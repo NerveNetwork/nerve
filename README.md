@@ -45,7 +45,7 @@ The current code version is not stable, so package download is not available.
  
 ## Contributions
 
-请您以签过名的commit发送pull request请求，我们期待您的加入！
+Please send a pull request with the signed commit, and we look forward to your joining!
 
 ## Community
 
