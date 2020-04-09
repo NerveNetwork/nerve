@@ -1,0 +1,31 @@
+{
+  "quote": [
+    {
+      "type": 1,
+      "dataParser": "io.nuls.quotation.model.txdata.Quotation",
+      "items": [
+        {
+          "key": "NULS_PRICE",
+          "collector": "io.nuls.quotation.processor.impl.CollectorProcessor",
+          "calculator": "io.nuls.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "NULS-USDT",
+          "desc": "NULS相对USDT价格"
+        },
+        {
+          "key": "BTC_PRICE",
+          "collector": "io.nuls.quotation.processor.impl.CollectorProcessor",
+          "calculator": "io.nuls.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "BTC-USDT",
+          "desc": "BTC相对USDT价格"
+        },
+        {
+          "key": "ETH_PRICE",
+          "collector": "io.nuls.quotation.processor.impl.CollectorProcessor",
+          "calculator": "io.nuls.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "ETH-USDT",
+          "desc": "ETH相对USDT价格"
+        }
+      ]
+    }
+  ]
+}

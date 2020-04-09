@@ -1,0 +1,24 @@
+#!/bin/bash
+cd `dirname $0`;
+help()
+{
+    cat <<- EOF
+    Desc: NULS 2.0地址生成工具，
+    Usage: ./create-address
+    		[-c] <chainId> 生成地址的chainId，默认为当前配置的chainId
+    		[-n] <number> 要生成的地址数量 默认1
+    		-h help
+    Author: zlj
+EOF
+    exit 0
+}
+while getopts hc:n: name
+do
+            case $name in
+            c)     chainId="$OPTARG";;
+            n)     number="$OPTARG";;
+            h)     help ;;
+            ?)     exit 2;;
+           esac
+done
+./cmd -C "address" -P "${number} ${chainId}"

@@ -1,0 +1,54 @@
+{
+  "providerType": "RPC",
+  "chainId": 2,
+  "assetId": 1,
+  "symbol": "NULS",
+  "language": "en",
+  "encoding": "UTF-8",
+  "databaseUrl": "127.0.0.1",
+  "databasePort": 27017,
+  "kernelUrl": "ws://127.0.0.1:7771",
+  "listenerIp": "0.0.0.0",
+  "rpcPort": 18003,
+  "logLevel": "DEBUG",
+  "maxAliveConnect": 20,
+  "maxWaitTime": 120000,
+  "connectTimeOut": 30000,
+  "symbolPriceProviderSource" : [
+    {
+      "name" : "Binance",
+      "clazs" : "io.nuls.api.sup.BinancePriceProvider",
+      "url" : "http://binanceapi.zhoulijun.top/",
+      "exclude" : "USD"
+    },
+    {
+      "name" : "USD",
+      "clazs" : "io.nuls.api.sup.UsdPriceProvider",
+      "url" : "http://bitfinex.zhoulijun.top/",
+      "match" : "USD"
+    }
+  ],
+  "symbolBaseInfoList" : [
+    {
+      "chainId" : 3,
+      "assetId" : 1,
+      "symbol"  : "BTC",
+      "decimals" : 8,
+      "queryPrice" : false
+    },
+    {
+      "chainId" : 4,
+      "assetId" : 1,
+      "symbol"  : "ETH",
+      "decimals" : 8,
+      "queryPrice" : false
+    },
+    {
+      "chainId" : 0,
+      "assetId" : 0,
+      "symbol"  : "USD",
+      "decimals" : 4,
+      "queryPrice" : false
+    }
+  ]
+}

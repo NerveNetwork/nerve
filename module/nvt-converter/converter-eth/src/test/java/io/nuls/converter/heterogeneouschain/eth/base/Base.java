@@ -1,0 +1,63 @@
+/**
+ * MIT License
+ * <p>
+ Copyright (c) 2019-2020 nerve.network
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package io.nuls.converter.heterogeneouschain.eth.base;
+
+import nerve.network.converter.heterogeneouschain.eth.context.EthContext;
+import nerve.network.converter.heterogeneouschain.eth.core.ETHWalletApi;
+import io.nuls.core.log.Log;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.http.HttpService;
+
+/**
+ * @author: Chino
+ * @date: 2020-03-18
+ */
+public class Base {
+
+    protected ETHWalletApi ethWalletApi;
+
+    @BeforeClass
+    public static void initClass() {
+        Log.info("init");
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        String ethRpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        ethWalletApi = new ETHWalletApi();
+        EthContext.setLogger(Log.BASIC_LOGGER);
+        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+        ethWalletApi.setWeb3j(web3j);
+        ethWalletApi.setEthRpcAddress(ethRpcAddress);
+    }
+
+    protected void setMain() {
+        String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        ethWalletApi.setWeb3j(web3j);
+        ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
+    }
+}

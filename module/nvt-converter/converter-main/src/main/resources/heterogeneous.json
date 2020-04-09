@@ -1,0 +1,27 @@
+[
+  {
+    "chainId": 101,
+    "type": 1,
+    "symbol": "ETH",
+    "multySignAddress": "0xE24973ff71D061f403Cb45DddE97E034484ee7D3",
+    "rpcAddress": "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5",
+    "defaultStartHeight": 7636719,
+    "txBlockConfirmations": 5,
+    "standbyRpcAddresses": "https://ropsten.infura.io/v3/xxxxx,https://ropsten.infura.io/v3/ooooo"
+  },
+  {
+    "chainId": 101,
+    "type": 2,
+    "symbol": "ERC20"
+  },
+  {
+    "chainId": 102,
+    "type": 1,
+    "symbol": "BTC",
+    "multySignAddress": "",
+    "rpcAddress": "",
+    "defaultStartHeight": 625555,
+    "txBlockConfirmations": 6,
+    "standbyRpcAddresses": ""
+  }
+]

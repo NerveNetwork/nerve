@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Huobi",
+    "baseurl": "http://hbg.zhoulijun.top",
+    "collector": "io.nuls.quotation.rpc.querier.impl.HuobiQuerier",
+    "weight": "0.30"
+  },
+  {
+    "name": "Binance",
+    "baseurl": "http://binanceapi.zhoulijun.top",
+    "collector": "io.nuls.quotation.rpc.querier.impl.BinanceQuerier",
+    "weight": "0.70"
+  }
+]
+
+

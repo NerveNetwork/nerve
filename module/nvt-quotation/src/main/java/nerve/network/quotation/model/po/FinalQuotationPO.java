@@ -1,0 +1,128 @@
+/**
+ * MIT License
+ * <p>
+ * Copyright (c) 2019-2020 nerve.network
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+package nerve.network.quotation.model.po;
+
+import com.alibaba.fastjson.JSON;
+import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.basic.NulsOutputStreamBuffer;
+import io.nuls.base.data.BaseNulsData;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.parse.SerializeUtils;
+import io.nuls.core.rpc.util.NulsDateUtils;
+import nerve.network.quotation.util.CommonUtil;
+
+import java.io.IOException;
+
+/**
+ * 经过计算可以使用的最终报价
+ * @author: Chino
+ * @date: 2020/03/27
+ */
+public class FinalQuotationPO extends BaseNulsData {
+
+    private String token;
+    private double price;
+    /**
+     * 发布时间 秒级
+     * 时间戳/1000
+     */
+    private long launchTime;
+    /**
+     * 报价的时间，可能早于发布时间 秒级
+     * 时间戳/1000
+     */
+    private long quotationTime;
+
+
+    @Override
+    protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
+        stream.writeString(token);
+        stream.writeDouble(price);
+        stream.writeUint32(launchTime);
+        stream.writeUint32(quotationTime);
+    }
+
+    @Override
+    public void parse(NulsByteBuffer byteBuffer) throws NulsException {
+        this.token = byteBuffer.readString();
+        this.price = byteBuffer.readDouble();
+        this.launchTime = byteBuffer.readUint32();
+        this.quotationTime = byteBuffer.readUint32();
+    }
+
+    @Override
+    public int size() {
+        int size = 0;
+        size += SerializeUtils.sizeOfString(this.token);
+        size += SerializeUtils.sizeOfDouble(this.price);
+        size += SerializeUtils.sizeOfUint32();
+        size += SerializeUtils.sizeOfUint32();
+        return size;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public long getLaunchTime() {
+        return launchTime;
+    }
+
+    public void setLaunchTime(long launchTime) {
+        this.launchTime = launchTime;
+    }
+
+    public long getQuotationTime() {
+        return quotationTime;
+    }
+
+    public void setQuotationTime(long quotationTime) {
+        this.quotationTime = quotationTime;
+    }
+
+
+    public static void main(String[] args) throws Exception {
+        FinalQuotationPO finalQuotation = new FinalQuotationPO();
+        finalQuotation.setToken("20191212-NULS");
+        finalQuotation.setPrice(0.27740000);
+        finalQuotation.setLaunchTime(NulsDateUtils.getCurrentTimeSeconds());
+        finalQuotation.setQuotationTime(NulsDateUtils.getCurrentTimeSeconds());
+        byte[] d = finalQuotation.serialize();
+        FinalQuotationPO f = CommonUtil.getInstance(d, FinalQuotationPO.class);
+        System.out.println(JSON.toJSONString(f));
+    }
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "version": "1",
+    "extend": "",
+    "validTxs": [
+      {
+        "type": "2",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "TransferProcessorV1"
+      },
+      {
+        "type": "3",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AliasProcessorV1"
+      }
+    ],
+    "validMsgs": [],
+    "invalidTxs": "",
+    "invalidMsgs": ""
+  }
+]

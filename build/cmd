@@ -1,0 +1,69 @@
+#!/bin/bash
+
+help()
+{
+    cat <<- EOF
+    Desc: 启动NULS 2.0钱包命令行，
+    Usage: ./cmd
+    		[-l] <log level> 输出的日志级别 默认ERROR
+    		[-c] <config file path> 指定nuls配置文件
+    		[-a] <asset id> 指定使用的资产id
+    		[-i] <chain id> 指定使用的chain id
+    		-h help
+    Author: zlj
+EOF
+    exit 0
+}
+
+
+cd `dirname $0`;
+. func
+if [ -d ./Libraries/JAVA/JRE/11.0.2 ]; then
+    JAVA_HOME=`dirname "./Libraries/JAVA/JRE/11.0.2/bin"`;
+    JAVA_HOME=`cd $JAVA_HOME; pwd`
+    JAVA="${JAVA_HOME}/bin/java"
+else
+    JAVA='java'
+fi
+JAVA_EXIST=`${JAVA} -version 2>&1 |grep 11`
+if [ ! -n "$JAVA_EXIST" ]; then
+    echo "JDK version is not 11"
+    ${JAVA} -version
+    exit 0;
+fi
+echo "JAVA_HOME:${JAVA_HOME}"
+echo `${JAVA} -version`
+
+LOGLEVEL="ERROR"
+command="cmd"
+PARAM=
+JAVAOPT=
+while getopts hl:c:C:P:a:i: name
+do
+            case $name in
+            l)     LOGLEVEL="$OPTARG"
+                   shift
+            ;;
+            c)     config="$OPTARG";;
+            C)     command="$OPTARG";;
+            P)     PARAM="$OPTARG";;
+            a)     JAVAOPT="${JAVAOPT} -DassetsId=$OPTARG";;
+            i)     JAVAOPT="${JAVAOPT} -DchainId=$OPTARG";;
+            h)     help ;;
+            ?)     exit 2;;
+           esac
+done
+JAVAOPT="${JAVAOPT} -Dlog.level=${LOGLEVEL}"
+if [ -z "$config" ]; then
+    config="./nuls.ncf";
+fi
+config="`get_fullpath $config`/${config##*/}"
+echo $config
+JAVAOPT="${JAVAOPT} -Dactive.config=${config}"
+nulstarUrl=`getModuleItem $config "serviceManager"`
+if [ -z "${nulstarUrl}" ]; then
+    nulstarUrl="ws://127.0.0.1:7771"
+fi
+echo "Service Manager URL: $nulstarUrl"
+cd ./Modules/Nuls/cmd-client/1.0.0
+./cmd ${JAVA_HOME} "${JAVAOPT}" ${nulstarUrl} $command "$PARAM"
