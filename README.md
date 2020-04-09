@@ -55,7 +55,7 @@ The current code version is not stable, so package download is not available.
 
 ### Discord
 
-- https://discord.gg/bdyMBT/
+- https://discord.gg/PBkHeD7
 
 ## License
 

@@ -55,7 +55,7 @@ Nerve是一个去中心化的数字资产服务网络。它是基于NULS微服�
 
 ### Discord开发者社区
 
-- https://discord.gg/bdyMBT/
+- https://discord.gg/PBkHeD7/
 
 ## 许可证
 Nerve是在[MIT](http://opensource.org/licenses/MIT)许可下发布的。
