@@ -43,10 +43,10 @@ public enum TxStatusEnum {
      */
     CONFIRMED((byte)1),
     /**
-     * 已打包状态
+     * 已打包状态(验证人变更才有这个中间态)
      * packaged and saved
      */
-    COMMITTED((byte)2);
+    BYZANTINE_COMPLETE((byte)2);
 
     private byte status;
 

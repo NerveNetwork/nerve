@@ -1,6 +1,7 @@
 package io.nuls.api.db;
 
 import io.nuls.api.model.po.*;
+import io.nuls.api.model.po.mini.MiniCrossChainTransactionInfo;
 import io.nuls.api.model.po.mini.MiniTransactionInfo;
 
 import java.util.List;
@@ -14,7 +15,11 @@ public interface TransactionService {
 
     void saveTxRelationList(int chainId, Set<TxRelationInfo> relationInfos);
 
-    PageInfo<MiniTransactionInfo> getTxList(int chainId, int pageIndex, int pageSize, boolean isHidden, int... type);
+    PageInfo<MiniCrossChainTransactionInfo> getCrossChainTxList(int chainId, String address, int pageIndex, int pageSize);
+
+    PageInfo<MiniTransactionInfo> getInnerChainTxList(int chainId, String address, int pageIndex, int pageSize, boolean isHidden, int... typeList);
+
+//    PageInfo<MiniTransactionInfo> getTxList(int chainId, int pageIndex, int pageSize, boolean isHidden, int... type);
 
     List<TxHexInfo> getUnConfirmList(int chainId);
 

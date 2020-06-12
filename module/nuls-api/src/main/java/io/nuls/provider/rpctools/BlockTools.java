@@ -138,6 +138,18 @@ public class BlockTools implements CallRpc {
         }
     }
 
+    public Result<Map>  getBlockGlobalInfo(int chainId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.CHAIN_ID, chainId);
+        try {
+            Map map = (Map) RpcCall.request(ModuleE.BL.abbr, CommandConstant.INFO, params);
+            return new Result<>(map);
+        } catch (Exception e) {
+            io.nuls.core.log.Log.error(e);
+        }
+        return null;
+    }
+
     /**
      * 根据高度获取区块序列化字符串
      *

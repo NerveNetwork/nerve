@@ -28,9 +28,7 @@ package io.nuls.network.manager;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.model.StringUtils;
 import io.nuls.network.cfg.NetworkConfig;
-import io.nuls.network.constant.ManagerStatusEnum;
 import io.nuls.network.constant.NetworkConstant;
-import io.nuls.network.constant.NetworkContext;
 import io.nuls.network.model.Node;
 import io.nuls.network.model.NodeGroup;
 import io.nuls.network.model.dto.NetTimeUrl;
@@ -146,11 +144,11 @@ public class TimeManager {
                 break;
             }
         }
-        if (count == 3) {
+        if (count == -1) {
             calNetTimeOffset(times[0], times[1], times[2]);
         } else {
             //从对等网络去获取时间
-            LoggerUtil.COMMON_LOG.debug("count={} syncPeerTime .....", count);
+            LoggerUtil.COMMON_LOG.debug("---从对等网络去获取时间--count={} syncPeerTime .....", count);
             syncPeerTime();
         }
         lastSyncTime = currentTimeMillis();
@@ -197,6 +195,7 @@ public class TimeManager {
         for (NodeGroup nodeGroup : list) {
             Collection<Node> nodes = nodeGroup.getLocalNetNodeContainer().getConnectedNodes().values();
             for (Node node : nodes) {
+                LoggerUtil.COMMON_LOG.debug("---发送获取时间---" + node.getIp());
                 sendGetTimeMessage(node);
                 count++;
                 if (count >= MAX_REQ_PEER_NUMBER) {

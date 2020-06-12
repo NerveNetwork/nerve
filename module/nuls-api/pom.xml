@@ -41,6 +41,12 @@
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>
             <version>1.0.7.RELEASE</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>nuls-base-api-provider</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>

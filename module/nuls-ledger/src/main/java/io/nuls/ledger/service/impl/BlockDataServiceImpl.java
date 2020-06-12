@@ -72,49 +72,51 @@ public class BlockDataServiceImpl implements BlockDataService {
     @Override
     public void initBlockDatas() throws Exception {
         //获取确认高度
-        List<ChainHeight> list = getChainsBlockHeight();
-        if (null != list) {
-            LoggerUtil.COMMON_LOG.info("chainList size = {}", list.size());
-            for (ChainHeight chainHeight : list) {
-                Log.info("begin chain ledger checked..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
-                BlockSnapshotAccounts blockSnapshotAccounts = repository.getBlockSnapshot(chainHeight.getChainId(), chainHeight.getBlockHeight() + 1);
-                if (null != blockSnapshotAccounts) {
-                    List<AccountStateSnapshot> preAccountStates = blockSnapshotAccounts.getAccounts();
-                    //回滚高度
-                    accountStateService.rollAccountState(chainHeight.getChainId(), preAccountStates);
-                }
-                LoggerUtil.COMMON_LOG.info("end chain ledger checked..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
-            }
-        }
+        //update by zhoulijun  去掉快照回滚功能
+//        List<ChainHeight> list = getChainsBlockHeight();
+//        if (null != list) {
+//            LoggerUtil.COMMON_LOG.info("chainList size = {}", list.size());
+//            for (ChainHeight chainHeight : list) {
+//                Log.info("begin chain ledger checked..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
+//                BlockSnapshotAccounts blockSnapshotAccounts = repository.getBlockSnapshot(chainHeight.getChainId(), chainHeight.getBlockHeight() + 1);
+//                if (null != blockSnapshotAccounts) {
+//                    List<AccountStateSnapshot> preAccountStates = blockSnapshotAccounts.getAccounts();
+//                    //回滚高度
+//                    accountStateService.rollAccountState(chainHeight.getChainId(), preAccountStates);
+//                }
+//                LoggerUtil.COMMON_LOG.info("end chain ledger checked..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
+//            }
+//        }
     }
 
     @Override
     public void syncBlockHeight() throws Exception {
         //获取确认高度
-        List<ChainHeight> list = getChainsBlockHeight();
-        if (null != list) {
-            LoggerUtil.COMMON_LOG.info("syncBlockHeight size = {}", list.size());
-            for (ChainHeight chainHeight : list) {
-                Log.info("####begin syncBlockHeight..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
-                long blockHeight = callRpcService.getBlockLatestHeight(chainHeight.getChainId());
-                if (blockHeight > 0 && ((blockHeight + 1) == chainHeight.getBlockHeight())) {
-                    LoggerUtil.logger(chainHeight.getChainId()).debug("rollBackBlockTxs chainId={},blockHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
-                    //回滚高度
-                    repository.saveOrUpdateBlockHeight(chainHeight.getChainId(), blockHeight);
-                    BlockSnapshotAccounts blockSnapshotAccounts = repository.getBlockSnapshot(chainHeight.getChainId(), chainHeight.getBlockHeight());
-                    if (null != blockSnapshotAccounts) {
-                        List<AccountStateSnapshot> preAccountStates = blockSnapshotAccounts.getAccounts();
-                        //回滚高度
-                        accountStateService.rollAccountState(chainHeight.getChainId(), preAccountStates);
-                        //更新高度，删除备份
-                        //删除备份数据
-                        repository.delBlockSnapshot(chainHeight.getChainId(), blockHeight);
-                        Log.info("####end syncBlockHeight..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
-                    }
-                    rollBackBlockDatas(chainHeight.getChainId(), blockHeight + 1);
-                }
-            }
-        }
+        //update by zhoulijun 去掉回滚功能
+//        List<ChainHeight> list = getChainsBlockHeight();
+//        if (null != list) {
+//            LoggerUtil.COMMON_LOG.info("syncBlockHeight size = {}", list.size());
+//            for (ChainHeight chainHeight : list) {
+//                Log.info("####begin syncBlockHeight..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
+//                long blockHeight = callRpcService.getBlockLatestHeight(chainHeight.getChainId());
+//                if (blockHeight > 0 && ((blockHeight + 1) == chainHeight.getBlockHeight())) {
+//                    LoggerUtil.logger(chainHeight.getChainId()).debug("rollBackBlockTxs chainId={},blockHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
+//                    //回滚高度
+//                    repository.saveOrUpdateBlockHeight(chainHeight.getChainId(), blockHeight);
+//                    BlockSnapshotAccounts blockSnapshotAccounts = repository.getBlockSnapshot(chainHeight.getChainId(), chainHeight.getBlockHeight());
+//                    if (null != blockSnapshotAccounts) {
+//                        List<AccountStateSnapshot> preAccountStates = blockSnapshotAccounts.getAccounts();
+//                        //回滚高度
+//                        accountStateService.rollAccountState(chainHeight.getChainId(), preAccountStates);
+//                        //更新高度，删除备份
+//                        //删除备份数据
+//                        repository.delBlockSnapshot(chainHeight.getChainId(), blockHeight);
+//                        Log.info("####end syncBlockHeight..chainId = {},chainHeight={}", chainHeight.getChainId(), chainHeight.getBlockHeight());
+//                    }
+//                    rollBackBlockDatas(chainHeight.getChainId(), blockHeight + 1);
+//                }
+//            }
+//        }
     }
 
     @Override

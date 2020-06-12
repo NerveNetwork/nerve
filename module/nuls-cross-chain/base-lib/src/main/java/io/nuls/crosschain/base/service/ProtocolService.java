@@ -1,6 +1,7 @@
 package io.nuls.crosschain.base.service;
 
 import io.nuls.crosschain.base.message.*;
+import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainMessage;
 
 /**
  * 跨链模块协议处理接口类
@@ -8,14 +9,6 @@ import io.nuls.crosschain.base.message.*;
  * @date 2019/4/8
  */
 public interface ProtocolService {
-    /**
-     * 链内节点获取完整跨链交易
-     * @param chainId     消息所属链Id
-     * @param nodeId      发送此消息的节点Id
-     * @param messageBody 消息体
-     * */
-    void getCtx(int chainId, String nodeId, GetCtxMessage messageBody);
-
     /**
      * 其他链向本链获取完整跨链交易
      * @param chainId     消息所属链Id
@@ -49,13 +42,6 @@ public interface ProtocolService {
      * */
     void getCirculation(int chainId, String nodeId, GetCirculationMessage messageBody);
 
-    /**
-     * 接收链内节点发送的完整跨链交易
-     * @param chainId     消息所属链Id
-     * @param nodeId      发送此消息的节点Id
-     * @param messageBody 消息体
-     * */
-    void receiveCtx(int chainId, String nodeId, NewCtxMessage messageBody);
 
     /**
      * 接收其他链发送的完整跨链交易
@@ -80,13 +66,4 @@ public interface ProtocolService {
      * @param messageBody 消息体
      * */
     void receiveCtxSign(int chainId,String nodeId,BroadCtxSignMessage messageBody);
-
-
-    /**
-     * 接收已注册的跨链交易信息
-     * @param chainId     消息所属链Id
-     * @param nodeId      发送此消息的节点Id
-     * @param messageBody 消息体
-     * */
-    void receiveRegisteredChainInfo(int chainId,String nodeId,RegisteredChainMessage messageBody);
 }

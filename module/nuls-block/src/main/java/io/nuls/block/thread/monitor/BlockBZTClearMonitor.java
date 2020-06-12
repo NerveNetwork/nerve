@@ -27,9 +27,7 @@ import io.nuls.block.model.ChainContext;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.rpc.util.NulsDateUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * bzt校验的区块数据清理情况监控器
@@ -41,8 +39,11 @@ import java.util.Map;
  * @date 19-12-14 下午3:53
  */
 public class BlockBZTClearMonitor extends BaseMonitor {
-    private static final short MAX_TEMP_SIZE = 100;
-    private static final short OVER_TIME_INTERVAL = 100;
+    /**
+     * 如果缓存中有200个区块基础验证通过的区块在2分钟之内还未拜占庭通过则需要清理删除
+     * */
+    private static final short MAX_TEMP_SIZE = 200;
+    private static final short OVER_TIME_INTERVAL = 120;
 
     private static final BlockBZTClearMonitor INSTANCE = new BlockBZTClearMonitor();
 
@@ -52,33 +53,14 @@ public class BlockBZTClearMonitor extends BaseMonitor {
 
     @Override
     protected void process(int chainId, ChainContext context, NulsLogger commonLog) {
-        Map<NulsHash, BlockVerifyFlag> blockVerifyFlagMap = context.getSavingBZTAndVerify();
         Map<NulsHash, BlockSaveTemp> blockSaveTempMap = context.getBlockVerifyResult();
-        List<NulsHash> removeHash = new ArrayList<>();
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         try {
-            if (blockVerifyFlagMap.size() > MAX_TEMP_SIZE) {
-                for (Map.Entry<NulsHash, BlockVerifyFlag> entry : blockVerifyFlagMap.entrySet()) {
-                    if (nowTime - entry.getValue().getTime() > OVER_TIME_INTERVAL) {
-                        removeHash.add(entry.getKey());
-                    }
-                }
-            }
-            if (blockSaveTempMap.size() > MAX_TEMP_SIZE) {
-                for (Map.Entry<NulsHash, BlockSaveTemp> entry : blockSaveTempMap.entrySet()) {
-                    if (nowTime - entry.getValue().getTime() > OVER_TIME_INTERVAL) {
-                        removeHash.add(entry.getKey());
-                    }
-                }
-            }
-            for (NulsHash hash : removeHash) {
-                commonLog.info("clear temp data hash={}", hash);
-                blockVerifyFlagMap.remove(hash);
-                blockSaveTempMap.remove(hash);
+            if(blockSaveTempMap.size() > MAX_TEMP_SIZE){
+                blockSaveTempMap.entrySet().removeIf(entry -> (nowTime - entry.getValue().getTime() > OVER_TIME_INTERVAL));
             }
         }catch(Exception e){
             commonLog.error(e);
         }
     }
-
 }

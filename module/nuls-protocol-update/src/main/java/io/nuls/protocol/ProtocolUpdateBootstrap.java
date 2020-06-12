@@ -46,7 +46,8 @@ public class ProtocolUpdateBootstrap extends RpcModule {
      */
     @Override
     public Module[] declareDependent() {
-        return new Module[]{Module.build(ModuleE.BL)};
+        return new Module[]{Module.build(ModuleE.BL),
+                new Module(ModuleE.CC.abbr, ROLE)};
     }
 
     /**

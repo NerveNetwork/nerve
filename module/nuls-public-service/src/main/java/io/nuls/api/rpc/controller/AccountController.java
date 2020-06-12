@@ -20,6 +20,7 @@
 
 package io.nuls.api.rpc.controller;
 
+import com.mongodb.client.model.Filters;
 import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
@@ -27,17 +28,35 @@ import io.nuls.api.db.*;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.po.mini.MiniAccountInfo;
+import io.nuls.api.model.po.mini.MiniCrossChainTransactionInfo;
 import io.nuls.api.model.rpc.*;
 import io.nuls.api.utils.LoggerUtil;
+import io.nuls.api.utils.PropertyUtils;
 import io.nuls.api.utils.VerifyUtils;
+import io.nuls.base.RPCUtil;
+import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.converter.ConverterService;
+import io.nuls.base.api.provider.converter.facade.GetHeterogeneousAssetInfoReq;
+import io.nuls.base.api.provider.converter.facade.HeterogeneousAssetInfo;
+import io.nuls.base.api.provider.ledger.LedgerProvider;
+import io.nuls.base.api.provider.ledger.facade.GetAssetListReq;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.basic.Result;
+import io.nuls.core.constant.CommonCodeConstanst;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.MapUtils;
+import org.bson.conversions.Bson;
+import org.checkerframework.checker.units.qual.min;
 
+import javax.validation.constraints.Min;
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Niels
@@ -55,6 +74,17 @@ public class AccountController {
     private AccountLedgerService accountLedgerService;
     @Autowired
     private AliasService aliasService;
+
+    @Autowired
+    SymbolRegService symbolRegService;
+
+
+    @Autowired
+    private ConverterTxService converterTxService;
+
+    LedgerProvider ledgerProvider = ServiceManager.get(LedgerProvider.class);
+
+    ConverterService converterService = ServiceManager.get(ConverterService.class);
 
     @RpcMethod("getAccountList")
     public RpcResult getAccountList(List<Object> params) {
@@ -94,11 +124,113 @@ public class AccountController {
 
     }
 
+
+    @RpcMethod("getAccountInnetTxs")
+    public RpcResult getAccountInnetTxs(List<Object> params) {
+        Bson filter = Filters.and(
+                Filters.ne("type", TxType.CROSS_CHAIN),
+                Filters.ne("type",TxType.RECHARGE),
+                Filters.ne("type",TxType.WITHDRAWAL));
+        return getAccountTxsForCrossChain(params,filter);
+    }
+
+
+    @RpcMethod("getAccountOutnetTxs")
+    public RpcResult getAccountOutnetTxs(List<Object> params) {
+        Bson filter = Filters.or(
+                Filters.eq("type", TxType.CROSS_CHAIN),
+                Filters.eq("type",TxType.RECHARGE),
+                Filters.eq("type",TxType.WITHDRAWAL));
+        RpcResult listRpc = getAccountTxsForCrossChain(params,filter);
+        if(listRpc.getResult() != null){
+            PageInfo pageInfo = (PageInfo) listRpc.getResult();
+            List<MiniCrossChainTransactionInfo> list = (List<MiniCrossChainTransactionInfo>) pageInfo.getList().stream().map(data->{
+                TxRelationInfo d = (TxRelationInfo) data;
+                ConverterTxInfo converterTxInfo = converterTxService.getByTxHash(ApiContext.defaultChainId,d.getTxHash());
+                MiniCrossChainTransactionInfo miniCrossChainTransactionInfo = new MiniCrossChainTransactionInfo();
+                PropertyUtils.copyProperties(miniCrossChainTransactionInfo,d);
+                miniCrossChainTransactionInfo.setValue(d.getValues());
+                miniCrossChainTransactionInfo.setHash(d.getTxHash());
+                if(converterTxInfo != null){
+                    SymbolRegInfo symbolRegInfo = symbolRegService.get(converterTxInfo.getAssetChainId(),converterTxInfo.getAssetId());
+                    miniCrossChainTransactionInfo.setCrossChainType(converterTxInfo.getCrossChainType());
+                    miniCrossChainTransactionInfo.setConverterType(converterTxInfo.getConverterType());
+                    miniCrossChainTransactionInfo.setOuterTxHash(converterTxInfo.getOuterTxHash());
+                    miniCrossChainTransactionInfo.setSymbol(symbolRegInfo.getSymbol());
+                    miniCrossChainTransactionInfo.setNetwork(symbolRegInfo.getFullName());
+                    miniCrossChainTransactionInfo.setDecimals(symbolRegInfo.getDecimals());
+                    miniCrossChainTransactionInfo.setIcon(symbolRegInfo.getIcon());
+                }
+                return miniCrossChainTransactionInfo;
+            }).collect(Collectors.toList());
+            return RpcResult.success(new PageInfo<>(pageInfo.getPageNumber(),pageInfo.getPageSize(),pageInfo.getTotalCount(),list));
+        }
+        return listRpc;
+    }
+
+    public RpcResult getAccountTxsForCrossChain(List<Object> params,Bson crossExpand) {
+        VerifyUtils.verifyParams(params, 5);
+        int chainId, pageNumber, pageSize, type;
+        String address;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            pageNumber = (int) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[pageNumber] is inValid");
+        }
+        try {
+            pageSize = (int) params.get(2);
+        } catch (Exception e) {
+            return RpcResult.paramError("[pageSize] is inValid");
+        }
+        try {
+            address = (String) params.get(3);
+        } catch (Exception e) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        try {
+            type = (int) params.get(4);
+        } catch (Exception e) {
+            return RpcResult.paramError("[type] is inValid");
+        }
+        if (!AddressTool.validAddress(chainId, address)) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+
+        if (pageNumber <= 0) {
+            pageNumber = 1;
+        }
+        if (pageSize <= 0 || pageSize > 100) {
+            pageSize = 10;
+        }
+        RpcResult result = new RpcResult();
+        try {
+            PageInfo<TxRelationInfo> pageInfo;
+            if (CacheManager.isChainExist(chainId)) {
+                pageInfo = accountService.pageAccountTxs(crossExpand,chainId, address, pageNumber, pageSize, type, -1, -1,null,null);
+                result.setResult(pageInfo);
+            } else {
+                result.setResult(new PageInfo<>(pageNumber, pageSize));
+            }
+        } catch (Exception e) {
+            LoggerUtil.commonLog.error(e);
+        }
+        return result;
+    }
+
+
+
     @RpcMethod("getAccountTxs")
     public RpcResult getAccountTxs(List<Object> params) {
         VerifyUtils.verifyParams(params, 7);
         int chainId, pageNumber, pageSize, type;
+        Integer assetChainId = null,assetId = null;
         String address;
+        Bson crossTxExpandFilter = null;
         long startHeight, endHeight;
         try {
             chainId = (int) params.get(0);
@@ -138,6 +270,21 @@ public class AccountController {
         if (!AddressTool.validAddress(chainId, address)) {
             return RpcResult.paramError("[address] is inValid");
         }
+        if(params.size() > 7){
+            try {
+                assetChainId = (int) params.get(7);
+            } catch (Exception e) {
+                return RpcResult.paramError("[assetChainId] is inValid");
+            }
+        }
+        if(params.size() > 8){
+            try {
+                assetId = (int) params.get(8);
+            } catch (Exception e) {
+                return RpcResult.paramError("[assetId] is inValid");
+            }
+        }
+
         if (pageNumber <= 0) {
             pageNumber = 1;
         }
@@ -148,7 +295,7 @@ public class AccountController {
         try {
             PageInfo<TxRelationInfo> pageInfo;
             if (CacheManager.isChainExist(chainId)) {
-                pageInfo = accountService.getAccountTxs(chainId, address, pageNumber, pageSize, type, startHeight, endHeight);
+                pageInfo = accountService.pageAccountTxs(null,chainId, address, pageNumber, pageSize, type, startHeight, endHeight,assetChainId,assetId);
             } else {
                 pageInfo = new PageInfo<>(pageNumber, pageSize);
             }
@@ -157,7 +304,6 @@ public class AccountController {
             LoggerUtil.commonLog.error(e);
         }
         return result;
-
     }
 
     @RpcMethod("getAcctTxs")
@@ -497,7 +643,7 @@ public class AccountController {
             return RpcResult.dataNotFound();
         }
         List<AccountLedgerInfo> list = accountLedgerService.getAccountLedgerInfoList(chainId, address);
-        for (AccountLedgerInfo ledgerInfo : list) {
+        return RpcResult.success(list.stream().map(ledgerInfo->{
             BalanceInfo balanceInfo = WalletRpcHandler.getAccountBalance(chainId, address, ledgerInfo.getChainId(), ledgerInfo.getAssetId());
             ledgerInfo.setBalance(balanceInfo.getBalance());
             ledgerInfo.setTimeLock(balanceInfo.getTimeLock());
@@ -507,15 +653,16 @@ public class AccountController {
                 ledgerInfo.setSymbol(assetInfo.getSymbol());
                 ledgerInfo.setDecimals(assetInfo.getDecimals());
             }
-        }
-        return RpcResult.success(list);
+            Map<String,Object> map = MapUtils.beanToMap(ledgerInfo);
+            return map;
+        }).collect(Collectors.toList()));
     }
 
 
     @RpcMethod("getAccountCrossLedgerList")
     public RpcResult getAccountCrossLedgerList(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
-        int chainId;
+        int chainId,hideZero = 0;
         String address;
         try {
             chainId = (int) params.get(0);
@@ -529,6 +676,14 @@ public class AccountController {
         }
         if (!AddressTool.validAddress(chainId, address)) {
             return RpcResult.paramError("[address] is inValid");
+        }
+
+        if(params.size() > 2){
+            try {
+                hideZero = (int) params.get(2);
+            } catch (Exception e) {
+                return RpcResult.paramError("[showZero] is inValid");
+            }
         }
 
         ApiCache apiCache = CacheManager.getCache(chainId);
@@ -547,7 +702,22 @@ public class AccountController {
                 ledgerInfo.setDecimals(assetInfo.getDecimals());
             }
         }
-        return RpcResult.success(list);
+        if(hideZero == 1){
+            list = list.stream().filter(d->d.getTotalBalance().compareTo(BigInteger.ZERO) > 0).collect(Collectors.toList());
+        }
+        return RpcResult.success(list.stream().map(ledgerInfo->{
+            Map<String,Object> map = MapUtils.beanToMap(ledgerInfo);
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(ledgerInfo.getChainId(),ledgerInfo.getAssetId());
+            map.put("source",symbolRegInfo.getSource());
+            io.nuls.base.api.provider.Result<HeterogeneousAssetInfo> heterogeneousAssetInfoResult = converterService.getHeterogeneousAssetInfo(new GetHeterogeneousAssetInfoReq(ledgerInfo.getAssetId()));
+            if(heterogeneousAssetInfoResult.isSuccess()){
+                map.put("chainName",heterogeneousAssetInfoResult.getData().getHeterogeneousChainSymbol());
+                map.put("isToken",heterogeneousAssetInfoResult.getData().isToken());
+                map.put("contractAddress",heterogeneousAssetInfoResult.getData().getContractAddress());
+                map.put("heterogeneousChainMultySignAddress",heterogeneousAssetInfoResult.getData().getHeterogeneousChainMultySignAddress());
+            }
+            return map;
+        }).collect(Collectors.toList()));
 
     }
 
@@ -556,4 +726,49 @@ public class AccountController {
         Result<List> result = WalletRpcHandler.getAllAddressPrefix();
         return RpcResult.success(result.getData());
     }
+
+
+    @RpcMethod("getAssetList")
+    public RpcResult getAssetList(List<Object> params){
+        VerifyUtils.verifyParams(params, 1);
+        int chainId,assetType = 0;
+        String address = null;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if(params.size() > 1){
+            try {
+                assetType = (int) params.get(1);
+            } catch (Exception e) {
+                return RpcResult.paramError("[showZero] is inValid");
+            }
+        }
+        if(params.size() > 2){
+            try {
+                address = (String) params.get(2);
+            } catch (Exception e) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+            if (!AddressTool.validAddress(chainId, address)) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+        }
+        io.nuls.base.api.provider.Result<io.nuls.base.api.provider.ledger.facade.AssetInfo> res = ledgerProvider.getAssetList(new GetAssetListReq(chainId,assetType));
+
+        if(res.isSuccess()){
+            if(StringUtils.isNotBlank(address)){
+                return RpcResult.success(res.getList().stream().filter(d->{
+                    BalanceInfo balanceInfo = WalletRpcHandler.getAccountBalance(chainId, (String) params.get(2), d.getAssetChainId(), d.getAssetId());
+                    return balanceInfo.getTotalBalance().compareTo(BigInteger.ZERO) > 0;
+                }).collect(Collectors.toList()));
+            }else{
+                return RpcResult.success(res.getList());
+            }
+        }else{
+            return RpcResult.failed(CommonCodeConstanst.FAILED,res.getMessage());
+        }
+    }
+
 }

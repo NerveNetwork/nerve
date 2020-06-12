@@ -95,8 +95,11 @@ public class CreateTx {
         return transferMap;
     }
 
+    public static Transaction assemblyTransaction(List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash prehash, Integer type) throws Exception {
+        return assemblyTransaction(fromList, toList, remark, prehash, null, type);
+    }
     public static Transaction assemblyTransaction(List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash prehash) throws Exception {
-        return assemblyTransaction(fromList, toList, remark, prehash, null);
+        return assemblyTransaction(fromList, toList, remark, prehash, null, null);
     }
 
     /**
@@ -108,8 +111,11 @@ public class CreateTx {
      * @return
      * @throws NulsException
      */
-    public static Transaction assemblyTransaction(List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash prehash, Long txtime) throws Exception {
-        Transaction tx = new Transaction(2);
+    public static Transaction assemblyTransaction(List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash prehash, Long txtime, Integer type) throws Exception {
+        if(null == type){
+            type = 2;
+        }
+        Transaction tx = new Transaction(type);
         tx.setTime(null == txtime ? NulsDateUtils.getCurrentTimeSeconds() : txtime);
         tx.setRemark(StringUtils.bytes(remark));
         //组装CoinData中的coinFrom、coinTo数据
@@ -136,9 +142,49 @@ public class CreateTx {
         return tx;
     }
 
+    /**
+     * 组装离线交易 不签名
+     * @param fromList
+     * @param toList
+     * @param remark
+     * @param prehash
+     * @param txtime
+     * @param type
+     * @return
+     * @throws Exception
+     */
+    public static Transaction assemblyTxWithoutSign(List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash prehash, Long txtime, Integer type) throws Exception {
+        if(null == type){
+            type = 2;
+        }
+        Transaction tx = new Transaction(type);
+        tx.setTime(null == txtime ? NulsDateUtils.getCurrentTimeSeconds() : txtime);
+        tx.setRemark(StringUtils.bytes(remark));
+        //组装CoinData中的coinFrom、coinTo数据
+        assemblyCoinData(tx, fromList, toList, prehash);
+        tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
+//        TransactionSignature transactionSignature = new TransactionSignature();
+//        List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
+//        for (CoinDTO from : fromList) {
+//            Map<String, Object> params = new HashMap<>(TxConstant.INIT_CAPACITY_8);
+//            params.put(Constants.VERSION_KEY_STR, TxConstant.RPC_VERSION);
+//            params.put(Constants.CHAIN_ID, chainId);
+//            params.put("address", from.getAddress());
+//            params.put("password", password);
+//            params.put("data", RPCUtil.encode(tx.getHash().getBytes()));
+//            HashMap result = (HashMap) TransactionCall.requestAndResponse(ModuleE.AC.abbr, "ac_signDigest", params);
+//            String signatureStr = (String) result.get("signature");
+//            P2PHKSignature signature = new P2PHKSignature(); // TxUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
+//            signature.parse(new NulsByteBuffer(RPCUtil.decode(signatureStr)));
+//            p2PHKSignatures.add(signature);
+//        }
+//        //交易签名
+//        transactionSignature.setP2PHKSignatures(p2PHKSignatures);
+//        tx.setTransactionSignature(transactionSignature.serialize());
+        return tx;
+    }
 
-
-    private static Transaction assemblyCoinData(Transaction tx, List<CoinDTO> fromList, List<CoinDTO> toList, NulsHash hash) throws Exception {
+    public static Transaction assemblyCoinData(Transaction tx, List<CoinDTO> fromList, List<CoinDTO> toList, NulsHash hash) throws Exception {
         //组装coinFrom、coinTo数据
         List<CoinFrom> coinFromList = assemblyCoinFrom( fromList, hash);
         List<CoinTo> coinToList = assemblyCoinTo(toList);

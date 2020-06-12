@@ -26,11 +26,16 @@
 package io.nuls.ledger.test.cmd;
 
 import io.nuls.base.RPCUtil;
+import io.nuls.base.api.provider.Provider;
+import io.nuls.base.api.provider.Result;
+import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.transaction.TransferService;
+import io.nuls.base.api.provider.transaction.facade.TransferReq;
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.data.*;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.rpc.info.Constants;
@@ -38,11 +43,13 @@ import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import io.nuls.ledger.model.po.AccountState;
 import io.nuls.ledger.test.constant.TestConfig;
 import io.nuls.ledger.utils.LedgerUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,6 +63,7 @@ public class CmdTest {
 
     @Before
     public void before() throws Exception {
+        ServiceManager.init(4, Provider.ProviderType.RPC);
         NoUse.mockModule();
 //        CmdDispatcher.syncKernel("ws://127.0.0.1:7771");
     }
@@ -160,5 +168,7 @@ public class CmdTest {
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "validateCoinData", params);
         Log.info("response {}", response);
     }
+
+
 
 }

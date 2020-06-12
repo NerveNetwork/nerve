@@ -1,0 +1,23 @@
+[
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "simple": "NVT"
+  },
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "simple": "TNVT"
+  },
+  {
+    "assetId": "1",
+    "chainId": "2",
+    "oracleKey": "NULS_PRICE",
+    "simple": "NULS"
+  },
+  {
+    "assetId": "2",
+    "oracleKey": "ETH_PRICE",
+    "simple": "ETH"
+  }
+]

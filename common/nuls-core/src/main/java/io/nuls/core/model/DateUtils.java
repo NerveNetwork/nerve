@@ -11,6 +11,7 @@ public class DateUtils {
     public final static String DEFAULT_TIMESTAMP_PATTERN = "yyyy-MM-dd HH:mm:ss.sss";
     public final static String DATE_PATTERN = "yyyyMMdd";
     public final static long DATE_TIME = 1000 * 24 * 60 * 60;
+    public final static long DATE_TIME_SECOND = 24 * 60 * 60;
     public final static long HOUR_TIME = 1000 * 60 * 60;
     public final static long MINUTE_TIME = 1000 * 60;
     public final static long SECOND_TIME = 1000;
@@ -762,11 +763,24 @@ public class DateUtils {
      * @return 日期字符串
      */
     public static String timeStamp2DateStr(long time, String format) {
+        return timeStamp2DateStr(time,format,Locale.CHINA);
+    }
+
+    /**
+     * 时间戳转换成日期格式字符串
+     *
+     * @param time   时间戳
+     * @param format 日期字符串格式
+     * @return 日期字符串
+     */
+    public static String timeStamp2DateStr(long time, String format,Locale locale) {
         if (format == null || format.isEmpty()) {
             format = DEFAULT_TIMESTAMP_PATTERN;
         }
-        SimpleDateFormat sdf = new SimpleDateFormat(format);
-        return sdf.format(new Date(time));
+        TimeZone timeZoneSH = TimeZone.getTimeZone("Asia/Shanghai");
+        SimpleDateFormat outputFormat = new SimpleDateFormat(format,locale);
+        outputFormat.setTimeZone(timeZoneSH);
+        return outputFormat.format(new Date(time));
     }
 
     /**
@@ -778,6 +792,17 @@ public class DateUtils {
      */
     public static boolean isSameDay(long time1, long time2) {
         return timeStamp2DateStr(time1,DATE_PATTERN).equals(timeStamp2DateStr(time2, DATE_PATTERN));
+    }
+
+    /**
+     * 比较两个时间是否为同一天
+     *
+     * @param time1   时间戳1(秒)
+     * @param time2   时间戳2（秒）
+     * @return 日期字符串
+     */
+    public static boolean isSameDayBySecond(long time1, long time2) {
+        return time1/DATE_TIME_SECOND == time2/DATE_TIME_SECOND;
     }
 
     /**

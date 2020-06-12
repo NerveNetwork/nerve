@@ -36,6 +36,7 @@ public class MongoAccountServiceImpl implements AccountService {
 
     public static int cacheSize = 5000;
 
+    @Override
     public void initCache() {
         for (ApiCache apiCache : CacheManager.getApiCaches().values()) {
             List<Document> documentList = mongoDBService.pageQuery(ACCOUNT_TABLE + apiCache.getChainInfo().getChainId(), 0, cacheSize);
@@ -48,6 +49,7 @@ public class MongoAccountServiceImpl implements AccountService {
         }
     }
 
+    @Override
     public AccountInfo getAccountInfo(int chainId, String address) {
         ApiCache apiCache = CacheManager.getCache(chainId);
         if (apiCache == null) {
@@ -70,6 +72,7 @@ public class MongoAccountServiceImpl implements AccountService {
         return accountInfo.copy();
     }
 
+    @Override
     public void saveAccounts(int chainId, Map<String, AccountInfo> accountInfoMap) {
         if (accountInfoMap.isEmpty()) {
             return;
@@ -116,6 +119,7 @@ public class MongoAccountServiceImpl implements AccountService {
         }
     }
 
+    @Override
     public PageInfo<AccountInfo> pageQuery(int chainId, int pageNumber, int pageSize) {
         List<Document> docsList = this.mongoDBService.pageQuery(ACCOUNT_TABLE + chainId, pageNumber, pageSize);
         List<AccountInfo> accountInfoList = new ArrayList<>();
@@ -127,10 +131,10 @@ public class MongoAccountServiceImpl implements AccountService {
         return pageInfo;
     }
 
-    public PageInfo<TxRelationInfo> getAccountTxs(int chainId, String address, int pageIndex, int pageSize, int type, long startHeight, long endHeight) {
+    @Override
+    public PageInfo<TxRelationInfo> pageAccountTxs(Bson expandFilter, int chainId, String address, int pageIndex, int pageSize, int type, long startHeight, long endHeight, Integer assetChainId, Integer assetId) {
         Bson filter;
         Bson addressFilter = Filters.eq("address", address);
-
         if (type > 0 && startHeight > -1 && endHeight > -1) {
             filter = Filters.and(addressFilter, Filters.eq("type", type), Filters.gte("height", startHeight), Filters.lte("height", endHeight));
         } else if (type > 0 && startHeight > -1) {
@@ -148,6 +152,18 @@ public class MongoAccountServiceImpl implements AccountService {
         } else {
             filter = addressFilter;
         }
+        if (expandFilter != null){
+            filter = Filters.and(expandFilter,filter);
+        }
+        if(assetChainId != null){
+            filter = Filters.and(filter,Filters.eq("chainId",assetChainId));
+            addressFilter = Filters.and(addressFilter,Filters.eq("chainId",assetChainId));
+        }
+        if(assetId != null){
+            filter = Filters.and(filter,Filters.eq("assetId",assetId));
+            addressFilter = Filters.and(addressFilter,Filters.eq("assetId",assetChainId));
+        }
+
         int start = (pageIndex - 1) * pageSize;
         int end = pageIndex * pageSize;
         int index = DBUtil.getShardNumber(address);

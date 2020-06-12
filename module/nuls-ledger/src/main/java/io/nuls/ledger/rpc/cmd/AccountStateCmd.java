@@ -26,11 +26,18 @@
 package io.nuls.ledger.rpc.cmd;
 
 import io.nuls.base.RPCUtil;
+import io.nuls.base.basic.AddressTool;
+import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rockdb.model.Entry;
+import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import io.nuls.ledger.config.LedgerConfig;
 import io.nuls.ledger.constant.CmdConstant;
 import io.nuls.ledger.constant.LedgerConstant;
 import io.nuls.ledger.constant.LedgerErrorCode;
@@ -45,11 +52,14 @@ import io.nuls.ledger.service.UnconfirmedStateService;
 import io.nuls.ledger.utils.LedgerUtil;
 import io.nuls.ledger.utils.LoggerUtil;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * 用于获取账户余额及账户nonce值
@@ -60,7 +70,8 @@ import java.util.Map;
 @Component
 public class AccountStateCmd extends BaseLedgerCmd {
 
-
+    @Autowired
+    LedgerConfig ledgerConfig;
     @Autowired
     private AccountStateService accountStateService;
     @Autowired
@@ -105,15 +116,15 @@ public class AccountStateCmd extends BaseLedgerCmd {
         BigInteger permanentLocked = BigInteger.ZERO;
         BigInteger timeHeightLocked = BigInteger.ZERO;
         for (FreezeLockTimeState freezeLockTimeState : accountState.getFreezeLockTimeStates()) {
-            if (LedgerUtil.isPermanentLock(freezeLockTimeState.getLockTime())) {
-                permanentLocked = permanentLocked.add(freezeLockTimeState.getAmount());
-            } else {
-                timeHeightLocked = timeHeightLocked.add(freezeLockTimeState.getAmount());
-            }
+            timeHeightLocked = timeHeightLocked.add(freezeLockTimeState.getAmount());
         }
         for (FreezeHeightState freezeHeightState : accountState.getFreezeHeightStates()) {
             timeHeightLocked = timeHeightLocked.add(freezeHeightState.getAmount());
         }
+        for (FreezeLockTimeState timeState : accountState.getPermanentLockMap().values()) {
+            permanentLocked = permanentLocked.add(timeState.getAmount());
+        }
+
         rtMap.put("permanentLocked", permanentLocked);
         rtMap.put("timeHeightLocked", timeHeightLocked);
         Response response = success(rtMap);
@@ -286,14 +297,13 @@ public class AccountStateCmd extends BaseLedgerCmd {
         BigInteger permanentLocked = BigInteger.ZERO;
         BigInteger timeHeightLocked = BigInteger.ZERO;
         for (FreezeLockTimeState freezeLockTimeState : accountState.getFreezeLockTimeStates()) {
-            if (LedgerUtil.isPermanentLock(freezeLockTimeState.getLockTime())) {
-                permanentLocked = permanentLocked.add(freezeLockTimeState.getAmount());
-            } else {
-                timeHeightLocked = timeHeightLocked.add(freezeLockTimeState.getAmount());
-            }
+            timeHeightLocked = timeHeightLocked.add(freezeLockTimeState.getAmount());
         }
         for (FreezeHeightState freezeHeightState : accountState.getFreezeHeightStates()) {
             timeHeightLocked = timeHeightLocked.add(freezeHeightState.getAmount());
+        }
+        for (FreezeLockTimeState timeState : accountState.getPermanentLockMap().values()) {
+            permanentLocked = permanentLocked.add(timeState.getAmount());
         }
         rtMap.put("permanentLocked", permanentLocked);
         rtMap.put("timeHeightLocked", timeHeightLocked);
@@ -309,14 +319,14 @@ public class AccountStateCmd extends BaseLedgerCmd {
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产所在地址"),
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象",
-            responseType = @TypeDescriptor(value = Map.class, mapKeys ={
-                @Key(name = "list", valueType = AccountAssetDto.class, description = "账户资产集合")
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "list", valueType = AccountAssetDto.class, description = "账户资产集合")
             })
     )
     public Response getBalanceList(Map params) {
         Integer chainId = (Integer) params.get("chainId");
         List<String> assetKeyList = (List<String>) params.get("assetKeyList");
-        if(assetKeyList == null) {
+        if (assetKeyList == null) {
             return failed(LedgerErrorCode.PARAMETER_ERROR, "invalid `assetKeyList`");
         }
         String address = LedgerUtil.getRealAddressStr((String) params.get("address"));
@@ -325,14 +335,14 @@ public class AccountStateCmd extends BaseLedgerCmd {
         }
         List<AccountAssetDto> resultList = new ArrayList<>();
         Map<String, Object> resultMap = new HashMap<>();
-        for(String assetKey : assetKeyList) {
+        for (String assetKey : assetKeyList) {
             assetKey = assetKey.trim();
             String[] assetInfo = assetKey.split("-");
             int assetChainId = Integer.parseInt(assetInfo[0].trim());
             int assetId = Integer.parseInt(assetInfo[1].trim());
 
             AccountState accountState = accountStateService.getAccountStateReCal(address, chainId, assetChainId, assetId);
-            if(accountState == null) {
+            if (accountState == null) {
                 continue;
             }
             AccountAssetDto dto = new AccountAssetDto();
@@ -352,6 +362,34 @@ public class AccountStateCmd extends BaseLedgerCmd {
         resultMap.put("list", resultList);
         Response response = success(resultMap);
         return response;
+    }
+
+    @CmdAnnotation(cmd = "getAllAccount", version = 1.0,
+            description = "获取所有账户")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "运行的链Id,取值区间[1-65535]")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象",
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "list", valueType = AccountAssetDto.class, description = "账户资产集合")
+            })
+    )
+    public Response getAllBalanceList(Map params) {
+        List<Entry<byte[],byte[]>> list = RocksDBService.entryList("account_" + params.get("chainId"));
+        Map<String,String> res = new HashMap<>();
+        list.stream().forEach(d->{
+            try {
+                String key = new String(d.getKey(),"UTF8");
+                String[] keyAry = key.split("-");
+                String address = keyAry[0];
+                byte[] bytes = AddressTool.getAddressByRealAddr(address);
+                address = AddressTool.getStringAddressByBytes(bytes,ledgerConfig.getAddressPrefix());
+                res.put(address + "-" + keyAry[1] + "-" + keyAry[2], HexUtil.encode(d.getValue()));
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        });
+        return success(res);
     }
 
 }

@@ -1,5 +1,8 @@
 package io.nuls.cmd.client.enums;
 public enum DepositTimeType {
+
+    TEST((byte)7, 5, 300),
+
     /**
      * 定期委托3个月
      * */
@@ -9,7 +12,6 @@ public enum DepositTimeType {
      * 半年
      * */
     HALF_YEAR((byte)1, 1.5, 15552000),
-
     /**
      * 一年
      * */

@@ -47,6 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static io.nuls.ledger.utils.LoggerUtil.logger;
+
 /**
  * @author lanjinsheng
  * @date 2018/11/29
@@ -136,6 +138,7 @@ public class AccountStateServiceImpl implements AccountStateService {
     public AccountState getAccountStateReCal(String address, int addressChainId, int assetChainId, int assetId) {
         //尝试缓存获取
         AccountState accountState = repository.getAccountStateByMemory(addressChainId, LedgerUtil.getKeyStr(address, assetChainId, assetId));
+
         if (null == accountState) {
             //账户处理锁
             byte[] key = LedgerUtil.getKey(address, assetChainId, assetId);
@@ -145,11 +148,14 @@ public class AccountStateServiceImpl implements AccountStateService {
                 return accountState;
             }
         }
+
         //解冻时间高度锁
         if (accountState.timeAllow()) {
             freezeStateService.recalculateFreeze(addressChainId, accountState);
             accountState.setLatestUnFreezeTime(NulsDateUtils.getCurrentTimeSeconds());
         }
+
+
         return accountState;
     }
 

@@ -28,7 +28,6 @@ package io.nuls.account.constant;
 
 import com.google.common.primitives.UnsignedBytes;
 import io.nuls.core.crypto.HexUtil;
-import io.nuls.core.rpc.model.ModuleE;
 
 import java.math.BigInteger;
 import java.util.Comparator;
@@ -39,71 +38,8 @@ import java.util.Comparator;
  */
 public interface AccountConstant {
 
-    String MODULE_DB_PATH = ModuleE.AC.name;
-
     /**
-     * ----[ System] ----
-     */
-    /**
-     * 系统配置项section名称
-     * The configuration item section name of the kernel module.
-     */
-    String CFG_SYSTEM_SECTION = "system";
-
-    /**
-     * 系统配置中语言设置的字段名
-     * The field name of the language set in the system configuration.
-     */
-    String CFG_SYSTEM_LANGUAGE = "language";
-
-    /**
-     * 系统配置中编码设置的字段名
-     * The field name of the code setting in the system configuration.
-     */
-    String CFG_SYSTEM_DEFAULT_ENCODING = "encoding";
-
-    /**
-     * 系统配置中语言设置的字段名
-     * The field name of the language set in the system configuration.
-     */
-    String CFG_SYSTEM_TKEYSTORE_FOLDER = "keyDir";
-
-    /**
-     * 内核模块地址端口
-     * Kernel module address port
-     */
-    String KERNEL_MODULE_PORT = "kernelPort";
-
-    /**
-     * --------[storage configs] -------
-     */
-    String CFG_DB_SECTION = "storage";
-    String DB_DATA_PATH = "dataDir";
-
-    /**
-     * --------[chain constant] -------
-     */
-    String CFG_CHAIN_SECTION = "chain";
-    /**
-     * 主链ID（卫星链ID）
-     */
-    String MAIN_CHAIN_ID = "mainChainId";
-
-    /**
-     * 主链资产ID（卫星链资产ID）
-     */
-    String MAIN_ASSETS_ID = "mainAssetsId";
-
-    /**
-     * --------[account constant] -------
-     */
-    /**
-     * The name of accouts cache
-     */
-    String ACCOUNT_LIST_CACHE = "ACCOUNT_LIST";
-
-    /**
-     * 设置别名的费用(烧毁)
+     * 设置别名的费用(销毁)
      * The cost of setting an alias
      */
     BigInteger ALIAS_FEE = BigInteger.valueOf(100000000);
@@ -115,33 +51,10 @@ public interface AccountConstant {
     String ACCOUNTKEYSTORE_FILE_SUFFIX = ".keystore";
 
     /**
-     * --------[RPC constant] -------
-     */
-    /**
      * SUCCESS_CODE
      */
     String SUCCESS_CODE = "1";
-    /**
-     * ERROR_CODE
-     */
-    String ERROR_CODE = "0";
-    /**
-     * SUCCESS_MSG
-     */
-    String SUCCESS_MSG = "success";
-    /**
-     * RPC_VERSION
-     */
-    double RPC_VERSION = 1.0;
-    /**
-     * DEFAULT PAGE_SIZE
-     */
-    int PAGE_SIZE = 20;
 
-
-    /**
-     * --------[EVENT constant] -------
-     */
     /**
      * 创建账户事件的主题
      * topic of account create events
@@ -161,9 +74,6 @@ public interface AccountConstant {
     String EVENT_TOPIC_UPDATE_PASSWORD = "evt_ac_updatePassword";
 
     /**
-     * --------[OTHER constant] -------
-     */
-    /**
      * Map初始值
      */
     int INIT_CAPACITY_16 = 16;
@@ -171,15 +81,6 @@ public interface AccountConstant {
     int INIT_CAPACITY_4 = 4;
     int INIT_CAPACITY_2 = 2;
 
-    /**
-     * account root path
-     */
-    String ACCOUNT_ROOT_PATH = "io.nuls.account";
-
-    /**
-     * rpc file path
-     */
-    String RPC_PATH = "io.nuls.account.rpc";
 
     /**
      * 普通交易为非解锁交易：0，解锁金额交易（退出共识，退出委托）：-1
@@ -207,8 +108,4 @@ public interface AccountConstant {
      */
     String SLASH = "/";
 
-    /**
-     * 交易相关
-     */
-    int TX_REMARK_MAX_LEN = 100;
 }

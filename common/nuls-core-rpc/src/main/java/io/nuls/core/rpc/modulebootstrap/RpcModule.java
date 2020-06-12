@@ -33,6 +33,9 @@ import java.util.concurrent.TimeUnit;
  */
 @Order(Integer.MIN_VALUE)
 public abstract class RpcModule implements InitializingBean {
+
+
+
     @Override
     public String toString() {
         return new StringJoiner(", ", RpcModule.class.getSimpleName() + "[", "]")
@@ -47,7 +50,9 @@ public abstract class RpcModule implements InitializingBean {
     private static final String LANGUAGE_PATH =  "languages";
     protected static final String ROLE = "1.0";
 
-    private Set<Module> dependencies;
+    protected String[] startArgs;
+
+    protected Set<Module> dependencies;
 
     /**
      * 模块运行状态
@@ -57,12 +62,12 @@ public abstract class RpcModule implements InitializingBean {
     /**
      * 依赖当前模块的其他模块列表
      */
-    private Map<Module, Boolean> followerList = new ConcurrentHashMap<>();
+    protected Map<Module, Boolean> followerList = new ConcurrentHashMap<>();
 
     /**
      * 当前模块依赖的其他模块的运行状态（是否接收到模块推送的ready通知）
      */
-    private Map<Module, Boolean> dependentReadyState = new ConcurrentHashMap<>();
+    protected Map<Module, Boolean> dependentReadyState = new ConcurrentHashMap<>();
 
     @Autowired
     NotifySender notifySender;
@@ -209,12 +214,23 @@ public abstract class RpcModule implements InitializingBean {
         followerList.keySet().forEach(this::notifyFollowerReady);
     }
 
+
     /**
      * 启动模块
      *
      * @param serviceManagerUrl
      */
-    void run(String modulePackage, String serviceManagerUrl) {
+    void run(String modulePackage, String serviceManagerUrl){
+        this.run(modulePackage,serviceManagerUrl,new String[]{serviceManagerUrl});
+    }
+
+    /**
+     * 启动模块
+     *
+     * @param serviceManagerUrl
+     */
+    void run(String modulePackage, String serviceManagerUrl,String[] startArgs) {
+        this.startArgs = startArgs;
         //初始化依赖模块的ready状态
         this.getDependencies().forEach(d -> dependentReadyState.put(d, Boolean.FALSE));
         try {
@@ -222,7 +238,7 @@ public abstract class RpcModule implements InitializingBean {
             Set<String> scanCmdPackage = new TreeSet<>();
             scanCmdPackage.add("io.nuls.core.rpc.cmd");
             scanCmdPackage.add("io.nuls.base.protocol.cmd");
-            scanCmdPackage.addAll((getRpcCmdPackage() == null) ? Set.of(modulePackage) : getRpcCmdPackage());
+            scanCmdPackage.addAll((getRpcCmdPackage() == null) ? Set.of(modulePackage.split(",")) : getRpcCmdPackage());
             NettyServer server = NettyServer.getInstance(moduleInfo().getName(), moduleInfo().getName(), ModuleE.DOMAIN)
                     .moduleRoles(new String[]{getRole()})
                     .moduleVersion(moduleInfo().getVersion())
@@ -300,15 +316,12 @@ public abstract class RpcModule implements InitializingBean {
     }
 
     protected long getTryRuningTimeout() {
-        //TODO pierre 临时测试调整, 需要改回30
         return 30;
     }
 
     protected String getRole() {
         return ROLE;
     }
-
-    ;
 
     /**
      * 模块是否已运行

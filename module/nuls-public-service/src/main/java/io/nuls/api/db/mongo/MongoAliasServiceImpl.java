@@ -73,9 +73,7 @@ public class MongoAliasServiceImpl implements AliasService {
             Document document = DocumentTransferTool.toDocument(info, "address");
             documentList.add(document);
         }
-        InsertManyOptions options = new InsertManyOptions();
-        options.ordered(false);
-        mongoDBService.insertMany(ALIAS_TABLE + chainId, documentList, options);
+        mongoDBService.insertOrUpdate(ALIAS_TABLE + chainId, documentList);
     }
 
 

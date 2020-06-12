@@ -56,27 +56,19 @@ public class CreateMultiSignAgentProcessor extends ConsensusBaseProcessor implem
         bulider.newLine(getCommandDescription())
                 .newLine("\t<agentAddress>   agent owner address   -required")
                 .newLine("\t<packingAddress>    packing address    -required")
-                .newLine("\t<commissionRate>    commission rate (10~100), you can have up to 2 valid digits after the decimal point  -required")
                 .newLine("\t<deposit>  amount you want to deposit, you can have up to 8 valid digits after the decimal point -required")
-                .newLine("\t[signAddress] first sign account -- not required")
                 .newLine("\t[rewardAddress]  Billing address    -not required");
         return bulider.toString();
     }
 
     @Override
     public String getCommandDescription() {
-        return "createmultisigneagent <agentAddress> <packingAddress> <commissionRate> <deposit> [signAddress] [rewardAddress] --create a agent";
+        return "createmultisigneagent <agentAddress> <packingAddress> <deposit> [rewardAddress] --create a agent";
     }
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,4,5,6);
-        checkIsNumeric(args[3],"commissionRate");
-        checkArgs(()->{
-            BigInteger commission = new BigInteger(args[3]);
-            //commission 取值范围 10~100
-            return commission.compareTo(BigInteger.TEN) >= 0 && commission.compareTo(BigInteger.valueOf(100L)) <= 0;
-        },"commission rate (10~100)");
+        checkArgsNumber(args,3,4);
         return true;
     }
 
@@ -85,20 +77,14 @@ public class CreateMultiSignAgentProcessor extends ConsensusBaseProcessor implem
         String agentAddress = args[1];
 
         String packingAddress = args[2];
-        Integer commissionRate = Integer.parseInt(args[3]);
 
-        BigInteger deposit = config.toSmallUnit(args[4]);
+        BigInteger deposit = config.toSmallUnit(args[3]);
         String rewardAddress = null;
-        if(args.length == 7){
-            rewardAddress = args[6];
+        if(args.length == 5){
+            rewardAddress = args[4];
         }
-        CreateMultiSignAgentReq req = new CreateMultiSignAgentReq(agentAddress,packingAddress,rewardAddress,commissionRate,deposit);
-        if(args.length == 6){
-            String signAddress = args[5];
-            String password = getPwd();
-            req.setSignAddress(signAddress);
-            req.setPassword(password);
-        }
+
+        CreateMultiSignAgentReq req = new CreateMultiSignAgentReq(agentAddress,packingAddress,rewardAddress,deposit);
         Result<MultiSignTransferRes> result = consensusProvider.createAgentForMultiSignAccount(req);
         if (result.isFailed()) {
             return CommandResult.getFailed(result);

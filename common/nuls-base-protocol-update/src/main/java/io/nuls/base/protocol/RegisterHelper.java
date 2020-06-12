@@ -42,6 +42,7 @@ public class RegisterHelper {
                 detail.setVerifySignature(config.isVerifySignature());
                 detail.setVerifyFee(config.getVerifyFee());
                 detail.setPackProduce(config.getPackProduce());
+                detail.setPackGenerate(config.getPackGenerate());
                 if(config.getPackProduce()){
                     moduleHasPackProduceTx = true;
                 }

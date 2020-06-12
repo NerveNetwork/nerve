@@ -29,6 +29,7 @@ public class MongoAgentServiceImpl implements AgentService {
     @Autowired
     private MongoAliasServiceImpl mongoAliasServiceImpl;
 
+    @Override
     public void initCache() {
         for (ApiCache apiCache : CacheManager.getApiCaches().values()) {
             List<Document> documentList = mongoDBService.query(AGENT_TABLE + apiCache.getChainInfo().getChainId());
@@ -39,6 +40,7 @@ public class MongoAgentServiceImpl implements AgentService {
         }
     }
 
+    @Override
     public AgentInfo getAgentByHash(int chainID, String agentHash) {
         AgentInfo agentInfo = CacheManager.getCache(chainID).getAgentInfo(agentHash);
         if (agentInfo == null) {
@@ -70,11 +72,12 @@ public class MongoAgentServiceImpl implements AgentService {
         return page;
     }
 
-    public AgentInfo getAgentByPackingAddress(int chainID, String packingAddress) {
+    @Override
+    public AgentInfo getAgentByRewardAddress(int chainID, String rewardAddress) {
         Collection<AgentInfo> agentInfos = CacheManager.getCache(chainID).getAgentMap().values();
         AgentInfo agentInfo = null;
         for (AgentInfo agent : agentInfos) {
-            if (!agent.getPackingAddress().equals(packingAddress)) {
+            if (!agent.getRewardAddress().equals(rewardAddress)) {
                 continue;
             }
             if (null == agentInfo || agent.getCreateTime() > agentInfo.getCreateTime()) {
@@ -87,6 +90,7 @@ public class MongoAgentServiceImpl implements AgentService {
         return agentInfo.copy();
     }
 
+    @Override
     public AgentInfo getAgentByAgentAddress(int chainID, String agentAddress) {
         Collection<AgentInfo> agentInfos = CacheManager.getCache(chainID).getAgentMap().values();
         AgentInfo agentInfo = null;
@@ -125,6 +129,7 @@ public class MongoAgentServiceImpl implements AgentService {
         return agentInfo.copy();
     }
 
+    @Override
     public void saveAgentList(int chainID, List<AgentInfo> agentInfoList) {
         if (agentInfoList.isEmpty()) {
             return;
@@ -171,7 +176,8 @@ public class MongoAgentServiceImpl implements AgentService {
         mongoDBService.bulkWrite(AGENT_TABLE + chainId, modelList, options);
     }
 
-    public List<AgentInfo> getAgentList(int chainId, long startHeight) {
+    @Override
+    public List<AgentInfo> getAgentListByStartHeight(int chainId, long startHeight) {
         ApiCache apiCache = CacheManager.getCache(chainId);
         Collection<AgentInfo> agentInfos = apiCache.getAgentMap().values();
         List<AgentInfo> resultList = new ArrayList<>();
@@ -201,42 +207,23 @@ public class MongoAgentServiceImpl implements AgentService {
         return resultList;
     }
 
-    public PageInfo<AgentInfo> getAgentList(int chainId, int type, int pageNumber, int pageSize) {
-        Bson filter = null;
-        Bson deleteFilter = Filters.eq("deleteHeight", 0);
-        if (type == 1) {
-            List list = new ArrayList<>(ApiContext.DEVELOPER_NODE_ADDRESS);
-            list.addAll(ApiContext.AMBASSADOR_NODE_ADDRESS);
-            filter = Filters.and(Filters.nin("agentAddress", list.toArray()), deleteFilter);
-        } else if (type == 2) {
-            filter = Filters.and(Filters.in("agentAddress", ApiContext.DEVELOPER_NODE_ADDRESS.toArray()), deleteFilter);
-        } else if (type == 3) {
-            filter = Filters.and(Filters.in("agentAddress", ApiContext.AMBASSADOR_NODE_ADDRESS.toArray()), deleteFilter);
-        } else {
-            filter = deleteFilter;
-        }
-        long totalCount = this.mongoDBService.getCount(AGENT_TABLE + chainId, filter);
-        List<Document> docsList = this.mongoDBService.pageQuery(AGENT_TABLE + chainId, filter, Sorts.descending("createTime"), pageNumber, pageSize);
-        List<AgentInfo> agentInfoList = new ArrayList<>();
-        for (Document document : docsList) {
-            AgentInfo agentInfo = DocumentTransferTool.toInfo(document, "txHash", AgentInfo.class);
+    @Override
+    public List<AgentInfo> getAllAgentList(int chainId) {
+        Bson filter = Filters.eq("deleteHeight", 0);
+        int limit = Integer.MAX_VALUE;
+        List<AgentInfo> agentInfoList = DocumentTransferTool.toInfoList(
+                this.mongoDBService.getCollection(AGENT_TABLE + chainId)
+                        .find(filter)
+                        .sort(Sorts.descending("deposit")),
+                "txHash",
+                AgentInfo.class);
+        agentInfoList.forEach(agentInfo->{
             AliasInfo alias = mongoAliasServiceImpl.getAliasByAddress(chainId, agentInfo.getAgentAddress());
             if (alias != null) {
                 agentInfo.setAgentAlias(alias.getAlias());
             }
-            agentInfoList.add(agentInfo);
-            if (agentInfo.getType() == 0 && null != agentInfo.getAgentAddress()) {
-                if (ApiContext.DEVELOPER_NODE_ADDRESS.contains(agentInfo.getAgentAddress())) {
-                    agentInfo.setType(2);
-                } else if (ApiContext.AMBASSADOR_NODE_ADDRESS.contains(agentInfo.getAgentAddress())) {
-                    agentInfo.setType(3);
-                } else {
-                    agentInfo.setType(1);
-                }
-            }
-        }
-        PageInfo<AgentInfo> pageInfo = new PageInfo<>(pageNumber, pageSize, totalCount, agentInfoList);
-        return pageInfo;
+        });
+        return agentInfoList;
     }
 
     @Override
@@ -265,6 +252,7 @@ public class MongoAgentServiceImpl implements AgentService {
         return pageInfo;
     }
 
+    @Override
     public long agentsCount(int chainId, long startHeight) {
         ApiCache apiCache = CacheManager.getCache(chainId);
         Collection<AgentInfo> agentInfos = apiCache.getAgentMap().values();
@@ -283,13 +271,14 @@ public class MongoAgentServiceImpl implements AgentService {
 //        return this.mongoDBService.getCount(MongoTableName.AGENT_INFO, bson);
     }
 
+    @Override
     public BigInteger getConsensusCoinTotal(int chainId) {
         BigInteger total = BigInteger.ZERO;
 
         ApiCache apiCache = CacheManager.getCache(chainId);
         for (AgentInfo agentInfo : apiCache.getAgentMap().values()) {
             if (agentInfo.getDeleteHash() == null) {
-                total = total.add(agentInfo.getDeposit()).add(agentInfo.getDeposit());
+                total = total.add(agentInfo.getDeposit());
             }
         }
         return total;

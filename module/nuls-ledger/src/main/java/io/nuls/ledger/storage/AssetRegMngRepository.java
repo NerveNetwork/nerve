@@ -39,6 +39,8 @@ public interface AssetRegMngRepository {
 
     void saveLedgerAssetReg(int chainId, LedgerAsset ledgerAsset) throws Exception;
 
+    void saveLedgerHeterogeneousAssetReg(int chainId, LedgerAsset ledgerAsset) throws Exception;
+
     void batchSaveLedgerAssetReg(int chainId, Map<byte[], byte[]> ledgerAssets, Map<byte[], byte[]> ledgerAssetsHashs) throws Exception;
 
     void batchRollBackLedgerAssetReg(int chainId, List<byte[]> txHashs) throws Exception;

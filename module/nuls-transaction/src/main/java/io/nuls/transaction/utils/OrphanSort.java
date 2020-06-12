@@ -58,8 +58,9 @@ public class OrphanSort {
             subList.add(tx);
         }
         //相同时间的组，进行细致排序，并更新排序字段的值
-        for (List<TransactionNetPO> list : groupMap.values()) {
-            this.sameTimeRank(list);
+        for (Map.Entry<Long, List<TransactionNetPO>> entry : groupMap.entrySet()) {
+            List<TransactionNetPO> list = entry.getValue();
+            entry.setValue(this.sameTimeRank(list));
         }
         //重新排序
         Collections.sort(txList, new Comparator<TransactionNetPO>() {
@@ -76,23 +77,22 @@ public class OrphanSort {
     }
 
 
-    private void sameTimeRank(List<TransactionNetPO> txList) {
+    public List<TransactionNetPO> sameTimeRank(List<TransactionNetPO> txList) {
         if (txList.size() <= 1) {
-            return;
+            return txList;
         }
-        OrphanSortResult<TransactionNetPO> result = new OrphanSortResult<>(txList.size());
-        txList.forEach(po -> {
-            doRank(result, new OrphanSortItem<>(po));
-        });
+//        System.out.println("=========================="+txList.size());
+        List<TransactionNetPO> resultList = NewSorter.sort(txList);
         int index = 0;
-        for (TransactionNetPO po : result.getList()) {
+        for (TransactionNetPO po : resultList) {
             po.setOrphanSortSerial(po.getOrphanSortSerial() + (index++));
         }
-
+        return resultList;
     }
 
     private void doRank(OrphanSortResult<TransactionNetPO> result, OrphanSortItem<TransactionNetPO> thisItem) {
         if (result.getIndex() == -1) {
+            System.out.println("找到第一个元素： " + thisItem.getObj().getTx().getHash());
             result.getArray()[0] = thisItem;
             result.setIndex(0);
             return;
@@ -106,6 +106,7 @@ public class OrphanSort {
             OrphanSortItem<TransactionNetPO> item = array[i];
             int val = this.compareTo(thisItem.getObj(), item.getObj());
             if (val == 1 && !gotNext) {
+                System.out.println("直接放在后面1： " + thisItem.getObj().getTx().getHash());
                 item.setFlower(new OrphanSortItem[]{thisItem});
                 item.setHasFlower(true);
                 insertArray(i + 1, result, result.getIndex() + 1, thisItem, false);
@@ -199,10 +200,18 @@ public class OrphanSort {
             }
         }
         if (!added) {
+            System.out.println("直接放在后面2：" + thisItem.getObj().getTx().getHash());
             this.insertArray(result.getIndex() + 1, result, result.getIndex() + 1, thisItem, false);
         }
     }
 
+    /**
+     * @param index         这个item放入的位置
+     * @param result        引用
+     * @param length        之前的总长度
+     * @param item          当前元素
+     * @param insertFlowers 是否有跟随元素
+     */
     private void insertArray(int index, OrphanSortResult result, int length, OrphanSortItem item, boolean insertFlowers) {
         OrphanSortItem[] array = result.getArray();
         int count = 1 + item.getFlower().length;
@@ -213,6 +222,7 @@ public class OrphanSort {
                     array[i + count] = array[i];
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
+                LOG.error("", e);
                 return;
             }
         }
@@ -229,6 +239,7 @@ public class OrphanSort {
 
     /**
      * 两个交易根据nonce 来排序
+     *
      * @param txNeto1
      * @param txNeto2
      * @return
@@ -239,10 +250,10 @@ public class OrphanSort {
         if (null == o1 && null == o2) {
             return 0;
         }
-        if(null == o1){
+        if (null == o1) {
             return 1;
         }
-        if(null == o2){
+        if (null == o2) {
             return -1;
         }
         if (o1.equals(o2)) {

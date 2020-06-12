@@ -80,7 +80,7 @@ public class AssetRegMngServiceImpl implements AssetRegMngService {
         localChainDefaultAsset.put("assetId", ledgerConfig.getAssetId());
         localChainDefaultAsset.put("assetType", LedgerConstant.COMMON_ASSET_TYPE);
         localChainDefaultAsset.put("assetOwnerAddress", "");
-        localChainDefaultAsset.put("initNumber", "");
+        localChainDefaultAsset.put("initNumber", "0");
         localChainDefaultAsset.put("decimalPlace", ledgerConfig.getDecimals());
         localChainDefaultAsset.put("assetName", ledgerConfig.getSymbol());
         localChainDefaultAsset.put("assetSymbol", ledgerConfig.getSymbol());
@@ -237,6 +237,20 @@ public class AssetRegMngServiceImpl implements AssetRegMngService {
         }
     }
 
+    @Override
+    public int registerHeterogeneousAsset(int chainId, LedgerAsset ledgerAsset) throws Exception {
+        ledgerAsset.setAssetId(getAndSetAssetIdByTemp(chainId, 1));
+        assetRegMngRepository.saveLedgerHeterogeneousAssetReg(chainId, ledgerAsset);
+        return ledgerAsset.getAssetId();
+    }
+
+    @Override
+    public void rollBackHeterogeneousAsset(int chainId, int assetId) throws Exception {
+        if (assetId > 0) {
+            assetRegMngRepository.deleteLedgerAssetReg(chainId, assetId);
+        }
+    }
+
     Map<String, Object> getAssetMapByLedgerAsset(LedgerAsset ledgerAsset) {
         Map<String, Object> map = new HashMap<>();
         map.put("assetId", ledgerAsset.getAssetId());
@@ -258,23 +272,19 @@ public class AssetRegMngServiceImpl implements AssetRegMngService {
         if (ledgerConfig.getChainId() == chainId) {
             defaultAsset = getLocalChainDefaultAsset();
         }
-        if (LedgerConstant.COMMON_ASSET_TYPE == assetType) {
-            rtList.add(defaultAsset);
-            for (LedgerAsset ledgerAsset : assets) {
-                if (LedgerConstant.COMMON_ASSET_TYPE == ledgerAsset.getAssetType()) {
-                    rtList.add(getAssetMapByLedgerAsset(ledgerAsset));
-                }
-            }
-        } else if (LedgerConstant.CONTRACT_ASSET_TYPE == assetType) {
-            for (LedgerAsset ledgerAsset : assets) {
-                if (LedgerConstant.CONTRACT_ASSET_TYPE == ledgerAsset.getAssetType()) {
-                    rtList.add(getAssetMapByLedgerAsset(ledgerAsset));
-                }
-            }
-        } else {
+        if( 0 == assetType) {
             rtList.add(defaultAsset);
             for (LedgerAsset ledgerAsset : assets) {
                 rtList.add(getAssetMapByLedgerAsset(ledgerAsset));
+            }
+        } else {
+            if (LedgerConstant.COMMON_ASSET_TYPE == assetType) {
+                rtList.add(defaultAsset);
+            }
+            for (LedgerAsset ledgerAsset : assets) {
+                if (assetType == ledgerAsset.getAssetType()) {
+                    rtList.add(getAssetMapByLedgerAsset(ledgerAsset));
+                }
             }
         }
         return rtList;

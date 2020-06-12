@@ -1,8 +1,11 @@
 package io.nuls.api.constant;
 
 import io.nuls.api.model.po.StackSymbolPriceInfo;
+import io.nuls.core.constant.TxType;
 
 public interface DBTableConstant {
+
+//    String DATABASE_NAME = "nuls-api";
 
     String DATABASE_NAME = "nuls-api";
 
@@ -21,6 +24,13 @@ public interface DBTableConstant {
     String ACCOUNT_TABLE = "account_table_";
     //资产信息表
     String ACCOUNT_LEDGER_TABLE = "account_ledger_table_";
+
+    /**
+     * 链上资产注册信息表
+     * 用于记录通过链上注册交易({@link TxType}.LEDGER_ASSET_REG_TRANSFER)
+     */
+    String LEDGER_REG_ASSET_TABLE = "ledger_reg_aaset_table_";
+
     //共识节点信息表
     String AGENT_TABLE = "agent_table_";
     //别名信息表

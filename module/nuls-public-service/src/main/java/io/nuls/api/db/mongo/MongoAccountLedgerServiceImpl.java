@@ -5,15 +5,18 @@ import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.db.AccountLedgerService;
+import io.nuls.api.db.SymbolRegService;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.dto.Asset;
 import io.nuls.api.model.po.AccountLedgerInfo;
 import io.nuls.api.model.po.AssetInfo;
+import io.nuls.api.model.po.SymbolRegInfo;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.checkerframework.checker.units.qual.A;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -28,6 +31,10 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
 
     private static int cacheSize = 30000;
 
+    @Autowired
+    SymbolRegService symbolRegService;
+
+    @Override
     public void initCache() {
         for (ApiCache apiCache : CacheManager.getApiCaches().values()) {
             List<Document> documentList = mongoDBService.pageQuery(DBTableConstant.ACCOUNT_LEDGER_TABLE + apiCache.getChainInfo().getChainId(), 0, cacheSize);
@@ -39,6 +46,7 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
         }
     }
 
+    @Override
     public AccountLedgerInfo getAccountLedgerInfo(int chainId, String key) {
         ApiCache apiCache = CacheManager.getCache(chainId);
         AccountLedgerInfo accountLedgerInfo = apiCache.getAccountLedgerInfo(key);
@@ -75,6 +83,24 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
         });
     }
 
+    @Override
+    public Map<String, BigInteger> aggAssetBalanceTotal(int chainId) {
+        Bson id = new Document().append("chainId" , "$chainId").append("assetId","$assetId");
+        Bson total = new Document().append("$sum","$totalBalance");
+        Bson group = new Document("$group",new Document().append("_id",id).append("total",total));
+        return mongoDBService.aggReturnDoc(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId,group)
+                .stream().map(d->{
+                    Document doc = (Document) d.get("_id");
+                    String assetChainId = doc.get("chainId").toString();
+                    String assetId = doc.get("assetId").toString();
+                    return Map.of(assetChainId + ApiConstant.SPACE + assetId,new BigInteger(d.get("total").toString()));
+                }).reduce(new HashMap<>(),(d1,d2)->{
+                    d1.putAll(d2);
+                    return d1;
+                });
+    }
+
+    @Override
     public void saveLedgerList(int chainId, Map<String, AccountLedgerInfo> accountLedgerInfoMap) {
         if (accountLedgerInfoMap.isEmpty()) {
             return;
@@ -116,13 +142,16 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
         Bson filter = Filters.eq("address", address);
         List<Document> documentList = mongoDBService.query(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId, filter);
         List<AccountLedgerInfo> accountLedgerInfoList = new ArrayList<>();
-
         for (Document document : documentList) {
             if (document.getInteger("chainId") != chainId) {
                 continue;
             }
             AccountLedgerInfo ledgerInfo = DocumentTransferTool.toInfo(document, "key", AccountLedgerInfo.class);
-            accountLedgerInfoList.add(ledgerInfo);
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(ledgerInfo.getChainId(),ledgerInfo.getAssetId());
+            if(symbolRegInfo.getSource() == 1){
+                ledgerInfo.setSource(symbolRegInfo.getSource());
+                accountLedgerInfoList.add(ledgerInfo);
+            }
         }
         if (accountLedgerInfoList.isEmpty()) {
             AssetInfo assetInfo = CacheManager.getCacheChain(chainId).getDefaultAsset();
@@ -139,15 +168,17 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
         List<AccountLedgerInfo> accountLedgerInfoList = new ArrayList<>();
 
         for (Document document : documentList) {
-            if (document.getInteger("chainId") == chainId) {
-                continue;
-            }
             AccountLedgerInfo ledgerInfo = DocumentTransferTool.toInfo(document, "key", AccountLedgerInfo.class);
-            accountLedgerInfoList.add(ledgerInfo);
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(ledgerInfo.getChainId(),ledgerInfo.getAssetId());
+            if(symbolRegInfo.getSource() > 1){
+                ledgerInfo.setSource(symbolRegInfo.getSource());
+                accountLedgerInfoList.add(ledgerInfo);
+            }
         }
         return accountLedgerInfoList;
     }
 
+    @Override
     public List<Document> getAllBalance(int chainId){
         Document project = new Document().append("chainId","$chainId").append("assetId","$assetId").append("balance","$totalBalance");
         return mongoDBService.aggReturnDoc(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId,new Document("$project",project));

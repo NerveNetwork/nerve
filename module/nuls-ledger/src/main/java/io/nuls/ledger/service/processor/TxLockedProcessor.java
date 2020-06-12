@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,13 +26,12 @@
 package io.nuls.ledger.service.processor;
 
 import io.nuls.base.data.Coin;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.CoinTo;
 import io.nuls.ledger.model.po.AccountState;
 import io.nuls.ledger.model.po.sub.FreezeHeightState;
 import io.nuls.ledger.model.po.sub.FreezeLockTimeState;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 交易处理器
@@ -42,7 +41,7 @@ import java.util.List;
 public interface TxLockedProcessor {
 
     boolean processCoinData(Coin coin, byte[] nonce, String txHash, List<FreezeLockTimeState> timeStateList,
-                            List<FreezeHeightState> heightStateList,String address,boolean isFromCoin);
+                            List<FreezeHeightState> heightStateList,Map<String,FreezeLockTimeState> permanentLockMap, String address, boolean isFromCoin);
 
 
     boolean processCoinData(Coin coin, byte[] nonce, String txHash, AccountState accountState, long txTime, String address,boolean isFromCoin);

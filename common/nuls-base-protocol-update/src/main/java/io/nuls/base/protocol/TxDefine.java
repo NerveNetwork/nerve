@@ -8,6 +8,7 @@ public class TxDefine {
     private boolean verifyFee;
     private String handler;
     private boolean packProduce;
+    private boolean packGenerate;
 
     public String getHandler() {
         return handler;
@@ -63,6 +64,14 @@ public class TxDefine {
 
     public void setPackProduce(boolean packProduce) {
         this.packProduce = packProduce;
+    }
+
+    public boolean getPackGenerate() {
+        return packGenerate;
+    }
+
+    public void setPackGenerate(boolean packGenerate) {
+        this.packGenerate = packGenerate;
     }
 
     @Override

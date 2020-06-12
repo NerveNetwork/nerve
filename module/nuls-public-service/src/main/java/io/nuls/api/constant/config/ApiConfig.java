@@ -76,6 +76,7 @@ public class ApiConfig implements ModuleConfig {
 
     private String mongoPwd;
 
+
     public String getEncoding() {
         return encoding;
     }

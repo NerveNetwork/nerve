@@ -64,6 +64,10 @@ public class AgentComparator implements Comparator<AgentInfo> {
             return -1;
         } else if (o1.getDeposit().compareTo(o2.getDeposit()) < 0) {
             return 1;
+        } else {
+            if(o1.isBankNode()){
+                return -1;
+            }
         }
 
         return 0;

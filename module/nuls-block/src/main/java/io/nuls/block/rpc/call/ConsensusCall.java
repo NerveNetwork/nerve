@@ -89,7 +89,6 @@ public class ConsensusCall {
     }
 
     /**
-     * TODO:
      * 共识BZT验证
      *
      * @param chainId

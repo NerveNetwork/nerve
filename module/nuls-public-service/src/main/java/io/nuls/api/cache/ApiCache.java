@@ -2,7 +2,9 @@ package io.nuls.api.cache;
 
 import io.nuls.api.model.po.*;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,7 @@ public class ApiCache {
     private Map<String, AliasInfo> aliasMap = new ConcurrentHashMap<>();
 
     private List<Nrc20Info> nrc20InfoList = new ArrayList<>();
+
 
     public ApiCache() {
         currentRound = new CurrentRound();

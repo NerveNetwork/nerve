@@ -37,6 +37,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -70,6 +71,9 @@ public class MongoDBService implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
         try {
+
+            System.setProperty("DEBUG.MONGO", "true");
+            System.setProperty("DB.TRACE", "true");
             long time1, time2;
             time1 = System.currentTimeMillis();
             MongoClientOptions options = MongoClientOptions.builder()
@@ -438,6 +442,18 @@ public class MongoDBService implements InitializingBean {
         return collection.bulkWrite(modelList);
     }
 
+
+    public BulkWriteResult insertOrUpdate(String collName, List<Document> documentList) {
+        MongoCollection<Document> collection = getCollection(collName);
+        List<WriteModel<Document>> modelList = new ArrayList<>();
+        documentList.forEach(document->{
+            modelList.add(new ReplaceOneModel(new Document("_id", document.get("_id")), document, new ReplaceOptions().upsert(true)));
+        });
+        return collection.bulkWrite(modelList);
+    }
+
+
+
     public BulkWriteResult bulkWrite(String collName, List<? extends WriteModel<? extends Document>> modelList) {
         MongoCollection<Document> collection = getCollection(collName);
         return collection.bulkWrite(modelList);
@@ -477,6 +493,7 @@ public class MongoDBService implements InitializingBean {
 
     public List<Document> aggReturnDoc(String collName, Bson... param){
         MongoCollection<Document> col = this.getCollection(collName);
+//        Log.debug("{}", Arrays.asList(param));
         AggregateIterable<Document> documents = col.aggregate(List.of(param));
         List<Document> list = new ArrayList<>();
         documents.iterator().forEachRemaining(list::add);

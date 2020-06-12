@@ -92,6 +92,7 @@ public class MongoDBTableServiceImpl implements DBTableService {
         mongoDBService.createCollection(DBTableConstant.BLOCK_HEX_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.ACCOUNT_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId);
+        mongoDBService.createCollection(DBTableConstant.LEDGER_REG_ASSET_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.AGENT_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.ALIAS_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.DEPOSIT_TABLE + chainId);
@@ -100,15 +101,11 @@ public class MongoDBTableServiceImpl implements DBTableService {
         mongoDBService.createCollection(DBTableConstant.PUNISH_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.ROUND_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.ROUND_ITEM_TABLE + chainId);
-        mongoDBService.createCollection(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId);
-        mongoDBService.createCollection(DBTableConstant.CONTRACT_TABLE + chainId);
-        mongoDBService.createCollection(DBTableConstant.CONTRACT_TX_TABLE + chainId);
-        mongoDBService.createCollection(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId);
-        mongoDBService.createCollection(DBTableConstant.CONTRACT_RESULT_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.STATISTICAL_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.STACK_SNAPSHOOT_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.CONVERTER_TX_TABLE + chainId);
         mongoDBService.createCollection(DBTableConstant.SYMBOL_FINAL_QUOTATION_TABLE);
+        mongoDBService.createCollection(DBTableConstant.SYMBOL_QUOTATION_RECORD_TABLE);
         mongoDBService.createCollection(DBTableConstant.SYMBOL_REG_TABLE);
         mongoDBService.createCollection(DBTableConstant.BLOCK_TIME_TABLE);
 
@@ -135,15 +132,15 @@ public class MongoDBTableServiceImpl implements DBTableService {
         //委托记录表
         mongoDBService.createIndex(DBTableConstant.DEPOSIT_TABLE + chainId, Indexes.descending("createTime"));
         //智能合约表
-        mongoDBService.createIndex(DBTableConstant.CONTRACT_TABLE + chainId, Indexes.descending("createTime"));
-        //账户token表
-        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.descending("balance"));
-        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.ascending("address"));
-        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.ascending("contractAddress"));
-        //token交易记录表
-        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("time"));
-        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("contractAddress","fromAddress"));
-        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("contractAddress","toAddress"));
+//        mongoDBService.createIndex(DBTableConstant.CONTRACT_TABLE + chainId, Indexes.descending("createTime"));
+//        //账户token表
+//        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.descending("balance"));
+//        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.ascending("address"));
+//        mongoDBService.createIndex(DBTableConstant.ACCOUNT_TOKEN_TABLE + chainId, Indexes.ascending("contractAddress"));
+//        //token交易记录表
+//        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("time"));
+//        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("contractAddress","fromAddress"));
+//        mongoDBService.createIndex(DBTableConstant.TOKEN_TRANSFER_TABLE + chainId, Indexes.descending("contractAddress","toAddress"));
     }
 
 }

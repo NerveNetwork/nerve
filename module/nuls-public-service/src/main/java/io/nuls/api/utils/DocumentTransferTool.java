@@ -1,5 +1,7 @@
 package io.nuls.api.utils;
 
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
 import io.nuls.api.constant.ApiErrorCode;
 import io.nuls.core.exception.NulsRuntimeException;
 import org.bson.Document;
@@ -89,7 +91,7 @@ public class DocumentTransferTool {
                 }
                 if (field.getType().getName().equals("java.math.BigInteger")) {
                     field.set(instance, new BigInteger(document.get(field.getName()).toString()));
-                } else if(field.getType().getName().equals("java.math.BigDecimal")){
+                } else if (field.getType().getName().equals("java.math.BigDecimal")) {
                     field.set(instance, new BigDecimal(document.get(field.getName()).toString()));
                 } else {
                     field.set(instance, document.get(field.getName()));
@@ -121,7 +123,7 @@ public class DocumentTransferTool {
                     continue;
                 } else if (field.getType().getName().equals("java.math.BigInteger")) {
                     field.set(instance, new BigInteger(document.get(field.getName()).toString()));
-                } else if(field.getType().getName().equals("java.math.BigDecimal")){
+                } else if (field.getType().getName().equals("java.math.BigDecimal")) {
                     field.set(instance, new BigDecimal(document.get(field.getName()).toString()));
                 } else {
                     field.set(instance, document.get(field.getName()));
@@ -174,6 +176,20 @@ public class DocumentTransferTool {
         }
         for (int i = 0; i < documents.size(); i++) {
             list.add(toInfo(documents.get(i), _id, clazz));
+        }
+        return list;
+    }
+
+
+    public static <T> List<T> toInfoList(FindIterable<Document> iterable, Class<T> clazz) {
+        return toInfoList(iterable,"_id",clazz);
+    }
+
+    public static <T> List<T> toInfoList(FindIterable<Document> iterable, String _id, Class<T> clazz) {
+        List<T> list = new ArrayList<>();
+        MongoCursor<Document> documentMongoCursor = iterable.iterator();
+        while (documentMongoCursor.hasNext()) {
+            list.add(toInfo(documentMongoCursor.next(), _id, clazz));
         }
         return list;
     }

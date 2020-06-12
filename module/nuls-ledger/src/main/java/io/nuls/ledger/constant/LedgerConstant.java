@@ -36,6 +36,9 @@ public class LedgerConstant {
      */
     public static final short COMMON_ASSET_TYPE = 1;
     public static final short CONTRACT_ASSET_TYPE = 2;
+    public static final short CROSS_CHAIN_ASSET_TYPE = 3;
+    public static final short HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE = 4;
+
     /**
      * 资产小数分割位
      */
@@ -58,6 +61,7 @@ public class LedgerConstant {
     /**
      * FROM locked 解锁常量 0 普通交易，-1 时间解锁,1 高度解锁
      */
+    public static final int UNLOCKED_COMMON = 0;
     public static final int UNLOCKED_TIME = -1;
     public static final int UNLOCKED_HEIGHT = 1;
     /**
@@ -96,4 +100,6 @@ public class LedgerConstant {
     public static final String COMMA = ",";
     public static final String COLON = ":";
     public static final String DOWN_LINE = "_";
+
+    public static final String HEX_PREFIX = "0x";
 }

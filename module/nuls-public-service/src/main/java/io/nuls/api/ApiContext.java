@@ -91,10 +91,6 @@ public class ApiContext {
 
     public static int magicNumber;
 
-    public static double localAssertBase;
-
-    public static double mainAssertBase;
-
     /**
      * 总通胀量
      */
@@ -120,4 +116,26 @@ public class ApiContext {
     //销毁地址公钥
     public static byte[] blackHolePublicKey;
 
+    /**
+     * 种子节点数量
+     */
+    public static int seedCount;
+
+
+    /**
+     * NULS权重基数
+     */
+    public static double mainAssertBase = 2;
+    /**
+     * NVT权重基数
+     */
+    public static double localAssertBase = 2;
+    /**
+     * 节点保证金基数
+     */
+    public static double agentDepositBase = 3;
+    /**
+     *  虚拟银行保证金基数
+     */
+    public static double superAgentDepositBase = 4;
 }

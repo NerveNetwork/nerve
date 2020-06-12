@@ -67,6 +67,7 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
         if (txKeyList == null || txKeyList.size() == 0) {
             return;
         }
+        chain.getLogger().info("[UnconfirmedTxProcessTask] unconfirmedTx count: {}", txKeyList.size());
         int count = processUnconfirmedTxs(txKeyList);
         chain.getLogger().info("[UnconfirmedTxProcessTask] Clean expire count: {}", count);
     }
@@ -105,6 +106,8 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
     public int processExpireTxs(List<byte[]> queryList){
         //获取未确认的交易
         List<TransactionUnconfirmedPO> list = unconfirmedTxStorageService.getTransactionUnconfirmedPOList(chain.getChainId(), queryList);
+
+        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次待处理的未确认交易数:{}", list.size());
         //计算出超时的未确认交易
         List<Transaction> expireTxList = getExpireTxList(list);
         int count = 0;
@@ -113,6 +116,7 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
             tx = expireTxList.get(i);
             //如果该未确认交易不在待打包池中，则认为是过期脏数据，需要清理
             if (!packablePool.exist(chain, tx)) {
+                chain.getLogger().info("[UnconfirmedTxProcessTask] --- 本次需要清理的交易hash:{}", tx.getHash().toHex());
                 processTx(chain, tx);
                 count++;
             }
@@ -132,6 +136,7 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
         //过滤指定时间内过期的交易
         List<TransactionUnconfirmedPO> expireTxPOList = txPOList.stream().filter(txPo -> currentTimeSeconds - txConfig.getUnconfirmedTxExpire() > txPo.getCreateTime()).collect(Collectors.toList());
         expireTxPOList.forEach(txPo -> expireTxList.add(txPo.getTx()));
+        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次处理后超过过期时间{}秒的交易数:{}", txConfig.getUnconfirmedTxExpire(), expireTxList.size());
         return expireTxList;
     }
 

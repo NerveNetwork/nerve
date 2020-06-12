@@ -45,7 +45,7 @@ The current code version is not stable, so package download is not available.
  
 ## Contributions
 
-Please send a pull request with the signed commit, and we look forward to your joining!
+Please send the pull request request with the signed commit. We are looking forward to your joining!
 
 ## Community
 
@@ -55,7 +55,7 @@ Please send a pull request with the signed commit, and we look forward to your j
 
 ### Discord
 
-- https://discord.gg/PBkHeD7
+- https://discord.gg/bdyMBT/
 
 ## License
 

@@ -24,11 +24,11 @@ import org.bson.conversions.Bson;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static com.mongodb.client.model.Filters.*;
 import static io.nuls.api.constant.DBTableConstant.DEPOSIT_TABLE;
 
 @Component
@@ -40,6 +40,7 @@ public class MongoDepositServiceImpl implements DepositService {
     @Autowired
     SymbolQuotationPriceService symbolPriceService;
 
+    @Override
     public DepositInfo getDepositInfoByKey(int chainId, String key) {
         Document document = mongoDBService.findOne(DEPOSIT_TABLE + chainId, Filters.eq("_id", key));
         if (document == null) {
@@ -49,6 +50,7 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositInfo;
     }
 
+    @Override
     public DepositInfo getDepositInfoByHash(int chainId, String hash) {
         Document document = mongoDBService.findOne(DEPOSIT_TABLE + chainId, Filters.eq("txHash", hash));
         if (document == null) {
@@ -58,6 +60,7 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositInfo;
     }
 
+    @Override
     public List<DepositInfo> getDepositListByAgentHash(int chainId, String hash) {
         List<DepositInfo> depositInfos = new ArrayList<>();
         Bson bson = Filters.and(Filters.eq("agentHash", hash), Filters.eq("deleteKey", null));
@@ -72,7 +75,8 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositInfos;
     }
 
-    public PageInfo<DepositInfo> getDepositListByAgentHash(int chainID, String hash, int pageIndex, int pageSize) {
+    @Override
+    public PageInfo<DepositInfo> pageDepositListByAgentHash(int chainID, String hash, int pageIndex, int pageSize) {
         Bson bson = Filters.and(Filters.eq("agentHash", hash), Filters.eq("deleteKey", null));
         List<Document> documentList = mongoDBService.pageQuery(DEPOSIT_TABLE + chainID, bson, Sorts.descending("createTime"), pageIndex, pageSize);
         long totalCount = mongoDBService.getCount(DEPOSIT_TABLE + chainID, bson);
@@ -86,6 +90,7 @@ public class MongoDepositServiceImpl implements DepositService {
         return pageInfo;
     }
 
+    @Override
     public List<DepositInfo> getDepositListByHash(int chainID, String hash) {
         Bson bson = Filters.and(Filters.eq("txHash", hash));
         List<Document> documentList = mongoDBService.query(DEPOSIT_TABLE + chainID, bson);
@@ -98,6 +103,7 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositInfos;
     }
 
+    @Override
     public void rollbackDeposit(int chainId, List<DepositInfo> depositInfoList) {
         if (depositInfoList.isEmpty()) {
             return;
@@ -117,20 +123,20 @@ public class MongoDepositServiceImpl implements DepositService {
         mongoDBService.bulkWrite(DEPOSIT_TABLE + chainId, modelList, options);
     }
 
-
+    @Override
     public void saveDepositList(int chainId, List<DepositInfo> depositInfoList) {
         if (depositInfoList.isEmpty()) {
             return;
         }
         List<WriteModel<Document>> modelList = new ArrayList<>();
         for (DepositInfo depositInfo : depositInfoList) {
-            AssetBaseInfo assetBaseInfo = AssetManager.getAssetBaseInfo(depositInfo.getAssetChainId(),depositInfo.getAssetId());
-            if(assetBaseInfo == null){
-                Log.error("未获取到资产{}的基础信息",depositInfo.getAssetChainId() + "-" + depositInfo.getAssetId(),new RuntimeException());
-                System.exit(0);
-            }
-            depositInfo.setDecimal(assetBaseInfo.getDecimals());
-            depositInfo.setSymbol(assetBaseInfo.getSymbol());
+//            AssetBaseInfo assetBaseInfo = AssetManager.getAssetBaseInfo(depositInfo.getAssetChainId(),depositInfo.getAssetId());
+//            if(assetBaseInfo == null){
+//                Log.error("未获取到资产{}的基础信息",depositInfo.getAssetChainId() + "-" + depositInfo.getAssetId(),new RuntimeException());
+//                System.exit(0);
+//            }
+//            depositInfo.setDecimal(assetBaseInfo.getDecimals());
+//            depositInfo.setSymbol(assetBaseInfo.getSymbol());
             Document document = DocumentTransferTool.toDocument(depositInfo, "key");
             if (depositInfo.isNew()) {
                 modelList.add(new InsertOneModel(document));
@@ -159,14 +165,14 @@ public class MongoDepositServiceImpl implements DepositService {
     /**
      * 获取高度范围类指定类型的抵押列表
      * @param chainId
-     * @param startHeight
+     * @param endHeight
      * @param types
      * @return
      */
     @Override
-    public List<DepositInfo> getDepositList(int chainId, long startHeight, int... types) {
+    public List<DepositInfo> getDepositList(int chainId, long endHeight, int... types) {
 
-        Bson bson = Filters.and(Filters.lte("blockHeight", startHeight), Filters.or(Filters.eq("deleteHeight", 0), Filters.gt("deleteHeight", startHeight)));
+        Bson bson = Filters.and(Filters.lte("blockHeight", endHeight), Filters.or(Filters.eq("deleteHeight", -1), Filters.gt("deleteHeight", endHeight)));
         List<Bson> typeFileer = new ArrayList<>();
         for (int i = 0;i<types.length;i++) {
             typeFileer.add(Filters.eq("type",types[i]));
@@ -205,25 +211,8 @@ public class MongoDepositServiceImpl implements DepositService {
         return total[0];
     }
 
-    public PageInfo<DepositInfo> getCancelDepositListByAgentHash(int chainId, String hash, int type, int pageIndex, int pageSize) {
-        Bson bson;
-        if (type != 2) {
-            bson = Filters.and(Filters.eq("agentHash", hash), Filters.eq("type", type));
-        } else {
-            bson = Filters.eq("agentHash", hash);
-        }
-        List<Document> documentList = mongoDBService.pageQuery(DEPOSIT_TABLE + chainId, bson, Sorts.descending("createTime"), pageIndex, pageSize);
-        long totalCount = mongoDBService.getCount(DEPOSIT_TABLE + chainId, bson);
 
-        List<DepositInfo> depositInfos = new ArrayList<>();
-        for (Document document : documentList) {
-            DepositInfo depositInfo = DocumentTransferTool.toInfo(document, "key", DepositInfo.class);
-            depositInfos.add(depositInfo);
-        }
-        PageInfo<DepositInfo> pageInfo = new PageInfo<>(pageIndex, pageSize, totalCount, depositInfos);
-        return pageInfo;
-    }
-
+    @Override
     public List<String> getAgentHashList(int chainId, String address) {
         Bson bson = Filters.and(Filters.eq("address", address), Filters.eq("type", 0), Filters.eq("deleteHeight", 0));
         DistinctIterable<String> iterable = mongoDBService.getCollection(DEPOSIT_TABLE + chainId).distinct("agentHash", bson, String.class);
@@ -235,13 +224,11 @@ public class MongoDepositServiceImpl implements DepositService {
         return list;
     }
 
-    public PageInfo<DepositInfo> getDepositListByAddress(int chainId, String agentHash, String address, int pageIndex, int pageSize) {
+    @Override
+    public PageInfo<DepositInfo> getDepositListByAddress(int chainId, String address, int pageIndex, int pageSize) {
         Bson bson;
-        if (StringUtils.isBlank(agentHash)) {
-            bson = Filters.and(Filters.eq("address", address), Filters.eq("type", 0), Filters.eq("deleteHeight", 0));
-        } else {
-            bson = Filters.and(Filters.eq("address", address), Filters.eq("agentHash", agentHash), Filters.eq("type", 0), Filters.eq("deleteHeight", 0));
-        }
+        Objects.requireNonNull(address);
+        bson = Filters.and(Filters.eq("address", address), Filters.or(Filters.eq("type", DepositInfoType.CREATE_AGENT),Filters.eq("type",DepositInfoType.APPEND_AGENT_DEPOSIT)), Filters.eq("deleteHeight", -1));
         long totalCount = mongoDBService.getCount(DEPOSIT_TABLE + chainId, bson);
         List<Document> documentList = mongoDBService.pageQuery(DEPOSIT_TABLE + chainId, bson, Sorts.descending("createTime"), pageIndex, pageSize);
         List<DepositInfo> depositInfos = new ArrayList<>();
@@ -254,6 +241,52 @@ public class MongoDepositServiceImpl implements DepositService {
     }
 
     @Override
+    public PageInfo<DepositInfo> pageDepositListByAgentHash(int chainId, String hash, int pageIndex, int pageSize, Integer... type){
+        return pageDepositList(chainId,null,hash,true,pageIndex,pageSize,type);
+    }
+
+    @Override
+    public PageInfo<DepositInfo> getStackingListByAddress(int chainId, int pageIndex, int pageSize, String address, boolean isActive){
+        return pageDepositList(chainId,address,null,isActive,pageIndex,pageSize,DepositInfoType.STACKING);
+    }
+
+    @Override
+    public PageInfo<DepositInfo> getStackRecordByAddress(int chainId, int pageIndex, int pageSize, String address){
+        return pageDepositList(chainId,address,null,false,pageIndex,pageSize,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
+    }
+
+
+
+    private PageInfo<DepositInfo> pageDepositList(int chainId, String address, String agentHash,boolean isActive, int pageIndex, int pageSize, Integer... type) {
+        if(type.length == 0){
+            throw new IllegalArgumentException("require type");
+        }
+        Bson bson = Filters.or(Arrays.stream(type).map(t->Filters.eq("type",t)).collect(Collectors.toList()));
+        if(isActive){
+            bson = Filters.and(Filters.eq("deleteHeight", -1),bson);
+        }else{
+            bson = Filters.and(Filters.ne("deleteHeight", -1),bson);
+        }
+        if(StringUtils.isNotBlank(address)){
+            bson = Filters.and(Filters.eq("address", address),bson);
+        }
+        if(StringUtils.isNotBlank(agentHash)){
+            bson = Filters.and(Filters.eq("agentHash", agentHash),bson);
+        }
+        List<Document> documentList = mongoDBService.pageQuery(DEPOSIT_TABLE + chainId, bson, Sorts.descending("createTime"), pageIndex, pageSize);
+        long totalCount = mongoDBService.getCount(DEPOSIT_TABLE + chainId, bson);
+
+        List<DepositInfo> depositInfos = new ArrayList<>();
+        for (Document document : documentList) {
+            DepositInfo depositInfo = DocumentTransferTool.toInfo(document, "key", DepositInfo.class);
+            depositInfos.add(depositInfo);
+        }
+        PageInfo<DepositInfo> pageInfo = new PageInfo<>(pageIndex, pageSize, totalCount, depositInfos);
+        return pageInfo;
+
+    }
+
+    @Override
     public BigInteger getAgentDepositTotal(int chainId,long height) {
         List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.CREATE_AGENT,DepositInfoType.APPEND_AGENT_DEPOSIT,DepositInfoType.REDUCE_AGENT_DEPOSIT,DepositInfoType.STOP_AGENT);
         return depositList.stream().map(d->d.getAmount()).reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
@@ -261,34 +294,49 @@ public class MongoDepositServiceImpl implements DepositService {
 
     @Override
     public BigInteger getStackingTotalByNVT(int chainId,long height) {
-        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
-        SymbolPrice nvtUsdtPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
-
-        BigInteger stackingTotal = depositList.stream().map(d->{
-            //抵押的是NVT直接返回数量
-            if(d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId){
-                return d.getAmount();
-            }
-            //需要将异构资产换算成NVT
-            //获取当前抵押的资产与USDT的汇率
-            SymbolPrice symbolPrice = symbolPriceService.getFreshUsdtPrice(d.getAssetChainId(),d.getAssetId());
-            //将当前抵押资产转换成NVT
-            BigDecimal amount = nvtUsdtPrice.transfer(symbolPrice,new BigDecimal(d.getAmount()).movePointLeft(d.getDecimal()));
-            return amount.movePointRight(ApiContext.defaultDecimals).toBigInteger();
-        }).reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
-        return stackingTotal;
+//        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
+        return getStackingTotalByNVTGroupSymbol(chainId,height).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
     @Override
-    public List<DepositInfo> getDepositSumList(int chainId){
+    public Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height) {
+        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
+        SymbolPrice nvtUsdtPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
+        Map<String,BigInteger> res = new HashMap<>();
+        depositList.stream().forEach(d->{
+            //抵押的是NVT直接返回数量
+            if(d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId){
+                res.put(d.getKey(),d.getAmount());
+            }else{
+                //需要将异构资产换算成NVT
+                //获取当前抵押的资产与USDT的汇率
+                SymbolPrice symbolPrice = symbolPriceService.getFreshUsdtPrice(d.getAssetChainId(),d.getAssetId());
+                //将当前抵押资产转换成NVT
+                BigDecimal amount = nvtUsdtPrice.transfer(symbolPrice,new BigDecimal(d.getAmount()).movePointLeft(d.getDecimal()));
+                res.put(d.getKey(),amount.movePointRight(ApiContext.defaultDecimals).toBigInteger());
+            }
+        });
+        return res;
+    }
+
+    @Override
+    public List<DepositInfo> getDepositSumList(int chainId,int... depositInfoTypes){
         Bson id = new Document()
                 .append("assetChainId","$assetChainId")
                 .append("assetId","$assetId")
                 .append("decimal","$decimal")
                 .append("symbol","$symbol");
         Bson sum = new Document("$sum","$amount");
+        Bson match = ne("_id", null);
+//        for (var i = 0;i<depositInfoTypes.length;i++){
+//            match = Filters.and(match,);
+//        }
+        if(depositInfoTypes.length > 0){
+            match = Filters.and(match,Filters.or(Arrays.stream(depositInfoTypes).mapToObj(t->Filters.eq("type",t)).collect(Collectors.toList())));
+        }
+        match = Aggregates.match(match);
         Bson group = new Document().append("_id",id).append("sum",sum);
-        List<Document> list = mongoDBService.aggReturnDoc(DEPOSIT_TABLE + chainId,new Document("$group",group));
+        List<Document> list = mongoDBService.aggReturnDoc(DEPOSIT_TABLE + chainId,match,new Document("$group",group));
         return list.stream().map(d->{
             Document _id = (Document) d.get("_id");
             Long amount = d.getLong("sum");

@@ -30,9 +30,7 @@ import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.transaction.model.bo.Chain;
 import io.nuls.transaction.model.bo.TxRegister;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 交易管理类，存储管理交易注册的基本信息
@@ -58,6 +56,34 @@ public class TxManager {
      */
     public static TxRegister getTxRegister(Chain chain, int type) {
         return chain.getTxRegisterMap().get(type);
+    }
+
+    /**
+     * 获取所有注册过交易的模块code列表
+     */
+    public static Set<String> getAllRegisteredModuleCode(Chain chain){
+        Set<String> set = new HashSet<>();
+        for(TxRegister txRegister : chain.getTxRegisterMap().values()){
+            set.add(txRegister.getModuleCode());
+        }
+        return set;
+    }
+
+
+
+    /**
+     * 创建分组packProduce, 所有模块都会调用
+     *
+     * @param chain
+     * @return
+     */
+    public static Map<String, List> getGroup(Chain chain) {
+        Set<String> moduleCodes = TxManager.getAllRegisteredModuleCode(chain);
+        Map<String, List> mapGroup = new HashMap<>();
+        for (String code : moduleCodes) {
+            mapGroup.put(code, new ArrayList<>());
+        }
+        return mapGroup;
     }
 
     /**
@@ -92,6 +118,18 @@ public class TxManager {
     public static boolean isSystemTx(Chain chain, Transaction tx) {
         TxRegister txRegister = chain.getTxRegisterMap().get(tx.getType());
         return txRegister.getSystemTx();
+    }
+
+    /**
+     * 判断是否是打包时产生的交易
+     * 例如 共识奖励 红黄牌 等
+     * @param chain
+     * @param tx
+     * @return
+     */
+    public static boolean isPackGenerate(Chain chain, Transaction tx) {
+        TxRegister txRegister = chain.getTxRegisterMap().get(tx.getType());
+        return txRegister.getPackGenerate();
     }
 
     /**

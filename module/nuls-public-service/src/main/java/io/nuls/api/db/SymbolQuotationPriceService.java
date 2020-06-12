@@ -21,12 +21,36 @@ public interface SymbolQuotationPriceService {
 
     PageInfo<SymbolQuotationRecordInfo> queryQuotationList(String symbol, int pageIndex, int pageSize,long startTime,long endTime);
 
+    /**
+     * 获取最新报价
+     * @param symbol
+     * @return
+     */
     StackSymbolPriceInfo getFreshUsdtPrice(String symbol);
 
+    /**
+     * 获取最新报价
+     * @param assetChainId
+     * @param assetId
+     * @return
+     */
     StackSymbolPriceInfo getFreshUsdtPrice(int assetChainId, int assetId);
 
+    /**
+     * 获取最新报价
+     * @param symbol
+     * @param currency
+     * @return
+     */
     StackSymbolPriceInfo getFreshPrice(String symbol, String currency);
 
+    /**
+     * 获取最新报价
+     * @param assetChainId
+     * @param assetId
+     * @param currency
+     * @return
+     */
     StackSymbolPriceInfo getFreshPrice(int assetChainId, int assetId, String currency);
 
     /**

@@ -18,6 +18,12 @@ public interface NetworkProvider {
     Result<NetworkInfo> getInfo();
 
     /**
+     * 获取节点外网ip
+     * @return
+     */
+    Result<String> getNodeExtranetIp();
+
+    /**
      * get network nodes for ip
      * @return
      */

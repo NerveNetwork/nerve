@@ -98,6 +98,9 @@ public class ValidatorCmd extends BaseLedgerCmd {
             List<String> orphanList = new ArrayList<>();
             List<String> successList = new ArrayList<>();
             List<String> failList = new ArrayList<>();
+            if(LoggerUtil.logger(chainId).isDebugEnabled()) {
+                LoggerUtil.logger(chainId).debug("[TEST] Verify CoinDataBatch Packaged Begin");
+            }
             for (Transaction tx : txList) {
                 tx.setBlockHeight(packagingHeight);
                 String txHash = tx.getHash().toHex();

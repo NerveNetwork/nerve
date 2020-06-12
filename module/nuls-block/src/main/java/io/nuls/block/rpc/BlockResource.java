@@ -28,7 +28,9 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.po.BlockHeaderPo;
 import io.nuls.block.constant.BlockErrorCode;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.message.HashMessage;
 import io.nuls.block.model.ChainContext;
+import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.service.BlockService;
 import io.nuls.block.utils.SmallBlockCacher;
 import io.nuls.core.core.annotation.Autowired;
@@ -62,25 +64,78 @@ public class BlockResource extends BaseCmd {
     @Autowired
     private BlockService service;
 
+    /**
+     * 共识模块通知节点向其他节点获取区块
+     * The consensus module informs the node to obtain blocks from other nodes
+     * @param map
+     * @return
+     */
+    @CmdAnnotation(cmd = NOTICE_GET_BLOCK, version = 1.0, description = "The consensus module informs the node to obtain blocks from other nodes")
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度"),
+            @Parameter(parameterName = "nodeId", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点ip"),
+            @Parameter(parameterName = "firstHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
+            @Parameter(parameterName = "secondHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
+    })
+    @ResponseData(name = "无返回值")
+
+    public Response noticeGetBlock(Map map) {
+        int chainId = (Integer)map.get(Constants.CHAIN_ID);
+        ChainContext context = ContextManager.getContext(chainId);
+        NulsLogger logger = context.getLogger();
+        long height = Long.parseLong(map.get("height").toString());
+        if(height <= context.getLatestHeight()){
+            logger.debug("=======Block to save complete=======");
+            return success();
+        }
+        String nodeId = String.valueOf(map.get("nodeId"));
+        String firstHash = String.valueOf(map.get("firstHash"));
+        if(firstHash != null){
+            NulsHash firstHashData = NulsHash.fromHex(firstHash);
+            if(SmallBlockCacher.getRealCacheSmallBlock(chainId, firstHashData) != null){
+                HashMessage request = new HashMessage();
+                request.setRequestHash(firstHashData);
+                NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);
+            }
+        }
+        String secondHash = String.valueOf(map.get("secondHash"));
+        if(secondHash != null){
+            NulsHash secondHashData = NulsHash.fromHex(secondHash);
+            if(SmallBlockCacher.getRealCacheSmallBlock(chainId, secondHashData) != null){
+                HashMessage request = new HashMessage();
+                request.setRequestHash(secondHashData);
+                NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);
+            }
+        }
+        return success();
+    }
+
 
     /**
-     * 获取最新主链高度
+     * 共识模块通知区块拜占庭完成
+     * The consensus module informs the node to obtain the block consensus from other nodes and informs the block Byzantium to complete
      *
      * @param map
      * @return
      */
-    @CmdAnnotation(cmd = PUTBZTFLAG, version = 1.0, description = "returns network node height and local node height")
+    @CmdAnnotation(cmd = PUTBZTFLAG, version = 1.0, description = "The consensus module informs the node to obtain the block consensus from other nodes and informs the block Byzantium to complete")
     @Parameters({
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
-            @Parameter(parameterName = "result", requestType = @TypeDescriptor(value = Boolean.class), parameterDes = "true-成功，false-失败")
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度"),
+            @Parameter(parameterName = "firstHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
+            @Parameter(parameterName = "secondHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象，包含1个属性", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "true正常处理并返回")})
-    )
+    @ResponseData(name = "无返回值")
     public Response putBZTFlag(Map map) {
-        int chainId = Integer.parseInt(map.get(Constants.CHAIN_ID).toString());
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        int chainId = (Integer)map.get(Constants.CHAIN_ID);
+        ChainContext context = ContextManager.getContext(chainId);
+        NulsLogger logger = context.getLogger();
+        long height = Long.parseLong(map.get("height").toString());
+        if(height <= context.getLatestHeight()){
+            logger.debug("=======Block to save complete=======");
+            return success();
+        }
         String firstHash = String.valueOf(map.get("firstHash"));
         boolean bifurcate = Boolean.valueOf(map.get("bifurcate").toString());
         logger.debug("=======putBZTFlag BEGIN，firstHash={},bifurcate={}",firstHash,bifurcate);
@@ -88,12 +143,11 @@ public class BlockResource extends BaseCmd {
             String secondHash = String.valueOf(map.get("secondHash"));
             service.handleEvidence(chainId, firstHash, secondHash);
             logger.warn("bzt分叉了，处理分叉");
+        }else{
+            service.putBlockBZT(chainId, NulsHash.fromHex(firstHash), !bifurcate);
         }
-        Map<String, Boolean> responseData = new HashMap<>(1);
-        boolean result = service.putBlockBZT(chainId, NulsHash.fromHex(firstHash), !bifurcate);
-        responseData.put("value", result);
         logger.debug("putBZTFlag END，firstHash={},bifurcate={}",firstHash,bifurcate);
-        return success(responseData);
+        return success();
     }
 
 

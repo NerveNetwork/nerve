@@ -25,7 +25,6 @@
  */
 package io.nuls.ledger.service.impl;
 
-import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rpc.util.NulsDateUtils;
@@ -51,7 +50,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     @Autowired
     Repository repository;
 
-    private BigInteger unFreezeLockTimeState(List<FreezeLockTimeState> timeList, AccountState accountState) {
+    private BigInteger unFreezeLockTimeState(List<FreezeLockTimeState> timeList) {
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
         //可移除的时间锁列表
@@ -59,11 +58,9 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
         for (FreezeLockTimeState freezeLockTimeState : timeList) {
             if (freezeLockTimeState.getLockTime() <= nowTime) {
-                //永久锁定的,继续处理
-                if (LedgerUtil.isPermanentLock(freezeLockTimeState.getLockTime())) {
-                    continue;
-                }
                 timeRemove.add(freezeLockTimeState);
+            } else {
+                break;
             }
         }
         BigInteger addToAmount = BigInteger.ZERO;
@@ -74,19 +71,18 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         return addToAmount;
     }
 
-    private BigInteger unFreezeLockTimeStateV2(List<FreezeLockTimeState> timeList, AccountState accountState) {
+    private BigInteger unFreezeLockTimeStateV2(List<FreezeLockTimeState> timeList) {
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
         //可移除的时间锁列表
         List<FreezeLockTimeState> timeRemove = new ArrayList<>();
         timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
         for (FreezeLockTimeState freezeLockTimeState : timeList) {
-            if ((freezeLockTimeState.getLockTime() <= nowTime) || (freezeLockTimeState.getLockTime() > LedgerConstant.LOCKED_ML_TIME_VALUE && freezeLockTimeState.getLockTime() <= nowTimeMl)) {
-                //永久锁定的,继续处理
-                if (LedgerUtil.isPermanentLock(freezeLockTimeState.getLockTime())) {
-                    continue;
-                }
+            if ((freezeLockTimeState.getLockTime() <= nowTime) ||
+                    (freezeLockTimeState.getLockTime() > LedgerConstant.LOCKED_ML_TIME_VALUE && freezeLockTimeState.getLockTime() <= nowTimeMl)) {
                 timeRemove.add(freezeLockTimeState);
+            } else {
+                break;
             }
         }
         BigInteger addToAmount = BigInteger.ZERO;
@@ -135,10 +131,10 @@ public class FreezeStateServiceImpl implements FreezeStateService {
             return true;
         }
         BigInteger addTimeAmount = BigInteger.ZERO;
-        if (LedgerUtil.getVersion(addressChainId) >1) {
-            addTimeAmount = unFreezeLockTimeStateV2(timeList, accountState);
+        if (LedgerUtil.getVersion(addressChainId) > 1) {
+            addTimeAmount = unFreezeLockTimeStateV2(timeList);
         } else {
-            addTimeAmount = unFreezeLockTimeState(timeList, accountState);
+            addTimeAmount = unFreezeLockTimeState(timeList);
         }
 
         BigInteger addHeightAmount = unFreezeLockHeightState(addressChainId, heightList, accountState);

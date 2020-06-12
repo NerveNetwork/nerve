@@ -20,8 +20,7 @@
 
 package io.nuls.api.db.mongo;
 
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.*;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.db.StatisticalService;
 import io.nuls.api.model.po.AssetSnapshotInfo;
@@ -31,11 +30,15 @@ import io.nuls.api.model.po.StatisticalInfo;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.DoubleUtils;
+import org.bson.BsonType;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
 import static io.nuls.api.constant.DBTableConstant.*;
@@ -121,40 +124,102 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
         return new ArrayList<>(resMap.values());
     }
 
-        /**
-         * @param type 0:14天，1:周，2：月，3：年，4：过去24小时,
-         * @return
-         */
-    public List getStatisticalList(int chainId, int type, String field) {
-        List<KeyValue> list = new ArrayList<>();
+    /**
+     * @param type 0:14天，1:周，2：月，3：年，4：过去24小时,
+     * @return
+     */
+    public List<KeyValue> getStatisticalList(int chainId, int type, String field,int timezoneOffset) {
+        String format = "%Y-%m-%d " + (type < 4 ? "00:00" : "%H:00");
         long startTime = getStartTime(type);
-        List<Document> documentList = mongoDBService.query(STATISTICAL_TABLE + chainId, gte("_id", startTime), Sorts.ascending("_id"));
-        if (documentList.size() < 32) {
-            for (Document document : documentList) {
-                KeyValue keyValue = new KeyValue();
-                keyValue.setKey(document.get("month") + "/" + document.get("date"));
-                if (ANNUALIZE_REWARD.equals(field)) {
-                    keyValue.setValue(document.getDouble(field));
-                } else if (CONSENSUS_LOCKED.equals(field)) {
-                    keyValue.setValue(new BigInteger(document.getString(field)));
-                } else {
-                    keyValue.setValue(document.getLong(field));
-                }
-                list.add(keyValue);
-            }
-        } else {
-            if (TX_COUNT.equals(field)) {
-                summaryLong(list, documentList, field);
-            } else if (ANNUALIZE_REWARD.equals(field)) {
-                avgDouble(list, documentList, field);
-            } else if (CONSENSUS_LOCKED.equals(field)) {
-                avgBigInteger(list, documentList, field);
-            } else {
-                avgLong(list, documentList, field);
-            }
-        }
-        return list;
+        Bson matchInt64 = Aggregates.match(Filters.eq("_id", new Document("$type",BsonType.INT64.getValue())));
+        Bson match = Aggregates.match(gte("_id", startTime));
+        Bson sort = Aggregates.sort(Sorts.ascending("_id"));
+        Bson pid = new Document("_id",new Document("$dateToString",
+                       new Document("format", format).append("date", new Document("$add",
+                               List.of(new Date(0),"$_id",timezoneOffset*60*1000)))));
+
+        Bson project = Aggregates.project(Projections.fields(pid,
+                new Document("nodeCount" , "$nodeCount"),
+                new Document("stackingTotal" , "$stackingTotal"),
+                new Document("txCount" , "$txCount"),
+                new Document("annualizedReward" , "$annualizedReward"),
+                new Document("consensusLocked" , "$consensusLocked"))
+        );
+        Bson group = Aggregates.group(new Document("_id","$_id"),
+                new BsonField("nodeCount",new Document("$sum","$nodeCount")),
+                new BsonField("stackingTotal",new Document("$sum","$stackingTotal")),
+                new BsonField("txCount",new Document("$sum","$txCount")),
+                new BsonField("annualizedReward",new Document("$last","$annualizedReward")),
+                new BsonField("consensusLocked",new Document("$last","$consensusLocked"))
+        );
+        List<Document> docRes = mongoDBService.aggReturnDoc(STATISTICAL_TABLE + chainId,matchInt64,sort,match,project,group);
+        return docRes.stream().map(d->{
+            KeyValue keyValue = new KeyValue();
+            Document id = (Document) d.get("_id");
+            keyValue.setKey(id.getString("_id"));
+            keyValue.setValue(d.get(field));
+            return keyValue;
+        }).sorted(Comparator.comparing(d->d.getKey())).collect(Collectors.toList());
+//        List<Document> documentList = mongoDBService.query(STATISTICAL_TABLE + chainId, gte("_id", startTime), Sorts.ascending("_id"));
+//        if (documentList.size() < 32) {
+//            for (Document document : documentList) {
+//                KeyValue keyValue = new KeyValue();
+//                keyValue.setKey(document.get("_id").toString());
+//                if (ANNUALIZE_REWARD.equals(field)) {
+//                    keyValue.setValue(document.getDouble(field));
+//                } else if (CONSENSUS_LOCKED.equals(field)) {
+//                    keyValue.setValue(new BigInteger(document.getString(field)));
+//                } else {
+//                    keyValue.setValue(document.getLong(field));
+//                }
+//                list.add(keyValue);
+//            }
+//        } else {
+//            if (TX_COUNT.equals(field)) {
+//                summaryLong(list, documentList, field);
+//            } else if (ANNUALIZE_REWARD.equals(field)) {
+//                avgDouble(list, documentList, field);
+//            } else if (CONSENSUS_LOCKED.equals(field)) {
+//                avgBigInteger(list, documentList, field);
+//            } else {
+//                avgLong(list, documentList, field);
+//            }
+//        }
     }
+//    /**
+//     * @param type 0:14天，1:周，2：月，3：年，4：过去24小时,
+//     * @return
+//     */
+//    public List getStatisticalList(int chainId, int type, String field) {
+//        List<KeyValue> list = new ArrayList<>();
+//        long startTime = getStartTime(type);
+//        List<Document> documentList = mongoDBService.query(STATISTICAL_TABLE + chainId, gte("_id", startTime), Sorts.ascending("_id"));
+//        if (documentList.size() < 32) {
+//            for (Document document : documentList) {
+//                KeyValue keyValue = new KeyValue();
+//                keyValue.setKey(document.get("_id").toString());
+//                if (ANNUALIZE_REWARD.equals(field)) {
+//                    keyValue.setValue(document.getDouble(field));
+//                } else if (CONSENSUS_LOCKED.equals(field)) {
+//                    keyValue.setValue(new BigInteger(document.getString(field)));
+//                } else {
+//                    keyValue.setValue(document.getLong(field));
+//                }
+//                list.add(keyValue);
+//            }
+//        } else {
+//            if (TX_COUNT.equals(field)) {
+//                summaryLong(list, documentList, field);
+//            } else if (ANNUALIZE_REWARD.equals(field)) {
+//                avgDouble(list, documentList, field);
+//            } else if (CONSENSUS_LOCKED.equals(field)) {
+//                avgBigInteger(list, documentList, field);
+//            } else {
+//                avgLong(list, documentList, field);
+//            }
+//        }
+//        return list;
+//    }
 
 
     @Override
@@ -187,7 +252,7 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
         Map<String, Long> map = new HashMap<>();
 
         for (Document document : documentList) {
-            String key = document.get("year") + "/" + document.get("month");
+            String key = document.get("_id").toString();
             Long value = map.get(key);
             if (null == value) {
                 value = 0L;
@@ -208,7 +273,7 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
         List<String> keyList = new ArrayList<>();
         Map<String, List<BigInteger>> map = new HashMap<>();
         for (Document document : documentList) {
-            String key = document.get("year") + "/" + document.get("month");
+            String key = document.get("_id").toString();
             List<BigInteger> value = map.get(key);
             if (null == value) {
                 value = new ArrayList<>();
@@ -237,7 +302,7 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
         Map<String, List<Long>> map = new HashMap<>();
 
         for (Document document : documentList) {
-            String key = document.get("year") + "/" + document.get("month");
+            String key = document.get("_id").toString();
             List<Long> value = map.get(key);
             if (null == value) {
                 value = new ArrayList<>();
@@ -264,7 +329,7 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
         Map<String, List<Double>> map = new HashMap<>();
 
         for (Document document : documentList) {
-            String key = document.get("year") + "/" + document.get("month");
+            String key = document.get("_id").toString();
             List<Double> value = map.get(key);
             if (null == value) {
                 value = new ArrayList<>();
@@ -287,9 +352,9 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
     }
 
     private long getStartTime(int type) {
-        if (4 == type) {
-            return 0;
-        }
+//        if (4 == type) {
+//            return 0;
+//        }
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         switch (type) {

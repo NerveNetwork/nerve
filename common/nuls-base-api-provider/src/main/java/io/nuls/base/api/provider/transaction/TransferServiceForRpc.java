@@ -9,6 +9,7 @@ import io.nuls.base.api.provider.transaction.facade.*;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.Coin;
+import io.nuls.base.data.CoinData;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.ErrorCode;
@@ -144,12 +145,15 @@ public class TransferServiceForRpc extends BaseRpcService implements TransferSer
             res.setTime(DateUtils.timeStamp2DateStr(transaction.getTime()*1000));
             res.setTransactionSignature(RPCUtil.encode(transaction.getTransactionSignature()));
             res.setType(transaction.getType());
-            res.setFrom(transaction.getCoinDataInstance().getFrom().stream().map(coinData->{
-                TransactionCoinData tcd = buildTransactionCoinData(coinData);
-                tcd.setNonce(HexUtil.encode(coinData.getNonce()));
-                return tcd;
-            }).collect(Collectors.toList()));
-            res.setTo(transaction.getCoinDataInstance().getTo().stream().map(this::buildTransactionCoinData).collect(Collectors.toList()));
+            CoinData coinData = transaction.getCoinDataInstance();
+            if(coinData != null){
+                res.setFrom(transaction.getCoinDataInstance().getFrom().stream().map(cd->{
+                    TransactionCoinData tcd = buildTransactionCoinData(cd);
+                    tcd.setNonce(HexUtil.encode(cd.getNonce()));
+                    return tcd;
+                }).collect(Collectors.toList()));
+                res.setTo(transaction.getCoinDataInstance().getTo().stream().map(this::buildTransactionCoinData).collect(Collectors.toList()));
+            }
             return success(res);
         } catch (NulsException e) {
             Log.error("反序列化transaction发生异常",e);

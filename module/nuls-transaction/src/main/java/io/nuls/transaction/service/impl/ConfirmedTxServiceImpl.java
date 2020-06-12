@@ -79,22 +79,9 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
     }
 
     @Override
-    public boolean saveTxList(Chain chain, List<String> txStrList, List<String> contractList, String blockHeader, int syncStatus) throws NulsException {
+    public boolean saveTxList(Chain chain, List<String> txStrList, String blockHeader, int syncStatus) throws NulsException {
         if (null == chain || txStrList == null || txStrList.size() == 0) {
             throw new NulsException(TxErrorCode.PARAMETER_ERROR);
-        }
-        //将智能合约交易(如果有)，从区块交易倒数第二个交易后插入
-        if(null != contractList && !contractList.isEmpty()){
-            int ide = txStrList.size() - 1;
-            String lastTxStr = txStrList.get(ide);
-            //如果区块最后一笔交易是智能合约返还GAS的交易, 则将contractList交易, 加入该交易之前,否则直接加入队尾
-            if (TxUtil.extractTxTypeFromTx(lastTxStr) == TxType.CONTRACT_RETURN_GAS) {
-                txStrList.remove(ide);
-                txStrList.addAll(contractList);
-                txStrList.add(lastTxStr);
-            }else{
-                txStrList.addAll(contractList);
-            }
         }
         try {
             return saveBlockTxList(chain, txStrList, blockHeader, false, syncStatus);
@@ -117,24 +104,15 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
             blockHeader = TxUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
             logger.debug("[保存区块] 开始 -----高度:{} -----数量:{}", blockHeader.getHeight(), txStrList.size());
             for (String txStr : txStrList) {
-                Transaction tx =TxUtil.getInstanceRpcStr(txStr, Transaction.class);
+                Transaction tx = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
                 txList.add(tx);
                 tx.setBlockHeight(blockHeader.getHeight());
                 txHashs.add(tx.getHash().getBytes());
-                if(TxManager.isSystemSmartContract(chain, tx.getType())) {
+                if (TxManager.isSystemSmartContract(chain, tx.getType())) {
                     continue;
                 }
                 // end code by pierre
                 TxUtil.moduleGroups(chain, moduleVerifyMap, tx.getType(), txStr);
-
-                // TODO
-                if(tx.getType() == TxType.QUOTATION){
-                    logger.debug("[喂价交易] txHash:{}", tx.getHash().toHex());
-                }
-                if(tx.getType() == TxType.FINAL_QUOTATION){
-                    logger.debug("[最终喂价交易] txHash:{}", tx.getHash().toHex());
-                }
-
             }
         } catch (Exception e) {
             logger.error(e);
@@ -146,25 +124,31 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         if (!saveTxs(chain, txList, blockHeader.getHeight(), true)) {
             return false;
         }
-        logger.debug("[保存区块] 存已确认交易DB 执行时间:{}", NulsDateUtils.getCurrentTimeMillis()- dbStart);
-        
-        // end code by pierre
-        long commitStart = NulsDateUtils.getCurrentTimeMillis();
-        if (!commitTxs(chain, moduleVerifyMap, blockHeaderStr, true, syncStatus)) {
-            removeTxs(chain, txList, blockHeader.getHeight(), false);
-            return false;
-        }
-        logger.debug("[保存区块] 交易业务提交 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - commitStart);
+        logger.debug("[保存区块] 存已确认交易DB 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - dbStart);
 
-        long ledgerStart = NulsDateUtils.getCurrentTimeMillis();
-        if (!commitLedger(chain, txStrList, blockHeader.getHeight())) {
-            if (!gengsis) {
-                rollbackTxs(chain, moduleVerifyMap, blockHeaderStr, false);
+        boolean onlyNullCoinBase = blockHeader.getTxCount() == 1 && txList.get(0).getType() == TxType.COIN_BASE && (txList.get(0).getCoinData().length < 3);
+
+
+        // end code by pierre
+        if (!onlyNullCoinBase) {
+            long commitStart = NulsDateUtils.getCurrentTimeMillis();
+            if (!commitTxs(chain, moduleVerifyMap, blockHeaderStr, true, syncStatus)) {
+                removeTxs(chain, txList, blockHeader.getHeight(), false);
+                return false;
             }
-            removeTxs(chain, txList, blockHeader.getHeight(), false);
-            return false;
+            logger.debug("[保存区块] 交易业务提交 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - commitStart);
         }
-        logger.debug("[保存区块] 账本模块提交 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - ledgerStart);
+//        if (!onlyNullCoinBase) {
+            long ledgerStart = NulsDateUtils.getCurrentTimeMillis();
+            if (!commitLedger(chain, txStrList, blockHeader.getHeight())) {
+                if (!gengsis) {
+                    rollbackTxs(chain, moduleVerifyMap, blockHeaderStr, false);
+                }
+                removeTxs(chain, txList, blockHeader.getHeight(), false);
+                return false;
+            }
+            logger.debug("[保存区块] 账本模块提交 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - ledgerStart);
+//        }
 
         //如果确认交易成功，则从未打包交易库中删除交易
         unconfirmedTxStorageService.removeTxList(chainId, txHashs);
@@ -183,7 +167,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
             TransactionConfirmedPO txConfirmedPO = new TransactionConfirmedPO(tx, blockHeight, TxStatusEnum.CONFIRMED.getStatus());
             toSaveList.add(txConfirmedPO);
         }
-        if(!confirmedTxStorageService.saveTxList(chain.getChainId(), toSaveList)){
+        if (!confirmedTxStorageService.saveTxList(chain.getChainId(), toSaveList)) {
             if (atomicity) {
                 removeTxs(chain, txList, blockHeight, false);
             }
@@ -218,7 +202,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         try {
             chain.getPackableState().set(false);
             boolean rs = LedgerCall.commitTxsLedger(chain, txList, blockHeight);
-            if(!rs){
+            if (!rs) {
                 chain.getLogger().error("save block tx failed! commitLedger");
             }
             return rs;
@@ -226,14 +210,14 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
             chain.getLogger().error("failed! commitLedger");
             chain.getLogger().error(e);
             return false;
-        }finally {
+        } finally {
             chain.getPackableState().set(true);
         }
     }
 
     private boolean removeTxs(Chain chain, List<Transaction> txList, long blockheight, boolean atomicity) {
         boolean rs = true;
-        if(!confirmedTxStorageService.removeTxList(chain.getChainId(), txList) && atomicity ){
+        if (!confirmedTxStorageService.removeTxList(chain.getChainId(), txList) && atomicity) {
             saveTxs(chain, txList, blockheight, false);
             rs = false;
             chain.getLogger().debug("failed! removeTxs");
@@ -267,22 +251,22 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         }
         try {
             chain.getPackableState().set(false);
-            boolean rs =  LedgerCall.rollbackTxsLedger(chain, txList, blockHeight);
-            if(!rs){
+            boolean rs = LedgerCall.rollbackTxsLedger(chain, txList, blockHeight);
+            if (!rs) {
                 chain.getLogger().error("rollback block tx failed! rollbackLedger");
             }
             return rs;
         } catch (NulsException e) {
             chain.getLogger().error(e);
             return false;
-        }finally {
+        } finally {
             chain.getPackableState().set(true);
         }
     }
 
     @Override
     public boolean rollbackTxList(Chain chain, List<NulsHash> txHashList, String blockHeaderStr) throws NulsException {
-        NulsLogger logger =  chain.getLogger();
+        NulsLogger logger = chain.getLogger();
         if (txHashList == null || txHashList.isEmpty()) {
             throw new NulsException(TxErrorCode.PARAMETER_ERROR);
         }
@@ -313,7 +297,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
             logger.error(e);
             return false;
         }
-        if(txList.isEmpty()){
+        if (txList.isEmpty()) {
             logger.warn("[rollbacked] warn! block txs is empty . -hight:{}", blockHeight);
             return true;
         }
@@ -343,7 +327,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         //计算待打包队列大小倒序放入未确认库, 和待打包队列
 
         int packableTxMapDataSize = 0;
-        if(chain.getPackaging().get()) {
+        if (chain.getPackaging().get()) {
             //是打包节点才计算待打包队列的当前容量
             for (Transaction tx : chain.getPackableTxMap().values()) {
                 packableTxMapDataSize += tx.size();
@@ -351,12 +335,12 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         }
         for (int i = txList.size() - 1; i >= 0; i--) {
             Transaction tx = txList.get(i);
-            if(!TxManager.isSystemTx(chain, tx)) {
+            if (!TxManager.isPackGenerate(chain, tx)) {
                 unconfirmedTxStorageService.putTx(chain.getChainId(), tx);
                 //不是系统交易,并且节点是打包节点,待打包队列没到最大值则重新放回待打包队列的最前端
                 if (chain.getPackaging().get() && packableTxMapDataSize < TxConstant.PACKABLE_TX_MAP_MAX_DATA_SIZE) {
                     packablePool.offerFirst(chain, tx);
-                } 
+                }
             }
         }
         logger.debug("[回滚区块] 回滚移除DB已存储的交易, 放入未确认库 执行时间:{}", NulsDateUtils.getCurrentTimeMillis() - dbStart);
@@ -366,6 +350,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
 
     /**
      * 批量实现
+     *
      * @param chain
      * @param hashList
      * @return
@@ -378,17 +363,17 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         }
         int chainId = chain.getChainId();
         List<byte[]> keys = new ArrayList<>();
-        for(String hashHex : hashList){
+        for (String hashHex : hashList) {
             keys.add(HexUtil.decode(hashHex));
         }
         List<Transaction> txList = confirmedTxStorageService.getTxList(chainId, keys);
         //必须全部命中
-        if(txList.size() != hashList.size()){
+        if (txList.size() != hashList.size()) {
             return txStrList;
         }
         Map<String, String> map = new HashMap<>(txList.size() * 2);
         try {
-            for(Transaction tx : txList){
+            for (Transaction tx : txList) {
                 map.put(tx.getHash().toHex(), RPCUtil.encode(tx.serialize()));
             }
         } catch (IOException e) {
@@ -396,7 +381,7 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
             return new ArrayList<>();
         }
         //返回的顺序和参数list中hash顺序要一致
-        for(String hash : hashList){
+        for (String hash : hashList) {
             txStrList.add(map.get(hash));
         }
 
@@ -411,36 +396,36 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         }
         int chainId = chain.getChainId();
         List<byte[]> keys = new ArrayList<>();
-        for(String hashHex : hashList){
+        for (String hashHex : hashList) {
             keys.add(HexUtil.decode(hashHex));
         }
-        List<Transaction> txConfirmedList = confirmedTxStorageService.getTxList(chainId,keys);
-        List<Transaction> txUnconfirmedList = unconfirmedTxStorageService.getTxList(chainId,keys);
+        List<Transaction> txConfirmedList = confirmedTxStorageService.getTxList(chainId, keys);
+        List<Transaction> txUnconfirmedList = unconfirmedTxStorageService.getTxList(chainId, keys);
         Set<Transaction> allTx = new HashSet<>();
         allTx.addAll(txConfirmedList);
         allTx.addAll(txUnconfirmedList);
-        if(allHits && allTx.size() != hashList.size()){
+        if (allHits && allTx.size() != hashList.size()) {
             //allHits为true时一旦有一个没有获取到, 直接返回空list
             return new ArrayList<>();
         }
         //放入map中用于排序时取值
         Map<String, String> map = new HashMap<>(allTx.size() * 2);
         try {
-            for(Transaction tx : allTx){
+            for (Transaction tx : allTx) {
                 map.put(tx.getHash().toHex(), RPCUtil.encode(tx.serialize()));
                 //txStrList.add(RPCUtil.encode(tx.serialize()));
             }
         } catch (IOException e) {
             chain.getLogger().error(e);
-            if(allHits) {
+            if (allHits) {
                 //allHits为true时直接返回空list
                 return new ArrayList<>();
             }
         }
         //返回的顺序和参数list中hash顺序要一致
-        for(String hash : hashList){
+        for (String hash : hashList) {
             String txHex = map.get(hash);
-            if(null != txHex) {
+            if (null != txHex) {
                 txStrList.add(txHex);
             }
         }
@@ -455,13 +440,13 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         }
         int chainId = chain.getChainId();
         List<byte[]> keys = new ArrayList<>();
-        for(String hashHex : hashList){
+        for (String hashHex : hashList) {
             keys.add(HexUtil.decode(hashHex));
         }
         //获取能查出来的交易
-        List<String> txUnconfirmedList = unconfirmedTxStorageService.getExistKeysStr(chainId,keys);
-        for(String hash : hashList){
-            if(txUnconfirmedList.contains(hash)){
+        List<String> txUnconfirmedList = unconfirmedTxStorageService.getExistKeysStr(chainId, keys);
+        for (String hash : hashList) {
+            if (txUnconfirmedList.contains(hash)) {
                 continue;
             }
             //只添加txUnconfirmedList中不存在的hash

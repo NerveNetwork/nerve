@@ -85,6 +85,13 @@ public class BlockController {
             map.put("symbol", config.getSymbol());
             map.remove("awardAssetId");
             map.remove("seedNodes");
+
+            Result<Map>  blockResult = blockTools.getBlockGlobalInfo(config.getChainId());
+            if (blockResult.isSuccess()) {
+                Map blockMap = blockResult.getData();
+                map.put("localHeight", blockMap.get("localHeight"));
+                map.put("networkHeight", blockMap.get("networkHeight"));
+            }
         }
         return ResultUtil.getJsonRpcResult(result);
     }

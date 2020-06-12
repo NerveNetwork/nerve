@@ -28,13 +28,17 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import io.nuls.ledger.constant.LedgerConstant;
 import io.nuls.ledger.model.tx.txdata.TxLedgerAsset;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -154,10 +158,50 @@ public class LedgerAsset extends BaseNulsData {
         this.setInitNumber(initNumber);
         this.setDecimalPlace(Short.valueOf(map.get("decimalPlace").toString()));
         this.setSymbol(String.valueOf(map.get("assetSymbol")));
-        this.setAssetOwnerAddress(AddressTool.getAddress(map.get("address").toString()));
         this.setCreateTime(NulsDateUtils.getCurrentTimeSeconds());
-        this.assetType = assetType;
+        this.setAssetType(assetType);
+        String address = (String) map.get("address");
+        if (assetType == LedgerConstant.COMMON_ASSET_TYPE || assetType == LedgerConstant.CONTRACT_ASSET_TYPE) {
+            this.setAssetOwnerAddress(AddressTool.getAddress(address));
+        }
+        if (map.get("assetId") != null) {
+            this.setAssetId(Integer.valueOf(map.get("assetId").toString()));
+        }
+        if (StringUtils.isBlank(address)) {
+            return;
+        }
+        if (assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE && address.startsWith(LedgerConstant.HEX_PREFIX)) {
+            this.setAssetOwnerAddress(HexUtil.decode(address.substring(2)));
+        }
 
+    }
+
+    public Map<String, Object> toMap() {
+        LedgerAsset asset = this;
+        Map<String, Object> result = new HashMap<>();
+        if (asset == null) {
+            return result;
+        }
+        result.put("assetChainId", asset.getChainId());
+        result.put("assetId", asset.getAssetId());
+        result.put("initNumber", asset.getInitNumber());
+        result.put("decimalPlace", asset.getDecimalPlace());
+        result.put("assetName", asset.getAssetName());
+        result.put("assetSymbol", asset.getSymbol());
+        short assetType = asset.getAssetType();
+        result.put("assetType", assetType);
+        byte[] address = asset.getAssetOwnerAddress();
+        if (address == null) {
+            return result;
+        }
+        String assetAddress = null;
+        if (assetType == LedgerConstant.COMMON_ASSET_TYPE || assetType == LedgerConstant.CONTRACT_ASSET_TYPE) {
+            assetAddress = AddressTool.getStringAddressByBytes(address);
+        } else if (assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE) {
+            assetAddress = LedgerConstant.HEX_PREFIX + HexUtil.encode(address);
+        }
+        result.put("assetAddress", assetAddress);
+        return result;
     }
 
 

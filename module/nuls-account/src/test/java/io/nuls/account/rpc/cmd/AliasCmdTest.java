@@ -98,7 +98,6 @@ public class AliasCmdTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
         params.put("txHex", RPCUtil.encode(transaction.serialize()));
-        //TODO How to get secondaryDataHex?
         params.put("secondaryDataHex", "111234134adfadfadfadfad");
         return params;
     }

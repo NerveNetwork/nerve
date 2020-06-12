@@ -247,6 +247,8 @@ if [ -n "${DOPULL}" ];then
 	log "git pull origin $GIT_BRANCH"
 	git pull origin "$GIT_BRANCH"
 fi
+echo "`cat version`-`git rev-parse --short HEAD`" > .package-version
+PACKAGE_VERSION=`cat .package-version`
 
 #0.download Nulstar
 if [ -n  "${BUILD_NULSTAR}" ]; then
@@ -291,6 +293,8 @@ if [ -n  "${BUILD_NULSTAR}" ]; then
     log "build Nulstar done"
 fi
 
+
+rm -rf ${COMMON_LIBS_PATH}/*
 doMvn "clean package" "nuls-project"
 
 #检查module.ncf指定配置项是否存在
@@ -398,7 +402,9 @@ copyJarToModules(){
 #			   cp "./target/libs/${jar}" "${modulePriLibPath}"
 #			   else
 #			   #statements
-			   cp "./target/libs/${jar}" "${COMMON_LIBS_PATH}"
+               if [ ! -f ${COMMON_LIBS_PATH}/${jar} ]; then
+			       cp "./target/libs/${jar}" "${COMMON_LIBS_PATH}"
+			   fi
 #			fi
 		done
 		cp "$dependentListConf" "${MODULES_PATH}/${moduleName}/${version}/dependent.conf"
@@ -642,7 +648,8 @@ log "============ COPY JRE TO libs done ============"
 fi
 
 log "================ COPY SCRIPT ==============="
-	cp "${BUILD_PATH}/default-config.ncf" "${MODULES_BIN_PATH}/.default-config.ncf"
+	#cp "${BUILD_PATH}/default-config.ncf" "${MODULES_BIN_PATH}/.default-config.ncf"
+	eval "sed -e 's/%PACKAGE_VERSION%/${PACKAGE_VERSION}/g' ${BUILD_PATH}/default-config.ncf > ${MODULES_BIN_PATH}/.default-config.ncf"
 	chmod u+r "${MODULES_BIN_PATH}/.default-config.ncf"
 	cp "${BUILD_PATH}/cmd" "${MODULES_BIN_PATH}/"
 	cp "${BUILD_PATH}/cmd.bat" "${MODULES_BIN_PATH}/"
@@ -690,4 +697,6 @@ if [ -n "${BUILDTAR}" ]; then
     tar -zcPf "${NULS_WALLET_TAR_NAME}_${TARGET_OS}.tar.gz" ${NULS_WALLET_TAR_NAME}
     log "============ BUILD ${NULS_WALLET_TAR_NAME}_${TARGET_OS}.tar.gz FINISH==================="
 fi
+cd $PROJECT_PATH
+echo "package version : $PACKAGE_VERSION"
 log "============ ${RELEASE_PATH} PACKAGE FINISH 🍺🍺🍺🎉🎉🎉 ==============="

@@ -94,6 +94,12 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
     }
 
     @Override
+    public void saveLedgerHeterogeneousAssetReg(int chainId, LedgerAsset ledgerAsset) throws Exception {
+        String assetRegTable = getLedgerAssetRegMngTableName(chainId);
+        RocksDBService.put(assetRegTable, ByteUtils.intToBytes(ledgerAsset.getAssetId()), ledgerAsset.serialize());
+    }
+
+    @Override
     public void batchSaveLedgerAssetReg(int chainId, Map<byte[], byte[]> ledgerAssets, Map<byte[], byte[]> ledgerAssetsHashs) throws Exception {
         //update account
         String assetRegTable = getLedgerAssetRegMngTableName(chainId);
@@ -181,14 +187,14 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
 
     @Override
     public int loadDatas(int chainId) throws Exception {
-        String assetHashTable = getLedgerAssetRegHashIndexTableName(chainId);
+        String assetTable = getLedgerAssetRegMngTableName(chainId);
         int assetId = 0;
-        List<byte[]> list1 = RocksDBService.valueList(assetHashTable);
+        List<byte[]> list1 = RocksDBService.keyList(assetTable);
         if (list1 != null) {
-            for (byte[] value : list1) {
-                int hashAssetId = ByteUtils.bytesToInt(value);
-                if (hashAssetId > assetId) {
-                    assetId = hashAssetId;
+            for (byte[] key : list1) {
+                int tempAssetId = ByteUtils.bytesToInt(key);
+                if (tempAssetId > assetId) {
+                    assetId = tempAssetId;
                 }
             }
         }
@@ -198,9 +204,6 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
             for (byte[] value : list2) {
                 int addressAssetId = ByteUtils.bytesToInt(value);
                 DB_CONTRACT_ASSETS_IDS_MAP.put(chainId + LedgerConstant.DOWN_LINE + addressAssetId, 1);
-                if (addressAssetId > assetId) {
-                    assetId = addressAssetId;
-                }
             }
         }
         return assetId;

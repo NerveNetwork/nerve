@@ -98,7 +98,7 @@ while [ ! -z $1 ] ; do
             datapath="-DdataPath=$2";
             shift 2 ;;
         "--debug")
-            DEBUG="$2";
+            DEBUG_PORT="$2";
             shift 2 ;;
         * )
             if [ -z "$2" ]; then
@@ -120,7 +120,7 @@ fi
 _dataPath=`getModuleItem ${config} "dataPath"`
 _logPath=`getModuleItem ${config} "logPath"`
 _logLevel=`getModuleItem ${config} "logLevel"`
-DEBUG=`getModuleItem ${config} "debug"`
+#DEBUG=`getModuleItem ${config} "debug"`
 cd `dirname ${config}`
 if [ ! -d ${_dataPath} ]; then
     mkdir ${_dataPath}
@@ -194,11 +194,12 @@ JAVA_OPTS=" -server -XX:+UseG1GC -XX:MaxGCPauseMillis=50 -Xms${JOPT_XMS}m -Xmx${
 JAVA_OPTS="${JAVA_OPTS} ${logpath} ${logLevel} ${datapath} "
 JAVA_OOM_DUMP="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGS_DIR}/oom-${START_DATE}.hprof"
 JAVA_OPTS="$JAVA_OPTS $JAVA_GC_LOG $JAVA_OOM_DUMP  -Dapp.name=$APP_NAME -Dactive.config=${config} "
+if [ -n "${DEBUG_PORT}" ]; then
+    JAVA_OPTS="${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG_PORT} "
+fi
 echo "${JAVA} ${JAVA_OPTS} ${CLASSPATH} ${MAIN_CLASS} ${NulstarUrl}"
 CMD="${JAVA} ${JAVA_OPTS} ${CLASSPATH} ${MAIN_CLASS} ${NulstarUrl} "
-if [ "$DEBUG" == "1" ]; then
-    CMD="${CMD} > ${STDOUT_FILE}"
-fi
+
 CMD="$CMD 2>&1 & ";
 eval $CMD
 #nohup ${JAVA} ${JAVA_OPTS} ${CLASSPATH} ${MAIN_CLASS} ${NulstarUrl} > ${STDOUT_FILE} 2>&1 &

@@ -30,6 +30,9 @@ public class AccountLedgerInfo {
     @JsonIgnore
     private boolean isNew;
 
+    @JsonIgnore
+    private int source;
+
     public AccountLedgerInfo() {
     }
 
@@ -47,6 +50,14 @@ public class AccountLedgerInfo {
             this.key = DBUtil.getAccountAssetKey(address, chainId, assetId);
         }
         return key;
+    }
+
+    public int getSource() {
+        return source;
+    }
+
+    public void setSource(int source) {
+        this.source = source;
     }
 
     public void setKey(String key) {

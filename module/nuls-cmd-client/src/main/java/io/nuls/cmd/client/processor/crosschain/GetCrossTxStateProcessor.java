@@ -46,7 +46,7 @@ public class GetCrossTxStateProcessor extends CrossChainBaseProcessor {
         if (result.isFailed()) {
             return CommandResult.getFailed(result);
         }
-        String state = result.getData() + "(0:Unconfirmed  1:MainNetConfirmed  2:Confirmed)";
+        String state = result.getData() + " (0:Unconfirmed  1:MainNetConfirmed  2:Confirmed)";
         return CommandResult.getSuccess(state);
     }
 }

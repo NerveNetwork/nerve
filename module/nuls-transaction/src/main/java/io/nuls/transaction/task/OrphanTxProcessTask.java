@@ -39,7 +39,6 @@ import io.nuls.transaction.rpc.call.LedgerCall;
 import io.nuls.transaction.rpc.call.NetworkCall;
 import io.nuls.transaction.service.TxService;
 import io.nuls.transaction.storage.UnconfirmedTxStorageService;
-import io.nuls.transaction.utils.LoggerUtil;
 import io.nuls.transaction.utils.OrphanSort;
 import io.nuls.transaction.utils.TxDuplicateRemoval;
 import io.nuls.transaction.utils.TxUtil;
@@ -102,8 +101,9 @@ public class OrphanTxProcessTask implements Runnable {
             while (flag) {
                 flag = process(orphanTxList);
             }
-        } catch (RuntimeException e) {
-            chain.getLogger().error("[OrphanTxProcessTask] RuntimeException:{}", e.getMessage());
+        } catch (Exception e) {
+            chain.getLogger().error("孤儿排序处理异常");
+            chain.getLogger().error(e);
             throw new NulsException(TxErrorCode.SYS_UNKOWN_EXCEPTION);
         } finally {
             if (orphanTxList.size() > 0) {

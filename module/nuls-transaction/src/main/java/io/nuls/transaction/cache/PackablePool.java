@@ -174,7 +174,7 @@ public class PackablePool {
      */
     public boolean exist(Chain chain, Transaction tx) {
         ByteArrayWrapper hash = new ByteArrayWrapper(tx.getHash().getBytes());
-        return chain.getPackableTxMap().containsKey(hash);
+        return chain.getPackableHashQueue().contains(hash);
     }
 
     public int packableHashQueueSize(Chain chain) {

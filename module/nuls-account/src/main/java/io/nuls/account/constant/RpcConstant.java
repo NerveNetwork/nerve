@@ -33,25 +33,6 @@ package io.nuls.account.constant;
 public interface RpcConstant {
 
     /**
-     * --------[call EventBus module RPC constants] -------
-     */
-    /**
-     * 事件发送接口
-     */
-    String EVENT_SEND_CMD = "send";
-    /**
-     * 事件发送接口版本号
-     */
-    String EVENT_SEND_VERSION = "1.0";
-    /**
-     * 事件发送主题
-     */
-    String EVENT_SEND_TOPIC = "topic";
-    /**
-     * 事件发送数据
-     */
-    String EVENT_SEND_DATA = "data";
-    /**
      * --------[call Transaction module RPC constants] -------
      */
     /**
@@ -63,7 +44,6 @@ public interface RpcConstant {
      */
     String TX_NEW_CMD = "tx_newTx";
 
-    String TX_BASE_VALIDATE = "tx_baseValidateTx";
     /**
      * 交易数据HEX编码
      */
@@ -100,17 +80,6 @@ public interface RpcConstant {
      */
     String SIGNATURE = "signature";
 
-    /**
-     * --------[RPC Module role constants] -------
-     */
-    /**
-     * Role_Account
-     */
-    String ROLE_AC = "Role_Account";
-    /**
-     * Role_Event
-     */
-    String ROLE_EV = "Role_Event";
 
     /**
      * TX_HASH

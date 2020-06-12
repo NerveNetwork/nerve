@@ -1,7 +1,11 @@
 package io.nuls.api.service;
 
+import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.SymbolPrice;
 import io.nuls.api.model.po.SymbolRegInfo;
+
+import java.math.BigInteger;
+import java.util.Map;
 
 /**
  * @Author: zhoulijun
@@ -12,11 +16,6 @@ import io.nuls.api.model.po.SymbolRegInfo;
  */
 public interface SymbolUsdtPriceProviderService {
 
-    /**
-     * 注册一种需要提供价格的币种
-     * @param symbolRegInfo
-     */
-    void regSymbol(SymbolRegInfo symbolRegInfo);
 
     /**
      * 获取一种币种的USDT汇率
@@ -24,5 +23,14 @@ public interface SymbolUsdtPriceProviderService {
      * @return
      */
     SymbolPrice getSymbolPriceForUsdt(String symbol);
+
+    /**
+     * 计算指定symbol在list中的usd价值占比
+     * @param symbol
+     * @param symbolList   symbol:amount
+     * @return
+     */
+    SymbolUsdPercentDTO calcRate(String symbol, Map<String, BigInteger> symbolList);
+
 
 }

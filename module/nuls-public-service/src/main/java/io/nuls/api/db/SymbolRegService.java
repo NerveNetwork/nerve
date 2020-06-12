@@ -17,7 +17,7 @@ public interface SymbolRegService {
      * 将把配置的币种信息和从异构跨链处获取到的配置信息初始化到mongodb中
      * 如果配置与异构跨链获取到的数据有重复，配置优先级高
      */
-    void init();
+    void updateSymbolRegList();
 
     void save(SymbolRegInfo info);
 

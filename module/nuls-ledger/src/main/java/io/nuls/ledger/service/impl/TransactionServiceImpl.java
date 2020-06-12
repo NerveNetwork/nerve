@@ -28,6 +28,7 @@ package io.nuls.ledger.service.impl;
 import io.nuls.base.data.*;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import io.nuls.ledger.constant.LedgerConstant;
 import io.nuls.ledger.constant.LedgerErrorCode;
@@ -39,16 +40,16 @@ import io.nuls.ledger.model.po.BlockSnapshotAccounts;
 import io.nuls.ledger.model.po.TxUnconfirmed;
 import io.nuls.ledger.model.po.sub.AccountStateSnapshot;
 import io.nuls.ledger.model.po.sub.AmountNonce;
-import io.nuls.ledger.service.*;
 import io.nuls.ledger.service.processor.CommontTransactionProcessor;
 import io.nuls.ledger.service.processor.LockedTransactionProcessor;
+import io.nuls.ledger.validator.CoinDataValidator;
+import io.nuls.ledger.service.*;
 import io.nuls.ledger.storage.LgBlockSyncRepository;
 import io.nuls.ledger.storage.Repository;
 import io.nuls.ledger.utils.CoinDataUtil;
 import io.nuls.ledger.utils.LedgerUtil;
 import io.nuls.ledger.utils.LockerUtil;
 import io.nuls.ledger.utils.LoggerUtil;
-import io.nuls.ledger.validator.CoinDataValidator;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -113,6 +114,9 @@ public class TransactionServiceImpl implements TransactionService {
         /*未确认交易的校验*/
         Map<String, TxUnconfirmed> accountsMap = new ConcurrentHashMap<>(8);
         byte[] txNonce = LedgerUtil.getNonceByTx(transaction);
+        if(LoggerUtil.logger(addressChainId).isDebugEnabled()) {
+            LoggerUtil.logger(addressChainId).debug("[TEST] unConfirmTxProcess txType: {}, txHash: {}, nonce: {}", transaction.getType(), transaction.getHash().toHex(), HexUtil.encode(txNonce));
+        }
         ValidateResult validateResult = coinDataValidator.analysisCoinData(addressChainId, transaction, accountsMap, txNonce);
         if (!validateResult.isSuccess()) {
             return validateResult;
@@ -134,6 +138,9 @@ public class TransactionServiceImpl implements TransactionService {
                                           Map<String, AccountBalance> updateAccounts, List<Uncfd2CfdKey> delUncfd2CfdKeys,
                                           Map<String, Integer> clearUncfs, Map<String, List<String>> assetAddressIndex) throws Exception {
         for (Transaction transaction : txList) {
+            if(LoggerUtil.logger(addressChainId).isDebugEnabled()) {
+                LoggerUtil.logger(addressChainId).debug("[TEST] blocks commit tx type: {}, hash: {}", transaction.getType(), transaction.getHash().toHex());
+            }
             byte[] nonce8Bytes = LedgerUtil.getNonceByTx(transaction);
             String nonce8Str = LedgerUtil.getNonceEncode(nonce8Bytes);
             String txHash = transaction.getHash().toHex();
@@ -275,7 +282,8 @@ public class TransactionServiceImpl implements TransactionService {
             //提交整体数据
             try {
                 //备份历史
-                repository.saveBlockSnapshot(addressChainId, blockHeight, blockSnapshotAccounts);
+                //update by zhoulijun 去掉快照功能
+//                repository.saveBlockSnapshot(addressChainId, blockHeight, blockSnapshotAccounts);
                 //更新链下资产种类，及资产地址集合数据。
                 chainAssetsService.updateChainAssets(addressChainId, assetAddressIndex);
                 //更新账本

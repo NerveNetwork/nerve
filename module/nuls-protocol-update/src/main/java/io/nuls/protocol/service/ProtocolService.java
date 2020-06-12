@@ -33,7 +33,7 @@ import io.nuls.core.exception.NulsException;
 public interface ProtocolService {
 
     /**
-     * todo 待实现
+     * 待实现
      * 启动一条链
      *
      * @param chainId 链ID
@@ -42,7 +42,7 @@ public interface ProtocolService {
     boolean startChain(int chainId);
 
     /**
-     * todo 待实现
+     * 待实现
      * 停止一条链
      *
      * @param chainId   链ID

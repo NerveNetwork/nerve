@@ -52,6 +52,7 @@ import static io.nuls.ledger.utils.LoggerUtil.logger;
  * @author lanjinsheng
  */
 @Component
+@Deprecated
 public class RepositoryImpl implements Repository, InitializingBean {
     /**
      * key1=chainId,  Map1=确认账户状态， key2= addr+assetkey  value=AccountState
@@ -147,6 +148,7 @@ public class RepositoryImpl implements Repository, InitializingBean {
                 accountState.setLatestUnFreezeTime(accountStateMem.getLatestUnFreezeTime());
                 accountState.getFreezeHeightStates().addAll(accountStateMem.getFreezeHeightStates());
                 accountState.getFreezeLockTimeStates().addAll(accountStateMem.getFreezeLockTimeStates());
+                accountState.getPermanentLockMap().putAll(accountStateMem.getPermanentLockMap());
                 return accountState;
             }
         }

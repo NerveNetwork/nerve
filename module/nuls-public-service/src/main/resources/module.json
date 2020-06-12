@@ -1,6 +1,6 @@
 {
   "providerType": "RPC",
-  "chainId": 2,
+  "chainId": 4,
   "assetId": 1,
   "symbol": "NULS",
   "language": "en",
@@ -26,29 +26,35 @@
       "clazs" : "io.nuls.api.sup.UsdPriceProvider",
       "url" : "http://bitfinex.zhoulijun.top/",
       "match" : "USD"
+    },
+    {
+      "name" : "TNVT",
+      "clazs" : "io.nuls.api.sup.NvtPriceProvider",
+      "url" : "",
+      "match" : "TNVT"
+    },
+    {
+      "name" : "NVT",
+      "clazs" : "io.nuls.api.sup.NvtPriceProvider",
+      "url" : "",
+      "match" : "NVT"
+    },
+    {
+      "name" : "USDI",
+      "clazs" : "io.nuls.api.sup.UsdtPriceProvider",
+      "url" : "",
+      "match" : "USDI,USDT"
     }
   ],
   "symbolBaseInfoList" : [
-    {
-      "chainId" : 3,
-      "assetId" : 1,
-      "symbol"  : "BTC",
-      "decimals" : 8,
-      "queryPrice" : false
-    },
-    {
-      "chainId" : 4,
-      "assetId" : 1,
-      "symbol"  : "ETH",
-      "decimals" : 8,
-      "queryPrice" : false
-    },
     {
       "chainId" : 0,
       "assetId" : 0,
       "symbol"  : "USD",
       "decimals" : 4,
-      "queryPrice" : false
+      "source" : 4,
+      "queryPrice" : false,
+      "level" : 0
     }
   ]
 }

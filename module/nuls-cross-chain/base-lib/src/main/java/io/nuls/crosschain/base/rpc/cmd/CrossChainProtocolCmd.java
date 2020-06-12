@@ -14,6 +14,7 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.crosschain.base.constant.CommandConstant;
 import io.nuls.crosschain.base.constant.CrossChainErrorCode;
 import io.nuls.crosschain.base.message.*;
+import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainMessage;
 import io.nuls.crosschain.base.service.ProtocolService;
 
 import java.util.Map;
@@ -27,28 +28,6 @@ import java.util.Map;
 public class CrossChainProtocolCmd extends BaseCmd {
     @Autowired
     private ProtocolService service;
-
-    /**
-     * 链内节点获取完整跨链交易
-     * */
-    @CmdAnnotation(cmd = CommandConstant.GET_CTX_MESSAGE, version = 1.0, description = "链内节点向本节点获取完成跨链交易/The intra-chain node acquires and completes the cross-chain transaction from its own node")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "nodeId", parameterType = "String", parameterDes = "节点IP")
-    @Parameter(parameterName = "messageBody", parameterType = "String", parameterDes = "消息体")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
-    public Response getCtx(Map<String,Object> params){
-        int chainId = Integer.parseInt(params.get("chainId").toString());
-        String nodeId = params.get("nodeId").toString();
-        byte[] decode = RPCUtil.decode(params.get("messageBody").toString());
-        GetCtxMessage message = new GetCtxMessage();
-        try {
-            message.parse(new NulsByteBuffer(decode));
-        } catch (NulsException e) {
-            return failed(CrossChainErrorCode.PARAMETER_ERROR);
-        }
-        service.getCtx(chainId,nodeId,message);
-        return success();
-    }
 
     /**
      * 跨链节点获取完整跨链交易
@@ -138,27 +117,6 @@ public class CrossChainProtocolCmd extends BaseCmd {
         return success();
     }
 
-    /**
-     * 接收链内节点发送的跨链交易
-     * */
-    @CmdAnnotation(cmd = CommandConstant.NEW_CTX_MESSAGE, version = 1.0, description = "接收本链节点广播的完整交易/Complete Transaction for Receiving Broadcast from Local Chain Nodes")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "nodeId", parameterType = "String", parameterDes = "节点IP")
-    @Parameter(parameterName = "messageBody", parameterType = "String", parameterDes = "消息体")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
-    public Response recvCtx(Map<String,Object> params){
-        int chainId = Integer.parseInt(params.get("chainId").toString());
-        String nodeId = params.get("nodeId").toString();
-        byte[] decode = RPCUtil.decode(params.get("messageBody").toString());
-        NewCtxMessage message = new NewCtxMessage();
-        try {
-            message.parse(new NulsByteBuffer(decode));
-        } catch (NulsException e) {
-            return failed(CrossChainErrorCode.PARAMETER_ERROR);
-        }
-        service.receiveCtx(chainId,nodeId,message);
-        return success();
-    }
 
     /**
      * 接收其他链发送的跨链交易
@@ -224,29 +182,6 @@ public class CrossChainProtocolCmd extends BaseCmd {
             return failed(CrossChainErrorCode.PARAMETER_ERROR);
         }
         service.receiveCtxSign(chainId,nodeId,message);
-        return success();
-    }
-
-    /**
-     * 接收到主网返回的已注册跨链交易信息
-     * Receive the information returned from the main network to register cross-chain transactions
-     * */
-    @CmdAnnotation(cmd = CommandConstant.REGISTERED_CHAIN_MESSAGE, version = 1.0, description = "接收到主网返回的已注册跨链交易的链信息/Receiving chain information of registered cross-chain transactions returned from the main network")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "nodeId", parameterType = "String", parameterDes = "节点IP")
-    @Parameter(parameterName = "messageBody", parameterType = "String", parameterDes = "消息体")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
-    public Response recvRegChain(Map<String,Object> params){
-        int chainId = Integer.parseInt(params.get("chainId").toString());
-        String nodeId = params.get("nodeId").toString();
-        byte[] decode = RPCUtil.decode(params.get("messageBody").toString());
-        RegisteredChainMessage message = new RegisteredChainMessage();
-        try {
-            message.parse(new NulsByteBuffer(decode));
-        } catch (NulsException e) {
-            return failed(CrossChainErrorCode.PARAMETER_ERROR);
-        }
-        service.receiveRegisteredChainInfo(chainId,nodeId,message);
         return success();
     }
 }

@@ -53,11 +53,6 @@ public class NulsConfig {
     public static String DATA_PATH;
 
     /**
-     * config file path
-     */
-    public static final String CONFIG_FILE_PATH = "account-config.json";
-
-    /**
      * 主网链ID（卫星链ID）
      */
     public static int MAIN_CHAIN_ID;

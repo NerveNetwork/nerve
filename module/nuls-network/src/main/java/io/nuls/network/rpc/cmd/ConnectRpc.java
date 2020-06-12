@@ -40,7 +40,6 @@ import io.nuls.network.model.NodeGroup;
 import io.nuls.network.utils.IpUtil;
 import io.nuls.network.utils.LoggerUtil;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +65,6 @@ public class ConnectRpc extends BaseCmd {
         NodeGroupManager nodeGroupManager = NodeGroupManager.getInstance();
         ConnectionManager connectionManager = ConnectionManager.getInstance();
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
-        boolean blCross = Boolean.valueOf(String.valueOf(params.get("isCross")));
         Map<String, Object> rtMap = new HashMap<>(1);
         try {
             String nodeId = String.valueOf(params.get("nodeId"));
@@ -78,46 +76,37 @@ public class ConnectRpc extends BaseCmd {
             if (null == ipPort) {
                 return failed(NetworkErrorCode.PARAMETER_ERROR);
             }
-            if (blCross) {
-                //暂时不支持跨链连接
-                return failed(NetworkErrorCode.PARAMETER_ERROR);
-            } else {
-                if (nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0])) {
-                    LoggerUtil.logger(chainId).info("connected success:{}, had exist.", nodeId);
-                    rtMap.put("value", true);
-                    return success(rtMap);
+            if (nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0])) {
+                LoggerUtil.logger(chainId).info("connected success:{}, had exist.", nodeId);
+                rtMap.put("value", true);
+                return success(rtMap);
+            }
+            Node node = new Node(nodeGroup.getMagicNumber(), ipPort[0], Integer.valueOf(ipPort[1]), 0, Node.OUT, false);
+            node.setConnectStatus(NodeConnectStatusEnum.CONNECTING);
+
+            node.setRegisterListener(() -> LoggerUtil.logger(chainId).debug("new node {} Register!", node.getId()));
+
+            node.setConnectedListener(() -> {
+                LoggerUtil.logger(chainId).debug("connected success:{},iscross={}", node.getId(), node.isCrossConnect());
+                connectionManager.nodeClientConnectSuccess(node);
+            });
+
+            node.setDisconnectListener(() -> {
+                LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
+                connectionManager.nodeConnectDisconnect(node);
+            });
+            if (connectionManager.connection(node)) {
+                int times = 0;
+                boolean hadConn = false;
+                while (!hadConn && times < 10) {
+                    LoggerUtil.logger(chainId).info("continues connected node:{}", ipPort[0]);
+                    Thread.sleep(100L);
+                    hadConn = nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0]);
+                    times++;
                 }
-                Node node = new Node(nodeGroup.getMagicNumber(), ipPort[0], Integer.valueOf(ipPort[1]), 0, Node.OUT, blCross);
-                node.setConnectStatus(NodeConnectStatusEnum.CONNECTING);
-
-                node.setRegisterListener(() -> LoggerUtil.logger(chainId).debug("new node {} Register!", node.getId()));
-
-                node.setConnectedListener(() -> {
-                    LoggerUtil.logger(chainId).debug("connected success:{},iscross={}", node.getId(), node.isCrossConnect());
-                    connectionManager.nodeClientConnectSuccess(node);
-                });
-
-                node.setDisconnectListener(() -> {
-                    LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
-                    connectionManager.nodeConnectDisconnect(node);
-                });
-                if (connectionManager.connection(node)) {
-                    //等待监听1s后,返回信息TODO:
-//                   CompletableFuture<Node> future = new CompletableFuture<>();
-//                   Node result =future.get(1000,TimeUnit.MILLISECONDS);
-                    int times = 0;
-                    boolean hadConn = false;
-                    while (!hadConn && times < 10) {
-                        LoggerUtil.logger(chainId).info("continues connected node:{}", ipPort[0]);
-                        Thread.sleep(100L);
-                        hadConn = nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0]);
-                        times++;
-                    }
-                    LoggerUtil.logger(chainId).info("connected node:{} hadConn={} success", ipPort[0], hadConn);
-                    rtMap.put("value", hadConn);
-                    return success(rtMap);
-                }
-
+                LoggerUtil.logger(chainId).info("connected node:{} hadConn={} success", ipPort[0], hadConn);
+                rtMap.put("value", hadConn);
+                return success(rtMap);
             }
         } catch (Exception e) {
             LoggerUtil.logger(chainId).error(e);

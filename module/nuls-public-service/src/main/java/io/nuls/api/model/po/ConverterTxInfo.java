@@ -1,6 +1,7 @@
 package io.nuls.api.model.po;
 
 import io.nuls.api.constant.ConverterTxType;
+import io.nuls.api.constant.CrossChainType;
 
 import java.math.BigInteger;
 
@@ -21,10 +22,11 @@ public class ConverterTxInfo extends TxDataInfo {
      */
     private String outerTxHash;
 
+
     private String address;
 
     /**
-     * 跨链类型
+     * 跨链交易方向，转入 or 转出
      * @see ConverterTxType
      */
     private String converterType;
@@ -38,6 +40,12 @@ public class ConverterTxInfo extends TxDataInfo {
     private int assetChainId;
 
     private int assetId;
+
+    /**
+     * 跨链网络类型
+     * @see CrossChainType
+     */
+    private String crossChainType;
 
     public String getTxHash() {
         return txHash;
@@ -109,5 +117,13 @@ public class ConverterTxInfo extends TxDataInfo {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getCrossChainType() {
+        return crossChainType;
+    }
+
+    public void setCrossChainType(String crossChainType) {
+        this.crossChainType = crossChainType;
     }
 }

@@ -34,6 +34,7 @@ import java.io.Serializable;
  * @date 2018/11/11
  */
 public class ConfigBean implements Serializable {
+    private static final long serialVersionUID = 1L;
     /**
      * 资产ID
      * assets id

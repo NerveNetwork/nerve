@@ -38,6 +38,7 @@ import io.nuls.provider.model.ErrorData;
 import io.nuls.provider.model.RpcClientResult;
 import io.nuls.provider.model.dto.DepositInfoDto;
 import io.nuls.provider.model.dto.RandomSeedDTO;
+import io.nuls.provider.model.dto.ReduceNonceDTO;
 import io.nuls.provider.model.form.consensus.CreateAgentForm;
 import io.nuls.provider.model.form.consensus.DepositForm;
 import io.nuls.provider.model.form.consensus.StopAgentForm;
@@ -58,7 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
+/**getReduceNonceList
  * @author: PierreLuo
  * @date: 2019-06-27
  */
@@ -144,9 +145,8 @@ public class ConsensusResource {
         if (form == null) {
             return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "form is empty"));
         }
-        DepositToAgentReq req = new DepositToAgentReq(
+        AgentDepositChangeReq req = new AgentDepositChangeReq(
                 form.getAddress(),
-                form.getAgentHash(),
                 new BigInteger(form.getDeposit()),
                 form.getPassword());
         req.setChainId(config.getChainId());
@@ -451,5 +451,33 @@ public class ConsensusResource {
         return ResultUtil.getRpcClientResult(result);
     }
 
+    @GET
+    @Path("/list/reduceNonce/{agentHash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "获取退出节点/退出保证金对应的追加保证金交易列表", order = 558)
+    @Parameters({
+            @Parameter(parameterName = "agentHash", parameterDes = "创建共识节点的交易hash"),
+            @Parameter(parameterName = "quitAll", parameterDes = "是否退出所有"),
+            @Parameter(parameterName = "reduceAmount", parameterDes = "退出金额")
+    })
+    @ResponseData(name = "返回值", description = "返回委托共识集合", responseType = @TypeDescriptor(value = List.class, collectionElement = ReduceNonceDTO.class))
+    public RpcClientResult getReduceNonceList(GetReduceNonceForm form) {
+        if (!ValidateUtil.validHash(form.getAgentHash())) {
+            return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "agentHash is invalid"));
+        }
+        GetReduceNonceReq req = new GetReduceNonceReq(form.getAgentHash(),form.getQuitAll(),form.getReduceAmount());
+        req.setChainId(config.getChainId());
 
+
+        Result<ReduceNonceInfo> result = consensusProvider.getReduceNonceList(req);
+        RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
+        if (result.isSuccess()) {
+            List<ReduceNonceInfo> list = result.getList();
+            if (list != null && !list.isEmpty()) {
+                List<ReduceNonceDTO> dtoList = list.stream().map(ReduceNonceDTO :: new).collect(Collectors.toList());
+                clientResult.setData(dtoList);
+            }
+        }
+        return clientResult;
+    }
 }

@@ -19,7 +19,8 @@ public enum CommandGroup {
     Block,
     Smart_Contract,
     Cross_Chain,
-    System;
+    System,
+    Converter;
 
     final String title;
 

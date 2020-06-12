@@ -24,8 +24,10 @@
 
 package io.nuls.transaction.tx;
 
+import io.nuls.base.data.CoinData;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.info.NoUse;
@@ -37,6 +39,8 @@ import io.nuls.transaction.model.bo.Chain;
 import io.nuls.transaction.model.bo.config.ConfigBean;
 import io.nuls.transaction.model.dto.CoinDTO;
 import io.nuls.transaction.model.po.TransactionNetPO;
+import io.nuls.transaction.utils.OrphanSort;
+import io.nuls.transaction.utils.TxUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,7 +58,7 @@ public class TxCompareTest {
     static int chainId = 2;
     static int assetChainId = 2;
     static int assetId = 1;
-
+    private OrphanSort orphanSort;
     static String password = "nuls123456";//"nuls123456";
 
     static String address20 = "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG";
@@ -76,9 +80,12 @@ public class TxCompareTest {
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":7771");
         chain = new Chain();
         chain.setConfig(new ConfigBean(chainId, assetId, 1024 * 1024, 1000, 20, 20000, 60000));
+        //初始化上下文
+//        SpringLiteContext.init(TestConstant.CONTEXT_PATH);
+//        orphanSort = SpringLiteContext.getBean(OrphanSort.class);
     }
 
-    private List<Integer> randomIde(int count) {
+    public static List<Integer> randomIde(int count) {
         List<Integer> list = new ArrayList<>();
         Set<Integer> set = new HashSet<>();
         while (true) {
@@ -93,263 +100,62 @@ public class TxCompareTest {
                 break;
             }
         }
-       /* for(Integer i : list){
-            System.out.println(i);
-        }*/
         return list;
     }
 
     //将交易的顺序打乱，再排序，来验证排序是否正确
     @Test
     public void test() throws Exception {
-        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
-        importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
+//        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
+        importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD TNVTdN9iB7VveoFG4GwYMRAFAF2Rsyrj9mjR3
         for (int y = 0; y < 1; y++) {
             System.out.println("------------------");
             System.out.println("------------------");
             System.out.println("------------------");
             System.out.println("------------------");
-            int count = 2;
-            int times = 2;
-//            List<Transaction> txs = new ArrayList<>();
-//            for (int x = 0; x < times; x++) {
-//                Thread.sleep(1000L);
-//                txs.addAll(createTxs(count));
-//            }
+
 
             List<Transaction> txs = new ArrayList<>();
-            List<Transaction> txs1 = createTxs(count);
-            txs.addAll(txs1);
+            List<Transaction> txs1 = createTxs(15);
+//            List<Transaction> txs1 = createTxs2();
             txs.addAll(txs1);
 
-            System.out.println("正确的顺序");
-            for (Transaction tx : txs) {
-                System.out.println("正确的顺序: " + tx.getHash().toHex());
-            }
-        /* 显示交易格式化完整信息
-        for(Transaction tx : txs){
-            TxUtil.txInformationDebugPrint(tx);
-        }*/
+//            System.out.println("正确的顺序");
+//            for (Transaction tx : txs) {
+//                System.out.println("正确的顺序: " + tx.getHash().toHex());
+//            }
+
+            /* 显示交易格式化完整信息
+            for(Transaction tx : txs){
+                TxUtil.txInformationDebugPrint(tx);
+            }*/
+            int total = txs.size();
             List<TransactionNetPO> txList = new ArrayList<>();
-            int total = count * times;
             List<Integer> ide = randomIde(total);
             for (int i = 0; i < total; i++) {
                 txList.add(new TransactionNetPO(txs.get(ide.get(i))));
             }
             System.out.println("Size:" + txList.size());
-//
-//        txList.add(new TransactionNetPO(txs.get(4)));
-//        txList.add(new TransactionNetPO(txs.get(7)));
-//        txList.add(new TransactionNetPO(txs.get(2)));
-//        txList.add(new TransactionNetPO(txs.get(3)));
-//        txList.add(new TransactionNetPO(txs.get(0)));
-//        txList.add(new TransactionNetPO(txs.get(5)));
-//        txList.add(new TransactionNetPO(txs.get(9)));
-//        txList.add(new TransactionNetPO(txs.get(1)));
-//        txList.add(new TransactionNetPO(txs.get(6)));
-//        txList.add(new TransactionNetPO(txs.get(8)));
-
 
             System.out.println("排序前");
             for (TransactionNetPO tx : txList) {
                 System.out.println("排序前的顺序: " + tx.getTx().getHash().toHex());
             }
-//            OrphanSort orphanSort = new OrphanSort();
             long start = System.currentTimeMillis();
             //排序
-            rank(txList);
+            OrphanSort sort = new OrphanSort();
+            sort.rank(txList);
             long end = System.currentTimeMillis() - start;
             System.out.println("执行时间：" + end);
             System.out.println(txList.size());
             System.out.println("排序后");
-            for (TransactionNetPO tx : txList) {
+            for (int i = 0; i < txList.size(); i++) {
+                TransactionNetPO tx = txList.get(i);
                 System.out.println("排序后的顺序: " + tx.getTx().getHash().toHex());
+                String hs = txs.get(i).getHash().toHex();
+                System.out.println("顺序正确: " + tx.getTx().getHash().toHex().equals(hs));
             }
 
-        }
-    }
-
-    //排序
-    private void rank(List<TransactionNetPO> txList) {
-        //分组：相同时间的一组，同时设置排序字段的值（10000*time），用于最终排序
-        Map<Long, List<TransactionNetPO>> groupMap = new HashMap<>();
-        for (TransactionNetPO tx : txList) {
-            long second = tx.getTx().getTime();
-            List<TransactionNetPO> subList = groupMap.get(second);
-            if (null == subList) {
-                subList = new ArrayList<>();
-                groupMap.put(second, subList);
-            }
-            tx.setOrphanSortSerial(second * 10000);
-            subList.add(tx);
-        }
-        //相同时间的组，进行细致排序，并更新排序字段的值
-        for (List<TransactionNetPO> list : groupMap.values()) {
-            this.sameTimeRank(list);
-        }
-        //重新排序
-        Collections.sort(txList, new Comparator<TransactionNetPO>() {
-            @Override
-            public int compare(TransactionNetPO o1, TransactionNetPO o2) {
-                if (o1.getOrphanSortSerial() > o2.getOrphanSortSerial()) {
-                    return 1;
-                } else if (o1.getOrphanSortSerial() < o2.getOrphanSortSerial()) {
-                    return -1;
-                }
-                return 0;
-            }
-        });
-    }
-
-    private void sameTimeRank(List<TransactionNetPO> txList) {
-        if (txList.size() <= 1) {
-            return;
-        }
-        TxCompareTool.SortResult<TransactionNetPO> result = new TxCompareTool.SortResult<>(txList.size());
-        txList.forEach(po -> {
-            doRank(result, new TxCompareTool.SortItem<>(po));
-        });
-        int index = 0;
-        for (TransactionNetPO po : result.getList()) {
-            po.setOrphanSortSerial(po.getOrphanSortSerial() + (index++));
-        }
-
-    }
-
-    private static void doRank(TxCompareTool.SortResult<TransactionNetPO> result, TxCompareTool.SortItem<TransactionNetPO> thisItem) {
-        if (result.getIndex() == -1) {
-            result.getArray()[0] = thisItem;
-            result.setIndex(0);
-            return;
-        }
-        TxCompareTool.SortItem[] array = result.getArray();
-        boolean gotFront = false;
-        boolean gotNext = false;
-        int gotIndex = -1;
-        boolean added = false;
-        for (int i = result.getIndex(); i >= 0; i--) {
-            TxCompareTool.SortItem<TransactionNetPO> item = array[i];
-            int val = TxCompareTool.compareTo(thisItem.getObj(), item.getObj());
-            if (val == 1 && !gotNext) {
-                item.setFlower(new TxCompareTool.SortItem[]{thisItem});
-                item.setHasFlower(true);
-                insertArray(i + 1, result, result.getIndex() + 1, thisItem, false);
-                gotFront = true;
-                gotIndex = i + 1;
-                added = true;
-            } else if (val == 1 && gotNext) {
-//                需要找到之前的一串，挪动到现在的位置
-                thisItem = result.getArray()[gotIndex];
-                if (i == gotIndex - 1) {
-                    item.setHasFlower(true);
-                    return;
-                }
-                boolean hasFlower = thisItem.isHasFlower();
-                TxCompareTool.SortItem<TransactionNetPO>[] flower = new TxCompareTool.SortItem[1];
-                int count = 0;
-                if (hasFlower) {
-                    count = 1;
-                }
-                int realCount = 1;
-                for (int x = 1; x <= count; x++) {
-                    TxCompareTool.SortItem flr = array[x + gotIndex];
-                    flower[x - 1] = flr;
-                    realCount++;
-                    if (x == count && flr.isHasFlower()) {
-                        count += 1;
-                        TxCompareTool.SortItem<TransactionNetPO>[] flower2 = new TxCompareTool.SortItem[flower.length + 1];
-                        System.arraycopy(flower, 0, flower2, 0, flower.length);
-                        flower = flower2;
-                    }
-                }
-                thisItem.setFlower(flower);
-                if (flower.length > 0) {
-                    thisItem.setHasFlower(true);
-                }
-                item.setHasFlower(true);
-                // 前移后面的元素
-                for (int x = 0; x < result.getIndex() - gotIndex + 1; x++) {
-                    int oldIndex = gotIndex + x + realCount;
-                    if (oldIndex <= result.getIndex()) {
-                        array[gotIndex + x] = array[oldIndex];
-                        array[oldIndex] = null;
-                    } else {
-                        array[gotIndex + x] = null;
-                    }
-                }
-                result.setIndex(result.getIndex() - realCount);
-                insertArray(i + 1, result, result.getIndex() + 1, thisItem, true);
-                return;
-            } else if (val == -1 && !gotFront) {
-                thisItem.setHasFlower(true);
-                insertArray(i, result, result.getIndex() + 1, thisItem, false);
-                gotNext = true;
-                gotIndex = i;
-                added = true;
-            } else if (val == -1 && gotFront) {
-                if (gotIndex == i - 1) {
-                    return;
-                }
-                thisItem.setHasFlower(true);
-                thisItem = result.getArray()[i];
-                boolean hasFlower = thisItem.isHasFlower();
-                int count = hasFlower ? 1 : 0;
-                int realCount = 1;
-                TxCompareTool.SortItem<TransactionNetPO>[] flower = new TxCompareTool.SortItem[count];
-                for (int x = 1; x <= count; x++) {
-                    TxCompareTool.SortItem flr = array[x + i];
-                    flower[x - 1] = flr;
-                    realCount++;
-                    if (x == count && flr.isHasFlower()) {
-                        count += 1;
-                        TxCompareTool.SortItem<TransactionNetPO>[] flower2 = new TxCompareTool.SortItem[flower.length + 1];
-                        System.arraycopy(flower, 0, flower2, 0, flower.length);
-                        flower = flower2;
-                    }
-                }
-                thisItem.setFlower(flower);
-                // 前移后面的元素
-                for (int x = 0; x < result.getIndex() - i + 1; x++) {
-                    int oldIndex = i + x + realCount;
-                    if (oldIndex <= result.getIndex()) {
-                        array[i + x] = array[oldIndex];
-                        array[oldIndex] = null;
-                    } else {
-                        array[i + x] = null;
-                    }
-                }
-                result.setIndex(result.getIndex() - realCount);
-                insertArray(gotIndex + 1 - realCount, result, result.getIndex() + 1, thisItem, true);
-                return;
-            }
-        }
-        if (!added) {
-            insertArray(result.getIndex() + 1, result, result.getIndex() + 1, thisItem, false);
-        }
-    }
-
-    private static void insertArray(int index, TxCompareTool.SortResult result, int length, TxCompareTool.SortItem item, boolean insertFlowers) {
-
-        try {
-            TxCompareTool.SortItem[] array = result.getArray();
-            int count = 1 + item.getFlower().length;
-            result.setIndex(result.getIndex() + count);
-            if (length >= index) {
-                for (int i = length - 1; i >= index; i--) {
-                    array[i + count] = array[i];
-                }
-            }
-            array[index] = item;
-            if (null == item.getFlower() || !insertFlowers) {
-                return;
-            }
-            int add = 1;
-            for (TxCompareTool.SortItem f : item.getFlower()) {
-                array[index + add] = f;
-                add++;
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return;
         }
     }
 
@@ -357,17 +163,50 @@ public class TxCompareTest {
     private List<Transaction> createTxs(int count) throws Exception {
         Map map = CreateTx.createTransferTx(address21, address20, new BigInteger("100000"));
         long time = NulsDateUtils.getCurrentTimeSeconds();
-//        Long time = null;
         List<Transaction> list = new ArrayList<>();
         NulsHash hash = null;
+        System.out.println("正确的顺序");
         for (int i = 0; i < count; i++) {
-            Transaction tx = CreateTx.assemblyTransaction((List<CoinDTO>) map.get("inputs"), (List<CoinDTO>) map.get("outputs"), (String) map.get("remark"), hash, time);
+            Transaction tx = CreateTx.assemblyTransaction((List<CoinDTO>) map.get("inputs"), (List<CoinDTO>) map.get("outputs"), (String) map.get("remark"), hash, time, null);
             list.add(tx);
             hash = tx.getHash();
+            CoinData coinData = TxUtil.getCoinData(tx);
+            System.out.println("正确的顺序: " + tx.getHash().toHex() + ", nonce:" + HexUtil.encode(coinData.getFrom().get(0).getNonce()));
+//            System.out.println(HexUtil.encode(tx.serialize()));
         }
-//        Thread.sleep(1000L);
         return list;
     }
+
+//    private List<Transaction> createTxs2() throws Exception {
+//        String s1 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af7846102605bef00000000000000000000000000000000000000000000000000000000000c32ce4a020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300605bef000000000000000000000000000000000000000000000000000000000008f1a6292a88c0798300170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000082c2d09ee348fad0d0001170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300605bef0000000000000000000000000000000000000000000000000000000000feffffffffffffff692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad846304402205fee2462aa08f9af41acc565f32e39169a6399c1cf397ed24cfb30f5a94408a6022006a675e9c758bc2cbb84c02838c5781e1a6bfeb53c256d5b50f5c0bc969d67ab";
+//        String s2 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af78461024878e2050000000000000000000000000000000000000000000000000000000061a86e4b020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af78461040003004878e20500000000000000000000000000000000000000000000000000000000088a4f23768f930d8e00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000088a4f23768f930d8e0001170400015884fa407da3005067ce4bd6d29a8e4a2af78461040003004878e20500000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad84730450221008e5f61bcd7a7cfc26ed4deecc7ec4ebebb1dc9a23abb6ed170b88527a9dcfdf102202b3fc7d3b640cc024a0878d17ec3f785490426cde146f2b7f9da1b78cbe565b8";
+//        String s3 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af7846102adbb4402000000000000000000000000000000000000000000000000000000008c90e24a020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300adbb44020000000000000000000000000000000000000000000000000000000008039c174f07645dae00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008039c174f07645dae0001170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300adbb440200000000000000000000000000000000000000000000000000000000feffffffffffffff692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8463044022057a263ad9ff837ec48b3f7e3bc1ca6782a03e58ef6a88fc1888079d84dbc8db702202815853bc21e689ef169c5b55148d0ef0fa28490732a32553ed61b226b523cdd";
+//        String s4 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af7846101a5bfd504000000000000000000000000000000000000000000000000000000004ced9b48020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002006bc837da0100000000000000000000000000000000000000000000000000000008aeec084ad7cf9baf00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008cd3d8febe863b4a00001170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002006bc837da01000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8473045022100c3bc906861e09f995c390a0a4f50c074174c1cd69a47f8dafdde1b874d3637a10220641c51e1c12d06c4cbe9ca39153ad5575d90c5e1f059e2e30349a3245653b087";
+//        String s5 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af78461014421f902000000000000000000000000000000000000000000000000000000003d949a48020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002005ad09b230100000000000000000000000000000000000000000000000000000008974914a32660666700170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008974914a3266066670001170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002005ad09b2301000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad847304502210087d7ea06099a9af9a84314adb65f127a3c74e34ddfc248dc227b90b43698bbaf022026ef433d7ef58db8221edef5c7ab28d2684de02a24ebbdbcea14ab425d5a6de3";
+//        String s6 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af784610118357c0200000000000000000000000000000000000000000000000000000000b67d6b47020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000200e20141f30000000000000000000000000000000000000000000000000000000008b8eed337e30758a500170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008b8eed337e30758a50001170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000200e20141f300000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8473045022100bbc69287f6098f10d1101933af5c8b780422f647b22ae0fc9b333d072e46ace902205c4aab1ce65896e67b15e9000d675905df1aea09b571da8cca3801132784f9b4";
+//        String s7 = "e5003a0bda5e007a35036ba33ea420bdd45d9737ea946d326a40b12d88ee1c5305fedc91b3a6c4460400015884fa407da3005067ce4bd6d29a8e4a2af7846101f618c70400000000000000000000000000000000000000000000000000000000ba020500000000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002003204040000000000000000000000000000000000000000000000000000000000084bb6260ec2926e5e00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008727dd8ef5e8d4bb80001170400015884fa407da3005067ce4bd6d29a8e4a2af78461040002003204040000000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8473045022100c47c20f13f09da178d47fb9916960956a4bad86574a3c3fd084dd33e89baab4a02200a127200ca99513f6db8907bf20a742a20fe740c7c28cbd872e76aa4c815f3a8";
+//        String s8 = "e5003a0bda5e007a35036ba33ea420bdd45d9737ea946d326a40b12d88ee1c5305fedc91b3a6c4460400015884fa407da3005067ce4bd6d29a8e4a2af78461019e2e6e0000000000000000000000000000000000000000000000000000000000f7020500000000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000200a55c000000000000000000000000000000000000000000000000000000000000087fc97024f0f4bd8000170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000087fc97024f0f4bd800001170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000200a55c000000000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8473045022100b5fb6547754ffde0ab950026e5f3e1bf6169c183ba8effe23ef026d10301e607022038653392075a711a83ca275d368dc8754a48f69efcd9542e6bcfb7cbfdd57acc";
+//        String s9 = "e6003a0bda5e002062fbc9feece12155f9149918df782ddafccf72ed129f63e59982e331a50feaab8c01170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000084bb6260ec2926e5e0001170400015884fa407da3005067ce4bd6d29a8e4a2af784610400010000000000000000000000000000000000000000000000000000000000000000000000000000000000692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8463044022013f9667c05445d9a6339fd28859b2982246a1c47a2925f8b3ce6322ca301626302200150f6c2f16ed658d2562bf74d85e3b949944713a43f0038f6aa1baf89e80e0a";
+//        String s10 = "e6003a0bda5e0020b6304973e60199ccd13a574814c42c567b1674d1f623663f7690138a87199fb48c01170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a08601000000000000000000000000000000000000000000000000000000000008e1f16dd5931cb00c0001170400015884fa407da3005067ce4bd6d29a8e4a2af784610400010000000000000000000000000000000000000000000000000000000000000000000000000000000000692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad84630440220785903f6b5b3be54cded776bd6037771041a8dd3586b07b38c7c6fd6fbb28cbe022008387aeae9ab9161fae0bfff8724edb6bfaadda7671bf990863776402e2316d0";
+//        String s11 = "e5003a0bda5e007a35036ba33ea420bdd45d9737ea946d326a40b12d88ee1c5305fedc91b3a6c4460400015884fa407da3005067ce4bd6d29a8e4a2af7846102aded6e01000000000000000000000000000000000000000000000000000000008b060500000000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846102000100aded6e010000000000000000000000000000000000000000000000000000000008f4dd41e4ce147c4d00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a0860100000000000000000000000000000000000000000000000000000000000883ab7af34a9ea2030001170400015884fa407da3005067ce4bd6d29a8e4a2af7846102000100aded6e0100000000000000000000000000000000000000000000000000000000feffffffffffffff692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad846304402206f10db6433318beebba4a878005326a4bbdbf3901d574bc6aebac93cb18516f8022036fdc8dcfc55fbb5343d0b9964e1240d8286be28cef54430bde825a3b4027651";
+//        String s12 = "e5003a0bda5e007a35036ba33ea420bdd45d9737ea946d326a40b12d88ee1c5305fedc91b3a6c4460400015884fa407da3005067ce4bd6d29a8e4a2af784610255b19405000000000000000000000000000000000000000000000000000000002c080500000000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af784610200010055b19405000000000000000000000000000000000000000000000000000000000886f29cf08f9be19100170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a0860100000000000000000000000000000000000000000000000000000000000886f29cf08f9be1910001170400015884fa407da3005067ce4bd6d29a8e4a2af784610200010055b1940500000000000000000000000000000000000000000000000000000000feffffffffffffff692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad846304402205f8fff1d863e241ac3ac5269cd135c1897fef09d0747a547f4b46f8b7fe64b36022047883add6e704b44de84c142c9b9907f48344ee2cb057ea98559d9acdea5a939";
+//        String s13 = "e5003a0bda5e007a35036ba33ea420bdd45d9737ea946d326a40b12d88ee1c5305fedc91b3a6c4460400015884fa407da3005067ce4bd6d29a8e4a2af7846102342a7e0100000000000000000000000000000000000000000000000000000000de080500000000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846102000100342a7e0100000000000000000000000000000000000000000000000000000000089c7598800faf73a200170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000089c7598800faf73a20001170400015884fa407da3005067ce4bd6d29a8e4a2af7846102000100342a7e0100000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad8473045022100989bad2d93a6b3f9538ed0656e70437330dbdac0a0c14b9425a806c9c3a9d16b0220052e7fa2508ccab60b79ce2158641ff295c7b88d74e4c893621a7eee4dc5f9d0";
+//        List<Transaction> list = new ArrayList<>();
+//        list.add(TxUtil.getInstance(s1, Transaction.class));
+//        list.add(TxUtil.getInstance(s2, Transaction.class));
+//        list.add(TxUtil.getInstance(s3, Transaction.class));
+//        list.add(TxUtil.getInstance(s4, Transaction.class));
+//        list.add(TxUtil.getInstance(s5, Transaction.class));
+//        list.add(TxUtil.getInstance(s6, Transaction.class));
+//        list.add(TxUtil.getInstance(s7, Transaction.class));
+//        list.add(TxUtil.getInstance(s8, Transaction.class));
+//        list.add(TxUtil.getInstance(s9, Transaction.class));
+//        list.add(TxUtil.getInstance(s10, Transaction.class));
+//        list.add(TxUtil.getInstance(s11, Transaction.class));
+//        list.add(TxUtil.getInstance(s12, Transaction.class));
+//        list.add(TxUtil.getInstance(s13, Transaction.class));
+//        return list;
+//    }
 
     public void importPriKey(String priKey, String pwd) {
         try {
@@ -382,7 +221,7 @@ public class TxCompareTest {
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_importAccountByPriKey", params);
             HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("ac_importAccountByPriKey");
             String address = (String) result.get("address");
-//            Log.debug("importPriKey success! address-{}", address);
+            System.out.println(address);
         } catch (Exception e) {
             e.printStackTrace();
         }

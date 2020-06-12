@@ -4,6 +4,7 @@ import io.nuls.api.model.po.AccountInfo;
 import io.nuls.api.model.po.PageInfo;
 import io.nuls.api.model.po.TxRelationInfo;
 import io.nuls.api.model.po.mini.MiniAccountInfo;
+import org.bson.conversions.Bson;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -18,7 +19,7 @@ public interface AccountService {
 
     PageInfo<AccountInfo> pageQuery(int chainId, int pageNumber, int pageSize);
 
-    PageInfo<TxRelationInfo> getAccountTxs(int chainId, String address, int pageIndex, int pageSize, int type, long startHeight, long endHeight);
+    PageInfo<TxRelationInfo> pageAccountTxs(Bson filter,int chainId, String address, int pageIndex, int pageSize, int type, long startHeight, long endHeight, Integer assetChainId, Integer assetId);
 
     PageInfo<TxRelationInfo> getAcctTxs(int chainId, String address, int pageIndex, int pageSize, int type, long startHeight, long endHeight);
 

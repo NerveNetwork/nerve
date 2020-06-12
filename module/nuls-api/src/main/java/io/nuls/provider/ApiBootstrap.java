@@ -99,7 +99,8 @@ public class ApiBootstrap extends RpcModule {
                 new Module(ModuleE.BL.abbr, ROLE),
                 new Module(ModuleE.AC.abbr, ROLE),
                 new Module(ModuleE.TX.abbr, ROLE),
-                new Module(ModuleE.LG.abbr, ROLE)
+                new Module(ModuleE.LG.abbr, ROLE),
+                Module.build(ModuleE.NW)
         };
     }
 

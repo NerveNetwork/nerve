@@ -35,6 +35,7 @@ public class MongoBlockServiceImpl implements BlockService {
     @Autowired
     private MongoChainServiceImpl mongoChainServiceImpl;
 
+    @Override
     public BlockHeaderInfo getBestBlockHeader(int chainId) {
         ApiCache apiCache = CacheManager.getCache(chainId);
         if (apiCache == null) {
@@ -50,6 +51,7 @@ public class MongoBlockServiceImpl implements BlockService {
         return apiCache.getBestHeader();
     }
 
+    @Override
     public BlockHeaderInfo getBlockHeader(int chainId, long height) {
         Document document = mongoDBService.findOne(BLOCK_HEADER_TABLE + chainId, Filters.eq("_id", height));
         if (document == null) {
@@ -58,6 +60,7 @@ public class MongoBlockServiceImpl implements BlockService {
         return DocumentTransferTool.toInfo(document, "height", BlockHeaderInfo.class);
     }
 
+    @Override
     public BlockHeaderInfo getBlockHeaderByHash(int chainId, String hash) {
         Document document = mongoDBService.findOne(BLOCK_HEADER_TABLE + chainId, Filters.eq("hash", hash));
         if (document == null) {
@@ -66,16 +69,19 @@ public class MongoBlockServiceImpl implements BlockService {
         return DocumentTransferTool.toInfo(document, "height", BlockHeaderInfo.class);
     }
 
+    @Override
     public void saveBLockHeaderInfo(int chainId, BlockHeaderInfo blockHeaderInfo) {
         Document document = DocumentTransferTool.toDocument(blockHeaderInfo, "height");
-        mongoDBService.insertOne(BLOCK_HEADER_TABLE + chainId, document);
+        mongoDBService.insertOrUpdate(BLOCK_HEADER_TABLE + chainId, document);
     }
 
+    @Override
     public void saveBlockHexInfo(int chainId, BlockHexInfo hexInfo) {
         Document document = DocumentTransferTool.toDocument(hexInfo, "height");
         mongoDBService.insertOne(BLOCK_HEX_TABLE + chainId, document);
     }
 
+    @Override
     public BlockHexInfo getBlockHexInfo(int chainId, long height) {
         Document document = mongoDBService.findOne(BLOCK_HEX_TABLE + chainId, Filters.eq("_id", height));
         if (document == null) {
@@ -138,6 +144,7 @@ public class MongoBlockServiceImpl implements BlockService {
 
     }
 
+    @Override
     public PageInfo<MiniBlockHeaderInfo> pageQuery(int chainId, int pageIndex, int pageSize, String packingAddress, boolean filterEmptyBlocks) {
         if (!CacheManager.isChainExist(chainId)) {
             return new PageInfo<>(pageIndex, pageSize);
@@ -200,10 +207,12 @@ public class MongoBlockServiceImpl implements BlockService {
         return count;
     }
 
+    @Override
     public long getMaxHeight(int chainId, long endTime) {
         return this.mongoDBService.getMax(BLOCK_HEADER_TABLE + chainId, "_id", Filters.lte("createTime", endTime));
     }
 
+    @Override
     public void deleteBlockHeader(int chainId, long height) {
         mongoDBService.delete(BLOCK_HEADER_TABLE + chainId, Filters.eq("_id", height));
         mongoDBService.delete(BLOCK_HEX_TABLE + chainId, Filters.eq("_id", height));

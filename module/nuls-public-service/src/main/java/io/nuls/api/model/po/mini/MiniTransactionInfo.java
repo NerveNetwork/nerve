@@ -20,6 +20,10 @@ public class MiniTransactionInfo {
 
     private BigInteger value;
 
+    private int decimals;
+
+    private String symbol;
+
     private int status;
 
     public static MiniTransactionInfo toInfo(Document document) {
@@ -89,5 +93,21 @@ public class MiniTransactionInfo {
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    public int getDecimals() {
+        return decimals;
+    }
+
+    public void setDecimals(int decimals) {
+        this.decimals = decimals;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
     }
 }

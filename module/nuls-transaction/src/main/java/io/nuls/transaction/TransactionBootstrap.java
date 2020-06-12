@@ -169,7 +169,8 @@ public class TransactionBootstrap extends RpcModule {
                 Module.build(ModuleE.NW),
                 Module.build(ModuleE.LG),
                 Module.build(ModuleE.BL),
-                Module.build(ModuleE.AC)
+                Module.build(ModuleE.AC),
+                new Module(ModuleE.PU.abbr, ROLE)
         };
     }
 

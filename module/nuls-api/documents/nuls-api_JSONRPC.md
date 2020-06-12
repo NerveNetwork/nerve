@@ -1918,7 +1918,7 @@ _**详细描述: 计算离线创建转账交易所需手续费**_
 {
   "jsonrpc" : "2.0",
   "method" : "calcTransferTxFee",
-  "params" : [ 6, 6, 2, "remark", "1000000" ],
+  "params" : [ 6, 6, 2, "remark", "100000" ],
   "id" : 1234
 }
 ```
@@ -2024,7 +2024,7 @@ _**详细描述: 计算离线创建转账交易所需手续费**_
 {
   "jsonrpc" : "2.0",
   "method" : "calcMultiSignTransferTxFee",
-  "params" : [ 2, 2, 1, "remark", "1000000" ],
+  "params" : [ 2, 2, 1, "remark", "100000" ],
   "id" : 1234
 }
 ```

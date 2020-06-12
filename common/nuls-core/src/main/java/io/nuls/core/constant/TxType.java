@@ -25,7 +25,7 @@ public class TxType {
      */
     public static final int ACCOUNT_ALIAS = 3;
     /**
-     * 新建共识节点
+     * 新建共识节点`
      */
     public static final int REGISTER_AGENT = 4;
     /**
@@ -186,6 +186,11 @@ public class TxType {
     public static final int EDIT_COIN_TRADING = 232;
 
     /**
+     * 撤单交易确认
+     */
+    public static final int ORDER_CANCEL_CONFIRM = 233;
+
+    /**
      * 确认 虚拟银行变更交易
      */
     public static final int CONFIRM_CHANGE_VIRTUAL_BANK = 40;
@@ -224,14 +229,27 @@ public class TxType {
      * 异构链交易手续费补贴
      */
     public static final int DISTRIBUTION_FEE = 47;
-    /**
-     * 异构链合约资产注册
-     */
-    public static final int HETEROGENEOUS_CONTRACT_ASSET_REG = 48;
 
     /**
      * 虚拟银行初始化异构链
      */
-    public static final int INITIALIZE_HETEROGENEOUS = 49;
+    public static final int INITIALIZE_HETEROGENEOUS = 48;
+    /**
+     * 异构链合约资产注册等待
+     */
+    public static final int HETEROGENEOUS_CONTRACT_ASSET_REG_PENDING = 49;
+
+    /**
+     * 异构链合约资产注册完成
+     */
+    public static final int HETEROGENEOUS_CONTRACT_ASSET_REG_COMPLETE = 50;
+    /**
+     * 确认提案执行交易
+     */
+    public static final int CONFIRM_PROPOSAL = 51;
+    /**
+     * 已注册跨链的链信息变更
+     */
+    public static final int REGISTERED_CHAIN_CHANGE = 60;
 
 }

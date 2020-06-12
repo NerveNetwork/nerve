@@ -9,6 +9,7 @@ import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.db.DepositService;
 import io.nuls.api.db.mongo.MongoDBService;
 import io.nuls.api.db.mongo.MongoDepositServiceImpl;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +19,7 @@ import org.junit.Test;
  * @Time: 2020-03-19 14:03
  * @Description: 功能描述
  */
-public class DepositServiceTest {
+public class DepositServiceTest extends BaseTestCase {
 
     MongoDBService mongoDBService;
 
@@ -36,21 +37,23 @@ public class DepositServiceTest {
 //        ApiContext.databaseUrl = "127.0.0.1";
 //        ApiContext.databasePort = 27018;
 //        SpringLiteContext.init("io.nuls");
-        ServerAddress serverAddress = new ServerAddress("127.0.0.1", 27017);
-        MongoCredential credential = MongoCredential.createScramSha1Credential("nuls", "admin", "password".toCharArray());
-        MongoClient mongoClient = new MongoClient(serverAddress,credential, MongoClientOptions.builder().build());
-        MongoDatabase mongoDatabase = mongoClient.getDatabase(DBTableConstant.DATABASE_NAME);
-        mongoDBService = new MongoDBService(mongoClient, mongoDatabase);
-        depositService = new MongoDepositServiceImpl();
-        ((MongoDepositServiceImpl) depositService).setMongoDBService(mongoDBService);
+        super.before();
+//        ServerAddress serverAddress = new ServerAddress("127.0.0.1", 27017);
+//        MongoCredential credential = MongoCredential.createScramSha1Credential("nuls", "nuls-api", "nuls123456".toCharArray());
+//        MongoClient mongoClient = new MongoClient(serverAddress,credential, MongoClientOptions.builder().build());
+//        MongoDatabase mongoDatabase = mongoClient.getDatabase(DBTableConstant.DATABASE_NAME);
+//        mongoDBService = new MongoDBService(mongoClient, mongoDatabase);
+//        depositService = new MongoDepositServiceImpl();
+//        ((MongoDepositServiceImpl) depositService).setMongoDBService(mongoDBService);
     }
 
 
     @Test
     public void testGetDepositList(){
-        depositService.getDepositSumList(2).forEach(d->{
-            Log.info("{}",d);
-        });
+        DepositService depositService = SpringLiteContext.getBean(DepositService.class);
+        Log.info("{}",depositService.getAgentDepositTotal(4,25291));
+        Log.info("{}",depositService.getStackingTotalByNVT(4,25291));
+
     }
 
 }

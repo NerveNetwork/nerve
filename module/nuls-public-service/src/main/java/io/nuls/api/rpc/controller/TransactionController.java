@@ -3,17 +3,24 @@ package io.nuls.api.rpc.controller;
 import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.AnalysisHandler;
 import io.nuls.api.analysis.WalletRpcHandler;
+import io.nuls.api.constant.ApiConstant;
+import io.nuls.api.constant.DepositFixedType;
 import io.nuls.api.db.*;
 import io.nuls.api.exception.JsonRpcException;
 import io.nuls.api.manager.CacheManager;
+import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.entity.CallContractData;
+import io.nuls.api.model.entity.CancelDeposit;
 import io.nuls.api.model.entity.CreateContractData;
 import io.nuls.api.model.entity.DeleteContractData;
 import io.nuls.api.model.po.*;
+import io.nuls.api.model.po.mini.CancelDepositInfo;
 import io.nuls.api.model.po.mini.MiniCoinBaseInfo;
+import io.nuls.api.model.po.mini.MiniCrossChainTransactionInfo;
 import io.nuls.api.model.po.mini.MiniTransactionInfo;
 import io.nuls.api.model.rpc.RpcErrorCode;
 import io.nuls.api.model.rpc.RpcResult;
+import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.api.utils.VerifyUtils;
 import io.nuls.base.RPCUtil;
@@ -29,7 +36,12 @@ import io.nuls.core.core.annotation.RpcMethod;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,6 +69,9 @@ public class TransactionController {
 
     @Autowired
     ConverterTxService converterTxService;
+
+    @Autowired
+    SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
 
 
     @RpcMethod("getTx")
@@ -100,13 +115,10 @@ public class TransactionController {
                 tx.setTxData(coinBaseInfo);
             } else if (tx.getType() == TxType.DEPOSIT || tx.getType() == TxType.CONTRACT_DEPOSIT) {
                 DepositInfo depositInfo = (DepositInfo) tx.getTxData();
-                AgentInfo agentInfo = agentService.getAgentByHash(chainId, depositInfo.getAgentHash());
-                tx.setTxData(agentInfo);
+                tx.setTxData(depositInfo);
             } else if (tx.getType() == TxType.CANCEL_DEPOSIT || tx.getType() == TxType.CONTRACT_CANCEL_DEPOSIT) {
-                DepositInfo depositInfo = (DepositInfo) tx.getTxData();
-                depositInfo = depositService.getDepositInfoByHash(chainId, depositInfo.getTxHash());
-                AgentInfo agentInfo = agentService.getAgentByHash(chainId, depositInfo.getAgentHash());
-                tx.setTxData(agentInfo);
+                CancelDepositInfo depositInfo = (CancelDepositInfo) tx.getTxData();
+                tx.setTxData(depositInfo);
             } else if (tx.getType() == TxType.STOP_AGENT || tx.getType() == TxType.CONTRACT_STOP_AGENT) {
                 AgentInfo agentInfo = (AgentInfo) tx.getTxData();
                 agentInfo = agentService.getAgentByHash(chainId, agentInfo.getTxHash());
@@ -147,6 +159,7 @@ public class TransactionController {
         VerifyUtils.verifyParams(params, 5);
         int chainId, pageNumber, pageSize, type;
         boolean isHidden;
+        String address = null;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -172,6 +185,16 @@ public class TransactionController {
         } catch (Exception e) {
             return RpcResult.paramError("[isHidden] is inValid");
         }
+        if(params.size() > 5){
+            try {
+                address = (String) params.get(5);
+            } catch (Exception e) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+            if (!AddressTool.validAddress(chainId, address)) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+        }
         if (pageNumber <= 0) {
             pageNumber = 1;
         }
@@ -182,7 +205,11 @@ public class TransactionController {
         if (!CacheManager.isChainExist(chainId)) {
             pageInfo = new PageInfo<>(pageNumber, pageSize);
         } else {
-            pageInfo = txService.getTxList(chainId, pageNumber, pageSize, isHidden, type);
+            if (type > 0) {
+                pageInfo = txService.getInnerChainTxList(chainId, address, pageNumber, pageSize, isHidden, type);
+            } else {
+                pageInfo = txService.getInnerChainTxList(chainId, address, pageNumber, pageSize, isHidden);
+            }
         }
         RpcResult rpcResult = new RpcResult();
         rpcResult.setResult(pageInfo);
@@ -240,7 +267,7 @@ public class TransactionController {
     @RpcMethod("getTxStatistical")
     public RpcResult getTxStatistical(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
-        int chainId, type;
+        int chainId, type,timezoneOffset = 0;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -251,11 +278,16 @@ public class TransactionController {
         } catch (Exception e) {
             return RpcResult.paramError("[type] is inValid");
         }
-
-        if (!CacheManager.isChainExist(chainId)) {
-            return RpcResult.success(new ArrayList<>());
+        if(params.size() > 2){
+            try {
+                timezoneOffset = (int) params.get(2);
+            } catch (Exception e) {
+                return RpcResult.paramError("[type] is inValid");
+            }
         }
-        List list = this.statisticalService.getStatisticalList(chainId, type, TX_COUNT);
+        //取反
+        timezoneOffset = -timezoneOffset;
+        List list = this.statisticalService.getStatisticalList(chainId, type, TX_COUNT, timezoneOffset);
         return new RpcResult().setResult(list);
     }
 
@@ -386,45 +418,45 @@ public class TransactionController {
         return byteBuffer.readUint16();
     }
 
-
-    @RpcMethod("sendCrossTx")
-    public RpcResult sendCrossTx(List<Object> params) {
-        if (!ApiContext.isReady) {
-            return RpcResult.chainNotReady();
-        }
-        VerifyUtils.verifyParams(params, 2);
-        int chainId;
-        String txHex;
-        try {
-            chainId = (int) params.get(0);
-        } catch (Exception e) {
-            return RpcResult.paramError("[chainId] is inValid");
-        }
-        try {
-            txHex = (String) params.get(1);
-        } catch (Exception e) {
-            return RpcResult.paramError("[txHex] is inValid");
-        }
-        if (!CacheManager.isChainExist(chainId)) {
-            return RpcResult.dataNotFound();
-        }
-        try {
-            Result result = WalletRpcHandler.sendCrossTx(chainId, txHex);
-
-            if (result.isSuccess()) {
-                Transaction tx = new Transaction();
-                tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                TransactionInfo txInfo = AnalysisHandler.toTransaction(chainId, tx);
-                txService.saveUnConfirmTx(chainId, txInfo, txHex);
-                return RpcResult.success(result.getData());
-            } else {
-                return RpcResult.failed(result);
-            }
-        } catch (Exception e) {
-            LoggerUtil.commonLog.error(e);
-            return RpcResult.failed(RpcErrorCode.TX_PARSE_ERROR);
-        }
-    }
+//
+//    @RpcMethod("sendCrossTx")
+//    public RpcResult sendCrossTx(List<Object> params) {
+//        if (!ApiContext.isReady) {
+//            return RpcResult.chainNotReady();
+//        }
+//        VerifyUtils.verifyParams(params, 2);
+//        int chainId;
+//        String txHex;
+//        try {
+//            chainId = (int) params.get(0);
+//        } catch (Exception e) {
+//            return RpcResult.paramError("[chainId] is inValid");
+//        }
+//        try {
+//            txHex = (String) params.get(1);
+//        } catch (Exception e) {
+//            return RpcResult.paramError("[txHex] is inValid");
+//        }
+//        if (!CacheManager.isChainExist(chainId)) {
+//            return RpcResult.dataNotFound();
+//        }
+//        try {
+//            Result result = WalletRpcHandler.sendCrossTx(chainId, txHex);
+//
+//            if (result.isSuccess()) {
+//                Transaction tx = new Transaction();
+//                tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
+//                TransactionInfo txInfo = AnalysisHandler.toTransaction(chainId, tx);
+//                txService.saveUnConfirmTx(chainId, txInfo, txHex);
+//                return RpcResult.success(result.getData());
+//            } else {
+//                return RpcResult.failed(result);
+//            }
+//        } catch (Exception e) {
+//            LoggerUtil.commonLog.error(e);
+//            return RpcResult.failed(RpcErrorCode.TX_PARSE_ERROR);
+//        }
+//    }
 
     @RpcMethod("broadcastTxWithNoContractValidation")
     public RpcResult broadcastTxWithNoContractValidation(List<Object> params) {
@@ -481,8 +513,36 @@ public class TransactionController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         List<AssetSnapshotInfo> list = statisticalService.getAssetSnapshotAggSum(chainId, 4);
-        return RpcResult.success(list.stream().map(d -> Map.of("symbol", d.getSymbol(), "total", d.getTotal(), "txTotal", d.getTxTotal())).collect(Collectors.toList())
-        );
+//        SymbolPrice usdPrice = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
+//        Map<String,BigDecimal> symbolUsdTxTotalMap = new HashMap<>(list.size());
+//        BigDecimal allSymbolTxTotalUsdValue = list.stream().map(d->{
+//            SymbolPrice symbolPrice = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(d.getSymbol());
+//            if(symbolPrice.getPrice().equals(BigDecimal.ZERO))return BigDecimal.ZERO;
+//            SymbolRegInfo symbolRegInfo = symbolRegService.get(d.getAssetChainId(),d.getAssetId());
+//            //计算当前币种交易对应的的USD总量
+//            BigDecimal total = new BigDecimal(d.getTxTotal()).movePointLeft(symbolRegInfo.getDecimals());
+//            BigDecimal usdTotal = usdPrice.transfer(symbolPrice,total);
+//            symbolUsdTxTotalMap.put(d.getSymbol(),usdTotal);
+//            return usdTotal;
+//        }).reduce(BigDecimal.ZERO,(v1,v2)->v1.add(v2));
+        Map<String,BigInteger> symbolList = list.stream().map(d -> Map.of(d.getSymbol(), d.getTxTotal())).reduce(new HashMap<>(list.size()),
+                (d1, d2) -> {
+                    d1.putAll(d2);
+                    return d1;
+                });
+        return RpcResult.success(list.stream().map(d -> {
+//            BigDecimal rate;
+//            BigDecimal usdValue = symbolUsdTxTotalMap.getOrDefault(d.getSymbol(),BigDecimal.ZERO);
+//            if(allSymbolTxTotalUsdValue.equals(BigDecimal.ZERO)){
+//                rate = new BigDecimal(100);
+//            }else if (usdValue.equals(BigDecimal.ZERO)){
+//                rate = BigDecimal.ZERO;
+//            }else {
+//                rate = symbolUsdTxTotalMap.get(d.getSymbol()).divide(allSymbolTxTotalUsdValue,2, RoundingMode.HALF_UP);
+//            }
+            SymbolUsdPercentDTO symbolUsdPercentDTO = symbolUsdtPriceProviderService.calcRate(d.getSymbol(), symbolList);
+            return Map.of("symbol", d.getSymbol(), "total", d.getTotal(), "txTotal", d.getTxTotal(), "txTotalRate", symbolUsdPercentDTO.getPer(), "usdValue", symbolUsdPercentDTO.getUsdVal());
+        }).collect(Collectors.toList()));
     }
 
     /**
@@ -495,6 +555,7 @@ public class TransactionController {
         VerifyUtils.verifyParams(params, 3);
         int chainId, pageNumber, pageSize, type;
         boolean isHidden;
+        String address = null;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -510,23 +571,28 @@ public class TransactionController {
         } catch (Exception e) {
             return RpcResult.paramError("[pageSize] is inValid");
         }
+        if(params.size() > 3){
+            try {
+                address = (String) params.get(4);
+            } catch (Exception e) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+            if (!AddressTool.validAddress(chainId, address)) {
+                return RpcResult.paramError("[address] is inValid");
+            }
+        }
         if (pageNumber <= 0) {
             pageNumber = 1;
         }
         if (pageSize <= 0 || pageSize > 100) {
             pageSize = 10;
         }
-        PageInfo<MiniTransactionInfo> pageInfo;
+        PageInfo<MiniCrossChainTransactionInfo> pageInfo;
         if (!CacheManager.isChainExist(chainId)) {
             pageInfo = new PageInfo<>(pageNumber, pageSize);
             return RpcResult.success(pageInfo);
         } else {
-            pageInfo = txService.getTxList(chainId, pageNumber, pageSize, true, RECHARGE,WITHDRAWAL);
-        }
-        //数据缺失
-        RpcResult<PageInfo> txList = getTxList(params);
-        if(txList.getError() != null){
-            return txList;
+            return RpcResult.success(txService.getCrossChainTxList(chainId, address,pageNumber, pageSize));
         }
 
 //        return RpcResult.success(List.of(
@@ -539,20 +605,22 @@ public class TransactionController {
 //                "amount", 10000,
 //                "state", "SUCCESS"
 //        ));
-        List list = pageInfo.getList().stream().map(d->{
-            MiniTransactionInfo tx = d;
-            ConverterTxInfo converterTxInfo = converterTxService.getByTxHash(chainId,tx.getHash());
-            SymbolRegInfo symbolRegInfo = symbolRegService.get(converterTxInfo.getAssetChainId(),converterTxInfo.getAssetId());
-            return Map.of(
-                    "blockHeight", d.getHeight(),
-                    "txHash", d.getHash(),
-                    "outerTxHash", converterTxInfo.getOuterTxHash(),
-                    "symbol", symbolRegInfo.getSymbol(),
-                    "network", symbolRegInfo.getFullName(),
-                    "time", d.getCreateTime() * 1000L,
-                    "amount", d.getValue());
-        }).collect(Collectors.toList());
-        return RpcResult.success(new PageInfo(pageInfo.getPageNumber(),pageInfo.getPageSize(),pageInfo.getTotalCount(),list));
+//        List list = pageInfo.getList().stream().map(d -> {
+//            MiniTransactionInfo tx = d;
+//            ConverterTxInfo converterTxInfo = converterTxService.getByTxHash(chainId, tx.getHash());
+//            SymbolRegInfo symbolRegInfo = symbolRegService.get(converterTxInfo.getAssetChainId(), converterTxInfo.getAssetId());
+//            return Map.of(
+//                    "blockHeight", d.getHeight(),
+//                    "txHash", d.getHash(),
+//                        "crossChainType",converterTxInfo.getCrossChainType(),
+//                    "converterType",converterTxInfo.getConverterType(),
+//                    "outerTxHash", converterTxInfo.getOuterTxHash(),
+//                    "symbol", symbolRegInfo.getSymbol(),
+//                    "network", symbolRegInfo.getFullName(),
+//                    "time", d.getCreateTime() * 1000L,
+//                    "amount", d.getValue());
+//        }).collect(Collectors.toList());
+//        return RpcResult.success(new PageInfo(pageInfo.getPageNumber(), pageInfo.getPageSize(), pageInfo.getTotalCount(), list));
     }
 
 }

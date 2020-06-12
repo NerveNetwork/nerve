@@ -1,0 +1,19 @@
+{
+  "moduleCode":"cv",
+  "mainChainId": 1,
+  "mainAssetId": 1,
+  "encoding": "UTF-8",
+  "chainId":1,
+  "assetId":1,
+  "dataPath": "../../../../data",
+  "executeChangeVirtualBankPeriodicHeight" : 43200,
+  "feePubkey": "111111111111111111111111111111111111111111111111111111111111111111",
+  "withdrawalBlackholePubkey": "222222222222222222222222222222222222222222222222222222222222222222",
+  "initVirtualBankHeight": 10,
+  "virtualBankAgentCountWithoutSeed": 10,
+  "proposalPrice": 20000000000,
+  "proposalVotingDays": 10,
+  "distributionFee": 10000000000,
+  "byzantineRatio": 66
+
+}

@@ -102,4 +102,47 @@ public class AssetInfo extends TxDataInfo {
     public void setDecimals(int decimals) {
         this.decimals = decimals;
     }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AssetInfo)) return false;
+
+        AssetInfo assetInfo = (AssetInfo) o;
+
+        if (chainId != assetInfo.chainId) return false;
+        if (assetId != assetInfo.assetId) return false;
+        return key != null ? key.equals(assetInfo.key) : assetInfo.key == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = key != null ? key.hashCode() : 0;
+        result = 31 * result + chainId;
+        result = 31 * result + assetId;
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder("{")
+                .append("\"key\":\"")
+                .append(key).append('\"')
+                .append(",\"chainId\":")
+                .append(chainId)
+                .append(",\"assetId\":")
+                .append(assetId)
+                .append(",\"symbol\":\"")
+                .append(symbol).append('\"')
+                .append(",\"decimals\":")
+                .append(decimals)
+                .append(",\"initCoins\":")
+                .append(initCoins)
+                .append(",\"address\":\"")
+                .append(address).append('\"')
+                .append(",\"status\":")
+                .append(status)
+                .append('}').toString();
+    }
 }

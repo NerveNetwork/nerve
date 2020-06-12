@@ -1,15 +1,14 @@
 package io.nuls.api.analysis;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.api.ApiContext;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.*;
+import io.nuls.api.db.SymbolRegService;
 import io.nuls.api.manager.CacheManager;
+import io.nuls.api.model.dto.LedgerAssetDTO;
 import io.nuls.api.model.entity.*;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.po.mini.CancelDepositInfo;
-import io.nuls.api.rpc.RpcCall;
-import io.nuls.api.utils.LoggerUtil;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
@@ -18,24 +17,18 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.TxStatusEnum;
 import io.nuls.core.constant.TxType;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
-import io.nuls.core.parse.JSONUtils;
-import io.nuls.core.rpc.info.Constants;
-import io.nuls.core.rpc.model.ModuleE;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-
-import static io.nuls.api.constant.ApiConstant.*;
 
 public class AnalysisHandler {
 
@@ -57,53 +50,19 @@ public class AnalysisHandler {
         BlockHeaderInfo blockHeader = toBlockHeaderInfo(block.getHeader(), chainId);
         blockHeader.setSize(bytes.length);
         blockHeader.setTxHashList(new ArrayList<>());
-        //提取智能合约相关交易的hash，查询合约执行结果
-        //Extract the hash of smart contract related transactions and query the contract execution results
-        List<String> contactHashList = new ArrayList<>();
-        for (Transaction tx : block.getTxs()) {
-            if (tx.getType() == TxType.CREATE_CONTRACT ||
-                    tx.getType() == TxType.CALL_CONTRACT ||
-                    tx.getType() == TxType.DELETE_CONTRACT) {
-                contactHashList.add(tx.getHash().toHex());
-            }
-        }
 
         BlockHexInfo hexInfo = new BlockHexInfo();
         hexInfo.setHeight(blockHeader.getHeight());
         hexInfo.setBlockHex(blockHex);
-        hexInfo.setContractHashList(contactHashList);
         blockInfo.setBlockHexInfo(hexInfo);
 
-        Map<String, ContractResultInfo> resultInfoMap = null;
-        if (!contactHashList.isEmpty()) {
-            Result<Map<String, ContractResultInfo>> result = WalletRpcHandler.getContractResults(chainId, contactHashList);
-            if (result.isFailed()) {
-                return null;
-            } else {
-                resultInfoMap = result.getData();
-            }
-        }
-        //执行成功的智能合约可能会产生系统内部交易，内部交易的序列化信息存放在执行结果中,将内部交易反序列后，一起解析
-        //A successful intelligent contract execution may result in system internal trading.
-        // The serialized information of internal trading is stored in the execution result, and the internal trading is reversed and parsed together
-        if (resultInfoMap != null) {
-            for (ContractResultInfo resultInfo : resultInfoMap.values()) {
-                if (resultInfo.getContractTxList() != null) {
-                    for (String txHex : resultInfo.getContractTxList()) {
-                        Transaction tx = new Transaction();
-                        tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                        tx.setBlockHeight(blockHeader.getHeight());
-                        block.getTxs().add(tx);
-                        // blockInfo.getTxList().add(toTransaction(chainId, tx));
-                    }
-                }
-            }
-        }
-        blockInfo.setTxList(toTxs(chainId, block.getTxs(), blockHeader, resultInfoMap));
+        blockInfo.setTxList(toTxs(chainId, block.getTxs(), blockHeader));
         //计算coinBase奖励
         blockHeader.setReward(calcCoinBaseReward(chainId, blockInfo.getTxList().get(0)));
+
         //计算总手续费
         blockHeader.setTotalFee(calcFee(blockInfo.getTxList(), chainId));
+
         //重新计算区块打包的交易个数
         blockHeader.setTxCount(blockInfo.getTxList().size());
         blockInfo.setHeader(blockHeader);
@@ -111,41 +70,41 @@ public class AnalysisHandler {
     }
 
 
-    public static BlockInfo toBlockInfo(String blockHex, Map<String, ContractResultInfo> resultInfoMap, int chainId) throws Exception {
-        byte[] bytes = RPCUtil.decode(blockHex);
-        Block block = new Block();
-        block.parse(new NulsByteBuffer(bytes));
-
-        BlockInfo blockInfo = new BlockInfo();
-        BlockHeaderInfo blockHeader = toBlockHeaderInfo(block.getHeader(), chainId);
-        blockHeader.setSize(bytes.length);
-        blockHeader.setTxHashList(new ArrayList<>());
-
-        //执行成功的智能合约可能会产生系统内部交易，内部交易的序列化信息存放在执行结果中,将内部交易反序列后，一起解析
-        //A successful intelligent contract execution may result in system internal trading.
-        // The serialized information of internal trading is stored in the execution result, and the internal trading is reversed and parsed together
-        if (resultInfoMap != null) {
-            for (ContractResultInfo resultInfo : resultInfoMap.values()) {
-                if (resultInfo.getContractTxList() != null) {
-                    for (String txHex : resultInfo.getContractTxList()) {
-                        Transaction tx = new Transaction();
-                        tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                        tx.setBlockHeight(blockHeader.getHeight());
-                        block.getTxs().add(tx);
-                    }
-                }
-            }
-        }
-        blockInfo.setTxList(toTxs(chainId, block.getTxs(), blockHeader, resultInfoMap));
-        //计算coinBase奖励
-        blockHeader.setReward(calcCoinBaseReward(chainId, blockInfo.getTxList().get(0)));
-        //计算总手续费
-        blockHeader.setTotalFee(calcFee(blockInfo.getTxList(), chainId));
-        //重新计算区块打包的交易个数
-        blockHeader.setTxCount(blockInfo.getTxList().size());
-        blockInfo.setHeader(blockHeader);
-        return blockInfo;
-    }
+//    public static BlockInfo toBlockInfo(String blockHex, Map<String, ContractResultInfo> resultInfoMap, int chainId) throws Exception {
+//        byte[] bytes = RPCUtil.decode(blockHex);
+//        Block block = new Block();
+//        block.parse(new NulsByteBuffer(bytes));
+//
+//        BlockInfo blockInfo = new BlockInfo();
+//        BlockHeaderInfo blockHeader = toBlockHeaderInfo(block.getHeader(), chainId);
+//        blockHeader.setSize(bytes.length);
+//        blockHeader.setTxHashList(new ArrayList<>());
+//
+//        //执行成功的智能合约可能会产生系统内部交易，内部交易的序列化信息存放在执行结果中,将内部交易反序列后，一起解析
+//        //A successful intelligent contract execution may result in system internal trading.
+//        // The serialized information of internal trading is stored in the execution result, and the internal trading is reversed and parsed together
+//        if (resultInfoMap != null) {
+//            for (ContractResultInfo resultInfo : resultInfoMap.values()) {
+//                if (resultInfo.getContractTxList() != null) {
+//                    for (String txHex : resultInfo.getContractTxList()) {
+//                        Transaction tx = new Transaction();
+//                        tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
+//                        tx.setBlockHeight(blockHeader.getHeight());
+//                        block.getTxs().add(tx);
+//                    }
+//                }
+//            }
+//        }
+//        blockInfo.setTxList(toTxs(chainId, block.getTxs(), blockHeader, resultInfoMap));
+//        //计算coinBase奖励
+//        blockHeader.setReward(calcCoinBaseReward(chainId, blockInfo.getTxList().get(0)));
+//        //计算总手续费
+//        blockHeader.setTotalFee(calcFee(blockInfo.getTxList(), chainId));
+//        //重新计算区块打包的交易个数
+//        blockHeader.setTxCount(blockInfo.getTxList().size());
+//        blockInfo.setHeader(blockHeader);
+//        return blockInfo;
+//    }
 
 
     public static BlockHeaderInfo toBlockHeaderInfo(BlockHeader blockHeader, int chainId) throws IOException {
@@ -173,12 +132,12 @@ public class AnalysisHandler {
         return info;
     }
 
-    public static List<TransactionInfo> toTxs(int chainId, List<Transaction> txList, BlockHeaderInfo blockHeader, Map<String, ContractResultInfo> resultInfoMap) throws Exception {
+    public static List<TransactionInfo> toTxs(int chainId, List<Transaction> txList, BlockHeaderInfo blockHeader) throws Exception {
         List<TransactionInfo> txs = new ArrayList<>();
         for (int i = 0; i < txList.size(); i++) {
             Transaction tx = txList.get(i);
             tx.setStatus(TxStatusEnum.CONFIRMED);
-            TransactionInfo txInfo = toTransaction(chainId, tx, resultInfoMap);
+            TransactionInfo txInfo = toTransaction(chainId, tx);
             if (txInfo.getType() == TxType.RED_PUNISH) {
                 PunishLogInfo punishLog = (PunishLogInfo) txInfo.getTxData();
                 punishLog.setRoundIndex(blockHeader.getRoundIndex());
@@ -221,58 +180,10 @@ public class AnalysisHandler {
             info.setCoinFroms(toCoinFromList(coinData));
             info.setCoinTos(toCoinToList(coinData));
         }
-        if (info.getType() == TxType.YELLOW_PUNISH) {
-            info.setTxDataList(toYellowPunish(tx));
-        } else {
-            info.setTxData(toTxData(chainId, tx));
-            info.setTxDataList(toTxDataList(chainId, tx));
-        }
+        info.setTxData(toTxData(chainId, tx));
+        info.setTxDataList(toTxDataList(chainId, tx));
         info.calcValue();
         info.calcFee(chainId);
-        return info;
-    }
-
-    public static TransactionInfo toTransaction(int chainId, Transaction tx, Map<String, ContractResultInfo> resultInfoMap) throws Exception {
-        TransactionInfo info = new TransactionInfo();
-        info.setHash(tx.getHash().toHex());
-        info.setHeight(tx.getBlockHeight());
-        info.setType(tx.getType());
-        info.setSize(tx.getSize());
-        info.setCreateTime(tx.getTime());
-        if (tx.getTxData() != null) {
-            info.setTxDataHex(RPCUtil.encode(tx.getTxData()));
-        }
-        if (tx.getRemark() != null) {
-            info.setRemark(new String(tx.getRemark(), StandardCharsets.UTF_8));
-        }
-
-        CoinData coinData = new CoinData();
-        if (tx.getCoinData() != null) {
-            coinData.parse(new NulsByteBuffer(tx.getCoinData()));
-            info.setCoinFroms(toCoinFromList(coinData));
-            info.setCoinTos(toCoinToList(coinData));
-        }
-        ContractResultInfo resultInfo = null;
-        if (resultInfoMap != null) {
-            resultInfo = resultInfoMap.get(info.getHash());
-        }
-        if (resultInfo == null) {
-            if (info.getType() == TxType.YELLOW_PUNISH) {
-                info.setTxDataList(toYellowPunish(tx));
-            } else {
-                info.setTxData(toTxData(chainId, tx));
-                info.setTxDataList(toTxDataList(chainId,tx));
-            }
-        } else {
-            info.setTxData(toTxData(chainId, tx, resultInfo));
-        }
-        info.calcValue();
-        info.calcFee(chainId);
-        if (tx.getStatus() == TxStatusEnum.UNCONFIRM) {
-            info.setStatus(ApiConstant.TX_UNCONFIRM);
-        } else {
-            info.setStatus(ApiConstant.TX_CONFIRM);
-        }
         return info;
     }
 
@@ -281,6 +192,7 @@ public class AnalysisHandler {
             return null;
         }
         List<CoinFromInfo> fromInfoList = new ArrayList<>();
+        SymbolRegService symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
         for (CoinFrom from : coinData.getFrom()) {
             CoinFromInfo fromInfo = new CoinFromInfo();
             fromInfo.setAddress(AddressTool.getStringAddressByBytes(from.getAddress()));
@@ -289,7 +201,12 @@ public class AnalysisHandler {
             fromInfo.setLocked(from.getLocked());
             fromInfo.setAmount(from.getAmount());
             fromInfo.setNonce(HexUtil.encode(from.getNonce()));
-            // fromInfo.setSymbol(CacheManager.getRegisteredAsset(fromInfo.getAssetKey()).getSymbol());
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(from.getAssetsChainId(),from.getAssetsId());
+            if(symbolRegInfo == null){
+                Log.error("数据异常，未找到对应资产注册信息:{}",from.getAssetsChainId() + "-" + from.getAssetsId());
+                throw new RuntimeException();
+            }
+            fromInfo.setSymbol(symbolRegInfo.getSymbol());
             fromInfoList.add(fromInfo);
         }
         return fromInfoList;
@@ -300,6 +217,7 @@ public class AnalysisHandler {
             return null;
         }
         List<CoinToInfo> toInfoList = new ArrayList<>();
+        SymbolRegService symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
         for (CoinTo to : coinData.getTo()) {
             CoinToInfo coinToInfo = new CoinToInfo();
             coinToInfo.setAddress(AddressTool.getStringAddressByBytes(to.getAddress()));
@@ -307,7 +225,12 @@ public class AnalysisHandler {
             coinToInfo.setChainId(to.getAssetsChainId());
             coinToInfo.setLockTime(to.getLockTime());
             coinToInfo.setAmount(to.getAmount());
-            //       coinToInfo.setSymbol(CacheManager.getRegisteredAsset(coinToInfo.getAssetKey()).getSymbol());
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(coinToInfo.getChainId(),coinToInfo.getAssetsId());
+            if(symbolRegInfo == null){
+                Log.error("数据异常，未找到对应资产注册信息:{}",coinToInfo.getChainId() + "-" + coinToInfo.getAssetsId());
+                throw new RuntimeException();
+            }
+            coinToInfo.setSymbol(symbolRegInfo.getSymbol());
             toInfoList.add(coinToInfo);
         }
         return toInfoList;
@@ -317,85 +240,69 @@ public class AnalysisHandler {
 //        Log.info("接收到新交易，交易类型:{}",tx.getType());
         if (tx.getType() == TxType.ACCOUNT_ALIAS) {
             return toAlias(tx);
-        } else if (tx.getType() == TxType.REGISTER_AGENT || tx.getType() == TxType.CONTRACT_CREATE_AGENT) {
+        } else if (tx.getType() == TxType.REGISTER_AGENT ) {
             return toAgent(tx);
-        } else if (tx.getType() == TxType.DEPOSIT || tx.getType() == TxType.CONTRACT_DEPOSIT) {
+        } else if (tx.getType() == TxType.DEPOSIT) {
             return toDeposit(tx);
-        } else if (tx.getType() == TxType.CANCEL_DEPOSIT || tx.getType() == TxType.CONTRACT_CANCEL_DEPOSIT) {
+        } else if (tx.getType() == TxType.CANCEL_DEPOSIT) {
             return toCancelDeposit(tx);
-        } else if (tx.getType() == TxType.STOP_AGENT || tx.getType() == TxType.CONTRACT_STOP_AGENT) {
+        } else if (tx.getType() == TxType.STOP_AGENT) {
             return toStopAgent(tx);
         } else if (tx.getType() == TxType.RED_PUNISH) {
             return toRedPublishLog(tx);
-        } else if (tx.getType() == TxType.CREATE_CONTRACT) {
-            return toContractInfo(chainId, tx);
-        } else if (tx.getType() == TxType.CALL_CONTRACT) {
-            return toContractCallInfo(chainId, tx);
-        } else if (tx.getType() == TxType.CROSS_CHAIN) {
-            //todo cross chain business
-        } else if (tx.getType() == TxType.DELETE_CONTRACT) {
-            return toContractDeleteInfo(chainId, tx);
-        } else if (tx.getType() == TxType.CONTRACT_TRANSFER) {
-            return toContractTransferInfo(tx);
-        } else if (tx.getType() == TxType.REGISTER_CHAIN_AND_ASSET || tx.getType() == TxType.DESTROY_CHAIN_AND_ASSET) {
-            return toChainInfo(tx);
-        } else if (tx.getType() == TxType.ADD_ASSET_TO_CHAIN || tx.getType() == TxType.REMOVE_ASSET_FROM_CHAIN) {
-            return toAssetInfo(tx);
         } else if (tx.getType() == TxType.APPEND_AGENT_DEPOSIT || tx.getType() == TxType.REDUCE_AGENT_DEPOSIT) {
             return toChangeAgentDepositData(tx);
         } else if (tx.getType() == TxType.CONFIRM_WITHDRAWAL || tx.getType() == TxType.RECHARGE) {
-            return toConverterTxInfo(tx);
+            return toConverterTxInfo(chainId,tx);
+        } else if (tx.getType() == TxType.LEDGER_ASSET_REG_TRANSFER) {
+            return toLedgerAssetInfo(chainId, tx);
+        } else if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK ) {
+            return toChangeVirtualBank(tx);
         }
 //        Log.warn("未处理交易类型：{}",tx.getType());
         return null;
     }
 
     private static List<TxDataInfo> toTxDataList(int chainId, Transaction tx) throws NulsException {
-        switch (tx.getType()){
+        switch (tx.getType()) {
+            case TxType.YELLOW_PUNISH:
+                return toYellowPunish(tx);
             case TxType.FINAL_QUOTATION:
                 return toSymbolPriceInfo(tx);
             case TxType.QUOTATION:
                 return toSymbolQuotationRecordInfo(tx);
-            default: return List.of();
+            case TxType.CROSS_CHAIN:
+                return toNativePlatformCrossTxInfo(chainId,tx);
+            default:
+                return List.of();
         }
-    }
-
-
-    public static TxDataInfo toTxData(int chainId, Transaction tx, ContractResultInfo resultInfo) throws NulsException {
-        if (tx.getType() == TxType.CREATE_CONTRACT) {
-            return toContractInfo(chainId, tx, resultInfo);
-        } else if (tx.getType() == TxType.CALL_CONTRACT) {
-            return toContractCallInfo(chainId, tx, resultInfo);
-        } else if (tx.getType() == TxType.DELETE_CONTRACT) {
-            return toContractDeleteInfo(chainId, tx, resultInfo);
-        }
-        return null;
     }
 
     /**
      * 解析最终喂价交易
+     *
      * @param tx
      * @return
      * @throws Exception
      */
     public static List<TxDataInfo> toSymbolPriceInfo(Transaction tx) throws NulsException {
-        Log.info("开始处理喂价最终确认交易:{}",tx.getBlockHeight());
+        Log.info("开始处理喂价最终确认交易:{}", tx.getBlockHeight());
         SymbolPrices symbolPrices = new SymbolPrices();
         symbolPrices.parse(new NulsByteBuffer(tx.getTxData()));
-        return toSymbolPriceInfo(symbolPrices,tx,StackSymbolPriceInfo.class);
+        return toSymbolPriceInfo(symbolPrices, tx, StackSymbolPriceInfo.class);
     }
 
-    public static List<TxDataInfo> toSymbolPriceInfo(SymbolPrices symbolPrices,Transaction tx,Class<? extends StackSymbolPriceInfo> clazs) throws NulsException {
-        return symbolPrices.getPrices().stream().map(p->{
+    public static List<TxDataInfo> toSymbolPriceInfo(SymbolPrices symbolPrices, Transaction tx, Class<? extends StackSymbolPriceInfo> clazs) throws NulsException {
+        return symbolPrices.getPrices().stream().map(p -> {
             StackSymbolPriceInfo spi = null;
             try {
                 spi = clazs.getConstructor().newInstance();
             } catch (Exception e) {
-                Log.error("create {} instance error",clazs);
+                Log.error("create {} instance error", clazs);
                 System.exit(0);
             }
             spi.setBlockHeight(tx.getBlockHeight());
-            spi.setCreateTime(tx.getTime());
+            spi.setCreateTime(tx.getTime() * 1000L);
             spi.setCurrency(p.getCurrency());
             spi.setPrice(p.getPrice());
             spi.setSymbol(p.getSymbol());
@@ -406,22 +313,23 @@ public class AnalysisHandler {
 
     /**
      * 解析喂价提交交易
+     *
      * @param tx
      * @return
      * @throws NulsException
      */
     public static List<TxDataInfo> toSymbolQuotationRecordInfo(Transaction tx) throws NulsException {
-        Log.info("开始处理喂价提交交易:{}",tx.getBlockHeight());
+        Log.info("开始处理喂价提交交易:{}", tx.getBlockHeight());
         Quotation quotation = new Quotation();
         quotation.parse(new NulsByteBuffer(tx.getTxData()));
-        List<TxDataInfo> prices = toSymbolPriceInfo(quotation.getPrices(),tx,SymbolQuotationRecordInfo.class);
-        return prices.stream().map(d->{
+        List<TxDataInfo> prices = toSymbolPriceInfo(quotation.getPrices(), tx, SymbolQuotationRecordInfo.class);
+        return prices.stream().map(d -> {
             SymbolQuotationRecordInfo info = (SymbolQuotationRecordInfo) d;
             info.setAddress(AddressTool.getStringAddressByBytes(quotation.getAddress()));
+            info.setCreateTime(tx.getTime() * 1000L);
             return info;
         }).collect(Collectors.toList());
     }
-
 
 
     public static AliasInfo toAlias(Transaction tx) throws NulsException {
@@ -430,6 +338,7 @@ public class AnalysisHandler {
         AliasInfo info = new AliasInfo();
         info.setAddress(AddressTool.getStringAddressByBytes(alias.getAddress()));
         info.setAlias(alias.getAlias());
+        info.setBlockHeight(tx.getBlockHeight());
         return info;
     }
 
@@ -476,11 +385,11 @@ public class AnalysisHandler {
         info.setFee(tx.getFee());
         info.setAssetChainId(deposit.getAssetChainId());
         info.setAssetId(deposit.getAssetId());
-        if(deposit.getDepositType() == StacKType.REGULAR){
+        if (deposit.getDepositType() == StacKType.REGULAR) {
             DepositFixedType depositFixedType = DepositFixedType.getValue(deposit.getTimeType());
-            if(depositFixedType == null){
-                Log.warn("未知的定期时间类型:{}",deposit.getTimeType());
-            }else{
+            if (depositFixedType == null) {
+                Log.warn("未知的定期时间类型:{}", deposit.getTimeType());
+            } else {
                 info.setFixedType(depositFixedType.name());
             }
         }
@@ -536,8 +445,6 @@ public class AnalysisHandler {
         punishLog.setAddress(AddressTool.getStringAddressByBytes(data.getAddress()));
         if (data.getReasonCode() == ApiConstant.TRY_FORK) {
             punishLog.setReason("Trying to bifurcate many times");
-        } else if (data.getReasonCode() == ApiConstant.DOUBLE_SPEND) {
-            punishLog.setReason("double-send tx in the block");
         } else if (data.getReasonCode() == ApiConstant.TOO_MUCH_YELLOW_PUNISH) {
             punishLog.setReason("too much yellow publish");
         }
@@ -546,321 +453,167 @@ public class AnalysisHandler {
         return punishLog;
     }
 
-    public static ContractInfo toContractInfo(int chainId, Transaction tx) throws NulsException {
-        CreateContractData data = new CreateContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-        ContractInfo contractInfo = new ContractInfo();
-        contractInfo.setCreateTxHash(tx.getHash().toHex());
-        contractInfo.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        contractInfo.setAlias(data.getAlias());
-        contractInfo.setBlockHeight(tx.getBlockHeight());
-        contractInfo.setCreateTime(tx.getTime());
-        try {
-            String args = JSONUtils.obj2json(data.getArgs());
-            contractInfo.setArgs(args);
-        } catch (JsonProcessingException e) {
-            throw new NulsException(CommonCodeConstanst.DATA_PARSE_ERROR);
-        }
-        if (tx.getStatus() == TxStatusEnum.CONFIRMED) {
-            Result<ContractInfo> result = WalletRpcHandler.getContractInfo(chainId, contractInfo);
-            return result.getData();
-        }
-        return contractInfo;
-    }
-
-    public static ContractInfo toContractInfo(int chainId, Transaction tx, ContractResultInfo resultInfo) throws NulsException {
-        CreateContractData data = new CreateContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-        ContractInfo contractInfo = new ContractInfo();
-        contractInfo.setCreateTxHash(tx.getHash().toHex());
-        contractInfo.setAlias(data.getAlias());
-        contractInfo.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        contractInfo.setBlockHeight(tx.getBlockHeight());
-        contractInfo.setCreateTime(tx.getTime());
-        try {
-            String args = JSONUtils.obj2json(data.getArgs());
-            contractInfo.setArgs(args);
-        } catch (JsonProcessingException e) {
-            throw new NulsException(CommonCodeConstanst.DATA_PARSE_ERROR);
-        }
-        contractInfo.setResultInfo(resultInfo);
-        if (!resultInfo.isSuccess()) {
-            contractInfo.setSuccess(false);
-            contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_FAIL);
-            contractInfo.setErrorMsg(resultInfo.getErrorMessage());
-            return contractInfo;
-        }
-        contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_NORMAL);
-        contractInfo.setSuccess(true);
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.CHAIN_ID, chainId);
-        params.put("contractAddress", contractInfo.getContractAddress());
-        params.put("hash", contractInfo.getCreateTxHash());
-        LoggerUtil.commonLog.info("------ContractAddress:" + contractInfo.getContractAddress());
-        Map map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_INFO, params);
-
-        contractInfo.setCreater(map.get("creater").toString());
-        contractInfo.setNrc20((Boolean) map.get("nrc20"));
-        contractInfo.setTokenType((Integer) map.get("tokenType"));
-        contractInfo.setDirectPayable((Boolean) map.get("directPayable"));
-        if (contractInfo.isNrc20()) {
-            contractInfo.setTokenName(map.get("nrc20TokenName").toString());
-            contractInfo.setSymbol(map.get("nrc20TokenSymbol").toString());
-            contractInfo.setDecimals((Integer) map.get("decimals"));
-            contractInfo.setTotalSupply(map.get("totalSupply").toString());
-            contractInfo.setOwners(new ArrayList<>());
+    public static ChangeVirtualBankInfo toChangeVirtualBank(Transaction tx) throws NulsException {
+        ChangeVirtualBankTxData changeVirtualBankTxData = new ChangeVirtualBankTxData();
+        changeVirtualBankTxData.parse(new NulsByteBuffer(tx.getTxData()));
+        ChangeVirtualBankInfo info = new ChangeVirtualBankInfo();
+        if(changeVirtualBankTxData.getInAgents() != null){
+            info.setInAgents(changeVirtualBankTxData.getInAgents().stream().map(AddressTool::getStringAddressByBytes).collect(Collectors.toList()));
+        }else{
+            info.setInAgents(List.of());
         }
 
-        List<Map<String, Object>> methodMap = (List<Map<String, Object>>) map.get("method");
-        List<ContractMethod> methodList = new ArrayList<>();
-        List<Map<String, Object>> argsList;
-        List<ContractMethodArg> paramList;
-        for (Map<String, Object> map1 : methodMap) {
-            ContractMethod method = new ContractMethod();
-            method.setName((String) map1.get("name"));
-            method.setDesc((String) map1.get("desc"));
-            method.setReturnType((String) map1.get("returnArg"));
-            method.setView((boolean) map1.get("view"));
-            method.setPayable((boolean) map1.get("payable"));
-            method.setEvent((boolean) map1.get("event"));
-            method.setJsonSerializable((boolean) map1.get("jsonSerializable"));
-            argsList = (List<Map<String, Object>>) map1.get("args");
-            paramList = new ArrayList<>();
-            for (Map<String, Object> arg : argsList) {
-                paramList.add(makeContractMethodArg(arg));
-            }
-            method.setParams(paramList);
-            methodList.add(method);
-        }
-        contractInfo.setMethods(methodList);
-        return contractInfo;
-    }
-
-    private static ContractMethodArg makeContractMethodArg(Map<String, Object> arg) {
-        return new ContractMethodArg((String) arg.get("type"), (String) arg.get("name"), (boolean) arg.get("required"));
-    }
-
-    public static ContractCallInfo toContractCallInfo(int chainId, Transaction tx) throws NulsException {
-        CallContractData data = new CallContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-
-        ContractCallInfo callInfo = new ContractCallInfo();
-        callInfo.setCreater(AddressTool.getStringAddressByBytes(data.getSender()));
-        callInfo.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        callInfo.setGasLimit(data.getGasLimit());
-        callInfo.setPrice(data.getPrice());
-        callInfo.setMethodName(data.getMethodName());
-        callInfo.setMethodDesc(data.getMethodDesc());
-        callInfo.setCreateTxHash(tx.getHash().toHex());
-        callInfo.setValue(data.getValue());
-        try {
-            String args = JSONUtils.obj2json(data.getArgs());
-            callInfo.setArgs(args);
-        } catch (JsonProcessingException e) {
-            throw new NulsException(CommonCodeConstanst.DATA_PARSE_ERROR);
-        }
-
-        //查询智能合约详情之前，先查询创建智能合约的执行结果是否成功
-        if (tx.getStatus() == TxStatusEnum.CONFIRMED) {
-            Result<ContractResultInfo> result = WalletRpcHandler.getContractResultInfo(chainId, callInfo.getCreateTxHash());
-            callInfo.setResultInfo(result.getData());
-        }
-        return callInfo;
-    }
-
-    public static ContractCallInfo toContractCallInfo(int chainId, Transaction tx, ContractResultInfo resultInfo) throws NulsException {
-        CallContractData data = new CallContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-
-        ContractCallInfo callInfo = new ContractCallInfo();
-        callInfo.setCreater(AddressTool.getStringAddressByBytes(data.getSender()));
-        callInfo.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        callInfo.setGasLimit(data.getGasLimit());
-        callInfo.setPrice(data.getPrice());
-        callInfo.setMethodName(data.getMethodName());
-        callInfo.setMethodDesc(data.getMethodDesc());
-        callInfo.setCreateTxHash(tx.getHash().toHex());
-        callInfo.setValue(data.getValue());
-        try {
-            String args = JSONUtils.obj2json(data.getArgs());
-            callInfo.setArgs(args);
-        } catch (JsonProcessingException e) {
-            throw new NulsException(CommonCodeConstanst.DATA_PARSE_ERROR);
-        }
-        callInfo.setResultInfo(resultInfo);
-        return callInfo;
-    }
-
-    public static ContractDeleteInfo toContractDeleteInfo(int chainId, Transaction tx) throws NulsException {
-        DeleteContractData data = new DeleteContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-
-        ContractDeleteInfo info = new ContractDeleteInfo();
-        info.setTxHash(tx.getHash().toHex());
-        info.setCreater(AddressTool.getStringAddressByBytes(data.getSender()));
-        info.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        if (tx.getStatus() == TxStatusEnum.CONFIRMED) {
-            Result<ContractResultInfo> result = WalletRpcHandler.getContractResultInfo(chainId, info.getTxHash());
-            info.setResultInfo(result.getData());
-        }
-
+        if(changeVirtualBankTxData.getOutAgents() != null){
+            info.setOutAgents(changeVirtualBankTxData.getOutAgents().stream().map(AddressTool::getStringAddressByBytes).collect(Collectors.toList()));
+        }else{
+            info.setOutAgents(List.of());
+        };
         return info;
     }
 
-    public static ContractDeleteInfo toContractDeleteInfo(int chainId, Transaction tx, ContractResultInfo resultInfo) throws NulsException {
-        DeleteContractData data = new DeleteContractData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
+//
+//
+//    private static ChainInfo toChainInfo(Transaction tx) throws NulsException {
+//        ChainInfo chainInfo = new ChainInfo();
+//        if (ApiContext.protocolVersion < 4) {
+//            TxChain txChain = new TxChain();
+//            txChain.parse(new NulsByteBuffer(tx.getTxData()));
+//            chainInfo.setChainId(txChain.getDefaultAsset().getChainId());
+//
+//            AssetInfo assetInfo = new AssetInfo();
+//            assetInfo.setAssetId(txChain.getDefaultAsset().getAssetId());
+//            assetInfo.setChainId(txChain.getDefaultAsset().getChainId());
+//            assetInfo.setSymbol(txChain.getDefaultAsset().getSymbol());
+//            assetInfo.setInitCoins(txChain.getDefaultAsset().getInitNumber());
+//            chainInfo.setDefaultAsset(assetInfo);
+//            chainInfo.getAssets().add(assetInfo);
+//        } else {
+//            io.nuls.api.model.entity.v4.TxChain txChain = new io.nuls.api.model.entity.v4.TxChain();
+//            txChain.parse(new NulsByteBuffer(tx.getTxData()));
+//            chainInfo.setChainId(txChain.getDefaultAsset().getChainId());
+//
+//            AssetInfo assetInfo = new AssetInfo();
+//            assetInfo.setAssetId(txChain.getDefaultAsset().getAssetId());
+//            assetInfo.setChainId(txChain.getDefaultAsset().getChainId());
+//            assetInfo.setSymbol(txChain.getDefaultAsset().getSymbol());
+//            assetInfo.setInitCoins(txChain.getDefaultAsset().getInitNumber());
+//            chainInfo.setDefaultAsset(assetInfo);
+//            chainInfo.getAssets().add(assetInfo);
+//        }
+//
+//
+//        return chainInfo;
+//    }
+//
+//    private static AssetInfo toAssetInfo(Transaction tx) throws NulsException {
+//        AssetInfo assetInfo = new AssetInfo();
+//        if (ApiContext.protocolVersion >= 4) {
+//            io.nuls.api.model.entity.v4.TxAsset txAsset = new io.nuls.api.model.entity.v4.TxAsset();
+//            txAsset.parse(new NulsByteBuffer(tx.getTxData()));
+//
+//            assetInfo.setAssetId(txAsset.getAssetId());
+//            assetInfo.setChainId(txAsset.getChainId());
+//            assetInfo.setSymbol(txAsset.getSymbol());
+//            assetInfo.setInitCoins(txAsset.getInitNumber());
+//            assetInfo.setAddress("");
+//        } else {
+//            TxAsset txAsset = new TxAsset();
+//            txAsset.parse(new NulsByteBuffer(tx.getTxData()));
+//
+//            assetInfo.setAssetId(txAsset.getAssetId());
+//            assetInfo.setChainId(txAsset.getChainId());
+//            assetInfo.setSymbol(txAsset.getSymbol());
+//            assetInfo.setInitCoins(txAsset.getInitNumber());
+//            assetInfo.setAddress(AddressTool.getStringAddressByBytes(txAsset.getAddress()));
+//        }
+//
+//        return assetInfo;
+//    }
 
-        ContractDeleteInfo info = new ContractDeleteInfo();
-        info.setTxHash(tx.getHash().toHex());
-        info.setCreater(AddressTool.getStringAddressByBytes(data.getSender()));
-        info.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        info.setResultInfo(resultInfo);
-        return info;
-    }
-
-    public static ContractResultInfo toContractResultInfo(String hash, Map<String, Object> resultMap) {
-        ContractResultInfo resultInfo = new ContractResultInfo();
-        resultInfo.setTxHash(hash);
-        resultInfo.setSuccess((Boolean) resultMap.get("success"));
-        resultInfo.setContractAddress((String) resultMap.get("contractAddress"));
-        resultInfo.setErrorMessage((String) resultMap.get("errorMessage"));
-        resultInfo.setResult((String) resultMap.get("result"));
-
-        resultInfo.setGasUsed(resultMap.get("gasUsed") != null ? Long.parseLong(resultMap.get("gasUsed").toString()) : 0);
-        resultInfo.setGasLimit(resultMap.get("gasLimit") != null ? Long.parseLong(resultMap.get("gasLimit").toString()) : 0);
-        resultInfo.setPrice(resultMap.get("price") != null ? Long.parseLong(resultMap.get("price").toString()) : 0);
-        resultInfo.setTotalFee((String) resultMap.get("totalFee"));
-        resultInfo.setTxSizeFee((String) resultMap.get("txSizeFee"));
-        resultInfo.setActualContractFee((String) resultMap.get("actualContractFee"));
-        resultInfo.setRefundFee((String) resultMap.get("refundFee"));
-        resultInfo.setValue((String) resultMap.get("value"));
-        //resultInfo.setBalance((String) map.get("balance"));
-        resultInfo.setEvents((List<String>) resultMap.get("events"));
-        resultInfo.setRemark((String) resultMap.get("remark"));
-        resultInfo.setContractTxList((List<String>) resultMap.get("contractTxList"));
-
-        List<Map<String, Object>> transfers = (List<Map<String, Object>>) resultMap.get("transfers");
-        List<NulsTransfer> transferList = new ArrayList<>();
-        for (Map map1 : transfers) {
-            NulsTransfer nulsTransfer = new NulsTransfer();
-            nulsTransfer.setTxHash((String) map1.get("txHash"));
-            nulsTransfer.setFrom((String) map1.get("from"));
-            nulsTransfer.setValue((String) map1.get("value"));
-            nulsTransfer.setOutputs((List<Map<String, Object>>) map1.get("outputs"));
-            transferList.add(nulsTransfer);
-        }
-        resultInfo.setNulsTransfers(transferList);
-
-        transfers = (List<Map<String, Object>>) resultMap.get("tokenTransfers");
-        List<TokenTransfer> tokenTransferList = new ArrayList<>();
-        for (Map map1 : transfers) {
-            TokenTransfer tokenTransfer = new TokenTransfer();
-            tokenTransfer.setContractAddress((String) map1.get("contractAddress"));
-            tokenTransfer.setFromAddress((String) map1.get("from"));
-            tokenTransfer.setToAddress((String) map1.get("to"));
-            tokenTransfer.setValue((String) map1.get("value"));
-            tokenTransfer.setName((String) map1.get("name"));
-            tokenTransfer.setSymbol((String) map1.get("symbol"));
-            tokenTransfer.setDecimals((Integer) map1.get("decimals"));
-            tokenTransferList.add(tokenTransfer);
-        }
-        resultInfo.setTokenTransfers(tokenTransferList);
-
-        return resultInfo;
-    }
-
-    private static ContractTransferInfo toContractTransferInfo(Transaction tx) throws NulsException {
-        ContractTransferData data = new ContractTransferData();
-        data.parse(new NulsByteBuffer(tx.getTxData()));
-
-        ContractTransferInfo info = new ContractTransferInfo();
-        info.setTxHash(tx.getHash().toHex());
-        info.setContractAddress(AddressTool.getStringAddressByBytes(data.getContractAddress()));
-        info.setOrginTxHash(data.getOrginTxHash().toHex());
-        return info;
-    }
-
-    private static ChainInfo toChainInfo(Transaction tx) throws NulsException {
-        ChainInfo chainInfo = new ChainInfo();
-        if (ApiContext.protocolVersion < 4) {
-            TxChain txChain = new TxChain();
-            txChain.parse(new NulsByteBuffer(tx.getTxData()));
-            chainInfo.setChainId(txChain.getDefaultAsset().getChainId());
-
-            AssetInfo assetInfo = new AssetInfo();
-            assetInfo.setAssetId(txChain.getDefaultAsset().getAssetId());
-            assetInfo.setChainId(txChain.getDefaultAsset().getChainId());
-            assetInfo.setSymbol(txChain.getDefaultAsset().getSymbol());
-            assetInfo.setInitCoins(txChain.getDefaultAsset().getInitNumber());
-            chainInfo.setDefaultAsset(assetInfo);
-            chainInfo.getAssets().add(assetInfo);
-        } else {
-            io.nuls.api.model.entity.v4.TxChain txChain = new io.nuls.api.model.entity.v4.TxChain();
-            txChain.parse(new NulsByteBuffer(tx.getTxData()));
-            chainInfo.setChainId(txChain.getDefaultAsset().getChainId());
-
-            AssetInfo assetInfo = new AssetInfo();
-            assetInfo.setAssetId(txChain.getDefaultAsset().getAssetId());
-            assetInfo.setChainId(txChain.getDefaultAsset().getChainId());
-            assetInfo.setSymbol(txChain.getDefaultAsset().getSymbol());
-            assetInfo.setInitCoins(txChain.getDefaultAsset().getInitNumber());
-            chainInfo.setDefaultAsset(assetInfo);
-            chainInfo.getAssets().add(assetInfo);
-        }
-
-
-        return chainInfo;
-    }
-
-    private static AssetInfo toAssetInfo(Transaction tx) throws NulsException {
-        AssetInfo assetInfo = new AssetInfo();
-        if (ApiContext.protocolVersion >= 4) {
-            io.nuls.api.model.entity.v4.TxAsset txAsset = new io.nuls.api.model.entity.v4.TxAsset();
-            txAsset.parse(new NulsByteBuffer(tx.getTxData()));
-
-            assetInfo.setAssetId(txAsset.getAssetId());
-            assetInfo.setChainId(txAsset.getChainId());
-            assetInfo.setSymbol(txAsset.getSymbol());
-            assetInfo.setInitCoins(txAsset.getInitNumber());
-            assetInfo.setAddress("");
-        } else {
-            TxAsset txAsset = new TxAsset();
-            txAsset.parse(new NulsByteBuffer(tx.getTxData()));
-
-            assetInfo.setAssetId(txAsset.getAssetId());
-            assetInfo.setChainId(txAsset.getChainId());
-            assetInfo.setSymbol(txAsset.getSymbol());
-            assetInfo.setInitCoins(txAsset.getInitNumber());
-            assetInfo.setAddress(AddressTool.getStringAddressByBytes(txAsset.getAddress()));
-        }
-
-        return assetInfo;
-    }
-
-    private static ConverterTxInfo toConverterTxInfo(Transaction tx) throws NulsException {
+    private static ConverterTxInfo coinToConverterTxInfo(Coin coin, Transaction tx,ConverterTxType converterTxType){
         ConverterTxInfo info = new ConverterTxInfo();
-        info.setTxHash(tx.getHash().toHex());
         info.setBlockHeight(tx.getBlockHeight());
         info.setCreateTime(tx.getTime() * 1000L);
-        CoinTo coinTo = tx.getCoinDataInstance().getTo().stream().filter(d->d.getAssetsChainId() != ApiContext.defaultChainId|| d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
-        info.setAmount(coinTo.getAmount());
-        info.setAssetChainId(coinTo.getAssetsChainId());
-        info.setAssetId(coinTo.getAssetsId());
-        info.setAddress(AddressTool.getStringAddressByBytes(coinTo.getAddress()));
+        info.setTxHash(tx.getHash().toHex());
+        info.setCrossChainType(CrossChainType.NulsPlatform.name());
+        info.setConverterType(converterTxType.name());
+        info.setAmount(coin.getAmount());
+        info.setAssetChainId(coin.getAssetsChainId());
+        info.setAssetId(coin.getAssetsId());
+        info.setAddress(AddressTool.getStringAddressByBytes(coin.getAddress()));
+        return info;
+    }
+
+    private static List<TxDataInfo> toNativePlatformCrossTxInfo(int chainId, Transaction tx) throws NulsException {
+        boolean isIn = tx.getCoinDataInstance().getFrom().stream().anyMatch(d->AddressTool.getChainIdByAddress(d.getAddress()) != ApiContext.defaultChainId);
+        ConverterTxType converterTxType = isIn ? ConverterTxType.IN : ConverterTxType.OUT;
+        return tx.getCoinDataInstance().getTo().stream().map(d-> coinToConverterTxInfo(d,tx,converterTxType)).collect(Collectors.toList());
+    }
+
+    private static ConverterTxInfo toConverterTxInfo(int chainId, Transaction tx) throws NulsException {
+        ConverterTxInfo info = new ConverterTxInfo();
+        info.setBlockHeight(tx.getBlockHeight());
+        info.setCreateTime(tx.getTime() * 1000L);
+        info.setTxHash(tx.getHash().toHex());
+        info.setCrossChainType(CrossChainType.CrossPlatform.name());
         if(tx.getType() == TxType.CONFIRM_WITHDRAWAL){
-            //提现确认交易
             ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
             txData.parse(new NulsByteBuffer(tx.getTxData()));
+            Result<TransactionInfo> transactionInfoResult = WalletRpcHandler.getTx(chainId,txData.getWithdrawalTxHash().toHex());
+            if(transactionInfoResult.isFailed()){
+                Log.error("获取异构跨链提现交易失败");
+                throw new NulsException(CommonCodeConstanst.DATA_ERROR);
+            }
+            TransactionInfo txInfo = transactionInfoResult.getData();
+            CoinToInfo coinTo = txInfo.getCoinTos().stream().filter(d -> d.getChainId() != ApiContext.defaultChainId || d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
+            info.setAmount(coinTo.getAmount());
+            info.setAssetChainId(coinTo.getChainId());
+            info.setAssetId(coinTo.getAssetsId());
+            info.setAddress(coinTo.getAddress());
             info.setConverterType(ConverterTxType.OUT.name());
             info.setOuterTxHash(txData.getHeterogeneousTxHash());
         }else{
+            CoinTo coinTo = tx.getCoinDataInstance().getTo().stream().filter(d -> d.getAssetsChainId() != ApiContext.defaultChainId || d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
+            info.setAmount(coinTo.getAmount());
+            info.setAssetChainId(coinTo.getAssetsChainId());
+            info.setAssetId(coinTo.getAssetsId());
+            info.setAddress(AddressTool.getStringAddressByBytes(coinTo.getAddress()));
             RechargeTxData txData = new RechargeTxData();
             txData.parse(new NulsByteBuffer(tx.getTxData()));
             info.setConverterType(ConverterTxType.IN.name());
             info.setOuterTxHash(txData.getHeterogeneousTxHash());
         }
         return info;
+    }
+
+
+    /**
+     * 转换账本链上资产注册交易
+     *
+     * @param tx
+     * @return
+     * @throws NulsException
+     */
+    private static LedgerRegAssetInfo toLedgerAssetInfo(int chainId, Transaction tx) throws NulsException {
+        TxLedgerAsset txLedgerAsset = new TxLedgerAsset();
+        txLedgerAsset.parse(new NulsByteBuffer(tx.getTxData()));
+        LedgerRegAssetInfo info = new LedgerRegAssetInfo();
+        info.setAddress(AddressTool.getStringAddressByBytes(txLedgerAsset.getAddress()));
+        Result<LedgerAssetDTO> res = WalletRpcHandler.getAssetInfo(chainId, tx.getHash().toHex());
+        if (res.isSuccess()) {
+            LedgerAssetDTO dto = res.getData();
+            info.setAssetChainId(chainId);
+            info.setAssetId(dto.getAssetId());
+            info.setAddress(dto.getAssetOwnerAddress());
+            info.setInitNumber(dto.getInitNumber().multiply(BigInteger.TEN.pow(dto.getDecimalPlace())));
+            info.setSymbol(dto.getAssetSymbol());
+            info.setDecimal(dto.getDecimalPlace());
+            info.set_id(tx.getHash().toHex());
+            info.setBlockHeight(tx.getBlockHeight());
+            return info;
+        } else {
+            return null;
+        }
     }
 
     public static BigInteger calcCoinBaseReward(int chainId, TransactionInfo coinBaseTx) {
@@ -890,4 +643,6 @@ public class AnalysisHandler {
         }
         return fee;
     }
+
+
 }

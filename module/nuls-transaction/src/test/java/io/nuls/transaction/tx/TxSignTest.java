@@ -22,10 +22,7 @@ package io.nuls.transaction.tx;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.NulsSignData;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
@@ -43,8 +40,24 @@ import java.util.List;
  * @author Niels
  */
 public class TxSignTest {
+    public static void main(String[] args) throws NulsException {
+        String txHex = "e5007a8bd45e007a07174ccb22d8b990d51a2a9d3e54c43c36afe1c189c47b8c87434b199939e21104000198980dd5d44f66d249c1e16bdf96e392d88309390100e1f505000000000000000000000000000000000000000000000000000000000050d6dc010000000000000000000000000000000000000000000000000000000000d2021704000198980dd5d44f66d249c1e16bdf96e392d8830939040002000050d6dc01000000000000000000000000000000000000000000000000000000082eb33b6db9beaee7001704000198980dd5d44f66d249c1e16bdf96e392d883093904000100a086010000000000000000000000000000000000000000000000000000000000082eb33b6db9beaee700011704000198980dd5d44f66d249c1e16bdf96e392d8830939040002000050d6dc01000000000000000000000000000000000000000000000000000000feffffffffffffff6a2103af80fe5894a4bc170abdad90bbaad38840576136b3fc498a291bb92335c4ad0e473045022100f9166111735ba879bd3072249d66c5505bdfb6d789671444202a3474c6afba3f0220649320415ad42d7261ca21e123b429595c0c711d0a7fefa5bebfa433d1743020";
+        Transaction tx = new Transaction();
+        tx.parse(HexUtil.decode(txHex),0);
+        System.out.println(tx.getHash());
+        CoinData coinData = new CoinData();
+        coinData.parse(tx.getCoinData(),0);
+        for(CoinFrom from :coinData.getFrom()){
+            System.out.println("from : "+AddressTool.getStringAddressByBytes(from.getAddress()));
+        }
+        TransactionSignature sig = new TransactionSignature();
+        sig.parse(tx.getTransactionSignature(),0);
+        boolean result = SignatureUtil.validateCtxSignture(tx);
+        System.out.println("sign : "+AddressTool.getAddressString(sig.getP2PHKSignatures().get(0).getPublicKey(),4));
+        System.out.println(result);
+    }
 
-    public static void main(String[] args) throws NulsException, IOException {
+    public static void main1(String[] args) throws NulsException, IOException {
 //        String txSign = "2102b2c2595d41d30742d71d48ad728fd909406e3b5920af533ae578ec72647e082a00473045022100d483dad8cb5604bbff2f11ade34af8586aeeae462a05e5ffc50114ec684df8d502203cea35c819a01cbb66df215f1125b600217ca0e970da0683a44ada47f736419d";
 //        String txHash = "568533e38c472f9e0740f318038b49ebe6b59817ce374c6816bf645744beb6ed";
 //

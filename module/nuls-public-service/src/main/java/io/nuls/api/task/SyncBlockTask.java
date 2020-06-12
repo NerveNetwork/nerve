@@ -2,6 +2,8 @@ package io.nuls.api.task;
 
 import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
+import io.nuls.api.db.SymbolRegService;
+import io.nuls.api.exception.SyncException;
 import io.nuls.api.model.po.BlockHeaderInfo;
 import io.nuls.api.model.po.BlockInfo;
 import io.nuls.api.model.po.SyncInfo;
@@ -12,6 +14,9 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class SyncBlockTask implements Runnable {
 
     private int chainId;
@@ -20,18 +25,28 @@ public class SyncBlockTask implements Runnable {
 
     private RollbackService rollbackService;
 
+    private SymbolRegService symbolRegService;
+
+    private Lock synclock = new ReentrantLock();
+
     public SyncBlockTask(int chainId) {
         this.chainId = chainId;
         syncService = SpringLiteContext.getBean(SyncService.class);
         rollbackService = SpringLiteContext.getBean(RollbackService.class);
+        symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
     }
 
-    @Override
-    public void run() {
+    public void run(int resetCount) {
         if (!ApiContext.isReady) {
             LoggerUtil.commonLog.info("------- ApiModule wait for successful cross-chain networking  --------");
             return;
         }
+//        long start = System.currentTimeMillis();
+////        symbolRegService.updateSymbolRegList();
+//        long end = System.currentTimeMillis() - start;
+//        if(end > 500){
+//            Log.warn("同步资产信息耗时：{}",end);
+//        }
         //每次同步数据前都查看一下最新的同步信息，如果最新块的数据并没有在一次事务中完全处理，需要对区块数据进行回滚
         //Check the latest synchronization information before each entity synchronization.
         //If the latest block entity is not completely processed in one transaction, you need to roll back the block entity.
@@ -41,18 +56,36 @@ public class SyncBlockTask implements Runnable {
                 rollbackService.rollbackBlock(chainId, syncInfo.getBestHeight());
             }
         } catch (Exception e) {
-            Log.error(e);
-            return;
+            Log.error("回滚数据失败", e);
+            if (resetCount < 3) {
+                run(++resetCount);
+            } else {
+                Log.error("连续重试回滚失败，停止模块");
+                System.exit(0);
+            }
         }
-
         boolean running = true;
         while (running) {
             try {
                 running = syncBlock();
-            } catch (Exception e) {
-                Log.error(e);
-                running = false;
+            } catch (SyncException e) {
+                Log.error("同步数据失败，失败高度：{},失败原因:{}", e.height,e.getErrorCode(),e);
+                if (resetCount < 3) {
+                    Log.info("进行第{}次重试", resetCount);
+                    run(++resetCount);
+                } else {
+                    Log.error("连续重试同步失败，停止模块");
+                    System.exit(0);
+                }
             }
+        }
+    }
+
+    @Override
+    public void run() {
+        if (synclock.tryLock()) {
+            run(0);
+            synclock.unlock();
         }
     }
 
@@ -70,36 +103,36 @@ public class SyncBlockTask implements Runnable {
      *
      * @return boolean 是否还继续同步
      */
-    private boolean syncBlock() {
+    private boolean syncBlock() throws SyncException {
         BlockHeaderInfo localBestBlockHeader = syncService.getBestBlockHeader(chainId);
-        try {
-            return process(localBestBlockHeader);
-        } catch (Exception e) {
-            LoggerUtil.commonLog.error(e);
-            return false;
-        }
+        return process(localBestBlockHeader);
     }
 
-    private boolean process(BlockHeaderInfo localBestBlockHeader) throws Exception {
+    private boolean process(BlockHeaderInfo localBestBlockHeader) throws SyncException {
         long nextHeight = 0;
         if (localBestBlockHeader != null) {
             nextHeight = localBestBlockHeader.getHeight() + 1;
         }
         Result<BlockInfo> result = WalletRpcHandler.getBlockInfo(chainId, nextHeight);
         if (result.isFailed()) {
-            return false;
+            throw new SyncException(result.getErrorCode(),nextHeight);
         }
         BlockInfo newBlock = result.getData();
         if (null == newBlock) {
-            Thread.sleep(5000L);
+            //终止本轮同步，等待线程下一轮调度
             return false;
         }
-        if (checkBlockContinuity(localBestBlockHeader, newBlock.getHeader())) {
-            return syncService.syncNewBlock(chainId, newBlock);
-        } else if (localBestBlockHeader != null) {
-            return rollbackService.rollbackBlock(chainId, localBestBlockHeader.getHeight());
+        try {
+            if (checkBlockContinuity(localBestBlockHeader, newBlock.getHeader())) {
+                return syncService.syncNewBlock(chainId, newBlock);
+            } else if (localBestBlockHeader != null) {
+                return rollbackService.rollbackBlock(chainId, localBestBlockHeader.getHeight());
+            }
+            return false;
+        }catch (Throwable e){
+            throw new SyncException(nextHeight,e);
         }
-        return false;
+
     }
 
     /**
@@ -111,7 +144,6 @@ public class SyncBlockTask implements Runnable {
      * @return
      */
     private boolean checkBlockContinuity(BlockHeaderInfo localBest, BlockHeaderInfo newest) {
-//        return false;
         if (localBest == null) {
             if (newest.getHeight() == 0) {
                 return true;

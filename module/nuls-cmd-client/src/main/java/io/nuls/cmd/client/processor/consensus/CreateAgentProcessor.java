@@ -57,32 +57,38 @@ public class CreateAgentProcessor extends ConsensusBaseProcessor implements Comm
                 .newLine("\t<agentAddress>   agent owner address   -required")
                 .newLine("\t<packingAddress>    packing address    -required")
                 .newLine("\t<deposit>   amount you want to deposit, you can have up to 8 valid digits after the decimal point -required")
-                .newLine("\t[rewardAddress]  Billing address    -not required");
+                .newLine("\t[rewardAddress]  Billing address    -not required")
+                .newLine("\t[password]       password   -not required");
         return bulider.toString();
     }
 
     @Override
     public String getCommandDescription() {
-        return "createagent <agentAddress> <packingAddress> <deposit> [rewardAddress] --create a agent";
+        return "createagent <agentAddress> <packingAddress> <deposit> [rewardAddress] [password] --create a agent";
     }
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkIsAmount(args[3],"deposit");
+        checkIsAmount(args[3], "deposit");
         return true;
     }
 
     @Override
     public CommandResult execute(String[] args) {
         String agentAddress = args[1];
-        String password = getPwd("Enter agent address password");
         String packingAddress = args[2];
         BigInteger deposit = config.toSmallUnit(args[3]);
         String rewardAddress = null;
-        if(args.length == 5){
+        String password = null;
+        if (args.length == 5) {
             rewardAddress = args[4];
         }
-        CreateAgentReq req = new CreateAgentReq(agentAddress,packingAddress,rewardAddress,deposit,password);
+        if (args.length == 6) {
+            password = args[5];
+        }else{
+            password = getPwd("\nEnter agent address password:");
+        }
+        CreateAgentReq req = new CreateAgentReq(agentAddress, packingAddress, rewardAddress, deposit, password);
         Result<String> result = consensusProvider.createAgent(req);
         if (result.isFailed()) {
             return CommandResult.getFailed(result);

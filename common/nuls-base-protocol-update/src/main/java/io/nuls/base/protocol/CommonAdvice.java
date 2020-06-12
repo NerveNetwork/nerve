@@ -28,6 +28,7 @@ import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: PierreLuo
@@ -36,6 +37,11 @@ import java.util.List;
 public interface CommonAdvice {
     default void begin(int chainId, List<Transaction> txList, BlockHeader blockHeader, int syncStatus) {
     }
+
     default void end(int chainId, List<Transaction> txList, BlockHeader blockHeader) {
+    }
+
+    default Map<String, Object> validates(int chainId, List<Transaction> txList, BlockHeader blockHeader) {
+        return null;
     }
 }

@@ -31,6 +31,7 @@ import io.nuls.api.manager.ScheduleManager;
 import io.nuls.api.model.po.ChainInfo;
 import io.nuls.api.model.po.SyncInfo;
 import io.nuls.api.rpc.jsonRpc.JsonRpcServer;
+import io.nuls.api.service.StackingService;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.ServiceManager;
@@ -78,6 +79,9 @@ public class PublicServiceBootstrap extends RpcModule {
     @Autowired
     SymbolRegService symbolRegService;
 
+    @Autowired
+    StackingService stackingService;
+
     public static void main(String[] args) {
         if (args == null || args.length == 0) {
             args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
@@ -86,9 +90,9 @@ public class PublicServiceBootstrap extends RpcModule {
 
         ConfigurationLoader configurationLoader = new ConfigurationLoader();
         configurationLoader.load();
-        Provider.ProviderType providerType = Provider.ProviderType.valueOf(configurationLoader.getValue("providerType"));
+//        Provider.ProviderType providerType = Provider.ProviderType.valueOf(configurationLoader.getValue("providerType"));
         int defaultChainId = Integer.parseInt(configurationLoader.getValue("chainId"));
-        ServiceManager.init(defaultChainId, providerType);
+        ServiceManager.init(defaultChainId, Provider.ProviderType.RPC);
         NulsRpcModuleBootstrap.run(DEFAULT_SCAN_PACKAGE, args);
     }
 
@@ -100,7 +104,9 @@ public class PublicServiceBootstrap extends RpcModule {
                 new Module(ModuleE.AC.abbr, ROLE),
                 new Module(ModuleE.TX.abbr, ROLE),
                 new Module(ModuleE.LG.abbr, ROLE),
-                new Module(ModuleE.NW.abbr, ROLE)
+                new Module(ModuleE.NW.abbr, ROLE),
+                Module.build(ModuleE.CC),
+                Module.build(ModuleE.CV)
         };
     }
 
@@ -165,6 +171,11 @@ public class PublicServiceBootstrap extends RpcModule {
         ApiContext.COMMUNITY_ADDRESS = apiConfig.getCommunityAddress();
         JSONUtils.getInstance().configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        ApiContext.localAssertBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"localAssertBase"));
+        ApiContext.mainAssertBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"mainAssertBase"));
+        ApiContext.agentDepositBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"agentDepositBase"));
+        ApiContext.superAgentDepositBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"superAgentDepositBase"));
     }
 
     @Override
@@ -182,10 +193,9 @@ public class PublicServiceBootstrap extends RpcModule {
                 ApiContext.agentAssetId = (int) configMap.get("agentAssetId");
                 ApiContext.awardAssetId = (int) configMap.get("awardAssetId");
                 ApiContext.totalInflationAmount = new BigInteger(configMap.get("totalInflationAmount").toString());
-                ApiContext.mainAssertBase = (double) configMap.get("mainAssertBase");
-                ApiContext.localAssertBase = (double) configMap.get("localAssertBase");
-//                ApiContext.minDeposit = new BigInteger(configMap.get("commissionMin").toString());
-                ApiContext.minDeposit = BigInteger.ZERO;
+                ApiContext.seedCount = (int)configMap.get("seed_count");
+                ApiContext.minDeposit = new BigInteger(configMap.get("commissionMin").toString());
+//                ApiContext.minDeposit = BigInteger.ZERO;
             }
             //从区块模块获取初始发行量
             Result<BigInteger> initialAmount = WalletRpcHandler.getInitialAmount(ApiContext.defaultChainId);
@@ -198,13 +208,16 @@ public class PublicServiceBootstrap extends RpcModule {
             if (hasDependent(ModuleE.CC)) {
                 ApiContext.isRunCrossChain = true;
             }
+
             //初始化币种信息
-            symbolRegService.init();
+            symbolRegService.updateSymbolRegList();
             ScheduleManager scheduleManager = SpringLiteContext.getBean(ScheduleManager.class);
             JsonRpcServer server = new JsonRpcServer();
             server.startServer(ApiContext.listenerIp, ApiContext.rpcPort);
             Thread.sleep(3000);
             scheduleManager.start();
+
+            stackingService.init();
         } catch (Exception e) {
             LoggerUtil.commonLog.error("------------------------public-service running failed---------------------------");
             LoggerUtil.commonLog.error(e);

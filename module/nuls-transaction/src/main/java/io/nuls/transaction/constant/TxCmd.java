@@ -52,6 +52,11 @@ public final class TxCmd {
     public static final String TX_BLOCK_HEIGHT = "tx_blockHeight";
     public static final String TX_VERIFYTX = "tx_verifyTx";
 
+    public static final String TX_LOCK = "tx_lock";
+    public static final String TX_UNLOCK = "tx_unlock";
+    public static final String TX_ISLOCKED = "tx_isLocked";
+    public static final String TX_ALL_LOCKED_ADDRESS= "tx_allLockedAddress";
+
     /**
      * 修改节点共识状态
      * Modify the node consensus state

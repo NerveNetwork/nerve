@@ -103,7 +103,6 @@ public class SmallBlockCacher {
 
     /**
      * 根据hash获取缓存的{@link SmallBlock}
-     * TODO  注释完整性
      *
      * @param chainId   链Id/chain id
      * @param blockHash
@@ -120,14 +119,17 @@ public class SmallBlockCacher {
             List<Transaction> txs = block.getTxs();
             Map<NulsHash, Transaction> txMap = new HashMap<>(txs.size());
             txs.forEach(e -> txMap.put(e.getHash(), e));
-            cachedSmallBlock = new CachedSmallBlock(null, smallBlock, txMap, null);
+            cachedSmallBlock = new CachedSmallBlock(null, smallBlock, txMap, null, false);
         }
         return cachedSmallBlock;
     }
 
+    public static CachedSmallBlock getRealCacheSmallBlock(int chainId, NulsHash blockHash){
+        return smallBlockCacheMap.get(chainId).get(blockHash);
+    }
+
     /**
      * 根据hash获取缓存的{@link SmallBlock}
-     * TODO  注释完整性
      *
      * @param chainId   链Id/chain id
      * @param blockHash

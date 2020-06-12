@@ -70,6 +70,8 @@ public class TxRegister {
 
     private boolean packProduce = false;
 
+    private boolean packGenerate = false;
+
 
     public int getTxType() {
         return txType;
@@ -125,6 +127,14 @@ public class TxRegister {
 
     public void setPackProduce(boolean packProduce) {
         this.packProduce = packProduce;
+    }
+
+    public boolean getPackGenerate() {
+        return packGenerate;
+    }
+
+    public void setPackGenerate(boolean packGenerate) {
+        this.packGenerate = packGenerate;
     }
 
     @Override

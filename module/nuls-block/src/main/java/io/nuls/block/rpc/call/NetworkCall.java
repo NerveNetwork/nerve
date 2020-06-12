@@ -133,7 +133,7 @@ public class NetworkCall {
             params.put("messageBody", RPCUtil.encode(message.serialize()));
             params.put("command", command);
             boolean success = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_broadcast", params).isSuccess();
-            logger.debug("broadcast " + message.getClass().getName() + ", success:" + success);
+//            logger.debug("broadcast " + message.getClass().getName() + ", success:" + success);
             return success;
         } catch (Exception e) {
             logger.error("", e);
@@ -177,7 +177,7 @@ public class NetworkCall {
             params.put("messageBody", RPCUtil.encode(message.serialize()));
             params.put("command", command);
             boolean success = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_sendPeersMsg", params).isSuccess();
-            logger.debug("send " + message.toString() + " to node-" + nodeId + ", success:" + success);
+//            logger.debug("send " + message.toString() + " to node-" + nodeId + ", success:" + success);
             return success;
         } catch (Exception e) {
             logger.error("", e);

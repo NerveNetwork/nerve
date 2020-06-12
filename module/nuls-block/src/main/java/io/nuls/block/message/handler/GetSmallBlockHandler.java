@@ -27,12 +27,14 @@ import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.SmallBlockMessage;
+import io.nuls.block.model.CachedSmallBlock;
 import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.utils.SmallBlockCacher;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.log.logback.NulsLogger;
 
 import static io.nuls.block.constant.CommandConstant.GET_SMALL_BLOCK_MESSAGE;
+import static io.nuls.block.constant.CommandConstant.SMALL_BLOCK_BZT_MESSAGE;
 import static io.nuls.block.constant.CommandConstant.SMALL_BLOCK_MESSAGE;
 
 /**
@@ -59,11 +61,19 @@ public class GetSmallBlockHandler implements MessageProcessor {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
         NulsHash blockHash = message.getRequestHash();
         logger.debug("recieve " + message + " from node-" + nodeId + ", hash:" + blockHash);
+        CachedSmallBlock cachedSmallBlock = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
+        if(cachedSmallBlock == null){
+            return;
+        }
         SmallBlock smallBlock = SmallBlockCacher.getSmallBlock(chainId, blockHash);
         if (smallBlock != null) {
             SmallBlockMessage smallBlockMessage = new SmallBlockMessage();
             smallBlockMessage.setSmallBlock(smallBlock);
-            NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_MESSAGE);
+            if(cachedSmallBlock.isPocNet()){
+                NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_BZT_MESSAGE);
+            }else{
+                NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_MESSAGE);
+            }
         }
     }
 }

@@ -39,12 +39,15 @@ import io.nuls.ledger.model.po.sub.FreezeLockTimeState;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 1.用户地址资产账号对应的账本信息
  * 2.该持久化对象是区块确认后的,最终信息：包含nonce值，余额，以及冻结信息。
  * 3.key值:address-assetChainId-assetId
+ *
  * @author lanjinsheng
  */
 
@@ -78,12 +81,17 @@ public class AccountState extends BaseNulsData {
      */
     private List<FreezeLockTimeState> freezeLockTimeStates = new ArrayList<>();
 
+    /**
+     * 账户冻结的资产(永久冻结)
+     */
+    private transient Map<String, FreezeLockTimeState> permanentLockMap = new HashMap<>();
+
     public AccountState() {
         super();
     }
 
     public AccountState(byte[] pNonce) {
-        System.arraycopy(pNonce,0,this.nonce,0,LedgerConstant.NONCE_LENGHT);
+        System.arraycopy(pNonce, 0, this.nonce, 0, LedgerConstant.NONCE_LENGHT);
     }
 
     /**
@@ -127,6 +135,15 @@ public class AccountState extends BaseNulsData {
         for (FreezeLockTimeState lockTimeState : freezeLockTimeStates) {
             stream.writeNulsData(lockTimeState);
         }
+
+        int count = permanentLockMap.size();
+        stream.writeVarInt(count);
+        if (count > 0) {
+            for (Map.Entry<String, FreezeLockTimeState> entry : permanentLockMap.entrySet()) {
+                stream.writeString(entry.getKey());
+                stream.writeNulsData(entry.getValue());
+            }
+        }
     }
 
     @Override
@@ -157,6 +174,15 @@ public class AccountState extends BaseNulsData {
                 throw new NulsException(e);
             }
         }
+
+        int count = (int) byteBuffer.readVarInt();
+        if (count > 0) {
+            for (int i = 0; i < count; i++) {
+                String key = byteBuffer.readString();
+                FreezeLockTimeState timeState = byteBuffer.readNulsData(new FreezeLockTimeState());
+                this.permanentLockMap.put(key, timeState);
+            }
+        }
     }
 
     @Override
@@ -176,6 +202,15 @@ public class AccountState extends BaseNulsData {
         for (FreezeLockTimeState lockTimeState : freezeLockTimeStates) {
             size += SerializeUtils.sizeOfNulsData(lockTimeState);
         }
+
+        int count = permanentLockMap.size();
+        size += SerializeUtils.sizeOfVarInt(count);
+        if (count > 0) {
+            for (Map.Entry<String, FreezeLockTimeState> entry : permanentLockMap.entrySet()) {
+                size += SerializeUtils.sizeOfString(entry.getKey());
+                size += entry.getValue().size();
+            }
+        }
         return size;
     }
 
@@ -189,7 +224,9 @@ public class AccountState extends BaseNulsData {
         for (FreezeHeightState heightState : freezeHeightStates) {
             freeze = freeze.add(heightState.getAmount());
         }
-
+        for (FreezeLockTimeState lockTimeState : permanentLockMap.values()) {
+            freeze = freeze.add(lockTimeState.getAmount());
+        }
         for (FreezeLockTimeState lockTimeState : freezeLockTimeStates) {
             freeze = freeze.add(lockTimeState.getAmount());
         }
@@ -209,6 +246,7 @@ public class AccountState extends BaseNulsData {
         List<FreezeLockTimeState> lockTimeStateArrayList = new ArrayList<>();
         lockTimeStateArrayList.addAll(this.getFreezeLockTimeStates());
         orgAccountState.setFreezeLockTimeStates(lockTimeStateArrayList);
+        orgAccountState.permanentLockMap.putAll(this.permanentLockMap);
         return orgAccountState;
     }
 
@@ -266,5 +304,18 @@ public class AccountState extends BaseNulsData {
             return true;
         }
         return false;
+    }
+
+    public Map<String, FreezeLockTimeState> getPermanentLockMap() {
+        return permanentLockMap;
+    }
+
+    public void setPermanentLockMap(Map<String, FreezeLockTimeState> permanentLockMap) {
+        this.permanentLockMap = permanentLockMap;
+    }
+
+
+    public boolean isExistPermanentLockMap(String nonce) {
+        return permanentLockMap.containsKey(nonce);
     }
 }

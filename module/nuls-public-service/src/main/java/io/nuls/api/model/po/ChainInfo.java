@@ -6,7 +6,10 @@ import io.nuls.api.utils.DocumentTransferTool;
 import org.bson.Document;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ChainInfo extends TxDataInfo {
 
@@ -16,7 +19,7 @@ public class ChainInfo extends TxDataInfo {
 
     private AssetInfo defaultAsset;
 
-    private List<AssetInfo> assets;
+    private Set<AssetInfo> assets;
 
     private List<String> seeds;
 
@@ -26,7 +29,7 @@ public class ChainInfo extends TxDataInfo {
     private boolean isNew;
 
     public ChainInfo() {
-        assets = new ArrayList<>();
+        assets = new HashSet<>();
         seeds = new ArrayList<>();
         status = ApiConstant.ENABLE;
     }
@@ -38,7 +41,7 @@ public class ChainInfo extends TxDataInfo {
         Document defaultAssetDoc = DocumentTransferTool.toDocument(defaultAsset);
         document.put("defaultAsset", defaultAssetDoc);
 
-        document.put("assets", DocumentTransferTool.toDocumentList(assets));
+        document.put("assets", DocumentTransferTool.toDocumentList(new ArrayList(assets)));
         document.put("seeds", seeds);
         return document;
     }
@@ -67,14 +70,14 @@ public class ChainInfo extends TxDataInfo {
         return null;
     }
 
-    public AssetInfo removeAsset(int assetId) {
-        for (int i = 0; i < assets.size(); i++) {
-            AssetInfo assetInfo = assets.get(i);
-            if (assetInfo.getAssetId() == assetId) {
-                return assets.remove(i);
-            }
-        }
-        return null;
+    public void removeAsset(int assetId) {
+//        for (int i = 0; i < assets.size(); i++) {
+//            AssetInfo assetInfo = assets.get(i);
+//            if (assetInfo.getAssetId() == assetId) {
+//                return assets.remove(i);
+//            }
+//        }
+        this.assets = assets.stream().filter(d->d.getAssetId() != assetId).collect(Collectors.toSet());
     }
 
     public int getChainId() {
@@ -93,11 +96,11 @@ public class ChainInfo extends TxDataInfo {
         this.defaultAsset = defaultAsset;
     }
 
-    public List<AssetInfo> getAssets() {
+    public Set<AssetInfo> getAssets() {
         return assets;
     }
 
-    public void setAssets(List<AssetInfo> assets) {
+    public void setAssets(Set<AssetInfo> assets) {
         this.assets = assets;
     }
 

@@ -22,6 +22,7 @@
 
 package io.nuls.block.model;
 
+import io.netty.util.concurrent.CompleteFuture;
 import io.nuls.base.data.Block;
 import io.nuls.base.data.NulsHash;
 import io.nuls.block.constant.StatusEnum;
@@ -37,8 +38,12 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.StampedLock;
 
 import static io.nuls.block.constant.StatusEnum.INITIALIZING;
@@ -137,24 +142,30 @@ public class ChainContext {
      */
     private Map<NulsHash, List<String>> orphanBlockRelatedNodes;
 
+
     /**
-     * 处理区块的拜占庭校验与基础校验的结果
+     * 区块验证结果
      */
-    private Map<NulsHash, BlockVerifyFlag> savingBZTAndVerify = new ConcurrentHashMap<>(100);
-    //TODO:缓存数据清理机制未处理
     private Map<NulsHash, BlockSaveTemp> blockVerifyResult = new ConcurrentHashMap<>(100);
+
+    /**
+     * 节点同步区块检测网络最新高度时防止收到新区块
+     */
+    private final ReentrantLock synCompleteLock = new ReentrantLock(true);
 
     /**
      * 缓存未来区块
      * key：高度
      * value:高度对应的区块（可能有多个）
-     * */
-    private Map<Long, Map<NulsHash,FutureBlockData>> futureBlockCache = new ConcurrentHashMap<>(100);
+     */
+    private Map<Long, Map<NulsHash, FutureBlockData>> futureBlockCache = new ConcurrentHashMap<>(100);
 
     /**
      * 线程池
-     * */
+     */
     private final ThreadPoolExecutor threadPool = ThreadUtils.createThreadPool(2, 100, new NulsThreadFactory("cache-block-pool"));
+    private boolean stoping = false;
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     public ThreadPoolExecutor getThreadPool() {
         return threadPool;
@@ -174,14 +185,6 @@ public class ChainContext {
 
     public void setBlockVerifyResult(Map<NulsHash, BlockSaveTemp> blockVerifyResult) {
         this.blockVerifyResult = blockVerifyResult;
-    }
-
-    public Map<NulsHash, BlockVerifyFlag> getSavingBZTAndVerify() {
-        return savingBZTAndVerify;
-    }
-
-    public void setSavingBZTAndVerify(Map<NulsHash, BlockVerifyFlag> savingBZTAndVerify) {
-        this.savingBZTAndVerify = savingBZTAndVerify;
     }
 
     public Map<NulsHash, List<String>> getOrphanBlockRelatedNodes() {
@@ -316,6 +319,10 @@ public class ChainContext {
         this.packingAddressList = packingAddressList;
     }
 
+    public ReentrantLock getSynCompleteLock() {
+        return synCompleteLock;
+    }
+
     public void setStatus(StatusEnum status) {
         if (status.equals(getStatus())) {
             return;
@@ -388,7 +395,7 @@ public class ChainContext {
      *
      * @return 0:同步 1:正常运行
      */
-    public int getSimpleStatus(){
+    public int getSimpleStatus() {
         switch (getStatus()) {
             case INITIALIZING:
             case WAITING:
@@ -399,4 +406,21 @@ public class ChainContext {
         }
     }
 
+    public boolean isStoping() {
+        if (this.stoping) {
+            countDownLatch.countDown();
+        }
+        return this.stoping;
+    }
+
+    public void stopBlock() {
+        this.stoping = true;
+        System.out.println("======1======="+System.nanoTime());
+    }
+
+    public void waitStopBlock() throws InterruptedException {
+        System.out.println("=======2======"+System.nanoTime());
+        countDownLatch.await();
+        System.out.println("=======3======"+System.nanoTime());
+    }
 }

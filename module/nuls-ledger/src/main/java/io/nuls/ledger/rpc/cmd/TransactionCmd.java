@@ -28,6 +28,7 @@ package io.nuls.ledger.rpc.cmd;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.ledger.constant.CmdConstant;
@@ -87,6 +88,9 @@ public class TransactionCmd extends BaseLedgerCmd {
                 LoggerUtil.logger(chainId).error("txStr is invalid chainId={},txHex={}", chainId, txStr);
                 return failed(LedgerErrorCode.TX_IS_WRONG);
             }
+            if(LoggerUtil.logger(chainId).isDebugEnabled()) {
+                LoggerUtil.logger(chainId).debug("[TEST] commitUnconfirmedTx One begin");
+            }
             ValidateResult validateResult = transactionService.unConfirmTxProcess(chainId, tx);
             Map<String, Object> rtMap = new HashMap<>(1);
             if (validateResult.isSuccess() || validateResult.isOrphan()) {
@@ -95,6 +99,9 @@ public class TransactionCmd extends BaseLedgerCmd {
             } else {
                 response = failed(validateResult.toErrorCode());
                 LoggerUtil.logger(chainId).error("####commitUnconfirmedTx chainId={},txHash={},value={}=={}", chainId, tx.getHash().toHex(), validateResult.getValidateCode(), validateResult.getValidateDesc());
+                if(response.getResponseErrorCode().equals("lg_1002")) {
+                    LoggerUtil.logger(chainId).error(tx.format());
+                }
             }
         } catch (Exception e) {
             LoggerUtil.logger(chainId).error("commitUnconfirmedTx exception ={}", e);
@@ -133,6 +140,9 @@ public class TransactionCmd extends BaseLedgerCmd {
             if (!parseResponse.isSuccess()) {
                 LoggerUtil.logger(chainId).debug("commitBatchUnconfirmedTxs response={}", parseResponse);
                 return parseResponse;
+            }
+            if(LoggerUtil.logger(chainId).isDebugEnabled()) {
+                LoggerUtil.logger(chainId).debug("[TEST] commitBatchUnconfirmedTxs List begin");
             }
             List<String> orphanList = new ArrayList<>();
             List<String> failList = new ArrayList<>();
@@ -179,6 +189,7 @@ public class TransactionCmd extends BaseLedgerCmd {
     )
     public Response commitBlockTxs(Map params) {
         Map<String, Object> rtData = new HashMap<>(1);
+        long start = System.currentTimeMillis();
         Integer chainId = (Integer) params.get("chainId");
         if (!chainHanlder(chainId)) {
             return failed(LedgerErrorCode.CHAIN_INIT_FAIL);
@@ -202,7 +213,7 @@ public class TransactionCmd extends BaseLedgerCmd {
         }
         rtData.put("value", value);
         Response response = success(rtData);
-        LoggerUtil.logger(chainId).info("response={}", value);
+        LoggerUtil.logger(chainId).info("response={},use={}", value,System.currentTimeMillis() - start);
         return response;
     }
 

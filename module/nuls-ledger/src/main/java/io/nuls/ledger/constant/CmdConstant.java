@@ -62,6 +62,16 @@ public interface CmdConstant {
     String CMD_CHAIN_ASSET_CONTRACT_ADDRESS = "getAssetContractAddress";
     String CMD_CHAIN_ASSET_CONTRACT_ASSETID = "getAssetContractAssetId";
     String CMD_CHAIN_ASSET_CONTRACT = "getAssetContract";
+
+    String CMD_CROSS_CHAIN_ASSET_REG = "lg_cross_chain_asset_reg";
+    String CMD_CROSS_CHAIN_ASSET_LIST_REG = "lg_cross_chain_asset_list_reg";
+    String CMD_CROSS_CHAIN_ASSET_DELETE = "lg_cross_chain_asset_delete";
+    String CMD_GET_CROSS_CHAIN_ASSET = "lg_get_cross_chain_asset";
+    String CMD_GET_ALL_CROSS_CHAIN_ASSET = "lg_get_all_cross_chain_asset";
+    String CMD_GET_ASSET = "lg_get_asset";
+    String CMD_GET_ALL_ASSET = "lg_get_all_asset";
+    String CMD_CHAIN_ASSET_HETEROGENEOUS_REG = "lg_chain_asset_heterogeneous_reg";
+    String CMD_CHAIN_ASSET_HETEROGENEOUS_ROLLBACK = "lg_chain_asset_heterogeneous_rollback";
     /**
      * 获取确认交易余额
      */

@@ -30,20 +30,18 @@ import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.consensus.ConsensusProvider;
 import io.nuls.base.api.provider.consensus.facade.DepositReq;
-import io.nuls.base.api.provider.consensus.facade.DepositToAgentReq;
-import io.nuls.base.data.NulsHash;
+import io.nuls.base.api.provider.consensus.facade.GetStackingAssetBySymbolReq;
+import io.nuls.base.api.provider.ledger.facade.AssetInfo;
 import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.config.Config;
 import io.nuls.cmd.client.enums.DepositTimeType;
 import io.nuls.cmd.client.processor.CommandProcessor;
+import io.nuls.cmd.client.utils.AssetsUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 
-import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author: zhoulijun
@@ -81,7 +79,31 @@ public abstract class DepositProcessor extends ConsensusBaseProcessor implements
             return true;
         }
 
-
+        @Override
+        public DepositReq getParam(String[] args) {
+            DepositReq req = new DepositReq();
+            Integer decimals =  config.getDecimals();
+            if(args.length > 3){
+                String symbol = args[3];
+                decimals = AssetsUtil.getAssetDecimal(symbol);
+                if(decimals == null){
+                    throw new RuntimeException("not support " + symbol);
+                }
+                Result<AssetInfo> assetInfo = consensusProvider.getStatcingAssetBySymbol(new GetStackingAssetBySymbolReq(symbol));
+                if(assetInfo.isFailed()){
+                    throw new RuntimeException(assetInfo.getMessage());
+                }
+                req.setAssetChainId(assetInfo.getData().getAssetChainId());
+                req.setAssetId(assetInfo.getData().getAssetId());
+            }else{
+                int assetChainId = config.getChainId();
+                int assetId = config.getAssetsId();
+                req.setAssetChainId(assetChainId);
+                req.setAssetId(assetId);
+            }
+            req.setDeposit(config.toSmallUnit(args[2],decimals));
+            return req;
+        }
     }
 
     @Component
@@ -136,7 +158,28 @@ public abstract class DepositProcessor extends ConsensusBaseProcessor implements
 
 
     public DepositReq getParam(String[] args){
-        return new DepositReq();
+        DepositReq req = new DepositReq();
+        Integer decimals =  config.getDecimals();
+        if(args.length > 4){
+            String symbol = args[4];
+            decimals = AssetsUtil.getAssetDecimal(symbol);
+            if(decimals == null){
+                throw new RuntimeException("not support " + symbol);
+            }
+            Result<AssetInfo> assetInfo = consensusProvider.getStatcingAssetBySymbol(new GetStackingAssetBySymbolReq(symbol));
+            if(assetInfo.isFailed()){
+                throw new RuntimeException(assetInfo.getMessage());
+            }
+            req.setAssetChainId(assetInfo.getData().getAssetChainId());
+            req.setAssetId(assetInfo.getData().getAssetId());
+        }else{
+            int assetChainId = config.getChainId();
+            int assetId = config.getAssetsId();
+            req.setAssetChainId(assetChainId);
+            req.setAssetId(assetId);
+        }
+        req.setDeposit(config.toSmallUnit(args[2],decimals));
+        return req;
     }
 
 
@@ -144,28 +187,18 @@ public abstract class DepositProcessor extends ConsensusBaseProcessor implements
     public CommandResult execute(String[] args) {
         String address = args[1];
         String password = getPwd();
+        try{
+            DepositReq req = getParam(args);
+            req.setAddress(address);
+            req.setPassword(password);
+            Result<String> result = consensusProvider.deposit(req);
+            if (result.isFailed()) {
+                return CommandResult.getFailed(result);
+            }
+            return CommandResult.getSuccess(result.getData());
+        }catch (Exception e){
+            return CommandResult.getFailed(e.getMessage());
+        }
 
-        int assetChainId = config.getChainId();
-        int assetId = config.getAssetsId();
-        int decimals = config.getDecimals();
-        if(args.length > 3){
-            String symbol = args[3];
-//            //获取其他币种的id  cv_get_heterogeneous_chain_asset_info
-//            Map<String,Object> map = new HashMap<>();
-//            assetChainId = map.get("chainId");
-//            assetId = map.get("assetId");
-//            decimals = map.get("decimals");
-        }
-        DepositReq req = getParam(args);
-        req.setAddress(address);
-        req.setPassword(password);
-        req.setAssetChainId(assetChainId);
-        req.setAssetId(assetId);
-        req.setDeposit(config.toSmallUnit(args[2],decimals));
-        Result<String> result = consensusProvider.deposit(req);
-        if (result.isFailed()) {
-            return CommandResult.getFailed(result);
-        }
-        return CommandResult.getSuccess(result.getData());
     }
 }

@@ -37,4 +37,26 @@ public class CrossChainCall {
         }
     }
 
+    /**
+     * 节点同步状态变更通知跨链模块
+     *
+     * @param chainId 链Id/chain id
+     * @param status  1-工作,0-等待
+     * @return
+     */
+    public static boolean notice(int chainId, int status) {
+        if (!ModuleHelper.isSupportCrossChain()) {
+            return true;
+        }
+        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        try {
+            Map<String, Object> params = new HashMap<>(2);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("status", status);
+            return ResponseMessageProcessor.requestAndResponse(ModuleE.CC.abbr, "syncStatusUpdate", params).isSuccess();
+        } catch (Exception e) {
+            logger.error("", e);
+            return false;
+        }
+    }
 }

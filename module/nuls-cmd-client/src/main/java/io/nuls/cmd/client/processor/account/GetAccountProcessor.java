@@ -38,6 +38,7 @@ import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.config.Config;
 import io.nuls.cmd.client.processor.CommandProcessor;
+import io.nuls.cmd.client.utils.AssetsUtil;
 import io.nuls.cmd.client.utils.Na;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -98,9 +99,9 @@ public class GetAccountProcessor extends AccountBaseProcessor implements Command
         }
         Map<String,Object> res = new HashMap<>(7);
         Map<String,Object> balanceMap = new HashMap<>(3);
-        balanceMap.put("available",config.toBigUnit(balance.getData().getAvailable()));
-        balanceMap.put("freeze",config.toBigUnit(balance.getData().getFreeze()));
-        balanceMap.put("total",config.toBigUnit(balance.getData().getTotal()));
+        balanceMap.put("available",config.toBigUnit(balance.getData().getAvailable()).stripTrailingZeros().toPlainString());
+        balanceMap.put("freeze",config.toBigUnit(balance.getData().getFreeze()).stripTrailingZeros().toPlainString());
+        balanceMap.put("total",config.toBigUnit(balance.getData().getTotal()).stripTrailingZeros().toPlainString());
         res.putAll(MapUtils.beanToMap(info.getData()));
         res.put("balance",balanceMap);
         try {

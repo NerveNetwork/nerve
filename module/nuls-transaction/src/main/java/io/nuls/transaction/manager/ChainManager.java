@@ -172,6 +172,13 @@ public class ChainManager {
             Verified transaction
             */
             RocksDBService.createTable(TxDBConstant.DB_TRANSACTION_UNCONFIRMED_PREFIX + chainId);
+
+            /*
+            锁定账户表
+             */
+            RocksDBService.createTable(TxDBConstant.DB_LOCKED_ADDRESS + chainId);
+
+
         } catch (Exception e) {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {
                 logger.error(e);

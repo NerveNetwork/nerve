@@ -29,11 +29,6 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.NulsSignData;
 import io.nuls.base.data.Transaction;
-import io.nuls.base.script.Script;
-import io.nuls.base.script.ScriptBuilder;
-import io.nuls.base.script.ScriptChunk;
-import io.nuls.base.script.ScriptOpCodes;
-import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.ECKey;
@@ -56,19 +51,15 @@ import java.util.*;
 public class SignatureUtil {
 
     private static final int MAIN_CHAIN_ID = 1;
+
     /**
      * 验证交易中所有签名正确性
      *
      * @param chainId 当前链ID
-     * @param tx 交易
+     * @param tx      交易
      */
     public static boolean validateTransactionSignture(int chainId, Transaction tx) throws NulsException {
         // 判断硬分叉,需要一个高度
-        long hardForkingHeight = 878000;
-        boolean forked = tx.getBlockHeight() <= 0 || tx.getBlockHeight() > hardForkingHeight;
-        if(chainId != MAIN_CHAIN_ID) {
-            forked = true;
-        }
         try {
             if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
                 throw new NulsException(new Exception());
@@ -79,26 +70,12 @@ public class SignatureUtil {
                 if ((transactionSignature.getP2PHKSignatures() == null || transactionSignature.getP2PHKSignatures().size() == 0)) {
                     throw new NulsException(new Exception("Transaction unsigned ！"));
                 }
-                if (forked) {
-                    //这里用硬分叉后的新逻辑
-                    for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
-                        if (!ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
-                            throw new NulsException(new Exception("Transaction signature error !"));
-                        }
-                    }
-                } else {
-                    int signCount = tx.getCoinDataInstance().getFromAddressCount();
-                    int passCount = 0;
-                    for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
-                        if (!ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
-                            throw new NulsException(new Exception("Transaction signature error !"));
-                        }
-                        passCount++;
-                        if (passCount >= signCount) {
-                            break;
-                        }
+                for (P2PHKSignature signature : transactionSignature.getP2PHKSignatures()) {
+                    if (!ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
+                        throw new NulsException(new Exception("Transaction signature error !"));
                     }
                 }
+
             } else {
                 MultiSignTxSignature transactionSignature = new MultiSignTxSignature();
                 transactionSignature.parse(tx.getTransactionSignature(), 0);
@@ -110,9 +87,6 @@ public class SignatureUtil {
                 for (P2PHKSignature signature : validSignatures) {
                     if (ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                         validCount++;
-                    }
-                    if (!forked && validCount >= transactionSignature.getM()) {
-                        break;
                     }
                 }
                 if (validCount < transactionSignature.getM()) {
@@ -132,7 +106,7 @@ public class SignatureUtil {
      *
      * @param tx 交易
      */
-    public static boolean ctxSignatureValid(int chainId,Transaction tx)throws NulsException{
+    public static boolean ctxSignatureValid(int chainId, Transaction tx) throws NulsException {
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
             throw new NulsException(new Exception());
         }
@@ -150,7 +124,7 @@ public class SignatureUtil {
                 throw new NulsException(new Exception("Transaction signature error !"));
             }
             signAddress = AddressTool.getStringAddressByBytes(AddressTool.getAddress(signature.getPublicKey(), chainId));
-            if(!fromAddressSet.contains(signAddress)){
+            if (!fromAddressSet.contains(signAddress)) {
                 continue;
             }
             fromAddressSet.remove(signAddress);
@@ -159,7 +133,7 @@ public class SignatureUtil {
                 break;
             }
         }
-        if(passCount < signCount || !fromAddressSet.isEmpty()){
+        if (passCount < signCount || !fromAddressSet.isEmpty()) {
             throw new NulsException(new Exception("Transaction signature error !"));
         }
         return true;
@@ -339,163 +313,6 @@ public class SignatureUtil {
     }
 
     /**
-     * 生成多个解锁脚本
-     *
-     * @param signtures 签名列表
-     * @param pubkeys   公钥列表
-     */
-    public static List<Script> createInputScripts(List<byte[]> signtures, List<byte[]> pubkeys) {
-        List<Script> scripts = new ArrayList<>();
-        if (signtures == null || pubkeys == null || signtures.size() != pubkeys.size()) {
-            return null;
-        }
-        //生成解锁脚本
-        for (int i = 0; i < signtures.size(); i++) {
-            scripts.add(createInputScript(signtures.get(i), pubkeys.get(i)));
-        }
-        return scripts;
-    }
-
-    /**
-     * 生成单个解锁脚本
-     *
-     * @param signture 签名列表
-     * @param pubkey   公钥列表
-     */
-    public static Script createInputScript(byte[] signture, byte[] pubkey) {
-        Script script = null;
-        if (signture != null && pubkey != null) {
-            script = ScriptBuilder.createNulsInputScript(signture, pubkey);
-        }
-        return script;
-    }
-
-    /**
-     * 生成单个鎖定脚本
-     */
-    public static Script createOutputScript(byte[] address) {
-        Script script = null;
-        if (address == null || address.length < 23) {
-            return null;
-        }
-        //
-        if (address[2] == BaseConstant.P2SH_ADDRESS_TYPE) {
-            script = ScriptBuilder.createOutputScript(address, 0);
-        } else {
-            script = ScriptBuilder.createOutputScript(address, 1);
-        }
-        return script;
-    }
-
-    /**
-     * 生成交易的锁定脚本
-     *
-     * @param tx 交易
-     */
-    //TODO (修改Transaction引起的编译错误)
-/*    public static boolean createOutputScript(Transaction tx) {
-        CoinData coinData = tx.getCoinData();
-        //生成锁定脚本
-        for (Coin coin : coinData.getTo()) {
-            Script scriptPubkey = null;
-            byte[] toAddr = coin.getAddress();
-            if (toAddr[2] == BaseConstant.DEFAULT_ADDRESS_TYPE) {
-                scriptPubkey = ScriptUtil.createP2PKHOutputScript(toAddr);
-            } else if (toAddr[2] == BaseConstant.P2SH_ADDRESS_TYPE) {
-                scriptPubkey = ScriptUtil.createP2SHOutputScript(toAddr);
-            }
-            if (scriptPubkey != null && scriptPubkey.getProgram().length > 0) {
-                coin.setOwner(scriptPubkey.getProgram());
-            }
-        }
-        return true;
-    }*/
-
-    /**
-     * 生成交易的脚本（多重签名，P2SH）
-     *
-     * @param signtures 签名列表
-     * @param pubkeys   公钥列表
-     */
-    public static Script createP2shScript(List<byte[]> signtures, List<byte[]> pubkeys, int m) {
-        Script scriptSig = null;
-        //生成赎回脚本
-        Script redeemScript = ScriptBuilder.createByteNulsRedeemScript(m, pubkeys);
-        //根据赎回脚本创建解锁脚本
-        scriptSig = ScriptBuilder.createNulsP2SHMultiSigInputScript(signtures, redeemScript);
-        return scriptSig;
-    }
-
-
-    /**
-     * 验证的脚本（多重签名，P2SH）
-     *
-     * @param digestBytes 验证的签名数据
-     * @param chunks      需要验证的脚本
-     */
-    public static boolean validScriptSign(byte[] digestBytes, List<ScriptChunk> chunks) {
-        if (chunks == null || chunks.size() < 2) {
-            return false;
-        }
-        //如果脚本是以OP_0开头则代表该脚本为多重签名/P2SH脚本
-        if (chunks.get(0).opcode == ScriptOpCodes.OP_0) {
-            byte[] redeemByte = chunks.get(chunks.size() - 1).data;
-            Script redeemScript = new Script(redeemByte);
-            List<ScriptChunk> redeemChunks = redeemScript.getChunks();
-
-            LinkedList<byte[]> signtures = new LinkedList<byte[]>();
-            for (int i = 1; i < chunks.size() - 1; i++) {
-                signtures.add(chunks.get(i).data);
-            }
-
-            LinkedList<byte[]> pubkeys = new LinkedList<byte[]>();
-            int m = Script.decodeFromOpN(redeemChunks.get(0).opcode);
-            if (signtures.size() < m) {
-                return false;
-            }
-
-            for (int j = 1; j < redeemChunks.size() - 2; j++) {
-                pubkeys.add(redeemChunks.get(j).data);
-            }
-
-            int n = Script.decodeFromOpN(redeemChunks.get(redeemChunks.size() - 2).opcode);
-            if (n != pubkeys.size() || n < m) {
-                return false;
-            }
-            return validMultiScriptSign(digestBytes, signtures, pubkeys);
-        } else {
-            if (!ECKey.verify(digestBytes, chunks.get(0).data, chunks.get(1).data)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-
-    /**
-     * 从赎回脚本中获取需要多少人签名
-     *
-     * @param redeemScript 赎回脚本
-     */
-    public static int getM(Script redeemScript) {
-        return Script.decodeFromOpN(redeemScript.getChunks().get(0).opcode);
-    }
-
-    /**
-     * 获取脚本中的公钥
-     */
-/*    public static String getScriptAddress(List<ScriptChunk> chunks) {
-        if (chunks.get(0).opcode == ScriptOpCodes.OP_0) {
-            byte[] redeemByte = chunks.get(chunks.size() - 1).entity;
-            Script redeemScript = new Script(redeemByte);
-            Address address = new Address(BaseConstant.DEFAULT_CHAIN_ID, BaseConstant.P2SH_ADDRESS_TYPE, SerializeUtils.sha256hash160(redeemScript.getProgram()));
-            return address.toString();
-        } else {
-            return AddressTool.getStringAddressByBytes(AddressTool.getAddress(chunks.get(1).entity,BaseConstant.DEFAULT_CHAIN_ID));
-        }
-    }*/
-
-    /**
      * 多重签名脚本签名验证
      *
      * @param digestBytes 验证的签名数据
@@ -526,7 +343,6 @@ public class SignatureUtil {
         nulsSignData.setSignBytes(signbytes);
         return nulsSignData;
     }
-
 
 
 }

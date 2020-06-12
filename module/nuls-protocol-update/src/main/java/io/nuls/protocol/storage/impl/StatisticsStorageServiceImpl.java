@@ -61,6 +61,9 @@ public class StatisticsStorageServiceImpl implements StatisticsStorageService {
         try {
             StatisticsInfo po = new StatisticsInfo();
             byte[] bytes = RocksDBService.get(Constant.STATISTICS + chainId, ByteUtils.longToBytes(height));
+            if (null == bytes) {
+                return null;
+            }
             po.parse(new NulsByteBuffer(bytes));
             return po;
         } catch (Exception e) {

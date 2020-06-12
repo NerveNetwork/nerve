@@ -125,3 +125,4 @@ NULS_Wallet
 config_tmp/
 NULS-Wallet-linux64-alpha*
 dev.md
+.package-version

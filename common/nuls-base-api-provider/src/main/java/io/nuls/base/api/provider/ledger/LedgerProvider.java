@@ -33,4 +33,12 @@ public interface LedgerProvider {
      */
     Result<Map> regLocalAsset(RegLocalAssetReq req);
 
+
+    /**
+     * 获取资产列表
+     * @param req
+     * @return
+     */
+    Result<AssetInfo> getAssetList(GetAssetListReq req);
+
 }

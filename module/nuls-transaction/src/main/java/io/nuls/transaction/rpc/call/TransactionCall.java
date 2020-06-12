@@ -45,12 +45,13 @@ public class TransactionCall {
                     response = ResponseMessageProcessor.requestAndResponse(moduleCode, cmd, params, timeout);
                 }
             } catch (Exception e) {
+                LOG.error("Call interface [{}] error, moduleCode:{}, ", moduleCode, cmd);
                 LOG.error(e);
                 throw new NulsException(TxErrorCode.RPC_REQUEST_FAILD);
             }
             if (!response.isSuccess()) {
                 String errorCode = response.getResponseErrorCode();
-                LOG.error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", cmd, errorCode, response.getResponseComment());
+                LOG.error("Call interface [{}] error, moduleCode:{}, ErrorCode is {}, ResponseComment:{}", moduleCode, cmd, errorCode, response.getResponseComment());
                 throw new NulsException(ErrorCode.init(errorCode));
             }
             Map data = (Map) response.getResponseData();
@@ -109,14 +110,18 @@ public class TransactionCall {
      * @param cmd        提交接口命令
      * @param moduleCode 模块code
      * @param txList     待提交交易列表
+     * @param process    0:表示打包, 1:表示验证
      * @return
      */
-    public static List<String> packProduce(Chain chain, String cmd, String moduleCode, List<String> txList) throws NulsException {
+    public static Map<String, List<String>> packProduce(Chain chain, String cmd, String moduleCode, List<String> txList, long height, long blockTime, int process) throws NulsException {
         Map<String, Object> params = new HashMap(TxConstant.INIT_CAPACITY_8);
         params.put(Constants.CHAIN_ID, chain.getChainId());
         params.put("txList", txList);
-        Map responseMap = (Map) TransactionCall.requestAndResponse(moduleCode, cmd, params);
-        return (List<String>) responseMap.get("list");
+        params.put("height", height);
+        params.put("blockTime", blockTime);
+        params.put("process", process);
+        HashMap responseMap = (HashMap) TransactionCall.requestAndResponse(moduleCode, cmd, params);
+        return responseMap;
     }
 
     /**

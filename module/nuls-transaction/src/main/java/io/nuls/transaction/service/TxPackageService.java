@@ -43,7 +43,7 @@ public interface TxPackageService {
      * @param maxTxDataSize
      * @return
      */
-    List<String> packageBasic (Chain chain, long endtimestamp, long maxTxDataSize);
+    List<String> packageBasic (Chain chain, long endtimestamp, long maxTxDataSize, long blockTime);
 
     /**
      * 验证区块交易

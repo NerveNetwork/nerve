@@ -89,7 +89,7 @@ public class TxGroupRequestor extends BaseMonitor {
     public static void removeTask(int chainId, NulsHash hash) {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
         DelayQueue<TxGroupTask> remove = map.get(chainId).remove(hash.toHex());
-        logger.debug("TxGroupRequestor remove TxGroupTask, hash-" + hash + ", size-" + (remove == null ? 0 : remove.size()));
+//        logger.debug("TxGroupRequestor remove TxGroupTask, hash-" + hash + ", size-" + (remove == null ? 0 : remove.size()));
     }
 
     @Override

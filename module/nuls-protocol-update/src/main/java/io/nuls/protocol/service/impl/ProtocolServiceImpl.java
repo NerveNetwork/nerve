@@ -25,7 +25,6 @@ import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.protocol.manager.ContextManager;
 import io.nuls.protocol.model.ChainParameters;
@@ -76,6 +75,11 @@ public class ProtocolServiceImpl implements ProtocolService {
         try {
             context.setLatestHeight(BlockCall.getLatestHeight(chainId));
             List<ProtocolVersionPo> list = protocolService.getList(chainId);
+            while (list.size() == 0){
+                Thread.sleep(3000L);
+                context.getLogger().warn("没有获取到区块协议版本统计信息, 等待重新获取..");
+                list = protocolService.getList(chainId);
+            }
             list.sort(ProtocolVersionPo.COMPARATOR.reversed());
             ProtocolVersionPo protocolVersionPo = list.get(0);
             ProtocolVersion protocolVersion = PoUtil.getProtocolVersion(protocolVersionPo);
@@ -315,6 +319,9 @@ public class ProtocolServiceImpl implements ProtocolService {
         //区块高度到达阈值,从数据库删除一条统计记录
         if (count < 0) {
             StatisticsInfo oldValidStatisticsInfo = service.get(chainId, height);
+            if(null == oldValidStatisticsInfo){
+                return true;
+            }
             boolean b = service.delete(chainId, height);
             logger.info("height-" + height + ", delete-" + b);
             count = interval - 1;

@@ -32,6 +32,16 @@ public class Config implements ModuleConfig {
 
     private String symbol;
 
+    private String packageVersion;
+
+    public String getPackageVersion() {
+        return packageVersion;
+    }
+
+    public void setPackageVersion(String packageVersion) {
+        this.packageVersion = packageVersion;
+    }
+
     public String getAddressPrefix() {
         return addressPrefix;
     }

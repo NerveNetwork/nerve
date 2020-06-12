@@ -316,7 +316,7 @@ public class RequestMessageProcessor {
         Message rspMessage = MessageUtil.basicMessage(MessageType.Response);
         rspMessage.setMessageData(realResponse);
         try {
-            Log.debug("responseWithEventCount: " + JSONUtils.obj2json(rspMessage));
+//            Log.debug("responseWithEventCount: " + JSONUtils.obj2json(rspMessage));
             ConnectManager.sendMessage(channel, SerializeUtil.getBuffer(JSONUtils.obj2ByteArray(rspMessage)));
         } catch (JsonProcessingException e) {
             Log.error(e);

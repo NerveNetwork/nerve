@@ -28,6 +28,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Charlie
@@ -42,9 +43,13 @@ public interface ModuleTxPackageProcessor {
      * 返回新产生的交易
      * @param chainId
      * @param txs
-     * @return
+     * @param process 0:表示打包时调用 1:表示验证区块时调用
+     * @param height 区块高度
+     * @param blockTime 区块时间
+     *
+     * @return Map 返回两个列表 1.key:newlyList 新生成的交易, 2.key: rmHashList 需要删除的原始交易hash
      */
-    default List<String> packProduce(int chainId, List<Transaction> txs) throws NulsException {
+    default Map<String, List<String>> packProduce(int chainId, List<Transaction> txs, int process, long height, long blockTime) throws NulsException {
         return null;
     }
 

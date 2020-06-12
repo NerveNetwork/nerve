@@ -14,7 +14,7 @@ public interface AgentService {
 
     PageInfo<AgentInfo> getAgentByHashList(int chainID, int pageNumber, int pageSize, List<String> hashList);
 
-    AgentInfo getAgentByPackingAddress(int chainID, String packingAddress);
+    AgentInfo getAgentByRewardAddress(int chainID, String packingAddress);
 
     AgentInfo getAgentByAgentAddress(int chainID, String agentAddress);
 
@@ -24,9 +24,9 @@ public interface AgentService {
 
     void rollbackAgentList(int chainId, List<AgentInfo> agentInfoList);
 
-    List<AgentInfo> getAgentList(int chainId, long startHeight);
+    List<AgentInfo> getAgentListByStartHeight(int chainId, long startHeight);
 
-    PageInfo<AgentInfo> getAgentList(int chainId, int type, int pageNumber, int pageSize);
+    List<AgentInfo> getAllAgentList(int chainId);
 
     PageInfo<AgentInfo> getAgentList(int chainId, int pageNumber, int pageSize);
 

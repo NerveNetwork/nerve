@@ -51,13 +51,13 @@ import io.nuls.transaction.model.dto.CoinDTO;
 import io.nuls.transaction.rpc.call.LedgerCall;
 import io.nuls.transaction.rpc.call.TransactionCall;
 import io.nuls.transaction.service.TxService;
-import io.nuls.transaction.utils.LoggerUtil;
+import org.junit.Assert;
 
 import java.math.BigInteger;
 import java.util.*;
 
 /**
- * TODO 大批量交易测试类 用于cmd命令行
+ * 大批量交易测试类 用于cmd命令行
  *
  * @author: Charlie
  * @date: 2019/6/29
@@ -65,12 +65,12 @@ import java.util.*;
 @Component
 public class TransferTestImpl {
 
-    static String address20 = "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG";
-    static String address21 = "tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD";
-    static String address22 = "tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24";
-    static String address23 = "tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD";
-    static String address24 = "tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL";
-    static String address25 = "tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL";
+    static String address20 = "TNVTdN9iAS9rt6f2Eu8LiYESwyMSt4HJU97o9";
+    static String address21 = "TNVTdN9iHMKEpHdAGRzrk8jNucKSPxjem1qT2";
+    static String address22 = "TNVTdN9iFDuRZ14Sota2dhU7eyLDS53DSo5Av";
+    static String address23 = "TNVTdN9i7JazkRXoEsn5JrXV4rnpnYucVtxxh";
+    static String address24 = "TNVTdN9iFTM1Xuz46ZVvbsnqxgNVzFGuhy73c";
+    static String address25 = "TNVTdN9i47oDvee9N52NwHkr7uRvQWpowTW9W";
     static String address26 = "tNULSeBaMoodYW7AqyJrgYdWiJ6nfwfVHHHyXm";
     static String address27 = "tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1";
     static String address28 = "tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2";
@@ -84,8 +84,8 @@ public class TransferTestImpl {
     private Chain chain;
     @Autowired
     private ChainManager chainManager;
-    static int chainId = 2;
-    static int assetChainId = 2;
+    static int chainId = 4;
+    static int assetChainId = 4;
     static int assetId = 1;
     static String version = "1.0";
 
@@ -96,12 +96,12 @@ public class TransferTestImpl {
     public void importPriKeyTest() {
 //        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
 //        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
-        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
-        importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
-        importPriKey("8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24
-        importPriKey("4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530", password);//23 tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD
-        importPriKey("bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7", password);//24 tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL
-        importPriKey("ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200", password);//25 tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL
+        importPriKey("5396d5015edb6c8e6a4f9ac281d82b57a222fe712f5281a1e256929df78a46f0", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
+        importPriKey("e626c1e1541471d4f6e074762c811e3a5896be14bffabff059e2c54703252160", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
+        importPriKey("8686352e34eade8b2e5104a0931011cc5a67e72fb1d2679d430e944480260dc4", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24
+        importPriKey("534b684229baad90b8e5ccd4813154209fb5f5d84bd0dc048f0d9e25e432ae07", password);//23 tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD
+        importPriKey("b3e6ddf3368970f3f0bead71dcc194d84ff654edd22182324fb4d9647dada8f8", password);//24 tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL
+        importPriKey("0d71c0ac3a6cd924c012efefd283e27e703813871493f122692548ad61ce794a", password);//25 tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL
         importPriKey("4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a", password);//26 tNULSeBaMoodYW7AqyJrgYdWiJ6nfwfVHHHyXm
         importPriKey("3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1", password);//27 tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1
         importPriKey("27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e", password);//28 tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2
@@ -195,6 +195,25 @@ public class TransferTestImpl {
         }
     }
 
+    public void transfer(String address) throws Exception {
+        while (true) {
+            Thread.sleep(10L);
+            Map transferMap = this.createTransferTx(address, address, new BigInteger("1000000"));
+            //调用接口
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_transfer", transferMap);
+            if (!cmdResp.isSuccess()) {
+                chain.getLogger().error("失败 errorcode:{}", cmdResp.getResponseErrorCode());
+                throw new NulsException(TxErrorCode.RPC_REQUEST_FAILD);
+            }
+            HashMap result = (HashMap) (((HashMap) cmdResp.getResponseData()).get("ac_transfer"));
+            Assert.assertTrue(null != result);
+            String hash = (String) result.get("value");
+            chain.getLogger().info("{}", hash);
+//            return hash;
+        }
+    }
+
+
     public void importPriKey(String priKey, String pwd) {
         try {
             //账户已存在则覆盖 If the account exists, it covers.
@@ -216,7 +235,7 @@ public class TransferTestImpl {
 
     private List<String> doAccountsCreateAndGiveMoney(int addrCount, BigInteger amount, String richAddr) throws Exception {
         List<String> list = createAddress(addrCount);
-        chain = chainManager.getChain(2);
+        chain = chainManager.getChain(4);
         //给新生成账户转账
         NulsHash hash = null;
         Log.info("交易账户余额初始化...");
@@ -245,7 +264,7 @@ public class TransferTestImpl {
 
     private long doTrans(Map<String, NulsHash> preHashMap, List<String> list1, List<String> list2, int count) throws Exception {
         long countTx = 0;
-        chain = chainManager.getChain(2);
+        chain = chainManager.getChain(4);
         for (int i = 0; i < count; i++) {
             String address = list1.get(i);
             String addressTo = list2.get(i);

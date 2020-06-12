@@ -14,24 +14,20 @@ public class MultiSignAccountDepositToAgentReq extends BaseReq {
 
     String address;
 
-    String agentHash;
-
     BigInteger deposit;
 
     String password;
 
     String signAddress;
 
-    public MultiSignAccountDepositToAgentReq(String address, String agentHash, BigInteger deposit, String password) {
+    public MultiSignAccountDepositToAgentReq(String address, BigInteger deposit, String password) {
         this.address = address;
-        this.agentHash = agentHash;
         this.deposit = deposit;
         this.password = password;
     }
 
-    public MultiSignAccountDepositToAgentReq(String address, String agentHash, BigInteger deposit) {
+    public MultiSignAccountDepositToAgentReq(String address, BigInteger deposit) {
         this.address = address;
-        this.agentHash = agentHash;
         this.deposit = deposit;
     }
 
@@ -41,14 +37,6 @@ public class MultiSignAccountDepositToAgentReq extends BaseReq {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public String getAgentHash() {
-        return agentHash;
-    }
-
-    public void setAgentHash(String agentHash) {
-        this.agentHash = agentHash;
     }
 
     public BigInteger getDeposit() {

@@ -64,9 +64,10 @@ public class BlockHandler implements MessageProcessor {
             boolean b = height > context.getLatestHeight() && context.isNeedSyn();
             if (b && context.getBlockMap().put(height, block) == null) {
                 context.getCachedBlockSize().addAndGet(block.size());
-            } else {
-                logger.warn("ignore BlockMessage from node-{}, blockHeight-{}, isNeedSyn-{}, LatestHeight-{}", nodeId, height, context.isNeedSyn(), context.getLatestHeight());
             }
+//            else {
+//                logger.warn("ignore BlockMessage from node-{}, blockHeight-{}, isNeedSyn-{}, LatestHeight-{}", nodeId, height, context.isNeedSyn(), context.getLatestHeight());
+//            }
         } else {
             if (block != null) {
                 block.setNodeId(nodeId);
@@ -74,7 +75,7 @@ public class BlockHandler implements MessageProcessor {
             SingleBlockCacher.receiveBlock(chainId, message);
         }
         if (block != null) {
-            logger.debug("recieve BlockMessage from node-" + nodeId + ", hash:" + block.getHeader().getHash() + ", height-" + block.getHeader().getHeight());
+//            logger.debug("recieve BlockMessage from node-" + nodeId + ", hash:" + block.getHeader().getHash() + ", height-" + block.getHeader().getHeight());
         } else {
             logger.debug("recieve null BlockMessage from node-" + nodeId);
         }

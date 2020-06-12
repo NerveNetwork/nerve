@@ -42,7 +42,7 @@ public class MongoRoundServiceImpl implements RoundService {
 
     public void saveRound(int chainId, PocRound round) {
         Document document = DocumentTransferTool.toDocument(round, "index");
-        this.mongoDBService.insertOne(ROUND_TABLE + chainId, document);
+        this.mongoDBService.insertOrUpdate(ROUND_TABLE + chainId, document);
     }
 
     public long updateRound(int chainId, PocRound round) {
@@ -62,7 +62,7 @@ public class MongoRoundServiceImpl implements RoundService {
             docsList.add(document);
         }
         try {
-            this.mongoDBService.insertMany(ROUND_ITEM_TABLE + chainId, docsList);
+            this.mongoDBService.insertOrUpdate(ROUND_ITEM_TABLE + chainId, docsList);
         } catch (Exception e) {
             LoggerUtil.commonLog.error(e);
         }

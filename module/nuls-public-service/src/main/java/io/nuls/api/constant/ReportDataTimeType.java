@@ -1,11 +1,13 @@
 package io.nuls.api.constant;
 
 
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * @Author: zhoulijun
@@ -22,13 +24,12 @@ public enum ReportDataTimeType {
         }
 
         @Override
-        public String getPreTimeValue(Date date) {
-            Calendar calendar = Calendar.getInstance();
+        public String getPreTimeValue(Date date, TimeZone timeZone) {
+            Calendar calendar = Calendar.getInstance(timeZone);
             calendar.setTime(date);
             calendar.add(Calendar.DATE,-1);
             return formatYYYYMMDD(calendar.getTime());
         }
-
 
         @Override
         public int modules() {
@@ -48,8 +49,8 @@ public enum ReportDataTimeType {
         }
 
         @Override
-        public String getPreTimeValue(Date date) {
-            Calendar calendar = Calendar.getInstance();
+        public String getPreTimeValue(Date date, TimeZone timeZone) {
+            Calendar calendar = Calendar.getInstance(timeZone);
             calendar.setTime(date);
             calendar.add(Calendar.MONTH,-1);
             calendar.set(Calendar.DAY_OF_MONTH,1);
@@ -73,8 +74,8 @@ public enum ReportDataTimeType {
         }
 
         @Override
-        public String getPreTimeValue(Date date) {
-            Calendar calendar = Calendar.getInstance(Locale.CHINA);
+        public String getPreTimeValue(Date date, TimeZone timeZone) {
+            Calendar calendar = Calendar.getInstance(timeZone);
             calendar.setTime(date);
             calendar.add(Calendar.WEEK_OF_YEAR,-1);
             //从星期一开始
@@ -99,8 +100,8 @@ public enum ReportDataTimeType {
         }
 
         @Override
-        public String getPreTimeValue(Date date) {
-            Calendar calendar = Calendar.getInstance();
+        public String getPreTimeValue(Date date, TimeZone timeZone) {
+            Calendar calendar = Calendar.getInstance(timeZone);
             calendar.setTime(date);
             calendar.add(Calendar.YEAR,-1);
             calendar.set(Calendar.DAY_OF_YEAR,1);
@@ -124,9 +125,19 @@ public enum ReportDataTimeType {
 
     public static final String YYYYMMDD = "yyyyMMdd";
 
-    public abstract String getPreTimeValue(Date date);
+    public String getPreTimeValue(Date date){
+        return getPreTimeValue(date,TimeZone.getDefault());
+    }
 
-    public Date[] getPreTimeRange(Date date) {
+    public abstract String getPreTimeValue(Date date, TimeZone timeZone);
+
+
+    public Date[] getPreTimeRange(Date date){
+        return getPreTimeRange(date,TimeZone.getDefault());
+    }
+
+
+    public Date[] getPreTimeRange(Date date,TimeZone timeZone) {
         String preTime = getPreTimeValue(date);
         try {
             return getTimeRange(new SimpleDateFormat(YYYYMMDD).parse(preTime));
@@ -135,11 +146,15 @@ public enum ReportDataTimeType {
         }
     }
 
-    public Date[] getTimeRange(Date date) {
+    public Date[] getTimeRange(Date date){
+        return getTimeRange(date,TimeZone.getDefault());
+    }
+
+    public Date[] getTimeRange(Date date,TimeZone timeZone) {
         String dayStr = formatYYYYMMDD(date);
         try {
             Date start = new SimpleDateFormat(YYYYMMDD).parse(dayStr);
-            Calendar calendar = Calendar.getInstance();
+            Calendar calendar = Calendar.getInstance(timeZone);
             calendar.setTime(start);
             calendar.add(getCalendarField(),1);
             calendar.add(Calendar.SECOND,-1);
@@ -152,11 +167,15 @@ public enum ReportDataTimeType {
     }
 
     public Date[] getTimeRangeForDay(Date date){
-        Calendar calendar = Calendar.getInstance();
+        return getTimeRangeForDay(date,TimeZone.getDefault());
+    }
+
+    public Date[] getTimeRangeForDay(Date date,TimeZone timeZone){
+        Calendar calendar = Calendar.getInstance(timeZone);
         calendar.setTime(date);
         calendar.add(Calendar.DATE,-this.dayNumber());
-        Date start = Day.getTimeRange(calendar.getTime())[0];
-        Date end = Day.getPreTimeRange(date)[1];
+        Date start = Day.getTimeRange(calendar.getTime(),timeZone)[0];
+        Date end = Day.getPreTimeRange(date,timeZone)[1];
         return new Date[]{start,end};
     }
 
@@ -181,14 +200,17 @@ public enum ReportDataTimeType {
         System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(range[1]));
         Calendar calendar = Calendar.getInstance();
         calendar.add(ReportDataTimeType.Year.getCalendarField(),-1);
-        range = ReportDataTimeType.Year.getTimeRange(calendar.getTime());
+        range = ReportDataTimeType.Year.getTimeRange(calendar.getTime(),TimeZone.getTimeZone("UTC+0"));
         System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(range[0]));
         System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(range[1]));
 
 
-        range = ReportDataTimeType.Week.getPreTimeRange(new Date());
+        range = ReportDataTimeType.Week.getPreTimeRange(Calendar.getInstance(TimeZone.getTimeZone("UTC+0")).getTime(),TimeZone.getTimeZone("UTC+0"));
         System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(range[0]));
         System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(range[1]));
+
+        System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(Calendar.getInstance(TimeZone.getTimeZone("UTC+0")).getTime()));
+        System.out.println(new SimpleDateFormat("yyyyMMdd HH:mm:ss").format(Calendar.getInstance(TimeZone.getTimeZone("UTC+8")).getTime()));
 
         System.out.println();
     }

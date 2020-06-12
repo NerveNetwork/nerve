@@ -41,6 +41,9 @@ public class LoggerUtil {
      * 日志
      */
     private static Map<String, NulsLogger> loggerMap = new HashMap<>();
+
+    public static NulsLogger nonceLog = LoggerBuilder.getLogger("nonce");
+
     public static final NulsLogger COMMON_LOG = LoggerBuilder.getLogger(ModuleE.Constant.LEDGER);
     public static NulsLogger logger(int chainId) {
         if (null == loggerMap.get(String.valueOf(chainId))) {

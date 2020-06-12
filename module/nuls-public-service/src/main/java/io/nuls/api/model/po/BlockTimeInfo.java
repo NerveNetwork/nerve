@@ -15,7 +15,7 @@ public class BlockTimeInfo {
     /**
      * 平均出块消耗时间
      */
-    private long avgConsumeTime;
+    private double avgConsumeTime;
 
     /**
      * 最后一次出块消耗时间
@@ -37,11 +37,11 @@ public class BlockTimeInfo {
         this.lastBlockTimeStamp = lastBlockTimeStamp;
     }
 
-    public long getAvgConsumeTime() {
+    public double getAvgConsumeTime() {
         return avgConsumeTime;
     }
 
-    public void setAvgConsumeTime(long avgConsumeTime) {
+    public void setAvgConsumeTime(double avgConsumeTime) {
         this.avgConsumeTime = avgConsumeTime;
     }
 

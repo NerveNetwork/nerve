@@ -1,15 +1,21 @@
 package io.nuls.api.model.po;
 
 import io.nuls.api.utils.DocumentTransferTool;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.Sha256Hash;
 import org.bson.Document;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.util.Objects;
 
 import static io.nuls.api.constant.ApiConstant.TRANSFER_FROM_TYPE;
 import static io.nuls.api.constant.ApiConstant.TRANSFER_TO_TYPE;
 
 
 public class TxRelationInfo {
+
+    private String _id;
 
     private String txHash;
 
@@ -38,6 +44,8 @@ public class TxRelationInfo {
 
     private int status;
 
+    private int txIndex = 0;
+
     public TxRelationInfo() {
 
     }
@@ -47,7 +55,13 @@ public class TxRelationInfo {
         this.txHash = txHash;
     }
 
-    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger balance) {
+
+    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger balance){
+        this(output,tx,balance,0);
+    }
+
+
+    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger balance,int txIndex) {
         this.address = output.getAddress();
         this.chainId = output.getChainId();
         this.assetId = output.getAssetsId();
@@ -60,9 +74,10 @@ public class TxRelationInfo {
         this.fee = tx.getFee();
         this.balance = balance;
         this.transferType = TRANSFER_TO_TYPE;
+        this.txIndex = txIndex;
     }
 
-    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger values, BigInteger balance) {
+    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger values, BigInteger balance,int txIndex){
         this.address = output.getAddress();
         this.chainId = output.getChainId();
         this.assetId = output.getAssetsId();
@@ -75,9 +90,18 @@ public class TxRelationInfo {
         this.fee = tx.getFee();
         this.balance = balance;
         this.transferType = TRANSFER_TO_TYPE;
+        this.txIndex = txIndex;
     }
 
-    public TxRelationInfo(CoinFromInfo input, TransactionInfo tx, BigInteger balance) {
+    public TxRelationInfo(CoinToInfo output, TransactionInfo tx, BigInteger values, BigInteger balance) {
+        this(output,tx,values,balance,0);
+    }
+
+    public TxRelationInfo(CoinFromInfo input, TransactionInfo tx, BigInteger balance){
+        this(input,tx,balance,0);
+    }
+
+    public TxRelationInfo(CoinFromInfo input, TransactionInfo tx, BigInteger balance,int txIndex) {
         this.address = input.getAddress();
         this.chainId = input.getChainId();
         this.assetId = input.getAssetsId();
@@ -90,6 +114,7 @@ public class TxRelationInfo {
         this.fee = tx.getFee();
         this.balance = balance;
         this.transferType = TRANSFER_FROM_TYPE;
+        this.txIndex = txIndex;
     }
 
     public TxRelationInfo(CoinFromInfo input, TransactionInfo tx, BigInteger values, BigInteger balance) {
@@ -105,6 +130,22 @@ public class TxRelationInfo {
         this.fee = tx.getFee();
         this.balance = balance;
         this.transferType = TRANSFER_FROM_TYPE;
+    }
+
+    public TxRelationInfo(LedgerRegAssetInfo input, TransactionInfo tx, BigInteger values, BigInteger balance,int txIndex) {
+        this.address = input.getAddress();
+        this.chainId = input.getAssetChainId();
+        this.assetId = input.getAssetId();
+        this.symbol = input.getSymbol();
+        this.values = values;
+        this.txHash = tx.getHash();
+        this.type = tx.getType();
+        this.createTime = tx.getCreateTime();
+        this.height = tx.getHeight();
+        this.fee = tx.getFee();
+        this.balance = balance;
+        this.transferType = TRANSFER_TO_TYPE;
+        this.txIndex = txIndex;
     }
 
     public TxRelationInfo(String address, TransactionInfo tx, AssetInfo assetInfo, BigInteger values, int transferType, BigInteger balance) {
@@ -140,7 +181,7 @@ public class TxRelationInfo {
 
     public Document toDocument() {
         Document document = new Document();
-        document.append("address", address).append("txHash", txHash).append("createTime", createTime).append("type", type)
+        document.append("_id",_id).append("address", address).append("txHash", txHash).append("createTime", createTime).append("type", type)
                 .append("height", height).append("chainId", chainId).append("assetId", assetId).append("symbol", symbol)
                 .append("values", values.toString()).append("transferType", transferType).append("balance", balance.toString()).append("fee", DocumentTransferTool.toDocument(fee));
         return document;
@@ -149,6 +190,7 @@ public class TxRelationInfo {
     public static TxRelationInfo toInfo(Document document) {
         try {
             TxRelationInfo relationInfo = new TxRelationInfo();
+            relationInfo.set_id(document.getString("_id"));
             relationInfo.setAddress(document.getString("address"));
             relationInfo.setTxHash(document.getString("txHash"));
             relationInfo.setCreateTime(document.getLong("createTime"));
@@ -272,4 +314,35 @@ public class TxRelationInfo {
     public void setFee(FeeInfo feeInfo) {
         this.fee = feeInfo;
     }
+
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+
+    public int getTxIndex() {
+        return txIndex;
+    }
+
+    public void setTxIndex(int txIndex) {
+        this.txIndex = txIndex;
+    }
+
+    public void buldTxRelationInfoId(){
+        Objects.requireNonNull(this.address,"address can't be null");
+        Objects.requireNonNull(this.txHash,"address can't be null");
+        String idStr = this.getAddress() + this.getTxHash() + "-" + txIndex;
+        try {
+            String id = HexUtil.encode(Sha256Hash.hash(idStr.getBytes("UTF8")));
+            this.set_id(id);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("build tx relation info id fail",e);
+        }
+    }
+
+
 }

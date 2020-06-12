@@ -98,17 +98,9 @@ public class RollbackService {
             return true;
         }
 
-        Map<String, ContractResultInfo> resultInfoMap = null;
-        if (blockHexInfo.getContractHashList() != null && !blockHexInfo.getContractHashList().isEmpty()) {
-            resultInfoMap = new HashMap<>();
-            for (String hash : blockHexInfo.getContractHashList()) {
-                ContractResultInfo resultInfo = contractService.getContractResultInfo(chainId, hash);
-                resultInfoMap.put(resultInfo.getTxHash(), resultInfo);
-            }
-        }
         BlockInfo blockInfo;
         try {
-            blockInfo = AnalysisHandler.toBlockInfo(blockHexInfo.getBlockHex(), resultInfoMap, chainId);
+            blockInfo = AnalysisHandler.toBlockInfo(blockHexInfo.getBlockHex(), chainId);
         } catch (Exception e) {
             Log.error(e);
             return false;
@@ -742,17 +734,17 @@ public class RollbackService {
             chainService.updateStep(syncInfo);
         }
 
-        if (syncInfo.getStep() == 50) {
-            tokenService.saveAccountTokens(chainId, accountTokenMap);
-            syncInfo.setStep(40);
-            chainService.updateStep(syncInfo);
-        }
-
-        if (syncInfo.getStep() == 40) {
-            contractService.rollbackContractInfos(chainId, contractInfoMap);
-            syncInfo.setStep(30);
-            chainService.updateStep(syncInfo);
-        }
+//        if (syncInfo.getStep() == 50) {
+//            tokenService.saveAccountTokens(chainId, accountTokenMap);
+//            syncInfo.setStep(40);
+//            chainService.updateStep(syncInfo);
+//        }
+//
+//        if (syncInfo.getStep() == 40) {
+//            contractService.rollbackContractInfos(chainId, contractInfoMap);
+//            syncInfo.setStep(30);
+//            chainService.updateStep(syncInfo);
+//        }
 
         if (syncInfo.getStep() == 30) {
             ledgerService.saveLedgerList(chainId, accountLedgerInfoMap);
@@ -768,10 +760,10 @@ public class RollbackService {
         //回滚chain信息
         chainService.rollbackChainList(chainInfoList);
         //回滾token转账信息
-        tokenService.rollbackTokenTransfers(chainId, tokenTransferHashList, blockInfo.getHeader().getHeight());
+//        tokenService.rollbackTokenTransfers(chainId, tokenTransferHashList, blockInfo.getHeader().getHeight());
         //回滾智能合約交易
-        contractService.rollbackContractResults(chainId, contractTxHashList);
-        contractService.rollbackContractTxInfos(chainId, contractTxHashList);
+//        contractService.rollbackContractResults(chainId, contractTxHashList);
+//        contractService.rollbackContractTxInfos(chainId, contractTxHashList);
         depositService.rollbackDeposit(chainId, depositInfoList);
         punishService.rollbackPunishLog(chainId, punishTxHashList, blockInfo.getHeader().getHeight());
         aliasService.rollbackAliasList(chainId, aliasInfoList);
@@ -845,7 +837,7 @@ public class RollbackService {
         } else if (type == 2) {
             agentInfo = agentService.getAgentByAgentAddress(chainId, key);
         } else {
-            agentInfo = agentService.getAgentByPackingAddress(chainId, key);
+            agentInfo = agentService.getAgentByRewardAddress(chainId, key);
         }
         if (agentInfo != null) {
             agentInfoList.add(agentInfo);

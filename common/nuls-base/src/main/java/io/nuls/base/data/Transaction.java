@@ -225,6 +225,9 @@ public class Transaction extends BaseNulsData implements Cloneable {
     }
 
     public CoinData getCoinDataInstance() throws NulsException {
+        if (null == this.coinData || this.coinData.length == 0) {
+            return null;
+        }
         if (coinDataInstance == null) {
             coinDataInstance = new CoinData();
             coinDataInstance.parse(new NulsByteBuffer(this.coinData));
@@ -338,7 +341,8 @@ public class Transaction extends BaseNulsData implements Cloneable {
             builder.append(lineSeparator).append("*********************** Transaction information ***********************").append(lineSeparator);
             builder.append(String.format("type: %s", this.type)).append(lineSeparator);
             builder.append(String.format("txHash: %s", this.getHash().toHex())).append(lineSeparator);
-            builder.append(String.format("time: %s", DateUtils.timeStamp2DateStr(this.getTime() * 1000L))).append(lineSeparator);
+            builder.append(String.format("time: %s", this.getTime())).append(lineSeparator);
+            builder.append(String.format("time(format): %s", DateUtils.timeStamp2DateStr(this.getTime() * 1000L))).append(lineSeparator);
             builder.append(String.format("size: %s byte,", String.valueOf(this.getSize()))).append(lineSeparator);
             byte[] remark = this.getRemark();
             String remarkStr = remark == null ? null : new String(this.getRemark(), "UTF-8");

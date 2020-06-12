@@ -4,9 +4,11 @@ import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.AddressType;
+import io.nuls.api.constant.config.ApiConfig;
 import io.nuls.api.db.*;
 import io.nuls.api.exception.JsonRpcException;
 import io.nuls.api.manager.CacheManager;
+import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.rpc.RpcErrorCode;
 import io.nuls.api.model.rpc.RpcResult;
@@ -21,15 +23,14 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
+import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.parse.MapUtils;
+import io.nuls.core.rpc.model.ModuleE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
@@ -59,6 +60,12 @@ public class ChainController {
 
     @Autowired
     SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
+
+    @Autowired
+    ConfigurationLoader configurationLoader;
+
+    @Autowired
+    ApiConfig apiConfig;
 
     @RpcMethod("getChainInfo")
     public RpcResult getChainInfo(List<Object> params) {
@@ -129,6 +136,9 @@ public class ChainController {
         map.put("magicNumber", ApiContext.magicNumber);
         map.put("isRunCrossChain", ApiContext.isRunCrossChain);
         map.put("isRunSmartContract", ApiContext.isRunSmartContract);
+        map.put("feePubkey", configurationLoader.getValue(ModuleE.Constant.CONVERTER,"feePubkey"));
+        map.put("proposalPrice",configurationLoader.getValue(ModuleE.Constant.CONVERTER,"proposalPrice"));
+        map.put("blackHolePublicKey",apiConfig.getBlackHolePublicKey());
         return RpcResult.success(map);
     }
 
@@ -315,8 +325,9 @@ public class ChainController {
 //        nvtPublishAmount": 1,     //当前发行量    当前通胀量 + 初始发行量
         BigInteger nvtPublishAmount = nvtInflationAmount.add(nvtInitialAmount);
         map.put("nvtPublishAmount", nvtPublishAmount);
-//        nvtDepositAmount": 1,      //当前抵押量
-
+//        nvtDepositTotal": 1,      //当前抵押量
+        BigInteger nvtDepositTotal = agentService.getConsensusCoinTotal(chainId);
+        map.put("nvtDepositTotal", nvtDepositTotal);
 //          nvtLockedAmount          //当期锁定量   查询几个固定的锁定资产
         BigInteger nvtLockedAmount = coinContextInfo.getBusiness().add(coinContextInfo.getCommunity()).add(coinContextInfo.getTeam()).add(coinContextInfo.getDestroy());
         map.put("nvtLockedAmount", nvtLockedAmount);
@@ -352,11 +363,17 @@ public class ChainController {
         if (apiCache.getBestHeader() != null) {
             count = agentService.agentsCount(chainId, apiCache.getBestHeader().getHeight());
         }
+        Result<Set<String>> bankNodeList = WalletRpcHandler.getVirtualBankAddressList(chainId);
+        if(bankNodeList.isFailed()){
+            return RpcResult.failed(bankNodeList.getErrorCode());
+        }
+
         map.put("nodeCount", count);
-        map.put("bankNodeCount", 0L);
+        //银行节点数量需要减去种子节点数量
+        map.put("bankNodeCount", bankNodeList.getData().size() - ApiContext.seedCount);
         BlockTimeInfo blockTimeInfo = blockTimeService.get(chainId);
         map.put("blockHeight", blockTimeInfo.getBlockHeight());
-        map.put("avgBlockTimeConsuming", blockTimeInfo.getAvgConsumeTime());
+        map.put("avgBlockTimeConsuming", new BigDecimal(blockTimeInfo.getAvgConsumeTime()).setScale(2, RoundingMode.HALF_UP));
         map.put("lastBlockTimeConsuming", blockTimeInfo.getLastConsumeTime());
         return RpcResult.success(map);
     }
@@ -370,7 +387,7 @@ public class ChainController {
     public RpcResult getSymbolBaseInfo(List<Object> params) {
         List<SymbolRegInfo> symbolList = symbolRegService.getAll();
         SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt("USD");
-        SymbolRegInfo usdInfo = symbolRegService.get(0,0);
+        SymbolRegInfo usdInfo = symbolRegService.get(0, 0);
         return RpcResult.success(
                 symbolList.stream().map(d -> {
                     Map<String, Object> map = MapUtils.beanToMap(d);
@@ -520,19 +537,53 @@ public class ChainController {
         } catch (Exception e) {
             return RpcResult.paramError("[chainId] is invalid");
         }
-        return RpcResult.success(statisticalService.getAssetSnapshotAggSum(chainId,4).stream().map(d->{
-            SymbolRegInfo asset = symbolRegService.get(d.getAssetChainId(),d.getAssetId());
-            return Map.of(
-                    "symbol",d.getSymbol(),
-                    "total",d.getTotal(),
-                    "convert24",d.getConverterInTotal(),
-                    "redeem24",d.getConverterOutTotal(),
-                    "transfer24",d.getTxTotal(),
-                    "addressCount",d.getAddressCount(),
-                    "icon",asset.getIcon(),
-                    "assetChainId",d.getAssetChainId(),
-                    "assetId",d.getAssetId()
-            );
+        List<AssetSnapshotInfo> dataList = statisticalService.getAssetSnapshotAggSum(chainId, 4);
+        Map<String, BigInteger> symbolTotalList = dataList.stream().map(d -> Map.of(d.getSymbol(), d.getTotal())).reduce(new HashMap<>(dataList.size()),
+                (d1, d2) -> {
+                    d1.putAll(d2);
+                    return d1;
+                });
+        Map<String, BigInteger> symbolConvert24List = dataList.stream().map(d -> Map.of(d.getSymbol(), d.getConverterInTotal())).reduce(new HashMap<>(dataList.size()),
+                (d1, d2) -> {
+                    d1.putAll(d2);
+                    return d1;
+                });
+        Map<String, BigInteger> symbolRedeem24List = dataList.stream().map(d -> Map.of(d.getSymbol(), d.getConverterOutTotal())).reduce(new HashMap<>(dataList.size()),
+                (d1, d2) -> {
+                    d1.putAll(d2);
+                    return d1;
+                });
+        Map<String, BigInteger> symbolTransfer24List = dataList.stream().map(d -> Map.of(d.getSymbol(), d.getTxTotal())).reduce(new HashMap<>(dataList.size()),
+                (d1, d2) -> {
+                    d1.putAll(d2);
+                    return d1;
+                });
+
+        return RpcResult.success(dataList.stream().map(d -> {
+            SymbolRegInfo asset = symbolRegService.get(d.getAssetChainId(), d.getAssetId());
+            Map<String, Object> res = new HashMap<>(9);
+            res.put("symbol", d.getSymbol());
+            SymbolUsdPercentDTO totalPer = symbolUsdtPriceProviderService.calcRate(d.getSymbol(),symbolTotalList);
+            res.put("total", d.getTotal());
+            res.put("totalRate",totalPer.getPer());
+            res.put("totalUsdVal",totalPer.getUsdVal());
+            SymbolUsdPercentDTO conver24Per = symbolUsdtPriceProviderService.calcRate(d.getSymbol(),symbolConvert24List);
+            res.put("convert24", d.getConverterInTotal());
+            res.put("convert24Rate",conver24Per.getPer());
+            res.put("convert24UsdVal",conver24Per.getUsdVal());
+            SymbolUsdPercentDTO redeem24Per = symbolUsdtPriceProviderService.calcRate(d.getSymbol(),symbolRedeem24List);
+            res.put("redeem24", d.getConverterOutTotal());
+            res.put("redeem24Rate",redeem24Per.getPer());
+            res.put("redeem24UsdVal",redeem24Per.getUsdVal());
+            SymbolUsdPercentDTO transfer24Per = symbolUsdtPriceProviderService.calcRate(d.getSymbol(),symbolTransfer24List);
+            res.put("transfer24", d.getTxTotal());
+            res.put("transfer24Rate",transfer24Per.getPer());
+            res.put("transfer24UsdVal",transfer24Per.getUsdVal());
+            res.put("addressCount", d.getAddressCount());
+            res.put("icon", asset.getIcon());
+            res.put("assetChainId", d.getAssetChainId());
+            res.put("assetId", d.getAssetId());
+            return res;
         }).collect(Collectors.toList()));
     }
 

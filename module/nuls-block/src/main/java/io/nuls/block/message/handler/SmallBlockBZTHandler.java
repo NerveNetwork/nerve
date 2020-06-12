@@ -58,7 +58,6 @@ import static io.nuls.block.constant.CommandConstant.SMALL_BLOCK_BZT_MESSAGE;
 /**
  * 处理收到的{@link SmallBlockMessage},用于区块的拜占庭校验
  * <p>
- * TODO:是否需要等待交易全部获取后进行拜占庭调用？
  *
  * @author LANJINSHENG
  * @version 1.0
@@ -105,8 +104,6 @@ public class SmallBlockBZTHandler implements MessageProcessor {
         }
 
         logger.debug("recieve smallBlockBZTMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
-        context.getCachedHashHeightMap().put(blockHash, header.getHeight());
-        NetworkCall.setHashAndHeight(chainId, blockHash, header.getHeight(), nodeId);
         if (context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
             return;
         }
@@ -162,8 +159,7 @@ public class SmallBlockBZTHandler implements MessageProcessor {
             List<NulsHash> missTxHashList = (List<NulsHash>) txHashList.clone();
             //移除系统交易hash后请求交易管理模块,批量获取区块中交易
             missTxHashList = CollectionUtils.removeAll(missTxHashList, systemTxHashList);
-            //todo
-//            missTxHashList.forEach(k -> LoggerUtil.COMMON_LOG.info("missTxHash:{}", k.toHex()));
+
             List<Transaction> existTransactions = TransactionCall.getTransactions(chainId, missTxHashList, false);
             if (!existTransactions.isEmpty()) {
                 //把普通交易放入txMap

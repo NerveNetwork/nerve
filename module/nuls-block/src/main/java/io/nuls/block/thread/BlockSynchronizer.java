@@ -30,10 +30,7 @@ import io.nuls.block.constant.StatusEnum;
 import io.nuls.block.manager.BlockChainManager;
 import io.nuls.block.manager.ContextManager;
 import io.nuls.block.model.*;
-import io.nuls.block.rpc.call.ConsensusCall;
-import io.nuls.block.rpc.call.NetworkCall;
-import io.nuls.block.rpc.call.ProtocolCall;
-import io.nuls.block.rpc.call.TransactionCall;
+import io.nuls.block.rpc.call.*;
 import io.nuls.block.service.BlockService;
 import io.nuls.block.storage.BlockStorageService;
 import io.nuls.block.storage.RollbackStorageService;
@@ -226,7 +223,7 @@ public class BlockSynchronizer implements Runnable {
                 count = 0;
             }
             logger.info("minNodeAmount = " + minNodeAmount + ", current nodes amount=" + nodeAmount + ", wait until network stable......");
-            if (count >= 5) {
+            if (count >= 3) {
                 return availableNodes;
             }
             Thread.sleep(waitNetworkInterval);
@@ -246,6 +243,7 @@ public class BlockSynchronizer implements Runnable {
             context.setStatus(StatusEnum.RUNNING);
             ConsensusCall.notice(chainId, MODULE_WORKING);
             TransactionCall.notice(chainId, MODULE_WORKING);
+            CrossChainCall.notice(chainId, MODULE_WORKING);
             return true;
         }
         //3.统计网络中可用节点的一致区块高度、区块hash
@@ -264,6 +262,7 @@ public class BlockSynchronizer implements Runnable {
             context.setStatus(StatusEnum.RUNNING);
             ConsensusCall.notice(chainId, MODULE_WORKING);
             TransactionCall.notice(chainId, MODULE_WORKING);
+            CrossChainCall.notice(chainId, MODULE_WORKING);
             return true;
         }
         //检查本地区块状态
@@ -273,6 +272,7 @@ public class BlockSynchronizer implements Runnable {
             context.setStatus(StatusEnum.RUNNING);
             ConsensusCall.notice(chainId, MODULE_WORKING);
             TransactionCall.notice(chainId, MODULE_WORKING);
+            CrossChainCall.notice(chainId, MODULE_WORKING);
             return true;
         }
         if (stateEnum.equals(UNCERTAINTY)) {
@@ -281,7 +281,7 @@ public class BlockSynchronizer implements Runnable {
             return false;
         }
         if (stateEnum.equals(CONFLICT)) {
-            logger.error("The local genesis block is different from networks");
+            logger.error("The local block is different from networks");
             System.exit(1);
         }
         long netLatestHeight = downloaderParams.getNetLatestHeight();
@@ -309,6 +309,7 @@ public class BlockSynchronizer implements Runnable {
                 context.setStatus(StatusEnum.RUNNING);
                 ConsensusCall.notice(chainId, MODULE_WORKING);
                 TransactionCall.notice(chainId, MODULE_WORKING);
+                CrossChainCall.notice(chainId, MODULE_WORKING);
                 return true;
             } else {
                 logger.info("Block syn complete but another syn is needed");
@@ -330,8 +331,13 @@ public class BlockSynchronizer implements Runnable {
      * @return
      */
     private boolean checkIsNewest(ChainContext context) {
-        BlockDownloaderParams newestParams = statistics(NetworkCall.getAvailableNodes(chainId), context);
-        return newestParams.getNetLatestHeight() <= context.getLatestBlock().getHeader().getHeight();
+        try {
+            context.getSynCompleteLock().lock();
+            BlockDownloaderParams newestParams = statistics(NetworkCall.getAvailableNodes(chainId), context);
+            return newestParams.getNetLatestHeight() <= context.getLatestBlock().getHeader().getHeight();
+        }finally {
+            context.getSynCompleteLock().unlock();
+        }
     }
 
     /**

@@ -55,10 +55,10 @@ public class CompleteHandler implements MessageProcessor {
         }
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
-        logger.debug("recieve " + message + " from node-" + nodeId);
-        if(context.getDownloaderParams() != null){
+//        logger.debug("recieve " + message + " from node-" + nodeId);
+        if (context.getDownloaderParams() != null && context.getDownloaderParams().getNodeMap() != null) {
             Node node = context.getDownloaderParams().getNodeMap().get(nodeId);
-            if(node != null){
+            if (node != null) {
                 node.adjustCredit(message.isSuccess());
                 node.setNodeEnum(NodeEnum.IDLE);
             }

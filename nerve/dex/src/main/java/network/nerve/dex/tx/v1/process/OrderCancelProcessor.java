@@ -1,0 +1,106 @@
+package network.nerve.dex.tx.v1.process;
+
+import io.nuls.base.data.BlockHeader;
+import io.nuls.base.data.Transaction;
+import io.nuls.base.protocol.TransactionProcessor;
+import io.nuls.core.constant.TxType;
+import io.nuls.core.core.annotation.Autowired;
+import io.nuls.core.core.annotation.Component;
+import network.nerve.dex.manager.DexManager;
+import network.nerve.dex.storage.TradingOrderCancelStorageService;
+import network.nerve.dex.storage.TradingOrderStorageService;
+import network.nerve.dex.tx.v1.validate.OrderCancelValidator;
+import network.nerve.dex.util.LoggerUtil;
+
+import java.util.*;
+
+/**
+ * 取消委托挂单处理器
+ */
+@Component("OrderCancelProcessorV1")
+public class OrderCancelProcessor implements TransactionProcessor {
+
+    @Autowired
+    private TradingOrderStorageService orderStorageService;
+    @Autowired
+    private TradingOrderCancelStorageService orderCancelStorageService;
+    @Autowired
+    private DexManager dexManager;
+    @Autowired
+    private OrderCancelValidator orderCancelValidator;
+
+    @Override
+    public int getType() {
+        return TxType.TRADING_ORDER_CANCEL;
+    }
+
+    @Override
+    public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        return orderCancelValidator.validateTxs(txs);
+    }
+
+    @Override
+    public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
+        return true;
+    }
+
+    @Override
+    public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
+        return true;
+    }
+
+    /**
+     * 提交取消委托挂单交易
+     *
+     * @param tx
+     */
+    public void cancelOrderCommit(Transaction tx) {
+//        try {
+//            TradingOrderCancel orderCancel = new TradingOrderCancel();
+//            orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
+//
+//            TradingOrderPo orderPo = orderStorageService.query(orderCancel.getOrderHash());
+//            orderStorageService.stop(orderPo);
+//            //删除盘口对应的订单记录
+//            dexManager.removeTradingOrder(orderPo);
+//        } catch (NulsException e) {
+//            LoggerUtil.dexLog.error("Failure to TradingOrderCancel commit, hash:" + tx.getHash().toHex());
+//            LoggerUtil.dexLog.error(e);
+//            throw new NulsRuntimeException(e.getErrorCode());
+//        } catch (Exception e) {
+//            LoggerUtil.dexLog.error("Failure to TradingOrderCancel commit, hash:" + tx.getHash().toHex());
+//            LoggerUtil.dexLog.error(e);
+//            throw new NulsRuntimeException(e);
+//        }
+    }
+
+    public void cancelOrderRollback(Transaction tx) {
+//        try {
+//            TradingOrderCancel orderCancel = new TradingOrderCancel();
+//            orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
+//            TradingOrderPo orderPo = orderStorageService.queryFromBack(orderCancel.getOrderHash());
+//            //有可能是因为保存区块时，未完整保存需要做回滚，因此数据可能会查询不到
+//            if (orderPo != null) {
+//                orderStorageService.rollbackStop(orderPo);
+//            }
+//        } catch (NulsException e) {
+//            LoggerUtil.dexLog.error("Failure to TradingOrderCancel rollback, hash:" + tx.getHash().toHex());
+//            LoggerUtil.dexLog.error(e);
+//            throw new NulsRuntimeException(e.getErrorCode());
+//        } catch (Exception e) {
+//            LoggerUtil.dexLog.error("Failure to TradingOrderCancel rollback, hash:" + tx.getHash().toHex());
+//            LoggerUtil.dexLog.error(e);
+//            throw new NulsRuntimeException(e);
+//        }
+    }
+
+    /**
+     * 挂单委托交易放在第1位处理
+     *
+     * @return
+     */
+    @Override
+    public int getPriority() {
+        return 1;
+    }
+}

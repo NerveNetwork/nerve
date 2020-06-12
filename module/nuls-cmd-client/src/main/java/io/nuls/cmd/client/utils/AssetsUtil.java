@@ -5,14 +5,17 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import io.nuls.core.rpc.util.RpcCall;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 资产工具类
@@ -21,37 +24,87 @@ import java.util.Map;
  * @date 2019/11/07
  **/
 public class AssetsUtil {
-    public static Map<String, Integer> ASSETS_DECIMALS = new HashMap<>();
+
+    public static class Asset {
+        int assetChainId;
+        int assetId;
+        String symbol;
+        int decimals;
+
+        public int getAssetChainId() {
+            return assetChainId;
+        }
+
+        public void setAssetChainId(int assetChainId) {
+            this.assetChainId = assetChainId;
+        }
+
+        public int getAssetId() {
+            return assetId;
+        }
+
+        public void setAssetId(int assetId) {
+            this.assetId = assetId;
+        }
+
+        public String getSymbol() {
+            return symbol;
+        }
+
+        public void setSymbol(String symbol) {
+            this.symbol = symbol;
+        }
+
+        public int getDecimals() {
+            return decimals;
+        }
+
+        public void setDecimals(int decimals) {
+            this.decimals = decimals;
+        }
+    }
+
+    private static Map<String,Asset> ASSET_MAP = new HashMap<>();
+
+    private static Map<String,Asset> ASSET_MAP_FOR_SYMBOL = new HashMap<>();
 
     static String getAssetKey(int chainId, int assetId) {
         return chainId + "-" + assetId;
     }
 
-    public static Integer getCrossAssetDecimal(int chainId, int assetId) {
+    public static Integer getAssetDecimal(int chainId, int assetId) {
         String key = getAssetKey(chainId, assetId);
-        if (null == ASSETS_DECIMALS.get(key)) {
-            initRegisteredChainInfo();
+        if (null == ASSET_MAP.get(key)) {
+            initRegisteredChainInfo(chainId);
         }
-        return ASSETS_DECIMALS.get(key);
+        return ASSET_MAP.get(key).getDecimals();
     }
 
-    public static Result initRegisteredChainInfo() {
+    public static Integer getAssetDecimal(String symbol) {
+        if (null == ASSET_MAP_FOR_SYMBOL.get(symbol)) {
+            return null;
+        }
+        return ASSET_MAP_FOR_SYMBOL.get(symbol).getDecimals();
+    }
+
+    public static void initRegisteredChainInfo(int chainId) {
         try {
-            Map<String, Object> map = (Map) request(ModuleE.CC.abbr, "getRegisteredChainInfoList", null, null);
-            List<Map<String, Object>> resultList = (List<Map<String, Object>>) map.get("list");
-            for (Map<String, Object> resultMap : resultList) {
-                List<Map<String, Object>> assetList = (List<Map<String, Object>>) resultMap.get("assetInfoList");
-                if (assetList != null) {
-                    for (Map<String, Object> assetMap : assetList) {
-                        int chainId = (Integer) resultMap.get("chainId");
-                        int assetId = (Integer) assetMap.get("assetId");
-                        ASSETS_DECIMALS.put(getAssetKey(chainId, assetId), (Integer) assetMap.get("decimalPlaces"));
-                    }
-                }
-            }
-            return Result.getSuccess(null).setData(map);
+            Map<String, Object> data = (Map) request(ModuleE.LG.abbr, "lg_get_all_asset", Map.of("chainId",chainId), null);
+            List<Map<String,Object>> list = (List<Map<String, Object>>) data.get("assets");
+            list.stream().map(d->{
+                Asset r = new Asset();
+                r.setAssetChainId((Integer) d.get("assetChainId"));
+                r.setAssetId((Integer) d.get("assetId"));
+                r.setSymbol(d.get("assetSymbol").toString());
+                r.setDecimals((Integer) d.get("decimalPlace"));
+                return r;
+            }).forEach(d->{
+                ASSET_MAP.put(getAssetKey(d.getAssetChainId() ,d.getAssetId()),d);
+                ASSET_MAP_FOR_SYMBOL.put(d.getSymbol(),d);
+            });
         } catch (NulsException e) {
-            return Result.getFailed(e.getErrorCode());
+            Log.error("初始化资产信息失败,{}",e.getErrorCode(),e);
+            System.exit(0);
         }
     }
 
@@ -99,4 +152,5 @@ public class AssetsUtil {
             throw new NulsException(ErrorCodeConstants.SYSTEM_ERR, e.getMessage());
         }
     }
+
 }

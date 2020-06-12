@@ -24,6 +24,8 @@ import io.nuls.core.basic.ModuleConfig;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.annotation.Configuration;
 import io.nuls.core.core.annotation.Value;
+import io.nuls.core.core.config.IniModuleConfigParser;
+import io.nuls.core.core.config.NcfModuleConfigParser;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.LoggerBuilder;
@@ -40,14 +42,12 @@ import lombok.Setter;
 import org.ini4j.Config;
 import org.ini4j.Ini;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 虚拟核心模块启动类
@@ -82,11 +82,16 @@ public class MyKernelBootstrap implements ModuleConfig {
 
     static NulsLogger log = LoggerBuilder.getLogger("kernel");
 
+    static AtomicInteger debug_port = new AtomicInteger(28001);
+
     public static void main(String[] args) throws Exception {
         NulsRpcModuleBootstrap.printLogo("/logo");
         System.setProperty("io.netty.tryReflectionSetAccessible", "true");
         MyKernelBootstrap.args = args;
         SpringLiteContext.init("io.nuls.mykernel","io.nuls.core.rpc.cmd.kernel");
+//        NcfModuleConfigParser iniModuleConfigParser = new NcfModuleConfigParser();
+//        FileInputStream fileInputStream = new FileInputStream(new File(iniModuleConfigParser.getFileName()));
+//        iniModuleConfigParser.parse(iniModuleConfigParser.getFileName(),fileInputStream);
         MyKernelBootstrap bootstrap = SpringLiteContext.getBean(MyKernelBootstrap.class);
         bootstrap.doStart();
     }
@@ -182,7 +187,7 @@ public class MyKernelBootstrap implements ModuleConfig {
                             + (StringUtils.isNotBlank(logPath) ? " --logpath " + logPath: "")
                             + (StringUtils.isNotBlank(dataPath) ? " --datapath " + dataPath : "")
                             + (StringUtils.isNotBlank(logLevel) ? " --loglevel " + logLevel : "")
-                            + " --debug " + debug
+                            + " --debug " + debug_port.addAndGet(1)
                             + (StringUtils.isNotBlank(config) ? " --config " + config : "")
                             + " -r ";
                     Log.info("run script:{}",cmd);

@@ -84,6 +84,17 @@ public class AgentInfo extends TxDataInfo {
     @JsonIgnore
     private boolean isNew;
 
+    /**
+     * 是否是虚拟银行节点
+     */
+    private boolean isBankNode;
+
+    /**
+     * 排名
+     * 此字段不持久化，动态计算后返回
+     */
+    private Integer ranking;
+
     public AgentInfo() {
 
     }
@@ -91,6 +102,14 @@ public class AgentInfo extends TxDataInfo {
     public void init() {
         reward = BigInteger.ZERO;
         deposit = BigInteger.ZERO;
+    }
+
+    public boolean isBankNode() {
+        return isBankNode;
+    }
+
+    public void setBankNode(boolean bankNode) {
+        isBankNode = bankNode;
     }
 
     public String getTxHash() {
@@ -288,6 +307,15 @@ public class AgentInfo extends TxDataInfo {
         agentInfo.yellowCardCount = this.yellowCardCount;
         agentInfo.version = this.version;
         agentInfo.type = this.type;
+        agentInfo.isBankNode = this.isBankNode;
         return agentInfo;
+    }
+
+    public Integer getRanking() {
+        return ranking;
+    }
+
+    public void setRanking(Integer ranking) {
+        this.ranking = ranking;
     }
 }

@@ -19,7 +19,6 @@
         <module>nuls-account</module>
         <module>nuls-public-service</module>
         <module>nuls-block</module>
-        <module>nuls-chain-manager</module>
         <module>nuls-consensus</module>
         <module>nuls-cross-chain</module>
         <module>nuls-ledger</module>
@@ -28,9 +27,6 @@
         <module>nuls-transaction</module>
         <module>nuls-cmd-client</module>
         <module>nuls-api</module>
-        <module>nuls-quotation</module>
-        <module>nuls-converter</module>
-        <module>nuls-dex</module>
     </modules>
 
     <dependencies>

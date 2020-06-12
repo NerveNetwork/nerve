@@ -19,7 +19,7 @@ public interface StatisticalService {
 
     long calcTxCount(int chainId, long start, long end);
 
-    List getStatisticalList(int chainId, int type, String field);
+    List getStatisticalList(int chainId, int type, String field,int timeZoom);
 
     List<Document> getStatisticalList(int chainId, int type);
 

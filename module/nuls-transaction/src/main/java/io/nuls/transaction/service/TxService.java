@@ -1,10 +1,12 @@
 package io.nuls.transaction.service;
 
-import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
-import io.nuls.transaction.model.bo.*;
+import io.nuls.transaction.model.bo.Chain;
+import io.nuls.transaction.model.bo.TxPackageWrapper;
+import io.nuls.transaction.model.bo.TxRegister;
+import io.nuls.transaction.model.bo.VerifyResult;
 import io.nuls.transaction.model.dto.ModuleTxRegisterDTO;
 import io.nuls.transaction.model.po.TransactionConfirmedPO;
 import io.nuls.transaction.model.po.TransactionNetPO;
@@ -88,33 +90,6 @@ public interface TxService {
     boolean isTxExists(Chain chain, NulsHash hash);
 
     /**
-     *  打包交易
-     *  适用于包含智能合约交易的区块链
-     * @param chain
-     * @param endtimestamp 获取交易截止时间
-     * @param maxTxDataSize
-     * @param blockTime 区块时间
-     * @param packingAddress
-     * @param preStateRoot
-     * @return
-     */
-    @Deprecated
-    TxPackage getPackableTxs(Chain chain, long endtimestamp, long maxTxDataSize, long blockTime,
-                             String packingAddress, String preStateRoot);
-
-
-    /**
-     * 收到新区快时，验证完整交易列表
-     * @param chain
-     * @param list
-     * @param preStateRoot
-     * @return
-     * @throws NulsException
-     */
-    Map<String, Object> batchVerify(Chain chain, List<String> list, BlockHeader blockHeader, String blockHeaderStr, String preStateRoot) throws Exception;
-
-
-    /**
      * 清理交易基础部分
      * @param chain
      * @param tx
@@ -159,12 +134,13 @@ public interface TxService {
     void addOrphanTxSet(Chain chain, Set<TxPackageWrapper> orphanTxSet, TxPackageWrapper txPackageWrapper);
 
     /**
-     * 1.统一验证
+     * 1.统一验证 和 生成
      * 2a:如果没有不通过的验证的交易则结束!!
      * 2b.有不通过的验证时，moduleVerifyMap过滤掉不通过的交易.
      * 3.重新验证同一个模块中不通过交易后面的交易(包括单个verify和coinData)，再执行1.递归？
      *
      * @param moduleVerifyMap
      */
-    boolean txModuleValidatorPackable(Chain chain, Map<String, List<String>> moduleVerifyMap, List<TxPackageWrapper> packingTxList, Set<TxPackageWrapper> orphanTxSet) throws NulsException;
+    List<String> txModuleValidatorPackable(Chain chain, Map<String, List<String>> moduleVerifyMap, List<TxPackageWrapper> packingTxList,
+                                           Set<TxPackageWrapper> orphanTxSet, long height, long blockTime) throws NulsException;
 }

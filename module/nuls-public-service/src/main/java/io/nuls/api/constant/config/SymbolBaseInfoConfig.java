@@ -13,8 +13,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.model.ModuleE;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Author: zhoulijun
@@ -29,9 +28,6 @@ public class SymbolBaseInfoConfig implements InitializingBean {
     List<SymbolRegInfo> symbolBaseInfoList = new ArrayList<>();
 
     @Autowired
-    SymbolRegService symbolRegService;
-
-    @Autowired
     ConfigurationLoader configurationLoader;
 
     @Autowired
@@ -39,28 +35,32 @@ public class SymbolBaseInfoConfig implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws NulsException {
-        SymbolRegInfo nulsRegInfo = symbolRegService.get(apiConfig.getMainChainId(),apiConfig.getMainAssetId());
-        if(nulsRegInfo != null){
-            return;
-        }
-        nulsRegInfo = new SymbolRegInfo();
-        nulsRegInfo.setSymbol(apiConfig.getSymbol());
-        nulsRegInfo.setAssetId(apiConfig.getMainAssetId());
-        nulsRegInfo.setChainId(apiConfig.getMainChainId());
-        nulsRegInfo.setDecimals(apiConfig.getDecimals());
-        nulsRegInfo.setQueryPrice(false);
-        nulsRegInfo.setFullName(apiConfig.getSymbol());
-        nulsRegInfo.setSource(ApiConstant.SYMBOL_REG_SOURCE_NATIVE);
-        symbolBaseInfoList.add(nulsRegInfo);
+        //查询nuls的stacking权重
         String nulsStackWeightConfig = configurationLoader.getConfigItem(ModuleE.Constant.CONSENSUS,"mainAssertBase").getValue();
+        double nulsStackWeight = 0;
         if(StringUtils.isNotBlank(nulsStackWeightConfig)){
-            double nulsStackWeight = Double.parseDouble(nulsStackWeightConfig);
-            nulsRegInfo.setStackWeight(nulsStackWeight);
+            nulsStackWeight = Double.parseDouble(nulsStackWeightConfig);
         }
-//        symbolBaseInfoList.forEach(d->{
-//            symbolRegService.save(d);
-//        });
+        Optional<SymbolRegInfo> nulsRegInfoOt = this.getSymbolRegInfoForConfig(apiConfig.getMainChainId(),apiConfig.getMainAssetId());
+        if(nulsRegInfoOt.isPresent()){
+            nulsRegInfoOt.get().setStackWeight(nulsStackWeight);
+        }else{
+            SymbolRegInfo symbolRegInfo = new SymbolRegInfo();
+            symbolRegInfo.setStackWeight(nulsStackWeight);
+            symbolRegInfo.setChainId(apiConfig.getMainChainId());
+            symbolRegInfo.setAssetId(apiConfig.getMainAssetId());
+            symbolRegInfo.setSymbol(apiConfig.getMainSymbol());
+            symbolRegInfo.setDecimals(ApiConstant.NULS_DECIMAL);
+            symbolRegInfo.setSource(ApiConstant.SYMBOL_REG_SOURCE_CC);
+            symbolRegInfo.setFullName("NULS");
+            symbolBaseInfoList.add(symbolRegInfo);
+        }
     }
+
+    public Optional<SymbolRegInfo> getSymbolRegInfoForConfig(int chainId, int assetId){
+        return this.symbolBaseInfoList.stream().filter(d->d.getChainId() == chainId && d.getAssetId() == assetId).findFirst();
+    }
+
 
     public List<SymbolRegInfo> getSymbolBaseInfoList() {
         return symbolBaseInfoList;

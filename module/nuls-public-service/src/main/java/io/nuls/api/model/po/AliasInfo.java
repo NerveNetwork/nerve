@@ -6,6 +6,8 @@ public class AliasInfo extends TxDataInfo {
 
     private String alias;
 
+    private Long blockHeight;
+
     public String getAddress() {
         return address;
     }
@@ -20,5 +22,13 @@ public class AliasInfo extends TxDataInfo {
 
     public void setAlias(String alias) {
         this.alias = alias;
+    }
+
+    public Long getBlockHeight() {
+        return blockHeight;
+    }
+
+    public void setBlockHeight(Long blockHeight) {
+        this.blockHeight = blockHeight;
     }
 }

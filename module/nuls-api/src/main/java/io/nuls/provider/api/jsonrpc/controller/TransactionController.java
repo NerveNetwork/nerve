@@ -313,8 +313,8 @@ public class TransactionController {
             @Key(name = "hash", description = "交易hash")
     }))
     public RpcResult transfer(List<Object> params) {
-        VerifyUtils.verifyParams(params, 7);
-        int chainId, assetId;
+        VerifyUtils.verifyParams(params, 8);
+        int chainId, assetChainId, assetId;
         String address, toAddress, password, amount, remark;
         try {
             chainId = (int) params.get(0);
@@ -322,48 +322,53 @@ public class TransactionController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         try {
-            assetId = (int) params.get(1);
+            assetChainId = (int) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[assetChainId] is inValid");
+        }
+        try {
+            assetId = (int) params.get(2);
         } catch (Exception e) {
             return RpcResult.paramError("[assetId] is inValid");
         }
         try {
-            address = (String) params.get(2);
+            address = (String) params.get(3);
         } catch (Exception e) {
             return RpcResult.paramError("[address] is inValid");
         }
         try {
-            toAddress = (String) params.get(3);
+            toAddress = (String) params.get(4);
         } catch (Exception e) {
             return RpcResult.paramError("[toAddress] is inValid");
         }
         try {
-            password = (String) params.get(4);
+            password = (String) params.get(5);
         } catch (Exception e) {
             return RpcResult.paramError("[password] is inValid");
         }
         try {
-            amount = params.get(5).toString();
+            amount = params.get(6).toString();
         } catch (Exception e) {
             return RpcResult.paramError("[amount] is inValid");
         }
         try {
-            remark = (String) params.get(6);
+            remark = (String) params.get(7);
         } catch (Exception e) {
             return RpcResult.paramError("[remark] is inValid");
         }
-        if (!AddressTool.validAddress(chainId, address)) {
-            return RpcResult.paramError("[address] is inValid");
-        }
-        if (!AddressTool.validAddress(chainId, toAddress)) {
-            return RpcResult.paramError("[toAddress] is inValid");
-        }
+//        if (!AddressTool.validAddress(chainId, address)) {
+//            return RpcResult.paramError("[address] is inValid");
+//        }
+//        if (!AddressTool.validAddress(chainId, toAddress)) {
+//            return RpcResult.paramError("[toAddress] is inValid");
+//        }
         if (!ValidateUtil.validateBigInteger(amount)) {
             return RpcResult.paramError("[amount] is inValid");
         }
         TransferReq.TransferReqBuilder builder =
                 new TransferReq.TransferReqBuilder(chainId, assetId)
-                        .addForm(address, password, new BigInteger(amount))
-                        .addTo(toAddress, new BigInteger(amount)).setRemark(remark);
+                        .addForm(assetChainId, assetId, address, password, new BigInteger(amount))
+                        .addTo(assetChainId, assetId, toAddress, new BigInteger(amount)).setRemark(remark);
         Result<String> result = transferService.transfer(builder.build(new TransferReq()));
         if (result.isSuccess()) {
             Map resultMap = new HashMap(2);

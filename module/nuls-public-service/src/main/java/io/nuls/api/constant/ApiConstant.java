@@ -125,7 +125,15 @@ public interface ApiConstant {
     //USDT 小数位数
     int USDT_DECIMAL = 6;
 
+    /**
+     * 美元小数位
+     */
     int USD_DECIMAL = 4;
+
+    /**
+     * NULS 小数位
+     */
+    int NULS_DECIMAL = 8;
 
     /**
      * 百分比格式的小数位数
@@ -156,5 +164,6 @@ public interface ApiConstant {
 
 
     String USD = "USD";
+
 
 }

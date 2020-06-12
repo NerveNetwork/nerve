@@ -71,7 +71,7 @@ public class BlockConsumer implements Callable<Boolean> {
                     begin = System.nanoTime();
                     boolean saveBlock = blockService.saveBlock(chainId, block, true);
                     if (!saveBlock) {
-                        logger.error("An exception occurred while saving the downloaded block, height-" + pendingHeight + ", hash-" + block.getHeader().getHash());
+                        logger.error("saving block exception, height-" + pendingHeight + ", hash-" + block.getHeader().getHash());
                         context.setNeedSyn(false);
                         return false;
                     }

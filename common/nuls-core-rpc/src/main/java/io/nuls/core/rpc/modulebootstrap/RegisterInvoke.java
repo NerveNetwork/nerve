@@ -69,19 +69,6 @@ public class RegisterInvoke extends BaseInvoke {
                             return false;
                         }
                     });
-
-//                    //是当前模块的依赖模块
-//                    Request request = MessageUtil.defaultRequest();
-//                    request.getRequestMethods().put("registerModuleDependencies", module);
-//                    Message message = MessageUtil.basicMessage(MessageType.Request);
-//                    message.setMessageData(request);
-//                    try {
-//                        Log.info("follow module:{}:{}",entry.getKey(),entry.getValue());
-//                        Channel channel = ConnectManager.getConnectByUrl("ws://"+entry.getValue().get("IP") + ":" +entry.getValue().get("Port")+"/ws");
-//                        ConnectManager.sendMessage(channel, JSONUtils.obj2json(message));
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
                 }
             });
 

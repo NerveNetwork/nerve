@@ -11,7 +11,7 @@
   "testAutoRollbackAmount": 0,
   "rollbackHeight": 878000,
   "blockMaxSize": 5242880,
-  "resetTime": 1800000,
+  "resetTime": 360000,
   "chainSwtichThreshold": 3,
   "cacheSize": 1000,
   "heightRange": 1000,

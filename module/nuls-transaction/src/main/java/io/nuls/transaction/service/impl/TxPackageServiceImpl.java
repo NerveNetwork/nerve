@@ -63,6 +63,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import static io.nuls.transaction.constant.TxConstant.CACHED_SIZE;
+import static io.nuls.transaction.constant.TxConstant.VERIFY;
 
 /**
  * @author: Charlie
@@ -96,18 +97,18 @@ public class TxPackageServiceImpl implements TxPackageService {
      * @return
      */
     @Override
-    public List<String> packageBasic(Chain chain, long endtimestamp, long maxTxDataSize) {
+    public List<String> packageBasic(Chain chain, long endtimestamp, long maxTxDataSize, long blockTime) {
         chain.getPackageLock().lock();
         long startTime = NulsDateUtils.getCurrentTimeMillis();
         long packableTime = endtimestamp - startTime;
         long height = chain.getBestBlockHeight() + 1;
+        LoggerUtil.LOG.debug("[打包-区块时间]:{}, 高度:{}", blockTime, height);
         List<TxPackageWrapper> packingTxList = new ArrayList<>();
         //记录账本的孤儿交易,返回给共识的时候给过滤出去,因为在因高度变化而导致重新打包的时候,需要还原到待打包队列
         Set<TxPackageWrapper> orphanTxSet = new HashSet<>();
         //组装统一验证参数数据,key为各模块统一验证器cmd
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
         NulsLogger log = chain.getLogger();
-        log.info("endtimestamp:{},startTime:{}", endtimestamp, startTime);
         try {
             log.info("[Package start] -打包总可用时间：{}, -可打包容量：{}B , - height:{}, - 当前待打包队列交易hash数:{}, - 待打包队列实际交易数:{}",
                     packableTime, maxTxDataSize, height, packablePool.packableHashQueueSize(chain), packablePool.packableTxMapSize(chain));
@@ -126,12 +127,11 @@ public class TxPackageServiceImpl implements TxPackageService {
             }
             //模块验证交易
             long batchStart = NulsDateUtils.getCurrentTimeMillis();
-            txService.txModuleValidatorPackable(chain, moduleVerifyMap, packingTxList, orphanTxSet);
+            List<String> allNewlyList = txService.txModuleValidatorPackable(chain, moduleVerifyMap, packingTxList, orphanTxSet, height, blockTime);
             //模块统一验证使用总时间
             if (log.isDebugEnabled()) {
                 batchModuleTime = NulsDateUtils.getCurrentTimeMillis() - batchStart;
             }
-
 
             List<String> packableTxs = new ArrayList<>();
             Iterator<TxPackageWrapper> iterator = packingTxList.iterator();
@@ -153,12 +153,10 @@ public class TxPackageServiceImpl implements TxPackageService {
                 }
             }
 
-            /**
-             * 处理需要打包时内部生成的交易
-             */
-            List<String> newProduceTxs = packProduceProcess(chain, packingTxList, height);
-            if (!newProduceTxs.isEmpty()) {
-                packableTxs.addAll(newProduceTxs);
+
+            // 处理需要打包时内部生成的交易
+            if (!allNewlyList.isEmpty()) {
+                packableTxs.addAll(allNewlyList);
             }
 
             //孤儿交易加回待打包队列去
@@ -192,72 +190,6 @@ public class TxPackageServiceImpl implements TxPackageService {
         }
     }
 
-    /**
-     * 打包交易时对应模块内部处理
-     * 判断交易需要进行打包时的模块处理,发送原始交易,获取新生成交易
-     * 如果出现异常,需要从打包列表中移除,原始交易
-     *
-     * @return
-     * @throws NulsException
-     */
-    private List<String> packProduceProcess(Chain chain, List<TxPackageWrapper> packingTxList, long height) {
-        Iterator<TxPackageWrapper> iterator = packingTxList.iterator();
-        // K: 模块code V:{k: 原始交易hash, v:原始交易字符串}
-        Map<String, Map<NulsHash, String>> packProduceCallMap = new HashMap<>();
-        while (iterator.hasNext()) {
-            TxPackageWrapper txPackageWrapper = iterator.next();
-            Transaction tx = txPackageWrapper.getTx();
-            TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
-            if (txRegister.getPackProduce()) {
-                try {
-                    String txHex = RPCUtil.encode(tx.serialize());
-                    Map<NulsHash, String> mapCallTxs = packProduceCallMap.computeIfAbsent(txRegister.getModuleCode(), k -> new HashMap<>());
-                    mapCallTxs.put(tx.getHash(), txHex);
-                    LoggerUtil.LOG.debug("打包时模块内部处理生成, 原始交易hash:{}, 高度:{}, moduleCode:{}", tx.getHash().toHex(), height, txRegister.getModuleCode());
-                } catch (Exception e) {
-                    chain.getLogger().error(e);
-                    txService.clearInvalidTx(chain, tx);
-                    iterator.remove();
-                    continue;
-                }
-            }
-        }
-
-        return getNewProduceTx(chain, packProduceCallMap, packingTxList);
-
-    }
-
-    private List<String> getNewProduceTx(Chain chain, Map<String, Map<NulsHash, String>> packProduceCallMap, List<TxPackageWrapper> packingTxList) {
-        List<String> rsList = new ArrayList<>();
-        Iterator<Map.Entry<String, Map<NulsHash, String>>> it = packProduceCallMap.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, Map<NulsHash, String>> entry = it.next();
-            Map<NulsHash, String> moduleMap = entry.getValue();
-            String moduleCode = entry.getKey();
-            try {
-                // 返回完整交易字符串
-                List<String> list = TransactionCall.packProduce(chain, BaseConstant.TX_PACKPRODUCE, moduleCode, new ArrayList<>(moduleMap.values()));
-                if (null != list) {
-                    rsList.addAll(list);
-                    LoggerUtil.LOG.debug("打包时生成的交易数量:{}, moduleCode:{}", list.size(), moduleCode);
-                }
-            } catch (NulsException e) {
-                Iterator<TxPackageWrapper> iterator = packingTxList.iterator();
-                while (iterator.hasNext()) {
-                    TxPackageWrapper txPackageWrapper = iterator.next();
-                    Transaction tx = txPackageWrapper.getTx();
-                    for (NulsHash hash : moduleMap.keySet()) {
-                        if (tx.getHash().equals(hash)) {
-                            // 出现异常清理掉该模块所有原始交易
-                            it.remove();
-                        }
-                    }
-                }
-            }
-        }
-        return rsList;
-    }
-
 
     /**
      * 获取打包的交易, 并验证账本
@@ -281,7 +213,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             long currentReserve = endtimestamp - currentTimeMillis;
             if (currentReserve <= TxConstant.BASIC_PACKAGE_RESERVE_TIME) {
                 if (log.isDebugEnabled()) {
-                    log.debug("获取交易时间到,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
+                    log.info("获取交易时间到,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
                             currentTimeMillis, endtimestamp, TxConstant.BASIC_PACKAGE_RESERVE_TIME, currentReserve);
                 }
                 backTempPackablePool(chain, currentBatchPackableTxs);
@@ -303,7 +235,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             }
             if (packingTxList.size() >= TxConstant.BASIC_PACKAGE_TX_MAX_COUNT) {
                 if (log.isDebugEnabled()) {
-                    log.debug("获取交易已达max count,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
+                    log.info("获取交易已达max count,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
                             currentTimeMillis, endtimestamp, TxConstant.BASIC_PACKAGE_RESERVE_TIME, endtimestamp - currentTimeMillis);
                 }
                 backTempPackablePool(chain, currentBatchPackableTxs);
@@ -500,16 +432,35 @@ public class TxPackageServiceImpl implements TxPackageService {
         }
     }
 
+    /**
+     * 验证区块中只允许有一个的交易不能有多个
+     */
+    public void verifySysTxCount(Set<Integer> onlyOneTxTypes, int type) throws NulsException {
+        switch (type) {
+            case TxType.COIN_BASE:
+            case TxType.YELLOW_PUNISH:
+                if (!onlyOneTxTypes.add(type)) {
+                    throw new NulsException(TxErrorCode.CONTAINS_MULTIPLE_UNIQUE_TXS);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
     @Override
     public boolean verifyBlockTransations(Chain chain, List<String> txStrList, String blockHeaderStr) throws Exception {
         long s1 = NulsDateUtils.getCurrentTimeMillis();
         NulsLogger log = chain.getLogger();
         BlockHeader blockHeader = TxUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
         long blockHeight = blockHeader.getHeight();
+        LoggerUtil.LOG.debug("[验区-区块时间]:{}, 高度:{}", blockHeader.getTime(), blockHeight);
         boolean isLogDebug = log.isDebugEnabled();
         if (isLogDebug) {
             log.debug("[验区块交易] 开始 -----高度:{} -----区块交易数:{}", blockHeight, txStrList.size());
         }
+        //验证区块中只允许有一个的交易不能有多个
+        Set<Integer> onlyOneTxTypes = new HashSet<>();
         List<TxVerifyWrapper> txList = new ArrayList<>();
         //组装统一验证参数数据,key为各模块统一验证器cmd
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
@@ -519,8 +470,11 @@ public class TxPackageServiceImpl implements TxPackageService {
             Transaction tx = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
             totalSize += tx.size();
             txList.add(new TxVerifyWrapper(tx, txStr));
-            TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
+            int type = tx.getType();
+            verifySysTxCount(onlyOneTxTypes, type);
+            TxRegister txRegister = TxManager.getTxRegister(chain, type);
             if (null == txRegister) {
+                log.error("txType:{}", type);
                 throw new NulsException(TxErrorCode.TX_TYPE_INVALID);
             }
             keys.add(tx.getHash().getBytes());
@@ -559,6 +513,12 @@ public class TxPackageServiceImpl implements TxPackageService {
                 throw new NulsException(TxErrorCode.TX_VERIFY_FAIL);
             }
         }
+
+        // 验证打包时生成的交易
+        // 分组 将所有交易分组 包含原始交易和打包时生成的交易
+        Map<String, List> packProduceCallMap = packProduceProcess(chain, txList, blockHeight);
+        verifyNewProduceTx(chain, packProduceCallMap, blockHeight, blockHeader.getTime());
+
         if (isLogDebug) {
             log.debug("[验区块交易] 模块统一验证时间:{}", NulsDateUtils.getCurrentTimeMillis() - moduleV);
             log.debug("[验区块交易] 模块统一验证 -距方法开始的时间:{}", NulsDateUtils.getCurrentTimeMillis() - s1);
@@ -571,6 +531,40 @@ public class TxPackageServiceImpl implements TxPackageService {
                     NulsDateUtils.getCurrentTimeMillis() - s1, totalSize, blockHeight, txStrList.size());
         }
         return true;
+    }
+
+
+    private Map<String, List> packProduceProcess(Chain chain, List<TxVerifyWrapper> txList, long height) {
+        Iterator<TxVerifyWrapper> iterator = txList.iterator();
+        // K: 模块code V:{k: 原始交易hash, v:原始交易字符串}
+        Map<String, List> packProduceCallMap = TxManager.getGroup(chain);
+
+        while (iterator.hasNext()) {
+            TxVerifyWrapper txVerifyWrapper = iterator.next();
+            Transaction tx = txVerifyWrapper.getTx();
+            TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
+            if (txRegister.getPackProduce()) {
+                List<TxVerifyWrapper> listCallTxs = packProduceCallMap.computeIfAbsent(txRegister.getModuleCode(), k -> new ArrayList<>());
+                listCallTxs.add(txVerifyWrapper);
+                LoggerUtil.LOG.debug("验证区块时模块内部处理生成, 原始交易hash:{}, 高度:{}, moduleCode:{}", tx.getHash().toHex(), height, txRegister.getModuleCode());
+            }
+        }
+        return packProduceCallMap;
+    }
+
+    private void verifyNewProduceTx(Chain chain, Map<String, List> packProduceCallMap, long height, long blockTime) throws NulsException {
+        Iterator<Map.Entry<String, List>> it = packProduceCallMap.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, List> entry = it.next();
+            List<TxVerifyWrapper> moduleList = entry.getValue();
+            List<String> txHexList = new ArrayList<>();
+            for (TxVerifyWrapper wrapper : moduleList) {
+                txHexList.add(wrapper.getTxStr());
+            }
+            String moduleCode = entry.getKey();
+            // 没有异常表示验证通过
+            TransactionCall.packProduce(chain, BaseConstant.TX_PACKPRODUCE, moduleCode, txHexList, height, blockTime, VERIFY);
+        }
     }
 
     /**

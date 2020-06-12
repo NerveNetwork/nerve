@@ -47,4 +47,9 @@ public interface TxDBConstant {
      * 验证通过但未打包的交易(未确认)
      */
      String DB_TRANSACTION_UNCONFIRMED_PREFIX = "tx_table_unconfirmed_";
+
+    /**
+     * 锁定账户表
+     */
+    String DB_LOCKED_ADDRESS = "tx_table_locked_address_";
 }

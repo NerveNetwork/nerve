@@ -5,6 +5,7 @@ import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.ApiErrorCode;
 import io.nuls.api.constant.CommandConstant;
 import io.nuls.api.model.dto.HeterogeneousAssetCollectionDTO;
+import io.nuls.api.model.dto.LedgerAssetDTO;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.rpc.BalanceInfo;
 import io.nuls.api.model.rpc.FreezeInfo;
@@ -15,6 +16,7 @@ import io.nuls.base.data.Block;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.TxStatusEnum;
 import io.nuls.core.crypto.HexUtil;
@@ -24,16 +26,14 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.MapUtils;
 import io.nuls.core.rpc.info.Constants;
+import io.nuls.core.rpc.model.Key;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import org.bouncycastle.asn1.cmp.ErrorMsgContent;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.nuls.api.constant.ApiConstant.*;
@@ -259,61 +259,61 @@ public class WalletRpcHandler {
         }
     }
 
-    public static Result<ContractInfo> getContractInfo(int chainId, ContractInfo contractInfo) throws NulsException {
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.CHAIN_ID, chainId);
-        params.put("contractAddress", contractInfo.getContractAddress());
-        params.put("hash", contractInfo.getCreateTxHash());
-        //查询智能合约详情之前，先查询创建智能合约的执行结果是否成功
-        Result<ContractResultInfo> result = getContractResultInfo(params);
-        ContractResultInfo resultInfo = result.getData();
-        contractInfo.setResultInfo(resultInfo);
-        if (!resultInfo.isSuccess()) {
-            contractInfo.setSuccess(false);
-            contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_FAIL);
-            contractInfo.setErrorMsg(resultInfo.getErrorMessage());
-            return Result.getSuccess(null).setData(contractInfo);
-        }
-        contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_NORMAL);
-        contractInfo.setSuccess(true);
-        Map map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_INFO, params);
-
-        contractInfo.setCreater(map.get("creater").toString());
-        contractInfo.setNrc20((Boolean) map.get("nrc20"));
-        contractInfo.setTokenType((Integer) map.get("tokenType"));
-        contractInfo.setDirectPayable((Boolean) map.get("directPayable"));
-        if (contractInfo.isNrc20()) {
-            contractInfo.setTokenName(map.get("nrc20TokenName").toString());
-            contractInfo.setSymbol(map.get("nrc20TokenSymbol").toString());
-            contractInfo.setDecimals((Integer) map.get("decimals"));
-            contractInfo.setTotalSupply(map.get("totalSupply").toString());
-            contractInfo.setOwners(new ArrayList<>());
-        }
-
-        List<Map<String, Object>> methodMap = (List<Map<String, Object>>) map.get("method");
-        List<ContractMethod> methodList = new ArrayList<>();
-        List<Map<String, Object>> argsList;
-        List<ContractMethodArg> paramList;
-        for (Map<String, Object> map1 : methodMap) {
-            ContractMethod method = new ContractMethod();
-            method.setName((String) map1.get("name"));
-            method.setDesc((String) map1.get("desc"));
-            method.setReturnType((String) map1.get("returnArg"));
-            method.setView((boolean) map1.get("view"));
-            method.setPayable((boolean) map1.get("payable"));
-            method.setEvent((boolean) map1.get("event"));
-            method.setJsonSerializable((boolean) map1.get("jsonSerializable"));
-            argsList = (List<Map<String, Object>>) map1.get("args");
-            paramList = new ArrayList<>();
-            for (Map<String, Object> arg : argsList) {
-                paramList.add(makeContractMethodArg(arg));
-            }
-            method.setParams(paramList);
-            methodList.add(method);
-        }
-        contractInfo.setMethods(methodList);
-        return Result.getSuccess(null).setData(contractInfo);
-    }
+//    public static Result<ContractInfo> getContractInfo(int chainId, ContractInfo contractInfo) throws NulsException {
+//        Map<String, Object> params = new HashMap<>();
+//        params.put(Constants.CHAIN_ID, chainId);
+//        params.put("contractAddress", contractInfo.getContractAddress());
+//        params.put("hash", contractInfo.getCreateTxHash());
+//        //查询智能合约详情之前，先查询创建智能合约的执行结果是否成功
+//        Result<ContractResultInfo> result = getContractResultInfo(params);
+//        ContractResultInfo resultInfo = result.getData();
+//        contractInfo.setResultInfo(resultInfo);
+//        if (!resultInfo.isSuccess()) {
+//            contractInfo.setSuccess(false);
+//            contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_FAIL);
+//            contractInfo.setErrorMsg(resultInfo.getErrorMessage());
+//            return Result.getSuccess(null).setData(contractInfo);
+//        }
+//        contractInfo.setStatus(ApiConstant.CONTRACT_STATUS_NORMAL);
+//        contractInfo.setSuccess(true);
+//        Map map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_INFO, params);
+//
+//        contractInfo.setCreater(map.get("creater").toString());
+//        contractInfo.setNrc20((Boolean) map.get("nrc20"));
+//        contractInfo.setTokenType((Integer) map.get("tokenType"));
+//        contractInfo.setDirectPayable((Boolean) map.get("directPayable"));
+//        if (contractInfo.isNrc20()) {
+//            contractInfo.setTokenName(map.get("nrc20TokenName").toString());
+//            contractInfo.setSymbol(map.get("nrc20TokenSymbol").toString());
+//            contractInfo.setDecimals((Integer) map.get("decimals"));
+//            contractInfo.setTotalSupply(map.get("totalSupply").toString());
+//            contractInfo.setOwners(new ArrayList<>());
+//        }
+//
+//        List<Map<String, Object>> methodMap = (List<Map<String, Object>>) map.get("method");
+//        List<ContractMethod> methodList = new ArrayList<>();
+//        List<Map<String, Object>> argsList;
+//        List<ContractMethodArg> paramList;
+//        for (Map<String, Object> map1 : methodMap) {
+//            ContractMethod method = new ContractMethod();
+//            method.setName((String) map1.get("name"));
+//            method.setDesc((String) map1.get("desc"));
+//            method.setReturnType((String) map1.get("returnArg"));
+//            method.setView((boolean) map1.get("view"));
+//            method.setPayable((boolean) map1.get("payable"));
+//            method.setEvent((boolean) map1.get("event"));
+//            method.setJsonSerializable((boolean) map1.get("jsonSerializable"));
+//            argsList = (List<Map<String, Object>>) map1.get("args");
+//            paramList = new ArrayList<>();
+//            for (Map<String, Object> arg : argsList) {
+//                paramList.add(makeContractMethodArg(arg));
+//            }
+//            method.setParams(paramList);
+//            methodList.add(method);
+//        }
+//        contractInfo.setMethods(methodList);
+//        return Result.getSuccess(null).setData(contractInfo);
+//    }
 
     private static ContractMethodArg makeContractMethodArg(Map<String, Object> arg) {
         return new ContractMethodArg((String) arg.get("type"), (String) arg.get("name"), (boolean) arg.get("required"));
@@ -451,24 +451,24 @@ public class WalletRpcHandler {
         return Result.getSuccess(null).setData(map);
     }
 
-    public static Result<ContractResultInfo> getContractResultInfo(int chainId, String hash) throws NulsException {
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.CHAIN_ID, chainId);
-        params.put("hash", hash);
-        return getContractResultInfo(params);
-    }
-
-    private static Result<ContractResultInfo> getContractResultInfo(Map<String, Object> params) throws NulsException {
-        Map map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_RESULT, params);
-        map = (Map) map.get("data");
-        if (map == null || map.isEmpty()) {
-            return Result.getFailed(ApiErrorCode.DATA_NOT_FOUND);
-        }
-
-        String hash = (String) params.get("hash");
-        ContractResultInfo resultInfo = AnalysisHandler.toContractResultInfo(hash, map);
-        return Result.getSuccess(null).setData(resultInfo);
-    }
+//    public static Result<ContractResultInfo> getContractResultInfo(int chainId, String hash) throws NulsException {
+//        Map<String, Object> params = new HashMap<>();
+//        params.put(Constants.CHAIN_ID, chainId);
+//        params.put("hash", hash);
+//        return getContractResultInfo(params);
+//    }
+//
+//    private static Result<ContractResultInfo> getContractResultInfo(Map<String, Object> params) throws NulsException {
+//        Map map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_RESULT, params);
+//        map = (Map) map.get("data");
+//        if (map == null || map.isEmpty()) {
+//            return Result.getFailed(ApiErrorCode.DATA_NOT_FOUND);
+//        }
+//
+//        String hash = (String) params.get("hash");
+//        ContractResultInfo resultInfo = AnalysisHandler.toContractResultInfo(hash, map);
+//        return Result.getSuccess(null).setData(resultInfo);
+//    }
 
     public static Result validateTx(int chainId, String txHex) {
         Map<String, Object> params = new HashMap<>();
@@ -520,24 +520,24 @@ public class WalletRpcHandler {
         }
     }
 
-    public static Result<Map<String, ContractResultInfo>> getContractResults(int chainId, List<String> hashList) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.CHAIN_ID, chainId);
-        params.put("hashList", hashList);
-
-        try {
-            Map<String, Object> map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_RESULT_LIST, params);
-
-            Map<String, ContractResultInfo> resultInfoMap = new HashMap<>();
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                ContractResultInfo resultInfo = AnalysisHandler.toContractResultInfo(entry.getKey(), (Map<String, Object>) entry.getValue());
-                resultInfoMap.put(resultInfo.getTxHash(), resultInfo);
-            }
-            return Result.getSuccess(null).setData(resultInfoMap);
-        } catch (NulsException e) {
-            return Result.getFailed(e.getErrorCode());
-        }
-    }
+//    public static Result<Map<String, ContractResultInfo>> getContractResults(int chainId, List<String> hashList) {
+//        Map<String, Object> params = new HashMap<>();
+//        params.put(Constants.CHAIN_ID, chainId);
+//        params.put("hashList", hashList);
+//
+//        try {
+//            Map<String, Object> map = (Map) RpcCall.request(ModuleE.SC.abbr, CommandConstant.CONTRACT_RESULT_LIST, params);
+//
+//            Map<String, ContractResultInfo> resultInfoMap = new HashMap<>();
+//            for (Map.Entry<String, Object> entry : map.entrySet()) {
+//                ContractResultInfo resultInfo = AnalysisHandler.toContractResultInfo(entry.getKey(), (Map<String, Object>) entry.getValue());
+//                resultInfoMap.put(resultInfo.getTxHash(), resultInfo);
+//            }
+//            return Result.getSuccess(null).setData(resultInfoMap);
+//        } catch (NulsException e) {
+//            return Result.getFailed(e.getErrorCode());
+//        }
+//    }
 
     public static Result getRegisteredChainInfoList() {
         try {
@@ -649,7 +649,6 @@ public class WalletRpcHandler {
         try {
             Map map = (Map) RpcCall.request(ModuleE.CV.abbr,"cv_get_all_heterogeneous_chain_asset_list",Map.of());
             List<Map<String,Object>> list = (List<Map<String,Object>>) map.get("list");
-            Log.info("{}",map);
             List<HeterogeneousAssetCollectionDTO> res = list.stream().map(data->{
                 HeterogeneousAssetCollectionDTO dto = new HeterogeneousAssetCollectionDTO();
                 dto.setChainId((Integer) data.get("chainId"));
@@ -664,6 +663,65 @@ public class WalletRpcHandler {
             }).collect(Collectors.toList());
             return Result.getSuccess(res);
         } catch (NulsException e) {
+            return Result.getFailed(e.getErrorCode());
+        }
+    }
+
+    /**
+     * 获取虚拟银行节点的agentAddress列表
+     * @param chainId
+     * @return
+     */
+    public static Result<Set<String>> getVirtualBankAddressList(int chainId){
+        try {
+            Map map = (Map) RpcCall.request(ModuleE.CV.abbr,"cv_virtualBankInfo",Map.of("chainId",chainId));
+            List<Map<String,Object>> list = (List<Map<String,Object>>) map.get("list");
+            Set<String> res = list.stream().map(data-> (String)data.get("agentAddress")).collect(Collectors.toSet());
+            return Result.getSuccess(res);
+        } catch (NulsException e) {
+            return Result.getFailed(e.getErrorCode());
+        }
+    }
+
+    public static Result<LedgerAssetDTO> getAssetInfo(int chainId, String txHash) {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("txHash", txHash);
+        try {
+            Map data = (Map) RpcCall.request(ModuleE.LG.abbr, "getAssetRegInfoByHash", params);
+            LedgerAssetDTO dto = MapUtils.mapToBean(data,new LedgerAssetDTO());
+            dto.setInitNumber(data.get("initNumber"));
+            return Result.getSuccess(dto);
+        } catch (Exception e) {
+            Log.error(e);
+        }
+        return null;
+    }
+
+    /**
+     * 从账本模块获取所有资产信息
+     * @param chainId
+     * @return
+     */
+    public static Result<List<SymbolRegInfo>> getSymbolList(int chainId){
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.CHAIN_ID, chainId);
+        try {
+            Map data = (Map) RpcCall.request(ModuleE.LG.abbr, "lg_get_all_asset", params);
+            List<Map<String,Object>> list = (List<Map<String, Object>>) data.get("assets");
+            return Result.getSuccess(list.stream().map(d->{
+                SymbolRegInfo r = new SymbolRegInfo();
+                r.setChainId((Integer) d.get("assetChainId"));
+                r.setAssetId((Integer) d.get("assetId"));
+                r.setSymbol(d.get("assetSymbol").toString());
+                r.setFullName(d.get("assetName").toString());
+                r.setSource((Integer) d.get("assetType"));
+                r.setDecimals((Integer) d.get("decimalPlace"));
+                r.setContractAddress((String) d.get("assetAddress"));
+                return r;
+            }).collect(Collectors.toList()));
+        } catch (NulsException e) {
+            Log.error(e);
             return Result.getFailed(e.getErrorCode());
         }
     }

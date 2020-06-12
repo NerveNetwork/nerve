@@ -66,7 +66,9 @@ public class BlockBootstrap extends RpcModule {
                 Module.build(ModuleE.AC),
                 Module.build(ModuleE.LG),
                 Module.build(ModuleE.CS),
-                Module.build(ModuleE.NW)
+                Module.build(ModuleE.NW),
+                new Module(ModuleE.PU.abbr, ROLE),
+                new Module(ModuleE.CC.abbr, ROLE)
         };
     }
 
@@ -148,7 +150,6 @@ public class BlockBootstrap extends RpcModule {
             List<Integer> chainIds = ContextManager.CHAIN_ID_LIST;
             for (Integer chainId : chainIds) {
                 BlockSynchronizer.syn(chainId);
-//                ContextManager.getContext(chainId).setStatus(StatusEnum.RUNNING);
             }
         } else {
             //开启区块同步线程
@@ -157,14 +158,14 @@ public class BlockBootstrap extends RpcModule {
                 BlockSynchronizer.syn(chainId);
             }
             //开启分叉链处理线程
-            ScheduledThreadPoolExecutor forkExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("fork-chains-monitor"));
-            forkExecutor.scheduleWithFixedDelay(ForkChainsMonitor.getInstance(), 0, blockConfig.getForkChainsMonitorInterval(), TimeUnit.MILLISECONDS);
+            /*ScheduledThreadPoolExecutor forkExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("fork-chains-monitor"));
+            forkExecutor.scheduleWithFixedDelay(ForkChainsMonitor.getInstance(), 0, blockConfig.getForkChainsMonitorInterval(), TimeUnit.MILLISECONDS);*/
             //开启孤儿链处理线程
-            ScheduledThreadPoolExecutor orphanExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-monitor"));
-            orphanExecutor.scheduleWithFixedDelay(OrphanChainsMonitor.getInstance(), 0, blockConfig.getOrphanChainsMonitorInterval(), TimeUnit.MILLISECONDS);
+            /*ScheduledThreadPoolExecutor orphanExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-monitor"));
+            orphanExecutor.scheduleWithFixedDelay(OrphanChainsMonitor.getInstance(), 0, blockConfig.getOrphanChainsMonitorInterval(), TimeUnit.MILLISECONDS);*/
             //开启孤儿链维护线程
-            ScheduledThreadPoolExecutor maintainExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-maintainer"));
-            maintainExecutor.scheduleWithFixedDelay(OrphanChainsMaintainer.getInstance(), 0, blockConfig.getOrphanChainsMaintainerInterval(), TimeUnit.MILLISECONDS);
+            /*ScheduledThreadPoolExecutor maintainExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-maintainer"));
+            maintainExecutor.scheduleWithFixedDelay(OrphanChainsMaintainer.getInstance(), 0, blockConfig.getOrphanChainsMaintainerInterval(), TimeUnit.MILLISECONDS);*/
             //开启数据库大小监控线程
             ScheduledThreadPoolExecutor dbSizeExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("storage-size-monitor"));
             dbSizeExecutor.scheduleWithFixedDelay(StorageSizeMonitor.getInstance(), 0, blockConfig.getStorageSizeMonitorInterval(), TimeUnit.MILLISECONDS);
@@ -180,6 +181,10 @@ public class BlockBootstrap extends RpcModule {
             //开启bzt缓存数据的清理
             ScheduledThreadPoolExecutor bztClearExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("blockBZTClear-monitor"));
             bztClearExecutor.scheduleWithFixedDelay(BlockBZTClearMonitor.getInstance(), 0, blockConfig.getBlockBZTClearMonitorInterval(), TimeUnit.MILLISECONDS);
+
+            ScheduledThreadPoolExecutor stopingExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("stoping-check"));
+            stopingExecutor.scheduleWithFixedDelay(StopingMonitor.getInstance(), 0,2, TimeUnit.SECONDS);
+
             started = true;
         }
         return RpcModuleState.Running;

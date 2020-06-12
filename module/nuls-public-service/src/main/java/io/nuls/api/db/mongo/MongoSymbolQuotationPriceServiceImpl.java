@@ -63,7 +63,7 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
                 d.setAssetChainId(si.getChainId());
                 d.setAssetId(si.getAssetId());
                 //转换成毫秒
-                d.setCreateTime(d.getCreateTime() * 1000L);
+                d.setCreateTime(d.getCreateTime());
             });
             modelList.add(new ReplaceOneModel(new Document("_id",d.get_id()),DocumentTransferTool.toDocument(d), new ReplaceOptions().upsert(true)));
         });

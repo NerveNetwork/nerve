@@ -134,6 +134,7 @@ public class MongoChainServiceImpl implements ChainService {
         return DocumentTransferTool.toInfo(document, "chainId", SyncInfo.class);
     }
 
+    @Override
     public SyncInfo saveNewSyncInfo(int chainId, long newHeight, int version) {
         SyncInfo syncInfo = new SyncInfo(chainId, newHeight, version, 0);
         Document document = DocumentTransferTool.toDocument(syncInfo, "chainId");

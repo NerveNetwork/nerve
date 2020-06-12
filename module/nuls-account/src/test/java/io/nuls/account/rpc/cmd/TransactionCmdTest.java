@@ -205,7 +205,6 @@ public class TransactionCmdTest {
         System.out.println(txDigestHex);
         assertNotNull(txDigestHex);
         //转账后查询转入方余额
-        //TODO 此处可能需要延时，因为涉及到交易广播与确认
     }
 
     /**

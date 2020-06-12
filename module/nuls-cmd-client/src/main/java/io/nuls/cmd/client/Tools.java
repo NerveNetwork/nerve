@@ -16,14 +16,9 @@ import io.nuls.core.parse.SerializeUtils;
  */
 public class Tools {
 
-    public static void main(String[] args) {
-//        if (args.length < 1) {
-//            System.out.println("cmd must be null");
-//            System.exit(0);
-//        }
 
-        ECKey ecKey = ECKey.fromPrivate(HexUtil.decode("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b"));
-        System.out.println(ecKey.getPublicKeyAsHex());
+
+    public static void main(String[] args) {
         SpringLiteContext.init("io.nuls.cmd.client.config");
         Config config = SpringLiteContext.getBean(Config.class);
         String cmd = args[0];
@@ -50,6 +45,7 @@ public class Tools {
                     Address address = new Address(chainId, addressPrefix, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(key.getPubKey()));
                     System.out.println("=".repeat(100));
                     System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
+                    System.out.println("publicKey :" + key.getPublicKeyAsHex());
                     System.out.println("privateKey:" + key.getPrivateKeyAsHex());
                     System.out.println("=".repeat(100));
 

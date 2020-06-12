@@ -32,6 +32,8 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 确认提现成功状态交易txdata
@@ -40,6 +42,50 @@ import java.io.IOException;
  */
 public class ConfirmWithdrawalTxData extends BaseNulsData {
 
+    public static class HeterogeneousAddress extends BaseNulsData {
+
+        private int chainId;
+
+        private String address;
+
+        @Override
+        protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
+            stream.writeUint16(chainId);
+            stream.writeString(address);
+        }
+
+        @Override
+        public void parse(NulsByteBuffer byteBuffer) throws NulsException {
+            this.chainId = byteBuffer.readUint16();
+            this.address = byteBuffer.readString();
+        }
+
+        @Override
+        public int size() {
+            int size = 0;
+            size += SerializeUtils.sizeOfUint16();
+            size += SerializeUtils.sizeOfString(this.address);
+            return size;
+        }
+
+        public int getChainId() {
+            return chainId;
+        }
+
+        public void setChainId(int chainId) {
+            this.chainId = chainId;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+    }
+
+        private int heterogeneousChainId;
     /**
      * 异构链中对应的提现交易确认高度
      */
@@ -55,28 +101,65 @@ public class ConfirmWithdrawalTxData extends BaseNulsData {
      */
     private NulsHash withdrawalTxHash;
 
+    /**
+     * 需要分发提现手续费的节点异构链地址
+     */
+    private List<HeterogeneousAddress> listDistributionFee;
+
 
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
+        stream.writeUint16(heterogeneousChainId);
         stream.writeInt64(heterogeneousHeight);
         stream.writeString(heterogeneousTxHash);
         stream.write(withdrawalTxHash.getBytes());
+        int listSize = listDistributionFee == null ? 0 : listDistributionFee.size();
+        stream.writeUint16(listSize);
+        if(null != listDistributionFee){
+            for(HeterogeneousAddress address : listDistributionFee){
+                stream.writeNulsData(address);
+            }
+        }
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
+        this.heterogeneousChainId = byteBuffer.readUint16();
         this.heterogeneousHeight = byteBuffer.readInt64();
         this.heterogeneousTxHash = byteBuffer.readString();
         this.withdrawalTxHash = byteBuffer.readHash();
+        int listSize = byteBuffer.readUint16();
+        if(0 < listSize){
+            List<HeterogeneousAddress> list = new ArrayList<>();
+            for(int i = 0; i< listSize; i++){
+                list.add(byteBuffer.readNulsData(new HeterogeneousAddress()));
+            }
+            this.listDistributionFee = list;
+        }
     }
 
     @Override
     public int size() {
         int size = 0;
+        size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfInt64();
         size += SerializeUtils.sizeOfString(this.heterogeneousTxHash);
         size += NulsHash.HASH_LENGTH;
+        size += SerializeUtils.sizeOfUint16();
+        if (null != listDistributionFee) {
+            for(HeterogeneousAddress address : listDistributionFee){
+                size += SerializeUtils.sizeOfNulsData(address);
+            }
+        }
         return size;
+    }
+
+    public int getHeterogeneousChainId() {
+        return heterogeneousChainId;
+    }
+
+    public void setHeterogeneousChainId(int heterogeneousChainId) {
+        this.heterogeneousChainId = heterogeneousChainId;
     }
 
     public long getHeterogeneousHeight() {
@@ -102,4 +185,13 @@ public class ConfirmWithdrawalTxData extends BaseNulsData {
     public void setWithdrawalTxHash(NulsHash withdrawalTxHash) {
         this.withdrawalTxHash = withdrawalTxHash;
     }
+
+    public List<HeterogeneousAddress> getListDistributionFee() {
+        return listDistributionFee;
+    }
+
+    public void setListDistributionFee(List<HeterogeneousAddress> listDistributionFee) {
+        this.listDistributionFee = listDistributionFee;
+    }
+
 }

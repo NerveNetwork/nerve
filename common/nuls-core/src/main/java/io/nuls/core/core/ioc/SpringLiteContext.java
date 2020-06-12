@@ -90,7 +90,12 @@ public class SpringLiteContext {
         SpringLiteContext.interceptor = interceptor;
         Log.info("spring lite scan package : " + Arrays.toString(packName));
         Set<Class> classes = new HashSet<>(ScanUtil.scan("io.nuls.core.core.config"));
-        Arrays.stream(packName).forEach(pack -> classes.addAll(ScanUtil.scan(pack)));
+        Arrays.stream(packName).forEach(pack -> {
+            Arrays.stream(pack.split(",")).forEach(p->{
+                classes.addAll(ScanUtil.scan(p));
+            });
+
+        });
         classes.stream()
                 //通过Order注解控制类加载顺序
                 .sorted((b1, b2) -> getOrderByClass(b1) > getOrderByClass(b2) ? 1 : -1)

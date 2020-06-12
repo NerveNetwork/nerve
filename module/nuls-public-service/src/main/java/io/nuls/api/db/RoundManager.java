@@ -118,7 +118,7 @@ public class RoundManager {
         if (null != currentRound.getStartBlockHeader() && currentRound.getStartBlockHeader().getPackingIndexOfRound() > 1) {
             startHeight = startHeight - 1;
         }
-        List<AgentInfo> agentList = mongoAgentServiceImpl.getAgentList(chainId, startHeight);
+        List<AgentInfo> agentList = mongoAgentServiceImpl.getAgentListByStartHeight(chainId, startHeight);
         List<DepositInfo> depositList = mongoDepositServiceImpl.getDepositList(chainId, startHeight);
         Map<String, AgentInfo> map = new HashMap<>();
         Map<String, BigInteger> depositMap = new HashMap<>();
@@ -134,7 +134,7 @@ public class RoundManager {
         }
         List<AgentSorter> sorterList = new ArrayList<>();
         for (AgentInfo agent : map.values()) {
-            BigInteger totalDeposit = depositMap.get(agent.getTxHash());
+            BigInteger totalDeposit =agent.getDeposit();
             if (null == totalDeposit) {
                 totalDeposit = BigInteger.ZERO;
             }
@@ -166,7 +166,7 @@ public class RoundManager {
         round.setStartBlockHeader(header);
         round.setStartTime(header.getRoundStartTime());
         round.setMemberCount(sorterList.size());
-        round.setEndTime(round.getStartTime() + 10 * sorterList.size());
+//        round.setEndTime(round.getStartTime() + 10 * sorterList.size());
         round.setProducedBlockCount(1);
 
         List<PocRoundItem> itemList = new ArrayList<>();
@@ -194,7 +194,7 @@ public class RoundManager {
                 item.setPackingAddress(sorter.getSeedAddress());
 
             }
-            item.setTime(round.getStartTime() + item.getOrder() * 10L);
+//            item.setTime(-1);
             itemList.add(item);
         }
         round.setItemList(itemList);

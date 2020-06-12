@@ -19,28 +19,16 @@ public class CreateMultiSignAgentReq extends BaseReq {
 
     private String rewardAddress;
 
-    private Integer commissionRate;
-
     private BigInteger deposit;
 
     private String password;
 
     private String signAddress;
 
-    public CreateMultiSignAgentReq(String agentAddress, String packingAddress, String rewardAddress, Integer commissionRate, BigInteger deposit, String password) {
+    public CreateMultiSignAgentReq(String agentAddress, String packingAddress, String rewardAddress, BigInteger deposit) {
         this.agentAddress = agentAddress;
         this.packingAddress = packingAddress;
         this.rewardAddress = rewardAddress;
-        this.commissionRate = commissionRate;
-        this.deposit = deposit;
-        this.password = password;
-    }
-
-    public CreateMultiSignAgentReq(String agentAddress, String packingAddress, String rewardAddress, Integer commissionRate, BigInteger deposit) {
-        this.agentAddress = agentAddress;
-        this.packingAddress = packingAddress;
-        this.rewardAddress = rewardAddress;
-        this.commissionRate = commissionRate;
         this.deposit = deposit;
     }
 
@@ -66,14 +54,6 @@ public class CreateMultiSignAgentReq extends BaseReq {
 
     public void setRewardAddress(String rewardAddress) {
         this.rewardAddress = rewardAddress;
-    }
-
-    public Integer getCommissionRate() {
-        return commissionRate;
-    }
-
-    public void setCommissionRate(Integer commissionRate) {
-        this.commissionRate = commissionRate;
     }
 
     public BigInteger getDeposit() {

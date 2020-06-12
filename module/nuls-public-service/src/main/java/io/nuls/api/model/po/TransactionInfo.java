@@ -6,6 +6,7 @@ import io.nuls.api.utils.DBUtil;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.constant.TxType;
+import io.nuls.core.log.Log;
 import org.bson.Document;
 
 import java.math.BigInteger;
@@ -49,46 +50,6 @@ public class TransactionInfo {
             }
         }
         this.value = value;
-//        if (type == TxType.COIN_BASE ||
-//                type == TxType.STOP_AGENT ||
-//                type == TxType.CANCEL_DEPOSIT ||
-//                type == TxType.CONTRACT_RETURN_GAS ||
-//                type == TxType.CONTRACT_STOP_AGENT ||
-//                type == TxType.CONTRACT_CANCEL_DEPOSIT) {
-//            if (coinTos != null) {
-//                for (CoinToInfo output : coinTos) {
-//                    value = value.add(output.getAmount());
-//                }
-//            }
-//        } else if (type == TxType.TRANSFER ||
-//                type == TxType.CALL_CONTRACT ||
-//                type == TxType.CONTRACT_TRANSFER
-//            //        type == TxType.TX_TYPE_DATA
-//        ) {
-//            Set<String> addressSet = new HashSet<>();
-//            for (CoinFromInfo input : coinFroms) {
-//                addressSet.add(input.getAddress());
-//            }
-//            for (CoinToInfo output : coinTos) {
-//                if (!addressSet.contains(output.getAddress())) {
-//                    value = value.add(output.getAmount());
-//                }
-//            }
-//        } else if (type == TxType.REGISTER_AGENT ||
-//                type == TxType.DEPOSIT ||
-//                type == TxType.CONTRACT_CREATE_AGENT ||
-//                type == TxType.CONTRACT_DEPOSIT) {
-//            for (CoinToInfo output : coinTos) {
-//                if (output.getLockTime() == -1) {
-//                    value = value.add(output.getAmount());
-//                }
-//            }
-//        } else if (type == TxType.ACCOUNT_ALIAS) {
-//            value = ApiConstant.ALIAS_AMOUNT;
-//        } else {
-//            value = this.fee;
-//        }
-//        this.value = value.abs();
     }
 
     public FeeInfo calcFee(int chainId) {

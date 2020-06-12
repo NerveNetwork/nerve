@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author tag
  * 2018/12/18
- * */
+ */
 public class Log {
 
     public static final String BASIC_NAME = "common";
@@ -32,15 +32,15 @@ public class Log {
     public static void debug(String msg, Object... objs) {
         try {
             List<String> objStrs = new ArrayList<>();
-            for (Object obj: objs) {
-                if(obj instanceof String){
-                    objStrs.add((String)obj);
-                }else{
+            for (Object obj : objs) {
+                if (obj instanceof String) {
+                    objStrs.add((String) obj);
+                } else {
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
             }
             BASIC_LOGGER.debug(msg, objStrs.toArray());
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -52,7 +52,7 @@ public class Log {
      * @param throwable 异常信息
      */
     public static void debug(String msg, Throwable throwable) {
-            BASIC_LOGGER.debug(msg, throwable);
+        BASIC_LOGGER.debug(msg, throwable);
     }
 
     /**
@@ -67,15 +67,15 @@ public class Log {
     public static void info(String msg, Object... objs) {
         try {
             List<String> objStrs = new ArrayList<>();
-            for (Object obj: objs) {
-                if(obj instanceof String){
-                    objStrs.add((String)obj);
-                }else{
+            for (Object obj : objs) {
+                if (obj instanceof String) {
+                    objStrs.add((String) obj);
+                } else {
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
             }
             BASIC_LOGGER.info(msg, objStrs.toArray());
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -102,15 +102,15 @@ public class Log {
     public static void warn(String msg, Object... objs) {
         try {
             List<String> objStrs = new ArrayList<>();
-            for (Object obj: objs) {
-                if(obj instanceof String){
-                    objStrs.add((String)obj);
-                }else{
+            for (Object obj : objs) {
+                if (obj instanceof String) {
+                    objStrs.add((String) obj);
+                } else {
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
             }
             BASIC_LOGGER.warn(msg, objStrs.toArray());
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -137,16 +137,18 @@ public class Log {
 
     public static void error(String msg, Object... objs) {
         try {
-            List<String> objStrs = new ArrayList<>();
-            for (Object obj: objs) {
-                if(obj instanceof String){
-                    objStrs.add((String)obj);
+            List<Object> objStrs = new ArrayList<>();
+            for (Object obj : objs) {
+                if (obj instanceof String) {
+                    objStrs.add(obj);
+                } else if (obj instanceof Throwable) {
+                    objStrs.add(obj);
                 }else{
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
             }
             BASIC_LOGGER.error(msg, objStrs.toArray());
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -161,7 +163,7 @@ public class Log {
         BASIC_LOGGER.error(msg, throwable);
     }
 
-    public static  void error(Throwable throwable) {
+    public static void error(Throwable throwable) {
         BASIC_LOGGER.error(throwable);
     }
 

@@ -83,6 +83,8 @@ public interface CommandConstant {
     String INFO = "info";
 
     String PUTBZTFLAG = "putBZTFlag";
+
+    String NOTICE_GET_BLOCK = "noticeGetBlock";
     /**
      * 获取最新高度
      */

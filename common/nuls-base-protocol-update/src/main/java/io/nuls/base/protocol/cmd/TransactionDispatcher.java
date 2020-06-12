@@ -46,20 +46,6 @@ public final class TransactionDispatcher extends BaseCmd {
         this.moduleTxPackageProcessor = moduleTxPackageProcessor;
     }
 
-    /**
-     * 各模块打包交易处理器接口
-     * k:模块code, v:模块处理器
-     */
-//    private Map<String, ModuleTxPackageProcessor> mapPackageProcessor = new HashMap<>();
-//
-//    public void setPackageProcessor(ModuleTxPackageProcessor packageProcessor) {
-//        this.mapPackageProcessor.put(packageProcessor.getModuleCode(), packageProcessor);
-//    }
-//
-//    public List<TransactionProcessor> getProcessors() {
-//        return processors;
-//    }
-
     public void setProcessors(List<TransactionProcessor> processors) {
         processors.forEach(e -> Log.info("register TransactionProcessor-" + e.toString()));
         processors.sort(TransactionProcessor.COMPARATOR);
@@ -70,6 +56,8 @@ public final class TransactionDispatcher extends BaseCmd {
     private CommonAdvice commitAdvice;
     @Autowired("EmptyCommonAdvice")
     private CommonAdvice rollbackAdvice;
+    @Autowired("EmptyCommonAdvice")
+    private CommonAdvice validatorAdvice;
 
     public void register(CommonAdvice commitAdvice, CommonAdvice rollbackAdvice) {
         if (commitAdvice != null) {
@@ -80,34 +68,54 @@ public final class TransactionDispatcher extends BaseCmd {
         }
     }
 
+    public void register(CommonAdvice commitAdvice, CommonAdvice rollbackAdvice, CommonAdvice validatorAdvice) {
+        if (commitAdvice != null) {
+            this.commitAdvice = commitAdvice;
+        }
+        if (rollbackAdvice != null) {
+            this.rollbackAdvice = rollbackAdvice;
+        }
+        if (validatorAdvice != null) {
+            this.validatorAdvice = validatorAdvice;
+        }
+    }
+
     /**
-     * 打包交易处理器
+     * 内部生成交易与验证器
+     *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = BaseConstant.TX_PACKPRODUCE, version = 1.0, description = "")
     @Parameter(parameterName = "chainId", parameterType = "int")
     @Parameter(parameterName = "txList", parameterType = "List")
+    @Parameter(parameterName = "process", parameterType = "int")
+    @Parameter(parameterName = "height", parameterType = "long")
+    @Parameter(parameterName = "blockTime", parameterType = "long")
     public Response txPackProduce(Map params) {
         ObjectUtils.canNotEmpty(params.get(Constants.CHAIN_ID), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
-        ObjectUtils.canNotEmpty(params.get("txList"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
+        ObjectUtils.canNotEmpty(params.get("process"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
+        ObjectUtils.canNotEmpty(params.get("height"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
+        ObjectUtils.canNotEmpty(params.get("blockTime"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
         try {
             int chainId = Integer.parseInt(params.get(Constants.CHAIN_ID).toString());
-            List<String> txList = (List<String>) params.get("txList");
+            int process = Integer.parseInt(params.get("process").toString());
+            long blockTime = Long.parseLong(params.get("blockTime").toString());
+            long height = Long.parseLong(params.get("height").toString());
             List<Transaction> txs = new ArrayList<>();
-            for (String txStr : txList) {
-                Transaction tx = RPCUtil.getInstanceRpcStr(txStr, Transaction.class);
-                txs.add(tx);
+            List<String> txList = (List<String>) params.get("txList");
+            if (null != txList) {
+                for (String txStr : txList) {
+                    Transaction tx = RPCUtil.getInstanceRpcStr(txStr, Transaction.class);
+                    txs.add(tx);
+                }
             }
-//            ModuleTxPackageProcessor processor = mapPackageProcessor.get(ConnectManager.LOCAL.getAbbreviation());
-//            List<String> list = new ArrayList<>();
-//            if(null != processor){
-//                list = processor.packProduce(chainId, txs);
-//            }
-            List<String> list = moduleTxPackageProcessor.packProduce(chainId, txs);
-            Map<String, Object> resultMap = new HashMap<>(2);
-            resultMap.put("list", list);
-            return success(resultMap);
+            //1.newlyList新生成的交易, 2.rmHashList需要删除的原始交易hash
+            Map<String, List<String>> map = new HashMap<>();
+            if (null != moduleTxPackageProcessor) {
+                map = moduleTxPackageProcessor.packProduce(chainId, txs, process, height, blockTime);
+            }
+            return success(map);
         } catch (NulsException e) {
             Log.error(e);
             return failed(e.getErrorCode());
@@ -121,6 +129,7 @@ public final class TransactionDispatcher extends BaseCmd {
 
     /**
      * 交易的模块验证器
+     *
      * @param params
      * @return
      */
@@ -144,6 +153,18 @@ public final class TransactionDispatcher extends BaseCmd {
             Transaction tx = RPCUtil.getInstanceRpcStr(txStr, Transaction.class);
             txs.add(tx);
         }
+
+        String errorCode = "";
+        Map<String, Object> validateMap;
+//        Map<String, Object> validateMap = validatorAdvice.validates(chainId, txs, blockHeader);
+//        if (validateMap != null) {
+//            List<Transaction> invalidTxs = (List<Transaction>) validateMap.get("txList");
+//            if (invalidTxs != null && !invalidTxs.isEmpty()) {
+//                errorCode = (String) validateMap.get("errorCode");
+//                finalInvalidTxs.addAll(invalidTxs);
+//            }
+//        }
+
         Map<Integer, List<Transaction>> map = new HashMap<>();
         for (TransactionProcessor processor : processors) {
             for (Transaction tx : txs) {
@@ -153,9 +174,9 @@ public final class TransactionDispatcher extends BaseCmd {
                 }
             }
         }
-        String errorCode = "";
+
         for (TransactionProcessor processor : processors) {
-            Map<String, Object> validateMap = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
+            validateMap = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
             if (validateMap == null) {
                 continue;
             }
@@ -171,11 +192,13 @@ public final class TransactionDispatcher extends BaseCmd {
         List<String> list = finalInvalidTxs.stream().map(e -> e.getHash().toHex()).collect(Collectors.toList());
         resultMap.put("errorCode", errorCode);
         resultMap.put("list", list);
+        validatorAdvice.end(chainId, txs, blockHeader);
         return success(resultMap);
     }
 
     /**
      * 交易业务提交
+     *
      * @param params
      * @return
      */
@@ -230,6 +253,7 @@ public final class TransactionDispatcher extends BaseCmd {
 
     /**
      * 交易业务回滚
+     *
      * @param params
      * @return
      */

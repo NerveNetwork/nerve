@@ -110,16 +110,6 @@ public interface RpcParameterNameConstant {
 
 
     /**
-     * blockHeaderDigest
-     */
-    String BLOCK_HEADER_DIGEST = "blockHeaderDigest";
-
-    /**
-     * the hex of transaction list
-     */
-    String TX_LIST = "txList";
-
-    /**
      * pubKeys
      */
     String PUB_KEYS = "pubKeys";
@@ -150,27 +140,6 @@ public interface RpcParameterNameConstant {
      */
     String SIG = "sig";
 
-    /**
-     * the to Address hex
-     */
-    String TO_ADDRESS = "toAddress";
-
-    /**
-     * the amount
-     */
-    String AMOUNT = "amount";
-
-    /**
-     * the TYPE
-     */
-    String TYPE = "type";
-
-    /**
-     * the ASSETS_Id
-     */
-    String ASSET_ID = "assetId";
-
-    String ASSET_CHAIN_ID = "assetChainId";
 
 
 }

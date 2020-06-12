@@ -1,12 +1,9 @@
 package io.nuls.api.sup;
 
-import io.nuls.api.model.po.SymbolPrice;
-import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.parse.JSONUtils;
-import org.checkerframework.checker.units.qual.A;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

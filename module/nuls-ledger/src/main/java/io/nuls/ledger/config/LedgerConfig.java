@@ -23,6 +23,7 @@ public class LedgerConfig implements ModuleConfig {
     private int assetRegDestroyAmount = 200;
     private int decimals = 8;
     private String  symbol;
+    private String addressPrefix;
 
     public String getBlackHolePublicKey() {
         return blackHolePublicKey;
@@ -116,5 +117,13 @@ public class LedgerConfig implements ModuleConfig {
 
     public void setSymbol(String symbol) {
         this.symbol = symbol;
+    }
+
+    public String getAddressPrefix() {
+        return addressPrefix;
+    }
+
+    public void setAddressPrefix(String addressPrefix) {
+        this.addressPrefix = addressPrefix;
     }
 }

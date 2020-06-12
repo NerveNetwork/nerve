@@ -166,10 +166,12 @@ public class NulsLogger {
     public void error(String msg, Object... objs) {
         String logContent = getLogTrace() + ":" + msg;
         try {
-            List<String> objStrs = new ArrayList<>();
+            List<Object> objStrs = new ArrayList<>();
             for (Object obj: objs) {
                 if(obj instanceof String){
                     objStrs.add((String)obj);
+                } else if (obj instanceof Throwable){
+                    objStrs.add(obj);
                 }else{
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
@@ -254,7 +256,7 @@ public class NulsLogger {
      * @return 日志记录点的全路径
      */
     private String getLogTrace() {
-        StringBuilder logTrace = new StringBuilder("---offSet:").append(LoggerBuilder.offSetTime).append("---");
+        StringBuilder logTrace = new StringBuilder("");
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         if (stack.length > 1) {
             // index为3上一级调用的堆栈信息，index为1和2都为Log类自己调两次（可忽略），index为0为主线程触发（可忽略）

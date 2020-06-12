@@ -367,7 +367,7 @@ public class ECKey {
         } else {
             // We expect the pubkey to be in regular encoded form, just as a BigInteger. Therefore the first byte is
             // a special marker byte.
-            // TODO: This is probably not a useful API and may be confusing.
+            //  This is probably not a useful API and may be confusing.
             this.pub = new LazyECPoint(CURVE.getCurve(), pubKey);
         }
     }
@@ -414,7 +414,7 @@ public class ECKey {
      */
     public static ECPoint publicPointFromPrivate(BigInteger privKey) {
         /*
-         * TODO: FixedPointCombMultiplier currently doesn't support scalars longer than the group order,
+         *  FixedPointCombMultiplier currently doesn't support scalars longer than the group order,
          * but that could change in future versions.
          */
         if (privKey.bitLength() > CURVE.getN().bitLength()) {

@@ -18,7 +18,7 @@ public class StackSnapshootInfo {
     /**
      * 基础利息
      */
-    private BigInteger baseInterest;
+    private BigDecimal baseInterest;
 
 
     /**
@@ -52,11 +52,11 @@ public class StackSnapshootInfo {
         this.day = day;
     }
 
-    public BigInteger getBaseInterest() {
+    public BigDecimal getBaseInterest() {
         return baseInterest;
     }
 
-    public void setBaseInterest(BigInteger baseInterest) {
+    public void setBaseInterest(BigDecimal baseInterest) {
         this.baseInterest = baseInterest;
     }
 
@@ -95,5 +95,23 @@ public class StackSnapshootInfo {
 
     public void setBlockHeight(Long blockHeight) {
         this.blockHeight = blockHeight;
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder("{")
+                .append("\"day\":")
+                .append(day)
+                .append(",\"baseInterest\":")
+                .append(baseInterest)
+                .append(",\"stackTotal\":")
+                .append(stackTotal)
+                .append(",\"rewardTotal\":")
+                .append(rewardTotal)
+                .append(",\"blockHeight\":")
+                .append(blockHeight)
+                .append(",\"createTime\":")
+                .append(createTime)
+                .append('}').toString();
     }
 }

@@ -10,10 +10,10 @@
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,13 +37,12 @@ import io.nuls.ledger.model.po.AccountState;
 public interface TxCommonProcessor {
     /**
      * 交易对象中fromCoinData 处理
-       * @param coin
+     * @param coin
      * @param nonce
-     * @param txHash
      * @param accountState
      * @return
      */
-      boolean processFromCoinData(CoinFrom coin, byte[] nonce,AccountState accountState);
+    boolean processFromCoinData(CoinFrom coin, byte[] nonce,AccountState accountState);
 
     /**
      * 交易中toCoinData处理
@@ -51,5 +50,5 @@ public interface TxCommonProcessor {
      * @param accountState
      * @return
      */
-      boolean processToCoinData(CoinTo coin,AccountState accountState);
+    boolean processToCoinData(CoinTo coin,AccountState accountState);
 }

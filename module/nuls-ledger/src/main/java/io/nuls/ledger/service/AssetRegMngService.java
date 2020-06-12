@@ -56,6 +56,10 @@ public interface AssetRegMngService {
 
     void rollBackContractAsset(int chainId, String contractAddress) throws Exception;
 
+    int registerHeterogeneousAsset(int chainId, LedgerAsset ledgerAssets) throws Exception;
+
+    void rollBackHeterogeneousAsset(int chainId, int assetId) throws Exception;
+
     List<Map<String, Object>> getLedgerRegAssets(int chainId, int assetType) throws Exception;
 
     Map<String, Object> getLedgerRegAsset(int chainId, String txHash) throws Exception;

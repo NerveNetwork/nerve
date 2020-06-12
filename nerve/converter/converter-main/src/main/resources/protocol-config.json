@@ -1,0 +1,123 @@
+[
+  {
+    "version": "1",
+    "extend": "",
+    "validTxs": [
+      {
+        "type": "40",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ConfirmedChangeVirtualBankV1"
+      },
+      {
+        "type": "41",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ChangeVirtualBankV1"
+      },
+      {
+        "type": "42",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "RechargeV1"
+      },
+      {
+        "type": "43",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "WithdrawalV1"
+      },
+      {
+        "type": "44",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ConfirmWithdrawalV1"
+      },
+      {
+        "type": "45",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "ProposalV1"
+      },
+      {
+        "type": "46",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "VoteProposalV1"
+      },
+      {
+        "type": "47",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "DistributionFeeV1"
+      },
+      {
+        "type": "48",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "InitializeHeterogeneousV1"
+      },
+      {
+        "type": "49",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "HeterogeneousContractAssetRegPendingV1"
+      },
+      {
+        "type": "50",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "HeterogeneousContractAssetRegCompleteV1"
+      },
+      {
+        "type": "51",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ConfirmProposalV1"
+      }
+    ],
+    "validMsgs": [
+      {
+        "name": "network.nerve.converter.message.BroadcastHashSignMessage",
+        "protocolCmd": "newHashSign",
+        "handlers": "BroadcastHashSignHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.GetTxMessage",
+        "protocolCmd": "getTx",
+        "handlers": "GetTxHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.NewTxMessage",
+        "protocolCmd": "newTx",
+        "handlers": "NewTxHandlerV1"
+      }
+    ],
+    "invalidTxs": "",
+    "invalidMsgs": ""
+  }
+]

@@ -26,6 +26,11 @@
 package io.nuls.provider.api.resources;
 
 
+import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.protocol.ProtocolProvider;
+import io.nuls.base.api.provider.protocol.facade.GetVersionReq;
+import io.nuls.base.api.provider.protocol.facade.VersionInfo;
+import io.nuls.core.parse.MapUtils;
 import io.nuls.provider.api.config.Config;
 import io.nuls.base.api.provider.Result;
 import io.nuls.core.core.annotation.Autowired;
@@ -34,6 +39,7 @@ import io.nuls.core.rpc.model.Key;
 import io.nuls.core.rpc.model.ResponseData;
 import io.nuls.core.rpc.model.TypeDescriptor;
 import io.nuls.provider.model.RpcClientResult;
+import io.nuls.provider.model.jsonrpc.RpcResult;
 import io.nuls.provider.rpctools.BlockTools;
 import io.nuls.provider.utils.ResultUtil;
 import io.nuls.v2.model.annotation.Api;
@@ -57,6 +63,9 @@ public class SystemResource {
     private Config config;
     @Autowired
     BlockTools blockTools;
+
+
+    ProtocolProvider protoclService = ServiceManager.get(ProtocolProvider.class);
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -90,6 +99,28 @@ public class SystemResource {
         }
         return ResultUtil.getRpcClientResult(result);
     }
+
+
+    @GET
+    @Path("version")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "获取版本信息", order = 001)
+    @ResponseData(name = "返回值", description = "返回本链信息", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "currentProtocolVersion", description = "当前网络运行的协信号"),
+            @Key(name = "localProtocolVersion", description = "当前节点最高支持的协议号"),
+            @Key(name = "clientVersion", description = "当前节点的程序版本号")
+    }))
+    public RpcClientResult version() {
+        Result<VersionInfo> res = protoclService.getVersion(new GetVersionReq());
+        if(config.getPackageVersion() != null){
+            Map<String,Object> m = MapUtils.beanToLinkedMap(res.getData());
+            m.put("clientVersion",config.getPackageVersion());
+            return ResultUtil.getRpcClientResult(new Result(m));
+        }else{
+            return ResultUtil.getRpcClientResult(res);
+        }
+    }
+
 
 
 }

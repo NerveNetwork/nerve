@@ -7,11 +7,14 @@ import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import io.nuls.core.rpc.util.RpcCall;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class CmdAssetRegTest {
     @Before
@@ -31,14 +34,40 @@ public class CmdAssetRegTest {
     public void chainAssetTxRegTest() throws Exception {
         // Build params map
         Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","USDI");
-        params.put("assetName","USDI");
+        params.put("assetSymbol","USDT");
+        params.put("assetName","USDT");
         params.put("initNumber",100000000);
-        params.put("decimalPlace",8);
-        params.put("txCreatorAddress","tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG");
-        params.put("assetOwnerAddress","tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG");
+        params.put("decimalPlace",6);
+        params.put("txCreatorAddress","NERVEeTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+        params.put("assetOwnerAddress","NERVEeTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
         params.put("password","nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
+        Log.debug("response {}", JSONUtils.obj2json(response));
+    }
+
+    @Test
+    public void chainAssetTxRegTest2() throws Exception {
+        // Build params map
+        Map<String,Object> params = new HashMap<>();
+        params.put("assetSymbol","USDT");
+        params.put("assetName","USDT");
+        params.put("initNumber",100000000);
+        params.put("decimalPlace",6);
+        params.put("txCreatorAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+        params.put("assetOwnerAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+        params.put("password","nuls123456");
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
+        Log.debug("response {}", JSONUtils.obj2json(response));
+        TimeUnit.SECONDS.sleep(4);
+        params = new HashMap<>();
+        params.put("assetSymbol","BTC");
+        params.put("assetName","BTC");
+        params.put("initNumber",100000000);
+        params.put("decimalPlace",8);
+        params.put("txCreatorAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+        params.put("assetOwnerAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+        params.put("password","nuls123456");
+        response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
         Log.debug("response {}", JSONUtils.obj2json(response));
     }
 
@@ -76,6 +105,16 @@ public class CmdAssetRegTest {
         params.put("contractAddress","NULSd6HgYEvN6e8kVdrJ3pBzPFq1T6p6j6pjv");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "getAssetContractAssetId", params);
         Log.debug("response {}", JSONUtils.obj2json(response));
+    }
+
+
+    @Test
+    public void getAssetInfoTest() throws Exception {
+        Map params = new HashMap();
+        params.put("chainId",4);
+        Map data = (Map) RpcCall.request(ModuleE.LG.abbr, "lg_get_all_asset", params);
+        List<Map<String,Object>> list = (List<Map<String, Object>>) data.get("assets");
+        Log.info("{}",list);
     }
 
 }

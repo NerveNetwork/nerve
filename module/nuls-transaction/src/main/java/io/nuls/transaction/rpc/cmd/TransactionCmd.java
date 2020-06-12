@@ -14,6 +14,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.ObjectUtils;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
@@ -31,6 +32,7 @@ import io.nuls.transaction.model.po.TransactionConfirmedPO;
 import io.nuls.transaction.service.ConfirmedTxService;
 import io.nuls.transaction.service.TxPackageService;
 import io.nuls.transaction.service.TxService;
+import io.nuls.transaction.storage.LockedAddressStorageService;
 import io.nuls.transaction.storage.UnconfirmedTxStorageService;
 import io.nuls.transaction.utils.TxUtil;
 
@@ -55,6 +57,8 @@ public class TransactionCmd extends BaseCmd {
     private ChainManager chainManager;
     @Autowired
     private PackablePool packablePool;
+    @Autowired
+    private LockedAddressStorageService lockedAddressStorageService;
 
     @CmdAnnotation(cmd = TxCmd.TX_REGISTER, version = 1.0, description = "注册模块交易/Register module transactions")
     @Parameters(value = {
@@ -176,6 +180,7 @@ public class TransactionCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "endTimestamp", requestType = @TypeDescriptor(value = long.class), parameterDes = "截止时间"),
+            @Parameter(parameterName = "blockTime", requestType = @TypeDescriptor(value = long.class), parameterDes = "本次出块区块时间"),
             @Parameter(parameterName = "maxTxDataSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易集最大容量")
     })
     @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
@@ -187,6 +192,7 @@ public class TransactionCmd extends BaseCmd {
             ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("endTimestamp"), TxErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("maxTxDataSize"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("blockTime"), TxErrorCode.PARAMETER_ERROR.getMsg());
             chain = chainManager.getChain((Integer) params.get("chainId"));
             if (null == chain) {
                 throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
@@ -195,8 +201,9 @@ public class TransactionCmd extends BaseCmd {
             long endTimestamp = Long.parseLong(params.get("endTimestamp").toString());
             //交易数据最大容量值
             int maxTxDataSize = (int) params.get("maxTxDataSize");
+            long blockTime = Long.parseLong(params.get("blockTime").toString());
 //            chain.getLogger().info("总可用:{}", endTimestamp - NulsDateUtils.getCurrentTimeMillis());
-            List<String> list = txPackageService.packageBasic(chain, endTimestamp, maxTxDataSize);
+            List<String> list = txPackageService.packageBasic(chain, endTimestamp, maxTxDataSize, blockTime);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
             map.put("list", null == list ? new ArrayList<>() : list);
             return success(map);
@@ -255,7 +262,6 @@ public class TransactionCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待保存的交易集合"),
-            @Parameter(parameterName = "contractList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "智能合约交易"),
             @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "区块头"),
             @Parameter(parameterName = "syncStatus", requestType = @TypeDescriptor(value = int.class), parameterDes = "运行状态")
     })
@@ -280,9 +286,8 @@ public class TransactionCmd extends BaseCmd {
             if (null == txStrList) {
                 throw new NulsException(TxErrorCode.PARAMETER_ERROR);
             }
-            List<String> contractList = (List<String>) params.get("contractList");
             int syncStatus = (Integer) params.get("syncStatus");
-            result = confirmedTxService.saveTxList(chain, txStrList, contractList, (String) params.get("blockHeader"), syncStatus);
+            result = confirmedTxService.saveTxList(chain, txStrList, (String) params.get("blockHeader"), syncStatus);
         } catch (NulsException e) {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode());
@@ -622,24 +627,14 @@ public class TransactionCmd extends BaseCmd {
         }
     }
 
-// <<<<<<< HEAD
-
-    // =======
-// >>>>>>> nerver
     @CmdAnnotation(cmd = TxCmd.TX_BATCHVERIFY, priority = CmdPriority.HIGH, version = 1.0, description = "验证区块所有交易/Verify all transactions in the block")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待验证交易序列化数据字符串集合"),
             @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "对应的区块头")
     })
-// <<<<<<< HEAD
-//     @ResponseData(name = "返回值", description = "返回一个Map，包含两个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-//             @Key(name = "value", valueType = boolean.class, description = "是否验证成功"),
-//             @Key(name = "contractList", valueType = List.class, valueElement = String.class, description = "智能合约新产生的交易")
-// =======
     @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class,  description = "是否验证成功")
-// >>>>>>> nerver
     }))
     public Response batchVerify(Map params) {
         VerifyLedgerResult verifyLedgerResult = null;
@@ -781,7 +776,7 @@ public class TransactionCmd extends BaseCmd {
             @Key(name = "value", valueType = List.class, valueElement = String.class, description = "交易的合法签名账户"),
 
     }))
-    public Object getTxSigners(Map params){
+    public Response getTxSigners(Map params){
         Chain chain = null;
         try {
             // check parameters
@@ -821,6 +816,131 @@ public class TransactionCmd extends BaseCmd {
             return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+
+    @CmdAnnotation(cmd = TxCmd.TX_LOCK, version = 1.0, description = "锁定账户")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    }))
+    public Response lockAddress(Map params){
+        Chain chain = null;
+        try {
+            // check parameters
+            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
+            }
+            String address = (String) params.get("address");
+            Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
+            map.put("value", lockedAddressStorageService.save(chain.getChainId(), address));
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = TxCmd.TX_UNLOCK, version = 1.0, description = "解锁账户")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    }))
+    public Response unLockAddress(Map params){
+        Chain chain = null;
+        try {
+            // check parameters
+            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
+            }
+            String address = (String) params.get("address");
+            Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
+            map.put("value", lockedAddressStorageService.delete(chain.getChainId(), address));
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = TxCmd.TX_ISLOCKED, version = 1.0, description = "返回地址是否已被锁定")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "待检查地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true:已锁定, false:未锁定")
+    }))
+    public Response isLocked(Map params){
+        Chain chain = null;
+        try {
+            // check parameters
+            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
+            }
+            String address = (String)params.get("address");
+            String lockedAddress =  lockedAddressStorageService.find(chain.getChainId(), address);
+            Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
+            // 返回true 表示被锁定
+            map.put("value", StringUtils.isNotBlank(lockedAddress));
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = TxCmd.TX_ALL_LOCKED_ADDRESS, version = 1.0, description = "获取所有已被锁定的地址列表")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = List.class, description = "地址列表")
+    }))
+    public Response getAllLocked(Map params){
+        Chain chain = null;
+        try {
+            // check parameters
+            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
+            }
+            Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
+            map.put("value", lockedAddressStorageService.findAll(chain.getChainId()));
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+
 
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {

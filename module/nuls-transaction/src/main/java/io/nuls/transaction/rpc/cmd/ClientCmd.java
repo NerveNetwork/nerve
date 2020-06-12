@@ -233,6 +233,9 @@ public class ClientCmd extends BaseCmd {
                 adddress2 = (String) params.get("address2");
                 transferTest.mAddressTransferLjs(address1, adddress2,amount);
             }
+            if(3 == method){
+                transferTest.transfer(address1);
+            }
             return success();
         } catch (Exception e) {
             return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);

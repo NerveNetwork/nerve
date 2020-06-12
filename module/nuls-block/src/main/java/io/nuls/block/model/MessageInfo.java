@@ -11,15 +11,13 @@ public class MessageInfo {
     private NulsHash blockHash;
     private BlockHeader header;
     private SmallBlock smallBlock;
-    private BaseBusinessMessage message;
 
-    public MessageInfo(int chainId, String nodeId, NulsHash blockHash, BlockHeader header, SmallBlock smallBlock, BaseBusinessMessage message){
+    public MessageInfo(int chainId, String nodeId, NulsHash blockHash, BlockHeader header, SmallBlock smallBlock){
         this.chainId = chainId;
         this.nodeId = nodeId;
         this.blockHash = blockHash;
         this.header = header;
         this.smallBlock = smallBlock;
-        this.message = message;
     }
 
     public int getChainId() {
@@ -60,13 +58,5 @@ public class MessageInfo {
 
     public void setSmallBlock(SmallBlock smallBlock) {
         this.smallBlock = smallBlock;
-    }
-
-    public BaseBusinessMessage getMessage() {
-        return message;
-    }
-
-    public void setMessage(BaseBusinessMessage message) {
-        this.message = message;
     }
 }

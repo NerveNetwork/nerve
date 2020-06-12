@@ -198,7 +198,7 @@ public class BlockUtil {
 
         //2.收到的区块可以连到主链,验证通过
         if (blockHeight == masterChainEndHeight + 1 && blockPreviousHash.equals(masterChainEndHash)) {
-            logger.debug("received continuous block of masterChain, height:" + blockHeight + ", hash:" + blockHash);
+//            logger.debug("received continuous block of masterChain, height:" + blockHeight + ", hash:" + blockHash);
             return Result.getSuccess(BlockErrorCode.SUCCESS);
         }
 
@@ -474,7 +474,7 @@ public class BlockUtil {
         int singleDownloadTimeout = context.getParameters().getSingleDownloadTimeout();
         NulsLogger logger = context.getLogger();
         Future<Block> future = SingleBlockCacher.addRequest(chainId, hash);
-        logger.debug("get block-" + hash + " from " + nodeId + " begin, height-" + height);
+//        logger.debug("get block-" + hash + " from " + nodeId + " begin, height-" + height);
         boolean result = NetworkCall.sendToNode(chainId, message, nodeId, GET_BLOCK_MESSAGE);
         if (!result) {
             SingleBlockCacher.removeRequest(chainId, hash);

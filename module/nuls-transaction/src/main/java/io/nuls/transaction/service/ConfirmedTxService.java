@@ -42,7 +42,7 @@ public interface ConfirmedTxService {
      * @param syncStatus 0:同步状态, 1:正常运行
      * @return
      */
-    boolean saveTxList(Chain chain, List<String> txStrList, List<String> contractList, String blockHeader, int syncStatus) throws NulsException;
+    boolean saveTxList(Chain chain, List<String> txStrList, String blockHeader, int syncStatus) throws NulsException;
 
 
 

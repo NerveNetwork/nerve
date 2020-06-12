@@ -32,13 +32,14 @@ import io.nuls.cmd.client.processor.account.*;
 import io.nuls.cmd.client.processor.block.GetBestBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.block.GetBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.consensus.*;
-import io.nuls.cmd.client.processor.contract.*;
+import io.nuls.cmd.client.processor.converter.RegisterHeterogeneousAssetProcessor;
+import io.nuls.cmd.client.processor.converter.VoteProposalProcess;
+import io.nuls.cmd.client.processor.converter.WithdrawalProcessor;
 import io.nuls.cmd.client.processor.crosschain.*;
 import io.nuls.cmd.client.processor.ledger.GetBalanceProcessor;
-import io.nuls.cmd.client.processor.ledger.GetContractCrossAssetProcessor;
 import io.nuls.cmd.client.processor.ledger.GetLocalCrossAssetProcessor;
-import io.nuls.cmd.client.processor.ledger.RegisterLocalAssetProcessor;
 import io.nuls.cmd.client.processor.network.GetNetworkProcessor;
+import io.nuls.cmd.client.processor.system.EvalProcessor;
 import io.nuls.cmd.client.processor.system.ExitProcessor;
 import io.nuls.cmd.client.processor.system.HelpProcessor;
 import io.nuls.cmd.client.processor.system.VersionProcessor;
@@ -111,8 +112,8 @@ public class CommandHandler implements InitializingBean {
         register(getBean(SetAliasProcessor.class));
         //transfer
         register(getBean(TransferProcessor.class));
-        //todo 批量交易测试命令
-        register(getBean(TransferTestProcessor.class));
+//        //批量交易测试命令
+//        register(getBean(TransferTestProcessor.class));
         //transfer by alias
 //        register(getBean(TransferByAliasProcessor.class));
 
@@ -127,9 +128,16 @@ public class CommandHandler implements InitializingBean {
         //get account balance
         register(getBean(GetBalanceProcessor.class));
         //local asset register
-        register(getBean(RegisterLocalAssetProcessor.class));
-        register(getBean(GetContractCrossAssetProcessor.class));
+//        register(getBean(RegisterLocalAssetProcessor.class));
+//        register(getBean(GetContractCrossAssetProcessor.class));
         register(getBean(GetLocalCrossAssetProcessor.class));
+
+        /**
+         * converter
+         */
+        register(getBean(WithdrawalProcessor.class));
+        register(getBean(VoteProposalProcess.class));
+        register(getBean(RegisterHeterogeneousAssetProcessor.class));
         /**
          * consensus
          */
@@ -139,8 +147,8 @@ public class CommandHandler implements InitializingBean {
         register(getBean(StopAgentProcessor.class));
 
         //deposit to agent
-        register(getBean(DepositToAgentProcessor.AppendAgentDeposit.class));
-        register(getBean(DepositToAgentProcessor.ReduceAgentDeposit.class));
+        register(getBean(ChangeAgentDepositProcessor.AppendAgentDeposit.class));
+        register(getBean(ChangeAgentDepositProcessor.ReduceAgentDeposit.class));
 
         //staking
         register(getBean(DepositProcessor.Deposit.class));
@@ -155,7 +163,7 @@ public class CommandHandler implements InitializingBean {
         register(SpringLiteContext.getBean(ExitProcessor.class));
         register(SpringLiteContext.getBean(HelpProcessor.class));
         register(SpringLiteContext.getBean(VersionProcessor.class));
-
+        register(getBean(EvalProcessor.class));
         register(getBean(GetNetworkProcessor.class));
 
         /**
@@ -170,40 +178,43 @@ public class CommandHandler implements InitializingBean {
         register(getBean(GetMultiSignAccountProcessor.class));
         register(getBean(CreateMultiSignAgentProcessor.class));
         register(getBean(StopMultiSignAgentProcessor.class));
-        register(getBean(DepositForMultiSignProcessor.class));
+        register(getBean(DepositForMultiSignProcessor.MultiDeposit.class));
+        register(getBean(DepositForMultiSignProcessor.MultiDepositFixed.class));
         register(getBean(WithdrawForMultiSignProcessor.class));
+        register(getBean(ChangeMultiAgentDepositProcessor.AppendMultiAgentDeposit.class));
+        register(getBean(ChangeMultiAgentDepositProcessor.ReduceMutilAgentDeposit.class));
 
-        register(getBean(CreateContractProcessor.class));
-        register(getBean(CallContractProcessor.class));
-        register(getBean(DeleteContractProcessor.class));
-        register(getBean(GetContractConstructorProcessor.class));
-        register(getBean(GetContractInfoProcessor.class));
-        register(getBean(GetContractResultProcessor.class));
-        register(getBean(GetContractTxProcessor.class));
-        register(getBean(TokenTransferProcessor.class));
-        register(getBean(TransferToContractProcessor.class));
-        register(getBean(ViewContractProcessor.class));
-        register(getBean(GetAccountContractListProcessor.class));
+//        register(getBean(CreateContractProcessor.class));
+//        register(getBean(CallContractProcessor.class));
+//        register(getBean(DeleteContractProcessor.class));
+//        register(getBean(GetContractConstructorProcessor.class));
+//        register(getBean(GetContractInfoProcessor.class));
+//        register(getBean(GetContractResultProcessor.class));
+//        register(getBean(GetContractTxProcessor.class));
+//        register(getBean(TokenTransferProcessor.class));
+//        register(getBean(TransferToContractProcessor.class));
+//        register(getBean(ViewContractProcessor.class));
+//        register(getBean(GetAccountContractListProcessor.class));
 
 
-        register(getBean(RegisterCrossChainProcessor.class));
-        register(getBean(CrossAssetAddProcessor.class));
-        register(getBean(CrossAssetDisableProcessor.class));
-        register(getBean(UpdateCrossChainProcessor.class));
-        register(getBean(CrossLocalAssetAddProcessor.class));
+//        register(getBean(RegisterCrossChainProcessor.class));
+//        register(getBean(CrossAssetAddProcessor.class));
+//        register(getBean(CrossAssetDisableProcessor.class));
+//        register(getBean(UpdateCrossChainProcessor.class));
+//        register(getBean(CrossLocalAssetAddProcessor.class));
 
         register(getBean(CreateCrossTxProcessor.class));
-        register(getBean(GetCrossChainsSimpleInfoProcessor.class));
-        register(getBean(GetCrossChainRegisterInfoProcessor.class));
-        register(getBean(GetCrossAssetInfoProcessor.class));
+//        register(getBean(GetCrossChainsSimpleInfoProcessor.class));
+//        register(getBean(GetCrossChainRegisterInfoProcessor.class));
+//        register(getBean(GetCrossAssetInfoProcessor.class));
         register(getBean(GetCrossTxStateProcessor.class));
 
         JSONUtils.getInstance().configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
         //add test
-        register(getBean(TestInitNetProcessor.class));
-        register(getBean(TestUpdateNetProcessor.class));
-        register(getBean(TestCleanNetProcessor.class));
+//        register(getBean(TestInitNetProcessor.class));
+//        register(getBean(TestUpdateNetProcessor.class));
+//        register(getBean(TestCleanNetProcessor.class));
     }
 
     public void start() {
@@ -232,8 +243,7 @@ public class CommandHandler implements InitializingBean {
                 if (StringUtils.isBlank(line)) {
                     continue;
                 }
-                String[] cmdArgs = parseArgs(line);
-                System.out.print(this.processCommand(cmdArgs) + "\n");
+                processCommand(line);
             } while (line != null);
         } catch (IOException e) {
             e.printStackTrace();
@@ -261,7 +271,6 @@ public class CommandHandler implements InitializingBean {
             String encoder = URLEncoder.encode(subGroup, StandardCharsets.UTF_8.toString());
             result = result.replace(group, encoder);
         }
-
         String[] args = result.split("\\s+");
         for (int i = 0, length = args.length; i < length; i++) {
             args[i] = URLDecoder.decode(args[i], StandardCharsets.UTF_8.toString());
@@ -269,39 +278,49 @@ public class CommandHandler implements InitializingBean {
         return args;
     }
 
-    private String processCommand(String[] args) {
-        int length = args.length;
-        if (length == 0) {
-            return CommandConstant.COMMAND_ERROR;
-        }
-        String command = args[0].trim();
-        CommandProcessor processor = PROCESSOR_MAP.get(command);
-        if (processor == null) {
-            return command + " not a nuls command!";
-        }
-        if (length == 2 && CommandConstant.NEED_HELP.equals(args[1])) {
-            return processor.getHelp();
-        }
+    public void processCommand(String args) throws UnsupportedEncodingException {
+        String[] cmdArgs = parseArgs(args);
         try {
-            try {
-                boolean result = processor.argsValidate(args);
-                if (!result) {
-                    return "args incorrect:\n" + processor.getHelp();
-                }
-            } catch (ParameterException e) {
-                return e.getMessage() + "\n" + "args incorrect:\n" + processor.getHelp();
-            }
-            return processor.execute(args).toString();
+            CommandResult commandResult = this.processCommand(cmdArgs);
+            System.out.print( commandResult.toString() + "\n");
         } catch (Exception e) {
             if (System.Logger.Level.DEBUG.getName().equals(System.getProperty("log.level"))) {
                 e.printStackTrace();
             }
-            return CommandConstant.EXCEPTION + ": " + e.getMessage();
+            System.out.println(CommandConstant.EXCEPTION + ": " + e.getMessage());
         }
+    }
+
+    public CommandResult processCommand(String[] args) {
+        int length = args.length;
+        if (length == 0) {
+            return CommandResult.getFailed(CommandConstant.COMMAND_ERROR);
+        }
+        String command = args[0].trim();
+        CommandProcessor processor = PROCESSOR_MAP.get(command);
+        if (processor == null) {
+            return CommandResult.getFailed(command + " not a nuls command!");
+        }
+        if (length == 2 && CommandConstant.NEED_HELP.equals(args[1])) {
+            return CommandResult.getFailed(processor.getHelp());
+        }
+        try {
+            boolean result = processor.argsValidate(args);
+            if (!result) {
+                return CommandResult.getFailed("args incorrect:\n" + processor.getHelp());
+            }
+        } catch (ParameterException e) {
+            return CommandResult.getFailed(e.getMessage() + "\n" + "args incorrect:\n" + processor.getHelp());
+        }
+        return processor.execute(args);
     }
 
     private void register(CommandProcessor processor) {
         PROCESSOR_MAP.put(processor.getCommand(), processor);
+    }
+
+    public boolean hasCommand(String command){
+        return PROCESSOR_MAP.containsKey(command);
     }
 
 }

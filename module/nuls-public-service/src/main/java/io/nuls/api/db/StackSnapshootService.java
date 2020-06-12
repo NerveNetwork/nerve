@@ -1,11 +1,16 @@
 package io.nuls.api.db;
 
+import io.nuls.api.model.po.BlockHeaderInfo;
 import io.nuls.api.model.po.StackSnapshootInfo;
 import io.nuls.api.model.po.TransactionInfo;
+import io.nuls.api.utils.DateUtil;
+import io.nuls.core.model.DateUtils;
 
 import java.math.BigInteger;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 /**
  * @Author: zhoulijun
@@ -37,10 +42,10 @@ public interface StackSnapshootService {
     /**
      * 构造一个快照对象
      * @param chainId
-     * @param tx
+     * @param blockHeaderInfo
      * @return
      */
-    Optional<StackSnapshootInfo> buildSnapshoot(int chainId, TransactionInfo tx);
+    Optional<StackSnapshootInfo> buildSnapshoot(int chainId, BlockHeaderInfo blockHeaderInfo);
 
     /**
      * 获取合计的收益发放数量

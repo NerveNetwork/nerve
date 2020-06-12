@@ -49,7 +49,7 @@ public abstract class BaseMonitor implements Runnable {
                 if (runningStatusEnumList.contains(status)) {
                     process(chainId, context, logger);
                 } else {
-                    logger.debug("skip process, status is " + status);
+//                    logger.debug("skip process, status is " + status);
                 }
             } catch (Exception e) {
                 context.setStatus(status);

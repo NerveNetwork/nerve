@@ -1,0 +1,14 @@
+[JAVA]
+APP_NAME=converter
+MAIN_CLASS=network.nerve.converter.ConverterBootstrap
+VERSION=1.0.0
+JOPT_XMS=256
+JOPT_XMX=512
+
+
+[Core]
+Managed=1
+
+[converter]
+moduleDynamicDependent=protocol-update,cross-chain
+

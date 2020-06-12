@@ -38,6 +38,14 @@ public class NetworkProviderForRpc extends BaseRpcService implements NetworkProv
     }
 
     @Override
+    public Result<String> getNodeExtranetIp() {
+        BaseReq req = new BaseReq();
+        req.setChainId(getChainId());
+        Function<Map,Result> callback = res-> success(res.get("nodeId"));
+        return call("nw_extranet_ip",req,callback);
+    }
+
+    @Override
     public Result<String> getNodes() {
         BaseReq req = new BaseReq();
         req.setChainId(getChainId());

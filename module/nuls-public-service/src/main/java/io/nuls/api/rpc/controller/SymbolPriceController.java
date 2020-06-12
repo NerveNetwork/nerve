@@ -13,6 +13,7 @@ import io.nuls.api.utils.VerifyUtils;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import org.bson.types.Symbol;
 
@@ -51,7 +52,9 @@ public class SymbolPriceController {
 //                "weight": 1,            共识模块RPC查询
 //                "assetChainId": 1,      StackSymbolPriceInfo
 //                "assetId": ""           StackSymbolPriceInfo
+        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
         return RpcResult.success(symbolPriceService.getAllFreshPrice().stream().map(d -> {
+            Log.info("喂价信息：{}",d);
             double weight = 1;
             if(apiConfig.getChainId() == d.getAssetChainId() && d.getAssetId() == apiConfig.getAssetId()){
                 weight = ApiContext.localAssertBase;
@@ -60,12 +63,13 @@ public class SymbolPriceController {
             }
             return Map.of(
                     "symbol", d.getSymbol(),
-                    "price", d.getPrice().movePointLeft(ApiConstant.USDT_DECIMAL),
+//                    "price", d.getPrice().movePointRight(ApiConstant.USDT_DECIMAL),
+                    "price",  usd.getPrice().multiply(d.getPrice(), MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN),
                     "weight", weight,
                     "assetChainId", d.getAssetChainId(),
                     "assetId", d.getAssetId()
             );
-        }));
+        }).collect(Collectors.toList()));
     }
 
 
@@ -83,28 +87,28 @@ public class SymbolPriceController {
 //                "price", 1,
 //                "symbol", "",
 //                "createdTime", 1
-        VerifyUtils.verifyParams(params, 3);
+        VerifyUtils.verifyParams(params, 2);
         int pageNumber, pageSize;
         long start,end;
         String symbol;
         try {
-            symbol = params.get(0).toString();
+            symbol = params.get(1).toString();
         } catch (Exception e) {
             return RpcResult.paramError("[symbol] is inValid");
         }
         try {
-            pageNumber = (int) params.get(1);
+            pageNumber = (int) params.get(2);
         } catch (Exception e) {
             return RpcResult.paramError("[pageNumber] is inValid");
         }
         try {
-            pageSize = (int) params.get(2);
+            pageSize = (int) params.get(3);
         } catch (Exception e) {
             return RpcResult.paramError("[pageSize] is inValid");
         }
         try {
-            if(params.size() > 3){
-                start = (long) params.get(3);
+            if(params.size() > 4){
+                start = (long) params.get(4);
             }else{
                 start = 0L;
             }
@@ -112,8 +116,8 @@ public class SymbolPriceController {
             return RpcResult.paramError("[startTime] is inValid");
         }
         try {
-            if(params.size() > 4){
-                end = (long) params.get(4);
+            if(params.size() > 5){
+                end = (long) params.get(5);
             }else{
                 end = System.currentTimeMillis();
             }

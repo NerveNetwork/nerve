@@ -45,6 +45,9 @@ public class TxRegisterDetail {
     @ApiModelProperty(description = "打包时该类型交易是否需要调用打包加工器")
     private boolean packProduce;
 
+    @ApiModelProperty(description = "组装区块交易时产生的交易")
+    private boolean packGenerate;
+
 
     public int getTxType() {
         return txType;
@@ -92,6 +95,14 @@ public class TxRegisterDetail {
 
     public void setPackProduce(boolean packProduce) {
         this.packProduce = packProduce;
+    }
+
+    public boolean getPackGenerate() {
+        return packGenerate;
+    }
+
+    public void setPackGenerate(boolean packGenerate) {
+        this.packGenerate = packGenerate;
     }
 
     @Override

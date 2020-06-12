@@ -2,7 +2,10 @@ package io.nuls.base.api.provider.consensus;
 
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.consensus.facade.*;
+import io.nuls.base.api.provider.ledger.facade.AssetInfo;
 import io.nuls.base.api.provider.transaction.facade.MultiSignTransferRes;
+
+import java.math.BigDecimal;
 
 /**
  * @Author: zhoulijun
@@ -46,7 +49,15 @@ public interface ConsensusProvider {
      * @param req
      * @return
      */
-    Result<String> changeAgentDeposit(DepositToAgentReq req);
+    Result<String> changeAgentDeposit(AgentDepositChangeReq req);
+
+    /**
+     * 改变节点押金
+     *
+     * @param req
+     * @return
+     */
+    Result<String> changeMultiAgentDeposit(MultiAgentDepositChangeReq req);
 
 
     /**
@@ -54,7 +65,7 @@ public interface ConsensusProvider {
      * @param req
      * @return
      */
-    Result<MultiSignTransferRes> depositToAgentForMultiSignAccount(MultiSignAccountDepositToAgentReq req);
+    Result<MultiSignTransferRes> multiSignJoinStacking(MultiSignJoinStackingReq req);
 
 
     /**
@@ -101,4 +112,33 @@ public interface ConsensusProvider {
      * @return
      */
     Result<DepositInfo> getDepositList(GetDepositListReq req);
+
+    /**
+     * 根据symbol查询参与stacking资产的id
+     * @param req
+     * @return
+     */
+    Result<AssetInfo> getStatcingAssetBySymbol(GetStackingAssetBySymbolReq req);
+
+    /**
+     * 查询退出保证金/退出节点对应的交易列表
+     * @param req
+     * @return
+     */
+    Result<ReduceNonceInfo> getReduceNonceList(GetReduceNonceReq req);
+
+
+    /**
+     * 获取可参与stacking的资产列表
+     * @param req
+     * @return
+     */
+    Result<AssetInfo> getCanStackingAssetList(GetCanStackingAssetListReq req);
+
+    /**
+     * 获取指定区块高度的区块总奖励数
+     * @param req
+     * @return
+     */
+    Result<BigDecimal> getTotalRewardForBlockHeight(GetTotalRewardForBlockHeightReq req);
 }

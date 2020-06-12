@@ -37,6 +37,7 @@ import io.nuls.provider.api.config.Context;
 import io.nuls.provider.api.manager.BeanCopierManager;
 import io.nuls.provider.model.dto.DepositInfoDto;
 import io.nuls.provider.model.dto.RandomSeedDTO;
+import io.nuls.provider.model.dto.ReduceNonceDTO;
 import io.nuls.provider.model.form.consensus.CreateAgentForm;
 import io.nuls.provider.model.form.consensus.DepositForm;
 import io.nuls.provider.model.form.consensus.StopAgentForm;
@@ -228,7 +229,7 @@ public class ConsensusController {
         if (StringUtils.isBlank(agentHash)) {
             return RpcResult.paramError("[agentHash] is inValid");
         }
-        DepositToAgentReq req = new DepositToAgentReq(address, agentHash, new BigInteger(deposit), password);
+        AgentDepositChangeReq req = new AgentDepositChangeReq(address, new BigInteger(deposit), password);
         req.setChainId(chainId);
         Result<String> result = consensusProvider.changeAgentDeposit(req);
         RpcResult rpcResult = ResultUtil.getJsonRpcResult(result);
@@ -1117,5 +1118,59 @@ public class ConsensusController {
 
         io.nuls.core.basic.Result result = NulsSDKTool.createMultiSignWithdrawDepositTxOffline(withDrawDto);
         return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getReduceNonceList")
+    @ApiOperation(description = "获取退出节点/退出保证金对应的追加保证金交易列表", order = 558)
+    @Parameters({
+            @Parameter(parameterName = "agentHash", parameterDes = "创建共识节点的交易hash"),
+            @Parameter(parameterName = "quitAll", parameterDes = "是否退出所有"),
+            @Parameter(parameterName = "reduceAmount", parameterDes = "退出金额")
+    })
+    @ResponseData(name = "返回值", description = "返回委托共识集合", responseType = @TypeDescriptor(value = List.class, collectionElement = ReduceNonceDTO.class))
+    public RpcResult getReduceNonceList(List<Object> params) {
+        int chainId,quitAll;
+        String agentHash,reduceAmount;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            agentHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[agentHash] is inValid");
+        }
+        if (!ValidateUtil.validHash(agentHash)) {
+            return RpcResult.paramError("[agentHash] is inValid");
+        }
+        try {
+            reduceAmount = params.get(2).toString();
+        } catch (Exception e) {
+            return RpcResult.paramError("[reduceAmount] is inValid");
+        }
+        try {
+            if(params.size() < 4){
+                quitAll = 0;
+            }else{
+                quitAll = (int)params.get(3);
+            }
+        } catch (Exception e) {
+            return RpcResult.paramError("[reduceAmount] is inValid");
+        }
+
+        GetReduceNonceReq req = new GetReduceNonceReq(agentHash,quitAll,reduceAmount);
+        req.setChainId(chainId);
+
+        Result<ReduceNonceInfo> result = consensusProvider.getReduceNonceList(req);
+        RpcResult rpcResult = ResultUtil.getJsonRpcResult(result);
+        if (result.isSuccess()) {
+            List<ReduceNonceInfo> list = result.getList();
+            if (list != null && !list.isEmpty()) {
+                List<ReduceNonceDTO> dtoList = list.stream().map(ReduceNonceDTO::new).collect(Collectors.toList());
+                rpcResult.setResult(dtoList);
+            }
+        }
+        return rpcResult;
     }
 }

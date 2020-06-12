@@ -81,7 +81,9 @@ public class AccountServiceTest {
             chain.setConfig(new ConfigBean(assetId, 5));
             List<Account> accountList = accountService.createAccount(chain, 6, password);
             for(Account acc : accountList){
-                System.out.println(acc.getAddress().getBase58());
+                System.out.println(acc.getAddress().getBase58() + "----" + HexUtil.encode(acc.getPriKey()));
+
+                System.out.println();
             }
         } catch (NulsRuntimeException e) {
             System.out.println(e.getMessage());
