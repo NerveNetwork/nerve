@@ -21,17 +21,14 @@
 package io.nuls.block.thread.monitor;
 
 import io.nuls.block.model.ChainContext;
+import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 
 import java.io.*;
 
 /**
- * 系统停止时，
- * 孤儿链定时维护处理器
- * 孤儿链处理大致流程：
- * 1.清理无效数据
- * 2.维护现有数据
+ * 系统停止时，先停止区块保存服务，确保不要产生事务性问题
  *
  * @author captain
  * @version 1.0
@@ -46,7 +43,9 @@ public class StopingMonitor extends BaseMonitor {
     private StopingMonitor() {
         super();
         FILE_NAME = System.getenv("NERVE_STOP_FILE");
+        Log.info("NERVE_STOP_FILE:{}",FILE_NAME);
         if(StringUtils.isBlank(FILE_NAME)){
+            Log.warn("There is no env:NERVE_STOP_FILE");
             FILE_NAME = "NERVE_STOP_FILE";
         }
         STOP_FILE = new File(FILE_NAME);
@@ -69,8 +68,10 @@ public class StopingMonitor extends BaseMonitor {
                 return;
             }
             if (val == 1) {
+                Log.info("监听到停止节点信号");
                 context.stopBlock();
                 context.waitStopBlock();
+                Log.info("停止节点操作准备就绪");
                 write(2);
             }
         } catch (Exception e) {

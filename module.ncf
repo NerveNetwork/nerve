@@ -1,11 +1,11 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/james/workspace/nerve-network/logs
+logPath=/Users/niels/workspace/nerve-network/logs
 logLevel=INFO
-dataPath=/Users/james/workspace/nerve-network/data
+dataPath=/Users/niels/workspace/nerve-network/data
 #默认本链ID
-chainId=4
+chainId=5
 #地址前缀
 addressPrefix=TNVT
 #默认本链主资产ID
@@ -15,7 +15,7 @@ decimals=8
 #默认链名称
 chainName=nerve
 #本链默认资产符号
-symbol=TNVT
+symbol=NVT
 #主网链id
 mainChainId=2
 #主网主资产id
@@ -25,15 +25,17 @@ mainSymbol=NULS
 blackHolePublicKey=000000000000000000000000000000000000000000000000000000000000000000
 packageVersion=%PACKAGE_VERSION%
 
+
 [network]
 port=17001
 crossPort=17002
 #魔法参数
-packetMagic=20200528
+packetMagic=20200615
 #种子节点
-selfSeedIps=seeda.nuls.io:17001,seedb.nuls.io:17001,seedh.nuls.io:17001,seedg.nuls.io:17001,seedc.nuls.io:17001,seede.nuls.io:17001
+selfSeedIps=seeda.nerve.network:17001,seedb.nerve.network:17001,seedh.nerve.network:17001,seedg.nerve.network:17001,seedc.nerve.network:17001,seede.nerve.network:17001
 #主网的跨链种子连接节点
 moonSeedIps=seedg.nuls.io:18002,seedc.nuls.io:18002,seeedd.nuls.io:18002,seede.nuls.io:18002
+
 #最大入网连接数
 maxInCount=300
 #最大出网连接数
@@ -61,17 +63,16 @@ cachedBlockSizeLimit=20971520
 genesisBlockPath=genesis-block.json
 
 [consensus]
-#种子节点列表
-seedNodes=TNVTdN9i5aCwKBhaGeUZExLLLB8WtUSWxekcp,TNVTdN9iFcMpYz5eVz41gdETPGNqqbFA8FfSf,TNVTdN9i7xo3PmLj376B17Qntng3DyVio4Bqd
+seedNodes=TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK,TNVTdTSPRdfVQaiS6MzaY7M1bgfauCbEVZMhF,TNVTdTSPQmKV5o9dhsN6TiXKot4mPLQXQLyHz,TNVTdTSPVPWYvNmNhhfuRFbCwra6bZsibRJJA
 #种子节点对应的公钥列表
-pubKeyList=02b1827ae93d6753ff437456bda9db20256110c76fad1cafaa976dd19a7eedefba,0370e9b19a6cae02412baa452a89a53ecdbfae5164a2b33d3f7931502b2a0a0dc5,02cec353f77275953704f5c6f64b38f3f49a5b590783392c69b2718e4bf18588be
+pubKeyList=0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260,03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5,02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750,03200bda89e4116392aa5b939d739e6c9358600c0f8c1790dd4f284591b285de70
 
 #出块地址密码
 password=nuls123456
 #出块间隔时间(单位：s)
 packingInterval=1
 #共识委托抵押资产链ID
-agentChainId=4
+agentChainId=5
 #共识委托抵押资产ID
 agentAssetId=1
 #共识奖励资产ID(共识奖励必须为本链资产)
@@ -83,19 +84,19 @@ mainAssertBase=2
 #NVT权重基数
 localAssertBase=2
 #节点保证金基数
-agentDepositBase=1.5
+agentDepositBase=3
 #虚拟银行保证金基数
-superAgentDepositBase=2
-#总通胀量
-totalInflationAmount=11000000000000000
-#初始通胀金额500w/365*30
-inflationAmount=200000000000000
-#通胀开始计算时间(单位:S)2020-07-12 00:00:00
+superAgentDepositBase=4
+#总通胀量(10亿枚)
+totalInflationAmount=100000000000000000
+#初始通胀金额（每个抵减周期）
+inflationAmount=8640000
+#通胀开始计算高度
 initHeight=1
-#通缩比例(如果没有通缩则设为100)
-deflationRatio=0.4
-#通缩间隔时间(单位：S),30天
-deflationHeightInterval=1000000
+#通缩比例(如果没有通缩则设为0)
+deflationRatio=0.0082
+#通缩间隔高度,100天
+deflationHeightInterval=4320000
 
 [public-service]
 #public-service模块对外的rpc端口号
@@ -115,7 +116,6 @@ connectTimeOut=30000
 mongoUser=nuls
 mongoPwd=nuls123456
 
-
 [cross-chain]
 #跨链节点链接的最小值
 minNodeAmount=3
@@ -134,7 +134,7 @@ maxSignatureCount=100
 
 [protocol-update]
 #每隔多少个区块统计一次协议占比
-interval=1
+interval=1000
 
 [nuls-api]
 #httpServer的启动ip
@@ -147,63 +147,52 @@ apiModuleApi=http://127.0.0.1:17003/
 webWalletPort=17006
 webWalletHost=0.0.0.0
 
-[nerve-explorer]
+[nuls-module-explorer]
 apiModuleApi=http://127.0.0.1:17003/
 webWalletPort=17005
 webWalletHost=0.0.0.0
 
 [dex]
 #系统收取手续费地址
-sysFeeAddress=TNVTdN9iBYfJtJMYbk34261gvj478mKLsxpG7
+sysFeeAddress=TNVTdTSPQ9yhsrG8az1JqK2MhcVDvJi9ukD81
 #系统收取手续费比例（3，表示3/10000）
 sysFeeScale=3
 #创建交易对费用
 createTradingAmount=2000000000000
 
-
 [dex-api]
 oneMinuteBlockCount=30
-usdiChainId=4
+usdiChainId=5
 usdiAssetId=3
-btcChainId=4
+btcChainId=5
 btcAssetId=4
-walletPSUrl=http://seede.nuls.io:17003/
-walletApiUrl=http://seede.nuls.io:17004/
-autoOrderAddress=TNVTdN9i8h18cc1izvziEyy334bxwTuQCMubz,TNVTdN9i8h18cc1izvziEyy334bxwTuQCMubz
-feeAddress=TNVTdN9i3RVt2u8ueS2u7y8aTUt7GzB2SC3HX
+walletPSUrl=http://beta.public.nerve.network/
+walletApiUrl=http://beta.api.nerve.network/
+autoOrderAddress=TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg,TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg
+#运行节点设置手续费收取地址
+feeAddress=TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf
 #运行节点设置手续费收取比例，最高不能超过5
 feeScale=5
 
 
-
 [dex-public-service]
-dexUrl=http://seedb.nuls.io:17007/
-nulsApi=http://127.0.0.1:17004/
+dexUrl=http://beta.nervedex.com/
+nulsApi=http://beta.api.nerve.network/
 mongoUser=nuls
 mongoPwd=nuls123456
 
 [quotation]
-effectiveQuotation=1
+effectiveQuotation=3
 quoteStartHm=00:00
-quoteEndHm=11:00
+quoteEndHm=00:10
 nerveBasedNuls=1
-
-[nvt-faucet]
-nulsApi=https://api.nuls.io/
-nvtAddress=TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
-nvtPwd=nuls123456
-nulsAddress=NULSd6HggXjuJ6Eds1WzqHMRxPowCr24dMUkx
-threshold=1000000000
-nulsAmount=10000000
-nvtAmount=1000
 
 [converter]
 executeChangeVirtualBankPeriodicHeight=900
 feePubkey=111111111111111111111111111111111111111111111111111111111111111111
-withdrawalBlackholePubkey=222222222222222222222222222222222222222222222222222222222222222222
 initVirtualBankHeight=10
 virtualBankAgentCountWithoutSeed=10
-proposalPrice=1000000000
+proposalPrice=20000000000
 withdrawalDistributionFee=10000000000
 byzantineRatio=66
-multySignAddressSet=101:0x4B3230f6d76B9DE6B41c1E484eD5401f0F0458a9
+multySignAddressSet=101:0x4f17262d0247E266e498Dcb20640ff6D3801df63

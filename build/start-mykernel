@@ -147,6 +147,7 @@ MODULE_PATH=`pwd`
 echo "===================="
 echo "NULS-WALLET STARTING"
 echo "===================="
+export NERVE_STOP_FILE=$BIN_PATH/.nerve-stop
 if [ -n "${RUNFRONT}" ];
 then
     ${JAVA} -server -Ddebug="${DEBUG}" -Dapp.name=mykernel -DlogPath="${LOGPATH}" -DdataPath=${DATAPATH} -Dactive.config="$CONFIG" -classpath ./libs/*:./mykernel/1.0.0/mykernel-1.0.0.jar io.nuls.mykernel.MyKernelBootstrap startModule $MODULE_PATH

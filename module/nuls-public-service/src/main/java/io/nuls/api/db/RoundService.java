@@ -9,6 +9,8 @@ public interface RoundService {
 
     PocRound getRound(int chainId, long roundIndex);
 
+    PocRoundItem getRoundItem(int chainId, long roundIndex,int packageIndex);
+
     List<PocRoundItem> getRoundItemList(int chainId, long roundIndex);
 
     void saveRound(int chainId, PocRound round);

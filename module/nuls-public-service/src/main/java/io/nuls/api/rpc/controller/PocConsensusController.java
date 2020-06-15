@@ -886,6 +886,20 @@ public class PocConsensusController {
             return RpcResult.dataNotFound();
         }
         List<PocRoundItem> itemList = roundService.getRoundItemList(chainId, roundIndex);
+        Optional<PocRoundItem> lastItem = itemList.stream().sorted(Comparator.comparing(d->-d.getOrder())).filter(d->d.getBlockHeight() != 0).findFirst();
+        int lastIndex;
+        if(lastItem.isEmpty()){
+            lastIndex = itemList.size() + 1;
+        }else{
+            lastIndex = lastItem.get().getOrder();
+        }
+        itemList.forEach(d->{
+            if(d.getOrder() < lastIndex && d.getBlockHeight() == 0){
+                d.setYellow(true);
+            }else{
+                d.setYellow(false);
+            }
+        });
         round.setItemList(itemList);
         round.initByPocRound(pocRound);
         return new RpcResult().setResult(round);

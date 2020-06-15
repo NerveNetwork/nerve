@@ -521,6 +521,10 @@ public class BlockServiceImpl implements BlockService {
             if (needLock) {
                 lock.unlockWrite(l);
             }
+            if(context.isStoping()){
+                logger.warn("The system is about to stop.......");
+            }
+
         }
     }
 

@@ -152,11 +152,11 @@ public class PocRoundItem {
     }
 
     public boolean isYellow() {
-        if (time > 0 && time < NulsDateUtils.getCurrentTimeSeconds() && null == blockHash) {
-            this.yellow = true;
-        } else {
-            yellow = false;
-        }
+//        if (time > 0 && time < NulsDateUtils.getCurrentTimeSeconds() && null == blockHash) {
+//            this.yellow = true;
+//        } else {
+//            yellow = false;
+//        }
         return yellow;
     }
 

@@ -1,5 +1,20 @@
 #!/bin/bash
 cd `dirname $0`
+total=0
+NERVE_STOP_FILE=`pwd`/.nerve-stop
+echo 1 > $NERVE_STOP_FILE
+while [ 1 == 1 ]
+do
+    if((total==5)); then
+        break;
+    fi
+    cmd=`cat $NERVE_STOP_FILE`;
+    if [ "$cmd" == "2" ]; then
+        break;
+    fi
+    ((total+=1))
+    sleep 1
+done
 APP_NAME="mykernel"
 KILL_WAIT_COUNT=120
 MODULE_PATH=`dirname $0`

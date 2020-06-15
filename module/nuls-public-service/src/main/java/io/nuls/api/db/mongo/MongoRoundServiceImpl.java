@@ -31,6 +31,15 @@ public class MongoRoundServiceImpl implements RoundService {
         return DocumentTransferTool.toInfo(document, "index", PocRound.class);
     }
 
+    @Override
+    public PocRoundItem getRoundItem(int chainId, long roundIndex, int packageIndex) {
+        Document document = this.mongoDBService.findOne(ROUND_ITEM_TABLE + chainId, eq("_id", roundIndex + "_" + packageIndex));
+        if (null == document) {
+            return null;
+        }
+        return DocumentTransferTool.toInfo(document, "id",PocRoundItem.class);
+    }
+
     public List<PocRoundItem> getRoundItemList(int chainId, long roundIndex) {
         List<Document> list = this.mongoDBService.query(ROUND_ITEM_TABLE + chainId, eq("roundIndex", roundIndex), Sorts.ascending("order"));
         List<PocRoundItem> itemList = new ArrayList<>();

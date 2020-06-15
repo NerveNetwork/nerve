@@ -8,15 +8,17 @@ public class BaseConstant {
      * 主网和测试网的默认chainID
      */
     public static final short MAINNET_CHAIN_ID = 1;
-    public static final short TESTNET_CHAIN_ID = 2;
-
     public static final String MAINNET_DEFAULT_ADDRESS_PREFIX = "NULS";
-    public static final String TESTNET_DEFAULT_ADDRESS_PREFIX = "tNULS";
-    public static final short NERVE_MAINNET_CHAIN_ID = 9;
-    public static final short NERVE_TESTNET_CHAIN_ID = 4;
 
+    public static final short TESTNET_CHAIN_ID = 2;
+    public static final String TESTNET_DEFAULT_ADDRESS_PREFIX = "tNULS";
+
+    public static final short NERVE_MAINNET_CHAIN_ID = 9;
     public static final String NERVE_MAINNET_DEFAULT_ADDRESS_PREFIX = "NERVE";
+
+    public static final short NERVE_TESTNET_CHAIN_ID = 5;
     public static final String NERVE_TESTNET_DEFAULT_ADDRESS_PREFIX = "TNVT";
+
     /**
      * hash length
      */

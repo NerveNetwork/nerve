@@ -4,7 +4,9 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.Sorts;
 import io.nuls.api.db.PunishService;
+import io.nuls.api.db.RoundService;
 import io.nuls.api.model.po.PageInfo;
+import io.nuls.api.model.po.PocRoundItem;
 import io.nuls.api.model.po.PunishLogInfo;
 import io.nuls.api.model.po.TxDataInfo;
 import io.nuls.api.utils.DocumentTransferTool;
@@ -27,11 +29,13 @@ public class MongoPunishServiceImpl implements PunishService {
     @Autowired
     private MongoDBService mongoDBService;
 
+    @Autowired
+    RoundService roundService;
+
     public void savePunishList(int chainId, List<PunishLogInfo> punishLogList) {
         if (punishLogList.isEmpty()) {
             return;
         }
-
         List<Document> documentList = new ArrayList<>();
         for (PunishLogInfo punishLog : punishLogList) {
             documentList.add(DocumentTransferTool.toDocument(punishLog,"txHash"));

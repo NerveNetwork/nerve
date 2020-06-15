@@ -3,12 +3,12 @@
   "time": "1568131200",
   "txs": [
     {
-      "address": "TNVTdN9iB7VveoFG4GwYMRAFAF2Rsyrj9mjR3",
+      "address": "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5",
       "amount": 5000000000000000,
       "lockTime": 0
     },
     {
-      "address": "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA",
+      "address": "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz",
       "amount": 5000000000000000,
       "lockTime": 0
     }
