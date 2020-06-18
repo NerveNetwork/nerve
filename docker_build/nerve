@@ -1,0 +1,115 @@
+#!/bin/bash
+
+function Usage(){
+cat << HELP
+
+Usage: nerve
+
+1.判断是否安装docker，如果未安装，自动完成docker安装。
+2.自动下载最新nerve-wallet-node镜像。
+3.下载完成后，重新启动nerve-wallet容器。并检查启动状态。
+4.生成进入cmd和检查启动状态的脚本程序。
+
+此脚本只支持centos7系统环境
+HELP
+}
+
+if [ "$1" == "h" ]; then
+    Usage;
+    exit 1
+fi
+
+if [ ! -f /etc/redhat-release ]; then
+    echo "this script only support centos 7"
+    exit 0;
+fi
+CENTOSVERSION=`cat /etc/redhat-release| grep '7.'`
+echo $CENTOSVERSION
+if [ -z "$CENTOSVERSION" ]; then
+    echo "this script only support centos 7"
+    exit 0;
+fi
+if ! [ "$USER" == 'root' ]; then
+    echo "must login root";
+    exit 0;
+fi
+if ! [ -x "$(command -v wget)" ]; then
+    echo "install wget"
+    yum install -y wget
+fi
+
+if ! [ -x "$(command -v docker)" ]; then
+  echo 'docker not install'
+  echo 'install docker'
+  yum remove -y docker \
+                  docker-client \
+                  docker-client-latest \
+                  docker-common \
+                  docker-latest \
+                  docker-latest-logrotate \
+                  docker-logrotate \
+                  docker-selinux \
+                  docker-engine-selinux \
+                  docker-engine
+# install require
+   yum install -y yum-utils \
+           device-mapper-persistent-data \
+           lvm2
+
+  # config source
+  yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+  yum makecache fast
+  yum install -y docker-ce
+  if ! [ -f /etc/docker/daemon.json ]; then
+     mkdir /etc/docker -p
+     echo "{\"registry-mirrors\": [\"https://registry.docker-cn.com\"]}" > /etc/docker/daemon.json
+  fi
+  systemctl enable docker
+  systemctl start docker	
+fi 
+
+lastTag(){
+	image="nervenetwork/nerve-wallet-node"
+        tags=`wget -q https://registry.hub.docker.com/v1/repositories/${image}/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}'`
+
+        echo "${tags}"|awk 'END {print}'
+}
+
+cmd=$1
+if [ -z "$cmd" ]; then
+    cmd="last"
+fi
+if [ "$cmd" == "last" ]; then
+    lastTag=`lastTag`
+    imageName="nervenetwork/nerve-wallet-node:$lastTag"
+    echo "pull last image : $imageName"
+    docker pull $imageName
+    if [ -n "`docker ps -a|grep -w 'nerve-wallet'`" ]; then
+        docker stop nerve-wallet
+        docker rm nerve-wallet
+    fi
+    docker run \
+        --name nerve-wallet \
+        --restart=always \
+        -d \
+        -p 17001:17001 \
+        -p 17002:17002 \
+        -p 17004:17004 \
+        -v `pwd`/data:/nuls/data \
+        -v `pwd`/logs:/nuls/Logs \
+        $imageName
+    sleep 3
+    if [ -n "`docker ps |grep -w 'nerve-wallet'`" ]; then
+    	echo "nerve wallet CONTAINER start success"
+    	if ! [ -f ./cmd ]; then
+        	echo "docker exec -it nerve-wallet cmd" > cmd
+        	chmod +x cmd
+    	fi
+        if ! [ -f ./check-status ]; then
+                echo "docker exec -it nerve-wallet check-status" > check-status
+                chmod +x check-status
+        fi
+        ./check-status
+        
+    fi
+fi
