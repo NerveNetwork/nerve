@@ -26,6 +26,7 @@ package network.nerve.converter.model.bo;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 虚拟银行成员
@@ -134,5 +135,19 @@ public class VirtualBankDirector implements Serializable {
 
     public void setAgentHash(String agentHash) {
         this.agentHash = agentHash;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {return true;}
+        if (o == null || getClass() != o.getClass()) {return false;}
+
+        VirtualBankDirector that = (VirtualBankDirector) o;
+        return Objects.equals(agentAddress, that.agentAddress);
+    }
+
+    @Override
+    public int hashCode() {
+        return agentAddress != null ? agentAddress.hashCode() : 0;
     }
 }

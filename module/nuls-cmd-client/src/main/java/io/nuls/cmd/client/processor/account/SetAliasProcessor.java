@@ -29,12 +29,14 @@ package io.nuls.cmd.client.processor.account;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.account.facade.SetAccountAliasReq;
 import io.nuls.cmd.client.CommandBuilder;
+import io.nuls.cmd.client.CommandHelper;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.config.Config;
 import io.nuls.cmd.client.processor.CommandProcessor;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.FormatValidUtils;
+import io.nuls.core.model.StringUtils;
 
 import static io.nuls.cmd.client.CommandHelper.getPwd;
 
@@ -58,19 +60,20 @@ public class SetAliasProcessor extends AccountBaseProcessor implements CommandPr
         builder.newLine(getCommandDescription())
                 .newLine("\t<address> The address of the account, - Required")
                 .newLine("\t<alias> The alias of the account, the bytes for the alias is between 1 and 20 " +
-                        "(only lower case letters, Numbers and underline, the underline should not be at the begin and end), - Required");
+                        "(only lower case letters, Numbers and underline, the underline should not be at the begin and end), - Required")
+                .newLine("\t[password] passoord");
         return builder.toString();
     }
 
     @Override
     public String getCommandDescription() {
-        return "setalias <address> <alias>  --Set an alias for the account ";
+        return "setalias <address> <alias> [password] --Set an alias for the account ";
     }
 
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,2);
+        checkArgsNumber(args,2,3);
         checkAddress(config.getChainId(),args[1]);
         checkArgs(FormatValidUtils.validAlias(args[2]),"alias format error");
         return true;
@@ -80,7 +83,12 @@ public class SetAliasProcessor extends AccountBaseProcessor implements CommandPr
     public CommandResult execute(String[] args) {
         String address = args[1];
         String alias = args[2];
-        String password = getPwd();
+        String password;
+        if(args.length > 3){
+            password = args[3];
+        }else{
+            password = getPwd();
+        }
         Result<String> result = accountService.setAccountAlias(new SetAccountAliasReq(password,address,alias));
         if(result.isFailed()){
             return CommandResult.getFailed(result);

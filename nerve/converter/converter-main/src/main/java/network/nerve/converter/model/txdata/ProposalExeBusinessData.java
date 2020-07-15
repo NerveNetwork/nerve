@@ -29,6 +29,7 @@ import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
@@ -60,6 +61,8 @@ public class ProposalExeBusinessData extends BaseNulsData {
      */
     private byte[] address;
 
+    private byte[] hash;
+
     /**
      * 需要分发提现手续费的节点异构链地址
      */
@@ -78,6 +81,7 @@ public class ProposalExeBusinessData extends BaseNulsData {
         builder.append(String.format("\theterogeneousTxHash: %s", heterogeneousTxHash)).append(lineSeparator);
         builder.append(String.format("\tproposalTxHash: %s", proposalTxHash)).append(lineSeparator);
         builder.append(String.format("\taddress: %s", AddressTool.getStringAddressByBytes(address))).append(lineSeparator);
+        builder.append(String.format("\tnerveHash: %s", null == hash ? null : HexUtil.encode(hash))).append(lineSeparator);
         if (listDistributionFee == null) {
             builder.append("\tlistDistributionFee: null").append(lineSeparator);
         } else if (listDistributionFee.size() == 0) {
@@ -101,6 +105,7 @@ public class ProposalExeBusinessData extends BaseNulsData {
         stream.writeString(heterogeneousTxHash);
         stream.write(proposalTxHash.getBytes());
         stream.writeBytesWithLength(address);
+        stream.writeBytesWithLength(hash);
         int listSize = listDistributionFee == null ? 0 : listDistributionFee.size();
         stream.writeUint16(listSize);
         if(null != listDistributionFee){
@@ -119,6 +124,7 @@ public class ProposalExeBusinessData extends BaseNulsData {
         this.heterogeneousTxHash = byteBuffer.readString();
         this.proposalTxHash = byteBuffer.readHash();
         this.address = byteBuffer.readByLengthByte();
+        this.hash = byteBuffer.readByLengthByte();
         int listSize = byteBuffer.readUint16();
         if(0 < listSize){
             List<HeterogeneousAddress> list = new ArrayList<>();
@@ -140,6 +146,7 @@ public class ProposalExeBusinessData extends BaseNulsData {
         size += SerializeUtils.sizeOfString(this.heterogeneousTxHash);
         size += NulsHash.HASH_LENGTH;
         size += SerializeUtils.sizeOfBytes(this.address);
+        size += SerializeUtils.sizeOfBytes(this.hash);
         size += SerializeUtils.sizeOfUint16();
         if (null != listDistributionFee) {
             for(HeterogeneousAddress address : listDistributionFee){
@@ -182,6 +189,14 @@ public class ProposalExeBusinessData extends BaseNulsData {
 
     public void setAddress(byte[] address) {
         this.address = address;
+    }
+
+    public byte[] getHash() {
+        return hash;
+    }
+
+    public void setHash(byte[] hash) {
+        this.hash = hash;
     }
 
     public NulsHash getProposalExeHash() {

@@ -107,6 +107,9 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode DISQUALIFICATION_FAILED= ErrorCode.init(ModuleE.CV.getPrefix() + "_0084");
 
     ErrorCode PROPOSAL_EXECUTIVE_FAILED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0084");
-
+    ErrorCode SIGNER_NOT_SEED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0085");
+    ErrorCode RESET_TX_NOT_EXIST = ErrorCode.init(ModuleE.CV.getPrefix() + "_0086");
+    ErrorCode HETEROGENEOUS_ASSET_NOT_FOUND = ErrorCode.init(ModuleE.CV.getPrefix() + "_0087");
+    ErrorCode WITHDRAWAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0088");
 
 }

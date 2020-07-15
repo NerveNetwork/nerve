@@ -28,6 +28,7 @@ import io.nuls.block.manager.ContextManager;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.SmallBlockMessage;
 import io.nuls.block.model.CachedSmallBlock;
+import io.nuls.block.rpc.call.ConsensusCall;
 import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.utils.SmallBlockCacher;
 import io.nuls.core.core.annotation.Component;
@@ -62,16 +63,28 @@ public class GetSmallBlockHandler implements MessageProcessor {
         NulsHash blockHash = message.getRequestHash();
         logger.debug("recieve " + message + " from node-" + nodeId + ", hash:" + blockHash);
         CachedSmallBlock cachedSmallBlock = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
-        if(cachedSmallBlock == null){
+        if (cachedSmallBlock == null) {
             return;
         }
         SmallBlock smallBlock = SmallBlockCacher.getSmallBlock(chainId, blockHash);
         if (smallBlock != null) {
             SmallBlockMessage smallBlockMessage = new SmallBlockMessage();
             smallBlockMessage.setSmallBlock(smallBlock);
-            if(cachedSmallBlock.isPocNet()){
+
+
+            byte[] voteResult = ContextManager.getContext(chainId).getVoteResultCache().get(blockHash);
+            if (null == voteResult) {
+                voteResult = ConsensusCall.getVoteResult(chainId, blockHash);
+                if(null != voteResult){
+                    ContextManager.getContext(chainId).getVoteResultCache().cache(blockHash,voteResult);
+                }
+            }
+
+            smallBlockMessage.setVoteResult(voteResult);
+
+            if (cachedSmallBlock.isPocNet()) {
                 NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_BZT_MESSAGE);
-            }else{
+            } else {
                 NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_MESSAGE);
             }
         }

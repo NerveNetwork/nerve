@@ -25,6 +25,7 @@
  */
 package network.nerve.pocbft.model.bo.round;
 
+import io.nuls.core.model.DateUtils;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.rpc.call.CallMethodUtils;
 import io.nuls.base.basic.AddressTool;
@@ -54,45 +55,51 @@ public class MeetingRound {
     /**
      * 本地打包节点在当前轮次的下标
      * Subscription of Local Packing Node in Current Round
-     * */
+     */
     @ApiModelProperty(description = "轮次下标")
     private long index;
     /**
      * 当前轮次开始打包时间
      * Current Round Start Packing Time
-     * */
+     */
     @ApiModelProperty(description = "轮次开始时间")
     private long startTime;
     /**
      * 当前轮次打包节点数量
      * Number of Packing Nodes in Current Round
-     * */
+     */
     @ApiModelProperty(description = "本轮次出块节点数")
     private int memberCount;
     /**
      * 当前轮次打包成员列表
      * Current rounds packaged membership list
-     * */
+     */
     @ApiModelProperty(description = "本轮次出块成员信息", type = @TypeDescriptor(value = List.class, collectionElement = MeetingMember.class))
     private List<MeetingMember> memberList;
     /**
      * 上一轮轮次信息
      * Last round of information
-     * */
+     */
     @ApiModelProperty(description = "上一轮信息")
     private MeetingRound preRound;
     /**
      * 本地打包成员信息
      * Locally packaged member information
-     * */
+     */
     @ApiModelProperty(description = "当前节点出块信息")
-    private MeetingMember myMember;
+    private MeetingMember localMember;
 
     /**
      * 本轮次出块节点地址列表
      * Node address list of block out this round
-     * */
-    private Set<String> memberAddressList;
+     */
+    private Set<String> memberAddressSet;
+    private int packingIndexOfRound = 1;
+    private boolean confirmed;
+    /**
+     * 当前轮次的延迟时间
+     */
+    private long delayedSeconds;
 
     public MeetingRound getPreRound() {
         return preRound;
@@ -106,6 +113,10 @@ public class MeetingRound {
         return startTime;
     }
 
+    public long getStartTimeMills() {
+        return startTime * 1000;
+    }
+
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
@@ -114,12 +125,12 @@ public class MeetingRound {
         return memberCount;
     }
 
-    public Set<String> getMemberAddressList() {
-        return memberAddressList;
+    public Set<String> getMemberAddressSet() {
+        return memberAddressSet;
     }
 
-    public void setMemberAddressList(Set<String> memberAddressList) {
-        this.memberAddressList = memberAddressList;
+    public void setMemberAddressSet(Set<String> memberAddressSet) {
+        this.memberAddressSet = memberAddressSet;
     }
 
     /**
@@ -127,7 +138,7 @@ public class MeetingRound {
      * Initialization Round Information
      *
      * @param memberList 打包成员信息列表/Packaged Member Information List
-     * */
+     */
     public void init(List<MeetingMember> memberList) {
         assert (startTime > 0L);
         this.memberList = memberList;
@@ -144,10 +155,10 @@ public class MeetingRound {
             member.setPackingIndexOfRound(i + 1);
             memberAddressList.add(AddressTool.getStringAddressByBytes(memberList.get(i).getAgent().getPackingAddress()));
         }
-        this.memberAddressList = memberAddressList;
+        this.memberAddressSet = memberAddressList;
     }
 
-    public MeetingMember getMember(int order) {
+    public MeetingMember getMemberByOrder(int order) {
         if (order == 0) {
             throw new NulsRuntimeException(ConsensusErrorCode.DATA_ERROR);
         }
@@ -157,7 +168,7 @@ public class MeetingRound {
         return this.memberList.get(order - 1);
     }
 
-    public MeetingMember getOnlyMember(byte[] address){
+    public MeetingMember getMemberByPackingAddress(byte[] address) {
         for (MeetingMember member : memberList) {
             if (Arrays.equals(address, member.getAgent().getPackingAddress())) {
                 return member;
@@ -166,7 +177,7 @@ public class MeetingRound {
         return null;
     }
 
-    public MeetingMember getMember(byte[] address, Chain chain) {
+    public MeetingMember getMemberByOrder(byte[] address, Chain chain) {
         for (MeetingMember member : memberList) {
             if (Arrays.equals(address, member.getAgent().getPackingAddress()) && validAccount(chain, AddressTool.getStringAddressByBytes(member.getAgent().getPackingAddress()))) {
                 return member;
@@ -175,23 +186,23 @@ public class MeetingRound {
         return null;
     }
 
-    private boolean validAccount(Chain chain,String address) {
+    private boolean validAccount(Chain chain, String address) {
         try {
             HashMap callResult = CallMethodUtils.accountValid(chain.getConfig().getChainId(), address, chain.getConfig().getPassword());
             String priKey = (String) callResult.get("priKey");
-            if (StringUtils.isNotBlank(priKey)){
+            if (StringUtils.isNotBlank(priKey)) {
                 return true;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
         return false;
     }
 
     /**
-    * 根据节点地址获取节点对应的打包信息
-    * Get the packing information corresponding to the node according to the address of the node
-    */
+     * 根据节点地址获取节点对应的打包信息
+     * Get the packing information corresponding to the node according to the address of the node
+     */
     public MeetingMember getMemberByAgentAddress(byte[] address) {
         for (MeetingMember member : memberList) {
             if (Arrays.equals(address, member.getAgent().getAgentAddress())) {
@@ -214,34 +225,19 @@ public class MeetingRound {
         return memberList;
     }
 
-    public MeetingMember getMyMember() {
-        return myMember;
+    public MeetingMember getLocalMember() {
+        return localMember;
     }
 
-    public void calcLocalPacker(List<byte[]> localAddressList,Chain chain) {
-        for (byte[] address:localAddressList) {
-            MeetingMember member = getMember(address,chain);
+    public void calcLocalPacker(List<byte[]> localAddressList, Chain chain) {
+        for (byte[] address : localAddressList) {
+            MeetingMember member = getMemberByOrder(address, chain);
             if (null != member) {
-                myMember = member;
+                localMember = member;
                 break;
             }
         }
-        if(myMember != null && (!chain.isPacker() || index == ConsensusConstant.INIT_ROUND_INDEX)){
-            if(!chain.isPacker() ){
-                chain.getLogger().debug("节点变更为共识节点" );
-                chain.setPacker(true);
-                CallMethodUtils.sendState(chain,true);
-            }
-            if(chain.isCanPacking()){
-                ConsensusNetUtil.initConsensusNet(chain, AddressTool.getStringAddressByBytes(myMember.getAgent().getPackingAddress()), memberAddressList);
-            }
-        }
-        if(myMember == null && chain.isPacker()){
-            chain.getLogger().debug("节点变更为非共识节点" );
-            chain.setPacker(false);
-            CallMethodUtils.sendState(chain,false);
-            ConsensusNetUtil.disConnectConsensusNet(chain);
-        }
+
     }
 
     @Override
@@ -254,11 +250,48 @@ public class MeetingRound {
             str.append("\n");
         }
         if (null == this.getPreRound()) {
-            return ("round:index:" + this.getIndex() + " , start:" + new Date(this.getStartTime() * 1000)
-                    + ", netTime:(" + new Date(NulsDateUtils.getCurrentTimeMillis()).toString() + ") ,members:\n" + str);
+            return ("\nround:index:" + this.getIndex() + " ,\n     start:" + DateUtils.timeStamp2Str(this.getStartTime() * 1000)
+                    + ", \nnowNetTime:" + DateUtils.timeStamp2Str(NulsDateUtils.getCurrentTimeMillis()) + "\ndelayedTime:" + this.delayedSeconds + "\npackingIndex:" + this.packingIndexOfRound +
+                    "\nisConfirmed:" + this.confirmed + " ,\nmembers:\n" + str);
         } else {
-            return ("round:index:" + this.getIndex() + " ,preIndex:" + this.getPreRound().getIndex() + " , start:" + new Date(this.getStartTime())
-                    + ", netTime:(" + new Date(NulsDateUtils.getCurrentTimeMillis()).toString() + ") , members:\n" + str);
+            return ("\nround:index:" + this.getIndex() + " ,\npreIndex:" + this.getPreRound().getIndex() + " , \n     start:" + DateUtils.timeStamp2Str(this.getStartTime() * 1000)
+                    + ", \nnowNetTime:" + DateUtils.timeStamp2Str(NulsDateUtils.getCurrentTimeMillis()) + "\ndelayedTime:" + this.delayedSeconds + "\npackingIndex:" + this.packingIndexOfRound +
+                    "\nisConfirmed:" + this.confirmed + " , \nmembers:\n" + str);
         }
+    }
+
+    public void setPackingIndexOfRound(int packingIndexOfRound) {
+        this.packingIndexOfRound = packingIndexOfRound;
+    }
+
+    public int getPackingIndexOfRound() {
+        return packingIndexOfRound;
+    }
+
+    public boolean isConfirmed() {
+        return confirmed;
+    }
+
+    public void setConfirmed(boolean confirmed) {
+        this.confirmed = confirmed;
+    }
+
+    public long getDelayedSeconds() {
+        return delayedSeconds;
+    }
+
+    public void setDelayedSeconds(long delayedSeconds) {
+        if (delayedSeconds < 0) {
+            delayedSeconds = 0;
+        }
+        this.delayedSeconds = delayedSeconds;
+    }
+
+    public void resetMemberOrder() {
+        for(MeetingMember meetingMember:this.memberList){
+            meetingMember.setRoundStartTime(this.getStartTime());
+            meetingMember.setSortValue(null);
+        }
+        this.init(this.memberList);
     }
 }

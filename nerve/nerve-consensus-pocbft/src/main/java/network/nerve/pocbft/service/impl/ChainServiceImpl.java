@@ -28,6 +28,7 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.model.dto.output.*;
 import network.nerve.pocbft.utils.manager.*;
+import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import static network.nerve.pocbft.constant.ParameterConstant.*;
 
@@ -49,8 +50,6 @@ public class ChainServiceImpl implements ChainService {
     private ChainManager chainManager;
     @Autowired
     private PunishManager punishManager;
-    @Autowired
-    private RoundManager roundManager;
     @Autowired
     private AgentManager agentManager;
     @Autowired
@@ -74,18 +73,19 @@ public class ChainServiceImpl implements ChainService {
         }
         try {
             MeetingRound round;
-            if(params.get(PARAM_BLOCK_HEADER) == null){
-                round = roundManager.getCurrentRound(chain);
-            }else{
+            if (params.get(PARAM_BLOCK_HEADER) == null) {
+                round = RoundUtils.getCurrentRound();
+            } else {
                 BlockHeader header = new BlockHeader();
                 header.parse(RPCUtil.decode((String) params.get(PARAM_BLOCK_HEADER)), 0);
-                round = roundManager.getRound(chain, header.getExtendsData().getRoundIndex(), header.getTime());
+                chain.getLogger().info("初始化轮次");
+                round = RoundUtils.getRoundController().tempRound();
             }
             String address = (String) params.get(PARAM_ADDRESS);
             Map<String, Object> validResult = new HashMap<>(2);
-            validResult.put(PARAM_RESULT_VALUE, round.getOnlyMember(AddressTool.getAddress(address)) != null);
+            validResult.put(PARAM_RESULT_VALUE, round.getMemberByPackingAddress(AddressTool.getAddress(address)) != null);
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(validResult);
-        }catch (NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
         }
@@ -188,7 +188,7 @@ public class ChainServiceImpl implements ChainService {
         }
         List<Agent> handleList = new ArrayList<>();
         //获取本地最新高度
-        long startBlockHeight = chain.getNewestHeader().getHeight();
+        long startBlockHeight = chain.getBestHeader().getHeight();
         for (Agent agent : agentList) {
             if (agent.getDelHeight() != -1L && agent.getDelHeight() <= startBlockHeight) {
                 continue;
@@ -197,7 +197,7 @@ public class ChainServiceImpl implements ChainService {
             }
             handleList.add(agent);
         }
-        MeetingRound round = roundManager.getCurrentRound(chain);
+        MeetingRound round = RoundUtils.getCurrentRound();
         BigInteger totalDeposit = BigInteger.ZERO;
         int packingAgentCount = 0;
         if (null != round) {
@@ -231,7 +231,7 @@ public class ChainServiceImpl implements ChainService {
         if (chain == null) {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        long startBlockHeight = chain.getNewestHeader().getHeight();
+        long startBlockHeight = chain.getBestHeader().getHeight();
         int agentCount = 0;
         String agentHash = null;
         byte[] addressBytes = AddressTool.getAddress(address);
@@ -345,7 +345,7 @@ public class ChainServiceImpl implements ChainService {
         if (chain == null) {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        MeetingRound round = roundManager.getCurrentRound(chain);
+        MeetingRound round = RoundUtils.getCurrentRound();
         return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(round);
     }
 
@@ -369,10 +369,7 @@ public class ChainServiceImpl implements ChainService {
         }
         try {
             BlockExtendsData extendsData = new BlockExtendsData(RPCUtil.decode((String) params.get(PARAM_EXTEND)));
-            MeetingRound round = roundManager.getRoundByIndex(chain, extendsData.getRoundIndex());
-            if (round == null) {
-                round = roundManager.getRound(chain, extendsData, false);
-            }
+            MeetingRound round = RoundUtils.getRoundController().getRound(extendsData.getRoundIndex(), extendsData.getRoundStartTime());
             List<String> packAddressList = new ArrayList<>();
             for (MeetingMember meetingMember : round.getMemberList()) {
                 packAddressList.add(AddressTool.getStringAddressByBytes(meetingMember.getAgent().getPackingAddress()));
@@ -380,9 +377,7 @@ public class ChainServiceImpl implements ChainService {
             Map<String, Object> resultMap = new HashMap<>(2);
             resultMap.put(PARAM_PACKING_ADDRESS_LIST, packAddressList);
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(resultMap);
-        } catch (NulsException e) {
-            chain.getLogger().error(e);
-            return Result.getFailed(e.getErrorCode());
+
         } catch (Exception e) {
             return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
         }
@@ -416,10 +411,10 @@ public class ChainServiceImpl implements ChainService {
         map.put(PARAM_AGENT_CHAIN_ID, chainConfig.getAgentChainId());
         map.put(PARAM_AWARD_ASSERT_ID, chainConfig.getAwardAssetId());
         map.put(PARAM_TOTALINFLATIONAMOUNT, chainConfig.getTotalInflationAmount());
-        map.put(PARAM_MAIN_ASSERT_BASE,chainConfig.getMainAssertBase());
-        map.put(PARAM_LOCAL_ASSERT_BASE,chainConfig.getLocalAssertBase());
-        map.put(PARAM_COMMISSION_MIN,chainConfig.getPackDepositMin());
-        map.put(PARAM_SEED_COUNT,chain.getSeedNodeList().size());
+        map.put(PARAM_MAIN_ASSERT_BASE, chainConfig.getMainAssertBase());
+        map.put(PARAM_LOCAL_ASSERT_BASE, chainConfig.getLocalAssertBase());
+        map.put(PARAM_COMMISSION_MIN, chainConfig.getPackDepositMin());
+        map.put(PARAM_SEED_COUNT, chain.getSeedAddressList().size());
         return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(map);
     }
 
@@ -438,16 +433,16 @@ public class ChainServiceImpl implements ChainService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         try {
-            List<String> packAddressList = chain.getSeedNodeList();
-            MeetingRound round = roundManager.getCurrentRound(chain);
+            List<String> packAddressList = chain.getSeedAddressList();
+            MeetingRound round = RoundUtils.getCurrentRound();
             MeetingMember member = null;
-            if(round != null){
-                member = round.getMyMember();
+            if (round != null) {
+                member = round.getLocalMember();
             }
             Map<String, Object> resultMap = new HashMap<>(4);
             if (member != null) {
                 String address = AddressTool.getStringAddressByBytes(member.getAgent().getPackingAddress());
-                if(packAddressList.contains(address)){
+                if (packAddressList.contains(address)) {
                     resultMap.put(PARAM_ADDRESS, address);
                     resultMap.put(PARAM_PASSWORD, chain.getConfig().getPassword());
                 }
@@ -464,12 +459,12 @@ public class ChainServiceImpl implements ChainService {
     @SuppressWarnings("unchecked")
     public Result getRateAddition(Map<String, Object> params) {
         Map<String, Object> resultMap = new HashMap<>(2);
-        if(chainManager.getStackingAssetList() == null || chainManager.getStackingAssetList().isEmpty()){
+        if (chainManager.getStackingAssetList() == null || chainManager.getStackingAssetList().isEmpty()) {
             resultMap.put(PARAM_LIST, new ArrayList<>());
-        }else{
+        } else {
             List<RateAdditionDTO> rateAdditionList = new ArrayList<>();
             double basicRate;
-            for (StackingAsset stackingAsset : chainManager.getStackingAssetList()){
+            for (StackingAsset stackingAsset : chainManager.getStackingAssetList()) {
                 basicRate = getBasicRate(stackingAsset.getChainId(), stackingAsset.getAssetId());
                 RateAdditionDTO rateAddition = new RateAdditionDTO(stackingAsset, basicRate);
                 rateAddition.setDetailList(getRateAdditionDetail(basicRate));
@@ -499,15 +494,15 @@ public class ChainServiceImpl implements ChainService {
         long initHeight = chain.getConfig().getInitHeight();
         long initEndHeight = initHeight + chain.getConfig().getDeflationHeightInterval();
         BigInteger award;
-        if(height > initEndHeight){
-            long differentCount = (height - initEndHeight)/chain.getConfig().getDeflationHeightInterval();
-            if((height - initEndHeight)%chain.getConfig().getDeflationHeightInterval() != 0){
-                differentCount ++;
+        if (height > initEndHeight) {
+            long differentCount = (height - initEndHeight) / chain.getConfig().getDeflationHeightInterval();
+            if ((height - initEndHeight) % chain.getConfig().getDeflationHeightInterval() != 0) {
+                differentCount++;
             }
             double ratio = DoubleUtils.div(chain.getConfig().getDeflationRatio(), NulsEconomicConstant.VALUE_OF_100, 4);
-            BigInteger inflationAmount = DoubleUtils.mul(new BigDecimal(chain.getConfig().getInflationAmount()),BigDecimal.valueOf(Math.pow(ratio, differentCount))).toBigInteger();
+            BigInteger inflationAmount = DoubleUtils.mul(new BigDecimal(chain.getConfig().getInflationAmount()), BigDecimal.valueOf(Math.pow(ratio, differentCount))).toBigInteger();
             award = DoubleUtils.div(new BigDecimal(inflationAmount), chain.getConfig().getDeflationHeightInterval()).toBigInteger();
-        }else{
+        } else {
             award = DoubleUtils.div(new BigDecimal(chain.getConfig().getInflationAmount()), chain.getConfig().getDeflationHeightInterval()).toBigInteger();
         }
         Map<String, Object> resultMap = new HashMap<>(2);
@@ -515,21 +510,21 @@ public class ChainServiceImpl implements ChainService {
         return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(resultMap);
     }
 
-    private double getBasicRate(int assetChainId, int assetId){
-        if(assetChainId == consensusConfig.getChainId() && assetId == consensusConfig.getAssetId()){
+    private double getBasicRate(int assetChainId, int assetId) {
+        if (assetChainId == consensusConfig.getChainId() && assetId == consensusConfig.getAssetId()) {
             return consensusConfig.getLocalAssertBase();
         }
-        if(assetChainId == consensusConfig.getMainChainId() && assetId == consensusConfig.getMainAssetId()){
+        if (assetChainId == consensusConfig.getMainChainId() && assetId == consensusConfig.getMainAssetId()) {
             return consensusConfig.getMainAssertBase();
         }
         return 1;
     }
 
-    private List<RateAdditionDetailDTO> getRateAdditionDetail(double basicRate){
+    private List<RateAdditionDetailDTO> getRateAdditionDetail(double basicRate) {
         List<RateAdditionDetailDTO> rateAdditionDetailList = new ArrayList<>();
-        rateAdditionDetailList.add(new RateAdditionDetailDTO((byte)0, basicRate, null));
-        for (DepositTimeType depositTimeType : DepositTimeType.values()){
-            rateAdditionDetailList.add(new RateAdditionDetailDTO((byte)1, basicRate, depositTimeType));
+        rateAdditionDetailList.add(new RateAdditionDetailDTO((byte) 0, basicRate, null));
+        for (DepositTimeType depositTimeType : DepositTimeType.values()) {
+            rateAdditionDetailList.add(new RateAdditionDetailDTO((byte) 1, basicRate, depositTimeType));
         }
         return rateAdditionDetailList;
     }

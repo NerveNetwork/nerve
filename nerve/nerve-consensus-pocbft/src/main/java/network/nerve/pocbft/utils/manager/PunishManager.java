@@ -26,6 +26,7 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.storage.PunishStorageService;
 import network.nerve.pocbft.utils.enumeration.PunishReasonEnum;
 import network.nerve.pocbft.utils.enumeration.PunishType;
+import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -44,8 +45,6 @@ public class PunishManager {
     private PunishStorageService punishStorageService;
     @Autowired
     private CoinDataManager coinDataManager;
-    @Autowired
-    private RoundManager roundManager;
 
     /**
      * 加载所有的红牌信息和最近X黃牌数据到缓存
@@ -54,7 +53,7 @@ public class PunishManager {
      * @param chain 链信息/chain info
      */
     public void loadPunishes(Chain chain) throws Exception {
-        BlockHeader blockHeader = chain.getNewestHeader();
+        BlockHeader blockHeader = chain.getBestHeader();
         if (null == blockHeader) {
             return;
         }
@@ -86,13 +85,13 @@ public class PunishManager {
      * @param chain 链信息/chain info
      */
     public void clear(Chain chain) {
-        BlockHeader blockHeader = chain.getNewestHeader();
+        BlockHeader blockHeader = chain.getBestHeader();
         BlockExtendsData roundData = blockHeader.getExtendsData();
-        Iterator <PunishLogPo> iterator = chain.getYellowPunishList().iterator();
+        Iterator<PunishLogPo> iterator = chain.getYellowPunishList().iterator();
         long minRound = roundData.getRoundIndex() - ConsensusConstant.INIT_PUNISH_OF_ROUND_COUNT;
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             PunishLogPo punishLogPo = iterator.next();
-            if(punishLogPo.getRoundIndex() >= minRound){
+            if (punishLogPo.getRoundIndex() >= minRound) {
                 break;
             }
             iterator.remove();
@@ -148,7 +147,7 @@ public class PunishManager {
         找到双花交易的节点
         Find the bifurcated nodes
         */
-        byte[] packingAddress = AddressTool.getAddress(block.getHeader().getBlockSignature().getPublicKey(), (short) chain.getConfig().getChainId());
+        byte[] packingAddress = AddressTool.getAddress(block.getHeader().getBlockSignature().getPublicKey(), chain.getConfig().getChainId());
         List<Agent> agentList = chain.getAgentList();
         Agent agent = null;
         for (Agent a : agentList) {
@@ -428,10 +427,12 @@ public class PunishManager {
             Yellow cards to be generated in this round
             */
             if (index > 0) {
-                member = round.getMember(index);
+//                chain.getLogger().info("here is run.");
+                member = round.getMemberByOrder(index);
                 if (member.getAgent() == null || member.getAgent().getDelHeight() > 0 || member.getAgent().getDeposit().equals(BigInteger.ZERO)) {
                     continue;
                 }
+//                chain.getLogger().info("here is run.");
                 addressList.add(member.getAgent().getAgentAddress());
             }
             /*
@@ -441,21 +442,21 @@ public class PunishManager {
             else {
                 preRound = round.getPreRound();
                 if (preRound == null) {
-                    /*
-                     * 找到round前一轮的第一个区块
-                     * */
-                    if (chain.getRoundList().size() > 0) {
-                        preRound = roundManager.getRoundByIndex(chain, round.getIndex()-1);
-                    }
-                    if(preRound == null){
-                        preRound = roundManager.getPreRound(chain, round.getIndex());
-                    }
+                    preRound = RoundUtils.getRoundController().getRoundByIndex(round.getIndex() - 1);
+//                    chain.getLogger().info("here");
                 }
-                if(preRound != null){
-                    member = preRound.getMember(index + preRound.getMemberCount());
+                if (null == preRound) {
+                    chain.getLogger().info("preRound is null.");
+                }
+
+
+                if (preRound != null) {
+//                    chain.getLogger().info(preRound.toString());
+                    member = preRound.getMemberByOrder(index + preRound.getMemberCount());
                     if (member.getAgent() == null || member.getAgent().getDelHeight() > 0 || member.getAgent().getDeposit().equals(BigInteger.ZERO)) {
                         continue;
                     }
+                    chain.getLogger().info("here is run.");
                     addressList.add(member.getAgent().getAgentAddress());
                 }
             }
@@ -507,7 +508,8 @@ public class PunishManager {
                         iterator.remove();
                     }
                     break;
-                case TxType.APPEND_AGENT_DEPOSIT: case TxType.REDUCE_AGENT_DEPOSIT:
+                case TxType.APPEND_AGENT_DEPOSIT:
+                case TxType.REDUCE_AGENT_DEPOSIT:
                     ChangeAgentDepositData txData = new ChangeAgentDepositData();
                     txData.parse(tx.getTxData(), 0);
                     if (invalidAgentTxHash.contains(txData.getAgentHash())) {

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AddressV1ToV2Test {
 

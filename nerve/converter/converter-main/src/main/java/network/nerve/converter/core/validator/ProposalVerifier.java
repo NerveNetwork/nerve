@@ -27,6 +27,7 @@ package network.nerve.converter.core.validator;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
+import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -44,8 +45,10 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.ProposalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
+import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
@@ -66,6 +69,8 @@ public class ProposalVerifier {
     private HeterogeneousChainManager heterogeneousChainManager;
     @Autowired
     private RechargeStorageService rechargeStorageService;
+    @Autowired
+    private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
         ProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ProposalTxData.class);
@@ -136,8 +141,36 @@ public class ProposalVerifier {
             case UPGRADE:
                 validBankVoteRange(chain, rangeType);
                 break;
+            case WITHDRAW:
+                validBankVoteRange(chain, rangeType);
+                validWithdrawTx(chain, txData.getHash());
+                break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * 验证提现类型的提案
+     * @param chain
+     * @param hashByte
+     * @throws NulsException
+     */
+    private void validWithdrawTx(Chain chain, byte[] hashByte) throws NulsException {
+        if(null == hashByte || hashByte.length == 0){
+            chain.getLogger().error("[Proposal-withdraw] The nerve hash not exist.");
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+        NulsHash hash = new NulsHash(hashByte);
+        Transaction withdrawTx = TransactionCall.getConfirmedTx(chain, hash);
+        if(null == withdrawTx) {
+            chain.getLogger().error("[Proposal-withdraw] The withdraw tx not exist.");
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        ConfirmWithdrawalPO cfmWithdrawalTx = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, hash);
+        if(null != cfmWithdrawalTx) {
+            chain.getLogger().error("[Proposal-withdraw] The confirmWithdraw tx is confirmed.");
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
         }
     }
 
@@ -151,9 +184,10 @@ public class ProposalVerifier {
     private void validTransfer(Chain chain, ProposalTxData txData, ProposalVoteRangeTypeEnum rangeType) throws NulsException {
         validBankVoteRange(chain, rangeType);
         validTxDataAddress(chain, txData.getAddress());
-        if (null != rechargeStorageService.find(chain, txData.getHeterogeneousTxHash())) {
-            ConverterErrorCode.TX_DUPLICATION.getCode();
-            chain.getLogger().error("The originalTxHash already confirmed (Repeat business)");
+        NulsHash hash = rechargeStorageService.find(chain, txData.getHeterogeneousTxHash());
+        if (null != hash) {
+            chain.getLogger().error("[Proposal-transfer]The originalTxHash already confirmed (Repeat business). nerveHash:{}, HeterogeneousTxHash:{}",
+                    hash.toHex(), txData.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
         }
         validHeterogeneousTx(chain, txData);
@@ -175,6 +209,12 @@ public class ProposalVerifier {
         }
     }
 
+    /**
+     * 验证异构链充值交易正确性
+     * @param chain
+     * @param txData
+     * @throws NulsException
+     */
     private void validHeterogeneousTx(Chain chain, ProposalTxData txData) throws NulsException {
         HeterogeneousTransactionInfo txInfo = HeterogeneousUtil.getTxInfo(chain,
                 txData.getHeterogeneousChainId(),

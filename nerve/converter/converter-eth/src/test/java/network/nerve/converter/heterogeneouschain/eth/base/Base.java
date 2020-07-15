@@ -55,6 +55,9 @@ public class Base {
     }
 
     protected void setMain() {
+        if(ethWalletApi.getWeb3j() != null) {
+            ethWalletApi.getWeb3j().shutdown();
+        }
         String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         ethWalletApi.setWeb3j(web3j);
@@ -62,6 +65,9 @@ public class Base {
     }
 
     protected void setRinkeby() {
+        if(ethWalletApi.getWeb3j() != null) {
+            ethWalletApi.getWeb3j().shutdown();
+        }
         String mainEthRpcAddress = "https://rinkeby.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         ethWalletApi.setWeb3j(web3j);

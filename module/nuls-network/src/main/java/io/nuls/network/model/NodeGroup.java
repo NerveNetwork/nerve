@@ -29,6 +29,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import io.nuls.network.cfg.NetworkConfig;
 import io.nuls.network.constant.NetworkConstant;
+import io.nuls.network.constant.NetworkContext;
 import io.nuls.network.constant.NodeConnectStatusEnum;
 import io.nuls.network.constant.NodeStatusEnum;
 import io.nuls.network.manager.NodeGroupManager;
@@ -36,6 +37,7 @@ import io.nuls.network.model.dto.Dto;
 import io.nuls.network.model.dto.RpcCacheMessage;
 import io.nuls.network.model.po.*;
 import io.nuls.network.netty.container.NodesContainer;
+import io.nuls.network.utils.IpUtil;
 import io.nuls.network.utils.LoggerUtil;
 
 import java.util.*;
@@ -279,6 +281,10 @@ public class NodeGroup implements Dto {
      */
     public void stopConnectedSeeds(boolean isCross) {
         try {
+            //如果当前节点是共识节点或是种子节点，则不主动断开种子节点连接
+            if (NetworkContext.isConsensusNode || isSeeds()) {
+                return;
+            }
             List<Node> nodes = null;
             int canConnectNodesNum = 0;
             if (isCross) {
@@ -559,5 +565,20 @@ public class NodeGroup implements Dto {
         }
 
         return ip;
+    }
+
+    /**
+     * 判断自己是否是种子节点
+     *
+     * @return
+     */
+    private boolean isSeeds() {
+        List<String> list = networkConfig.getSeedIpList();
+        for (String ip : list) {
+            if (IpUtil.getIps().contains(ip)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

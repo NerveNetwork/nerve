@@ -15,10 +15,8 @@ import io.nuls.core.log.Log;
 import io.nuls.core.rpc.model.ModuleE;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.math.RoundingMode;
+import java.util.*;
 
 /**
  * @Author: zhoulijun
@@ -74,13 +72,7 @@ public class StackingService {
      * @return
      */
     public BigDecimal getAssetStackingRate(String symbol,DepositFixedType timeType){
-        BigDecimal baseInterest;
-        Optional<StackSnapshootInfo> stackSnapshootInfo = stackSnapshootService.getLastSnapshoot(ApiContext.defaultChainId);
-        if(stackSnapshootInfo.isEmpty()){
-            baseInterest = BigDecimal.valueOf(0.1);
-        }else{
-            baseInterest = stackSnapshootInfo.get().getBaseInterest();
-        }
+        BigDecimal baseInterest = getBaseInterest();
         BigDecimal rate = assetInterestWeight
                 .entrySet().stream()
                 .filter(d->d.getKey().symbol.equals(symbol) && d.getKey().timeType.equals(timeType))
@@ -88,6 +80,29 @@ public class StackingService {
                 .orElseThrow(()-> new IllegalArgumentException("not support symbol :" + symbol + ":" + timeType )).getValue();
 
         return rate.multiply(baseInterest);
+    }
+
+    /**
+     * 根据权重计算年化收益率
+     * @param weight
+     * @return
+     */
+    public BigDecimal getInterestRate(Double... weight){
+        double totalWeight = Arrays.stream(weight).reduce(1D,(w1,w2)->w1 * w2);
+        totalWeight = Math.sqrt(totalWeight);
+        BigDecimal interest = getBaseInterest().multiply(new BigDecimal(totalWeight));
+        return interest;
+    }
+
+    public BigDecimal getBaseInterest(){
+        BigDecimal baseInterest;
+        Optional<StackSnapshootInfo> stackSnapshootInfo = stackSnapshootService.getLastSnapshoot(ApiContext.defaultChainId);
+        if(stackSnapshootInfo.isEmpty()){
+            baseInterest = BigDecimal.ZERO;
+        }else{
+            baseInterest = stackSnapshootInfo.get().getBaseInterest();
+        }
+        return baseInterest;
     }
 
     /**

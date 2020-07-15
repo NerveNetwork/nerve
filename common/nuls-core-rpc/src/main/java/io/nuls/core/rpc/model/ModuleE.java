@@ -61,7 +61,7 @@ public enum ModuleE {
 
     public static class Constant {
         
-        public static final String KERNEL = "kernel";
+        public static final String KERNEL = "mykernel";
 
         public static final String CHAIN_MANAGER = "chain-manager";
 

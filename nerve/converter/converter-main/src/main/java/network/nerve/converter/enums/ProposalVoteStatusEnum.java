@@ -45,12 +45,7 @@ public enum ProposalVoteStatusEnum {
     /**
      * 已被否决(不可投票)
      */
-    REJECTED((byte) 2),
-
-    /**
-     * 已执行/结束(不可投票)
-     */
-    COMPLETED((byte) 3);
+    REJECTED((byte) 2);
 
     private byte value;
     private static Map<Byte, ProposalVoteStatusEnum> map;

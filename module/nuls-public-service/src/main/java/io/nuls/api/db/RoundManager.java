@@ -8,6 +8,7 @@ import io.nuls.api.db.mongo.MongoDepositServiceImpl;
 import io.nuls.api.db.mongo.MongoRoundServiceImpl;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.*;
+import io.nuls.api.utils.AgentComparator;
 import io.nuls.api.utils.AgentSorter;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.base.basic.AddressTool;
@@ -21,6 +22,7 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class RoundManager {
@@ -36,6 +38,9 @@ public class RoundManager {
 
     @Autowired
     private MongoBlockServiceImpl mongoBlockServiceImpl;
+
+    @Autowired
+    BlockTimeService blockTimeService;
 
     public void process(int chainId, BlockInfo blockInfo) {
         ApiCache apiCache = CacheManager.getCache(chainId);
@@ -119,7 +124,9 @@ public class RoundManager {
             startHeight = startHeight - 1;
         }
         List<AgentInfo> agentList = mongoAgentServiceImpl.getAgentListByStartHeight(chainId, startHeight);
+        agentList = agentList.stream().sorted(AgentComparator.getInstance()).limit(ApiContext.maxAgentCount - apiCache.getChainInfo().getSeeds().size()).collect(Collectors.toList());
         List<DepositInfo> depositList = mongoDepositServiceImpl.getDepositList(chainId, startHeight);
+        BlockTimeInfo blockTimeInfo = blockTimeService.get(chainId);
         Map<String, AgentInfo> map = new HashMap<>();
         Map<String, BigInteger> depositMap = new HashMap<>();
         for (AgentInfo agent : agentList) {
@@ -166,7 +173,7 @@ public class RoundManager {
         round.setStartBlockHeader(header);
         round.setStartTime(header.getRoundStartTime());
         round.setMemberCount(sorterList.size());
-//        round.setEndTime(round.getStartTime() + 10 * sorterList.size());
+//        round.setEndTime(round.getStartTime() + (int)blockTimeInfo.getAvgConsumeTime() * sorterList.size());
         round.setProducedBlockCount(1);
 
         List<PocRoundItem> itemList = new ArrayList<>();
@@ -194,7 +201,7 @@ public class RoundManager {
                 item.setPackingAddress(sorter.getSeedAddress());
 
             }
-//            item.setTime(-1);
+            item.setTime(round.getStartTime() + (int)blockTimeInfo.getAvgConsumeTime() * (index - 1));
             itemList.add(item);
         }
         round.setItemList(itemList);

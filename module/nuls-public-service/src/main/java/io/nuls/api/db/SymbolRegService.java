@@ -29,4 +29,6 @@ public interface SymbolRegService {
 
     List<SymbolRegInfo> getAll();
 
+    List<SymbolRegInfo> getListBySource(Integer... source);
+
 }

@@ -47,7 +47,7 @@ public class OkexQuerier implements Querier {
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().debug("OkexQuerier, 取价anchorToken:{}", anchorToken);
+        chain.getLogger().info("OkexQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = anchorToken.toUpperCase();
         String url = String.format(baseurl + CMD_FORMAT, symbol);
         HttpRequest request = HttpRequest.newBuilder()
@@ -63,7 +63,7 @@ public class OkexQuerier implements Querier {
             }
             Map<String, Object> responseDate = JSONUtils.json2map(response.body());
             BigDecimal res = new BigDecimal((String) responseDate.get("last"));
-            chain.getLogger().debug("Okex获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            chain.getLogger().info("Okex获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
             return res;
         } catch (Throwable e) {
             chain.getLogger().error("调用{}接口Okex获取价格失败", url);

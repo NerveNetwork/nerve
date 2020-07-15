@@ -34,15 +34,14 @@ log(){ #print date prefix and green
 }
 
 BUILD_NULSTAR="1"
-NULSTAR_FILE_NAME="nulstar_190909.tar.gz"
+NULSTAR_FILE_NAME="nulstar_20200706.tar.gz"
 #TARGET_OS=linux
 #NULSTAR download url
-NULSTAR_URL="http://nuls-cn.oss-cn-hangzhou.aliyuncs.com/nulstar/"
+NULSTAR_URL="https://nulstar.oss-ap-southeast-1.aliyuncs.com/"
 #获取参数
 #输出目录
 NULS_WALLET_TAR_NAME="./NULS_Wallet"
 MODULES_PATH="${NULS_WALLET_TAR_NAME}"
-#RELEASE_OUT_PATH="./NULS-Walltet-linux64-alpha1"
 #是否马上更新代码
 DOPULL=
 #是否生成mykernel模块
@@ -251,8 +250,8 @@ fi
 
 #0.更新代码
 if [ -n "${DOPULL}" ];then
-	log "git pull origin $GIT_BRANCH"
-	git pull origin "$GIT_BRANCH"
+	log "git pull --no-edit origin $GIT_BRANCH"
+	git pull --no-edit origin "$GIT_BRANCH"
 fi
 echo "`cat version`-`git rev-parse --short HEAD`" > .package-version
 PACKAGE_VERSION=`cat .package-version`
@@ -484,7 +483,7 @@ copyModuleNcfToModules(){
             echo "dependent=$dependent" >> $moduleNcf
         fi
     fi
-#	 merge common module.ncf and private module.ncf to module.tmep.ncf
+#	 merge common nuls.ncf and private nuls.ncf to module.tmep.ncf
 	"${PROJECT_PATH}/build/merge-ncf" "${BUILD_PATH}/module-prod.ncf" $moduleNcf $moduleName
 #	rm $moduleNcf
 	sedCommand+=" -e 's/%MAIN_CLASS_NAME%/${mainClassName}/g' "
@@ -660,9 +659,6 @@ log "================ COPY SCRIPT ==============="
 	    tempModuleList+=" \"${m}\""
 	done
 	eval "sed -e 's/%MODULES%/${tempModuleList}/g' ${BUILD_PATH}/check-status > ${BUILD_PATH}/tmp/check-status-temp"
-	eval "sed -e 's/%MODULES%/${tempModuleList}/g' ${BUILD_PATH}/shutdown-nulstar > ${BUILD_PATH}/tmp/shutdown-nulstar"
-    cp "${BUILD_PATH}/tmp/shutdown-nulstar" "${MODULES_BIN_PATH}/stop"
-	chmod u+x "${MODULES_BIN_PATH}/stop"
 	cp "${BUILD_PATH}/tmp/check-status-temp" "${MODULES_BIN_PATH}/check-status"
 	chmod u+x "${MODULES_BIN_PATH}/check-status"
 	cp ${PROJECT_PATH}/version ${MODULES_BIN_PATH}/version

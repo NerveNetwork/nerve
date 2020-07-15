@@ -27,7 +27,7 @@ package io.nuls.core.parse.config;
 import java.util.Properties;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class PropertiesEntity {
 

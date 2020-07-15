@@ -41,6 +41,7 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
@@ -55,6 +56,7 @@ import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.storage.DisqualificationStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
+import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.storage.VirtualBankStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
@@ -79,6 +81,8 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     @Autowired
     private VirtualBankStorageService virtualBankStorageService;
     @Autowired
+    private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService;
+    @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
@@ -86,6 +90,8 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     private VirtualBankService virtualBankService;
     @Autowired
     private DisqualificationStorageService disqualificationStorageService;
+    @Autowired
+    private HeterogeneousService heterogeneousService;
 
 
     /**
@@ -122,8 +128,10 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain);
             // 当前最新有资格成为虚拟银行的(非种子)节点
             List<AgentBasic> listNewestVirtualBank = virtualBankService.calcNewestVirtualBank(chain, listAgent);
-            //区块内业务重复交易检查
+            // 区块内业务重复交易检查
             Set<String> setDuplicate = new HashSet<>();
+            // 地址重复检查, 同一个区块的所有变更交易的in和out里面不能出现相同的地址
+            Set<String> addressDuplicate = new HashSet<>();
             outer:
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
@@ -141,6 +149,31 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     continue;
                 }
                 ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
+                // 地址重复检查
+                if(null != txData.getInAgents()){
+                    for(byte[] addressBytes : txData.getInAgents()){
+                        if(addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))){
+                            // 区块内业务重复交易
+                            failsList.add(tx);
+                            errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
+                            log.error("[ChangeVirtualBank] txData has duplication address. hash:{}", tx.getHash().toHex());
+                            continue;
+                        }
+                    }
+                }
+                if(null != txData.getOutAgents()){
+                    for(byte[] addressBytes : txData.getOutAgents()){
+                        if(addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))){
+                            // 区块内业务重复交易
+                            failsList.add(tx);
+                            errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
+                            log.error("[ChangeVirtualBank] txData has duplication address. hash:{}", tx.getHash().toHex());
+                            continue;
+                        }
+                    }
+                }
+
+
                 // 验证退出虚拟银行业务
                 List<byte[]> listOutAgents = txData.getOutAgents();
                 int listOutAgentsSize = 0;
@@ -214,13 +247,25 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
                 // 验签名
                 try {
-                    ConverterSignValidUtil.validateSign(chain, tx);
+                    ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
                     failsList.add(tx);
                     errorCode = e.getErrorCode().getCode();
                     log.error(e.getErrorCode().getMsg());
                     continue outer;
                 }
+                // 将所有地址 放入重复检查集合
+                if(null != txData.getInAgents()){
+                    for(byte[] addressBytes : txData.getInAgents()){
+                        addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
+                    }
+                }
+                if(null != txData.getOutAgents()){
+                    for(byte[] addressBytes : txData.getOutAgents()){
+                        addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
+                    }
+                }
+                // 将txData hex 放入重复检查集合
                 setDuplicate.add(txDataHex);
             }
             result.put("txList", failsList);
@@ -321,6 +366,103 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
         return null;
     }
 
+
+    /**
+     * 加入虚拟银行节点
+     *
+     * @param chain
+     * @param listInAgents
+     * @param listCurrentAgent
+     * @throws NulsException
+     */
+    private List<VirtualBankDirector> processSaveVirtualBank(Chain chain, List<byte[]> listInAgents, List<AgentBasic> listCurrentAgent) throws NulsException {
+        List<VirtualBankDirector> listInDirector = new ArrayList<>();
+        if (null == listInAgents || listInAgents.isEmpty()) {
+            chain.getLogger().info("[commit] 没有节点加入虚拟银行");
+            return listInDirector;
+        }
+        for (byte[] addressBytes : listInAgents) {
+            String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
+            AgentBasic agentInfo = getAgentInfo(listCurrentAgent, agentAddress);
+            if (null == agentInfo) {
+                throw new NulsException(ConverterErrorCode.AGENT_INFO_NOT_FOUND);
+            }
+            String packingAddr = agentInfo.getPackingAddress();
+            VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
+            virtualBankDirector.setAgentHash(agentInfo.getAgentHash());
+            virtualBankDirector.setAgentAddress(agentAddress);
+            virtualBankDirector.setSignAddress(packingAddr);
+            virtualBankDirector.setRewardAddress(agentInfo.getRewardAddress());
+            virtualBankDirector.setSignAddrPubKey(agentInfo.getPubKey());
+            virtualBankDirector.setSeedNode(false);
+            virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
+            chain.getLogger().info("[commit] 节点加入虚拟银行, packing:{}, agent:{}", packingAddr, agentAddress);
+            listInDirector.add(virtualBankDirector);
+        }
+        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
+        // end code by Mimi
+        return listInDirector;
+    }
+
+    /**
+     * 移除虚拟银行节点
+     *
+     * @param chain
+     * @param listAgents
+     * @throws NulsException
+     */
+    private List<VirtualBankDirector> processRemoveVirtualBank(Chain chain, List<byte[]> listAgents) throws NulsException {
+        List<VirtualBankDirector> listOutDirector = new ArrayList<>();
+        if (null == listAgents || listAgents.isEmpty()) {
+            chain.getLogger().info("[commit] 没有节点退出虚拟银行");
+            return listOutDirector;
+        }
+        for (byte[] addressBytes : listAgents) {
+            String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
+            VirtualBankDirector director = chain.getDirectorByAgent(agentAddress);
+            listOutDirector.add(director);
+            String directorSignAddress = director.getSignAddress();
+            try {
+                chain.getLogger().debug("[退出银行节点信息]:{}", JSONUtils.obj2PrettyJson(director));
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+            chain.getLogger().info("[commit] 节点退出虚拟银行, packing:{}, agent:{}", directorSignAddress, agentAddress);
+        }
+        // add by Mimi at 2020-05-06 移除时更新顺序
+        VirtualBankUtil.virtualBankRemove(chain, chain.getMapVirtualBank(), listOutDirector, virtualBankStorageService);
+        // end code by Mimi
+        return listOutDirector;
+    }
+
+
+    /**
+     * 检查所有虚拟银行成员创建多签/合约地址, 补充创建地址等信息
+     **/
+    private void createNewHeterogeneousAddress(Chain chain, List<IHeterogeneousChainDocking> hInterfaces) {
+        Collection<VirtualBankDirector> allDirectors = chain.getMapVirtualBank().values();
+        if (null != allDirectors && !allDirectors.isEmpty()) {
+            for (VirtualBankDirector director : allDirectors) {
+                for (IHeterogeneousChainDocking hInterface : hInterfaces) {
+                    if (director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
+                        // 存在异构地址就不创建
+                        continue;
+                    }
+                    // 为新成员创建异构链多签地址
+                    String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
+                    director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
+                            new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
+                    virtualBankStorageService.save(chain, director);
+                    virtualBankAllHistoryStorageService.save(chain, director);
+                    chain.getLogger().debug("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                            director.getAgentAddress(), hInterface.getChainId(), director.getHeterogeneousAddrMap().get(hInterface.getChainId()));
+                }
+            }
+        }
+
+    }
+
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
         return commit(chainId, txs, blockHeader, syncStatus, true);
@@ -371,7 +513,12 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                                 currentDirector = true;
                                 // 异构链组件注册当前节点签名地址
                                 virtualBankService.initLocalSignPriKeyToHeterogeneous(chain, signAccountDTO);
-                                chain.getLogger().info("[虚拟银行] 当前节点计入虚拟银行,标识变更为: true");
+                                /**
+                                 * 当前是新加入的虚拟银行成员, 默认把异构链调用标志设为true, 在确认变更交易的时候会自动复原.
+                                 * 防止本节点, 发出后续异构交易导致合约与链内数据不一致
+                                 */
+                                heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
+                                chain.getLogger().info("[虚拟银行] 当前节点加入虚拟银行,标识变更为: true");
                                 break;
                             }
                         }
@@ -479,99 +626,4 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
         }
     }
 
-
-    /**
-     * 加入虚拟银行节点
-     *
-     * @param chain
-     * @param listInAgents
-     * @param listCurrentAgent
-     * @throws NulsException
-     */
-    private List<VirtualBankDirector> processSaveVirtualBank(Chain chain, List<byte[]> listInAgents, List<AgentBasic> listCurrentAgent) throws NulsException {
-        List<VirtualBankDirector> listInDirector = new ArrayList<>();
-        if (null == listInAgents || listInAgents.isEmpty()) {
-            chain.getLogger().info("[commit] 没有节点加入虚拟银行");
-            return listInDirector;
-        }
-        for (byte[] addressBytes : listInAgents) {
-            String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
-            AgentBasic agentInfo = getAgentInfo(listCurrentAgent, agentAddress);
-            if (null == agentInfo) {
-                throw new NulsException(ConverterErrorCode.AGENT_INFO_NOT_FOUND);
-            }
-            String packingAddr = agentInfo.getPackingAddress();
-            VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
-            virtualBankDirector.setAgentHash(agentInfo.getAgentHash());
-            virtualBankDirector.setAgentAddress(agentAddress);
-            virtualBankDirector.setSignAddress(packingAddr);
-            virtualBankDirector.setRewardAddress(agentInfo.getRewardAddress());
-            virtualBankDirector.setSignAddrPubKey(agentInfo.getPubKey());
-            virtualBankDirector.setSeedNode(false);
-            virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
-            chain.getLogger().info("[commit] 节点加入虚拟银行, packing:{}, agent:{}", packingAddr, agentAddress);
-            listInDirector.add(virtualBankDirector);
-        }
-        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
-        VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
-        // end code by Mimi
-        return listInDirector;
-    }
-
-    /**
-     * 移除虚拟银行节点
-     *
-     * @param chain
-     * @param listAgents
-     * @throws NulsException
-     */
-    private List<VirtualBankDirector> processRemoveVirtualBank(Chain chain, List<byte[]> listAgents) throws NulsException {
-        List<VirtualBankDirector> listOutDirector = new ArrayList<>();
-        if (null == listAgents || listAgents.isEmpty()) {
-            chain.getLogger().info("[commit] 没有节点退出虚拟银行");
-            return listOutDirector;
-        }
-        for (byte[] addressBytes : listAgents) {
-            String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
-            VirtualBankDirector director = chain.getDirectorByAgent(agentAddress);
-            listOutDirector.add(director);
-            String directorSignAddress = director.getSignAddress();
-            try {
-                chain.getLogger().debug("[退出银行节点信息]:{}", JSONUtils.obj2PrettyJson(director));
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-            chain.getLogger().info("[commit] 节点退出虚拟银行, packing:{}, agent:{}", directorSignAddress, agentAddress);
-        }
-        // add by Mimi at 2020-05-06 移除时更新顺序
-        VirtualBankUtil.virtualBankRemove(chain, chain.getMapVirtualBank(), listOutDirector, virtualBankStorageService);
-        // end code by Mimi
-        return listOutDirector;
-    }
-
-
-    /**
-     * 检查所有虚拟银行成员创建多签/合约地址, 补充创建地址等信息
-     **/
-    private void createNewHeterogeneousAddress(Chain chain, List<IHeterogeneousChainDocking> hInterfaces) {
-        Collection<VirtualBankDirector> allDirectors = chain.getMapVirtualBank().values();
-        if (null != allDirectors && !allDirectors.isEmpty()) {
-            for (VirtualBankDirector director : allDirectors) {
-                for (IHeterogeneousChainDocking hInterface : hInterfaces) {
-                    if (director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
-                        // 存在异构地址就不创建
-                        continue;
-                    }
-                    // 为新成员创建异构链多签地址
-                    String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
-                    director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
-                            new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
-                    virtualBankStorageService.save(chain, director);
-                    chain.getLogger().debug("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
-                            director.getAgentAddress(), hInterface.getChainId(), heterogeneousAddress);
-                }
-            }
-        }
-
-    }
 }

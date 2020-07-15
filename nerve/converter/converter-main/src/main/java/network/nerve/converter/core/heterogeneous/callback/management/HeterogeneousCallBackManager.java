@@ -34,9 +34,7 @@ import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirm
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
-import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
-import network.nerve.converter.storage.ProposalExeStorageService;
-import network.nerve.converter.storage.ProposalStorageService;
+import network.nerve.converter.storage.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -67,6 +65,10 @@ public class HeterogeneousCallBackManager {
     private ProposalExeStorageService proposalExeStorageService;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
+    @Autowired
+    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
 
     /**
      * 管理每个异构链组件的充值交易监听回调器
@@ -87,7 +89,9 @@ public class HeterogeneousCallBackManager {
                 heterogeneousDockingManager,
                 heterogeneousConfirmedChangeVBStorageService,
                 proposalStorageService,
-                proposalExeStorageService));
+                proposalExeStorageService,
+                txSubsequentProcessStorageService,
+                asyncProcessedTxStorageService));
     }
 
     public Collection<IDepositTxSubmitter> getAllDepositTxSubmitter() {

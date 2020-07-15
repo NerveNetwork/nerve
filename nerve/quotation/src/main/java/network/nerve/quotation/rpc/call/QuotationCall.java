@@ -127,26 +127,6 @@ public class QuotationCall {
         }
     }
 
-    /**
-     * 发起最终报价交易
-     */
-    public static void newFinalQuotationTx(Chain chain, Transaction tx) throws NulsException {
-        try {
-            Map<String, Object> params = new HashMap<>(QuotationConstant.INIT_CAPACITY_8);
-            params.put(Constants.VERSION_KEY_STR, QuotationConstant.RPC_VERSION);
-            params.put(Constants.CHAIN_ID, chain.getChainId());
-            params.put("tx", RPCUtil.encode(tx.serialize()));
-            requestAndResponse(ModuleE.TX.abbr, "tx_finalQuotationTx", params);
-        } catch (IOException e) {
-            LoggerUtil.LOG.error(e);
-            throw new NulsException(QuotationErrorCode.SERIALIZE_ERROR);
-        } catch (RuntimeException e) {
-            LoggerUtil.LOG.error(e);
-            throw new NulsException(QuotationErrorCode.RPC_REQUEST_FAILD);
-        }
-    }
-
-
     public static boolean isConsensusNode(Chain chain, BlockHeader blockHeader, String address) throws NulsException {
         try {
             Map<String, Object> params = new HashMap(QuotationConstant.INIT_CAPACITY_4);

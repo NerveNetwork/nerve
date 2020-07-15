@@ -60,7 +60,7 @@ public class CommonProtocolCmd extends BaseCmd {
             Log.error("getVersionChangeInvoker error");
             System.exit(1);
         }
-        Log.info("protocolVersion change-" + protocolVersion);
+//        Log.info("protocolVersion change-" + protocolVersion);
         return success();
     }
 

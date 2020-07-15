@@ -21,7 +21,7 @@
 package io.nuls.api.utils;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AgentSorter implements Comparable<AgentSorter> {
 

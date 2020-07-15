@@ -512,6 +512,13 @@ public class SyncService {
         txRelationInfoSet.add(new TxRelationInfo(output, tx, ledgerInfo.getTotalBalance()));
         accountInfo = queryAccountInfo(chainId, input.getAddress());
         accountInfo.setTxCount(accountInfo.getTxCount() + 1);
+
+        //更新节点别名
+        AgentInfo agentInfo = queryAgentInfo(chainId, aliasInfo.getAddress(), 2);
+        if(agentInfo != null){
+            agentInfo.setAgentAlias(aliasInfo.getAlias());
+            agentInfo.setNew(false);
+        }
     }
 
     /**

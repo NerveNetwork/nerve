@@ -59,6 +59,10 @@ public class ProposalTxDTO {
      */
     String businessAddress;
     /**
+     * 链内交易hash
+     */
+    String hash;
+    /**
      * 备注
      */
     String remark;
@@ -114,6 +118,14 @@ public class ProposalTxDTO {
 
     public void setBusinessAddress(String businessAddress) {
         this.businessAddress = businessAddress;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
     }
 
     public String getRemark() {

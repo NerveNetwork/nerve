@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class ConfigLoader {
 

@@ -38,13 +38,16 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.BigIntegerUtils;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
+import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.DistributionFeePO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
@@ -53,6 +56,7 @@ import network.nerve.converter.model.txdata.ProposalExeBusinessData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.DistributionFeeStorageService;
+import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigInteger;
@@ -67,6 +71,10 @@ public class DistributionFeeProcessor implements TransactionProcessor {
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
     @Autowired
     private DistributionFeeStorageService distributionFeeStorageService;
+    @Autowired
+    private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService;
+    @Autowired
+    private AssembleTxService assembleTxService;
 
     @Override
     public int getType() {
@@ -182,6 +190,11 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         List<byte[]> listBasisTxRewardAddressBytes = new ArrayList<>();
         for (HeterogeneousAddress addr : listDistributionFee) {
             String address = chain.getDirectorRewardAddress(addr);
+            if(StringUtils.isBlank(address)){
+                String signAddress = virtualBankAllHistoryStorageService.findByHeterogeneousAddress(chain, addr.getAddress());
+                VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
+                address = director.getRewardAddress();
+            }
             listBasisTxRewardAddressBytes.add(AddressTool.getAddress(address));
         }
         CoinData coinData = null;
@@ -191,17 +204,23 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             chain.getLogger().error(e);
             return e.getErrorCode().getCode();
         }
-        if (listBasisTxRewardAddressBytes.size() != coinData.getTo().size()) {
-            chain.getLogger().error(ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getMsg());
-            return ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
-        }
+
         // 补贴交易的收到手续费的地址列表
         List<byte[]> listDistributionTxRewardAddressBytes = new ArrayList<>();
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listBasisTxRewardAddressBytes.size());
         BigInteger amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
+
+        // 通过原始数据(确认交易中的列表),计算组装cointo的数据
+        Map<String, BigInteger> coinToOriginalMap = assembleTxService.calculateDistributionFeeCoinToAmount(listBasisTxRewardAddressBytes, amount);
+
+        if (coinToOriginalMap.size() != coinData.getTo().size()) {
+            chain.getLogger().error(ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getMsg());
+            return ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
+        }
         for (CoinTo coinTo : coinData.getTo()) {
-            if (!BigIntegerUtils.isEqual(coinTo.getAmount(), amount)) {
+            BigInteger originalAmount = coinToOriginalMap.get(AddressTool.getStringAddressByBytes(coinTo.getAddress()));
+            if (!BigIntegerUtils.isEqual(coinTo.getAmount(), originalAmount)) {
                 chain.getLogger().error(ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg());
                 return ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getCode();
             }
@@ -222,6 +241,8 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         }
         return null;
     }
+
+
 
     /**
      * 验证提案投票交易的手续费补贴分发

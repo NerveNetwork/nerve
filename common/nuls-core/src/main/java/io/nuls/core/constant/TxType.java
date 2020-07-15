@@ -248,6 +248,14 @@ public class TxType {
      */
     public static final int CONFIRM_PROPOSAL = 51;
     /**
+     * 重置异构链(合约)虚拟银行
+     */
+    public static final int RESET_HETEROGENEOUS_VIRTUAL_BANK = 52;
+    /**
+     * 确认重置异构链(合约)虚拟银行
+     */
+    public static final int CONFIRM_HETEROGENEOUS_RESET_VIRTUAL_BANK = 53;
+    /**
      * 已注册跨链的链信息变更
      */
     public static final int REGISTERED_CHAIN_CHANGE = 60;

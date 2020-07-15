@@ -69,7 +69,7 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
     @Override
     public void afterPropertiesSet() throws NulsException {
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"/api/v3/exchangeInfo"))
+                .uri(URI.create(url+"api/v3/exchangeInfo"))
                 .timeout(Duration.ofMillis(5000))
                 .build();
         try {
@@ -86,7 +86,7 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
             });
         }catch (Exception e) {
             if(initTryCount > 3){
-                Log.error("获取binance的交易对基础信息失败");
+                Log.error("获取binance的交易对基础信息失败",e);
                 System.exit(0);
             }
             initTryCount++;

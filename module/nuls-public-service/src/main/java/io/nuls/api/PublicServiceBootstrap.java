@@ -83,9 +83,6 @@ public class PublicServiceBootstrap extends RpcModule {
     StackingService stackingService;
 
     public static void main(String[] args) {
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         Thread.currentThread().setName("public-service-main");
 
         ConfigurationLoader configurationLoader = new ConfigurationLoader();
@@ -176,6 +173,11 @@ public class PublicServiceBootstrap extends RpcModule {
         ApiContext.mainAssertBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"mainAssertBase"));
         ApiContext.agentDepositBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"agentDepositBase"));
         ApiContext.superAgentDepositBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"superAgentDepositBase"));
+        ApiContext.reservegentDepositBase = Double.parseDouble(configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"reservegentDepositBase"));
+        String agentCountMax = configurationLoader.getValue(ModuleE.Constant.CONSENSUS,"agentCountMax");
+        if(agentCountMax != null){
+            ApiContext.maxAgentCount = Integer.parseInt(agentCountMax);
+        }
     }
 
     @Override

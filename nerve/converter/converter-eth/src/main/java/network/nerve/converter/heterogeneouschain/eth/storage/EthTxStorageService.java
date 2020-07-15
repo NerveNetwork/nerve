@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.storage;
 
+import network.nerve.converter.heterogeneouschain.eth.model.EthRecoveryDto;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 
 /**
@@ -39,4 +40,7 @@ public interface EthTxStorageService {
 
     void deleteByTxHash(String txHash) throws Exception;
 
+    int saveRecovery(String nerveTxKey, EthRecoveryDto recovery) throws Exception;
+
+    EthRecoveryDto findRecoveryByNerveTxKey(String nerveTxKey);
 }

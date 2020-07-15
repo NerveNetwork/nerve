@@ -30,7 +30,7 @@ import io.nuls.core.model.StringUtils;
 import java.text.MessageFormat;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NulsRuntimeException extends RuntimeException {
 

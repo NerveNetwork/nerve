@@ -1,6 +1,8 @@
 package io.nuls.api.db.mongo;
 
 import com.mongodb.client.model.*;
+import io.nuls.api.ApiContext;
+import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.constant.config.ApiConfig;
 import io.nuls.api.db.SymbolQuotationPriceService;
@@ -83,12 +85,25 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
                 Aggregates.match(condition),
                 Aggregates.group("$symbol",Accumulators.sum("count",1))
 //                Aggregates.match(Filters.eq("_id",symbol))
-                ).stream().map(d->Long.parseLong(d.get("count").toString())).findFirst().orElse(0L);
-        List<SymbolQuotationRecordInfo> list = mongoDBService.limitQuery(SYMBOL_QUOTATION_RECORD_TABLE,condition,sort,(pageIndex - 1) * pageSize,pageSize)
+        ).stream().map(d->Long.parseLong(d.get("count").toString())).findFirst().orElse(0L);
+        List<SymbolQuotationRecordInfo> list = mongoDBService.limitQuery(SYMBOL_QUOTATION_RECORD_TABLE,condition,sort,0, ApiContext.maxAgentCount)
                 .stream().map(d->
-                    DocumentTransferTool.toInfo(d,SymbolQuotationRecordInfo.class)
+                        DocumentTransferTool.toInfo(d,SymbolQuotationRecordInfo.class)
                 ).collect(Collectors.toList());
         return new PageInfo<>(pageIndex, pageSize, totalCount, list);
+    }
+
+    @Override
+    public List<SymbolQuotationRecordInfo> queryLastQuotationList(String symbol) {
+        Bson condition = Filters.and(Filters.eq("symbol",symbol));
+        Bson sort = Sorts.descending("blockHeight");
+        Map<String,SymbolQuotationRecordInfo> resMap = new HashMap<>(ApiContext.maxAgentCount);
+        mongoDBService.limitQuery(SYMBOL_QUOTATION_RECORD_TABLE,condition,sort,0, ApiContext.maxAgentCount)
+                .stream().forEach(d->{
+                    SymbolQuotationRecordInfo info = DocumentTransferTool.toInfo(d,SymbolQuotationRecordInfo.class);
+                    resMap.putIfAbsent(info.getAddress(),info);
+                });
+        return new ArrayList<>(resMap.values());
     }
 
     @Override

@@ -173,7 +173,7 @@ public interface BlockService {
      * @param forward   是否需要转发该区块
      * @return
      */
-    boolean saveBlock(int chainId, Block block, int download, boolean needLock, boolean broadcast, boolean forward,String nodeId);
+    boolean saveBlock(int chainId, Block block, int download, boolean needLock, boolean broadcast, boolean forward, String nodeId);
 
     boolean saveConsensusBlock(int chainId, Block block, int download, boolean needLock, boolean broadcast, boolean forward, boolean isRecPocNet, String nodeId);
 
@@ -205,9 +205,9 @@ public interface BlockService {
      * @param excludeNode 需要排除的节点,因为从该节点处接收的本区块
      * @return
      */
-    boolean forwardBlock(int chainId, NulsHash hash, String excludeNode);
+    boolean forwardBlock(int chainId, NulsHash hash, long height, String excludeNode);
 
-    boolean forwardPocNetBlock(int chainId, NulsHash hash, String excludeNode);
+    boolean forwardPocNetBlock(int chainId, NulsHash hash, long height, String excludeNode);
 
     /**
      * 广播区块给连接的其他对等节点
@@ -240,6 +240,6 @@ public interface BlockService {
 
     /**
      * 分叉处理
-     * */
+     */
     void handleEvidence(int chainId, String firstHash, String secondHash);
 }

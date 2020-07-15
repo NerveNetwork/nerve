@@ -190,8 +190,8 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         if(null == heterogeneousAssetInfo){
                             failsList.add(tx);
                             // 异构链资产不存在
-                            errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
-                            log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
+                            errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
+                            log.error(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
                             continue;
                         }
                     }
@@ -240,6 +240,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setBlockHeader(blockHeader);
+                        pendingPO.setCurrentDirector(true);
                         pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offer(pendingPO);

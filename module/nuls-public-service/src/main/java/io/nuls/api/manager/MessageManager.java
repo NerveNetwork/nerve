@@ -33,7 +33,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class MessageManager {
 

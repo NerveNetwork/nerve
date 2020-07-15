@@ -38,6 +38,7 @@ public interface ConverterCmdConstant {
 
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO = "cv_get_heterogeneous_chain_asset_info";
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS = "cv_get_heterogeneous_chain_asset_info_by_address";
+    String GET_HETEROGENEOUS_ADDRESS = "cv_get_heterogeneous_address";
     String GET_ALL_HETEROGENEOUS_CHAIN_ASSET_LIST = "cv_get_all_heterogeneous_chain_asset_list";
     String CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_create_heterogeneous_contract_asset_reg_pending_tx";
     String VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_validate_heterogeneous_contract_asset_reg_pending_tx";
@@ -47,5 +48,6 @@ public interface ConverterCmdConstant {
     String PROPOSAL = "cv_proposal";
     String BROADCAST_PROPOSAL = "cv_broadcast_proposal";
     String VOTE_PROPOSAL = "cv_voteProposal";
+    String RESET_VIRTUAL_BANK = "cv_resetVirtualBank";
 
 }

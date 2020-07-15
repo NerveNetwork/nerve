@@ -45,7 +45,7 @@ public class LoadJsonFileTest {
 
     @Test
     public void heterogeneousFiletest() throws Exception {
-        String configJson = IoUtils.read(ConverterConstant.HETEROGENEOUS_CONFIG);
+        String configJson = IoUtils.read(ConverterConstant.HETEROGENEOUS_TESTNET_CONFIG);
         List<HeterogeneousCfg> list = JSONUtils.json2list(configJson, HeterogeneousCfg.class);
         System.out.println(list.size());
     }

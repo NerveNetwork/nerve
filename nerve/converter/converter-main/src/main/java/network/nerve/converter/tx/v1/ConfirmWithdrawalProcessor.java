@@ -109,7 +109,12 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     log.error(ConverterErrorCode.CFM_IS_DUPLICATION.getMsg());
                     continue;
                 }
-
+                if(null != tx.getCoinData() && tx.getCoinData().length > 0){
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.COINDATA_CANNOT_EXIST.getCode();
+                    log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
+                    continue;
+                }
                 // 签名验证
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
@@ -202,7 +207,7 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                     docking.txConfirmedRollback(txData.getHeterogeneousTxHash());
                 }
-                chain.getLogger().info("[rollback] 确认提现交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[rollback] 确认提现交易 hash:{}, 原始提现交易hash:{}", tx.getHash().toHex(), txData.getWithdrawalTxHash().toHex());
             }
             return true;
         } catch (Exception e) {

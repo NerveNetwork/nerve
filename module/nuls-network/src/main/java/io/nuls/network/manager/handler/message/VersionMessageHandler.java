@@ -26,6 +26,8 @@
 package io.nuls.network.manager.handler.message;
 
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.thread.ThreadUtils;
+import io.nuls.core.thread.commom.NulsThreadFactory;
 import io.nuls.network.constant.NodeConnectStatusEnum;
 import io.nuls.network.constant.NodeStatusEnum;
 import io.nuls.network.manager.*;
@@ -45,6 +47,7 @@ import io.nuls.network.rpc.call.impl.BlockRpcServiceImpl;
 import io.nuls.network.utils.LoggerUtil;
 
 import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * version message handler
@@ -58,6 +61,8 @@ public class VersionMessageHandler extends BaseMessageHandler {
 
     private static VersionMessageHandler instance = new VersionMessageHandler();
     private NodeGroupManager nodeGroupManager = NodeGroupManager.getInstance();
+    private final ConnectionManager connectionManager = ConnectionManager.getInstance();
+    public ExecutorService discover = ThreadUtils.createThreadPool(Runtime.getRuntime().availableProcessors(), 20, new NulsThreadFactory("NODE_DISCOVER_MULTI_THREAD"));
 
     private VersionMessageHandler() {
 
@@ -119,7 +124,6 @@ public class VersionMessageHandler extends BaseMessageHandler {
         VersionMessageBody versionBody = (VersionMessageBody) message.getMsgBody();
         NodeGroup nodeGroup = nodeGroupManager.getNodeGroupByMagic(message.getHeader().getMagicNumber());
         String myIp = versionBody.getAddrYou().getIp().getHostAddress();
-        int myPort = versionBody.getAddrYou().getPort();
         //设置magicNumber
         node.setMagicNumber(nodeGroup.getMagicNumber());
         String ip = node.getIp();
@@ -164,6 +168,17 @@ public class VersionMessageHandler extends BaseMessageHandler {
             node.getChannel().close();
             return;
         }
+
+        //判断对方节点是否可以连接，若不能连接，则直接断链，不加入到已连接列表里
+        LoggerUtil.logger(nodeGroup.getChainId()).info("----是否检查对方网络节点可连接，reverseCheck:" + versionBody.getReverseCheck());
+        if (versionBody.getReverseCheck() != 0) {
+            if (!checkNodeCanConnect(node, versionBody.getAddrMe().getPort())) {
+                node.getChannel().close();
+                LoggerUtil.logger(nodeGroup.getChainId()).info("--------------节点连接验证失败！");
+                return;
+            }
+        }
+
         node.setConnectStatus(NodeConnectStatusEnum.CONNECTED);
         nodesContainer.getConnectedNodes().put(node.getId(), node);
         nodesContainer.markCanuseNodeByIp(ip, NodeStatusEnum.AVAILABLE);
@@ -183,7 +198,66 @@ public class VersionMessageHandler extends BaseMessageHandler {
         //回复version
         VersionMessage versionMessage = MessageFactory.getInstance().buildVersionMessage(node, message.getHeader().getMagicNumber());
         LoggerUtil.logger(nodeGroup.getChainId()).info("rec node={} ver msg success.go response versionMessage..cross={}", node.getId(), node.isCrossConnect());
+        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------服务器回执握手连接，ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
         send(versionMessage, node, true);
+    }
+
+//
+//    private boolean checkNodeCanConnect(Node node) {
+//        Future<Boolean> res = discover.submit(new Callable<Node>() {
+//            @Override
+//            public Node call() {
+//            }
+//        });
+//
+//        try {
+//            return res.get().booleanValue();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//        }
+//        return false;
+//    }
+
+    private boolean checkNodeCanConnect(Node source, int port) {
+        Node node = new Node(source.getNodeGroup().getMagicNumber(), source.getIp(), port, 0, Node.OUT, false);
+        if (node == null) {
+            return false;
+        }
+        node.setRemotePort(port);
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        node.setConnectStatus(NodeConnectStatusEnum.CONNECTING);
+        node.setConnectedListener(() -> {
+            //探测可连接后，断开连接
+            LoggerUtil.logger(node.getNodeGroup().getChainId()).debug(" checkNodeCanConnect node:{},connect success", node.getId());
+            node.setConnectStatus(NodeConnectStatusEnum.CONNECTED);
+            node.getChannel().close();
+        });
+
+        node.setDisconnectListener(() -> {
+            LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("checkNodeCanConnect node:{},disconnect,failCount={}", node.getId(), node.getFailCount());
+            node.setChannel(null);
+            if (node.getConnectStatus() == NodeConnectStatusEnum.CONNECTED) {
+                //探测可连接
+                node.setConnectStatus(NodeConnectStatusEnum.DISCONNECT);
+                future.complete(true);
+            } else {
+                node.setConnectStatus(NodeConnectStatusEnum.FAIL);
+                future.complete(false);
+            }
+        });
+
+        boolean result = connectionManager.connection(node);
+        if (!result) {
+            return false;
+        }
+        try {
+            return future.get();
+        } catch (Exception e) {
+            LoggerUtil.logger(node.getNodeGroup().getChainId()).error(e);
+            return false;
+        }
     }
 
     /**

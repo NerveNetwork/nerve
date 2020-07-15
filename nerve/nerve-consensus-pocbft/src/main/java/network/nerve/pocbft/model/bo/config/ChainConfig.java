@@ -1,9 +1,12 @@
 package network.nerve.pocbft.model.bo.config;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
@@ -80,13 +83,13 @@ public class ChainConfig extends BaseNulsData {
     /**
      * 追加保证金最小金额
      * Minimum amount of additional margin
-     * */
+     */
     private BigInteger appendAgentDepositMin;
 
     /**
      * 退出保证金最小金额
      * Minimum amount of withdrawal deposit
-     * */
+     */
     private BigInteger reduceAgentDepositMin;
 
     private int byzantineRate;
@@ -99,17 +102,17 @@ public class ChainConfig extends BaseNulsData {
 
     /**
      * 种子节点对应公钥
-     * */
+     */
     private String pubKeyList;
 
     /**
      * 出块节点密码
-     * */
+     */
     private String password;
 
     /**
      * 打包区块最大值
-     * */
+     */
     private long blockMaxSize;
 
     /**
@@ -150,43 +153,66 @@ public class ChainConfig extends BaseNulsData {
 
     /**
      * 通胀开始时间
-     * */
+     */
     private long initHeight;
 
     /**
      * 通缩比例
-     * */
+     */
     private double deflationRatio;
 
     /**
      * 通缩间隔时间
-     * */
+     */
     private long deflationHeightInterval;
 
     /**
      * 共识节点最大数量
-     * */
+     */
     private int agentCountMax;
 
     /**
      * Nuls和Nerve的权重基数
-     * */
+     */
     private double mainAssertBase;
 
     /**
      * 本链主资产的权重基数
-     * */
+     */
     private double localAssertBase;
 
     /**
      * 节点保证金基数
-     * */
+     */
     private double agentDepositBase;
-
     /**
      * 虚拟银行保证金基数
-     * */
+     */
     private double superAgentDepositBase;
+    /**
+     * 后备节点保证金基数
+     */
+    private double reservegentDepositBase;
+
+
+    private int maxCoinToOfCoinbase;
+    private long minRewardHeight;
+
+    public int getMaxCoinToOfCoinbase() {
+        return maxCoinToOfCoinbase;
+    }
+
+    public void setMaxCoinToOfCoinbase(int maxCoinToOfCoinbase) {
+        this.maxCoinToOfCoinbase = maxCoinToOfCoinbase;
+    }
+
+    public long getMinRewardHeight() {
+        return minRewardHeight;
+    }
+
+    public void setMinRewardHeight(long minRewardHeight) {
+        this.minRewardHeight = minRewardHeight;
+    }
 
     public long getPackingInterval() {
         return packingInterval;
@@ -230,11 +256,16 @@ public class ChainConfig extends BaseNulsData {
     }
 
     public String getSeedNodes() {
+        //不再配置种子节点地址，而是从公钥计算得到
+        if (StringUtils.isBlank(seedNodes)) {
+            String[] pubkeys = this.pubKeyList.split(",");
+            StringBuilder ss = new StringBuilder("");
+            for (String pub : pubkeys) {
+                ss.append(",").append(AddressTool.getAddressString(HexUtil.decode(pub), this.chainId));
+            }
+            this.seedNodes = ss.toString().substring(1);
+        }
         return seedNodes;
-    }
-
-    public void setSeedNodes(String seedNodes) {
-        this.seedNodes = seedNodes;
     }
 
     public String getPubKeyList() {
@@ -471,6 +502,9 @@ public class ChainConfig extends BaseNulsData {
         stream.writeDouble(localAssertBase);
         stream.writeDouble(agentDepositBase);
         stream.writeDouble(superAgentDepositBase);
+        stream.writeDouble(reservegentDepositBase);
+        stream.writeUint32(this.maxCoinToOfCoinbase);
+        stream.writeUint32(this.minRewardHeight);
     }
 
     @Override
@@ -506,6 +540,9 @@ public class ChainConfig extends BaseNulsData {
         this.localAssertBase = byteBuffer.readDouble();
         this.agentDepositBase = byteBuffer.readDouble();
         this.superAgentDepositBase = byteBuffer.readDouble();
+        this.reservegentDepositBase = byteBuffer.readDouble();
+        this.maxCoinToOfCoinbase = (int) byteBuffer.readUint32();
+        this.minRewardHeight = byteBuffer.readUint32();
     }
 
     @Override
@@ -526,6 +563,22 @@ public class ChainConfig extends BaseNulsData {
         size += SerializeUtils.sizeOfDouble(mainAssertBase);
         size += SerializeUtils.sizeOfDouble(agentDepositBase);
         size += SerializeUtils.sizeOfDouble(superAgentDepositBase);
+        size += SerializeUtils.sizeOfDouble(reservegentDepositBase);
+        size += SerializeUtils.sizeOfUint32();
+        size += SerializeUtils.sizeOfUint32();
         return size;
+    }
+
+
+    public long getPackingIntervalMills() {
+        return 1000 * this.getPackingInterval();
+    }
+
+    public double getReservegentDepositBase() {
+        return reservegentDepositBase;
+    }
+
+    public void setReservegentDepositBase(double reservegentDepositBase) {
+        this.reservegentDepositBase = reservegentDepositBase;
     }
 }

@@ -6,11 +6,6 @@
   },
   {
     "assetId": "1",
-    "oracleKey": "NERVE_PRICE",
-    "simple": "TNVT"
-  },
-  {
-    "assetId": "1",
     "chainId": "2",
     "oracleKey": "NULS_PRICE",
     "simple": "NULS"

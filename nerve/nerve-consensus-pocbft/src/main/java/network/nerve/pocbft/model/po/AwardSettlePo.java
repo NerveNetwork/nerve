@@ -5,7 +5,9 @@ import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.base.data.CoinTo;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import io.nuls.core.parse.SerializeUtils;
+import network.nerve.pocbft.utils.LoggerUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,28 +16,31 @@ import java.util.List;
 public class AwardSettlePo extends BaseNulsData {
     /**
      * 开始高度
-     * */
+     */
     private long startHeight;
     /**
      * 结束高度
-     * */
+     */
     private long endHeight;
     /**
      * 结算日期
-     * */
+     */
     private String date;
     /**
      * 是否为本地定时任务生成，如果为本地任务生成的数据如果结算区块验证不过不需要删除否则需要清除
-     * */
+     */
     private boolean settled;
     /**
      * 结算明细
-     * */
+     */
     private List<CoinTo> settleDetails;
 
-    public AwardSettlePo(){}
+    private long issuedCount;
 
-    public AwardSettlePo(long startHeight, long endHeight, String date){
+    public AwardSettlePo() {
+    }
+
+    public AwardSettlePo(long startHeight, long endHeight, String date) {
         this.startHeight = startHeight;
         this.endHeight = endHeight;
         this.date = date;
@@ -49,6 +54,7 @@ public class AwardSettlePo extends BaseNulsData {
         stream.writeInt64(endHeight);
         stream.writeString(date);
         stream.writeBoolean(settled);
+        stream.writeUint32(issuedCount);
         int toCount = settleDetails == null ? 0 : settleDetails.size();
         stream.writeVarInt(toCount);
         if (null != settleDetails) {
@@ -64,6 +70,7 @@ public class AwardSettlePo extends BaseNulsData {
         endHeight = byteBuffer.readInt64();
         date = byteBuffer.readString();
         settled = byteBuffer.readBoolean();
+        this.issuedCount = byteBuffer.readUint32();
         int toCount = (int) byteBuffer.readVarInt();
         if (0 < toCount) {
             List<CoinTo> toList = new ArrayList<>();
@@ -83,7 +90,7 @@ public class AwardSettlePo extends BaseNulsData {
             }
         }
         size += SerializeUtils.sizeOfString(date);
-        size += 17;
+        size += 21;
         return size;
     }
 
@@ -91,16 +98,8 @@ public class AwardSettlePo extends BaseNulsData {
         return startHeight;
     }
 
-    public void setStartHeight(long startHeight) {
-        this.startHeight = startHeight;
-    }
-
     public long getEndHeight() {
         return endHeight;
-    }
-
-    public void setEndHeight(long endHeight) {
-        this.endHeight = endHeight;
     }
 
     public String getDate() {
@@ -125,5 +124,22 @@ public class AwardSettlePo extends BaseNulsData {
 
     public void setSettleDetails(List<CoinTo> settleDetails) {
         this.settleDetails = settleDetails;
+    }
+
+    public long getIssuedCount() {
+        return issuedCount;
+    }
+
+    public void setIssuedCount(long issuedCount) {
+        this.issuedCount = issuedCount;
+    }
+
+    public boolean didPart() {
+        return this.getSettleDetails().size() > this.issuedCount && this.issuedCount > 0;
+    }
+
+    public void getclearSettleDetails() {
+        Log.info("======clear SettleDetails");
+        this.getSettleDetails().clear();
     }
 }

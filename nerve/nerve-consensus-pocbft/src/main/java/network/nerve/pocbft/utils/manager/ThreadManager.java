@@ -7,6 +7,9 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.pocbft.constant.ConsensusConstant;
 import io.nuls.core.core.annotation.Component;
 import network.nerve.pocbft.utils.thread.*;
+import network.nerve.pocbft.v1.thread.ConsensusThread;
+import network.nerve.pocbft.v1.thread.VoteMsgProcessor;
+import network.nerve.pocbft.v1.thread.VoteResultProcessor;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author tag
  * 2018/11/9
- * */
+ */
 @Component
 public class ThreadManager {
     /**
@@ -25,17 +28,11 @@ public class ThreadManager {
      * The task of creating a chain
      *
      * @param chain chain info
-     * */
-    public void createChainThread(Chain chain){
-        /*
-        创建链相关的任务
-        Chain-related tasks
-        */
-        chain.getThreadPool().execute(new VoteProcessor(chain));
-        chain.getThreadPool().execute(new StageOneVoteCollector(chain));
-        chain.getThreadPool().execute(new StageTwoVoteCollector(chain));
+     */
+    public void createChainThread(Chain chain) {
+        //所有共识核心功能都从这里开始
+        chain.getThreadPool().execute(new ConsensusThread(chain));
         chain.getThreadPool().execute(new VoteResultProcessor(chain));
-        chain.getThreadPool().execute(new CheckFutureVoteProcessor(chain));
     }
 
     /**
@@ -43,23 +40,23 @@ public class ThreadManager {
      * The task of creating a chain
      *
      * @param chain chain info
-     * */
-    public void createChainScheduler(Chain chain){
-        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = ThreadUtils.createScheduledThreadPool(1,new NulsThreadFactory("nerve" + chain.getChainId()));
+     */
+    public void createChainScheduler(Chain chain) {
+        ScheduledThreadPoolExecutor scheduledThreadPoolExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("nerve" + chain.getChainId()));
         BudgetConsensusAwardTask budgetConsensusAwardTask = new BudgetConsensusAwardTask(chain);
-        long delayTime ;
+        long delayTime;
         long currentTime = NulsDateUtils.getCurrentTimeMillis();
         long timeInDay = currentTime % ConsensusConstant.ONE_DAY_MILLISECONDS;
-        //如果当前时间是12点之前则等到12点再计算，如果12点之后则立即执行，（避免在12点之前停止节点12点之后重启节点这种情况发生）
-        if(timeInDay <= ConsensusConstant.HALF_DAY_MILLISECONDS){
+        //如果当前时间是一半之前则等到一半时再计算，如果一半之后之后则立即执行，（避免在一半之前停止节点一半之后重启节点这种情况发生）
+        if (timeInDay <= ConsensusConstant.HALF_DAY_MILLISECONDS) {
             delayTime = ConsensusConstant.HALF_DAY_MILLISECONDS - timeInDay;
-        }else{
+        } else {
             delayTime = 0;
         }
         scheduledThreadPoolExecutor.scheduleAtFixedRate(budgetConsensusAwardTask, delayTime, ConsensusConstant.ONE_DAY_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
-    public void createConsensusNetThread(Chain chain){
+    public void createConsensusNetThread(Chain chain) {
         chain.getThreadPool().execute(new NetworkProcessor(chain));
     }
 }

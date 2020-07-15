@@ -24,7 +24,6 @@
 
 package network.nerve.converter.tx.v1;
 
-import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
@@ -32,24 +31,21 @@ import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.VirtualBankService;
-import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
-import network.nerve.converter.model.txdata.InitializeHeterogeneousTxData;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
-import network.nerve.converter.utils.ConverterSignValidUtil;
-import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Loki
@@ -82,10 +78,10 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
         try {
             chain = chainManager.getChain(chainId);
             NulsLogger log = chain.getLogger();
-            String errorCode = null;
+            String errorCode = ConverterErrorCode.SYS_UNKOWN_EXCEPTION.getCode();
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            Set<Integer> setDuplicate = new HashSet<>();
+           /* Set<Integer> setDuplicate = new HashSet<>();
             outer:
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
@@ -130,7 +126,7 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
 
                 // 验签名
                 try {
-                    ConverterSignValidUtil.validateSign(chain, tx);
+                    ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
                     failsList.add(tx);
                     errorCode = e.getErrorCode().getCode();
@@ -138,7 +134,9 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
                     continue outer;
                 }
                 setDuplicate.add(heterogeneousChainId);
-            }
+            }*/
+            // 暂时关闭该交易
+            failsList.addAll(txs);
             result.put("txList", failsList);
             result.put("errorCode", errorCode);
         } catch (Exception e) {

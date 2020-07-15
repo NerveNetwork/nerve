@@ -33,13 +33,7 @@ public enum DepositTimeType {
     /**
      * 十年
      * */
-    TEN_YEARS((byte)6, 5, 311040000, "十年"),
-
-    /**
-     * 测试
-     * todo 用于测试，减少等待时间，在正式上线前干掉
-     * */
-    TEST((byte)7, 5, 300, "五分钟");
+    TEN_YEARS((byte)6, 5, 311040000, "十年") ;
     private final byte type;
 
     private final double weight;

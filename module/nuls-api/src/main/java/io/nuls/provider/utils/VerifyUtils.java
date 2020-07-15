@@ -28,7 +28,7 @@ import io.nuls.provider.model.jsonrpc.RpcResultError;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class VerifyUtils {
 

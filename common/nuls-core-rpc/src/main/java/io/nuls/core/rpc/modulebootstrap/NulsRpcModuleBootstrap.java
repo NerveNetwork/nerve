@@ -1,14 +1,17 @@
 package io.nuls.core.rpc.modulebootstrap;
 
+import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
+import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.thread.ThreadUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * @Author: zhoulijun
@@ -29,11 +32,20 @@ public class NulsRpcModuleBootstrap {
         run(DEFAULT_SCAN_PACKAGE, args);
     }
 
+
+
     public static void run(String scanPackage, String[] args) {
         printLogo("/logo");
         Log.info("RUN MODULE:{}", System.getProperty("app.name"));
-
         SpringLiteContext.init(scanPackage, "io.nuls.core.rpc.modulebootstrap", "io.nuls.core.rpc.cmd", "io.nuls.base.protocol");
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        if (args == null || args.length == 0) {
+            String serviceManagerPort = configurationLoader.getValue("serviceManagerPort");
+            if(serviceManagerPort == null){
+                serviceManagerPort = "8771";
+            }
+            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":" + serviceManagerPort};
+        }
         RpcModule module;
         try {
             module = SpringLiteContext.getBean(RpcModule.class);

@@ -1,14 +1,12 @@
 {
-  "moduleCode":"tx",
+  "moduleCode": "tx",
   "mainChainId": 1,
   "mainAssetId": 1,
   "encoding": "UTF-8",
-  "unconfirmedTxExpire":20,
-  "chainId":1,
-  "assetId":1,
-  "txMaxSize":307200,
-  "moduleVerifyPercent":30,
-  "packageRpcReserveTime":100,
-  "txUnverifiedQueueSize":50000,
-  "orphanTtl":300
+  "chainId": 1,
+  "assetId": 1,
+  "txMaxSize": 307200,
+  "unconfirmedTxExpireSec": 20,
+  "orphanLifeTimeSec": 300,
+  "blockTxTimeRangeSec": 600
 }

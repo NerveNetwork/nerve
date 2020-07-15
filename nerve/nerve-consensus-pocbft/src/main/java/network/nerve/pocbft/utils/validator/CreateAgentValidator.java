@@ -81,7 +81,7 @@ public class CreateAgentValidator extends BaseValidator {
      * @return Result
      */
     private Result createAgentBasicValid(Chain chain, Transaction tx, Agent agent){
-        if (!AddressTool.validNormalAddress(agent.getPackingAddress(), (short) chain.getConfig().getChainId())) {
+        if (!AddressTool.validNormalAddress(agent.getPackingAddress(), chain.getConfig().getChainId())) {
             chain.getLogger().error("CreateAgent -- PackingAddress error");
             return Result.getFailed(ConsensusErrorCode.ADDRESS_ERROR);
         }
@@ -115,10 +115,10 @@ public class CreateAgentValidator extends BaseValidator {
      * @return boolean
      */
     private Result createAgentAddrValid(Chain chain, Transaction tx, Agent agent) {
-        if (!chain.getSeedNodeList().isEmpty()) {
+        if (!chain.getSeedAddressList().isEmpty()) {
             byte[] nodeAddressBytes;
             //节点地址及出块地址不能是种子节点
-            for (String nodeAddress : chain.getSeedNodeList()) {
+            for (String nodeAddress : chain.getSeedAddressList()) {
                 nodeAddressBytes = AddressTool.getAddress(nodeAddress);
                 if (Arrays.equals(nodeAddressBytes, agent.getAgentAddress())) {
                     chain.getLogger().error("CreateAgent -- AgentAddress is seedNode address");
@@ -131,7 +131,7 @@ public class CreateAgentValidator extends BaseValidator {
             }
         }
         //节点地址及出块地址不能重复
-        List<Agent> agentList = agentManager.getAgentList(chain, chain.getNewestHeader().getHeight());
+        List<Agent> agentList = agentManager.getAgentList(chain, chain.getBestHeader().getHeight());
         if (agentList != null && agentList.size() > 0) {
             Set<String> set = new HashSet<>();
             for (Agent agentTemp : agentList) {

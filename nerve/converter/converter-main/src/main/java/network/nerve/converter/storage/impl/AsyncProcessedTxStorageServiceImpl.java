@@ -31,7 +31,6 @@ import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.storage.AsyncProcessedTxStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
-import org.ethereum.util.ByteUtil;
 
 /**
  * @author: Loki
@@ -44,13 +43,13 @@ public class AsyncProcessedTxStorageServiceImpl implements AsyncProcessedTxStora
     private static final String COMPONENT_CALL_PREFIX = "COMPONENT_CALL_PREFIX_";
 
     @Override
-    public boolean saveProposalExe(Chain chain, String hash, long height) {
+    public boolean saveProposalExe(Chain chain, String hash) {
         if(StringUtils.isBlank(hash)){
             return false;
         }
         try {
             return RocksDBService.put(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
-                    ConverterDBUtil.stringToBytes(PROPOSAL_EXE_PREFIX + hash), ByteUtil.longToBytes(height));
+                    ConverterDBUtil.stringToBytes(PROPOSAL_EXE_PREFIX + hash), ConverterDBUtil.stringToBytes(hash));
         } catch (Exception e) {
             chain.getLogger().error(e);
             return false;
@@ -58,30 +57,44 @@ public class AsyncProcessedTxStorageServiceImpl implements AsyncProcessedTxStora
     }
 
     @Override
-    public boolean saveComponentCall(Chain chain, String hash, long height) {
+    public boolean saveComponentCall(Chain chain, String hash) {
         if(StringUtils.isBlank(hash)){
             return false;
         }
         try {
             return RocksDBService.put(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
-                    ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash), ByteUtil.longToBytes(height));
+                    ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash), ConverterDBUtil.stringToBytes(hash));
+
         } catch (Exception e) {
             chain.getLogger().error(e);
             return false;
         }
     }
 
+    @Override
+    public boolean removeComponentCall(Chain chain, String hash) {
+        if(StringUtils.isBlank(hash)){
+            return false;
+        }
+        try {
+            return RocksDBService.delete(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
+                    ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash));
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
 
     @Override
-    public Long getProposalExe(Chain chain, String hash) {
+    public String getProposalExe(Chain chain, String hash) {
         byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(), ConverterDBUtil.stringToBytes(PROPOSAL_EXE_PREFIX + hash));
-        return null == bytes ? null : ByteUtil.byteArrayToLong(bytes);
+        return null == bytes ? null : ConverterDBUtil.bytesToString(bytes);
     }
 
     @Override
-    public Long getComponentCall(Chain chain, String hash) {
+    public String getComponentCall(Chain chain, String hash) {
         byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(), ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash));
-        return null == bytes ? null : ByteUtil.byteArrayToLong(bytes);
+        return null == bytes ? null : ConverterDBUtil.bytesToString(bytes);
     }
 
 }

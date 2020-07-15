@@ -18,6 +18,7 @@ import java.util.Set;
  * @date 2018/12/3
  */
 public class NoUse {
+
     /**
      * 模拟核心模块（Manager），测试专用
      * For internal debugging only
@@ -46,21 +47,32 @@ public class NoUse {
     }
 
     public static int startKernel() throws Exception {
-        startKernel(HostInfo.getLocalIP(), 7771, "");
-        return 7771;
+        return startKernel(8771);
+    }
+
+    public static int startKernel(int port) throws Exception {
+        startKernel(HostInfo.getLocalIP(), port, "");
+        return port;
+    }
+    /**
+     * 模拟启动模块，单元测试专用
+     * Analog Startup Module, Unit Test Specific
+     */
+    public static void mockModule() throws Exception {
+        mockModule(8771);
     }
 
     /**
      * 模拟启动模块，单元测试专用
      * Analog Startup Module, Unit Test Specific
      */
-    public static void mockModule() throws Exception {
+    public static void mockModule(int port) throws Exception {
         NettyServer.getInstance("test", "TestModule", "test.com")
                 .moduleRoles("test_role", new String[]{"1.0"})
                 .moduleVersion("1.0");
 
-        ConnectManager.getConnectByUrl("ws://" + HostInfo.getLocalIP() + ":7771");
+        ConnectManager.getConnectByUrl("ws://" + HostInfo.getLocalIP() + ":" + port);
         // Get information from kernel
-        ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":7771");
+        ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":" + port);
     }
 }

@@ -44,7 +44,7 @@ import static com.mongodb.client.model.Filters.*;
 import static io.nuls.api.constant.DBTableConstant.*;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Component
 public class MongoStatisticalServiceImpl implements StatisticalService {
@@ -110,8 +110,9 @@ public class MongoStatisticalServiceImpl implements StatisticalService {
                     v2.entrySet().forEach(dm->{
                         v1.merge(dm.getKey(),dm.getValue(),(oldv,newv)->{
                             oldv.setTxTotal(oldv.getTxTotal().add(newv.getTxTotal()));
-                            oldv.setTotal(oldv.getTotal().add(newv.getTotal()));
-                            oldv.setAddressCount(oldv.getAddressCount() + newv.getAddressCount());
+                            oldv.setTotal(newv.getTotal());
+                            //地址数量取最新一条
+                            oldv.setAddressCount(newv.getAddressCount());
                             oldv.setConverterInTotal(oldv.getConverterInTotal().add(newv.getConverterInTotal()));
                             oldv.setConverterOutTotal(oldv.getConverterOutTotal().add(newv.getConverterOutTotal()));
                             return oldv;

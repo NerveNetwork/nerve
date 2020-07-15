@@ -16,9 +16,13 @@ import java.util.List;
 @Component
 @Configuration(domain = ModuleE.Constant.NETWORK)
 public class NetworkConfig implements ModuleConfig {
+
     private String logLevel = "DEBUG";
+
     private int chainId;
+
     private int mainChainId;
+
     private int port;
 
     private long packetMagic;
@@ -27,8 +31,12 @@ public class NetworkConfig implements ModuleConfig {
 
     private int maxOutCount;
 
+    private byte reverseCheck = 1;
+
     private int maxInSameIp;
+
     private String selfSeedIps;
+
     private List<String> seedIpList;
 
     private int crossPort;
@@ -38,15 +46,19 @@ public class NetworkConfig implements ModuleConfig {
     private int crossMaxOutCount;
 
     private int crossMaxInSameIp;
+
     private String moonSeedIps;
+
     private List<String> moonSeedIpList;
 
     private boolean moonNode;
 
     private String language;
+
     private String encoding;
 
     private List<String> localIps = new ArrayList<>();
+
     private int updatePeerInfoType = 0;
     /**
      * ROCK DB 数据库文件存储路径
@@ -247,5 +259,13 @@ public class NetworkConfig implements ModuleConfig {
 
     public void setMainChainId(int mainChainId) {
         this.mainChainId = mainChainId;
+    }
+
+    public byte getReverseCheck() {
+        return reverseCheck;
+    }
+
+    public void setReverseCheck(byte reverseCheck) {
+        this.reverseCheck = reverseCheck;
     }
 }

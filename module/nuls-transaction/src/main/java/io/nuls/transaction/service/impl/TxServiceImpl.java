@@ -74,6 +74,7 @@ import java.util.concurrent.ExecutorService;
 
 import static io.nuls.transaction.constant.TxConstant.CACHED_SIZE;
 import static io.nuls.transaction.constant.TxConstant.PACKING;
+import static io.nuls.transaction.constant.TxContext.TX_MAX_SIZE;
 
 /**
  * @author: Charlie
@@ -250,6 +251,7 @@ public class TxServiceImpl implements TxService {
         if (null == txRegister) {
             throw new NulsException(TxErrorCode.TX_TYPE_INVALID);
         }
+
         if (!localTx && txRegister.getSystemTx()) {
             throw new NulsException(TxErrorCode.SYS_TX_TYPE_NON_CIRCULATING);
         }
@@ -296,9 +298,14 @@ public class TxServiceImpl implements TxService {
         if (tx.getTime() == 0L) {
             throw new NulsException(TxErrorCode.TX_DATA_VALIDATION_ERROR);
         }
-        if (tx.size() > chain.getConfig().getTxMaxSize()) {
+        if (tx.size() > TX_MAX_SIZE) {
             throw new NulsException(TxErrorCode.TX_SIZE_TOO_LARGE);
         }
+
+//        if (tx.getType() == TxType.REGISTER_AGENT || tx.getType() == TxType.DEPOSIT) {
+//            throw new NulsException(TxErrorCode.TX_TYPE_INVALID);
+//        }
+
         //验证签名
         validateTxSignature(tx, txRegister, chain);
         //如果有coinData, 则进行验证,有一些交易(黄牌)没有coinData数据
@@ -308,7 +315,7 @@ public class TxServiceImpl implements TxService {
                 || tx.getType() == TxType.VERIFIER_CHANGE
                 || tx.getType() == TxType.VERIFIER_INIT
                 || tx.getType() == TxType.REGISTERED_CHAIN_CHANGE) {
-            if(null != tx.getCoinData() && tx.getCoinData().length > 0){
+            if (null != tx.getCoinData() && tx.getCoinData().length > 0) {
                 chain.getLogger().error("This transaction type does not allow the existence of CoinData. hash:{}, type:{}",
                         tx.getHash().toHex(), tx.getType());
                 throw new NulsException(TxErrorCode.TX_VERIFY_FAIL);
@@ -482,7 +489,7 @@ public class TxServiceImpl implements TxService {
                 throw new NulsException(TxErrorCode.ADDRESS_LOCKED);
             }
         }
-        if (null != existMultiSignAddress && type != TxType.STOP_AGENT && type != TxType.RED_PUNISH ) {
+        if (null != existMultiSignAddress && type != TxType.STOP_AGENT && type != TxType.RED_PUNISH) {
             //如果from中含有多签地址,则表示该交易是多签交易,则必须满足,froms中只存在这一个多签地址
             for (CoinFrom coinFrom : listFrom) {
                 if (!Arrays.equals(existMultiSignAddress, coinFrom.getAddress())) {
@@ -562,7 +569,7 @@ public class TxServiceImpl implements TxService {
      * 验证交易手续费是否正确
      *
      * @param chain    链id
-     * @param tx        tx
+     * @param tx       tx
      * @param coinData
      * @return Result
      */

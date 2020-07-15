@@ -26,8 +26,11 @@ package network.nerve.converter.heterogeneouschain.eth.storage.impl;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthTxRelationStorageService;
+import network.nerve.converter.utils.ConverterDBUtil;
 
 import static network.nerve.converter.utils.ConverterDBUtil.bytesToString;
 import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
@@ -40,13 +43,14 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageService {
 
     private final String baseArea = EthDBConstant.DB_ETH;
-    //private final String KEY_PREFIX_NERVE = "TXRELATION-N-";
+    private final String KEY_PREFIX_NERVE = "TXRELATION-N-";
     private final String KEY_PREFIX_ETH = "TXRELATION-E-";
+    private final String KEY_PREFIX_ETH_PO = "TXRELATION-P-";
 
     @Override
-    public int save(String ethTxHash, String nerveTxHash) throws Exception {
-        //RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash), stringToBytes(ethTxHash));
+    public int save(String ethTxHash, String nerveTxHash, EthSendTransactionPo ethTxPo) throws Exception {
         RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash), stringToBytes(nerveTxHash));
+        ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash), ethTxPo);
         return 1;
     }
 
@@ -63,19 +67,31 @@ public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageServ
     }
 
     @Override
-    public void deleteByTxHash(String ethTxHash) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash));
+    public EthSendTransactionPo findEthSendTxPo(String ethTxHash) {
+        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash), EthSendTransactionPo.class);
     }
 
-    /*@Override
-    public String findEthTxHash(String nerveTxHash) {
+    @Override
+    public void deleteByTxHash(String ethTxHash) throws Exception {
+        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash));
+        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash));
+    }
+
+    @Override
+    public int saveNerveTxHash(String nerveTxHash) throws Exception {
+        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash), EthConstant.EMPTY_BYTE);
+        return 0;
+    }
+
+    @Override
+    public boolean existNerveTxHash(String nerveTxHash) {
         if (StringUtils.isBlank(nerveTxHash)) {
-            return null;
+            return false;
         }
         byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash));
         if (bytes == null) {
-            return null;
+            return false;
         }
-        return bytesToString(bytes);
-    }*/
+        return true;
+    }
 }

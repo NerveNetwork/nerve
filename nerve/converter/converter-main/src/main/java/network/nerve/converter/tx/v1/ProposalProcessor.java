@@ -124,6 +124,7 @@ public class ProposalProcessor implements TransactionProcessor {
                 po.setHash(tx.getHash());
                 po.setType(txData.getType());
                 po.setAddress(txData.getAddress());
+                po.setNerveHash(txData.getHash());
                 po.setHeterogeneousChainId(txData.getHeterogeneousChainId());
                 po.setHeterogeneousTxHash(txData.getHeterogeneousTxHash());
                 po.setVoteRangeType(txData.getVoteRangeType());

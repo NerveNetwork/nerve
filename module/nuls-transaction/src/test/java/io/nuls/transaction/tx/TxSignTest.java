@@ -37,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class TxSignTest {
     public static void main(String[] args) throws NulsException {

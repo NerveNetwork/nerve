@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 public class TxSendTest {
+    /*
     static String address20 = "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG";
     static String address21 = "tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD";
     static String address22 = "tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24";
@@ -36,21 +37,42 @@ public class TxSendTest {
     static String address27 = "tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1";
     static String address28 = "tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2";
     static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
-    //ETH地址
     static String address30 = "tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ";
+    */
+
+    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+    static String address21 = "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz";
+    static String address22 = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";
+    static String address23 = "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv";
+    static String address24 = "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD";
+    static String address25 = "TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5";
+    static String address26 = "TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg";
+    static String address27 = "TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n";
+    static String address28 = "TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu";
+    static String address29 = "TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf";
+    static String address30 = "TNVTdTSPEn3kK94RqiMffiKkXTQ2anRwhN1J9";
     /**
      * 0xc11D9943805e56b630A401D4bd9A29550353EFa1 [Account 9]
      */
-    static String address31 = "tNULSeBaMrQaVh1V7LLvbKa5QSN54bS4sdbXaF";
+    /*static String address31 = "tNULSeBaMrQaVh1V7LLvbKa5QSN54bS4sdbXaF";
+    String packageAddressZP = "tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp";
+    String packageAddressNE = "tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe";
+    String packageAddressHF = "tNULSeBaMmShSTVwbU4rHkZjpD98JgFgg6rmhF";// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
+    String packageAddress6  = "tNULSeBaMfmpwBtUSHyLCGHq4WqYY5A4Dxak91";
+    String packageAddress7  = "tNULSeBaMjqtMNhWWyUKZUsGhWaRd88RMrSU6J";
+    String packageAddress8  = "tNULSeBaMrmiuHZg9c2JVAbLQydAxjNvuKRgFj";*/
+
     static String agentAddress;
     static String packageAddress;
     static String packageAddressPrivateKey;
-    String packageAddressZP = "tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp";
-    String packageAddressNE = "tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe";
-    String packageAddressHF = "tNULSeBaMmShSTVwbU4rHkZjpD98JgFgg6rmhF";
-    String packageAddress6  = "tNULSeBaMfmpwBtUSHyLCGHq4WqYY5A4Dxak91";
-    String packageAddress7  = "tNULSeBaMjqtMNhWWyUKZUsGhWaRd88RMrSU6J";
-    String packageAddress8  = "tNULSeBaMrmiuHZg9c2JVAbLQydAxjNvuKRgFj";
+
+    static String address31 = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+    String packageAddressZP = "TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd";
+    String packageAddressNE = "TNVTdTSPNeoGxTS92S2r1DZAtJegbeucL8tCT";
+    String packageAddressHF = "TNVTdTSPLpegzD3B6qaVKhfj6t8cYtnkfR7Wx";// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
+    String packageAddress6  = "TNVTdTSPF9nBiba1vk4PqRkyQaYqwoAJX95xn";
+    String packageAddress7  = "TNVTdTSPKDqbuQc6cF3m41CcQKRvzmXSQzouy";
+    String packageAddress8  = "TNVTdTSPS9g9pGmjEo2gjjGKsNBGc22ysz25a";
     String packageAddressPrivateKeyZP = "b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5";
     String packageAddressPrivateKeyNE = "188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f";
     String packageAddressPrivateKeyHF = "fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499";
@@ -62,11 +84,12 @@ public class TxSendTest {
     static String USDI = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
     static String DAI = "0xad6d458402f60fd3bd25163575031acdce07538d";
     static String FAU = "0xfab46e002bbf0b4509813474841e0716e6730136";
+    static String MT = "0x9b4e2b4b13d125238aa0480dd42b4f6fc71b37cc";
     //symbol: DAI, decimals: 18, address: 0xad6d458402f60fd3bd25163575031acdce07538d
     //symbol: FAU, decimals: 18, address: 0xfab46e002bbf0b4509813474841e0716e6730136
 
     private Chain chain;
-    static int chainId = 2;
+    static int chainId = 5;
     static int assetId = 1;
     static int heterogeneousChainId = 101;
     static int heterogeneousAssetId = 1;
@@ -86,6 +109,10 @@ public class TxSendTest {
         packageHF();
     }
 
+
+    // 0x09534d4692F568BC6e9bef3b4D84d48f19E52501 [Account3]
+    // 0xF3c90eF58eC31805af11CE5FA6d39E395c66441f [Account4]
+    // 0x6afb1F9Ca069bC004DCF06C51B42992DBD90Adba [Account5]
     // 私钥: 43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D / 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65 [Account 6] / tNULSeBaMfmpwBtUSHyLCGHq4WqYY5A4Dxak91
     // 私钥: 0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85 / 0xd29E172537A3FB133f790EBE57aCe8221CB8024F [Account 7] / tNULSeBaMjqtMNhWWyUKZUsGhWaRd88RMrSU6J
     // 私钥: CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2 / 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17 [Account 8] / tNULSeBaMrmiuHZg9c2JVAbLQydAxjNvuKRgFj
@@ -109,6 +136,7 @@ public class TxSendTest {
         importPriKey("4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39", password);//ETH 测试网地址 tNULSeBaMrQaVh1V7LLvbKa5QSN54bS4sdbXaF, 0xc11D9943805e56b630A401D4bd9A29550353EFa1 [Account 9]
         importPriKey(packageAddressPrivateKey, password);
     }
+
     public static void importPriKey(String priKey, String pwd) {
         try {
             //账户已存在则覆盖 If the account exists, it covers.
@@ -162,8 +190,8 @@ public class TxSendTest {
 
         params.put("assetId", 2);
         params.put("heterogeneousAddress", "0xc11d9943805e56b630a401d4bd9a29550353efa1");
-        // 0.1个ETH
-        params.put("amount", Long.valueOf(10_0000_0000_0000_0000L));
+        // 0.01个ETH
+        params.put("amount", Long.valueOf(1_0000_0000_0000_0000L));
         params.put("remark", "提现");
         params.put("address", address31);
         params.put("password", password);
@@ -228,6 +256,7 @@ public class TxSendTest {
         regERC20("USDI", USDI, 6);
         //regERC20("DAI", DAI, 18);
         //regERC20("FAU", FAU, 18);
+        //regERC20("MT", MT, 18); // mainnet
     }
 
     private void regERC20(String symbol, String contract, int decimal) throws Exception {
@@ -274,8 +303,8 @@ public class TxSendTest {
     public void findAssetInfoByAssetId() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
-        params.put("chainId", 2);
-        params.put("assetId", 4);
+        params.put("chainId", chainId);
+        params.put("assetId", 1);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO, params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
@@ -289,10 +318,22 @@ public class TxSendTest {
         transferMap.put("remark", "abc");
         List<CoinDTO> inputs = new ArrayList<>();
         List<CoinDTO> outputs = new ArrayList<>();
-        inputs.add(new CoinDTO(address31, 2, 1, BigInteger.valueOf(10_0000L), password, 0));
-        inputs.add(new CoinDTO(address31, 101, 1, BigInteger.valueOf(10_0000_0000_0000_0000L), password, 0));
 
-        outputs.add(new CoinDTO(address30, 101, 1, BigInteger.valueOf(10_0000_0000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address22, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address23, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address24, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address25, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address26, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address27, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address28, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address29, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address30, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address31, chainId, 1, BigInteger.valueOf(510000_0000_0000L), password, 0));
+        BigInteger inAmount = BigInteger.valueOf(10_0000L);
+        for (CoinDTO dto : outputs) {
+            inAmount = inAmount.add(dto.getAmount());
+        }
+        inputs.add(new CoinDTO(address21, chainId, 1, inAmount, password, 0));
 
         transferMap.put("inputs", inputs);
         transferMap.put("outputs", outputs);
@@ -318,7 +359,7 @@ public class TxSendTest {
     @Test
     public void stopAgent() throws Exception {
         Map<String, Object> params = new HashMap<>();
-        params.put(Constants.CHAIN_ID, 2);
+        params.put(Constants.CHAIN_ID, chainId);
         params.put("address", agentAddress);
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_stopAgent", params);
@@ -350,8 +391,8 @@ public class TxSendTest {
     public void ledgerAssetInChainQuery() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
-        params.put("chainId", 4);
-        params.put("assetId", 3);
+        params.put("chainId", chainId);
+        params.put("assetId", 2);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "getAssetRegInfoByAssetId", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
@@ -373,10 +414,10 @@ public class TxSendTest {
         params.put(Constants.CHAIN_ID, chainId);
 
         params.put("type", ProposalTypeEnum.UPGRADE.value());
-        params.put("content", "这是一个提案的内容......");
+        params.put("content", "这是升级合约的提案……");
         params.put("heterogeneousChainId", heterogeneousChainId);
         params.put("heterogeneousTxHash", "");
-        params.put("businessAddress", "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2");
+        params.put("businessAddress", "0x9371A75C4CaAcAB8Cd537B8BDf18272CA1777FE0");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
         params.put("address", address22);
@@ -397,10 +438,10 @@ public class TxSendTest {
         transferMap.put("remark", "abc");
         List<CoinDTO> inputs = new ArrayList<>();
         List<CoinDTO> outputs = new ArrayList<>();
-        inputs.add(new CoinDTO(address22, 2, 1, BigInteger.valueOf(20_0000_0001_0000L), password, 0));
+        inputs.add(new CoinDTO(address21, chainId, 1, BigInteger.valueOf(20_0000_0001_0000L), password, 0));
 
-        outputs.add(new CoinDTO(address31, 2, 1, BigInteger.valueOf(10_0000_0000_0000L), password, 0));
-        outputs.add(new CoinDTO(agentAddress, 2, 1, BigInteger.valueOf(10_0000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(address31, chainId, 1, BigInteger.valueOf(10_0000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO(agentAddress, chainId, 1, BigInteger.valueOf(10_0000_0000_0000L), password, 0));
 
         transferMap.put("inputs", inputs);
         transferMap.put("outputs", outputs);
@@ -416,7 +457,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "ec51d3159150c800df7c9e41daaa5743dad9f36146d8a56e20d06d71e9eae747");
+        params.put("proposalTxHash", "cf087e39c1daace9dc47f79ecf3c084e9df3c2fdbd3dc9c76571860c2dff947e");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", agentAddress);

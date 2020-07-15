@@ -13,7 +13,7 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.storage.RandomSeedsStorageService;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Component
 public class RandomSeedService {

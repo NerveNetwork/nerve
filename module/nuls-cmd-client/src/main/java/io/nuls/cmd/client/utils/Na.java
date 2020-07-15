@@ -41,7 +41,7 @@ import java.text.NumberFormat;
 /**
  * Nuls unit
  *
- * @author Niels
+ * @author Eva
  */
 public final class Na implements Comparable<Na>, Serializable {
 

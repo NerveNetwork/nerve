@@ -252,21 +252,24 @@ public class MongoDepositServiceImpl implements DepositService {
 
     @Override
     public PageInfo<DepositInfo> getStackRecordByAddress(int chainId, int pageIndex, int pageSize, String address){
-        return pageDepositList(chainId,address,null,false,pageIndex,pageSize,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
+        return pageDepositList(chainId,address,null,null,pageIndex,pageSize,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
     }
 
 
 
-    private PageInfo<DepositInfo> pageDepositList(int chainId, String address, String agentHash,boolean isActive, int pageIndex, int pageSize, Integer... type) {
+    private PageInfo<DepositInfo> pageDepositList(int chainId, String address, String agentHash,Boolean isActive, int pageIndex, int pageSize, Integer... type) {
         if(type.length == 0){
             throw new IllegalArgumentException("require type");
         }
         Bson bson = Filters.or(Arrays.stream(type).map(t->Filters.eq("type",t)).collect(Collectors.toList()));
-        if(isActive){
-            bson = Filters.and(Filters.eq("deleteHeight", -1),bson);
-        }else{
-            bson = Filters.and(Filters.ne("deleteHeight", -1),bson);
+        if(isActive != null){
+            if(isActive){
+                bson = Filters.and(Filters.eq("deleteHeight", -1),bson);
+            }else{
+                bson = Filters.and(Filters.ne("deleteHeight", -1),bson);
+            }
         }
+
         if(StringUtils.isNotBlank(address)){
             bson = Filters.and(Filters.eq("address", address),bson);
         }
@@ -301,6 +304,16 @@ public class MongoDepositServiceImpl implements DepositService {
     @Override
     public Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height) {
         List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
+        return assetToNvtValue(depositList);
+    }
+
+    @Override
+    public BigInteger getStackingTotalByNVT(int chainId,String address){
+        List<DepositInfo> depositList = pageDepositList(chainId,address,null,true,1,Integer.MAX_VALUE,DepositInfoType.STACKING).getList();
+        return assetToNvtValue(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
+    }
+
+    private  Map<String,BigInteger> assetToNvtValue( List<DepositInfo>  depositList){
         SymbolPrice nvtUsdtPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
         Map<String,BigInteger> res = new HashMap<>();
         depositList.stream().forEach(d->{

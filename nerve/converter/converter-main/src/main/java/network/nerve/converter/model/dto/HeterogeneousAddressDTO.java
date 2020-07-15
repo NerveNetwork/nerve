@@ -32,22 +32,24 @@ import network.nerve.converter.model.bo.HeterogeneousAddress;
  */
 public class HeterogeneousAddressDTO extends HeterogeneousAddress {
 
+    private String symbol;
+
     private String balance;
 
     public HeterogeneousAddressDTO() {
     }
 
-    public HeterogeneousAddressDTO(int chainId, String address) {
-        super(chainId, address);
-    }
-
-    public HeterogeneousAddressDTO(int chainId, String address, String balance) {
-        super(chainId, address);
-        this.balance = balance;
-    }
 
     public HeterogeneousAddressDTO(HeterogeneousAddress heterogeneousAddress) {
         super(heterogeneousAddress.getChainId(), heterogeneousAddress.getAddress());
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
     }
 
     public String getBalance() {

@@ -67,10 +67,9 @@ public class ForwardSmallBlockHandler implements MessageProcessor {
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
         NulsHash blockHash = message.getRequestHash();
-        Long height = context.getCachedHashHeightMap().get(blockHash);
-        if (height != null) {
-            NetworkCall.setHashAndHeight(chainId, blockHash, height, nodeId);
-        }
+        long height = message.getHeight();
+        context.getCachedHashHeightMap().put(blockHash, height);
+        NetworkCall.setHashAndHeight(chainId, blockHash, height, nodeId);
         BlockForwardEnum status = SmallBlockCacher.getStatus(chainId, blockHash);
         logger.debug("recieve " + message + " from node-" + nodeId + ", hash:" + blockHash);
         List<String> nodes = context.getOrphanBlockRelatedNodes().get(blockHash);
@@ -101,8 +100,7 @@ public class ForwardSmallBlockHandler implements MessageProcessor {
         }
         //3.未收到区块
         if (BlockForwardEnum.EMPTY.equals(status)) {
-            HashMessage request = new HashMessage();
-            request.setRequestHash(blockHash);
+            HashMessage request = new HashMessage(blockHash, height);
             NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);
         }
     }

@@ -79,7 +79,7 @@ public class TxCompareTest {
         NoUse.mockModule();
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":7771");
         chain = new Chain();
-        chain.setConfig(new ConfigBean(chainId, assetId, 1024 * 1024, 1000, 20, 20000, 60000));
+        chain.setConfig(new ConfigBean(chainId, assetId));
         //初始化上下文
 //        SpringLiteContext.init(TestConstant.CONTEXT_PATH);
 //        orphanSort = SpringLiteContext.getBean(OrphanSort.class);

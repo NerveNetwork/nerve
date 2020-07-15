@@ -34,11 +34,16 @@ import network.nerve.converter.model.bo.Chain;
  */
 public interface AsyncProcessedTxStorageService {
 
-    boolean saveProposalExe(Chain chain, String hash, long height);
+    boolean saveProposalExe(Chain chain, String hash);
 
-    boolean saveComponentCall(Chain chain, String hash, long height);
+    boolean saveComponentCall(Chain chain, String hash);
 
-    Long getProposalExe(Chain chain, String hash);
+    boolean removeComponentCall(Chain chain, String hash);
 
-    Long getComponentCall(Chain chain, String hash);
+    String getProposalExe(Chain chain, String hash);
+
+    String getComponentCall(Chain chain, String hash);
+
+
+
 }

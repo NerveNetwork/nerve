@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class ApiContext {
 
@@ -51,6 +51,9 @@ public class ApiContext {
 
     public static int awardAssetId;
 
+    /**
+     * 节点出块条件，委托数大于等会此值才有资格出块
+     */
     public static BigInteger minDeposit;
 
     public static String databaseUrl;
@@ -89,7 +92,14 @@ public class ApiContext {
 
     public static long networkHeight;
 
+    /**
+     * 最新区块出块时间
+     */
+    public static long bestBlockCreateTime;
+
     public static int magicNumber;
+
+    public static int maxAgentCount = 35;
 
     /**
      * 总通胀量
@@ -134,8 +144,14 @@ public class ApiContext {
      * 节点保证金基数
      */
     public static double agentDepositBase = 3;
+
     /**
-     *  虚拟银行保证金基数
+     * #节点保证金基数
+     */
+    public static double reservegentDepositBase = 1.5;
+    /**
+     * 虚拟银行保证金基数
      */
     public static double superAgentDepositBase = 4;
+
 }

@@ -200,6 +200,9 @@ public class ChainManager {
             key:本链协议的交易Hash
             value:本链协议跨链交易及状态
             */
+            /**
+             * @see network.nerve.model.po.CtxStatusPO
+             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_CTX_STATUS + chainId);
 
             /*

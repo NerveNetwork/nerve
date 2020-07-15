@@ -24,19 +24,25 @@
 
 package network.nerve.converter.heterogeneouschain.eth.storage;
 
+import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
+
 /**
  * @author: Mimi
  * @date: 2020-02-20
  */
 public interface EthTxRelationStorageService {
 
-    int save(String ethTxHash, String nerveTxHash) throws Exception;
+    int save(String ethTxHash, String nerveTxHash, EthSendTransactionPo ethTxPo) throws Exception;
 
     String findNerveTxHash(String ethTxHash);
 
+    EthSendTransactionPo findEthSendTxPo(String ethTxHash);
+
     void deleteByTxHash(String ethTxHash) throws Exception;
 
-    //String findEthTxHash(String nerveTxHash);
+    int saveNerveTxHash(String nerveTxHash) throws Exception;
+
+    boolean existNerveTxHash(String nerveTxHash);
 
 
 }

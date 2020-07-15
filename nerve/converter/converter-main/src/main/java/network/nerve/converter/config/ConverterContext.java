@@ -89,4 +89,5 @@ public class ConverterContext {
      * 签名拜占庭比例
      */
     public static int BYZANTINERATIO = 66;
+
 }

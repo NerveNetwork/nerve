@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class CurrentRound extends PocRound {
 

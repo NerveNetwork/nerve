@@ -67,6 +67,7 @@ public class BlockResource extends BaseCmd {
     /**
      * 共识模块通知节点向其他节点获取区块
      * The consensus module informs the node to obtain blocks from other nodes
+     *
      * @param map
      * @return
      */
@@ -79,32 +80,29 @@ public class BlockResource extends BaseCmd {
             @Parameter(parameterName = "secondHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "block hash值"),
     })
     @ResponseData(name = "无返回值")
-
     public Response noticeGetBlock(Map map) {
-        int chainId = (Integer)map.get(Constants.CHAIN_ID);
+        int chainId = (Integer) map.get(Constants.CHAIN_ID);
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
         long height = Long.parseLong(map.get("height").toString());
-        if(height <= context.getLatestHeight()){
+        if (height <= context.getLatestHeight()) {
             logger.debug("=======Block to save complete=======");
             return success();
         }
         String nodeId = String.valueOf(map.get("nodeId"));
         String firstHash = String.valueOf(map.get("firstHash"));
-        if(firstHash != null){
+        if (firstHash != null) {
             NulsHash firstHashData = NulsHash.fromHex(firstHash);
-            if(SmallBlockCacher.getRealCacheSmallBlock(chainId, firstHashData) != null){
-                HashMessage request = new HashMessage();
-                request.setRequestHash(firstHashData);
+            if (SmallBlockCacher.getRealCacheSmallBlock(chainId, firstHashData) != null) {
+                HashMessage request = new HashMessage(firstHashData,height);
                 NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);
             }
         }
         String secondHash = String.valueOf(map.get("secondHash"));
-        if(secondHash != null){
+        if (secondHash != null && secondHash.length() > 10) {
             NulsHash secondHashData = NulsHash.fromHex(secondHash);
-            if(SmallBlockCacher.getRealCacheSmallBlock(chainId, secondHashData) != null){
-                HashMessage request = new HashMessage();
-                request.setRequestHash(secondHashData);
+            if (SmallBlockCacher.getRealCacheSmallBlock(chainId, secondHashData) != null) {
+                HashMessage request = new HashMessage(secondHashData,height);
                 NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);
             }
         }
@@ -128,25 +126,25 @@ public class BlockResource extends BaseCmd {
     })
     @ResponseData(name = "无返回值")
     public Response putBZTFlag(Map map) {
-        int chainId = (Integer)map.get(Constants.CHAIN_ID);
+        int chainId = (Integer) map.get(Constants.CHAIN_ID);
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
         long height = Long.parseLong(map.get("height").toString());
-        if(height <= context.getLatestHeight()){
+        if (height <= context.getLatestHeight()) {
             logger.debug("=======Block to save complete=======");
             return success();
         }
         String firstHash = String.valueOf(map.get("firstHash"));
         boolean bifurcate = Boolean.valueOf(map.get("bifurcate").toString());
-        logger.debug("=======putBZTFlag BEGIN，firstHash={},bifurcate={}",firstHash,bifurcate);
-        if(bifurcate){
+        logger.debug("=======putBZTFlag BEGIN，firstHash={},bifurcate={}", firstHash, bifurcate);
+        if (bifurcate) {
             String secondHash = String.valueOf(map.get("secondHash"));
             service.handleEvidence(chainId, firstHash, secondHash);
             logger.warn("bzt分叉了，处理分叉");
-        }else{
+        } else {
             service.putBlockBZT(chainId, NulsHash.fromHex(firstHash), !bifurcate);
         }
-        logger.debug("putBZTFlag END，firstHash={},bifurcate={}",firstHash,bifurcate);
+        logger.info("putBZTFlag END，Hash={}", firstHash);
         return success();
     }
 
@@ -174,6 +172,7 @@ public class BlockResource extends BaseCmd {
         }
         responseData.put("networkHeight", context.getNetworkHeight());
         responseData.put("localHeight", context.getLatestHeight());
+        responseData.put("bestBlockCreateTime", context.getLatestBlock().getHeader().getTime());
         return success(responseData);
     }
 
@@ -729,7 +728,7 @@ public class BlockResource extends BaseCmd {
             Block block = new Block();
             block.parse(new NulsByteBuffer(RPCUtil.decode((String) map.get("block"))));
             logger.debug("recieve block from local node, height:" + block.getHeader().getHeight() + ", hash:" + block.getHeader().getHash());
-            if (service.saveConsensusBlock(chainId, block, 1, true, true, false, true,null)) {
+            if (service.saveConsensusBlock(chainId, block, 1, true, true, false, true, null)) {
                 return success();
             } else {
                 SmallBlockCacher.setStatus(chainId, block.getHeader().getHash(), ERROR);
@@ -775,6 +774,7 @@ public class BlockResource extends BaseCmd {
         }
         return success(responseData);
     }
+
     /**
      * 获取当前运行状态
      * status-0:同步
@@ -808,9 +808,9 @@ public class BlockResource extends BaseCmd {
     public Response clearSystxCache(Map map) {
         int chainId = Integer.parseInt(map.get(Constants.CHAIN_ID).toString());
         ChainContext context = ContextManager.getContext(chainId);
-       if(null != context && null != context.getSystemTransactionType()){
-           context.getSystemTransactionType().clear();
-       }
+        if (null != context && null != context.getSystemTransactionType()) {
+            context.getSystemTransactionType().clear();
+        }
         return success(Map.of("value", true));
     }
 

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CvTest {
+    /*
     static String address20 = "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG";
     static String address21 = "tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD";
     static String address22 = "tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24";
@@ -37,11 +38,28 @@ public class CvTest {
     static String address27 = "tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1";
     static String address28 = "tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2";
     static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
-    //ETH地址
+
     static String address30 = "tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ";
+    static String address31 = "tNULSeBaMrbmG67VrTJeZswv4P2uXXKoFMa6RH";
+    */
+
+    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+    static String address21 = "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz";
+    static String address22 = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";
+    static String address23 = "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv";
+    static String address24 = "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD";
+    static String address25 = "TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5";
+    static String address26 = "TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg";
+    static String address27 = "TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n";
+    static String address28 = "TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu";
+    static String address29 = "TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf";
+    static String address30 = "TNVTdTSPEn3kK94RqiMffiKkXTQ2anRwhN1J9";
+    static String address31 = "TNVTdTSPRyiWcpbS65NmT5qyGmuqPxuKv8SF4";
+
+
 
     private Chain chain;
-    static int chainId = 2;
+    static int chainId = 5;
     static int assetId = 1;
     static int heterogeneousChainId = 101;
     static int heterogeneousAssetId = 1;
@@ -60,24 +78,27 @@ public class CvTest {
 
     @Test
     public void importPriKeyTest() {
-        //公钥: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
-        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
-//        //公钥: 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b
-//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
-        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
-        importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
-        importPriKey("8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24
-        importPriKey("4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530", password);//23 tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD
-        importPriKey("bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7", password);//24 tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL
-        importPriKey("ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200", password);//25 tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL
-        importPriKey("4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a", password);//26 tNULSeBaMoodYW7AqyJrgYdWiJ6nfwfVHHHyXm
-        importPriKey("3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1", password);//27 tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1
-        importPriKey("27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e", password);//28 tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2
-        importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn
+        // 公钥: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
+        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd
+        // 公钥: 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b
+//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe TNVTdTSPNeoGxTS92S2r1DZAtJegbeucL8tCT
+        // 公钥: 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
+//        importPriKey("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499", password);//种子出块地址 tNULSeBaMmShSTVwbU4rHkZjpD98JgFgg6rmhF TNVTdTSPLpegzD3B6qaVKhfj6t8cYtnkfR7Wx
 
-        importPriKey("50a0631304ba75b1519c96169a0250795d985832763b06862167aa6bbcd6171f", password);// 出块 0x18354c726a3ef2b7da89def0fce1d15d679ae16a
+        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5
+        importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz
+        importPriKey("8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24 TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw
+        importPriKey("4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530", password);//23 tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv
+        importPriKey("bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7", password);//24 tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD
+        importPriKey("ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200", password);//25 tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5
+        importPriKey("4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a", password);//26 tNULSeBaMoodYW7AqyJrgYdWiJ6nfwfVHHHyXm TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg
+        importPriKey("3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1", password);//27 tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1 TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n
+        importPriKey("27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e", password);//28 tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2 TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu
+        importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf
 
-        importPriKey("b36097415f57fe0ac1665858e3d007ba066a7c022ec712928d2372b27e8513ff", password);//ETH 测试网地址 tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ
+        importPriKey("50a0631304ba75b1519c96169a0250795d985832763b06862167aa6bbcd6171f", password);// 出块 tNULSeBaMrbmG67VrTJeZswv4P2uXXKoFMa6RH TNVTdTSPRyiWcpbS65NmT5qyGmuqPxuKv8SF4 0x18354c726a3ef2b7da89def0fce1d15d679ae16a
+
+        importPriKey("b36097415f57fe0ac1665858e3d007ba066a7c022ec712928d2372b27e8513ff", password);//ETH 测试网地址 tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ TNVTdTSPEn3kK94RqiMffiKkXTQ2anRwhN1J9
     }
 
     public static void importPriKey(String priKey, String pwd) {
@@ -121,7 +142,7 @@ public class CvTest {
 
     @Test
     public void getBalance() throws Exception {
-        NonceBalance balance = LedgerCall.getBalanceNonce(chain, chainId, 2, address27);
+        NonceBalance balance = LedgerCall.getBalanceNonce(chain, chainId, 2, address30);
         System.out.println("ETH:" + balance.getAvailable());
         NonceBalance balance3 = LedgerCall.getBalanceNonce(chain, chainId, 3, address30);
         System.out.println("USDX:" + balance3.getAvailable());
@@ -133,15 +154,14 @@ public class CvTest {
     @Test
     public void withdrawalETH() throws Exception {
         //账户已存在则覆盖 If the account exists, it covers.
-        for (int i = 1; i <= 100; i++) {
+        for (int i = 1; i <= 1; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
 
             params.put("assetId", 2);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
-            params.put("amount", "1000000000000000000");//1ETH
-            params.put("amount", "5000000000000000");
+            params.put("amount", "100000000000000000");
             params.put("remark", "提现");
             params.put("address", address30);
             params.put("password", password);
@@ -159,7 +179,7 @@ public class CvTest {
 
     @Test
     public void withdrawalERC20() throws Exception {
-        for (int i = 1; i <= 100; i++) {
+        for (int i = 1; i <= 5; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -167,7 +187,7 @@ public class CvTest {
             params.put("assetId", 3);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
 //            params.put("amount", (10 * i) + "000000");
-            params.put("amount", "1000000");
+            params.put("amount", "10000000");
             params.put("remark", "提现");
             params.put("address", address30);
             params.put("password", password);
@@ -190,7 +210,7 @@ public class CvTest {
         params.put(Constants.CHAIN_ID, chainId);
         params.put("deposit", "40000000000000"); // 50W
         // 私钥:50a0631304ba75b1519c96169a0250795d985832763b06862167aa6bbcd6171f
-        params.put("packingAddress", "tNULSeBaMrbmG67VrTJeZswv4P2uXXKoFMa6RH");
+        params.put("packingAddress", address30);
         params.put("password", password);
         params.put("rewardAddress", address29);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_createAgent", params);
@@ -231,11 +251,12 @@ public class CvTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
-        params.put("type", ProposalTypeEnum.LOCK.value());
+        params.put("type", ProposalTypeEnum.REFUND.value());
         params.put("content", "这是一个提案的内容...");
         params.put("heterogeneousChainId", heterogeneousChainId);
-        params.put("heterogeneousTxHash", "0x5182c6d534ac5bcee37b1c6309ea2ed3fd5adeca9ed78a9e6e6e654230720be5");
-        params.put("businessAddress", address25);
+        params.put("heterogeneousTxHash", "0x7488d23bf46af751194e1fc3f1794418d61326ab77bf151f68c6c6546c2e20b7");
+        params.put("businessAddress", address26);
+        params.put("hash", "954dcd9a6ae9a1cc9f341126c3c05c48feb95b47ba191d76f42d4bcf1b27448a");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
         params.put("address", address20);
@@ -255,7 +276,7 @@ public class CvTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "cee3fc7f7cc9a3a67c44094df1d1fe3f471d7af47e57d2564aa98ea76e75bde8");
+        params.put("proposalTxHash", "86a8640eac276aa00c5fb8d73ffb723a20c6c74619f1e1895149a85845578286");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", "tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp");
@@ -278,4 +299,6 @@ public class CvTest {
         Transaction tx = ConverterUtil.getInstance(str, Transaction.class);
         System.out.println(tx.format(WithdrawalTxData.class));
     }
+
+    // resetbank 101 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
 }

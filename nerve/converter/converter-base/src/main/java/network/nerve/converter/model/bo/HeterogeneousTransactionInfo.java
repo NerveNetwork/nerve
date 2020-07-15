@@ -45,7 +45,7 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
      */
     private String[] addAddresses;
     private String[] removeAddresses;
-    private String[] currentAddresses;
+    private int orginTxCount;
 
     public String getNerveTxHash() {
         return nerveTxHash;
@@ -71,12 +71,12 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
         this.removeAddresses = removeAddresses;
     }
 
-    public String[] getCurrentAddresses() {
-        return currentAddresses;
+    public int getOrginTxCount() {
+        return orginTxCount;
     }
 
-    public void setCurrentAddresses(String[] currentAddresses) {
-        this.currentAddresses = currentAddresses;
+    public void setOrginTxCount(int orginTxCount) {
+        this.orginTxCount = orginTxCount;
     }
 
     public HeterogeneousChainTxType getTxType() {
@@ -98,6 +98,8 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
                 .append(Arrays.toString(addAddresses));
         sb.append(",\"removeAddresses\":")
                 .append(Arrays.toString(removeAddresses));
+        sb.append(",\"orginTxCount\":")
+                .append(orginTxCount);
         sb.append(",\"baseInfo\":")
                 .append(super.toString());
         sb.append('}');

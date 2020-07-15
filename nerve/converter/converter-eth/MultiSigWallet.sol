@@ -21,7 +21,6 @@ contract MultiSigWallet {
     // 用于提现
     struct TxWithdraw {
         uint8 e;
-        address creator;
         address payable to;
         uint256 amount;
         bool isERC20;
@@ -31,7 +30,6 @@ contract MultiSigWallet {
     // 用于管理员变更
     struct TxManagerChange {
         uint8 e;
-        address creator;
         address[] adds;
         address[] removes;
         Signature signature;
@@ -60,7 +58,7 @@ contract MultiSigWallet {
     uint constant DENOMINATOR = 100;
     string constant UPDATE_SEED_MANAGERS = "updateSeedManagers";
     // 当前提现交易的最小签名数量
-    uint public current_withdraw_min_signatures;
+    uint8 public current_withdraw_min_signatures;
     address public owner;
     mapping(address => uint8) private seedManagers;
     address[] public seedManagerArray;
@@ -108,7 +106,6 @@ contract MultiSigWallet {
         pendingTxWithdraws[txKey] = tx1;
         TxWithdraw storage _tx = pendingTxWithdraws[txKey];
         _tx.e = 1;
-        _tx.creator = msg.sender;
         _tx.to = to;
         _tx.amount = amount;
         _tx.isERC20 = isERC20;
@@ -133,10 +130,10 @@ contract MultiSigWallet {
             }
             emit TxWithdrawCompleted(signers, txKey);
             // 移除暂存数据
-            deletePendingTx(txKey, 1);
+            deletePendingTx(txKey, tx1.e, 1);
         }
     }
-    function createOrSignManagerChange(string memory txKey, address[] memory adds, address[] memory removes) public isManager {
+    function createOrSignManagerChange(string memory txKey, address[] memory adds, address[] memory removes, uint8 count) public isManager {
         require(adds.length > 0 || removes.length > 0, "There are no managers joining or exiting");
         // 校验已经完成的交易
         require(completedTxs[txKey] == 0, "Transaction has been completed");
@@ -149,8 +146,10 @@ contract MultiSigWallet {
         TxManagerChange memory tx1;
         pendingTxManagerChanges[txKey] = tx1;
         TxManagerChange storage _tx = pendingTxManagerChanges[txKey];
-        _tx.e = 1;
-        _tx.creator = msg.sender;
+        if (count == 0) {
+            count = 1;
+        }
+        _tx.e = count;
         _tx.adds = adds;
         _tx.removes = removes;
         _tx.signature.signed.push(msg.sender);
@@ -181,7 +180,7 @@ contract MultiSigWallet {
             // add managerChange event
             emit TxManagerChangeCompleted(signers, txKey);
             // 移除暂存数据
-            deletePendingTx(txKey, 2);
+            deletePendingTx(txKey, tx1.e, 2);
         }
     }
     function createOrSignUpgrade(string memory txKey) public isManager {
@@ -210,14 +209,14 @@ contract MultiSigWallet {
             // add managerChange event
             emit TxUpgradeCompleted(signers, txKey);
             // 移除暂存数据
-            deletePendingTx(txKey, 3);
+            deletePendingTx(txKey, tx1.e, 3);
         }
     }
-    function isCompleteSign(Signature storage signature, uint min_signatures, uint removeLengh) internal returns (bool){
+    function isCompleteSign(Signature storage signature, uint8 min_signatures, uint removeLengh) internal returns (bool){
         bool complete = false;
         // 计算当前有效签名
         signature.signatureCount = calValidSignatureCount(signature);
-        if( min_signatures == 0) {
+        if (min_signatures == 0) {
             min_signatures = calMinSignatures(managerArray.length - removeLengh);
         }
         if (signature.signatureCount >= min_signatures) {
@@ -381,12 +380,10 @@ contract MultiSigWallet {
             }
         }
     }
-    function deletePendingTx(string memory txKey, uint types) internal {
-        completedTxs[txKey] = 1;
+    function deletePendingTx(string memory txKey, uint8 e, uint types) internal {
+        completedTxs[txKey] = e;
         if (types == 1) {
             delete pendingTxWithdraws[txKey];
-        } else if (types == 2) {
-            delete pendingTxManagerChanges[txKey];
         } else if (types == 3) {
             delete pendingTxUpgrade[txKey];
         }
@@ -415,15 +412,15 @@ contract MultiSigWallet {
         transferERC20(ERC20, to, amount);
     }
     function isCompletedTx(string memory txKey) public view returns (bool){
-        return completedTxs[txKey] == 1;
+        return completedTxs[txKey] > 0;
     }
-    function pendingWithdrawTx(string memory txKey) public view returns (address creator, address to, uint256 amount, bool isERC20, address ERC20, uint8 signatureCount) {
+    function pendingWithdrawTx(string memory txKey) public view returns (address to, uint256 amount, bool isERC20, address ERC20, uint8 signatureCount) {
         TxWithdraw storage tx1 = pendingTxWithdraws[txKey];
-        return (tx1.creator, tx1.to, tx1.amount, tx1.isERC20, tx1.ERC20, tx1.signature.signatureCount);
+        return (tx1.to, tx1.amount, tx1.isERC20, tx1.ERC20, tx1.signature.signatureCount);
     }
-    function pendingManagerChangeTx(string memory txKey) public view returns (address creator, string memory key, address[] memory adds, address[] memory removes, uint8 signatureCount) {
+    function pendingManagerChangeTx(string memory txKey) public view returns (uint8 txCount, string memory key, address[] memory adds, address[] memory removes, uint8 signatureCount) {
         TxManagerChange storage tx1 = pendingTxManagerChanges[txKey];
-        return (tx1.creator, txKey, tx1.adds, tx1.removes, tx1.signature.signatureCount);
+        return (tx1.e, txKey, tx1.adds, tx1.removes, tx1.signature.signatureCount);
     }
     function ifManager(address _manager) public view returns (bool) {
         return managers[_manager] == 1;

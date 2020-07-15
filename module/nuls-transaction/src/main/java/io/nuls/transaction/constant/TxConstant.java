@@ -4,7 +4,7 @@ import io.nuls.core.crypto.HexUtil;
 
 /**
  * @author: Charlie
- * @date: 2018/11/12
+ * @date: 2020/06/25
  */
 public interface TxConstant {
 
@@ -41,8 +41,9 @@ public interface TxConstant {
     /** 处理网络新交易时，一次从待处理集合中获取新交易的最大值 */
     int NET_TX_PROCESS_NUMBER_ONCE = 1000;
 
-    /** 打包时，一批次给账本进行验证的交易数 */
-    int PACKAGE_TX_VERIFY_COINDATA_NUMBER_OF_TIMES_TO_PROCESS = 2000;
+    /** 接收网络新交易队列的最大容量 未处理的交易队列**/
+    int TX_UNVERIFIED_QUEUE_SIZE = 10000;
+
 
     /** Map初始值 */
     int INIT_CAPACITY_32 = 32;
@@ -63,28 +64,16 @@ public interface TxConstant {
 
     int ORPHAN_LIST_MAX_DATA_SIZE = 5000 * 300;
 
-    int PACKAGE_TX_MAX_COUNT = 10000;
-    /** 一个区块中最大允许跨链模块交易的数量*/
-    int PACKAGE_CROSS_TX_MAX_COUNT = 500;
-    /** 一个区块中最大允许智能合约交易的数量*/
-    int PACKAGE_CONTRACT_TX_MAX_COUNT = 600;
+    long REQUEST_TIME_OUT = 600 * 1000L;
 
-    /**(毫秒) 打包时的时间分配分为两大部分
-     1：从待打包队列获取交易以及账本验证。
-     2：调用各模块验证器验证交易，获取智能合约结果。
-     该配置为固定给第二部分预留的时间，其他时间留给第一部分。
-     */
-    long PACKAGE_MODULE_VALIDATOR_RESERVE_TIME = 2000L;//1500L;
-    long TIMEOUT = 600 * 1000L;
-
-    /** 闪电网络基础打包参数配置 不包含智能合约**/
-    /** 闪电网络打包的最大交易数 **/
+    /** 基础打包参数配置 不包含智能合约**/
+    /** 打包的最大交易数 **/
     int BASIC_PACKAGE_TX_MAX_COUNT = 1200;
-    /** 闪电网络打包时模块验证等预留时间 **/
+    /** 打包时模块验证等预留时间 **/
     long BASIC_PACKAGE_RESERVE_TIME = 400L;
     /** 一个区块中最大允许跨链模块交易的数量*/
     int BASIC_PACKAGE_CROSS_TX_MAX_COUNT = 50;
-    /** 闪电网络打包时,账本验证一批次的数量*/
+    /** 打包时,账本验证一批次的数量*/
     int BASIC_PACKAGE_VERIFY_COINDATA_BATCH = 800;
     /**rpc预留时间 **/
     long BASIC_PACKAGE_RPC_RESERVE_TIME = 20L;
@@ -94,4 +83,5 @@ public interface TxConstant {
     int PACKING = 0;
 
     int VERIFY = 1;
+
 }

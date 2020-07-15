@@ -1,10 +1,12 @@
 package network.nerve.dex.model.txData;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.Address;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 
@@ -120,4 +122,23 @@ public class TradingOrder extends BaseNulsData {
     public void setAddress(byte[] address) {
         this.address = address;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        String lineSeparator = System.lineSeparator();
+        builder.append(String.format("\ttradingHash: %s", HexUtil.encode(tradingHash))).append(lineSeparator);
+        builder.append(String.format("\taddress: %s", AddressTool.getStringAddressByBytes(address))).append(lineSeparator);
+        builder.append(String.format("\ttype: %s", type)).append(lineSeparator);
+        builder.append(String.format("\tamount: %s", amount)).append(lineSeparator);
+        builder.append(String.format("\tprice: %s", price)).append(lineSeparator);
+        String addr = null;
+        if(null != feeAddress && feeAddress.length > 0){
+            addr = AddressTool.getStringAddressByBytes(feeAddress);
+        }
+        builder.append(String.format("\tfeeAddress: %s", addr)).append(lineSeparator);
+        builder.append(String.format("\tfeeScale: %s", feeScale)).append(lineSeparator);
+        return builder.toString();
+    }
+
 }

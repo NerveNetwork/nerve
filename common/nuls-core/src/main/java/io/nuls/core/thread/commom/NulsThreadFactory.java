@@ -30,7 +30,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NulsThreadFactory implements ThreadFactory {
     private final String poolName;

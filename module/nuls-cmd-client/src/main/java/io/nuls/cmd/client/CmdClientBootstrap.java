@@ -18,9 +18,6 @@ import io.nuls.core.rpc.util.AddressPrefixDatas;
 public class CmdClientBootstrap {
     public static void main(String[] args) {
         NulsRpcModuleBootstrap.printLogo("/cli-logo");
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         ConfigurationLoader configurationLoader = new ConfigurationLoader();
         configurationLoader.load();
         Provider.ProviderType providerType = Provider.ProviderType.valueOf(configurationLoader.getValue("providerType"));

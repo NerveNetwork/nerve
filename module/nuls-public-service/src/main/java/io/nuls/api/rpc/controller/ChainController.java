@@ -112,7 +112,7 @@ public class ChainController {
         map.put("chainId", chainId);
         map.put("networkHeight", ApiContext.networkHeight);
         map.put("localHeight", ApiContext.localHeight);
-
+        map.put("bestBlockCreateTime",ApiContext.bestBlockCreateTime);
         ApiCache apiCache = CacheManager.getCache(chainId);
         AssetInfo assetInfo = apiCache.getChainInfo().getDefaultAsset();
         Map<String, Object> assetMap = new HashMap<>();
@@ -375,6 +375,7 @@ public class ChainController {
         map.put("blockHeight", blockTimeInfo.getBlockHeight());
         map.put("avgBlockTimeConsuming", new BigDecimal(blockTimeInfo.getAvgConsumeTime()).setScale(2, RoundingMode.HALF_UP));
         map.put("lastBlockTimeConsuming", blockTimeInfo.getLastConsumeTime());
+        map.put("bestBlockCreateTime",ApiContext.bestBlockCreateTime);
         return RpcResult.success(map);
     }
 

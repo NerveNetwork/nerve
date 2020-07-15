@@ -98,6 +98,22 @@
         "verifySignature": false,
         "verifyFee": false,
         "handler": "ConfirmProposalV1"
+      },
+      {
+        "type": "52",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ResetHeterogeneousVirtualBankV1"
+      },
+      {
+        "type": "53",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "ConfirmResetHeterogeneousVirtualBankV1"
       }
     ],
     "validMsgs": [

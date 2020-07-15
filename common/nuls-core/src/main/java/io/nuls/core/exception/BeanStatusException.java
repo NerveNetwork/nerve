@@ -31,7 +31,7 @@ import io.nuls.core.constant.ErrorCode;
  * 系统对象池中的对象实例访问状态不正确时，抛出的异常
  * An exception is thrown when the object instance in the system object pool is not in the right state.
  *
- * @author Niels
+ * @author Eva
  */
 public class BeanStatusException extends NulsRuntimeException {
     public BeanStatusException(ErrorCode message) {

@@ -25,7 +25,6 @@
 package network.nerve.converter.tx.v1;
 
 import io.nuls.base.data.BlockHeader;
-import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.core.constant.SyncStatusEnum;
@@ -36,11 +35,11 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
-import network.nerve.converter.enums.ProposalVoteStatusEnum;
 import network.nerve.converter.helper.ConfirmProposalHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
@@ -84,6 +83,8 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
     private VirtualBankService virtualBankService;
     @Autowired
     private ProposalStorageService proposalStorageService;
+    @Autowired
+    private HeterogeneousService heterogeneousService;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -115,6 +116,13 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The proposalTxHash in the block is repeated (Repeat business)");
+                    continue;
+                }
+
+                if(null != tx.getCoinData() && tx.getCoinData().length > 0){
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.COINDATA_CANNOT_EXIST.getCode();
+                    log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
                 try {
@@ -156,42 +164,43 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                 int heterogeneousChainId = -1;
                 String heterogeneousTxHash = null;
                 IHeterogeneousChainDocking docking = null;
-                NulsHash proposalHash = null;
                 if (txData.getType() == ProposalTypeEnum.UPGRADE.value()) {
                     ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
                     heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
                     heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
-                    proposalHash = upgradeTxData.getNerveTxHash();
                     docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                     docking.updateMultySignAddress(Numeric.toHexString(upgradeTxData.getAddress()));
                 }else{
                     ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
-                    proposalHash = businessData.getProposalTxHash();
                     heterogeneousChainId = businessData.getHeterogeneousChainId();
                     heterogeneousTxHash = businessData.getHeterogeneousTxHash();
+                    ProposalPO po = this.proposalStorageService.find(chain, businessData.getProposalTxHash());
+                    if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
+                        // 重置执行撤银行节点提案标志
+                        heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
+                    }
                 }
-
-                ProposalPO proposalPO = proposalStorageService.find(chain, proposalHash);
-                proposalPO.setStatus(ProposalVoteStatusEnum.COMPLETED.value());
-                proposalStorageService.save(chain, proposalPO);
-
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
                             txData.getType() == ProposalTypeEnum.EXPELLED.value() ||
-                            txData.getType() == ProposalTypeEnum.REFUND.value()) {
+                            txData.getType() == ProposalTypeEnum.REFUND.value() ||
+                            txData.getType() == ProposalTypeEnum.WITHDRAW.value()) {
                         if (null == docking) {
                             docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                         }
                         docking.txConfirmedCompleted(heterogeneousTxHash, blockHeader.getHeight());
 
                         // 补贴手续费
-                        //放入后续处理队列, 可能发起手续费补贴交易
-                        TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
-                        pendingPO.setTx(tx);
-                        pendingPO.setBlockHeader(blockHeader);
-                        pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
-                        txSubsequentProcessStorageService.save(chain, pendingPO);
-                        chain.getPendingTxQueue().offer(pendingPO);
+                        if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
+                                txData.getType() == ProposalTypeEnum.REFUND.value() ) {
+                            //放入后续处理队列, 可能发起手续费补贴交易
+                            TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                            pendingPO.setTx(tx);
+                            pendingPO.setBlockHeader(blockHeader);
+                            pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                            txSubsequentProcessStorageService.save(chain, pendingPO);
+                            chain.getPendingTxQueue().offer(pendingPO);
+                        }
                     }
                 }
                 chain.getLogger().info("[commit] 确认提案执行交易 hash:{} type:{}",
@@ -230,6 +239,13 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                     heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
                     docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                     docking.updateMultySignAddress(Numeric.toHexString(upgradeTxData.getOldAddress()));
+                }else {
+                    ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
+                    ProposalPO po = this.proposalStorageService.find(chain, businessData.getProposalTxHash());
+                    if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
+                        // 重置执行撤银行节点提案标志
+                        heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, true);
+                    }
                 }
                 if (isCurrentDirector) {
                     if (txData.getType() != ProposalTypeEnum.UPGRADE.value()) {

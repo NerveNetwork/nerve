@@ -1,4 +1,6 @@
 package network.nerve.pocbft.model.bo;
+
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
 import network.nerve.pocbft.model.bo.config.ChainConfig;
@@ -11,6 +13,9 @@ import network.nerve.pocbft.model.po.PubKeyPo;
 import network.nerve.pocbft.model.po.PunishLogPo;
 import network.nerve.pocbft.utils.enumeration.ConsensusStatus;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.pocbft.v1.cache.ConsensusCache;
+
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
@@ -24,17 +29,13 @@ import java.util.concurrent.locks.ReentrantLock;
  * 2018/12/4
  **/
 public class Chain {
-    /**
-     * 是否为共识节点
-     * Is it a consensus node
-     */
-    private boolean packer;
+    private ConsensusCache consensusCache = new ConsensusCache();
 
     /**
      * 共识网络是否组好
      * 链接当前共识网络中80%的节点表示共识网络已组好
-     * */
-    private boolean networkState;
+     */
+    private boolean networkStateOk;
 
     /**
      * 链基础配置信息
@@ -49,16 +50,16 @@ public class Chain {
     private ConsensusStatus consensusStatus;
 
     /**
-     * 打包状态
+     * 已完成区块同步，达到最新高度
      * Chain packing state
      */
-    private boolean canPacking;
+    private boolean synchronizedHeight;
 
     /**
      * 最新区块头
      * The most new block
      */
-    private BlockHeader newestHeader;
+    private BlockHeader bestHeader;
 
     /**
      * 节点列表
@@ -83,7 +84,11 @@ public class Chain {
      * Red punish list
      */
     private List<PunishLogPo> redPunishList;
-
+    /**
+     * 是否为共识节点
+     * Is it a consensus node
+     */
+    private boolean consonsusNode;
     /**
      * 记录链出块地址PackingAddress，同一个高度发出了两个不同的块的证据
      * 下一轮正常则清零， 连续3轮将会被红牌惩罚
@@ -114,16 +119,14 @@ public class Chain {
     /**
      * 追加保证金信息列表
      * List of additional margin information
-     * */
+     */
     private List<ChangeAgentDepositPo> appendDepositList;
 
     /**
      * 减少保证金信息列表
      * Reduced margin information list
-     * */
+     */
     private List<ChangeAgentDepositPo> reduceDepositList;
-
-    private final Lock roundLock = new ReentrantLock();
 
     private NulsLogger logger;
 
@@ -131,29 +134,29 @@ public class Chain {
     /**
      * 种子节点列表
      * Seed node list
-     * */
-    private List<String> seedNodeList;
+     */
+    private List<String> seedAddressList;
 
     /**
      * 线程池
-     * */
+     */
     private ThreadPoolExecutor threadPool;
 
     private List<byte[]> seedNodePubKeyList;
-
+    private List<Agent> seedAgentList;
     /**
      * 本链未出过块的共识节点地址列表
-     * */
-    private List<String> unBlockAgentList;
+     */
+    private Set<String> unBlockAgentList;
 
     /**
      * 本链节点出块地址与公钥键值对
-     * */
+     */
     private PubKeyPo pubKeyPo;
 
     public Chain() {
         this.consensusStatus = ConsensusStatus.RUNNING;
-        this.canPacking = false;
+        this.synchronizedHeight = false;
         this.agentList = new ArrayList<>();
         this.depositList = new ArrayList<>();
         this.yellowPunishList = new ArrayList<>();
@@ -161,21 +164,21 @@ public class Chain {
         this.evidenceMap = new HashMap<>();
         this.redPunishTransactionList = new ArrayList<>();
         this.roundList = new ArrayList<>();
-        this.packer = false;
-        this.seedNodeList = new ArrayList<>();
+        this.consonsusNode = false;
+        this.seedAddressList = new ArrayList<>();
         this.appendDepositList = new ArrayList<>();
         this.reduceDepositList = new ArrayList<>();
-        this.networkState = false;
+        this.networkStateOk = false;
         this.seedNodePubKeyList = new ArrayList<>();
-        this.unBlockAgentList = new ArrayList<>();
+        this.unBlockAgentList = new HashSet<>();
     }
 
 
-    public int getChainId(){
+    public int getChainId() {
         return config.getChainId();
     }
 
-    public int getAssetId(){
+    public int getAssetId() {
         return config.getAssetId();
     }
 
@@ -195,12 +198,12 @@ public class Chain {
         this.consensusStatus = consensusStatus;
     }
 
-    public boolean isCanPacking() {
-        return canPacking;
+    public boolean isSynchronizedHeight() {
+        return synchronizedHeight;
     }
 
-    public void setCanPacking(boolean canPacking) {
-        this.canPacking = canPacking;
+    public void setSynchronizedHeight(boolean synchronizedHeight) {
+        this.synchronizedHeight = synchronizedHeight;
     }
 
     public List<Agent> getAgentList() {
@@ -259,12 +262,12 @@ public class Chain {
         this.roundList = roundList;
     }
 
-    public BlockHeader getNewestHeader() {
-        return newestHeader;
+    public BlockHeader getBestHeader() {
+        return bestHeader;
     }
 
-    public void setNewestHeader(BlockHeader newestHeader) {
-        this.newestHeader = newestHeader;
+    public void setBestHeader(BlockHeader bestHeader) {
+        this.bestHeader = bestHeader;
     }
 
     public List<BlockHeader> getBlockHeaderList() {
@@ -283,16 +286,12 @@ public class Chain {
         this.threadPool = threadPool;
     }
 
-    public Lock getRoundLock() {
-        return roundLock;
+    public boolean isConsonsusNode() {
+        return consonsusNode;
     }
 
-    public boolean isPacker() {
-        return packer;
-    }
-
-    public void setPacker(boolean packer) {
-        this.packer = packer;
+    public void setConsonsusNode(boolean consonsusNode) {
+        this.consonsusNode = consonsusNode;
     }
 
     public NulsLogger getLogger() {
@@ -303,12 +302,32 @@ public class Chain {
         this.logger = logger;
     }
 
-    public List<String> getSeedNodeList() {
-        return seedNodeList;
+    public List<String> getSeedAddressList() {
+        return seedAddressList;
     }
 
-    public void setSeedNodeList(List<String> seedNodeList) {
-        this.seedNodeList = seedNodeList;
+    public List<Agent> getSeedAgentList() {
+        if (this.seedAgentList == null) {
+            List<Agent> list = new ArrayList<>();
+            for (int i = 0; i < this.seedAddressList.size(); i++) {
+                String address = this.seedAddressList.get(i);
+                byte[] addressByte = AddressTool.getAddress(address);
+                Agent agent = new Agent();
+                agent.setAgentAddress(addressByte);
+                agent.setPackingAddress(addressByte);
+                agent.setRewardAddress(addressByte);
+                agent.setCreditVal(0);
+                agent.setDeposit(BigInteger.ZERO);
+                agent.setPubKey(this.seedNodePubKeyList.get(i));
+                list.add(agent);
+            }
+            this.seedAgentList = list;
+        }
+        return this.seedAgentList;
+    }
+
+    public void setSeedAddressList(List<String> seedAddressList) {
+        this.seedAddressList = seedAddressList;
     }
 
     public List<ChangeAgentDepositPo> getAppendDepositList() {
@@ -327,16 +346,16 @@ public class Chain {
         this.reduceDepositList = reduceDepositList;
     }
 
-    public boolean isNetworkState() {
-        return networkState;
+    public boolean isNetworkStateOk() {
+        return networkStateOk;
     }
 
-    public void setNetworkState(boolean networkState) {
-        this.networkState = networkState;
+    public void setNetworkStateOk(boolean networkStateOk) {
+        this.networkStateOk = networkStateOk;
     }
 
-    public int getConsensusAgentCountMax(){
-        return config.getAgentCountMax() - seedNodeList.size();
+    public int getConsensusAgentCountMax() {
+        return config.getAgentCountMax() - seedAddressList.size();
     }
 
     public PubKeyPo getPubKeyPo() {
@@ -355,11 +374,19 @@ public class Chain {
         this.seedNodePubKeyList = seedNodePubKeyList;
     }
 
-    public List<String> getUnBlockAgentList() {
+    public Set<String> getUnBlockAgentList() {
         return unBlockAgentList;
     }
 
-    public void setUnBlockAgentList(List<String> unBlockAgentList) {
+    public void setUnBlockAgentList(Set<String> unBlockAgentList) {
         this.unBlockAgentList = unBlockAgentList;
+    }
+
+    public ConsensusCache getConsensusCache() {
+        return consensusCache;
+    }
+
+    public void setConsensusCache(ConsensusCache consensusCache) {
+        this.consensusCache = consensusCache;
     }
 }

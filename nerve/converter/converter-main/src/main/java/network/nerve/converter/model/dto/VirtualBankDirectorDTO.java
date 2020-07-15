@@ -59,6 +59,11 @@ public class VirtualBankDirectorDTO {
      */
     List<HeterogeneousAddressDTO> heterogeneousAddresses;
 
+    /**
+     * 节点加入虚拟银行时的顺序
+     */
+    private int order;
+
     public VirtualBankDirectorDTO() {
     }
 
@@ -68,6 +73,7 @@ public class VirtualBankDirectorDTO {
         this.seedNode = director.getSeedNode();
         this.rewardAddress = director.getRewardAddress();
         this.heterogeneousAddresses = new ArrayList<>();
+        this.order = director.getOrder();
         for(HeterogeneousAddress heterogeneousAddress :  director.getHeterogeneousAddrMap().values()){
             heterogeneousAddresses.add(new HeterogeneousAddressDTO(heterogeneousAddress));
         }
@@ -113,4 +119,11 @@ public class VirtualBankDirectorDTO {
         this.rewardAddress = rewardAddress;
     }
 
+    public int getOrder() {
+        return order;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
 }

@@ -101,8 +101,8 @@ public class ConverterSignUtil {
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_CONSENSUS_AGENT);
         }
         if (!chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
-            chain.getLogger().error("[交易签名失败]当前由虚拟银行节点签名, 但当前节点非虚拟银行成员节点, 不具备签名资格! type:{}, hash:{}",
-                    tx.getType(), tx.getHash().toHex());
+            chain.getLogger().error("[交易签名失败]当前由虚拟银行节点签名, 但当前节点非虚拟银行成员节点, 不具备签名资格! type:{}, hash:{}, signAddress:{}",
+                    tx.getType(), tx.getHash().toHex(), signAccountDTO.getAddress());
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
         }
         return signTx(tx, signAccountDTO);

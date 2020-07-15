@@ -30,6 +30,7 @@ import io.nuls.core.constant.SyncStatusEnum;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -48,12 +49,12 @@ public class TxSubsequentProcessPO implements Serializable {
     /**
      * 加入虚拟银行成员列表 (需要创建异构地址)
      */
-    private List<VirtualBankDirector> listInDirector;
+    private List<VirtualBankDirector> listInDirector = new ArrayList<>();
 
     /**
      * 退出虚拟银行成员列表
      */
-    private List<VirtualBankDirector> listOutDirector;
+    private List<VirtualBankDirector> listOutDirector = new ArrayList<>();
 
     /**
      * 处理时先验证交易是否确认的验证次数（达到阈值交易没确认则丢弃）

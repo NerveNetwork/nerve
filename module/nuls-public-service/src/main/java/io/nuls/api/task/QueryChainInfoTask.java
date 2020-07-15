@@ -42,39 +42,6 @@ public class QueryChainInfoTask implements Runnable {
             SymbolRegService symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
             //去账本同步资产信息
             symbolRegService.updateSymbolRegList();
-//            if (ApiContext.isRunCrossChain) {
-//                //获取生态内跨链资产列表
-//                Result<Map<String, Object>> result = WalletRpcHandler.getRegisteredChainInfoList();
-//                Map<String, Object> map = result.getData();
-//                chainInfoMap.putAll((Map<Integer, ChainInfo>) map.get("chainInfoMap"));
-//                assetInfoMap.putAll((Map<String, AssetInfo>) map.get("assetInfoMap"));
-//            }
-//
-
-//            //将生态内跨链的资产信息刷新到资产注册信息表中
-//            assetInfoMap.entrySet().forEach(entry -> {
-//                AssetInfo ai = entry.getValue();
-//                SymbolRegInfo symbolRegInfo = symbolRegService.get(entry.getValue().getChainId(), entry.getValue().getAssetId());
-//                if (symbolRegInfo == null) {
-//                    symbolRegInfo = new SymbolRegInfo();
-//                    symbolRegInfo.setDecimals(ai.getDecimals());
-//                    symbolRegInfo.setSymbol(ai.getSymbol());
-//                    symbolRegInfo.setLevel(ApiConstant.SYMBOL_REG_SOURCE_CC);
-//                    symbolRegInfo.setSource(symbolRegInfo.getLevel());
-//                    symbolRegInfo.setAssetId(ai.getAssetId());
-//                    symbolRegInfo.setChainId(ai.getChainId());
-//                    symbolRegInfo.setFullName(ai.getSymbol());
-//                    symbolRegInfo.setStackWeight(0);
-//                    symbolRegService.save(symbolRegInfo);
-//                } else {
-//                    if (symbolRegInfo.getSource().equals(ApiConstant.SYMBOL_REG_SOURCE_CC)) {
-//                        symbolRegInfo.setDecimals(ai.getDecimals());
-//                        symbolRegInfo.setSymbol(ai.getSymbol());
-//                        symbolRegInfo.setFullName(ai.getSymbol());
-//                        symbolRegService.save(symbolRegInfo);
-//                    }
-//                }
-//            });
             //获取所有资产注册信息放入内存中
             symbolRegService.getAll().stream().sorted(Comparator.comparing(d -> d.getAssetId())).forEach(d -> {
                 if (d.getAssetId() == 1) {

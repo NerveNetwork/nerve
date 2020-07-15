@@ -46,6 +46,8 @@ public interface NulsCrossChainConstant {
     String DB_NAME_BROAD_FAILED ="verifier_broad_fail";
     /**本地验证人信息表*/
     String DB_NAME_LOCAL_VERIFIER ="local_verifier";
+    /**转出资产总额信息表*/
+    String DB_NAME_TOTAL_OUT_AMOUNT ="total_out_amount";
 
 
     /**

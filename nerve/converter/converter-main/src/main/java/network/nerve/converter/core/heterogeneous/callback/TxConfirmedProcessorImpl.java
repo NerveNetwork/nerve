@@ -36,14 +36,10 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
+import network.nerve.converter.model.po.MergedComponentCallPO;
 import network.nerve.converter.model.po.ProposalPO;
-import network.nerve.converter.model.txdata.ConfirmProposalTxData;
-import network.nerve.converter.model.txdata.ConfirmUpgradeTxData;
-import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
-import network.nerve.converter.model.txdata.ProposalExeBusinessData;
-import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
-import network.nerve.converter.storage.ProposalExeStorageService;
-import network.nerve.converter.storage.ProposalStorageService;
+import network.nerve.converter.model.txdata.*;
+import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
 
@@ -69,12 +65,16 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     private HeterogeneousConfirmedChangeVBStorageService heterogeneousConfirmedChangeVBStorageService;
     private ProposalStorageService proposalStorageService;
     private ProposalExeStorageService proposalExeStorageService;
+    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
+    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
 
     public TxConfirmedProcessorImpl(Chain nerveChain, int hChainId, AssembleTxService assembleTxService,
                                     HeterogeneousDockingManager heterogeneousDockingManager,
                                     HeterogeneousConfirmedChangeVBStorageService heterogeneousConfirmedChangeVBStorageService,
                                     ProposalStorageService proposalStorageService,
-                                    ProposalExeStorageService proposalExeStorageService) {
+                                    ProposalExeStorageService proposalExeStorageService,
+                                    TxSubsequentProcessStorageService txSubsequentProcessStorageService,
+                                    AsyncProcessedTxStorageService asyncProcessedTxStorageService) {
         this.nerveChain = nerveChain;
         this.hChainId = hChainId;
         this.assembleTxService = assembleTxService;
@@ -82,6 +82,8 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         this.heterogeneousConfirmedChangeVBStorageService = heterogeneousConfirmedChangeVBStorageService;
         this.proposalStorageService = proposalStorageService;
         this.proposalExeStorageService = proposalExeStorageService;
+        this.txSubsequentProcessStorageService = txSubsequentProcessStorageService;
+        this.asyncProcessedTxStorageService = asyncProcessedTxStorageService;
     }
 
     private NulsLogger logger() {
@@ -103,78 +105,111 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     @Override
     public void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash, String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception {
         NulsHash nerveHash = NulsHash.fromHex(nerveTxHash);
+        // 检查是否由提案发起的确认交易
+        NulsHash nerveProposalHash = proposalStorageService.getExeBusiness(nerveChain, nerveTxHash);
+        ProposalPO proposalPO = null;
+        ProposalTypeEnum proposalType = null;
+        if (nerveProposalHash != null) {
+            proposalPO = proposalStorageService.find(nerveChain, nerveProposalHash);
+            proposalType = ProposalTypeEnum.getEnum(proposalPO.getType());
+        }
+        boolean isProposal = proposalPO != null;
         switch (txType) {
             case WITHDRAW:
-                ProposalPO proposalPO1 = proposalStorageService.find(nerveChain, nerveHash);
-                boolean isProposal = proposalPO1 != null;
-                if(isProposal) {
-                    logger().info("提案执行确认[退回资金], proposalHash: {}, ETH txHash: {}", nerveTxHash, txHash);
-                    this.createRefundOrDisqualificationConfirmProposalTx(ProposalTypeEnum.REFUND, nerveHash, null, txHash, proposalPO1.getAddress(), signers, txTime);
-                    break;
+                if (isProposal) {
+                    logger().info("提案执行确认[{}], proposalHash: {}, ETH txHash: {}", proposalType, nerveProposalHash.toHex(), txHash);
+                    this.createCommonConfirmProposalTx(proposalType, nerveProposalHash, null, txHash, proposalPO.getAddress(), signers, txTime);
+                    //break;
                 }
+                // 正常提现的确认交易
                 ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
                 txData.setHeterogeneousChainId(hChainId);
                 txData.setHeterogeneousHeight(blockHeight);
                 txData.setHeterogeneousTxHash(txHash);
-                txData.setWithdrawalTxHash(NulsHash.fromHex(nerveTxHash));
+                txData.setWithdrawalTxHash(nerveHash);
                 txData.setListDistributionFee(signers);
                 assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, txTime);
                 break;
             case CHANGE:
-                // 成员变更的提案确认交易
-                NulsHash proposalHash = proposalExeStorageService.find(nerveChain, nerveTxHash);
-                if(proposalHash != null) {
-                    ProposalPO proposalPO3 = proposalStorageService.find(nerveChain, proposalHash);
-                    boolean isProposa3 = proposalPO3 != null;
-                    if(isProposa3) {
-                        logger().info("提案执行确认[撤销银行资格], proposalHash: {}, ETH txHash: {}", proposalHash.toHex(), txHash);
-                        this.createRefundOrDisqualificationConfirmProposalTx(ProposalTypeEnum.EXPELLED, proposalHash, nerveHash, txHash, proposalPO3.getAddress(), signers, txTime);
-                        break;
-                    }
-                }
-                logger().info("收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-                HeterogeneousConfirmedVirtualBank bank = new HeterogeneousConfirmedVirtualBank();
-                bank.setEffectiveTime(txTime);
-                bank.setHeterogeneousChainId(hChainId);
-                bank.setHeterogeneousTxHash(txHash);
-                bank.setHeterogeneousAddress(multiSignAddress);
-                bank.setSignedHeterogeneousAddress(signers);
-                HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
-                if(vbPo == null) {
-                    vbPo = new HeterogeneousConfirmedChangeVBPo();
-                    vbPo.setNerveTxHash(nerveTxHash);
-                    vbPo.setHgCollection(new HashSet<>());
-                }
-                Set<HeterogeneousConfirmedVirtualBank> vbSet = vbPo.getHgCollection();
-                int hChainSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
-                // 检查重复添加
-                if (!vbSet.add(bank)) {
-                    logger().warn("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-                    return;
-                }
-                heterogeneousConfirmedChangeVBStorageService.save(vbPo);
-                // 收集完成，组装广播交易
-                if (vbSet.size() == hChainSize) {
-                    logger().info("完成收集异构链变更确认, 创建确认交易, NerveTxHash: {}", nerveTxHash);
-                    List<HeterogeneousConfirmedVirtualBank> hList = new ArrayList<>(vbSet);
-                    VirtualBankUtil.sortListByChainId(hList);
-                    assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
+                /*if (isProposal) {
+                    logger().info("提案执行确认[撤销银行资格], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
+                    this.createCommonConfirmProposalTx(ProposalTypeEnum.EXPELLED, nerveProposalHash, nerveHash, txHash, proposalPO.getAddress(), signers, txTime);
+                    //break;
+                }*/
+                // 查询合并数据库，检查变更交易是否合并
+                List<String> nerveTxHashList = new ArrayList<>();
+                MergedComponentCallPO mergedTx = txSubsequentProcessStorageService.findMergedTx(nerveChain, nerveTxHash);
+                if (mergedTx == null) {
+                    nerveTxHashList.add(nerveTxHash);
                 } else {
-                    logger().info("当前已收集的异构链变更确认交易数量: {}, 所有异构链数量: {}", vbSet.size(), hChainSize);
+                    nerveTxHashList.addAll(mergedTx.getListTxHash());
+                }
+                HeterogeneousConfirmedVirtualBank bank = new HeterogeneousConfirmedVirtualBank(hChainId, multiSignAddress, txHash, txTime, signers);
+                for (String relNerveTxHash : nerveTxHashList) {
+                    this.checkProposal(relNerveTxHash, txHash, txTime, signers);
+                    this.confirmChangeTx(relNerveTxHash, bank);
                 }
                 break;
+            case RECOVERY:
+                ConfirmResetVirtualBankTxData reset = new ConfirmResetVirtualBankTxData();
+                reset.setHeterogeneousChainId(hChainId);
+                reset.setResetTxHash(nerveHash);
+                reset.setHeterogeneousTxHash(txHash);
+                assembleTxService.createConfirmResetVirtualBankTx(nerveChain, reset, txTime);
+                break;
             case UPGRADE:
-                ProposalPO proposalPO2 = proposalStorageService.find(nerveChain, nerveHash);
-                boolean isProposal2 = proposalPO2 != null;
-                if(isProposal2) {
-                    logger().info("提案执行确认[多签合约升级], proposalHash: {}, ETH txHash: {}", nerveHash.toHex(), txHash);
-                    this.createUpgradeConfirmProposalTx(nerveHash, txHash, proposalPO2.getAddress(), multiSignAddress, signers, txTime);
+                if (isProposal) {
+                    logger().info("提案执行确认[多签合约升级], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
+                    this.createUpgradeConfirmProposalTx(nerveProposalHash, txHash, proposalPO.getAddress(), multiSignAddress, signers, txTime);
                 }
                 break;
         }
     }
 
-    private void createRefundOrDisqualificationConfirmProposalTx(ProposalTypeEnum proposalType, NulsHash proposalTxHash, NulsHash proposalExeHash, String heterogeneousTxHash, byte[] address, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
+    private void checkProposal(String nerveTxHash, String txHash, Long txTime, List<HeterogeneousAddress> signers) throws NulsException {
+        NulsHash nerveHash = NulsHash.fromHex(nerveTxHash);
+        // 检查是否由提案发起的确认交易
+        NulsHash nerveProposalHash = proposalStorageService.getExeBusiness(nerveChain, nerveTxHash);
+        ProposalPO proposalPO = null;
+        if (nerveProposalHash != null) {
+            proposalPO = proposalStorageService.find(nerveChain, nerveProposalHash);
+        }
+        if (proposalPO != null) {
+            logger().info("提案执行确认[撤销银行资格], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
+            this.createCommonConfirmProposalTx(ProposalTypeEnum.EXPELLED, nerveProposalHash, nerveHash, txHash, proposalPO.getAddress(), signers, txTime);
+        }
+    }
+
+    private int confirmChangeTx(String nerveTxHash, HeterogeneousConfirmedVirtualBank bank) throws Exception {
+        logger().info("收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
+        HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
+        if (vbPo == null) {
+            vbPo = new HeterogeneousConfirmedChangeVBPo();
+            vbPo.setNerveTxHash(nerveTxHash);
+            vbPo.setHgCollection(new HashSet<>());
+        }
+        Set<HeterogeneousConfirmedVirtualBank> vbSet = vbPo.getHgCollection();
+        int hChainSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
+        // 检查重复添加
+        if (!vbSet.add(bank)) {
+            logger().info("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
+            return 2;
+        }
+        heterogeneousConfirmedChangeVBStorageService.save(vbPo);
+        // 收集完成，组装广播交易
+        if (vbSet.size() == hChainSize) {
+            logger().info("完成收集异构链变更确认, 创建确认交易, NerveTxHash: {}", nerveTxHash);
+            List<HeterogeneousConfirmedVirtualBank> hList = new ArrayList<>(vbSet);
+            VirtualBankUtil.sortListByChainId(hList);
+            assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
+            return 1;
+        } else {
+            logger().info("当前已收集的异构链变更确认交易数量: {}, 所有异构链数量: {}", vbSet.size(), hChainSize);
+        }
+        return 0;
+    }
+
+    private void createCommonConfirmProposalTx(ProposalTypeEnum proposalType, NulsHash proposalTxHash, NulsHash proposalExeHash, String heterogeneousTxHash, byte[] address, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
         ProposalExeBusinessData businessData = new ProposalExeBusinessData();
         businessData.setProposalTxHash(proposalTxHash);
         businessData.setProposalExeHash(proposalExeHash);
@@ -194,9 +229,9 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         assembleTxService.createConfirmProposalTx(nerveChain, txData, heterogeneousTxTime);
     }
 
-    private void createUpgradeConfirmProposalTx(NulsHash nerveHash, String heterogeneousTxHash, byte[] address, String multiSignAddress, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
+    private void createUpgradeConfirmProposalTx(NulsHash nerveProposalHash, String heterogeneousTxHash, byte[] address, String multiSignAddress, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
         ConfirmUpgradeTxData businessData = new ConfirmUpgradeTxData();
-        businessData.setNerveTxHash(nerveHash);
+        businessData.setNerveTxHash(nerveProposalHash);
         businessData.setHeterogeneousChainId(hChainId);
         businessData.setHeterogeneousTxHash(heterogeneousTxHash);
         businessData.setAddress(address);

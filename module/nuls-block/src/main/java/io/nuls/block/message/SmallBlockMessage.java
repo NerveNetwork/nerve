@@ -41,6 +41,8 @@ public class SmallBlockMessage extends BaseBusinessMessage {
 
     private SmallBlock smallBlock;
 
+    private byte[] voteResult;
+
     public SmallBlockMessage() {
     }
 
@@ -56,17 +58,27 @@ public class SmallBlockMessage extends BaseBusinessMessage {
     public int size() {
         int size = 0;
         size += SerializeUtils.sizeOfNulsData(smallBlock);
+        size += SerializeUtils.sizeOfBytes(voteResult);
         return size;
     }
 
     @Override
     public void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
         stream.writeNulsData(smallBlock);
+        stream.writeBytesWithLength(voteResult);
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
         this.smallBlock = byteBuffer.readNulsData(new SmallBlock());
+        this.voteResult = byteBuffer.readByLengthByte();
     }
 
+    public byte[] getVoteResult() {
+        return voteResult;
+    }
+
+    public void setVoteResult(byte[] voteResult) {
+        this.voteResult = voteResult;
+    }
 }

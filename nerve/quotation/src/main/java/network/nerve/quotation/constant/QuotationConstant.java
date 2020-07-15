@@ -55,6 +55,9 @@ public interface QuotationConstant {
     /** 存储各节点的报价交易数据 */
     String DB_QUOTATION_NODE_PREFIX = "quotation_node_";
 
+    /** 存储各节点的报价交易数据 */
+    String DB_INTRADAY_QUOTATION_NODE_PREFIX = "Intraday_quotation_node_";
+
     /** 存储计算后的最终报价 */
     String DB_QUOTATION_FINAL_PREFIX = "final_quotation_final_";
 
@@ -84,7 +87,7 @@ public interface QuotationConstant {
     String NULS_ANCHORTOKEN = "NULS-USDT";
 
     String NERVE_PRICE = "NERVE_PRICE";
-    String NERVE_ANCHORTOKEN = "NERVE-USDT";
+    String NERVE_ANCHORTOKEN = "NVT-USDT";
 
     /** nerve 的价格是否基于NULS来计算 默认值0:不是, 1:是**/
     byte NERVE_BASED_NULS = 0;

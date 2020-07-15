@@ -1,4 +1,5 @@
 package network.nerve.pocbft.utils.manager;
+
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.round.MeetingMember;
 import network.nerve.pocbft.model.bo.round.MeetingRound;
@@ -21,6 +22,7 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.storage.AgentStorageService;
 import network.nerve.pocbft.storage.VirtualAgentStorageService;
+import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -37,8 +39,6 @@ import java.util.*;
 public class AgentManager {
     @Autowired
     private AgentStorageService agentStorageService;
-    @Autowired
-    private RoundManager roundManager;
     @Autowired
     private AgentDepositManager agentDepositManager;
     @Autowired
@@ -81,17 +81,17 @@ public class AgentManager {
      * 修改指定链节点
      * Modifying specified chain nodes
      *
-     * @param chain          chain info
-     * @param realAgent      agent info
+     * @param chain     chain info
+     * @param realAgent agent info
      */
     public boolean updateAgent(Chain chain, Agent realAgent) {
-        if(!agentStorageService.save(new AgentPo(realAgent), chain.getChainId())){
+        if (!agentStorageService.save(new AgentPo(realAgent), chain.getChainId())) {
             chain.getLogger().error("Agent data update error!");
             return false;
         }
 
         for (Agent agent : chain.getAgentList()) {
-            if(agent.getTxHash().equals(realAgent.getTxHash())){
+            if (agent.getTxHash().equals(realAgent.getTxHash())) {
                 agent.setDelHeight(realAgent.getDelHeight());
                 agent.setDeposit(realAgent.getDeposit());
                 break;
@@ -124,7 +124,7 @@ public class AgentManager {
      * @param chain  chain info
      * @param txHash 创建该节点交易的HASH/Creating the node transaction hash
      */
-    public Agent getAgentByHash(Chain chain, NulsHash txHash){
+    public Agent getAgentByHash(Chain chain, NulsHash txHash) {
         for (Agent agent : chain.getAgentList()) {
             if (txHash.equals(agent.getTxHash())) {
                 return agent;
@@ -137,47 +137,50 @@ public class AgentManager {
      * 查询指定节点
      * Query specified nodes
      *
-     * @param chain          chain info
-     * @param agentAddress   节点地址
+     * @param chain        chain info
+     * @param agentAddress 节点地址
      */
-    public Agent getAgentByAddress(Chain chain, byte[] agentAddress){
-        for (Agent agent:chain.getAgentList()) {
-            if(Arrays.equals(agentAddress, agent.getAgentAddress())){
-                return agent;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 查询指定节点
-     * Query specified nodes
-     *
-     * @param chain          chain info
-     * @param agentAddress   节点地址
-     */
-    public Agent getValidAgentByAddress(Chain chain, byte[] agentAddress){
-        for (Agent agent:chain.getAgentList()) {
-            if(Arrays.equals(agentAddress, agent.getAgentAddress()) && agent.getDelHeight() == -1){
-                return agent;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 查询指定节点
-     * Query specified nodes
-     *
-     * @param chain          chain info
-     * @param packAddress   节点地址
-     */
-    public Agent getAgentByPackAddress(Chain chain, byte[] packAddress){
-        for (Agent agent:chain.getAgentList()) {
-            if(agent.getDelHeight() != -1){
+    public Agent getAgentByAddress(Chain chain, byte[] agentAddress) {
+        for (Agent agent : chain.getAgentList()) {
+            if (agent.getDelHeight() > 0) {
                 continue;
             }
-            if(Arrays.equals(packAddress, agent.getPackingAddress())){
+            if (Arrays.equals(agentAddress, agent.getAgentAddress())) {
+                return agent;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查询指定节点
+     * Query specified nodes
+     *
+     * @param chain        chain info
+     * @param agentAddress 节点地址
+     */
+    public Agent getValidAgentByAddress(Chain chain, byte[] agentAddress) {
+        for (Agent agent : chain.getAgentList()) {
+            if (Arrays.equals(agentAddress, agent.getAgentAddress()) && agent.getDelHeight() == -1) {
+                return agent;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查询指定节点
+     * Query specified nodes
+     *
+     * @param chain       chain info
+     * @param packAddress 节点地址
+     */
+    public Agent getAgentByPackAddress(Chain chain, byte[] packAddress) {
+        for (Agent agent : chain.getAgentList()) {
+            if (agent.getDelHeight() != -1) {
+                continue;
+            }
+            if (Arrays.equals(packAddress, agent.getPackingAddress())) {
                 return agent;
             }
         }
@@ -186,19 +189,20 @@ public class AgentManager {
 
     /**
      * 设置节点公钥
+     *
      * @param chain  链信息
      * @param pubKey 出块地址公钥
-     * */
-    public void setPubkey(Chain chain, byte[] pubKey){
+     */
+    public void setPubkey(Chain chain, byte[] pubKey) {
         byte[] packAddressByte = AddressTool.getAddress(pubKey, chain.getChainId());
         String packAddress = AddressTool.getStringAddressByBytes(packAddressByte);
-        if(chain.getUnBlockAgentList().contains(packAddress)){
+        if (chain.getUnBlockAgentList().contains(packAddress)) {
             Agent agent = getAgentByPackAddress(chain, packAddressByte);
-            if(agent == null || agent.getPubKey() != null){
+            if (agent == null || agent.getPubKey() != null) {
                 return;
             }
             agent.setPubKey(pubKey);
-            if(!agentStorageService.save(new AgentPo(agent), chain.getChainId())){
+            if (!agentStorageService.save(new AgentPo(agent), chain.getChainId())) {
                 chain.getLogger().error("Agent pubKey set error!");
                 return;
             }
@@ -219,7 +223,8 @@ public class AgentManager {
     }
 
     public void fillAgentList(Chain chain, List<Agent> agentList) {
-        MeetingRound round = roundManager.getCurrentRound(chain);
+
+        MeetingRound round = RoundUtils.getRoundController().getCurrentRound();
         for (Agent agent : agentList) {
             fillAgent(agent, round);
         }
@@ -229,7 +234,7 @@ public class AgentManager {
         if (round == null) {
             return;
         }
-        MeetingMember member = round.getOnlyMember(agent.getPackingAddress());
+        MeetingMember member = round.getMemberByPackingAddress(agent.getPackingAddress());
         if (null == member) {
             agent.setStatus(0);
             return;
@@ -243,20 +248,20 @@ public class AgentManager {
      * 验证节点是否存在且指定地址是否为创建者
      * Verify that the node exists
      *
-     * @param chain       链信息
-     * @param agentHash   节点Hash
-     * @param address     创建者地址
-     * @return            创建者是否正确
-     * */
+     * @param chain     链信息
+     * @param agentHash 节点Hash
+     * @param address   创建者地址
+     * @return 创建者是否正确
+     */
     @SuppressWarnings("unchecked")
-    public Result creatorValid(Chain chain , NulsHash agentHash, byte[] address){
+    public Result creatorValid(Chain chain, NulsHash agentHash, byte[] address) {
         AgentPo agentPo = agentStorageService.get(agentHash, chain.getChainId());
         if (agentPo == null || agentPo.getDelHeight() > 0) {
             chain.getLogger().error("Agent does not exist");
             return Result.getFailed(ConsensusErrorCode.AGENT_NOT_EXIST);
         }
-        if(!Arrays.equals(agentPo.getAgentAddress(), address)){
-            chain.getLogger().error("Account is not the agent Creator,agentAddress:{},address:{}",AddressTool.getStringAddressByBytes(agentPo.getAgentAddress()),AddressTool.getStringAddressByBytes(address));
+        if (!Arrays.equals(agentPo.getAgentAddress(), address)) {
+            chain.getLogger().error("Account is not the agent Creator,agentAddress:{},address:{}", AddressTool.getStringAddressByBytes(agentPo.getAgentAddress()), AddressTool.getStringAddressByBytes(address));
             return Result.getFailed(ConsensusErrorCode.ACCOUNT_IS_NOT_CREATOR);
         }
         return ConsensusNetUtil.getSuccess().setData(agentPo);
@@ -267,7 +272,7 @@ public class AgentManager {
      * 获取当前未注销的所有节点列表(创建节点时避免账户重复创建节点)
      * Get a list of nodes that meet block requirements
      *
-     * @param chain        链信息
+     * @param chain 链信息
      * @return List<agent>
      **/
     public List<Agent> getAgentList(Chain chain, long height) {
@@ -288,8 +293,8 @@ public class AgentManager {
      * 获取指定高度出块节点地址列表
      * Get a list of nodes that meet block requirements
      *
-     * @param chain           链信息
-     * @param height          区块高度
+     * @param chain  链信息
+     * @param height 区块高度
      * @return List<agent>
      **/
     public Set<String> getPackAddressList(Chain chain, long height) {
@@ -305,27 +310,27 @@ public class AgentManager {
      * 获取指定高度出块节点列表
      * Get the node list of the specified height out of block
      *
-     * @param chain        链信息
-     * @param height       指定区块高度
+     * @param chain  链信息
+     * @param height 指定区块高度
      * @return List<agent>
      **/
     public List<Agent> getPackAgentList(Chain chain, long height) {
         List<Agent> packAgentList = new ArrayList<>();
-        boolean isLatestHeight = height == chain.getNewestHeader().getHeight();
+        boolean isLatestHeight = height == chain.getBestHeader().getHeight();
         List<Agent> agentList;
-        if(!isLatestHeight){
+        if (!isLatestHeight) {
             agentList = getBeforeAgentList(chain, height);
-        }else{
+        } else {
             agentList = getValidAgentList(chain);
         }
         agentList.sort(new AgentDepositComparator());
         for (Agent agent : agentList) {
-            if(agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0){
+            if (agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0) {
                 packAgentList.add(agent);
-            }else{
+            } else {
                 break;
             }
-            if(packAgentList.size() >= chain.getConsensusAgentCountMax()){
+            if (packAgentList.size() >= chain.getConsensusAgentCountMax()) {
                 break;
             }
         }
@@ -336,36 +341,36 @@ public class AgentManager {
      * 获取指定高度出块节点基础信息列表
      * Get the node list of the specified height out of block
      *
-     * @param chain        链信息
-     * @param height       指定区块高度
+     * @param chain  链信息
+     * @param height 指定区块高度
      * @return List<agent>
      **/
     public List<AgentBasicDTO> getPackBasicAgentList(Chain chain, long height, boolean isNewest) {
         List<AgentBasicDTO> packBasicAgentList = new ArrayList<>();
-        for (int index = 0; index < chain.getSeedNodeList().size(); index++){
-            packBasicAgentList.add(new AgentBasicDTO(chain.getSeedNodeList().get(index), HexUtil.encode(chain.getSeedNodePubKeyList().get(index))));
+        for (int index = 0; index < chain.getSeedAddressList().size(); index++) {
+            packBasicAgentList.add(new AgentBasicDTO(chain.getSeedAddressList().get(index), HexUtil.encode(chain.getSeedNodePubKeyList().get(index))));
         }
         List<Agent> agentList;
-        if(!isNewest){
+        if (!isNewest) {
             agentList = getBeforeAgentList(chain, height);
-        }else{
+        } else {
             agentList = getValidAgentList(chain);
         }
         agentList.sort(new AgentDepositComparator());
         for (Agent agent : agentList) {
-            if(agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0){
+            if (agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0) {
                 packBasicAgentList.add(new AgentBasicDTO(agent));
-            }else{
+            } else {
                 break;
             }
-            if(packBasicAgentList.size() >= chain.getConsensusAgentCountMax()){
+            if (packBasicAgentList.size() >= chain.getConsensusAgentCountMax()) {
                 break;
             }
         }
         return packBasicAgentList;
     }
 
-    private List<Agent> getValidAgentList(Chain chain){
+    private List<Agent> getValidAgentList(Chain chain) {
         List<Agent> agentList = new ArrayList<>();
         for (Agent agent : chain.getAgentList()) {
             if (agent.getDelHeight() != -1L) {
@@ -383,11 +388,11 @@ public class AgentManager {
      * 获取当前区块之前的某个高度出块节点列表
      * Get a list of out of block nodes before the current block
      *
-     * @param chain        链信息
-     * @param height       指定区块高度
+     * @param chain  链信息
+     * @param height 指定区块高度
      * @return List<agent>
-     * */
-    private List<Agent> getBeforeAgentList(Chain chain, long height){
+     */
+    private List<Agent> getBeforeAgentList(Chain chain, long height) {
         Map<NulsHash, Agent> agentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);
         for (Agent agent : chain.getAgentList()) {
             if (agent.getDelHeight() != -1L && agent.getDelHeight() <= height) {
@@ -398,17 +403,17 @@ public class AgentManager {
             }
             try {
                 agentMap.put(agent.getTxHash(), agent.clone());
-            }catch (CloneNotSupportedException e){
+            } catch (CloneNotSupportedException e) {
                 chain.getLogger().error(e);
             }
         }
         //获取该高度之后的退出保证金交易
         Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, height);
         BigInteger realDeposit;
-        if(!reduceDepositMap.isEmpty()){
+        if (!reduceDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : reduceDepositMap.entrySet()) {
                 NulsHash agentHash = entry.getKey();
-                if(agentMap.containsKey(agentHash)){
+                if (agentMap.containsKey(agentHash)) {
                     realDeposit = agentMap.get(agentHash).getDeposit().add(entry.getValue());
                     agentMap.get(agentHash).setDeposit(realDeposit);
                 }
@@ -416,33 +421,34 @@ public class AgentManager {
         }
         //获取该高度之后的追加保证金交易
         Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, height);
-        if(!appendDepositMap.isEmpty()){
+        if (!appendDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : appendDepositMap.entrySet()) {
                 NulsHash agentHash = entry.getKey();
-                if(agentMap.containsKey(agentHash)){
+                if (agentMap.containsKey(agentHash)) {
                     realDeposit = agentMap.get(agentHash).getDeposit().subtract(entry.getValue());
                     agentMap.get(agentHash).setDeposit(realDeposit);
                 }
             }
         }
-        return  new ArrayList<>(agentMap.values());
+        return new ArrayList<>(agentMap.values());
     }
 
     /**
      * 计算个账户的保证金并返回总的保证金
-     * @param chain        链信息
-     * @param height       高度
-     * @param depositMap   委托
-     * @param totalAmount  总委托金额
-     * */
-    public BigDecimal getAgentDepositByHeight(Chain chain, long height, Map<String, BigDecimal> depositMap, BigDecimal totalAmount){
+     *
+     * @param chain       链信息
+     * @param height      高度
+     * @param depositMap  委托
+     * @param totalAmount 总委托金额
+     */
+    public BigDecimal getAgentDepositByHeight(Chain chain, long height, Map<String, BigDecimal> depositMap, BigDecimal totalAmount) {
         List<AgentPo> poList;
         try {
             poList = agentStorageService.getList(chain.getConfig().getChainId());
-        }catch (NulsException e){
+        } catch (NulsException e) {
             return totalAmount;
         }
-        if(poList == null || poList.isEmpty()){
+        if (poList == null || poList.isEmpty()) {
             return totalAmount;
         }
         Map<NulsHash, AgentPo> agentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_64);
@@ -455,17 +461,17 @@ public class AgentManager {
             }
             agentMap.put(agent.getHash(), agent);
         }
-        if(agentMap.isEmpty()){
+        if (agentMap.isEmpty()) {
             return totalAmount;
         }
         //获取该高度之后的退出保证金交易
         Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, height);
         BigInteger tempDeposit;
         AgentPo po;
-        if(!reduceDepositMap.isEmpty()){
+        if (!reduceDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : reduceDepositMap.entrySet()) {
                 NulsHash agentHash = entry.getKey();
-                if(agentMap.containsKey(agentHash)){
+                if (agentMap.containsKey(agentHash)) {
                     po = agentMap.get(agentHash);
                     tempDeposit = po.getDeposit().add(entry.getValue());
                     po.setDeposit(tempDeposit);
@@ -474,10 +480,10 @@ public class AgentManager {
         }
         //获取该高度之后的追加保证金交易
         Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, height);
-        if(!appendDepositMap.isEmpty()){
+        if (!appendDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : appendDepositMap.entrySet()) {
                 NulsHash agentHash = entry.getKey();
-                if(agentMap.containsKey(agentHash)){
+                if (agentMap.containsKey(agentHash)) {
                     po = agentMap.get(agentHash);
                     tempDeposit = po.getDeposit().subtract(entry.getValue());
                     po.setDeposit(tempDeposit);
@@ -490,7 +496,7 @@ public class AgentManager {
         int maxConsensusAgentCount = chain.getConsensusAgentCountMax();
         List<String> virtualBankList = new ArrayList<>();
         VirtualAgentPo virtualAgentPo = virtualAgentStorageService.get(height);
-        if(virtualAgentPo != null){
+        if (virtualAgentPo != null) {
             virtualBankList = virtualAgentPo.getVirtualAgentList();
         }
         BigDecimal realDeposit;
@@ -498,25 +504,24 @@ public class AgentManager {
         String agentAddress;
         int count = 1;
         double baseWeight = chain.getConfig().getLocalAssertBase();
-        for (AgentPo agentPo : sortAgentMap.values()){
+        for (AgentPo agentPo : sortAgentMap.values()) {
             rewardAddress = AddressTool.getStringAddressByBytes(agentPo.getRewardAddress());
-            if(count > maxConsensusAgentCount){
-                realDeposit = new BigDecimal(agentPo.getDeposit());
-                totalAmount = totalAmount.add(realDeposit);
-            }else{
-                agentAddress = AddressTool.getStringAddressByBytes(agentPo.getAgentAddress());
-                //如果为虚拟银行则按虚拟银行计算
-                realDeposit = new BigDecimal(agentPo.getDeposit());
-                if(!virtualBankList.isEmpty() && virtualBankList.contains(agentAddress)){
-                    baseWeight = baseWeight * chain.getConfig().getSuperAgentDepositBase();
-                }else{
-                    baseWeight = baseWeight * chain.getConfig().getAgentDepositBase();
-                }
-                baseWeight = Math.sqrt(baseWeight);
-                BigDecimal weightSqrt = new BigDecimal(baseWeight).setScale(4, BigDecimal.ROUND_HALF_UP);
-                realDeposit = DoubleUtils.mul(realDeposit, weightSqrt);
-                totalAmount = totalAmount.add(realDeposit);
+
+            agentAddress = AddressTool.getStringAddressByBytes(agentPo.getAgentAddress());
+            //如果为虚拟银行则按虚拟银行计算
+            realDeposit = new BigDecimal(agentPo.getDeposit());
+            if (!virtualBankList.isEmpty() && virtualBankList.contains(agentAddress)) {
+                baseWeight = baseWeight * chain.getConfig().getSuperAgentDepositBase();
+            } else if (count <= maxConsensusAgentCount) {
+                baseWeight = baseWeight * chain.getConfig().getAgentDepositBase();
+            } else if (count > maxConsensusAgentCount) {
+                baseWeight = baseWeight * chain.getConfig().getReservegentDepositBase();
             }
+            baseWeight = Math.sqrt(baseWeight);
+            BigDecimal weightSqrt = new BigDecimal(baseWeight).setScale(4, BigDecimal.ROUND_HALF_UP);
+            realDeposit = DoubleUtils.mul(realDeposit, weightSqrt);
+            totalAmount = totalAmount.add(realDeposit);
+
             depositMap.merge(rewardAddress, realDeposit, (oldValue, value) -> oldValue.subtract(value));
             count++;
         }

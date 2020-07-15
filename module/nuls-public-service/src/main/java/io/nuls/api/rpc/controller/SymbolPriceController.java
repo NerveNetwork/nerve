@@ -53,7 +53,7 @@ public class SymbolPriceController {
 //                "assetChainId": 1,      StackSymbolPriceInfo
 //                "assetId": ""           StackSymbolPriceInfo
         SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
-        return RpcResult.success(symbolPriceService.getAllFreshPrice().stream().map(d -> {
+        return RpcResult.success(symbolPriceService.getAllFreshPrice().stream().filter(d->d.getAssetChainId() != null && d.getAssetId() != null).map(d -> {
             Log.info("喂价信息：{}",d);
             double weight = 1;
             if(apiConfig.getChainId() == d.getAssetChainId() && d.getAssetId() == apiConfig.getAssetId()){
@@ -70,6 +70,28 @@ public class SymbolPriceController {
                     "assetId", d.getAssetId()
             );
         }).collect(Collectors.toList()));
+    }
+
+
+
+
+    /**
+     * 获取报价记录
+     *
+     * @param params
+     * @return
+     */
+    @RpcMethod("getLastQuotationRecord")
+    public RpcResult getLastQuotationRecord(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        String symbol;
+        try {
+            symbol = params.get(1).toString();
+        } catch (Exception e) {
+            return RpcResult.paramError("[symbol] is inValid");
+        }
+        List<SymbolQuotationRecordInfo> data = symbolPriceService.queryLastQuotationList(symbol);
+        return RpcResult.success(data.stream().map(this::buildRes).collect(Collectors.toList()));
     }
 
 
@@ -132,14 +154,18 @@ public class SymbolPriceController {
             pageSize = 10;
         }
         PageInfo<SymbolQuotationRecordInfo> data = symbolPriceService.queryQuotationList(symbol, pageNumber,pageSize,start,end);
-        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
         return RpcResult.success(new PageInfo<Map>(data.getPageNumber(),data.getPageSize(),data.getTotalCount(),
-                data.getList().stream().map(d-> Map.of(
-                        "nodeName" , StringUtils.isNotBlank(d.getAlias()) ? d.getAlias() : d.getAddress().substring(d.getAddress().length()-8).toUpperCase(),
-                         "price" , usd.getPrice().multiply(d.getPrice(), MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN),
-                        "symbol" , symbol,
-                        "createdTime", d.getCreateTime()
-                )).collect(Collectors.toList())));
+                data.getList().stream().map(this::buildRes).collect(Collectors.toList())));
+    }
+
+    private Map<String,Object> buildRes(SymbolQuotationRecordInfo d){
+        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
+        return Map.of(
+                "nodeName" , StringUtils.isNotBlank(d.getAlias()) ? d.getAlias() : d.getAddress().substring(d.getAddress().length()-8).toUpperCase(),
+                "price" , usd.getPrice().multiply(d.getPrice(), MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN),
+                "symbol" , d.getSymbol(),
+                "createdTime", d.getCreateTime()
+        );
     }
 
 }

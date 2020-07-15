@@ -62,7 +62,8 @@ public class ChainManager {
         }
     }
 
-    /**BlockSynchronizer
+    /**
+     * BlockSynchronizer
      * 初始化并启动链
      * Initialize and start the chain
      */
@@ -75,8 +76,10 @@ public class ChainManager {
                 LoggerUtil.COMMON_LOG.warn("systemTypes doesn't contains coin_base");
                 systemTypes = TransactionCall.getSystemTypes(chainId);
             }
+            SaverManager.startSaver(chainId, service);
             //服务初始化
             service.init(chainId);
+
         }
     }
 

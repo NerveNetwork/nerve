@@ -23,7 +23,7 @@ package io.nuls.api.model.rpc;
 import io.nuls.core.constant.ErrorCode;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class RpcResultError {
 

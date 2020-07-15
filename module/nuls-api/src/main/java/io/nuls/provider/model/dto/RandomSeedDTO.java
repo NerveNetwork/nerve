@@ -4,7 +4,7 @@ import io.nuls.core.rpc.model.ApiModel;
 import io.nuls.core.rpc.model.ApiModelProperty;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @ApiModel
 public class RandomSeedDTO {

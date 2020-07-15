@@ -35,7 +35,7 @@ public class QuotationCmdTest {
     static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
 
     private Chain chain;
-    static int chainId = 4;
+    static int chainId = 2;
     static int assetChainId = 2;
     static int assetId = 1;
     static String version = "1.0";

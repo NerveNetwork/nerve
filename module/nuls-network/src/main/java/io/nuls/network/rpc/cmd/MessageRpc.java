@@ -33,11 +33,13 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import io.nuls.network.constant.CmdConstant;
 import io.nuls.network.constant.NetworkConstant;
+import io.nuls.network.constant.NetworkContext;
 import io.nuls.network.constant.NetworkErrorCode;
 import io.nuls.network.manager.BusinessGroupManager;
 import io.nuls.network.manager.MessageManager;
 import io.nuls.network.manager.NodeGroupManager;
 import io.nuls.network.manager.handler.MessageHandlerFactory;
+import io.nuls.network.model.NetworkEventResult;
 import io.nuls.network.model.Node;
 import io.nuls.network.model.NodeGroup;
 import io.nuls.network.model.message.base.MessageHeader;
@@ -185,6 +187,29 @@ public class MessageRpc extends BaseCmd {
         return success(rtMap);
     }
 
+    /**
+     * nw_broadcast
+     * 外部广播接收
+     */
+    @CmdAnnotation(cmd = CmdConstant.NW_BROADCAST_JOIN_CONSENSUS, version = 1.0,
+            description = "广播消息")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
+            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "排除peer节点Id，用逗号分割"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令"),
+            @Parameter(parameterName = "isCross", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "是否是跨链"),
+            @Parameter(parameterName = "percent", requestType = @TypeDescriptor(value = int.class), parameterDes = "广播发送比例,不填写,默认100"),
+
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "一个节点都没发送出去时返回false")
+    }))
+    public Response broadcastJoinConsensusMessage(Map params) {
+        NetworkContext.isConsensusNode = true;
+        return broadcast(params);
+    }
+
 
     /**
      * nw_broadcast
@@ -208,12 +233,12 @@ public class MessageRpc extends BaseCmd {
         Map<String, Object> rtMap = new HashMap<>();
         int percent = NetworkConstant.FULL_BROADCAST_PERCENT;
         String excludeNodes = "";
-        Map<String,Integer> excludeNodesMap = new HashMap<>();
+        Map<String, Integer> excludeNodesMap = new HashMap<>();
         if (null != params.get("excludeNodes")) {
             excludeNodes = String.valueOf(params.get("excludeNodes"));
-            String []excludeNodeArray = excludeNodes.split(NetworkConstant.COMMA);
-            for(String excludeNode:excludeNodeArray){
-                excludeNodesMap.put(excludeNode.split(NetworkConstant.COLON)[0],1);
+            String[] excludeNodeArray = excludeNodes.split(NetworkConstant.COMMA);
+            for (String excludeNode : excludeNodeArray) {
+                excludeNodesMap.put(excludeNode.split(NetworkConstant.COLON)[0], 1);
             }
         }
 
@@ -248,14 +273,17 @@ public class MessageRpc extends BaseCmd {
             List<Node> nodes = new ArrayList<>();
             for (Node node : nodesCollection) {
                 if (null != ipsMap.get(node.getIp())) {
-                    if(excludeNodesMap.get(node.getIp()) == null) {
+                    if (excludeNodesMap.get(node.getIp()) == null) {
                         nodes.add(node);
                     }
                     rtList.add(node.getIp());
                 }
             }
             if (nodes.size() > 0) {
-                messageManager.broadcastToNodes(message, cmd, nodes, true, percent);
+                NetworkEventResult result = messageManager.broadcastToNodes(message, cmd, nodes, false, percent);
+                if(nodes.size()>20&&!result.isSuccess()){
+                    System.out.println();
+                }
             }
         } catch (Exception e) {
             LoggerUtil.COMMON_LOG.error(e);
@@ -345,9 +373,10 @@ public class MessageRpc extends BaseCmd {
             String excludeNodes = String.valueOf(params.get("excludeNodes"));
             BusinessGroupManager businessGroupManager = BusinessGroupManager.getInstance();
             Map<String, String> ipsMap = businessGroupManager.getIpsMap(chainId, module, groupFlag);
-            if(ipsMap == null){
+            if (ipsMap == null) {
                 LoggerUtil.COMMON_LOG.info("未连接到其他节点");
                 rtMap.put("list", rtList);
+                return success(rtMap);
             }
             String messageBodyStr = String.valueOf(params.get("messageBody"));
             byte[] messageBody = RPCUtil.decode(messageBodyStr);

@@ -47,6 +47,13 @@ public interface ConverterService {
      */
     Result<String> vote(VoteReq req);
 
+    /**
+     * 重置虚拟银行异构链
+     * @param req
+     * @return
+     */
+    Result<String> resetBank(ResetBankReq req);
+
     Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 
     Result<Boolean> validateRegisterHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
@@ -58,5 +65,18 @@ public interface ConverterService {
      */
     Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req);
 
+    /**
+     * 获取虚拟银行信息
+     * @param req
+     * @return
+     */
+    Result<VirtualBankDirectorDTO> getVirtualBankInfo(GetVirtualBankInfoReq req);
+
+    /**
+     * 通过打包地址获取节点的异构链地址
+     * @param req
+     * @return
+     */
+    Result<String> getHeterogeneousAddress(GetHeterogeneousAddressReq req);
 
 }

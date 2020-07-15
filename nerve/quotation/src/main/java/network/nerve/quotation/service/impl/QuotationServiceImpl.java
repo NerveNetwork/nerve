@@ -42,6 +42,7 @@ import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.model.txdata.Quotation;
 import network.nerve.quotation.rpc.call.QuotationCall;
 import network.nerve.quotation.service.QuotationService;
+import network.nerve.quotation.util.TimeUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,13 +59,13 @@ public class QuotationServiceImpl implements QuotationService {
 
     @Override
     public Transaction quote(Chain chain, QuoteDTO quoteDTO) throws NulsException {
-        byte[] txData = assemblyQuotationTxData(quoteDTO.getAddress() ,quoteDTO.getPricesMap());
+        byte[] txData = assemblyQuotationTxData(quoteDTO.getAddress(), quoteDTO.getPricesMap());
         Transaction tx = createQuotationTransaction(txData, quoteDTO.getAddress(), quoteDTO.getPassword());
         QuotationCall.newTx(chain, tx);
         return tx;
     }
 
-    public Prices getPrices(Map<String, Double> pricesMap) throws NulsException{
+    public Prices getPrices(Map<String, Double> pricesMap) throws NulsException {
         if (null == pricesMap || pricesMap.isEmpty()) {
             throw new NulsException(QuotationErrorCode.TXDATA_EMPTY);
         }
@@ -109,7 +110,7 @@ public class QuotationServiceImpl implements QuotationService {
 
     @Override
     public Transaction createFinalQuotationTransaction(Prices prices) throws NulsException {
-        if(null == prices){
+        if (null == prices) {
             throw new NulsException(QuotationErrorCode.TXDATA_EMPTY);
         }
         Transaction tx = new Transaction(TxType.FINAL_QUOTATION);
@@ -118,7 +119,8 @@ public class QuotationServiceImpl implements QuotationService {
         } catch (IOException e) {
             throw new NulsException(QuotationErrorCode.SERIALIZE_ERROR);
         }
-        tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
+        long zeroTimeMillis = TimeUtil.getUTCZeroTimeMillisOfTheDay(NulsDateUtils.getCurrentTimeMillis());
+        tx.setTime(zeroTimeMillis / 1000);
         return tx;
     }
 

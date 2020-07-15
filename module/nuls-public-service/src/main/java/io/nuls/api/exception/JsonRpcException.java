@@ -25,7 +25,7 @@ import io.nuls.api.model.rpc.RpcResultError;
 import io.nuls.core.constant.ErrorCode;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class JsonRpcException extends RuntimeException {
     private RpcResultError error;

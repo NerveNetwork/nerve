@@ -24,11 +24,9 @@
 
 package io.nuls.base.api.provider.converter;
 
-import io.nuls.base.api.provider.BaseReq;
 import io.nuls.base.api.provider.BaseRpcService;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.Result;
-import io.nuls.base.api.provider.account.facade.AccountInfo;
 import io.nuls.base.api.provider.converter.facade.*;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.log.Log;
@@ -38,6 +36,7 @@ import io.nuls.core.rpc.model.ModuleE;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author: Charlie
@@ -70,6 +69,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<String> resetBank(ResetBankReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_resetVirtualBank", req, fun);
+    }
+
+    @Override
     public Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
@@ -91,12 +99,40 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req) {
         return call("cv_get_heterogeneous_chain_asset_info", req, (Function<Map, Result>) res -> {
             try {
-                HeterogeneousAssetInfo list = MapUtils.mapToBean(res, new HeterogeneousAssetInfo());
-                return success(list);
+                HeterogeneousAssetInfo heterogeneousAssetInfo = MapUtils.mapToBean(res, new HeterogeneousAssetInfo());
+                heterogeneousAssetInfo.setToken((Boolean) res.get("isToken"));
+                return success(heterogeneousAssetInfo);
             } catch (Exception e) {
                 Log.error("cv_get_heterogeneous_chain_asset_info fail", e);
                 return fail(CommonCodeConstanst.FAILED);
             }
         });
+    }
+
+    @Override
+    public Result<VirtualBankDirectorDTO> getVirtualBankInfo(GetVirtualBankInfoReq req) {
+        return call("cv_virtualBankInfo", req, (Function<Map, Result>) res -> {
+            try {
+                List<Map> list = (List<Map>) res.get("list");
+                return success(list.stream().map(d->{
+                    Map<String,Object> map = (Map<String, Object>) d;
+                    VirtualBankDirectorDTO dto = MapUtils.mapToBean(map,new VirtualBankDirectorDTO());
+                    try {
+                        dto.setHeterogeneousAddresses(MapUtils.mapsToObjects((List<Map<String, Object>>) map.get("heterogeneousAddresses"),HeterogeneousAddressDTO.class));
+                    } catch (Exception e) {
+                        Log.error("数据转换错误",e);
+                    }
+                    return dto;
+                }).collect(Collectors.toList()));
+            } catch (Exception e) {
+                Log.error("cv_virtualBankInfo fail", e);
+                return fail(CommonCodeConstanst.FAILED);
+            }
+        });
+    }
+
+    @Override
+    public Result<String> getHeterogeneousAddress(GetHeterogeneousAddressReq req) {
+        return null;
     }
 }

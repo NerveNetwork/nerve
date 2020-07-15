@@ -3,6 +3,7 @@ package io.nuls.api.db.mongo;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import io.nuls.api.ApiContext;
+import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.constant.DepositFixedType;
 import io.nuls.api.constant.DepositInfoType;
@@ -13,6 +14,7 @@ import io.nuls.api.db.SymbolQuotationPriceService;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.*;
 import io.nuls.api.service.StackingService;
+import io.nuls.api.utils.AgentComparator;
 import io.nuls.api.utils.DateUtil;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.base.api.provider.ServiceManager;
@@ -21,6 +23,8 @@ import io.nuls.base.api.provider.consensus.facade.GetTotalRewardForBlockHeightRe
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.log.Log;
+import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.DateUtils;
 import org.bson.Document;
 
@@ -105,19 +109,33 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
             stackSnapshootInfo.setCreateTime(blockHeaderInfo.getCreateTime() * 1000L);
             //获取节点委托的总数
             List<AgentInfo> agentInfoList = new ArrayList<>(CacheManager.getCache(chainId).getAgentMap().values());
-            BigDecimal agentDepositTotalWeight = agentInfoList.stream().map(agent -> {
+            Collections.sort(agentInfoList, AgentComparator.getInstance());
+            int agentCountWithoutSeed = ApiContext.maxAgentCount - ApiContext.seedCount;
+            BigDecimal agentDepositTotalWeight = agentInfoList.stream().limit(agentCountWithoutSeed).map(agent -> {
                 //节点押金只能用NVT作为抵押资产 NVT的基础权重
                 double weight = ApiContext.localAssertBase;
                 if (agent.isBankNode()) {
                     //虚拟银行节点权重
                     weight = weight * ApiContext.superAgentDepositBase;
-                } else {
+                } else if(BigIntegerUtils.isEqualOrGreaterThan(agent.getDeposit(),ApiContext.minDeposit)) {
                     //普通节点权重
                     weight = weight * ApiContext.agentDepositBase;
+                } else {
+                    //未参与共识的节点权重
+                    weight = weight * ApiContext.reservegentDepositBase;
                 }
                 weight = Math.sqrt(weight);
                 return BigDecimal.valueOf(weight).multiply(new BigDecimal(agent.getDeposit()));
             }).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+            agentDepositTotalWeight = agentInfoList.stream().skip(agentCountWithoutSeed).map(agent -> {
+                //节点押金只能用NVT作为抵押资产 NVT的基础权重
+                double weight = ApiContext.localAssertBase;
+                //未参与共识的节点权重
+                weight = weight * ApiContext.reservegentDepositBase;
+                weight = Math.sqrt(weight);
+                return BigDecimal.valueOf(weight).multiply(new BigDecimal(agent.getDeposit()));
+            }).reduce(agentDepositTotalWeight,BigDecimal::add);
+
             BigInteger bankTotalDeposit = agentInfoList.stream().filter(d -> d.isBankNode()).map(d -> d.getDeposit()).reduce(BigInteger::add).orElse(BigInteger.ZERO);
             BigInteger nomalTotalDeposit = agentInfoList.stream().filter(d -> !d.isBankNode()).map(d -> d.getDeposit()).reduce(BigInteger::add).orElse(BigInteger.ZERO);
             commonLog.info("查询到当前节点总数:{}个，虚拟银行总抵押数量:{},普通节点总抵押数:{},占有权重数:{}", agentInfoList.size(), bankTotalDeposit, nomalTotalDeposit, agentDepositTotalWeight.toBigInteger());
@@ -255,9 +273,5 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
         this.lastSnapshootTime = lastSnapshootTime;
     }
 
-    public static void main(String[] args) {
-        BigDecimal o = BigDecimal.valueOf(200000000).multiply(new BigDecimal(ONE_DAY_BLOCK_COUNT));
-        System.out.println(o.divide(BigDecimal.valueOf(460267107233300L), MathContext.DECIMAL64).multiply(BigDecimal.valueOf(365)));
-    }
 
 }

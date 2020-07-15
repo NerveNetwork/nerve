@@ -41,7 +41,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NulsResourceConfig extends ResourceConfig {
 

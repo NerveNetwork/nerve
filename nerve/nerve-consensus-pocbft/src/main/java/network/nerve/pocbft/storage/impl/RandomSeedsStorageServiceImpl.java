@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Component
 public class RandomSeedsStorageServiceImpl implements RandomSeedsStorageService {

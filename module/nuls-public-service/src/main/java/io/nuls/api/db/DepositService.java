@@ -40,6 +40,14 @@ public interface DepositService {
 
     BigInteger getStackingTotalByNVT(int chainId,long height);
 
+    /**
+     * 获取指定地址所有stacking 转换成nvt的价值
+     * @param chainId
+     * @param address
+     * @return
+     */
+    BigInteger getStackingTotalByNVT(int chainId,String address);
+
     Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height);
 
     /**

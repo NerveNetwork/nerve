@@ -20,6 +20,7 @@
 
 package io.nuls.api.rpc.controller;
 
+import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.ApiConstant;
@@ -28,6 +29,7 @@ import io.nuls.api.constant.DepositInfoType;
 import io.nuls.api.constant.ReportDataTimeType;
 import io.nuls.api.db.*;
 import io.nuls.api.manager.CacheManager;
+import io.nuls.api.manager.HeterogeneousChainAssetBalanceManager;
 import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.rpc.RpcErrorCode;
@@ -36,15 +38,16 @@ import io.nuls.api.rpc.RpcCall;
 import io.nuls.api.service.StackingService;
 import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.api.utils.AgentComparator;
-import io.nuls.api.utils.DateUtil;
 import io.nuls.api.utils.VerifyUtils;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.consensus.ConsensusProvider;
 import io.nuls.base.api.provider.consensus.facade.GetCanStackingAssetListReq;
 import io.nuls.base.api.provider.consensus.facade.GetReduceNonceReq;
 import io.nuls.base.api.provider.consensus.facade.ReduceNonceInfo;
+import io.nuls.base.api.provider.converter.ConverterService;
+import io.nuls.base.api.provider.converter.facade.GetVirtualBankInfoReq;
+import io.nuls.base.api.provider.converter.facade.VirtualBankDirectorDTO;
 import io.nuls.base.api.provider.ledger.facade.AssetInfo;
-import io.nuls.base.api.provider.ledger.facade.GetAssetListReq;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.CommonCodeConstanst;
@@ -57,21 +60,21 @@ import io.nuls.core.model.DateUtils;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.MapUtils;
-import io.nuls.core.rpc.model.*;
+import io.nuls.core.rpc.model.ModuleE;
+import io.nuls.core.rpc.util.NulsDateUtils;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.nuls.api.constant.DBTableConstant.CONSENSUS_LOCKED;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Controller
 public class PocConsensusController {
@@ -110,7 +113,15 @@ public class PocConsensusController {
     @Autowired
     BlockService blockService;
 
+    @Autowired
+    SymbolQuotationPriceService symbolQuotationPriceService;
+
+    @Autowired
+    HeterogeneousChainAssetBalanceManager heterogeneousChainAssetBalanceManager;
+
     ConsensusProvider consensusProvider = ServiceManager.get(ConsensusProvider.class);
+
+    ConverterService converterService = ServiceManager.get(ConverterService.class);
 
     @RpcMethod("getBestRoundItemList")
     public RpcResult getBestRoundItemList(List<Object> params) {
@@ -209,7 +220,15 @@ public class PocConsensusController {
             return RpcResult.failed(bankListRes.getErrorCode());
         }
         Set<String> bankList = bankListRes.getData();
+        Map<String,VirtualBankDirectorDTO> virtualBankDirectorDTOMap = new HashMap<>();
+        io.nuls.base.api.provider.Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq(false));
+        if(virtualBankDirectorDTOResult.isSuccess()){
+            virtualBankDirectorDTOResult.getList().forEach(d->{
+                virtualBankDirectorDTOMap.put(d.getSignAddress(),d);
+            });
+        }
         List<AgentInfo> agentInfoList = agentService.getAllAgentList(chainId);
+        NavigableSet<AgentInfo> ranking = new TreeSet<>(AgentComparator.getInstance());
         for (AgentInfo agentInfo : agentInfoList) {
             long count = punishService.getYellowCount(chainId, agentInfo.getAgentAddress());
             if (agentInfo.getTotalPackingCount() != 0 || count != 0) {
@@ -229,6 +248,7 @@ public class PocConsensusController {
                 }
             }
             agentInfo.setBankNode(bankList.contains(agentInfo.getAgentAddress()));
+            ranking.add(agentInfo);
         }
         Collections.sort(agentInfoList, AgentComparator.getInstance());
         switch (type){
@@ -239,7 +259,31 @@ public class PocConsensusController {
                 agentInfoList = agentInfoList.stream().filter(d->d.isBankNode()).collect(Collectors.toList());
                 break;
         }
-        return new RpcResult().setResult(new PageInfo<>(1,Integer.MAX_VALUE,agentInfoList.size(),agentInfoList));
+        Stream<Map> stream = agentInfoList.stream().map(agent->{
+            agent.setRanking(ranking.headSet(agent,true).size());
+            Map data = MapUtils.beanToMap(agent);
+            VirtualBankDirectorDTO virtualBankDirectorDTO = virtualBankDirectorDTOMap.get(agent.getPackingAddress());
+
+            if(virtualBankDirectorDTO != null){
+                data.put("networkList",virtualBankDirectorDTO.getHeterogeneousAddresses().parallelStream().map(d->{
+                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(d.getChainId(),d.getAddress());
+                    d.setBalance(balance.toPlainString());
+                    return d;
+                }).collect(Collectors.toList()));
+                data.put("order",virtualBankDirectorDTO.getOrder());
+            }
+            return data;
+        });
+        if(type == 2){
+            //虚拟银行 需要重新排序
+            stream = stream.sorted((o1,o2)->{
+                Integer s1 = (Integer) o1.get("order");
+                Integer s2 = (Integer) o2.get("order");
+                return s1.compareTo(s2);
+            });
+        }
+        List<Map> result = stream.collect(Collectors.toList());
+        return new RpcResult().setResult(new PageInfo<>(1,Integer.MAX_VALUE,agentInfoList.size(),result));
     }
 
 
@@ -347,6 +391,9 @@ public class PocConsensusController {
                 }
             }
         }
+
+
+
         Result<AgentInfo> result = WalletRpcHandler.getAgentInfo(chainId, agentHash);
         if (result.isSuccess()) {
             AgentInfo agent = result.getData();
@@ -360,12 +407,31 @@ public class PocConsensusController {
             }
         }
         agentInfo.setBankNode(bankList.contains(agentInfo.getAgentAddress()));
+        double consusensWeight = 1D;
+        if(agentInfo.isBankNode()){
+            consusensWeight = ApiContext.superAgentDepositBase;
+        }else if(agentInfo.getStatus() == 1){
+            consusensWeight = ApiContext.superAgentDepositBase;
+        }
+        BigDecimal interest = stackingService.getInterestRate(ApiContext.localAssertBase,consusensWeight);
 
         ApiCache cache = CacheManager.getCache(chainId);
         //计算节点排名
         int ranking = cache.getAgentMap().entrySet().stream().filter(d->d.getValue().getDeposit().compareTo(agentInfo.getDeposit()) >= 0).collect(Collectors.toList()).size();
         agentInfo.setRanking(ranking);
-        return RpcResult.success(agentInfo);
+        Map<String,Object> res = MapUtils.beanToLinkedMap(agentInfo);
+        res.put("interestRate",interest.setScale(4, RoundingMode.HALF_DOWN));
+        io.nuls.base.api.provider.Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq(false));
+        if(virtualBankDirectorDTOResult.isSuccess()){
+            virtualBankDirectorDTOResult.getList().stream().filter(d->d.getSignAddress().equals(agentInfo.getPackingAddress())).findFirst().ifPresent(d->{
+                res.put("networkList",d.getHeterogeneousAddresses().parallelStream().map(da->{
+                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(da.getChainId(),da.getAddress());
+                    da.setBalance(balance.toPlainString());
+                    return da;
+                }).collect(Collectors.toList()));
+            });
+        }
+        return RpcResult.success(res);
     }
 
     @RpcMethod("getAccountConsensusNode")
@@ -897,7 +963,11 @@ public class PocConsensusController {
             if(d.getOrder() < lastIndex && d.getBlockHeight() == 0){
                 d.setYellow(true);
             }else{
-                d.setYellow(false);
+                if(d.getTime() < NulsDateUtils.getCurrentTimeSeconds() && d.getBlockHeight() == 0){
+                    d.setYellow(true);
+                }else{
+                    d.setYellow(false);
+                }
             }
         });
         round.setItemList(itemList);
@@ -942,8 +1012,6 @@ public class PocConsensusController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         List<DepositInfo> list = depositService.getDepositSumList(chainId,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
-//        BigDecimal total = new BigDecimal(list.stream().map(d -> d.getAmount()).reduce(BigInteger.ZERO, (d1, d2) -> d1.add(d2)));
-//        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
         Map<String, BigInteger> symbolList = list.stream().map(d -> Map.of(d.getSymbol(), d.getAmount())).reduce(new HashMap<>(list.size()),
                 (d1, d2) -> {
                     d1.putAll(d2);
@@ -962,11 +1030,6 @@ public class PocConsensusController {
             );
             return m;
         }).collect(Collectors.toList());
-//        BigInteger rateTotal = resList.stream().map(d -> (BigInteger) d.get("rate")).reduce(BigInteger.ZERO, (d1, d2) -> d1.add(d2));
-//        if (rateTotal.compareTo(BigInteger.valueOf(10000)) < 0) {
-//            BigInteger diff = BigInteger.valueOf(10000).subtract(rateTotal);
-//            resList.get(0).put("rate", ((BigInteger) resList.get(0).get("rate")).add(diff));
-//        }
         return RpcResult.success(resList);
     }
 
@@ -1199,9 +1262,16 @@ public class PocConsensusController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         io.nuls.base.api.provider.Result<AssetInfo> res = consensusProvider.getCanStackingAssetList(new GetCanStackingAssetListReq(chainId));
+
         if(res.isSuccess()){
             return RpcResult.success(res.getList().stream().map(d->{
                 Map<String,Object> map = MapUtils.beanToLinkedMap(d);
+                if(d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId){
+                    map.put("nvtPrice",BigDecimal.ONE);
+                }else{
+                    SymbolPrice symbolPrice = symbolQuotationPriceService.getFreshUsdtPrice(d.getSymbol());
+                    map.put("nvtPrice",getNvtPrice().transfer(symbolPrice,BigDecimal.ONE));
+                }
                 map.put("rate",getStackingRate(d.getSymbol()));
                 return map;
             }).collect(Collectors.toList()));
@@ -1209,6 +1279,18 @@ public class PocConsensusController {
             return RpcResult.failed(CommonCodeConstanst.FAILED,res.getMessage());
         }
     }
+
+    private SymbolPrice getNvtPrice(){
+        StackSymbolPriceInfo nvtPrice = symbolQuotationPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
+        if(nvtPrice.getPrice().compareTo(BigDecimal.ZERO) == 0){
+            SymbolPrice nulsPrice = symbolQuotationPriceService.getFreshUsdtPrice(ApiContext.mainSymbol);
+            nvtPrice = new StackSymbolPriceInfo();
+            nvtPrice.setPrice(nulsPrice.getPrice().divide(BigDecimal.TEN));
+            nvtPrice.setCurrency(SymbolQuotationPriceService.USDT);
+        }
+        return nvtPrice;
+    }
+
 
     private Map<DepositFixedType,BigDecimal> getStackingRate(String symbol) {
         Map<DepositFixedType,BigDecimal> res = new HashMap<>(DepositFixedType.values().length);
@@ -1218,8 +1300,8 @@ public class PocConsensusController {
                 res.put(d,rate);
             }else{
                 Long day = d.getTime() / 3600L / 24;
-                BigDecimal totalRate = rate.multiply(new BigDecimal(day));
-                res.put(d,totalRate);
+                BigDecimal totalRate = rate.divide(BigDecimal.valueOf(365), MathContext.DECIMAL64).multiply(new BigDecimal(day));
+                res.put(d,totalRate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_UP));
             }
 
         });

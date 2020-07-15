@@ -41,7 +41,7 @@ import java.util.Arrays;
 
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NulsByteBuffer {
 

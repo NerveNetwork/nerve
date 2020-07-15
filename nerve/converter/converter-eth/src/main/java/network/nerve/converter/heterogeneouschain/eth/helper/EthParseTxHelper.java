@@ -36,6 +36,8 @@ import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -60,6 +62,20 @@ public class EthParseTxHelper {
     @Autowired
     private EthListener ethListener;
 
+    public boolean isCompletedTransaction(String nerveTxHash) throws Exception {
+        return isCompletedTransactionByStatus(nerveTxHash, false);
+    }
+
+    public boolean isCompletedTransactionByLatest(String nerveTxHash) throws Exception {
+        return isCompletedTransactionByStatus(nerveTxHash, true);
+    }
+
+    private boolean isCompletedTransactionByStatus(String nerveTxHash, boolean latest) throws Exception {
+        Function isCompletedFunction = EthUtil.getIsCompletedFunction(nerveTxHash);
+        List<Type> valueTypes = ethWalletApi.callViewFunction(EthContext.MULTY_SIGN_ADDRESS, isCompletedFunction, latest);
+        boolean isCompleted = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
+        return isCompleted;
+    }
     /**
      * 解析提现交易数据
      */
@@ -239,11 +255,15 @@ public class EthParseTxHelper {
                 List<Object> inputData = EthUtil.parseInput(input, EthConstant.INPUT_CHANGE);
                 List<Address> adds = (List<Address>) inputData.get(1);
                 List<Address> quits = (List<Address>) inputData.get(2);
+                BigInteger orginTxCount = (BigInteger) inputData.get(3);
                 if (!adds.isEmpty()) {
                     txInfo.setAddAddresses(EthUtil.list2array(adds.stream().map(a -> a.getValue()).collect(Collectors.toList())));
                 }
                 if (!quits.isEmpty()) {
                     txInfo.setRemoveAddresses(EthUtil.list2array(quits.stream().map(q -> q.getValue()).collect(Collectors.toList())));
+                }
+                if (orginTxCount != null) {
+                    txInfo.setOrginTxCount(orginTxCount.intValue());
                 }
             }
         }

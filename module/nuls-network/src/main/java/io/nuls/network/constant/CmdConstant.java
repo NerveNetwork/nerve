@@ -43,6 +43,8 @@ public interface CmdConstant {
      * 广播消息
      */
     String CMD_NW_BROADCAST = "nw_broadcast";
+
+    String NW_BROADCAST_JOIN_CONSENSUS = "nw_broadcast_join_consensus";
     /**
      * 通过IP地址发送消息
      */

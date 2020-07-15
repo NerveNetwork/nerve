@@ -34,9 +34,12 @@ import network.nerve.converter.model.dto.RechargeTxDTO;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.model.dto.WithdrawalTxDTO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
+import network.nerve.converter.model.txdata.ConfirmResetVirtualBankTxData;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
 
+import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 组装交易
@@ -47,7 +50,7 @@ import java.util.List;
 public interface AssembleTxService {
 
     /**
-     * 组装并发布 虚拟银行节点变更交易
+     * 虚拟银行节点变更交易
      *
      * @param chain        链信息
      * @param inAgentList  加入的节点信息
@@ -58,6 +61,22 @@ public interface AssembleTxService {
      * @throws NulsException
      */
     Transaction createChangeVirtualBankTx(Chain chain,
+                                          List<byte[]> inAgentList,
+                                          List<byte[]> outAgentList,
+                                          long outHeight,
+                                          long txTime) throws NulsException;
+
+    /**
+     *  只创建交易, 不发送到交易模块
+     * @param chain
+     * @param inAgentList
+     * @param outAgentList
+     * @param outHeight
+     * @param txTime
+     * @return
+     * @throws NulsException
+     */
+    Transaction assembleChangeVirtualBankTx(Chain chain,
                                           List<byte[]> inAgentList,
                                           List<byte[]> outAgentList,
                                           long outHeight,
@@ -99,7 +118,7 @@ public interface AssembleTxService {
                                                 long txTime) throws NulsException;
 
     /**
-     * 组装并发布 充值交易
+     * 充值交易
      *
      * @param chain         链信息
      * @param rechargeTxDTO 充值数据
@@ -111,7 +130,7 @@ public interface AssembleTxService {
     Transaction createRechargeTxWithoutSign(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException;
 
     /**
-     * 组装并发布 提现交易
+     * 提现交易
      *
      * @param chain           链信息
      * @param withdrawalTxDTO 提现数据
@@ -121,7 +140,7 @@ public interface AssembleTxService {
     Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException;
 
     /**
-     * 组装并发布 确认提现交易
+     * 确认提现交易
      *
      * @param chain                   链信息
      * @param confirmWithdrawalTxData 交易信息
@@ -148,7 +167,7 @@ public interface AssembleTxService {
     Transaction processProposalTx(Chain chain, Transaction tx) throws NulsException;
 
     /**
-     * 组装并发布 发起提案交易
+     * 发起提案交易
      * 默认以虚拟银行节点的身份签名, 不是虚拟银行节点将无法签名该交易
      *
      * @param chain         链信息
@@ -159,7 +178,7 @@ public interface AssembleTxService {
     Transaction createProposalTx(Chain chain, ProposalTxDTO proposalTxDTO) throws NulsException;
 
     /**
-     * 组装并发布 对提案表决交易
+     * 提案投票交易
      * 用传入账户密码信息签名
      *
      * @param chain          链信息
@@ -232,5 +251,33 @@ public interface AssembleTxService {
      */
     Transaction createHeterogeneousContractAssetRegCompleteTx(Chain chain, Transaction pendingTx) throws NulsException;
 
+    /**
+     * 根据奖励地址计算出组装cointo数据
+     * 由于奖励地址列表通过异构签名地址得到,如果出现多个虚拟银行奖励地址相同,
+     * 那么奖励地址列表就会有重复的奖励地址, 因此要合并该地址得到的多笔奖励金额.
+     * @param listRewardAddress
+     * @param amount
+     */
+    Map<String, BigInteger> calculateDistributionFeeCoinToAmount(List<byte[]> listRewardAddress, BigInteger amount);
+
+
+    /**
+     * 创建重置虚拟银行异构链(合约)交易
+     * @param chain
+     * @param heterogeneousChainId
+     * @param signAccount
+     * @return
+     * @throws NulsException
+     */
+    Transaction createResetVirtualBankTx(Chain chain, int heterogeneousChainId, SignAccountDTO signAccount) throws NulsException;
+
+    /**
+     * 创建确认重置虚拟银行异构链(合约)交易
+     * @param chain
+     * @param txData
+     * @return
+     * @throws NulsException
+     */
+    Transaction createConfirmResetVirtualBankTx(Chain chain, ConfirmResetVirtualBankTxData txData, long txTime) throws NulsException;
 
 }

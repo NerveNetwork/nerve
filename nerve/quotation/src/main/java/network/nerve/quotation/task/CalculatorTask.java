@@ -33,6 +33,7 @@ import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.processor.Calculator;
 import network.nerve.quotation.rpc.call.QuotationCall;
 import network.nerve.quotation.service.QuotationService;
+import network.nerve.quotation.storage.QuotationIntradayStorageService;
 import network.nerve.quotation.util.CommonUtil;
 import network.nerve.quotation.util.TimeUtil;
 
@@ -57,48 +58,47 @@ public class CalculatorTask implements Runnable {
 
 
     private QuotationService quotationService = SpringLiteContext.getBean(QuotationService.class);
+    private QuotationIntradayStorageService quotationIntradayStorageService = SpringLiteContext.getBean(QuotationIntradayStorageService.class);
+
     @Override
     public void run() {
-        while (true) {
-            try {
-
-                //是否在允许的执行时间范围
-                if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
-                    break;
-                }
-                if(!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))){
-                    break;
-                }
-                //清空当天的节点报价缓存
-                QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.clear();
-                QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.clear();
-                List<QuotationActuator> quteList = chain.getQuote();
-                Map<String, Double> pricesMap = new HashMap<>();
-                for (QuotationActuator qa : quteList) {
-                    String anchorToken = qa.getAnchorToken();
-                    if(QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)){
-                        //如果已确认的报价交易缓存中已存在该key, 则不再执行.
-                        continue;
-                    }
-                    Calculator calculator = getCalculator(qa.getCalculator());
-                    Double price = calculator.calcFinal(chain, anchorToken, TimeUtil.nowUTCDate());
-                    if(null != price && price > 0) {
-                        pricesMap.put(anchorToken, price);
-                    }
-                }
-                //开始组装交易发送到交易模块（交易模块有特殊的接口 不广播）
-                if(!pricesMap.isEmpty()){
-                    Transaction tx = quotationService.createFinalQuotationTransaction(pricesMap);
-                    chain.getLogger().info("{}", tx.format(Prices.class));
-                    //发送到交易模块
-                    QuotationCall.newFinalQuotationTx(chain, tx);
-                    chain.getLogger().info("发布最终报价交易 hash:{}", tx.getHash().toHex());
-                }
-                break;
-            } catch (Throwable e) {
-                chain.getLogger().error("finalQuotationProcessTask error", e);
-                break;
+        try {
+            //是否在允许的执行时间范围
+            if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
+                return;
             }
+            if(!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))){
+                return;
+            }
+            //清空当天的节点报价缓存
+            QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.clear();
+            QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.clear();
+            quotationIntradayStorageService.removeAll(chain);
+
+            List<QuotationActuator> quteList = chain.getQuote();
+            Map<String, Double> pricesMap = new HashMap<>();
+            for (QuotationActuator qa : quteList) {
+                String anchorToken = qa.getAnchorToken();
+                if(QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)){
+                    //如果已确认的报价交易缓存中已存在该key, 则不再执行.
+                    continue;
+                }
+                Calculator calculator = getCalculator(qa.getCalculator());
+                Double price = calculator.calcFinal(chain, anchorToken, TimeUtil.nowUTCDate());
+                if(null != price && price > 0) {
+                    pricesMap.put(anchorToken, price);
+                }
+            }
+            //开始组装交易发送到交易模块（交易模块有特殊的接口 不广播）
+            if(!pricesMap.isEmpty()){
+                Transaction tx = quotationService.createFinalQuotationTransaction(pricesMap);
+                chain.getLogger().info("{}", tx.format(Prices.class));
+                //发送到交易模块
+                QuotationCall.newTx(chain, tx);
+                chain.getLogger().info("发布最终报价交易 hash:{}", tx.getHash().toHex());
+            }
+        } catch (Throwable e) {
+            chain.getLogger().error("finalQuotationProcessTask error", e);
         }
     }
 

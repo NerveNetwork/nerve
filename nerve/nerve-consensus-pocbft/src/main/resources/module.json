@@ -1,8 +1,8 @@
 {
   "packingInterval": 1,
   "redPublishLockTime": 5184000,
-  "stopAgentLockTime": 259200,
-  "reducedDepositLockTime": 259200,
+  "stopAgentLockTime": 1296000,
+  "reducedDepositLockTime": 1296000,
   "depositMin": 20000000000000,
   "depositMax": 10000000000000000,
   "packDepositMin": 20000000000000,
@@ -16,5 +16,7 @@
   "moduleCode": "cs",
   "byzantineRate": 66,
   "agentCountMax": 35,
-  "mainChainCommissionRatio": 60
+  "mainChainCommissionRatio": 60,
+  "maxCoinToOfCoinbase": 10,
+  "minRewardHeight": 1
 }

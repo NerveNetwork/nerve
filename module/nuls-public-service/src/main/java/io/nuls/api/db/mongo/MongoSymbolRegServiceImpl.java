@@ -67,6 +67,9 @@ public class MongoSymbolRegServiceImpl implements SymbolRegService {
             m2.entrySet().forEach(entry -> {
                 m1.merge(entry.getKey(), entry.getValue(), (ov, nv) -> {
                     PropertyUtils.copyNotNullProperties(nv,ov);
+                    if(nv.getChainId() == apiConfig.getChainId() && nv.getAssetId() == apiConfig.getAssetId()){
+                        nv.setSource(ApiConstant.SYMBOL_REG_SOURCE_NATIVE);
+                    }
                     return nv;
                 });
             });
@@ -134,6 +137,14 @@ public class MongoSymbolRegServiceImpl implements SymbolRegService {
     @Override
     public List<SymbolRegInfo> getAll() {
         return mongoDBService.query(SYMBOL_REG_TABLE).stream().map(d -> DocumentTransferTool.toInfo(d, SymbolRegInfo.class)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SymbolRegInfo> getListBySource(Integer... source) {
+        if(source.length == 0){
+            return getAll();
+        }
+        return mongoDBService.query(SYMBOL_REG_TABLE,Filters.or(Arrays.stream(source).map(d->Filters.eq("source",d)).collect(Collectors.toList()))).stream().map(d -> DocumentTransferTool.toInfo(d, SymbolRegInfo.class)).collect(Collectors.toList());
     }
 
 

@@ -10,6 +10,18 @@
     "baseurl": "http://binanceapi.zhoulijun.top",
     "collector": "network.nerve.quotation.rpc.querier.impl.BinanceQuerier",
     "weight": "0.70"
+  },
+  {
+    "name": "Okex",
+    "baseurl": "https://www.okex.com",
+    "collector": "network.nerve.quotation.rpc.querier.impl.OkexQuerier",
+    "weight": "0.30"
+  },
+  {
+    "name": "Dex",
+    "baseurl": "http://beta.nervedex.com/",
+    "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
+    "weight": "0.10"
   }
 ]
 

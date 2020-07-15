@@ -158,7 +158,7 @@ public class EthUtilTest extends Base {
         } else {
             bankOrder -= mod - 1;
         }
-        int waitting = (bankOrder - 1) * EthConstant.INTERVAL_WAITTING;
+        int waitting = (bankOrder - 1) * EthConstant.DEFAULT_INTERVAL_WAITTING;
         System.out.println(String.format("seed: %s, mod: %s, bankOrder: %s, waitting: %s",seed, mod, bankOrder, waitting));
     }
 

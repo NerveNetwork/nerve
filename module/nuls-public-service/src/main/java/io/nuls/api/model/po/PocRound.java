@@ -21,7 +21,7 @@
 package io.nuls.api.model.po;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class PocRound {
 

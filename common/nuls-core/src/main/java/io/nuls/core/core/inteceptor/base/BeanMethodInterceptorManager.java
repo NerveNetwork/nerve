@@ -37,7 +37,7 @@ import java.util.Map;
  * 拦截器管理器
  * Interceptor manager.
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 public class BeanMethodInterceptorManager {
 

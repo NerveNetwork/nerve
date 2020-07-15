@@ -81,32 +81,32 @@
     ],
     "validMsgs": [
       {
-        "name": "io.nuls.pocbft.message.VoteMessage",
+        "name": "network.nerve.pocbft.v1.message.VoteMessage",
         "protocolCmd": "vote",
         "handlers": "VoteHandlerV1"
       },
       {
-        "name": "io.nuls.pocbft.message.GetVoteResultMessage",
+        "name": "network.nerve.pocbft.v1.message.GetVoteResultMessage",
         "protocolCmd": "getResult",
         "handlers": "GetVoteResultDataHandlerV1"
       },
       {
-        "name": "io.nuls.pocbft.message.VoteResultMessage",
+        "name": "network.nerve.pocbft.v1.message.VoteResultMessage",
         "protocolCmd": "voteResult",
         "handlers": "VoteResultDataHandlerV1"
       },
       {
-        "name": "io.nuls.pocnetwork.model.message.ConsensusIdentitiesMsg",
+        "name": "network.nerve.pocbft.network.model.message.ConsensusIdentitiesMsg",
         "protocolCmd": "pocIdentity",
         "handlers": "ConsensusIdentityProcessorV1"
       },
       {
-        "name": "io.nuls.pocnetwork.model.message.ConsensusShareMsg",
+        "name": "network.nerve.pocbft.network.model.message.ConsensusShareMsg",
         "protocolCmd": "pocShare",
         "handlers": "ConsensusShareProcessorV1"
       },
       {
-        "name": "io.nuls.pocnetwork.model.message.ConsensusIdentitiesMsg",
+        "name": "network.nerve.pocbft.network.model.message.ConsensusIdentitiesMsg",
         "protocolCmd": "pocDisConn",
         "handlers": "ConsensusDisConnectProcessorV1"
       }

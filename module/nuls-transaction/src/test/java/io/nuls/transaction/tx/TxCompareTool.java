@@ -14,7 +14,7 @@ import java.util.List;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class TxCompareTool {
 

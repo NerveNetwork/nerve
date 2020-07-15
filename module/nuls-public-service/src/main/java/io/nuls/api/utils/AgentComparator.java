@@ -21,11 +21,14 @@
 package io.nuls.api.utils;
 
 import io.nuls.api.model.po.AgentInfo;
+import io.nuls.core.crypto.HexUtil;
+import org.apache.commons.codec.binary.Hex;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AgentComparator implements Comparator<AgentInfo> {
 
@@ -40,36 +43,59 @@ public class AgentComparator implements Comparator<AgentInfo> {
 
     @Override
     public int compare(AgentInfo o1, AgentInfo o2) {
-        if (o1.getStatus() > o2.getStatus()) {
-            return -1;
-        } else if (o1.getStatus() < o2.getStatus()) {
-            return 1;
+        //保证金从大到小排序
+        int result = o2.getDeposit().compareTo(o1.getDeposit());
+        if(result != 0){
+            return result;
         }
-        if (o1.getCreditValue() > o2.getCreditValue()) {
-            return -1;
-        } else if (o1.getCreditValue() < o2.getCreditValue()) {
-            return 1;
+        if (o1.getBlockHeight() != o2.getBlockHeight()) {
+            return (int) (o1.getBlockHeight() - o2.getBlockHeight());
         }
-//        if (o1.getCommissionRate() < o2.getCommissionRate()) {
-//            return -1;
-//        } else if (o1.getCommissionRate() > o2.getCommissionRate()) {
-//            return 1;
-//        }
-//        if (o1.getTotalDeposit().compareTo(o2.getTotalDeposit()) < 0) {
-//            return -1;
-//        } else if (o1.getTotalDeposit().compareTo(o2.getTotalDeposit()) > 0) {
-//            return 1;
-//        }
-        if (o1.getDeposit().compareTo(o2.getDeposit()) > 0) {
-            return -1;
-        } else if (o1.getDeposit().compareTo(o2.getDeposit()) < 0) {
-            return 1;
-        } else {
-            if(o1.isBankNode()){
-                return -1;
-            }
+        result =  (int) (o1.getCreateTime() - o2.getCreateTime());
+        if(result!=0){
+            return result;
         }
+        return Arrays.compare(HexUtil.decode(o1.getTxHash()), HexUtil.decode(o2.getTxHash()));
 
-        return 0;
+//        int cp = o1.getDeposit().compareTo(o2.getDeposit());
+//        if(cp == 0){
+//            if(o1.getCreateTime() == o2.getCreateTime()){
+//                return o1.getAgentAddress().compareTo(o2.getAgentAddress());
+//            }
+//            return o1.getCreateTime() < o2.getCreateTime() ? -1 : 1;
+//        }else{
+//            return -cp;
+//        }
+//        if (o1.getStatus() > o2.getStatus()) {
+//            return -1;
+//        } else if (o1.getStatus() < o2.getStatus()) {
+//            return 1;
+//        }
+//        if (o1.getCreditValue() > o2.getCreditValue()) {
+//            return -1;
+//        } else if (o1.getCreditValue() < o2.getCreditValue()) {
+//            return 1;
+//        }
+////        if (o1.getCommissionRate() < o2.getCommissionRate()) {
+////            return -1;
+////        } else if (o1.getCommissionRate() > o2.getCommissionRate()) {
+////            return 1;
+////        }
+////        if (o1.getTotalDeposit().compareTo(o2.getTotalDeposit()) < 0) {
+////            return -1;
+////        } else if (o1.getTotalDeposit().compareTo(o2.getTotalDeposit()) > 0) {
+////            return 1;
+////        }
+//        if (o1.getDeposit().compareTo(o2.getDeposit()) > 0) {
+//            return -1;
+//        } else if (o1.getDeposit().compareTo(o2.getDeposit()) < 0) {
+//            return 1;
+//        } else {
+//            if(o1.isBankNode()){
+//                return -1;
+//            }
+//        }
+
+//        return 0;
     }
 }

@@ -148,19 +148,19 @@ public interface ApiConstant {
      * 币种注册信息来源
      * 原生币种
      */
-    int SYMBOL_REG_SOURCE_NATIVE = 0;
+    int SYMBOL_REG_SOURCE_NATIVE = 1;
 
     /**
      * 币种注册信息来源
      * 生态内跨链
      */
-    int SYMBOL_REG_SOURCE_CC = 1;
+    int SYMBOL_REG_SOURCE_CC = 3;
 
     /**
      * 币种注册信息来源
      * 异构链跨链
      */
-    int SYMBOL_REG_SOURCE_CONVERTER = 2;
+    int SYMBOL_REG_SOURCE_CONVERTER = 4;
 
 
     String USD = "USD";

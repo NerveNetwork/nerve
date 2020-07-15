@@ -21,7 +21,7 @@
 package io.nuls.api.model.rpc;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class SearchResultDTO {
 

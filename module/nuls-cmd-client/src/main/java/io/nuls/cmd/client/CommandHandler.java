@@ -33,9 +33,11 @@ import io.nuls.cmd.client.processor.block.GetBestBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.block.GetBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.consensus.*;
 import io.nuls.cmd.client.processor.converter.RegisterHeterogeneousAssetProcessor;
+import io.nuls.cmd.client.processor.converter.ResetBankProcess;
 import io.nuls.cmd.client.processor.converter.VoteProposalProcess;
 import io.nuls.cmd.client.processor.converter.WithdrawalProcessor;
-import io.nuls.cmd.client.processor.crosschain.*;
+import io.nuls.cmd.client.processor.crosschain.CreateCrossTxProcessor;
+import io.nuls.cmd.client.processor.crosschain.GetCrossTxStateProcessor;
 import io.nuls.cmd.client.processor.ledger.GetBalanceProcessor;
 import io.nuls.cmd.client.processor.ledger.GetLocalCrossAssetProcessor;
 import io.nuls.cmd.client.processor.network.GetNetworkProcessor;
@@ -138,25 +140,26 @@ public class CommandHandler implements InitializingBean {
         register(getBean(WithdrawalProcessor.class));
         register(getBean(VoteProposalProcess.class));
         register(getBean(RegisterHeterogeneousAssetProcessor.class));
+        register(getBean(ResetBankProcess.class));
         /**
          * consensus
          */
         //create consensus node
         register(getBean(CreateAgentProcessor.class));
-        //stop consensus node
+//        //stop consensus node
         register(getBean(StopAgentProcessor.class));
-
-        //deposit to agent
-        register(getBean(ChangeAgentDepositProcessor.AppendAgentDeposit.class));
-        register(getBean(ChangeAgentDepositProcessor.ReduceAgentDeposit.class));
-
-        //staking
-        register(getBean(DepositProcessor.Deposit.class));
-        register(getBean(DepositProcessor.DepositFixed.class));
-        register(getBean(WithdrawProcessor.class));
-
-        register(getBean(GetAgentsProcessor.class));
-        register(getBean(GetAgentInfoProcessor.class));
+//
+//        //deposit to agent
+//        register(getBean(ChangeAgentDepositProcessor.AppendAgentDeposit.class));
+//        register(getBean(ChangeAgentDepositProcessor.ReduceAgentDeposit.class));
+//
+//        //staking
+//        register(getBean(DepositProcessor.Deposit.class));
+//        register(getBean(DepositProcessor.DepositFixed.class));
+//        register(getBean(WithdrawProcessor.class));
+//
+//        register(getBean(GetAgentsProcessor.class));
+//        register(getBean(GetAgentInfoProcessor.class));
         /**
          * system
          */

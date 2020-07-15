@@ -39,6 +39,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteChoiceEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
@@ -81,6 +82,8 @@ public class VoteProposalProcessor implements TransactionProcessor {
     private ExeProposalStorageService exeProposalStorageService;
     @Autowired
     private DisqualificationStorageService disqualificationStorageService;
+    @Autowired
+    private HeterogeneousService heterogeneousService;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -288,18 +291,22 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     }
                     exeProposalPOSet.add(exeProposalPO);
 
-                    // 如果是撤销虚拟银行节点,则先上执行提案,保证节点数据一致性
-                    if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
+                    // 如果是撤销虚拟银行节点,则先执行提案,保证节点数据一致性
+                    if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
+                        if (syncStatus == SyncStatusEnum.RUNNING.value()) {
+                            heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, true);
+                        }
                         if (!disqualificationStorageService.save(chain, po.getAddress())) {
                             chain.getLogger().error("[commit] 地址加入[撤销银行资格列表]失败 address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                             throw new NulsException(ConverterErrorCode.DISQUALIFICATION_FAILED);
                         }
+                        chain.getLogger().info("[commit] 撤销银行资格提案投票通过, 银行节点地址加入[撤销银行资格列表] address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                     }
                 }
                 chain.getLogger().debug("[commit] 提案投票成功 hash:{}, 提案hash:{}, 投票地址:{}",
                         tx.getHash().toHex(), txData.getProposalTxHash().toHex(), AddressTool.getStringAddressByBytes(address));
             }
-            if(null != exeProposalPOSet) {
+            if (null != exeProposalPOSet) {
                 for (ExeProposalPO exeProposalPO : exeProposalPOSet) {
                     // 放入队列
                     chain.getExeProposalQueue().offer(exeProposalPO);
@@ -342,7 +349,8 @@ public class VoteProposalProcessor implements TransactionProcessor {
                 // 为提案处理票数
                 ProposalPO po = this.proposalStorageService.find(chain, txData.getProposalTxHash());
                 po.voteRollback(chain, txData.getChoice(), AddressTool.getStringAddressByBytes(address));
-                if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
+                if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
+                    heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
                     if (!disqualificationStorageService.delete(chain, po.getAddress())) {
                         chain.getLogger().error("[rollback]地址移除[撤销银行资格列表]失败 address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                         throw new NulsException(ConverterErrorCode.DISQUALIFICATION_FAILED);

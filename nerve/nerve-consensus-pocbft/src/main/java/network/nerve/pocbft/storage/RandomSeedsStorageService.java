@@ -7,7 +7,7 @@ import network.nerve.pocbft.model.po.RandomSeedStatusPo;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public interface RandomSeedsStorageService {
 

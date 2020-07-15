@@ -60,7 +60,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Controller
 @Api(type = ApiType.JSONRPC)

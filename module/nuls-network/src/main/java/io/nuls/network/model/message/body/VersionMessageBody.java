@@ -44,6 +44,7 @@ public class VersionMessageBody extends BaseNulsData {
     private IpAddress addrYou = new IpAddress();
     private IpAddress addrMe = new IpAddress();
     private long blockHeight;
+    private byte reverseCheck = 0;
     private String blockHash = "";
     private String extend = "";
 
@@ -59,6 +60,7 @@ public class VersionMessageBody extends BaseNulsData {
         s += addrYou.size(); // addrYou 16byte
         s += addrMe.size(); // addrMe  16byte
         s += SerializeUtils.sizeOfUint32(); // blockHeight
+        s += 1;
         s += SerializeUtils.sizeOfString(blockHash); // blockHash
         s += SerializeUtils.sizeOfString(extend); // extend
         return s;
@@ -75,6 +77,7 @@ public class VersionMessageBody extends BaseNulsData {
         stream.writeUint32(blockHeight);
         stream.writeString(blockHash);
         stream.writeString(extend);
+        stream.write(reverseCheck);
     }
 
     @Override
@@ -86,6 +89,9 @@ public class VersionMessageBody extends BaseNulsData {
             blockHeight = buffer.readUint32();
             blockHash = buffer.readString();
             extend = buffer.readString();
+            if (!buffer.isFinished()) {
+                reverseCheck = buffer.readByte();
+            }
         } catch (Exception e) {
             throw new NulsException(e);
         }
@@ -138,5 +144,13 @@ public class VersionMessageBody extends BaseNulsData {
 
     public void setBlockHash(String blockHash) {
         this.blockHash = blockHash;
+    }
+
+    public byte getReverseCheck() {
+        return reverseCheck;
+    }
+
+    public void setReverseCheck(byte reverseCheck) {
+        this.reverseCheck = reverseCheck;
     }
 }

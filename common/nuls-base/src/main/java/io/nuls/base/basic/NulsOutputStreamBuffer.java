@@ -38,7 +38,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NulsOutputStreamBuffer {
 

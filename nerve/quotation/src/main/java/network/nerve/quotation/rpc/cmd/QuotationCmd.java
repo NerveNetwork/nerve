@@ -138,6 +138,7 @@ public class QuotationCmd extends BaseCmd {
                     break;
                 }
             }
+
             if (null == confirmFinalQuotationPO) {
                 //如果当前需要获取nerve的价格，并且
                 if (key.equals(QuotationConstant.NERVE_PRICE)

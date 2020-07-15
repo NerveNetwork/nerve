@@ -28,7 +28,7 @@ package network.nerve.model.bo;
  * 交易状态枚举
  * Enumeration of transaction status
  *
- * @author Niels
+ * @author Eva
  */
 public enum CtxStateEnum {
 

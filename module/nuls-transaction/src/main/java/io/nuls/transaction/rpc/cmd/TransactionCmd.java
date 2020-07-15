@@ -33,7 +33,6 @@ import io.nuls.transaction.service.ConfirmedTxService;
 import io.nuls.transaction.service.TxPackageService;
 import io.nuls.transaction.service.TxService;
 import io.nuls.transaction.storage.LockedAddressStorageService;
-import io.nuls.transaction.storage.UnconfirmedTxStorageService;
 import io.nuls.transaction.utils.TxUtil;
 
 import java.util.*;
@@ -124,43 +123,6 @@ public class TransactionCmd extends BaseCmd {
             //将txStr转换为Transaction对象
             Transaction transaction = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
             //将交易放入待验证本地交易队列中
-            txService.newTx(chain, transaction);
-            Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
-            map.put("value", true);
-            map.put("hash", transaction.getHash().toHex());
-            return success(map);
-        } catch (NulsException e) {
-            errorLogProcess(chain, e);
-            return failed(e.getErrorCode());
-        } catch (Exception e) {
-            errorLogProcess(chain, e);
-            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
-        }
-    }
-
-    @Autowired
-    private UnconfirmedTxStorageService unconfirmedTxStorageService;
-
-    @CmdAnnotation(cmd = TxCmd.TX_FINAL_QUOTATION_NEWTX, version = 1.0, description = "接收本地新最终报价交易/receive a new final quotation transaction")
-    @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tx", parameterType = "String", parameterDes = "交易序列化数据字符串")
-    })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功"),
-            @Key(name = "hash", description = "交易hash")
-    }))
-    public Response newTxtest(Map params) {
-        Chain chain = null;
-        try {
-            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
-            ObjectUtils.canNotEmpty(params.get("tx"), TxErrorCode.PARAMETER_ERROR.getMsg());
-            chain = chainManager.getChain((Integer) params.get("chainId"));
-            if (null == chain) {
-                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
-            }
-            String txStr = (String) params.get("tx");
-            Transaction transaction = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
             txService.newTx(chain, transaction);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
             map.put("value", true);

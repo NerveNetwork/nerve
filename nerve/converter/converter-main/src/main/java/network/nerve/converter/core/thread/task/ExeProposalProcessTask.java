@@ -25,10 +25,13 @@
 package network.nerve.converter.core.thread.task;
 
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -39,14 +42,18 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.ExeProposalPO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
+import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.*;
+import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
@@ -73,8 +80,8 @@ public class ExeProposalProcessTask implements Runnable {
     private ExeProposalStorageService exeProposalStorageService = SpringLiteContext.getBean(ExeProposalStorageService.class);
     private ProposalStorageService proposalStorageService = SpringLiteContext.getBean(ProposalStorageService.class);
     private AssembleTxService assembleTxService = SpringLiteContext.getBean(AssembleTxService.class);
-    private DisqualificationStorageService disqualificationStorageService = SpringLiteContext.getBean(DisqualificationStorageService.class);
-    private ProposalExeStorageService proposalExeStorageService = SpringLiteContext.getBean(ProposalExeStorageService.class);
+    private ConfirmWithdrawalStorageService confirmWithdrawalStorageService = SpringLiteContext.getBean(ConfirmWithdrawalStorageService.class);
+    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService = SpringLiteContext.getBean(HeterogeneousAssetConverterStorageService.class);
 
     @Override
     public void run() {
@@ -107,7 +114,6 @@ public class ExeProposalProcessTask implements Runnable {
                     // 终止本次执行，等待下一次执行再次检查交易是否确认
                     break;
                 }
-                long currentHeight = pendingPO.getHeight();
 
                 ProposalPO proposalPO = proposalStorageService.find(chain, hash);
                 ProposalTypeEnum proposalTypeEnum = ProposalTypeEnum.getEnum(proposalPO.getType());
@@ -116,12 +122,12 @@ public class ExeProposalProcessTask implements Runnable {
                         // 异构链原路退回
                         refund(pendingPO, proposalPO);
                         // 记录原始充值hash 保证在提案中只执行一次
-                        asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash(), currentHeight);
+                        asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash());
                         break;
                     case TRANSFER:
                         // 转到其他账户
                         transfer(pendingPO, proposalPO);
-                        asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash(), currentHeight);
+                        asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash());
                         break;
                     case LOCK:
                         // 冻结账户
@@ -141,19 +147,27 @@ public class ExeProposalProcessTask implements Runnable {
                         break;
                     case EXPELLED:
                         // 撤销银行资格
+                        if (chain.getResetVirtualBank().get()) {
+                            chain.getLogger().warn("正在重置虚拟银行异构链(合约), 提案等待1分钟后执行..");
+                            Thread.sleep(60000L);
+                            continue;
+                        }
                         disqualification(pendingPO, proposalPO);
                         break;
                     case UPGRADE:
                         // 升级合约
                         upgrade(pendingPO, proposalPO);
                         break;
+                    case WITHDRAW:
+                        // 提现提案
+                        withdrawProposal(pendingPO, proposalPO);
                     case OTHER:
                     default:
                         break;
                 }
 
                 // 存储已执行成功的交易hash, 执行过的不再执行 (当前节点处于同步区块模式时,也要存该hash, 表示已执行过)
-                asyncProcessedTxStorageService.saveProposalExe(chain, hash.toHex(), currentHeight);
+                asyncProcessedTxStorageService.saveProposalExe(chain, hash.toHex());
                 // 执行成功移除队列头部元素
                 exeProposalQueue.remove();
                 chain.getLogger().debug("[异构链待处理队列] 执行成功移除交易, hash:{}", hash.toHex());
@@ -165,6 +179,69 @@ public class ExeProposalProcessTask implements Runnable {
         } catch (Exception e) {
             chain.getLogger().error(e);
         }
+    }
+
+    /**
+     * 提现提案
+     * @param pendingPO
+     * @param proposalPO
+     * @throws NulsException
+     */
+    private void withdrawProposal(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
+        if (pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+            return;
+        }
+        String hash = proposalPO.getHash().toHex();
+        if (!hasExecutePermission(hash)) {
+            return;
+        }
+        NulsHash withdrawHash = new NulsHash(proposalPO.getNerveHash());
+        Transaction withdrawTx = TransactionCall.getConfirmedTx(chain, withdrawHash);
+        if (null == withdrawTx) {
+            chain.getLogger().error("[ExeProposal-withdraw] The withdraw tx not exist. proposalHash:{}, withdrawHash:{}",
+                    hash, withdrawHash.toHex());
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        ConfirmWithdrawalPO cfmWithdrawalTx = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, withdrawHash);
+        if (null != cfmWithdrawalTx) {
+            chain.getLogger().error("[ExeProposal-withdraw] The confirmWithdraw tx is confirmed. proposalHash:{}, withdrawHash:{}, cfmWithdrawalTx",
+                    hash, withdrawHash.toHex(), cfmWithdrawalTx.getConfirmWithdrawalTxHash().toHex());
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
+        }
+        exeWithdraw(withdrawTx);
+        this.proposalStorageService.saveExeBusiness(chain, HexUtil.encode(proposalPO.getNerveHash()), proposalPO.getHash());
+    }
+
+    /**
+     * 执行提现调用异构链
+     * @param withdrawTx
+     * @throws NulsException
+     */
+    private void exeWithdraw(Transaction withdrawTx) throws NulsException {
+        CoinData coinData = ConverterUtil.getInstance(withdrawTx.getCoinData(), CoinData.class);
+        CoinTo withdrawCoinTo = null;
+        for (CoinTo coinTo : coinData.getTo()) {
+            if (coinTo.getAssetsId() != chain.getConfig().getAssetId()) {
+                withdrawCoinTo = coinTo;
+                break;
+            }
+        }
+        if (null == withdrawCoinTo) {
+            chain.getLogger().error("[ExeProposal-withdraw] Withdraw transaction cointo data error, no withdrawCoinTo. hash:{}", withdrawTx.getHash().toHex());
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+        HeterogeneousAssetInfo assetInfo =
+                heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsId());
+        if (null == assetInfo) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+        }
+        WithdrawalTxData withdrawTxData = ConverterUtil.getInstance(withdrawTx.getTxData(), WithdrawalTxData.class);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+        docking.createOrSignWithdrawTx(
+                withdrawTx.getHash().toHex(),
+                withdrawTxData.getHeterogeneousAddress(),
+                withdrawCoinTo.getAmount(),
+                assetInfo.getAssetId());
     }
 
     /**
@@ -185,6 +262,7 @@ public class ExeProposalProcessTask implements Runnable {
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
         // 向异构链发起合约升级交易
         String exeTxHash = docking.createOrSignUpgradeTx(hash);
+        this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
         chain.getLogger().info("[执行提案-{}] proposalHash:{}, exeTxHash:{}",
                 ProposalTypeEnum.UPGRADE,
                 proposalPO.getHash().toHex(),
@@ -214,7 +292,7 @@ public class ExeProposalProcessTask implements Runnable {
      * @return
      */
     private boolean replyAttack(String hash, String heterogeneousTxHash) {
-        if (null != asyncProcessedTxStorageService.getProposalExe(chain,heterogeneousTxHash)) {
+        if (null != asyncProcessedTxStorageService.getProposalExe(chain, heterogeneousTxHash)) {
             chain.getLogger().error("[提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
             return false;
         }
@@ -230,7 +308,7 @@ public class ExeProposalProcessTask implements Runnable {
     private void refund(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         NulsHash proposalHash = proposalPO.getHash();
         String hash = proposalHash.toHex();
-        if(!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+        if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
             chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
             return;
         }
@@ -249,6 +327,7 @@ public class ExeProposalProcessTask implements Runnable {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
         String exeTxHash = heterogeneousInterface.createOrSignWithdrawTx(hash, info.getFrom(), info.getValue(), info.getAssetId());
+        this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
         chain.getLogger().info("[执行提案-{}] proposalHash:{}, exeTxHash:{}",
                 ProposalTypeEnum.REFUND,
                 proposalPO.getHash().toHex(),
@@ -262,7 +341,7 @@ public class ExeProposalProcessTask implements Runnable {
      */
     private void transfer(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         String hash = proposalPO.getHash().toHex();
-        if(!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+        if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
             chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
             return;
         }
@@ -330,22 +409,32 @@ public class ExeProposalProcessTask implements Runnable {
 
 
     private void disqualification(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
-        if(!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+        if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
             chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
-            return;
-        }
-        if (!chain.isVirtualBankByAgentAddr(AddressTool.getStringAddressByBytes(proposalPO.getAddress()))) {
-            chain.getLogger().warn("该节点地址已不是虚拟银行节点, 无需发送银行变更交易. address:{}", AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
             return;
         }
         List<byte[]> outList = new ArrayList<>();
         outList.add(proposalPO.getAddress());
         // 创建虚拟银行变更交易
-        Transaction tx = assembleTxService.createChangeVirtualBankTx(chain, null, outList, pendingPO.getHeight(), pendingPO.getTime());
-        proposalExeStorageService.save(chain, tx.getHash().toHex(), pendingPO.getProposalTxHash());
-        chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}",
-                ProposalTypeEnum.EXPELLED,
-                proposalPO.getHash().toHex(),
-                tx.getHash().toHex());
+        Transaction tx = null;
+        try {
+            tx = assembleTxService.assembleChangeVirtualBankTx(chain, null, outList, pendingPO.getHeight(), pendingPO.getTime());
+            boolean rs = this.proposalStorageService.saveExeBusiness(chain, tx.getHash().toHex(), proposalPO.getHash());
+            TransactionCall.newTx(chain, tx);
+            chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}, saveExeBusiness:{}",
+                    ProposalTypeEnum.EXPELLED,
+                    proposalPO.getHash().toHex(),
+                    tx.getHash().toHex(),
+                    rs);
+        } catch (NulsException e) {
+            chain.getLogger().error(e);
+            if(!e.getErrorCode().getCode().equals("cv_0048")
+                    && !e.getErrorCode().getCode().equals("cv_0020")
+                    && !e.getErrorCode().getCode().equals("tx_0013")){
+                throw e;
+            }
+            chain.getLogger().warn("[执行提案] 该节点已经不是银行成员, 无需执行变更交易, 提案完成.");
+        }
+
     }
 }

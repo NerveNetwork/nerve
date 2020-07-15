@@ -46,9 +46,6 @@ public class ConsensusBootStrap extends RpcModule {
     private AddressPrefixDatas addressPrefixDatas;
 
     public static void main(String[] args) {
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         NulsRpcModuleBootstrap.run(ConsensusConstant.BOOT_PATH, args);
     }
 

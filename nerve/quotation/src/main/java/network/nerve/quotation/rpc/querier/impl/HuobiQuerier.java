@@ -53,7 +53,7 @@ public class HuobiQuerier implements Querier {
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().debug("HuobiQuerier, 取价anchorToken:{}", anchorToken);
+        chain.getLogger().info("HuobiQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = (anchorToken.replace("-","")).toLowerCase();
         String url = baseurl + CMD;
         try {
@@ -72,7 +72,7 @@ public class HuobiQuerier implements Querier {
             for (Map<String, Object> map : dataList) {
                 if (symbol.equals(map.get("symbol").toString())) {
                     BigDecimal res = new BigDecimal(String.valueOf(map.get("close")));
-                    chain.getLogger().debug("Huobi获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+                    chain.getLogger().info("Huobi获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
                     return res;
                 }
             }

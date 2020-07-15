@@ -21,7 +21,7 @@
 package io.nuls.api.model.entity;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class Message {
 

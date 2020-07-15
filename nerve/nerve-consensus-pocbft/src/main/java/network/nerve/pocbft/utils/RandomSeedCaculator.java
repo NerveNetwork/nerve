@@ -10,7 +10,7 @@ import io.nuls.core.model.StringUtils;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class RandomSeedCaculator {
 

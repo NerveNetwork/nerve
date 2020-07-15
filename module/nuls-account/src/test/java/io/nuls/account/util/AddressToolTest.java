@@ -14,9 +14,31 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AddressToolTest {
+
+    public static void main(String[] args) {
+        System.out.println(AddressTool.getAddressString(HexUtil.decode("03890847cf4c9a22179b217217b306228a80c6c96bcc77e71342e09e00bb0bda30"),9));
+    }
+
+    @Test
+    public void createNerveAddr(){
+        ECKey ecKey = new ECKey();
+        System.out.println(ecKey.getPrivateKeyAsHex());
+        System.out.println(ecKey.getPublicKeyAsHex());
+//        f07d26a6cc0e931602f638fdf5b7dfa94ac8e1a0f9b5885feb78db17a4a7400a
+//        034e7ebe781dc25d5603c78616c939beabb1bd89ef5a2a182d292535146828c509
+//        TNVTdTSPG3sAwUkrGBqoVVzDjHYqvQKMX1khf
+        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(),5));
+//        a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca
+//        02401b78e28d293ad840f9298c2c7e522c68776e3badf092c2dbf457af1b8ed43e
+//                TNERVEfTSPQvEngihwxqwCNPq3keQL1PwrcLbtj
+
+//        94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717
+//        023d994b0452216d13ae59b4544ea168f63360cf3a2ac1a2d74cfbf37cc6fa4848
+//                TNERVEfTSPMT6FsCYgJ2ugkC9Sqhws5YYV4z378
+    }
 
     @Test
     public void test7y(){

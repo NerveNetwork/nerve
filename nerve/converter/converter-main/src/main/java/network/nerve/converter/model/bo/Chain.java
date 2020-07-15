@@ -92,6 +92,25 @@ public class Chain {
      */
     private Map<NulsHash, ProposalPO> votingProposalMap = new HashMap<>();
 
+    /**
+     * 异构链正在执行虚拟银行变更交易, 暂停执行新的虚拟银行变更交易
+     */
+    private AtomicBoolean heterogeneousChangeBankExecuting = new AtomicBoolean(false);
+
+    /**
+     * 正在执行取消节点银行资格的提案
+     */
+    private AtomicBoolean exeDisqualifyBankProposal = new AtomicBoolean(false);
+
+    /**
+     * 是否正在重置异构链(合约)
+     */
+    private AtomicBoolean resetVirtualBank = new AtomicBoolean(false);
+
+    public AtomicBoolean getResetVirtualBank() {
+        return resetVirtualBank;
+    }
+
     public int getChainId() {
         return config.getChainId();
     }
@@ -157,6 +176,13 @@ public class Chain {
         return exeProposalQueue;
     }
 
+    public AtomicBoolean getHeterogeneousChangeBankExecuting() {
+        return heterogeneousChangeBankExecuting;
+    }
+
+    public AtomicBoolean getExeDisqualifyBankProposal() {
+        return exeDisqualifyBankProposal;
+    }
 
     /**
      * 根据异构chainId、type获取异构链配置信息
@@ -231,17 +257,21 @@ public class Chain {
      * 根据银行节点地址和异构链chanId 获取异构链地址
      *
      * @param agentAddress
-     * @param HeterogeneousChainId
+     * @param heterogeneousChainId
      * @return
      */
-    public String getDirectorHeterogeneousAddrByAgentAddr(String agentAddress, int HeterogeneousChainId) throws NulsException {
+    public String getDirectorHeterogeneousAddrByAgentAddr(String agentAddress, int heterogeneousChainId) throws NulsException {
         for (VirtualBankDirector director : mapVirtualBank.values()) {
             if (director.getAgentAddress().equals(agentAddress)) {
                 HeterogeneousAddress heterogeneousAddress =
-                        director.getHeterogeneousAddrMap().get(HeterogeneousChainId);
+                        director.getHeterogeneousAddrMap().get(heterogeneousChainId);
                 return heterogeneousAddress.getAddress();
             }
         }
+        logger.error("没有获取到虚拟银行节点的异构链地址 " +
+                        "can not get heterogeneous address by agent address and heterogeneousChainId. " +
+                        "- HeterogeneousChainId:{} agentAddress:{}",
+                heterogeneousChainId, agentAddress);
         throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
     }
 
@@ -249,13 +279,13 @@ public class Chain {
      * 根据银行节点签名地址和异构链chanId 获取异构链地址
      *
      * @param sginAddress
-     * @param HeterogeneousChainId
+     * @param heterogeneousChainId
      * @return
      */
-    public String getDirectorHeterogeneousAddr(String sginAddress, int HeterogeneousChainId) {
+    public String getDirectorHeterogeneousAddr(String sginAddress, int heterogeneousChainId) {
         VirtualBankDirector virtualBankDirector = this.getMapVirtualBank().get(sginAddress);
         HeterogeneousAddress heterogeneousAddress =
-                virtualBankDirector.getHeterogeneousAddrMap().get(HeterogeneousChainId);
+                virtualBankDirector.getHeterogeneousAddrMap().get(heterogeneousChainId);
         return heterogeneousAddress.getAddress();
     }
 

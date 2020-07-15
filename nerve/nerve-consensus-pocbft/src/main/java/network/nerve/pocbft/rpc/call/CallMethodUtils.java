@@ -71,7 +71,7 @@ public class CallMethodUtils {
             return callResult;
         } catch (NulsException e) {
             throw e;
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new NulsException(e);
         }
     }
@@ -98,11 +98,11 @@ public class CallMethodUtils {
                 throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
             }
             MultiSigAccount multiSigAccount = new MultiSigAccount();
-            multiSigAccount.parse(RPCUtil.decode((String) callResult.get(PARAM_RESULT_VALUE)),0);
+            multiSigAccount.parse(RPCUtil.decode((String) callResult.get(PARAM_RESULT_VALUE)), 0);
             return multiSigAccount;
         } catch (NulsException e) {
             throw e;
-        }catch (Exception e) {
+        } catch (Exception e) {
             throw new NulsException(ConsensusErrorCode.INTERFACE_CALL_FAILED);
         }
     }
@@ -263,23 +263,23 @@ public class CallMethodUtils {
      * @param chain chain info
      */
     @SuppressWarnings("unchecked")
-    public static Map<String,Object> getPackingTxList(Chain chain, long blockTime) {
+    public static Map<String, Object> getPackingTxList(Chain chain, long blockTime) {
         try {
-            long packEndTime = (blockTime + 1) * 1000;
+            long packEndTime = (blockTime + chain.getConfig().getPackingInterval()) * 1000;
             Map<String, Object> params = new HashMap(4);
             params.put(Constants.CHAIN_ID, chain.getConfig().getChainId());
             long currentTime = NulsDateUtils.getCurrentTimeMillis();
             long surplusTime = packEndTime - currentTime;
-            if(surplusTime <= MIN_PACK_SURPLUS_TIME){
+            if (surplusTime <= MIN_PACK_SURPLUS_TIME) {
                 chain.getLogger().warn("打包时间太短，出空块");
                 return null;
             }
-            params.put(PARAM_END_TIME_STAMP, packEndTime - CALL_BACK_HANDLE_TIME );
+            params.put(PARAM_END_TIME_STAMP, packEndTime - CALL_BACK_HANDLE_TIME);
             params.put(PARAM_MAX_TX_SIZE, chain.getConfig().getBlockMaxSize());
             params.put(PARAM_BLOCK_TIME, blockTime);
 
-            chain.getLogger().info("packEndTime:{},currentTime:{},打包时间为：{}",packEndTime,currentTime,surplusTime);
-            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, CALL_TX_PACKABLE_TXS, params,surplusTime - CALL_BACK_HANDLE_TIME);
+//            chain.getLogger().info("packEndTime:{},currentTime:{},打包时间为：{}",packEndTime,currentTime,surplusTime);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, CALL_TX_PACKABLE_TXS, params, surplusTime - CALL_BACK_HANDLE_TIME);
             if (!cmdResp.isSuccess()) {
                 chain.getLogger().error("Packaging transaction acquisition failure!");
                 return null;
@@ -330,7 +330,7 @@ public class CallMethodUtils {
      * The newly created transaction is sent to the transaction management module
      *
      * @param chain chain info
-     * @param tx transaction hex
+     * @param tx    transaction hex
      */
     @SuppressWarnings("unchecked")
     public static void sendTx(Chain chain, String tx) throws NulsException {
@@ -340,7 +340,7 @@ public class CallMethodUtils {
         params.put(PARAM_TX, tx);
         try {
             cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, CALL_TX_NEW_TX, params);
-        }catch (Exception e){
+        } catch (Exception e) {
             chain.getLogger().error(e);
             throw new NulsException(ConsensusErrorCode.INTERFACE_CALL_FAILED);
         }
@@ -434,9 +434,9 @@ public class CallMethodUtils {
     /**
      * 查询账户别名
      * Query account alias
-     * */
-    public static String getAlias(Chain chain, String address){
-        String alias = null ;
+     */
+    public static String getAlias(Chain chain, String address) {
+        String alias = null;
         try {
             Map<String, Object> params = new HashMap<>(2);
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -444,10 +444,10 @@ public class CallMethodUtils {
             params.put(PARAM_ADDRESS, address);
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_GET_ALIAS_BY_ADDRESS, params);
             HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get(CALL_AC_GET_ALIAS_BY_ADDRESS);
-            if(result.get(PARAM_ALIAS) != null){
+            if (result.get(PARAM_ALIAS) != null) {
                 alias = (String) result.get(PARAM_ALIAS);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             chain.getLogger().error(e);
         }
         return alias;
@@ -460,7 +460,7 @@ public class CallMethodUtils {
      * @param chain chain info
      */
     @SuppressWarnings("unchecked")
-    public static void loadBlockHeader(Chain chain)throws Exception{
+    public static void loadBlockHeader(Chain chain) throws Exception {
         Map params = new HashMap(ConsensusConstant.INIT_CAPACITY_2);
         params.put(Constants.CHAIN_ID, chain.getConfig().getChainId());
         params.put(PARAM_ROUND, ConsensusConstant.INIT_BLOCK_HEADER_COUNT);
@@ -491,7 +491,7 @@ public class CallMethodUtils {
         }
         blockHeaders.sort(new BlockHeaderComparator());
         chain.setBlockHeaderList(blockHeaders);
-        chain.setNewestHeader(blockHeaders.get(blockHeaders.size() - 1));
+        chain.setBestHeader(blockHeaders.get(blockHeaders.size() - 1));
         Log.debug("---------------------------区块加载成功！");
     }
 
@@ -503,7 +503,7 @@ public class CallMethodUtils {
      * @param chain chain info
      */
     @SuppressWarnings("unchecked")
-    public static void getRoundBlockHeaders(Chain chain, long roundCount, long startHeight)throws Exception{
+    public static void getRoundBlockHeaders(Chain chain, long roundCount, long startHeight) throws Exception {
         Map params = new HashMap(ConsensusConstant.INIT_CAPACITY_2);
         params.put(Constants.CHAIN_ID, chain.getConfig().getChainId());
         params.put(PARAM_ROUND, roundCount);
@@ -544,57 +544,67 @@ public class CallMethodUtils {
     /**
      * 通知区块模块有区块拜占庭验证成功
      * Notification block module has block Byzantine verification succeeded
-     * @param chain           链信息
-     * @param bifurcate       是否分叉
-     * @param height          区块高度
-     * @param firstHash     第一个区块Hash
-     * @param secondHash    如果分叉则为分叉块Hash否则为NULL
-     * */
+     *
+     * @param chain      链信息
+     * @param bifurcate  是否分叉
+     * @param height     区块高度
+     * @param firstHash  第一个区块Hash
+     * @param secondHash 如果分叉则为分叉块Hash否则为NULL
+     */
     @SuppressWarnings("unchecked")
-    public static void noticeByzantineResult(Chain chain, long height, boolean bifurcate, NulsHash firstHash, NulsHash secondHash){
+    public static void noticeByzantineResult(Chain chain, long height, boolean bifurcate, NulsHash firstHash, NulsHash secondHash) {
         Map params = new HashMap(ConsensusConstant.INIT_CAPACITY_8);
         params.put(Constants.CHAIN_ID, chain.getChainId());
         params.put(PARAM_HEIGHT, height);
         params.put(PARAM_BIFURCATE, bifurcate);
         params.put(PARAM_FIRST_HASH, firstHash.toHex());
-        if(secondHash != null){
+        if (secondHash != null) {
             params.put(PARAM_SECOND_HASH, secondHash.toHex());
-        }else{
+        } else {
             params.put(PARAM_SECOND_HASH, null);
         }
+        while (!noticeByzantineResult(chain, params)) {
+            chain.getLogger().info("重新推送拜占庭验证结果");
+        }
+    }
+
+    private static boolean noticeByzantineResult(Chain chain, Map params) {
+
         try {
-            Request request = MessageUtil.newRequest(CALL_BL_PUT_BZFT_FLAG, params, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);
-            ResponseMessageProcessor.requestOnly(ModuleE.BL.abbr, request);
-        }catch (Exception e){
+            Response callResp = ResponseMessageProcessor.requestAndResponse(ModuleE.BL.abbr, CALL_BL_PUT_BZFT_FLAG, params);
+            return callResp.isSuccess();
+        } catch (Exception e) {
             chain.getLogger().error(e);
+            return false;
         }
     }
 
     /**
      * 通知区块模块向节点获取区块信息
      * Notify the block module to obtain the block information from the node
-     * @param chain         链信息
-     * @param height        区块高度
-     * @param nodeId        节点信息
-     * @param firstHash     第一个区块Hash
-     * @param secondHash    如果分叉则为分叉块Hash否则为NULL
-     * */
+     *
+     * @param chain      链信息
+     * @param height     区块高度
+     * @param nodeId     节点信息
+     * @param firstHash  第一个区块Hash
+     * @param secondHash 如果分叉则为分叉块Hash否则为NULL
+     */
     @SuppressWarnings("unchecked")
-    public static void noticeGetBlock(Chain chain, long height, String nodeId, NulsHash firstHash, NulsHash secondHash){
+    public static void noticeGetBlock(Chain chain, long height, String nodeId, NulsHash firstHash, NulsHash secondHash) {
         Map params = new HashMap(ConsensusConstant.INIT_CAPACITY_8);
         params.put(Constants.CHAIN_ID, chain.getChainId());
         params.put(PARAM_HEIGHT, height);
         params.put(PARAM_NODE_ID, nodeId);
         params.put(PARAM_FIRST_HASH, firstHash.toHex());
-        if(secondHash != null){
+        if (secondHash != null) {
             params.put(PARAM_SECOND_HASH, secondHash.toHex());
-        }else{
-            params.put(PARAM_SECOND_HASH, null);
+        } else {
+            params.put(PARAM_SECOND_HASH, "");
         }
         try {
-            Request request = MessageUtil.newRequest(CALL_BL_PUT_BZFT_FLAG, params, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);
+            Request request = MessageUtil.newRequest("noticeGetBlock", params, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);
             ResponseMessageProcessor.requestOnly(ModuleE.BL.abbr, request);
-        }catch (Exception e){
+        } catch (Exception e) {
             chain.getLogger().error(e);
         }
     }
@@ -607,7 +617,7 @@ public class CallMethodUtils {
      * @return Successful Sending
      */
     @SuppressWarnings("unchecked")
-    public static void  receivePackingBlock(int chainId, String block) throws NulsException {
+    public static void receivePackingBlock(int chainId, String block) throws NulsException {
         Map<String, Object> params = new HashMap(4);
         params.put(Constants.CHAIN_ID, chainId);
         params.put(PARAM_BLOCK, block);
@@ -658,7 +668,7 @@ public class CallMethodUtils {
                 return 0;
             }
             HashMap result = (HashMap) ((HashMap) callResp.getResponseData()).get(CALL_QU_FINAL_QUOTATION);
-            if(result == null){
+            if (result == null) {
                 LoggerUtil.commonLog.warn("The asset has not yet been quoted and cannot participate in the stacking during the accounting period");
                 throw new NulsException(ConsensusErrorCode.ASSET_NO_OFFER_YET);
             }

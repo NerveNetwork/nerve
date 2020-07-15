@@ -48,6 +48,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import static io.nuls.transaction.constant.TxContext.ORPHAN_LIFE_TIME_SEC;
+
 /**
  * @author: Charlie
  * @date: 2019/4/26
@@ -184,7 +186,7 @@ public class OrphanTxProcessTask implements Runnable {
             }
             long currentTimeSeconds = NulsDateUtils.getCurrentTimeSeconds();
             //超过指定时间仍旧是孤儿交易，则删除
-            boolean rs = tx.getTime() < (currentTimeSeconds - (chain.getConfig().getOrphanTtl()));
+            boolean rs = tx.getTime() < (currentTimeSeconds - ORPHAN_LIFE_TIME_SEC);
             return rs;
         } catch (Exception e) {
             chain.getLogger().error(e);

@@ -32,16 +32,17 @@ public class ScheduleManager {
         executorService.scheduleAtFixedRate(new QueryChainInfoTask(ApiContext.defaultChainId), 2, 60, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new SyncBlockTask(ApiContext.defaultChainId), 5, 2, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new StatisticalNulsTask(ApiContext.defaultChainId), 1, 5, TimeUnit.MINUTES);
-//        executorService.scheduleAtFixedRate(new StatisticalNulsTask(ApiContext.defaultChainId), 0, 20, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new StatisticalTask(ApiContext.defaultChainId), 1, 2, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new UnConfirmTxTask(ApiContext.defaultChainId), 1, 2, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new StatisticalRewardTask(ApiContext.defaultChainId), 1, 60, TimeUnit.MINUTES);
-        executorService.scheduleAtFixedRate(new GetGlobalInfoTask(ApiContext.defaultChainId), 5, 10, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(new GetGlobalInfoTask(ApiContext.defaultChainId), 5, 2, TimeUnit.SECONDS);
 
         //每小时执行一次币种兑USDT价格采集
         executorService.scheduleAtFixedRate(new ActualSymbolUsdtPriceTask(),10,3600,TimeUnit.SECONDS);
 
         //每小时执行一次统计数据缓存
         executorService.scheduleAtFixedRate(new ReportTask(),10,10,TimeUnit.SECONDS);
+
+        executorService.scheduleAtFixedRate(new QueryHeterogeneousChainBalanceTask(),1,5,TimeUnit.MINUTES);
     }
 }

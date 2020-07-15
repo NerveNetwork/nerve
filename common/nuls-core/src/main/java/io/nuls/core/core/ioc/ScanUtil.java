@@ -41,7 +41,7 @@ import java.util.jar.JarFile;
  * The utility class is used to scan all classes in the classpath,
  * including the class in the jar file and the class under the folder.
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 public class ScanUtil {
     private static final ClassLoader CLASS_LOADER = ScanUtil.class.getClassLoader();

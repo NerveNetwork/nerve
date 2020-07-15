@@ -24,9 +24,21 @@
 package io.nuls.transaction.constant;
 
 /**
- * @author: PierreLuo
- * @date: 2019-12-04
+ * @author: Charlie
+ * @date: 2020/06/25
  */
 public class TxContext {
-    public static short UPDATE_VERSION_V250 = 5;
+
+    /** 交易数据最大值 默认300K**/
+    public static long TX_MAX_SIZE = 307200;
+
+    /** 未确认交易过期时间秒 */
+    public static long UNCONFIRMED_TX_EXPIRE_SEC = 20;
+
+    /** 孤儿交易生命时间,超过会被清理**/
+    public static long ORPHAN_LIFE_TIME_SEC = 300;
+
+    /**交易时间所在区块时间的默认范围值(在区块时间±本值范围内)*/
+    public static long BLOCK_TX_TIME_RANGE_SEC = 600;
+
 }

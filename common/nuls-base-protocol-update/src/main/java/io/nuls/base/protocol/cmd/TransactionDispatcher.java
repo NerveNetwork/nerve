@@ -47,7 +47,7 @@ public final class TransactionDispatcher extends BaseCmd {
     }
 
     public void setProcessors(List<TransactionProcessor> processors) {
-        processors.forEach(e -> Log.info("register TransactionProcessor-" + e.toString()));
+//        processors.forEach(e -> Log.info("register TransactionProcessor-" + e.toString()));
         processors.sort(TransactionProcessor.COMPARATOR);
         this.processors = processors;
     }

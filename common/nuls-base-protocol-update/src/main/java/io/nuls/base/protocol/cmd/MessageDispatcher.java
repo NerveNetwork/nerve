@@ -33,7 +33,7 @@ public final class MessageDispatcher extends BaseCmd {
     }
 
     public void setProcessors(List<MessageProcessor> processors) {
-        processors.forEach(e -> Log.info("register MessageProcessor-" + e.toString()));
+//        processors.forEach(e -> Log.info("register MessageProcessor-" + e.toString()));
         this.processors = processors;
     }
 

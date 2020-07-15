@@ -41,7 +41,7 @@ import java.util.Map;
 /**
  * 所有该端口的请求都发送到这里统一处理，在此类中封装JSON-RPC 2.0规范的框架
  *
- * @author Niels
+ * @author Eva
  */
 public class JsonRpcHandler extends HttpHandler {
 

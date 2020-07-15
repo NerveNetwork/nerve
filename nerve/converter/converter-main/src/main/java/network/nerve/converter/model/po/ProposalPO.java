@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class ProposalPO extends BaseNulsData {
 
@@ -37,6 +37,8 @@ public class ProposalPO extends BaseNulsData {
     private String heterogeneousTxHash;
 
     private byte[] address;
+
+    private byte[] nerveHash;
     /**
      * 投票范围类型
      */
@@ -77,6 +79,7 @@ public class ProposalPO extends BaseNulsData {
         stream.writeUint16(heterogeneousChainId);
         stream.writeString(heterogeneousTxHash);
         stream.writeBytesWithLength(address);
+        stream.writeBytesWithLength(nerveHash);
         stream.writeByte(voteRangeType);
         stream.writeUint32(voteEndHeight);
         stream.write(status);
@@ -109,6 +112,7 @@ public class ProposalPO extends BaseNulsData {
         this.heterogeneousChainId = byteBuffer.readUint16();
         this.heterogeneousTxHash = byteBuffer.readString();
         this.address = byteBuffer.readByLengthByte();
+        this.nerveHash = byteBuffer.readByLengthByte();
         this.voteRangeType = byteBuffer.readByte();
         this.voteEndHeight = byteBuffer.readUint32();
         this.status = byteBuffer.readByte();
@@ -141,6 +145,7 @@ public class ProposalPO extends BaseNulsData {
         size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfString(this.heterogeneousTxHash);
         size += SerializeUtils.sizeOfBytes(this.address);
+        size += SerializeUtils.sizeOfBytes(this.nerveHash);
         size += 1;
         size += SerializeUtils.sizeOfUint32();
         size += 1;
@@ -208,6 +213,14 @@ public class ProposalPO extends BaseNulsData {
 
     public void setAddress(byte[] address) {
         this.address = address;
+    }
+
+    public byte[] getNerveHash() {
+        return nerveHash;
+    }
+
+    public void setNerveHash(byte[] nerveHash) {
+        this.nerveHash = nerveHash;
     }
 
     public byte getVoteRangeType() {

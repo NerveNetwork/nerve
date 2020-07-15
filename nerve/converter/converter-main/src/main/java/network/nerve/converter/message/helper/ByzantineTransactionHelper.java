@@ -36,6 +36,8 @@ import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.dto.RechargeTxDTO;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.model.txdata.ConfirmedChangeVirtualBankTxData;
+import network.nerve.converter.model.txdata.RechargeTxData;
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
 
@@ -90,7 +92,7 @@ public class ByzantineTransactionHelper {
         dto.setTxtime(depositTx.getTxTime());
         Transaction tx = assembleTxService.createRechargeTxWithoutSign(nerveChain, dto);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[充值]拜占庭交易验证失败");
+            nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));
             return false;
         }
         assembleTxService.createRechargeTx(nerveChain, dto);
@@ -109,7 +111,7 @@ public class ByzantineTransactionHelper {
         txData.setListDistributionFee(hTx.getSigners());
         Transaction tx = assembleTxService.createConfirmWithdrawalTxWithoutSign(nerveChain, txData, hTx.getTxTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[确认提现]拜占庭交易验证失败");
+            nerveChain.getLogger().error("[确认提现]拜占庭交易验证失败, 交易详情: {}", tx.format(ConfirmWithdrawalTxData.class));
             return false;
         }
         assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, hTx.getTxTime());
@@ -132,18 +134,20 @@ public class ByzantineTransactionHelper {
             hTxHash = hash.getHeterogeneousHash();
             IHeterogeneousChainDocking chainDocking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
             HeterogeneousConfirmedInfo confirmedTxInfo = chainDocking.getChangeVirtualBankConfirmedTxInfo(hTxHash);
-            HeterogeneousConfirmedVirtualBank bank = new HeterogeneousConfirmedVirtualBank();
-            bank.setEffectiveTime(confirmedTxInfo.getTxTime());
-            bank.setHeterogeneousChainId(hChainId);
-            bank.setHeterogeneousTxHash(hTxHash);
-            bank.setHeterogeneousAddress(confirmedTxInfo.getMultySignAddress());
+            HeterogeneousConfirmedVirtualBank bank = new HeterogeneousConfirmedVirtualBank(
+                    hChainId,
+                    confirmedTxInfo.getMultySignAddress(),
+                    hTxHash,
+                    confirmedTxInfo.getTxTime(),
+                    confirmedTxInfo.getSigners()
+            );
             vbSet.add(bank);
         }
         List<HeterogeneousConfirmedVirtualBank> hList = new ArrayList<>(vbSet);
         VirtualBankUtil.sortListByChainId(hList);
         Transaction tx = assembleTxService.createConfirmedChangeVirtualBankTxWithoutSign(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[确认变更]拜占庭交易验证失败");
+            nerveChain.getLogger().error("[确认变更]拜占庭交易验证失败, 交易详情: {}", tx.format(ConfirmedChangeVirtualBankTxData.class));
             return false;
         }
         assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());

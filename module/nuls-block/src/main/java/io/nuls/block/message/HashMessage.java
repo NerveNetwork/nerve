@@ -40,6 +40,8 @@ public class HashMessage extends BaseBusinessMessage {
 
     private NulsHash requestHash;
 
+    private long height;
+
     public HashMessage() {
     }
 
@@ -47,28 +49,31 @@ public class HashMessage extends BaseBusinessMessage {
         return requestHash;
     }
 
-    public void setRequestHash(NulsHash requestHash) {
-        this.requestHash = requestHash;
+    public long getHeight() {
+        return height;
     }
 
-    public HashMessage(NulsHash hash) {
+    public HashMessage(NulsHash hash, long height) {
         this.requestHash = hash;
+        this.height = height;
     }
 
     @Override
     public int size() {
-        int size = 0;
+        int size = 4;
         size += NulsHash.HASH_LENGTH;
         return size;
     }
 
     @Override
     public void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
+        stream.writeUint32(height);
         stream.write(requestHash.getBytes());
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
+        this.height = byteBuffer.readUint32();
         this.requestHash = byteBuffer.readHash();
     }
 

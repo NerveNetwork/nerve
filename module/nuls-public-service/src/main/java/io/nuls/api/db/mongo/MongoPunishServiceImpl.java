@@ -3,6 +3,7 @@ package io.nuls.api.db.mongo;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.InsertManyOptions;
 import com.mongodb.client.model.Sorts;
+import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.db.PunishService;
 import io.nuls.api.db.RoundService;
 import io.nuls.api.model.po.PageInfo;
@@ -38,16 +39,17 @@ public class MongoPunishServiceImpl implements PunishService {
         }
         List<Document> documentList = new ArrayList<>();
         for (PunishLogInfo punishLog : punishLogList) {
-            documentList.add(DocumentTransferTool.toDocument(punishLog,"txHash"));
+            punishLog.set_id(punishLog.getTxHash() + "_" + punishLog.getAddress() + "_" + punishLog.getRoundIndex());
+            documentList.add(DocumentTransferTool.toDocument(punishLog));
         }
         mongoDBService.insertOrUpdate(PUNISH_TABLE + chainId,documentList);
     }
 
     public List<TxDataInfo> getYellowPunishLog(int chainId, String txHash) {
-        List<Document> documentList = mongoDBService.query(PUNISH_TABLE + chainId, Filters.eq("_id", txHash));
+        List<Document> documentList = mongoDBService.query(PUNISH_TABLE + chainId, Filters.and(Filters.eq("txHash", txHash),Filters.eq("type", ApiConstant.PUBLISH_YELLOW)));
         List<TxDataInfo> punishLogs = new ArrayList<>();
         for (Document document : documentList) {
-            PunishLogInfo punishLog = DocumentTransferTool.toInfo(document, "txHash",PunishLogInfo.class);
+            PunishLogInfo punishLog = DocumentTransferTool.toInfo(document,PunishLogInfo.class);
             punishLogs.add(punishLog);
         }
         return punishLogs;
@@ -55,16 +57,16 @@ public class MongoPunishServiceImpl implements PunishService {
 
 
     public PunishLogInfo getRedPunishLog(int chainId, String txHash) {
-        Document document = mongoDBService.findOne(PUNISH_TABLE + chainId, Filters.eq("_id", txHash));
+        Document document = mongoDBService.findOne(PUNISH_TABLE + chainId, Filters.and(Filters.eq("txHash", txHash),Filters.eq("type", ApiConstant.PUBLISH_RED)));
         if (document == null) {
             return null;
         }
-        PunishLogInfo punishLog = DocumentTransferTool.toInfo(document,"txHash", PunishLogInfo.class);
+        PunishLogInfo punishLog = DocumentTransferTool.toInfo(document, PunishLogInfo.class);
         return punishLog;
     }
 
     public long getYellowCount(int chainId, String agentAddress) {
-        Bson filter = and(eq("type", 1), eq("address", agentAddress));
+        Bson filter = and(eq("type", ApiConstant.PUBLISH_YELLOW), eq("address", agentAddress));
         long count = mongoDBService.getCount(PUNISH_TABLE + chainId, filter);
         return count;
     }

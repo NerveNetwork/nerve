@@ -55,91 +55,94 @@ import java.math.BigInteger;
 public class Agent extends BaseNulsData {
 
     /**
-    * 节点地址
-    * agent address
-    **/
+     * 节点地址
+     * agent address
+     **/
     @ApiModelProperty(description = "节点地址")
     private byte[] agentAddress;
 
     /**
-    * 打包地址
-    * packing address
-    **/
+     * 打包地址
+     * packing address
+     **/
     @ApiModelProperty(description = "出块地址")
     private byte[] packingAddress;
 
     /**
-    * 奖励地址
-    * reward address
-    * */
+     * 奖励地址
+     * reward address
+     */
     @ApiModelProperty(description = "奖励地址")
     private byte[] rewardAddress;
 
     /**
-    * 保证金
-    * deposit
-    * */
+     * 保证金
+     * deposit
+     */
     @ApiModelProperty(description = "保证金")
     private BigInteger deposit;
 
     /**
-    * 创建时间
-    * create time
-    **/
+     * 创建时间
+     * create time
+     **/
     @ApiModelProperty(description = "创建时间")
     private transient long time;
 
     /**
-    * 所在区块高度
-    * block height
-    * */
+     * 所在区块高度
+     * block height
+     */
     @ApiModelProperty(description = "所在区块高度")
     private transient long blockHeight = -1L;
 
     /**
-    * 该节点注销所在区块高度
-    * Block height where the node logs out
-    * */
+     * 该节点注销所在区块高度
+     * Block height where the node logs out
+     */
     @ApiModelProperty(description = "节点注销高度")
     private transient long delHeight = -1L;
 
     /**
-    *0:待共识 unConsensus, 1:共识中 consensus
-    * */
+     * 0:待共识 unConsensus, 1:共识中 consensus
+     */
     @ApiModelProperty(description = "状态，0:待共识 unConsensus, 1:共识中 consensus")
     private transient int status;
 
     /**
-    * 信誉值
-    * credit value
-    * */
+     * 信誉值
+     * credit value
+     */
     @ApiModelProperty(description = "信誉值")
     private transient double creditVal;
 
     /**
      * 交易HASH
      * transaction hash
-     * */
+     */
     @ApiModelProperty(description = "创建该节点的交易HASH")
     private transient NulsHash txHash;
 
     /**
-    *别名不序列化
-    * Aliases not serialized
-    * */
+     * 别名不序列化
+     * Aliases not serialized
+     */
     @ApiModelProperty(description = "节点别名")
     private transient String alias;
 
     /**
      * 出块地址公钥
      * Aliases not serialized
-     * */
+     */
     @ApiModelProperty(description = "节点别名")
     private transient byte[] pubKey;
 
-    public Agent(){}
+    private transient String packingAddressStr;
 
-    public Agent(CreateAgentDTO dto){
+    public Agent() {
+    }
+
+    public Agent(CreateAgentDTO dto) {
         byte[] agentAddress = AddressTool.getAddress(dto.getAgentAddress());
         this.agentAddress = agentAddress;
         this.packingAddress = AddressTool.getAddress(dto.getPackingAddress());
@@ -151,7 +154,7 @@ public class Agent extends BaseNulsData {
         this.deposit = BigIntegerUtils.stringToBigInteger(dto.getDeposit());
     }
 
-    public Agent(AgentPo po){
+    public Agent(AgentPo po) {
         this.agentAddress = po.getAgentAddress();
         this.packingAddress = po.getPackingAddress();
         this.rewardAddress = po.getRewardAddress();
@@ -189,6 +192,17 @@ public class Agent extends BaseNulsData {
         this.rewardAddress = byteBuffer.readBytes(Address.ADDRESS_LENGTH);
     }
 
+    public String getPackingAddressStr() {
+        if (null == packingAddressStr) {
+            packingAddressStr = AddressTool.getStringAddressByBytes(packingAddress);
+        }
+        return packingAddressStr;
+    }
+
+    public void setPackingAddressStr(String packingAddressStr) {
+        this.packingAddressStr = packingAddressStr;
+    }
+
     public byte[] getPackingAddress() {
         return packingAddress;
     }
@@ -221,7 +235,7 @@ public class Agent extends BaseNulsData {
         return creditVal < 0d ? 0D : this.creditVal;
     }
 
-    public double getRealCreditVal(){
+    public double getRealCreditVal() {
         return this.creditVal;
     }
 

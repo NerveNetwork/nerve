@@ -21,6 +21,7 @@ import io.nuls.crosschain.base.service.CrossChainService;
 import network.nerve.constant.NulsCrossChainConfig;
 import network.nerve.constant.NulsCrossChainConstant;
 import network.nerve.constant.NulsCrossChainErrorCode;
+import network.nerve.model.bo.BackOutAmount;
 import network.nerve.model.bo.Chain;
 import network.nerve.model.po.CtxStatusPO;
 import network.nerve.rpc.call.AccountCall;
@@ -36,6 +37,7 @@ import network.nerve.utils.validator.CrossTxValidator;
 import network.nerve.srorage.*;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.*;
 
 import static network.nerve.constant.NulsCrossChainConstant.CHAIN_ID_MIN;
@@ -76,6 +78,9 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
 
     @Autowired
     private CtxStatusService ctxStatusService;
+
+    @Autowired
+    private TotalOutAmountService totalOutAmountService;
 
     @Autowired
     private CommitedOtherCtxService otherCtxService;
@@ -278,16 +283,16 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                     }
                     //回滚重新打包，如果当前跨链交易已处理完成，则不需要重复处理
                     CtxStatusPO ctxStatusPO = ctxStatusService.get(ctxHash, chainId);
-                    if(ctxStatusPO != null){
-                        if(ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()){
-                            chain.getLogger().info("该跨链转账交易之前已处理完成，不需重复处理：{}",ctxHash.toHex() );
+                    if (ctxStatusPO != null) {
+                        if (ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()) {
+                            chain.getLogger().info("该跨链转账交易之前已处理完成，不需重复处理：{}", ctxHash.toHex());
                             continue;
                         }
                     }
                     ctxStatusList.add(ctxHash);
                     chain.getLogger().debug("跨链交易提交完成，对跨链转账交易做拜占庭验证：{}", ctxHash.toHex());
                     //如果本链为主网通知跨链管理模块发起链与接收链资产变更
-                    if(config.isMainNet()){
+                    if (config.isMainNet()) {
                         List<String> txStrList = new ArrayList<>();
                         for (Transaction tx : txs) {
                             txStrList.add(RPCUtil.encode(tx.serialize()));
@@ -297,6 +302,16 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                     }
                     //发起拜占庭验证
                     chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, ctx, syncStatus));
+                }
+                //这里处理转出总数的维护
+                BackOutAmount backOutAmount = getBackAmount(ctx, chain);
+                if (null == backOutAmount) {
+                    continue;
+                }
+                if (backOutAmount.getBack().compareTo(BigInteger.ZERO) > 0) {
+                    this.totalOutAmountService.addBackAmount(backOutAmount.getChainId(), backOutAmount.getAssetId(), backOutAmount.getBack());
+                } else if (backOutAmount.getOut().compareTo(BigInteger.ZERO) > 0) {
+                    this.totalOutAmountService.addOutAmount(backOutAmount.getChainId(), backOutAmount.getAssetId(), backOutAmount.getOut());
                 }
             }
             chain.getLogger().info("高度：{} 的跨链交易提交完成\n", blockHeader.getHeight());
@@ -322,9 +337,9 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                 NulsHash ctxHash = ctx.getHash();
                 if (chainId == fromChainId) {
                     CtxStatusPO ctxStatusPO = ctxStatusService.get(ctxHash, chainId);
-                    if(ctxStatusPO != null){
-                        if(ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()){
-                            chain.getLogger().info("该跨链转账交易已处理完成，不需回滚：{}",ctxHash.toHex() );
+                    if (ctxStatusPO != null) {
+                        if (ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()) {
+                            chain.getLogger().info("该跨链转账交易已处理完成，不需回滚：{}", ctxHash.toHex());
                             continue;
                         }
                     }
@@ -341,9 +356,9 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                     }
                 } else {
                     CtxStatusPO ctxStatusPO = ctxStatusService.get(ctxHash, chainId);
-                    if(ctxStatusPO != null){
-                        if(ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()){
-                            chain.getLogger().info("该跨链转账交易已处理完成，不需回滚：{}",ctxHash.toHex() );
+                    if (ctxStatusPO != null) {
+                        if (ctxStatusPO.getStatus() == TxStatusEnum.CONFIRMED.getStatus()) {
+                            chain.getLogger().info("该跨链转账交易已处理完成，不需回滚：{}", ctxHash.toHex());
                             continue;
                         }
                     }
@@ -384,16 +399,35 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
         Set<NulsHash> verifiedCtxSet = verifiedCtxMap.get(chainId);
         List<Transaction> invalidCtxList = new ArrayList<>();
         String errorCode = null;
+        Map<String, BigInteger> totalBackAmountMap = new HashMap<>();
         for (Transaction ctx : txs) {
             NulsHash ctxHash = ctx.getHash();
             try {
-                if (!verifiedCtxSet.contains(ctxHash)) {
-                    if (!txValidator.validateTx(chain, ctx, blockHeader)) {
-                        invalidCtxList.add(ctx);
+                boolean ok = verifiedCtxSet.contains(ctxHash);
+                if (!ok) {
+                    ok = txValidator.validateTx(chain, ctx, blockHeader);
+                }
+                BackOutAmount amount = getBackAmount(ctx, chain);
+
+                if (null != amount && ok && amount.getBack().compareTo(BigInteger.ZERO) > 0) {
+                    String key = amount.getChainId() + "_" + amount.getAssetId();
+                    BigInteger totalBackAmount = totalBackAmountMap.computeIfAbsent(key, val -> BigInteger.ZERO);
+                    BigInteger tempTotalBackAmount = amount.getBack().add(totalBackAmount);
+                    BigInteger totalOutAmount = this.totalOutAmountService.getOutTotalAmount(amount.getChainId(), amount.getAssetId());
+                    if (tempTotalBackAmount.compareTo(totalOutAmount) > 0) {
+                        //超过总量则不通过
+                        ok = false;
                     } else {
-                        verifiedCtxSet.add(ctxHash);
+                        //如果没超过过，就继续累加
+                        totalBackAmountMap.put(key, tempTotalBackAmount);
                     }
                 }
+                if (!ok) {
+                    invalidCtxList.add(ctx);
+                } else {
+                    verifiedCtxSet.add(ctxHash);
+                }
+
             } catch (NulsException e) {
                 invalidCtxList.add(ctx);
                 chain.getLogger().error("Cross-Chain Transaction Verification Failure");
@@ -409,6 +443,33 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
         result.put("txList", invalidCtxList);
         result.put("errorCode", errorCode);
         return result;
+    }
+
+    private BackOutAmount getBackAmount(Transaction ctx, Chain chain) throws NulsException {
+        BackOutAmount backOutAmount = null;
+        CoinData coinData = new CoinData();
+        coinData.parse(ctx.getCoinData(), 0);
+        CoinTo coinTo = coinData.getTo().get(0);
+        if (chain.getChainId() != coinTo.getAssetsChainId()) {
+            //只处理本链资产
+            return null;
+        }
+        byte[] toAddress = coinTo.getAddress();
+        int chainId = AddressTool.getChainIdByAddress(toAddress);
+        backOutAmount = new BackOutAmount(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+        if (chain.getChainId() == chainId) {
+            //猜测是转回
+            backOutAmount.addBack(coinTo.getAmount());
+        } else {
+            backOutAmount.addOut(coinTo.getAmount());
+        }
+        //应该验证下from地址
+        CoinFrom from = coinData.getFrom().get(0);
+        int fromChainId = AddressTool.getChainIdByAddress(from.getAddress());
+        if (fromChainId == chainId) {
+            throw new NulsException(TO_ADDRESS_ERROR);
+        }
+        return backOutAmount;
     }
 
     @Override

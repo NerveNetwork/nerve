@@ -52,7 +52,7 @@
       "assetId" : 0,
       "symbol"  : "USD",
       "decimals" : 4,
-      "source" : 4,
+      "source" : 0,
       "queryPrice" : false,
       "level" : 0
     }

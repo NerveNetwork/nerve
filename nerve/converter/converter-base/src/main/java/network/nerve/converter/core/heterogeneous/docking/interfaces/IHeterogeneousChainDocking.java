@@ -24,10 +24,7 @@
 package network.nerve.converter.core.heterogeneous.docking.interfaces;
 
 import io.nuls.core.exception.NulsException;
-import network.nerve.converter.model.bo.HeterogeneousAccount;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
-import network.nerve.converter.model.bo.HeterogeneousConfirmedInfo;
-import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.model.bo.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -184,6 +181,11 @@ public interface IHeterogeneousChainDocking {
      * 获取变更管理员确认交易的信息
      */
     HeterogeneousConfirmedInfo getChangeVirtualBankConfirmedTxInfo(String txHash) throws Exception;
+
+    /**
+     * 获取变更管理员待处理交易的信息
+     */
+    HeterogeneousChangePendingInfo getChangeVirtualBankPendingInfo(String nerveTxHash) throws Exception;
     /**
      * 创建或签名提现交易
      *
@@ -197,7 +199,7 @@ public interface IHeterogeneousChainDocking {
      * @return 异构链交易hash
      */
     String createOrSignManagerChangesTx(String txHash, String[] addAddresses,
-                                        String[] removeAddresses, String[] currentAddresses) throws NulsException;
+                                        String[] removeAddresses, int orginTxCount) throws NulsException;
 
     /**
      * 创建或签名合约升级授权交易
@@ -205,4 +207,9 @@ public interface IHeterogeneousChainDocking {
      * @return 异构链交易hash
      */
     String createOrSignUpgradeTx(String txHash) throws NulsException;
+
+    /**
+     * 强制恢复一致
+     */
+    String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException;
 }

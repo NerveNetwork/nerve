@@ -12,6 +12,7 @@
         <module>module</module>
         <module>nerve</module>
         <module>test</module>
+        <module>nerve/distribute</module>
     </modules>
 
     <properties>

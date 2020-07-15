@@ -32,7 +32,7 @@ import network.nerve.pocbft.model.bo.tx.txdata.Agent;
 import java.util.Comparator;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AgentComparatorRpc implements Comparator<Agent> {
 

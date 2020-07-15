@@ -49,16 +49,14 @@ public class MessageTest {
 
     @Test
     public void testEquals() throws Exception {
-        HashMessage m1 = new HashMessage();
+        HashMessage m1 = new HashMessage(NulsHash.fromHex("00202385c6ea81795592278265e3d42d4c454dcf05fe368e8ba9d6799dc43695f3e6"),1);
         {
-            m1.setRequestHash(NulsHash.fromHex("00202385c6ea81795592278265e3d42d4c454dcf05fe368e8ba9d6799dc43695f3e6"));
             String hex = HexUtil.encode(m1.serialize());
             System.out.println(hex);
         }
 
-        HashMessage m2 = new HashMessage();
+        HashMessage m2 = new HashMessage(NulsHash.fromHex("00202385c6ea81795592278265e3d42d4c454dcf05fe368e8ba9d6799dc43695f3e6"),1);
         {
-            m2.setRequestHash(NulsHash.fromHex("00202385c6ea81795592278265e3d42d4c454dcf05fe368e8ba9d6799dc43695f3e6"));
             String hex = HexUtil.encode(m2.serialize());
             System.out.println(hex);
         }
@@ -99,9 +97,8 @@ public class MessageTest {
 
     @Test
     public void testHashMessage() throws Exception {
-        HashMessage message = new HashMessage();
-        message.setRequestHash(NulsHash.fromHex("0020e643ab908b37ce52b4cdaeb3219846162235b466cb78491832d766ba0a3a5e98"));
-        
+        HashMessage message = new HashMessage(NulsHash.fromHex("0020e643ab908b37ce52b4cdaeb3219846162235b466cb78491832d766ba0a3a5e98"),1);
+
         String hex = HexUtil.encode(message.serialize());
         System.out.println(hex);
 

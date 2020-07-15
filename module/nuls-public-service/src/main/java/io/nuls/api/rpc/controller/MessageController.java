@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * 消息中转工具（临时实现）
  *
- * @author Niels
+ * @author Eva
  */
 @Controller
 public class MessageController {

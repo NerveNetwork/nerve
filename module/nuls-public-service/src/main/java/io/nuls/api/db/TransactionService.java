@@ -15,7 +15,7 @@ public interface TransactionService {
 
     void saveTxRelationList(int chainId, Set<TxRelationInfo> relationInfos);
 
-    PageInfo<MiniCrossChainTransactionInfo> getCrossChainTxList(int chainId, String address, int pageIndex, int pageSize);
+    PageInfo<MiniCrossChainTransactionInfo> getCrossChainTxList(int chainId, String address, int pageIndex, int pageSize,int... types);
 
     PageInfo<MiniTransactionInfo> getInnerChainTxList(int chainId, String address, int pageIndex, int pageSize, boolean isHidden, int... typeList);
 

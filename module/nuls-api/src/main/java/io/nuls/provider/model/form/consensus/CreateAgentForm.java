@@ -32,7 +32,7 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import io.nuls.provider.model.form.Base;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @ApiModel(description = "创建共识节点表单数据")
 public class CreateAgentForm extends Base {

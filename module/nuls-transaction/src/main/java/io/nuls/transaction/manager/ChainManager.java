@@ -43,6 +43,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static io.nuls.transaction.constant.TxConstant.TX_UNVERIFIED_QUEUE_SIZE;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
 /**
@@ -193,7 +194,7 @@ public class ChainManager {
      * @param chain chain info
      */
     private void initCache(Chain chain) {
-        BlockingDeque<TransactionNetPO> unverifiedQueue = new LinkedBlockingDeque<>((int)txConfig.getTxUnverifiedQueueSize());
+        BlockingDeque<TransactionNetPO> unverifiedQueue = new LinkedBlockingDeque<>(TX_UNVERIFIED_QUEUE_SIZE);
         chain.setUnverifiedQueue(unverifiedQueue);
     }
 

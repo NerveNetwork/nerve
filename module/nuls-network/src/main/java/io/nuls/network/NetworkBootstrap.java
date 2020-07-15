@@ -65,13 +65,10 @@ public class NetworkBootstrap extends RpcModule {
     private boolean hadRun = false;
 
     public static void main(String[] args) {
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         NulsRpcModuleBootstrap.run("io.nuls", args);
     }
 
-    private boolean validatCfg() {
+    private boolean validateCfg() {
         if (networkConfig.getPacketMagic() > NetworkConstant.MAX_NUMBER_4_BYTE) {
             Log.error("Network cfg error.packageMagic:{}>{}", networkConfig.getPacketMagic(), NetworkConstant.MAX_NUMBER_4_BYTE);
             return false;
@@ -90,6 +87,7 @@ public class NetworkBootstrap extends RpcModule {
         }
 
         NetworkContext.chainId = networkConfig.getChainId();
+        NetworkContext.reverseCheck = networkConfig.getReverseCheck();
         return true;
     }
 
@@ -157,7 +155,7 @@ public class NetworkBootstrap extends RpcModule {
         try {
             super.init();
             System.setProperty("io.netty.tryReflectionSetAccessible", "true");
-            if (!validatCfg()) {
+            if (!validateCfg()) {
                 System.exit(-1);
             }
             jsonCfgInit();

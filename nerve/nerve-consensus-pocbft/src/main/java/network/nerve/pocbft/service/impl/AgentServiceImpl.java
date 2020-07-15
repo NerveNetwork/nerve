@@ -46,6 +46,7 @@ import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.storage.VirtualAgentStorageService;
 import network.nerve.pocbft.model.dto.input.*;
 import network.nerve.pocbft.utils.manager.*;
+import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import static network.nerve.pocbft.constant.ParameterConstant.*;
 
@@ -70,9 +71,6 @@ public class AgentServiceImpl implements AgentService {
 
     @Autowired
     private AgentManager agentManager;
-
-    @Autowired
-    private RoundManager roundManager;
 
     @Autowired
     private VirtualAgentStorageService virtualAgentStorageService;
@@ -101,7 +99,7 @@ public class AgentServiceImpl implements AgentService {
         }
         try {
             //1.参数验证
-            if (!AddressTool.isNormalAddress(dto.getPackingAddress(),dto.getChainId())) {
+            if (!AddressTool.isNormalAddress(dto.getPackingAddress(), dto.getChainId())) {
                 throw new NulsRuntimeException(ConsensusErrorCode.ADDRESS_ERROR);
             }
             //2.账户验证
@@ -144,25 +142,25 @@ public class AgentServiceImpl implements AgentService {
             Log.error(ConsensusErrorCode.CHAIN_NOT_EXIST.getMsg());
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        if (!AddressTool.isNormalAddress(dto.getAddress(),  dto.getChainId())) {
+        if (!AddressTool.isNormalAddress(dto.getAddress(), dto.getChainId())) {
             return Result.getFailed(ConsensusErrorCode.ADDRESS_ERROR);
         }
         try {
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
-            if(agent == null){
+            if (agent == null) {
                 return Result.getFailed(ConsensusErrorCode.AGENT_NOT_EXIST);
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //验证节点是否存在且交易发起者是否为节点创建者
             Result rs = agentManager.creatorValid(chain, agentHash, address);
-            if(rs.isFailed()){
+            if (rs.isFailed()) {
                 return rs;
             }
             HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
             Transaction tx = new Transaction(TxType.APPEND_AGENT_DEPOSIT);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
-            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, BigIntegerUtils.stringToBigInteger(dto.getAmount()),agentHash);
+            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, BigIntegerUtils.stringToBigInteger(dto.getAmount()), agentHash);
             tx.setTxData(txData.serialize());
             CoinData coinData = coinDataManager.getCoinData(address, chain, new BigInteger(dto.getAmount()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + P2PHKSignature.SERIALIZE_LENGTH);
             tx.setCoinData(coinData.serialize());
@@ -173,10 +171,10 @@ public class AgentServiceImpl implements AgentService {
             Map<String, Object> result = new HashMap<>(2);
             result.put(PARAM_TX_HASH, tx.getHash().toHex());
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch (NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -194,32 +192,32 @@ public class AgentServiceImpl implements AgentService {
             Log.error(ConsensusErrorCode.CHAIN_NOT_EXIST.getMsg());
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        if (!AddressTool.isNormalAddress(dto.getAddress(),  dto.getChainId())) {
+        if (!AddressTool.isNormalAddress(dto.getAddress(), dto.getChainId())) {
             return Result.getFailed(ConsensusErrorCode.ADDRESS_ERROR);
         }
         try {
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
-            if(agent == null){
+            if (agent == null) {
                 return Result.getFailed(ConsensusErrorCode.AGENT_NOT_EXIST);
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //验证节点是否存在且交易发起者是否为节点创建者
             Result rs = agentManager.creatorValid(chain, agentHash, address);
-            if(rs.isFailed()){
+            if (rs.isFailed()) {
                 return rs;
             }
             AgentPo agentPo = (AgentPo) rs.getData();
             BigInteger amount = new BigInteger(dto.getAmount());
             //金额小于允许的最小金额
-            if(amount.compareTo(chain.getConfig().getReduceAgentDepositMin()) < 0){
+            if (amount.compareTo(chain.getConfig().getReduceAgentDepositMin()) < 0) {
                 chain.getLogger().error("The amount of exit margin is not within the allowed range");
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
             BigInteger maxReduceAmount = agentPo.getDeposit().subtract(chain.getConfig().getDepositMin());
             //退出金额大于当前允许退出的最大金额
-            if(amount.compareTo(maxReduceAmount) > 0){
-                chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}",agentPo.getDeposit(),maxReduceAmount,amount);
+            if (amount.compareTo(maxReduceAmount) > 0) {
+                chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}", agentPo.getDeposit(), maxReduceAmount, amount);
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
 
@@ -227,7 +225,7 @@ public class AgentServiceImpl implements AgentService {
             Transaction tx = new Transaction(TxType.REDUCE_AGENT_DEPOSIT);
             long txTime = NulsDateUtils.getCurrentTimeSeconds();
             tx.setTime(txTime);
-            ChangeAgentDepositData txData = new ChangeAgentDepositData(address,amount,agentHash);
+            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, amount, agentHash);
             tx.setTxData(txData.serialize());
             CoinData coinData = coinDataManager.getReduceAgentDepositCoinData(address, chain, amount, txTime + chain.getConfig().getReducedDepositLockTime(), tx.size() + P2PHKSignature.SERIALIZE_LENGTH, agentHash);
             tx.setCoinData(coinData.serialize());
@@ -238,10 +236,10 @@ public class AgentServiceImpl implements AgentService {
             Map<String, Object> result = new HashMap<>(2);
             result.put(PARAM_TX_HASH, tx.getHash().toHex());
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch (NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -261,7 +259,7 @@ public class AgentServiceImpl implements AgentService {
         } catch (RuntimeException e) {
             return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
         }
-        if (!AddressTool.validAddress( dto.getChainId(), dto.getAddress())) {
+        if (!AddressTool.validAddress(dto.getChainId(), dto.getAddress())) {
             throw new NulsRuntimeException(ConsensusErrorCode.ADDRESS_ERROR);
         }
         Chain chain = chainManager.getChainMap().get(dto.getChainId());
@@ -338,7 +336,7 @@ public class AgentServiceImpl implements AgentService {
         List<Agent> agentList = chain.getAgentList();
         List<Agent> handleList = new ArrayList<>();
         String keyword = dto.getKeyWord();
-        long startBlockHeight = chain.getNewestHeader().getHeight();
+        long startBlockHeight = chain.getBestHeader().getHeight();
         for (Agent agent : agentList) {
             if (agent.getDelHeight() != -1L && agent.getDelHeight() <= startBlockHeight) {
                 continue;
@@ -401,7 +399,7 @@ public class AgentServiceImpl implements AgentService {
         }
         boolean isNewest = true;
         long height = 0;
-        if(params.get(PARAM_HEIGHT) != null){
+        if (params.get(PARAM_HEIGHT) != null) {
             isNewest = false;
             height = (Integer) params.get(PARAM_HEIGHT);
         }
@@ -430,9 +428,9 @@ public class AgentServiceImpl implements AgentService {
         List<Agent> agentList = chain.getAgentList();
         for (Agent agent : agentList) {
             if (agent.getTxHash().equals(agentHashData)) {
-                MeetingRound round = roundManager.getCurrentRound(chain);
+                MeetingRound round = RoundUtils.getRoundController().getCurrentRound();
                 if (agent.getDelHeight() == -1) {
-                    agentManager.fillAgent( agent, round);
+                    agentManager.fillAgent(agent, round);
                 } else {
                     agent.setStatus(0);
                     agent.setCreditVal(0);
@@ -464,7 +462,7 @@ public class AgentServiceImpl implements AgentService {
         }
         Map<String, Integer> result = new HashMap<>(ConsensusConstant.INIT_CAPACITY_2);
         try {
-            Agent agent = agentManager.getAgentByHash(chain,NulsHash.fromHex(dto.getAgentHash()));
+            Agent agent = agentManager.getAgentByHash(chain, NulsHash.fromHex(dto.getAgentHash()));
             if (agent.getDelHeight() > MIN_VALUE) {
                 result.put(PARAM_STATUS, 0);
             } else {
@@ -508,20 +506,12 @@ public class AgentServiceImpl implements AgentService {
         if (chain == null) {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        chain.getLogger().info("节点共识状态变更，修改后的状态为，status：{}",status);
+        chain.getLogger().info("节点共识状态变更，修改后的状态为，status：{}", status);
         if (status == 1) {
-            chain.setCanPacking(true);
-            boolean initStatus = chain.isPacker();
-            //区块同步完成之后初始化共识网络
-            MeetingRound currentRound = roundManager.getCurrentRound(chain);
-            if (currentRound != null && currentRound.getMyMember() != null && initStatus){
-                chain.getLogger().info("本节点为共识节点，初始化共识网络");
-                ConsensusNetUtil.initConsensusNet(chain, AddressTool.getStringAddressByBytes(currentRound.getMyMember().getAgent().getPackingAddress()), currentRound.getMemberAddressList());
-            }
+            chain.setSynchronizedHeight(true);
         } else {
             //共识状态变更为不可打包状态，清理当前投票信息，断开共识网络
-            chain.setCanPacking(false);
-            VoteManager.stopVote(chain);
+            chain.setSynchronizedHeight(false);
         }
         return Result.getSuccess(ConsensusErrorCode.SUCCESS);
 
@@ -544,9 +534,9 @@ public class AgentServiceImpl implements AgentService {
         try {
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CommandConstant.CALL_AC_GET_UNENCRYPTED_ADDRESS_LIST, params);
             List<String> accountAddressList = (List<String>) ((HashMap) ((HashMap) cmdResp.getResponseData()).get(CommandConstant.CALL_AC_GET_UNENCRYPTED_ADDRESS_LIST)).get("list");
-            Set<String> packAddressList = agentManager.getPackAddressList(chain, chain.getNewestHeader().getHeight());
+            Set<String> packAddressList = agentManager.getPackAddressList(chain, chain.getBestHeader().getHeight());
             String packAddress = null;
-            for (String address: packAddressList) {
+            for (String address : packAddressList) {
                 if (accountAddressList.contains(address)) {
                     packAddress = address;
                     break;
@@ -582,7 +572,7 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         Map<String, Object> resultMap = new HashMap<>(2);
-        resultMap.put(PARAM_PACK_ADDRESS , agentManager.getPackAddressList(chain, chain.getNewestHeader().getHeight()));
+        resultMap.put(PARAM_PACK_ADDRESS, agentManager.getPackAddressList(chain, chain.getBestHeader().getHeight()));
         return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(resultMap);
     }
 
@@ -607,13 +597,14 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         try {
-            MeetingRound round = roundManager.getCurrentRound(chain);
+            MeetingRound round = RoundUtils.getCurrentRound();
             MeetingMember member = null;
-            if(round == null && chain.getNewestHeader() != null && chain.getNewestHeader().getHeight() != 0){
-                round = roundManager.getRound(chain, chain.getNewestHeader().getExtendsData().getRoundIndex(), chain.getNewestHeader().getTime());
+            if (round == null && chain.getBestHeader() != null && chain.getBestHeader().getHeight() != 0) {
+                chain.getLogger().info("初始化轮次");
+                round = RoundUtils.getRoundController().tempRound();
             }
-            if(round != null){
-                member = round.getMyMember();
+            if (round != null) {
+                member = round.getLocalMember();
             }
             Map<String, Object> resultMap = new HashMap<>(4);
             if (member != null) {
@@ -621,10 +612,10 @@ public class AgentServiceImpl implements AgentService {
                 resultMap.put(PARAM_PASSWORD, chain.getConfig().getPassword());
             }
             List<String> packAddressList;
-            if(round != null){
-                packAddressList = new ArrayList<>(round.getMemberAddressList());
-            }else {
-                packAddressList = chain.getSeedNodeList();
+            if (round != null) {
+                packAddressList = new ArrayList<>(round.getMemberAddressSet());
+            } else {
+                packAddressList = chain.getSeedAddressList();
             }
             resultMap.put(PARAM_PACKING_ADDRESS_LIST, packAddressList);
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(resultMap);
@@ -649,13 +640,13 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         BlockExtendsData lastExtendsData = null;
-        String lastRoundStr = (String)params.get(PARAM_LAST_ROUND);
-        if(lastRoundStr != null){
+        String lastRoundStr = (String) params.get(PARAM_LAST_ROUND);
+        if (lastRoundStr != null) {
             lastExtendsData = new BlockExtendsData(RPCUtil.decode(lastRoundStr));
         }
-        String currentRoundStr = (String)params.get(PARAM_CURRENT_ROUND);
+        String currentRoundStr = (String) params.get(PARAM_CURRENT_ROUND);
         BlockExtendsData currentExtendsData = new BlockExtendsData(RPCUtil.decode(currentRoundStr));
-        return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(roundManager.getAgentChangeInfo(chain, lastExtendsData, currentExtendsData));
+        return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(RoundUtils.getAgentChangeInfo(chain, lastExtendsData, currentExtendsData));
     }
 
     @Override
@@ -672,17 +663,17 @@ public class AgentServiceImpl implements AgentService {
         if (chain == null) {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        int quitAll = (int)params.get(PARAM_QUIT_ALL);
-        String agentHash = (String)params.get(PARAM_AGENT_HASH);
+        int quitAll = (int) params.get(PARAM_QUIT_ALL);
+        String agentHash = (String) params.get(PARAM_AGENT_HASH);
         BigInteger depositAmount = BigInteger.ZERO;
         boolean stopAgent = quitAll == 1;
-        if(!stopAgent){
-            depositAmount = new BigInteger((String)params.get(PARAM_REDUCE_AMOUNT));
+        if (!stopAgent) {
+            depositAmount = new BigInteger((String) params.get(PARAM_REDUCE_AMOUNT));
         }
         Map<String, Object> resultMap = new HashMap<>(4);
-        List<NonceDataPo> nonceDataList= AgentDepositNonceManager.getNonceDataList(chain, depositAmount,  new NulsHash(HexUtil.decode(agentHash)), stopAgent);
+        List<NonceDataPo> nonceDataList = AgentDepositNonceManager.getNonceDataList(chain, depositAmount, new NulsHash(HexUtil.decode(agentHash)), stopAgent);
         List<ReduceNonceDTO> nonceDTOList = new ArrayList<>();
-        for (NonceDataPo nonceDataPo : nonceDataList){
+        for (NonceDataPo nonceDataPo : nonceDataList) {
             nonceDTOList.add(new ReduceNonceDTO(nonceDataPo));
         }
         resultMap.put(PARAM_LIST, nonceDTOList);
@@ -704,7 +695,7 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         long height = Long.valueOf(params.get(PARAM_HEIGHT).toString());
-        List<String> virtualAgentList = (List<String>)params.get(PARAM_VIRTUAL_AGENT_LIST);
+        List<String> virtualAgentList = (List<String>) params.get(PARAM_VIRTUAL_AGENT_LIST);
         virtualAgentStorageService.save(new VirtualAgentPo(height, virtualAgentList), height);
         return Result.getSuccess(ConsensusErrorCode.SUCCESS);
     }

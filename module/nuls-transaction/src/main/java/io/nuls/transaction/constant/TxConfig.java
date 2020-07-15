@@ -18,9 +18,8 @@ import java.lang.reflect.InvocationTargetException;
 @Component
 @Configuration(domain = ModuleE.Constant.TRANSACTION)
 public class TxConfig extends ConfigBean implements ModuleConfig {
-    /**
-     * ROCK DB 数据库文件存储路径
-     */
+
+    /** ROCK DB 数据库文件存储路径*/
     private String dataPath;
     /** 模块code*/
     private String moduleCode;
@@ -30,9 +29,17 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
     private int mainAssetId;
     /** 编码*/
     private String encoding;
-    /** 未确认交易过期时间秒 */
-    private long unconfirmedTxExpire;
+    /** 黑洞公钥*/
     private String blackHolePublicKey;
+    /** 交易时间所在区块时间的默认范围值(在区块时间±本值范围内)*/
+    private long blockTxTimeRangeSec;
+    /** 孤儿交易生命时间,超过会被清理**/
+    private int orphanLifeTimeSec;
+    /** 未确认交易过期时间秒 */
+    private long unconfirmedTxExpireSec;
+    /** 单个交易数据最大值(B)*/
+    private long txMaxSize;
+
 
     public String getBlackHolePublicKey() {
         return blackHolePublicKey;
@@ -41,20 +48,6 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
     public void setBlackHolePublicKey(String blackHolePublicKey) {
         this.blackHolePublicKey = blackHolePublicKey;
     }
-    // add by pierre at 2019-12-04
-    /**
-     *  是否已连接智能合约模块
-     */
-    private volatile boolean collectedSmartContractModule;
-
-    public boolean isCollectedSmartContractModule() {
-        return collectedSmartContractModule;
-    }
-
-    public void setCollectedSmartContractModule(boolean collectedSmartContractModule) {
-        this.collectedSmartContractModule = collectedSmartContractModule;
-    }
-    // end code by pierre
 
     public String getDataPath() {
         return dataPath;
@@ -100,12 +93,36 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
         this.encoding = encoding;
     }
 
-    public long getUnconfirmedTxExpire() {
-        return unconfirmedTxExpire;
+    public long getUnconfirmedTxExpireSec() {
+        return unconfirmedTxExpireSec;
     }
 
-    public void setUnconfirmedTxExpire(long unconfirmedTxExpire) {
-        this.unconfirmedTxExpire = unconfirmedTxExpire;
+    public void setUnconfirmedTxExpireSec(long unconfirmedTxExpireSec) {
+        this.unconfirmedTxExpireSec = unconfirmedTxExpireSec;
+    }
+
+    public long getBlockTxTimeRangeSec() {
+        return blockTxTimeRangeSec;
+    }
+
+    public void setBlockTxTimeRangeSec(long blockTxTimeRangeSec) {
+        this.blockTxTimeRangeSec = blockTxTimeRangeSec;
+    }
+
+    public int getOrphanLifeTimeSec() {
+        return orphanLifeTimeSec;
+    }
+
+    public void setOrphanLifeTimeSec(int orphanLifeTimeSec) {
+        this.orphanLifeTimeSec = orphanLifeTimeSec;
+    }
+
+    public long getTxMaxSize() {
+        return txMaxSize;
+    }
+
+    public void setTxMaxSize(long txMaxSize) {
+        this.txMaxSize = txMaxSize;
     }
 
     @Override

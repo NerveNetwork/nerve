@@ -39,7 +39,7 @@ import java.util.Map;
 
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class JsonRpcServer {
 

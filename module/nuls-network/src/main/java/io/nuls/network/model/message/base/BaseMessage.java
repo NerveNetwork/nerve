@@ -40,7 +40,7 @@ import java.io.IOException;
  * 所有网络上传输的消息的基类，定义了网络消息的基本格式
  * The base class for all messages transmitted over the network defines the basic format of the network message.
  *
- * @author Niels
+ * @author Eva
  */
 public abstract class BaseMessage<T extends BaseNulsData> extends BaseNulsData {
 

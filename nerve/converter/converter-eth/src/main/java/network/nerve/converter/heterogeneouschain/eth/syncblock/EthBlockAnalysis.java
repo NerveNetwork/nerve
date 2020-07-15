@@ -37,10 +37,10 @@ import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.EthInput;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
-import network.nerve.converter.heterogeneouschain.eth.storage.EthTxRelationStorageService;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.utils.LoggerUtil;
 import org.springframework.beans.BeanUtils;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.Transaction;
@@ -63,8 +63,6 @@ public class EthBlockAnalysis {
     private EthListener ethListener;
     @Autowired
     private EthCallBackManager ethCallBackManager;
-    @Autowired
-    private EthTxRelationStorageService ethTxRelationStorageService;
     @Autowired
     private ETHWalletApi ethWalletApi;
     @Autowired
@@ -206,14 +204,21 @@ public class EthBlockAnalysis {
         ethLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // 只保留最近的三个区块
         ethLocalBlockHelper.deleteByHeight(blockHeight - 3);
-        EthContext.logger().info("同步ETH高度[{}]完成", block.getNumber().longValue());
+        if (LoggerUtil.LOG.isDebugEnabled()) {
+            LoggerUtil.LOG.debug("同步ETH高度[{}]完成", block.getNumber().longValue());
+        }
     }
 
     private void dealBroadcastTx(String nerveTxHash, HeterogeneousChainTxType txType, Transaction tx, long blockHeight, long txTime, EthUnconfirmedTxPo txPoFromDB) throws Exception {
         String ethTxHash = tx.getHash();
         // 检查nerveTxHash是否合法
-        if(EthContext.getConverterCoreApi().getNerveTx(nerveTxHash) == null) {
-            EthContext.logger().warn("交易业务不合法[{}]，未找到NERVE交易，类型: {}, Key: {}", ethTxHash, txType, nerveTxHash);
+        String realNerveTxHash = nerveTxHash;
+        if (nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_I) || nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_II)) {
+            realNerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_I.length());
+            txType = HeterogeneousChainTxType.RECOVERY;
+        }
+        if(EthContext.getConverterCoreApi().getNerveTx(realNerveTxHash) == null) {
+            EthContext.logger().warn("交易业务不合法[{}]，未找到NERVE交易，类型: {}, Key: {}", ethTxHash, txType, realNerveTxHash);
             return;
         }
         EthUnconfirmedTxPo txPo = txPoFromDB;
@@ -222,29 +227,33 @@ public class EthBlockAnalysis {
             txPo = new EthUnconfirmedTxPo();
             isLocal = false;
         }
+        txPo.setNerveTxHash(nerveTxHash);
+        txPo.setTxHash(ethTxHash);
+        txPo.setTxType(txType);
+        txPo.setBlockHeight(blockHeight);
+        txPo.setTxTime(txTime);
         // 判断是否为签名完成的交易，更改状态，解析交易的多签地址列表
         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
         if (txReceipt == null || !txReceipt.isStatusOK()) {
-            // 交易失败，重发三十次，仍然失败的话，则丢弃交易
-            if (ethResendHelper.canResend(nerveTxHash)) {
+            // 当前节点发出的交易，交易失败，重发三十次，仍然失败的话，则丢弃交易
+            if (ethResendHelper.currentNodeSent(ethTxHash) && ethResendHelper.canResend(nerveTxHash)) {
                 ethResendHelper.increase(nerveTxHash);
                 txPo.setStatus(MultiSignatureStatus.RESEND);
             } else {
                 txPo.setStatus(MultiSignatureStatus.FAILED);
             }
-            txPo.setBlockHeight(blockHeight);
-            txPo.setTxTime(txTime);
         } else {
             // 先默认设置为正在多签的交易
             txPo.setStatus(MultiSignatureStatus.DOING);
             HeterogeneousTransactionInfo txInfo = null;
             // 以此判断是否为首次保存
-            if (StringUtils.isBlank(txPo.getNerveTxHash())) {
+            if (StringUtils.isBlank(txPo.getFrom())) {
                 // 解析交易数据，补充基本信息、多签列表信息
                 switch (txType) {
                     case WITHDRAW:
                         txInfo = ethParseTxHelper.parseWithdrawTransaction(tx, txReceipt);
                         break;
+                    case RECOVERY:
                     case CHANGE:
                         txInfo = ethParseTxHelper.parseManagerChangeTransaction(tx, txReceipt);
                         break;
@@ -253,6 +262,11 @@ public class EthBlockAnalysis {
                         break;
                 }
                 if (txInfo != null) {
+                    txInfo.setNerveTxHash(nerveTxHash);
+                    txInfo.setTxHash(ethTxHash);
+                    txInfo.setTxType(txType);
+                    txInfo.setBlockHeight(blockHeight);
+                    txInfo.setTxTime(txTime);
                     BeanUtils.copyProperties(txInfo, txPo);
                 }
             } else {
@@ -266,8 +280,6 @@ public class EthBlockAnalysis {
                         ethTxHash, Arrays.toString(txPo.getSigners().toArray()));
                 txPo.setStatus(MultiSignatureStatus.COMPLETED);
             }
-            txPo.setBlockHeight(blockHeight);
-            txPo.setTxTime(txTime);
             // 保存解析的已签名完成的交易
             if (txInfo != null) {
                 ethStorageHelper.saveTxInfo(txInfo);

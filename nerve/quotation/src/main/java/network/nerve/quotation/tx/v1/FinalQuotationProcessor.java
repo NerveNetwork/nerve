@@ -136,6 +136,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     log.error(QuotationErrorCode.QUOTATION_COINDATA_NOT_EMPTY.getMsg());
                 }
                 if (tx.getTransactionSignature() != null && tx.getTransactionSignature().length != 0) {
+                    // 最终喂价交易为系统交易, 不通过网络转发, 只能由打包节点打包到区块中, 不含签名数据
                     failsList.add(tx);
                     errorCode = QuotationErrorCode.FINAL_QUOTATION_SIGN_NOT_EMPTY.getCode();
                     log.error(QuotationErrorCode.FINAL_QUOTATION_SIGN_NOT_EMPTY.getMsg());

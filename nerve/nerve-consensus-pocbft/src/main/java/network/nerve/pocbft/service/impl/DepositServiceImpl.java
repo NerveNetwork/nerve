@@ -245,7 +245,7 @@ public class DepositServiceImpl implements DepositService {
         }
         List<Deposit> depositList = chain.getDepositList();
         List<Deposit> handleList = new ArrayList<>();
-        long startBlockHeight = chain.getNewestHeader().getHeight();
+        long startBlockHeight = chain.getBestHeader().getHeight();
         byte[] addressBytes = null;
         if (StringUtils.isNotBlank(address)) {
             addressBytes = AddressTool.getAddress(address);

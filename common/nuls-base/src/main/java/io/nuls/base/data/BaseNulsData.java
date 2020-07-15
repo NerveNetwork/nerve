@@ -37,7 +37,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public abstract class BaseNulsData implements NulsData, Serializable, Cloneable {
 

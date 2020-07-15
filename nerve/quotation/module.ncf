@@ -8,6 +8,3 @@ JOPT_XMX=512
 [Core]
 Managed=1
 loadLanguage=1
-
-[transaction]
-moduleDynamicDependent=protocol-update

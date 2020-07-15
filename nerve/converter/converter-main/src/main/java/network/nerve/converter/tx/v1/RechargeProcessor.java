@@ -49,6 +49,7 @@ import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
+import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -111,14 +112,16 @@ public class RechargeProcessor implements TransactionProcessor {
                     // 区块内业务重复交易
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
-                    log.error("The originalTxHash in the block is repeated (Repeat business)");
+                    log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
+                            tx.getHash().toHex(), txData.getOriginalTxHash());
                     continue;
                 }
                 if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
-                    // 该原始交易已执行过提现
+                    // 该原始交易已执行过充值
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
-                    log.error("The originalTxHash already confirmed (Repeat business)");
+                    log.error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
+                            tx.getHash().toHex(), txData.getOriginalTxHash());
                 }
 
                 // 签名拜占庭验证
@@ -151,6 +154,7 @@ public class RechargeProcessor implements TransactionProcessor {
             return true;
         }
         Chain chain = chainManager.getChain(chainId);
+        boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
         try {
             // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
             for(Transaction tx : txs) {
@@ -170,11 +174,12 @@ public class RechargeProcessor implements TransactionProcessor {
                     // 表明不是异构链交易hash 可能为提案
                     proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
                 }
+
                 // 节点正常运行状态下 并且不是提案执行的充值交易，才执行异构链交易确认函数
-                if (syncStatus == SyncStatusEnum.RUNNING.value() && null == proposalPO) {
+                if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector && null == proposalPO) {
                     docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight());
                 }
-                if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value()) {
+                if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     // 如果是执行提案 需要发布提案确认交易
                     publishProposalConfirmed(chain, tx.getHash(), proposalPO, blockHeader.getTime());
                 }

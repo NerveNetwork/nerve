@@ -84,6 +84,8 @@ public class ChainManager {
     @Autowired
     private ExeProposalStorageService exeProposalStorageService;
     @Autowired
+    private PersistentCacheStroageService persistentCacheStroageService;
+    @Autowired
     private ConverterConfig converterConfig;
     @Autowired
     private ConverterCoreApi converterCoreApi;
@@ -121,6 +123,7 @@ public class ChainManager {
         try {
             // 虚拟银行成员表、虚拟银行变化记录对象
             RocksDBService.createTable(ConverterDBConstant.DB_VIRTUAL_BANK_PREFIX + chainId);
+            RocksDBService.createTable(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + chainId);
             // 交易存储
             RocksDBService.createTable(ConverterDBConstant.DB_TX_PREFIX + chainId);
             // 确认虚拟银行变更交易 业务存储表
@@ -147,6 +150,8 @@ public class ChainManager {
             RocksDBService.createTable(ConverterDBConstant.DB_PROPOSAL_EXE + chainId);
             // 等待执行的提案
             RocksDBService.createTable(ConverterDBConstant.DB_EXE_PROPOSAL_PENDING_PREFIX + chainId);
+            // 重置虚拟银行异构链
+            RocksDBService.createTable(ConverterDBConstant.DB_RESET_BANK_PREFIX + chainId);
 
         } catch (Exception e) {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {
@@ -199,11 +204,33 @@ public class ChainManager {
         List<ExeProposalPO> exeProposalPOList = exeProposalStorageService.findAll(chain);
         chain.getExeProposalQueue().addAll(exeProposalPOList);
         chain.getLogger().info("exeProposalPOList size : {}", exeProposalPOList.size());
+
+
+        Integer changeBank = persistentCacheStroageService.getCacheState(chain, ConverterDBConstant.EXE_HETEROGENEOUS_CHANGE_BANK_KEY);
+        if(null != changeBank){
+            chain.getHeterogeneousChangeBankExecuting().set(changeBank == 0 ? false : true);
+            chain.getLogger().info("HeterogeneousChangeBankExecuting : {}", chain.getHeterogeneousChangeBankExecuting().get());
+        }
+        Integer disqualifyBank = persistentCacheStroageService.getCacheState(chain, ConverterDBConstant.EXE_DISQUALIFY_BANK_PROPOSAL_KEY);
+        if(null != disqualifyBank){
+            chain.getExeDisqualifyBankProposal().set(disqualifyBank == 0 ? false : true);
+            chain.getLogger().info("ExeDisqualifyBankProposal : {}", chain.getExeDisqualifyBankProposal().get());
+        }
+        Integer resetBank = persistentCacheStroageService.getCacheState(chain, ConverterDBConstant.RESET_VIRTUALBANK_KEY);
+        if(null != resetBank){
+            chain.getResetVirtualBank().set(resetBank == 0 ? false : true);
+            chain.getLogger().info("ResetVirtualBank : {}", chain.getResetVirtualBank().get());
+        }
     }
 
 
     private void loadHeterogeneousCfgJson(Chain chain) throws Exception {
-        String configJson = IoUtils.read(ConverterConstant.HETEROGENEOUS_CONFIG);
+        String configJson;
+        if (converterConfig.isHeterogeneousMainNet()) {
+            configJson = IoUtils.read(ConverterConstant.HETEROGENEOUS_MAINNET_CONFIG);
+        } else {
+            configJson = IoUtils.read(ConverterConstant.HETEROGENEOUS_TESTNET_CONFIG);
+        }
         List<HeterogeneousCfg> list = JSONUtils.json2list(configJson, HeterogeneousCfg.class);
         String multySignAddressSet = converterConfig.getMultySignAddressSet();
         if(StringUtils.isBlank(multySignAddressSet)) {

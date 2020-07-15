@@ -53,4 +53,18 @@ public interface ProposalStorageService {
      * @return
      */
     boolean delete(Chain chain, NulsHash hash);
+
+    /**
+     * 提案执行业务hash 与提案交易hash的关系
+     * 用来发起确认交易时 异构链组件能够识别对应的执行提案
+     * @param chain
+     * @param exeHash
+     * @param proposalHash
+     * @return
+     */
+    boolean saveExeBusiness(Chain chain, String exeHash, NulsHash proposalHash);
+
+    NulsHash getExeBusiness(Chain chain, String exeHash);
+
+    boolean deleteExeBusiness(Chain chain, String exeHash);
 }

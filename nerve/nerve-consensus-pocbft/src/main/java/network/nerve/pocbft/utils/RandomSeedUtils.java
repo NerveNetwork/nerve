@@ -8,7 +8,7 @@ import java.math.BigInteger;
 import java.util.Random;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class RandomSeedUtils {
 

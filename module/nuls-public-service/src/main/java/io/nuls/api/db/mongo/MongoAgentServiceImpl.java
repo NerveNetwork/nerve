@@ -4,6 +4,7 @@ import com.mongodb.client.model.*;
 import io.nuls.api.ApiContext;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.db.AgentService;
+import io.nuls.api.db.AliasService;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.AgentInfo;
 import io.nuls.api.model.po.AliasInfo;
@@ -11,6 +12,7 @@ import io.nuls.api.model.po.PageInfo;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.model.StringUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -29,13 +31,25 @@ public class MongoAgentServiceImpl implements AgentService {
     @Autowired
     private MongoAliasServiceImpl mongoAliasServiceImpl;
 
+    @Autowired
+    AliasService aliasService;
+
     @Override
     public void initCache() {
         for (ApiCache apiCache : CacheManager.getApiCaches().values()) {
             List<Document> documentList = mongoDBService.query(AGENT_TABLE + apiCache.getChainInfo().getChainId());
+            List<AgentInfo> saveAlias = new ArrayList<>();
             for (Document document : documentList) {
                 AgentInfo agentInfo = DocumentTransferTool.toInfo(document, "txHash", AgentInfo.class);
+                AliasInfo aliasInfo = aliasService.getAliasByAddress(ApiContext.defaultChainId,agentInfo.getAgentAddress());
+                if(aliasInfo != null && StringUtils.isBlank(agentInfo.getAgentAlias())){
+                    agentInfo.setAgentAlias(aliasInfo.getAlias());
+                    saveAlias.add(agentInfo);
+                }
                 apiCache.addAgentInfo(agentInfo);
+            }
+            if(!saveAlias.isEmpty()){
+                saveAgentList(ApiContext.defaultChainId,saveAlias);
             }
         }
     }

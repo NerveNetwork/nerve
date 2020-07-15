@@ -32,6 +32,7 @@ import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.SerializeUtils;
+import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import org.bitcoinj.crypto.*;
@@ -39,16 +40,14 @@ import org.bitcoinj.wallet.DeterministicSeed;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.ethereum.crypto.ECKey;
+import org.junit.Before;
 import org.junit.Test;
 import org.web3j.crypto.*;
 import org.web3j.protocol.ObjectMapperFactory;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static io.nuls.core.crypto.ECKey.CURVE;
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.PUBLIC_KEY_UNCOMPRESSED_PREFIX;
@@ -58,9 +57,15 @@ import static network.nerve.converter.heterogeneouschain.eth.utils.EthUtil.leftP
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class EthAccountTest {
+public class EthAccountTest extends Base {
 
-    private int chainId = 2;
+    private int chainId;
+
+    @Before
+    public void initChainId() {
+        chainId = 5;
+        AddressTool.addPrefix(chainId, "TNVT");
+    }
 
     @Test
     public void importPriKeyTest() {
@@ -71,7 +76,7 @@ public class EthAccountTest {
         //String prikey = "53b02c91605451ea35175df894b4c47b7d1effbd05d6b269b3e7c785f3f6dc18";
         //String prikey = "b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5";
         //String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
-        String prikey = "4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39";
+        String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -125,6 +130,18 @@ public class EthAccountTest {
     }
 
     @Test
+    public void createEthAccount() throws Exception {
+        for (int i = 0; i < 1; i++) {
+            ECKeyPair ecKeyPair = Keys.createEcKeyPair();
+            String pk = Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
+            Credentials credentials = Credentials.create(pk);
+            String msg = "address: " + credentials.getAddress()
+                    + ", privateKey: " + Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
+            System.out.println(msg);
+        }
+    }
+
+    @Test
     public void NULSAccountTest() {
         chainId = 2;
         String prikey = "53b02c91605451ea35175df894b4c47b7d1effbd05d6b269b3e7c785f3f6dc18";
@@ -158,19 +175,19 @@ public class EthAccountTest {
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x32a6d6b1e968f996757cb49fd4f0b08692f9d7f6
-        String pubkey = "037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863";
+        String pubkey = "02d09924d493ab1e7a2fc7438f48abcd078ff0bf0b82563f1c4917de8879a075c4";
         System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
     }
 
     @Test
     public void ETHAddressByPubkeySet() {
-        String pubkeySet = "02b1827ae93d6753ff437456bda9db20256110c76fad1cafaa976dd19a7eedefba,0370e9b19a6cae02412baa452a89a53ecdbfae5164a2b33d3f7931502b2a0a0dc5,02cec353f77275953704f5c6f64b38f3f49a5b590783392c69b2718e4bf18588be";
+        String pubkeySet = "021f23baf681fb72021b59a37ef9d266e0849bfd253fb25028465baa610e81caf3,02ecaaef4c36c7c50dd293d8b942d091203115dbeaa78a412e70aab3240c9a87ad,02dfc728f4c57b3fdab2bce1217eb142e3f84b3859affa6c761d19dc669d828e18";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
         int i = 0;
-        for(String key : array) {
-            if(i == array.length - 1) {
+        for (String key : array) {
+            if (i == array.length - 1) {
                 System.out.print("\"" + EthUtil.genEthAddressByCompressedPublickey(key) + "\"");
             } else {
                 System.out.print("\"" + EthUtil.genEthAddressByCompressedPublickey(key) + "\", ");
@@ -181,14 +198,14 @@ public class EthAccountTest {
     }
 
     @Test
-    public void FormatETHAddressSet() {
-        String pubkeySet = "0x746259b245dD0C108C607596645DFdcada454ee9,0xf32F741CF474A75db80FdA309310f31e1055d6d9,0xAa4bE6F45220D3c07Bf5570c6660a39F7fE11f62,0x81541Fd9bff76f17906ce4e4a8f3F9210c06a212,0xa1Ac741c72029de046aC2197Bb1bbb49710B2249,0x5B6C5578823a3e2f4adb487f35e2044dF926C1e7,0x7907Fe6eAf1bd69Ff0C7a0191bc3A748bf703F8f,0x8bc5D227211ABc5FfA8598E48B3B34166cA3718C,0x5F266296f307f228Fca55f2a1DEbb35f0a5253F8,0xFF9224B741B1363Ce0b8d2fFC1de82c2Af55C3cF";
+    public void formatETHAddressSet() {
+        String pubkeySet = "0xd135fab4d7b083BAB5C4e8006441039f5b3Eef17,0x4310A8225e8542A403d4f873dea36B1c556BE15A,0x282aAd555cA7DaCF10142F134521627C4468f179,0xc8fe37a1A5D612D037B70D67EA8f57cE49B85111,0x3eCEd496928C385acE2dE521b166A27E3170D7b8,0x6b611bab94d21130B20DfE243A78192920a8daB5,0xC6A3Ed9D25978251320971341b088B3434De086b,0xDa994c7213Ef684F13C25AD404C463D50c9A7ADA,0xC9e08F32da4Ba5C1F344d07580ed19ec2B8c2e11,0xaff9C6DB3023D2ABAa4eb6C2dd9747Be282AA7c8";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
         int i = 0;
-        for(String address : array) {
-            if(i == array.length - 1) {
+        for (String address : array) {
+            if (i == array.length - 1) {
                 System.out.print("\"" + address + "\"");
             } else {
                 System.out.print("\"" + address + "\", ");
@@ -199,10 +216,43 @@ public class EthAccountTest {
     }
 
     @Test
+    public void balanceOfETHAddressSet() throws Exception {
+        setMain();
+        String pubkeySet = "0x26e6a054a74E6427f135A38C7229f2B31A75e997,0xa83346Ce373678B9a02F186C43a26aa6A2D825eE,0xD571666db5EC21cAafcEdf0c8AFB61CdFB0B0E25";
+        String[] array = pubkeySet.split(",");
+        System.out.println(String.format("size : %s", array.length));
+        for (String address : array) {
+            System.out.println(String.format("address %s : %s", address, ethWalletApi.getBalance(address).movePointLeft(18).toPlainString()));
+        }
+    }
+
+    @Test
+    public void formatRpc() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("xxx");
+        System.out.println(String.format("size : %s", list.size()));
+        int i = 0;
+        for (String id : list) {
+            if (i == list.size() - 1) {
+                System.out.print("https://mainnet.infura.io/v3/" + id);
+            } else {
+                System.out.print("https://mainnet.infura.io/v3/" + id + ",");
+            }
+            i++;
+        }
+    }
+
+    @Test
     public void ethAddress() {
-        // ["0xdd7cbedde731e78e8b8e4b2c212bc42fa7c09d03","0xd16634629c638efd8ed90bb096c216e7aec01a91"]
+        // ["0xdd7cbedde731e78e8b8e4b2c212bc42fa7c09d03","0xd16634629c638efd8ed90bb096c216e7aec01a91","0x16534991E80117Ca16c724C991aad9EAbd1D7ebe"]
         System.out.println(EthUtil.genEthAddressByCompressedPublickey("037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863"));
         System.out.println(EthUtil.genEthAddressByCompressedPublickey("036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b"));
+    }
+
+    @Test
+    public void substringTest() {
+        String asd = "https://ropsten.infura.io/v3/cf9ce39514724372bfeac13262e164af";
+        System.out.println(asd.substring(asd.indexOf("infura.io") - 1));
     }
 
     @Test
@@ -253,9 +303,9 @@ public class EthAccountTest {
     /**
      * 通过助记词导入钱包
      *
-     * @param path     助记词路径  用户提供使用什么协议生成
-     * @param list     助记词
-     * @param password 密码
+     * @param path      助记词路径  用户提供使用什么协议生成
+     * @param mnemonics 助记词
+     * @param password  密码
      * @return
      */
     private Map importByMnemonic(String path, List<String> mnemonics, String password) {

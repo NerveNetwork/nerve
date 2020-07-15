@@ -144,7 +144,7 @@ public class TimeManager {
                 break;
             }
         }
-        if (count == -1) {
+        if (count >= 3) {
             calNetTimeOffset(times[0], times[1], times[2]);
         } else {
             //从对等网络去获取时间

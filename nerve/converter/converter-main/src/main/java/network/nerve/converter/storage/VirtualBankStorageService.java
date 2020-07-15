@@ -35,7 +35,6 @@ import java.util.Map;
  */
 public interface VirtualBankStorageService {
 
-
     boolean save(Chain chain, VirtualBankDirector virtualBankDirector);
 
     VirtualBankDirector findBySignAddress(Chain chain, String address);

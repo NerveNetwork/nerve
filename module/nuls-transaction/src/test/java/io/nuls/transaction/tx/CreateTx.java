@@ -61,7 +61,7 @@ public class CreateTx {
 
 
     static {
-        chain.setConfig(new ConfigBean(chainId, assetId, 1024 * 1024, 1000, 20, 20000, 60000));
+        chain.setConfig(new ConfigBean(chainId, assetId));
     }
     /**
      * 创建普通转账交易

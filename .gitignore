@@ -116,6 +116,7 @@ buildNumber.properties
 # log
 logs/
 /data/
+/data_bak/
 !tools/nuls-tools/base-tools/src/main/java/io/nuls/base/data
 keystore/
 Modules/
@@ -126,3 +127,4 @@ config_tmp/
 NULS-Wallet-linux64-alpha*
 dev.md
 .package-version
+module/nuls-ledger/.temp

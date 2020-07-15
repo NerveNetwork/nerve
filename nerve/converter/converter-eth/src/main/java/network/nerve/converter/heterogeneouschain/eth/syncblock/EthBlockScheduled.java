@@ -31,6 +31,7 @@ import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
+import network.nerve.converter.utils.LoggerUtil;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
 import java.math.BigInteger;
@@ -64,6 +65,12 @@ public class EthBlockScheduled implements Runnable {
 
 
     public void run() {
+        if (!EthContext.getConverterCoreApi().isRunning()) {
+            if (LoggerUtil.LOG.isDebugEnabled()) {
+                LoggerUtil.LOG.debug("忽略同步区块模式");
+            }
+            return;
+        }
         if (!EthContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
             try {
                 if(!clearDB) {
@@ -73,11 +80,15 @@ public class EthBlockScheduled implements Runnable {
             } catch (Exception e) {
                 EthContext.logger().error(e);
             }
-            EthContext.logger().info("非虚拟银行成员，跳过此任务");
+            if (LoggerUtil.LOG.isDebugEnabled()) {
+                LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
+            }
             return;
         }
         clearDB = false;
-        EthContext.logger().info("[ETH区块解析任务] - 每隔20秒执行一次。");
+        if (LoggerUtil.LOG.isDebugEnabled()) {
+            LoggerUtil.LOG.debug("[ETH区块解析任务] - 每隔20秒执行一次。");
+        }
         try {
             ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
             BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
@@ -129,7 +140,8 @@ public class EthBlockScheduled implements Runnable {
                 return;
             }
 
-            for (int i = 1; i <= blockHeightFromEth - localBlockHeight; i++) {
+            long size = blockHeightFromEth - localBlockHeight;
+            for (int i = 1; i <= size; i++) {
                 localBlockHeight = localBlockHeight + 1;
                 /**
                  * 同步并解析数据

@@ -31,6 +31,7 @@ import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
@@ -53,7 +54,6 @@ import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.model.dto.WithdrawalTxDTO;
 import network.nerve.converter.model.po.TransactionPO;
 import network.nerve.converter.model.txdata.*;
-import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.rpc.call.TransactionCall;
@@ -66,8 +66,7 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author: Loki
@@ -105,6 +104,13 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createChangeVirtualBankTx(Chain chain, List<byte[]> inAgentList, List<byte[]> outAgentList, long outHeight, long txTime) throws NulsException {
+        Transaction tx = assembleChangeVirtualBankTx(chain, inAgentList, outAgentList, outHeight, txTime);
+        TransactionCall.newTx(chain, tx);
+        return tx;
+    }
+
+    @Override
+    public Transaction assembleChangeVirtualBankTx(Chain chain, List<byte[]> inAgentList, List<byte[]> outAgentList, long outHeight, long txTime) throws NulsException {
         ChangeVirtualBankTxData txData = new ChangeVirtualBankTxData();
         txData.setInAgents(inAgentList);
         txData.setOutAgents(outAgentList);
@@ -118,7 +124,6 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.CHANGE_VIRTUAL_BANK, txDataBytes, txTime);
         ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
         chain.getLogger().debug(tx.format(ChangeVirtualBankTxData.class));
-        TransactionCall.newTx(chain, tx);
         return tx;
     }
 
@@ -320,7 +325,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         NetWorkCall.broadcast(chain, newTxMessage, ConverterCmdConstant.NEW_TX_MESSAGE);
 
         if (VirtualBankUtil.isCurrentDirector(chain)) {
-            if(null == heterogeneousChainId || StringUtils.isBlank(heterogeneousTxHash)){
+            if (null == heterogeneousChainId || StringUtils.isBlank(heterogeneousTxHash)) {
                 ProposalTxData txdata = ConverterUtil.getInstance(tx.getTxData(), ProposalTxData.class);
                 heterogeneousChainId = txdata.getHeterogeneousChainId();
                 heterogeneousTxHash = txdata.getHeterogeneousTxHash();
@@ -356,15 +361,24 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         txData.setContent(proposalTxDTO.getContent());
         txData.setHeterogeneousChainId(proposalTxDTO.getHeterogeneousChainId());
-        txData.setHeterogeneousTxHash(proposalTxDTO.getHeterogeneousTxHash().toLowerCase());
+        String heterogeneousTxHash = proposalTxDTO.getHeterogeneousTxHash();
+        if (StringUtils.isNotBlank(heterogeneousTxHash)) {
+            txData.setHeterogeneousTxHash(heterogeneousTxHash.toLowerCase());
+        }
         String businessAddress = proposalTxDTO.getBusinessAddress();
         if (StringUtils.isNotBlank(businessAddress)) {
-            if(Numeric.containsHexPrefix(businessAddress)) {
+            if (Numeric.containsHexPrefix(businessAddress)) {
                 txData.setAddress(Numeric.hexStringToByteArray(businessAddress));
             } else {
                 txData.setAddress(AddressTool.getAddress(proposalTxDTO.getBusinessAddress()));
             }
         }
+
+        String hash = proposalTxDTO.getHash();
+        if (StringUtils.isNotBlank(hash)) {
+            txData.setHash(HexUtil.decode(proposalTxDTO.getHash()));
+        }
+
         byte[] txDataBytes = null;
         try {
             txDataBytes = txData.serialize();
@@ -423,7 +437,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         saveWaitingProcess(chain, tx);
         byte proposalType = confirmProposalTxData.getType();
         BroadcastHashSignMessage message;
-        if(ProposalTypeEnum.REFUND.value() == proposalType
+        if (ProposalTypeEnum.REFUND.value() == proposalType
                 || ProposalTypeEnum.TRANSFER.value() == proposalType
                 || ProposalTypeEnum.EXPELLED.value() == proposalType) {
             List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
@@ -431,9 +445,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     confirmProposalTxData.getBusinessData(),
                     ProposalExeBusinessData.class);
             heterogeneousHashList.add(new HeterogeneousHash(business.getHeterogeneousChainId(), business.getHeterogeneousTxHash()));
-             message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+            message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         } else {
-             message = new BroadcastHashSignMessage(tx, p2PHKSignature);
+            message = new BroadcastHashSignMessage(tx, p2PHKSignature);
         }
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
         chain.getLogger().debug(tx.format(ConfirmProposalTxData.class));
@@ -536,6 +550,38 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         if (chain.getLogger().isDebugEnabled()) {
             chain.getLogger().debug(tx.format(HeterogeneousContractAssetRegCompleteTxData.class));
         }
+        return tx;
+    }
+
+    @Override
+    public Transaction createResetVirtualBankTx(Chain chain, int heterogeneousChainId, SignAccountDTO signAccount) throws NulsException {
+        ResetVirtualBankTxData txData = new ResetVirtualBankTxData();
+        txData.setHeterogeneousChainId(heterogeneousChainId);
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.RESET_HETEROGENEOUS_VIRTUAL_BANK, txDataBytes);
+        ConverterSignUtil.signTx(tx, signAccount);
+        chain.getLogger().debug(tx.format(ResetVirtualBankTxData.class));
+        TransactionCall.newTx(chain, tx);
+        return tx;
+    }
+
+    @Override
+    public Transaction createConfirmResetVirtualBankTx(Chain chain, ConfirmResetVirtualBankTxData txData, long txTime) throws NulsException {
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.CONFIRM_HETEROGENEOUS_RESET_VIRTUAL_BANK, txDataBytes, txTime);
+        ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        chain.getLogger().debug(tx.format(ConfirmResetVirtualBankTxData.class));
+        TransactionCall.newTx(chain, tx);
         return tx;
     }
 
@@ -764,17 +810,29 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listRewardAddress.size());
         BigInteger amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
-
+        Map<String, BigInteger> map = calculateDistributionFeeCoinToAmount(listRewardAddress, amount);
+        // 组装cointo
         List<CoinTo> listTo = new ArrayList<>();
-        for (byte[] address : listRewardAddress) {
+        for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
             CoinTo distributionFeeCoinTo = new CoinTo(
-                    address,
+                    AddressTool.getAddress(entry.getKey()),
                     chain.getConfig().getChainId(),
                     chain.getConfig().getAssetId(),
-                    amount);
+                    entry.getValue());
             listTo.add(distributionFeeCoinTo);
         }
         return listTo;
+    }
+
+    @Override
+    public Map<String, BigInteger> calculateDistributionFeeCoinToAmount(List<byte[]> listRewardAddress, BigInteger amount) {
+        Map<String, BigInteger> map = new HashMap<>();
+        for (byte[] address : listRewardAddress) {
+            String addr = AddressTool.getStringAddressByBytes(address);
+            map.computeIfPresent(addr, (k, v) -> v.add(amount));
+            map.putIfAbsent(addr, amount);
+        }
+        return map;
     }
 
     /**

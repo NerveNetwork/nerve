@@ -4,6 +4,9 @@ import io.nuls.core.rpc.util.NulsDateUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 public class TimeUtil {
     private static final ZoneOffset ZONE_UTC = ZoneOffset.of("Z");
@@ -27,6 +30,20 @@ public class TimeUtil {
         return localDateTime.format(df);
     }
 
+    /**
+     * 计算当前时间戳的UTC 零点 时间戳
+     * @param timeMillis
+     * @return
+     */
+    public static long getUTCZeroTimeMillisOfTheDay(long timeMillis){
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.setTime(new Date(timeMillis));
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar.getTime().getTime();
+    }
 
     /**
      * 当前时间是否在当天的指定时段区间内(不包含区间边界)

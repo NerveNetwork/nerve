@@ -20,6 +20,8 @@
 
 package io.nuls.block.thread.monitor;
 
+import io.nuls.block.constant.StatusEnum;
+import io.nuls.block.manager.ContextManager;
 import io.nuls.block.model.ChainContext;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
@@ -40,11 +42,15 @@ public class StopingMonitor extends BaseMonitor {
     private static File STOP_FILE;
     private static final StopingMonitor INSTANCE = new StopingMonitor();
 
+    private static final String ACTIVE = "1";
+
+    private static final String DONE = "2";
+
     private StopingMonitor() {
         super();
         FILE_NAME = System.getenv("NERVE_STOP_FILE");
-        Log.info("NERVE_STOP_FILE:{}",FILE_NAME);
-        if(StringUtils.isBlank(FILE_NAME)){
+        Log.info("NERVE_STOP_FILE:{}", FILE_NAME);
+        if (StringUtils.isBlank(FILE_NAME)) {
             Log.warn("There is no env:NERVE_STOP_FILE");
             FILE_NAME = "NERVE_STOP_FILE";
         }
@@ -58,29 +64,45 @@ public class StopingMonitor extends BaseMonitor {
 
 
     @Override
+    public void run() {
+        for (Integer chainId : ContextManager.CHAIN_ID_LIST) {
+            ChainContext context = ContextManager.getContext(chainId);
+            NulsLogger logger = context.getLogger();
+            try {
+                process(chainId, context, logger);
+            } catch (Exception e) {
+                logger.error(symbol + " running fail", e);
+            }
+        }
+    }
+
+
+    @Override
     protected void process(int chainId, ChainContext context, NulsLogger commonLog) {
         if (!STOP_FILE.exists()) {
             return;
         }
         try {
-            byte val = read();
-            if (val == 0) {
+            commonLog.debug("读取到停止信号文件:{}", STOP_FILE);
+            String val = read();
+            commonLog.info("读取到停止信号:{}", val);
+            if (val == null) {
                 return;
             }
-            if (val == 1) {
-                Log.info("监听到停止节点信号");
+            if (ACTIVE.equals(val)) {
+                commonLog.info("开始进行停止节点准备工作");
                 context.stopBlock();
                 context.waitStopBlock();
-                Log.info("停止节点操作准备就绪");
-                write(2);
+                commonLog.info("停止节点准备工作完成");
+                write(DONE);
             }
         } catch (Exception e) {
             commonLog.error(e);
         }
     }
 
-    private void write(int val) throws IOException {
-        OutputStream out = new FileOutputStream(STOP_FILE);
+    private void write(String val) throws IOException {
+        FileWriter out = new FileWriter(STOP_FILE);
         try {
             out.write(val);
             out.flush();
@@ -91,14 +113,15 @@ public class StopingMonitor extends BaseMonitor {
         }
     }
 
-    private byte read() throws IOException {
-        InputStream in = new FileInputStream(STOP_FILE);
+    private String read() throws IOException {
+
+        BufferedReader in = new BufferedReader(new FileReader(STOP_FILE));
         try {
-            byte[] bytes = in.readAllBytes();
-            if (bytes != null && bytes.length > 0) {
-                return bytes[0];
+            String line = in.readLine();
+            if (line != null) {
+                return line.substring(0, 1);
             }
-            return 0;
+            return null;
         } finally {
             in.close();
         }
@@ -106,9 +129,9 @@ public class StopingMonitor extends BaseMonitor {
 
     public static void main(String[] args) throws IOException {
         StopingMonitor test = StopingMonitor.getInstance();
-        test.write(1);
 
-
+        test.write(ACTIVE);
+        System.out.println(test.read());
     }
 
     public void clear() {

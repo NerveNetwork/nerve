@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.docking;
 
+import io.nuls.base.data.Transaction;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
@@ -38,13 +39,13 @@ import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthResendHelper;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
-import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
-import network.nerve.converter.heterogeneouschain.eth.model.EthERC20Po;
-import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.eth.model.*;
 import network.nerve.converter.heterogeneouschain.eth.storage.*;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.model.bo.*;
+import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
@@ -261,12 +262,12 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
-    public void txConfirmedCompleted(String txHash, Long blockHeight) throws Exception {
+    public void txConfirmedCompleted(String ethTxHash, Long blockHeight) throws Exception {
         // 更新db中po的状态，改为delete，在队列任务中确认`ROLLBACK_NUMER`个块之后再移除，便于状态回滚
-        EthUnconfirmedTxPo txPo = ethUnconfirmedTxStorageService.findByTxHash(txHash);
+        EthUnconfirmedTxPo txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         if (txPo == null) {
             txPo = new EthUnconfirmedTxPo();
-            txPo.setTxHash(txHash);
+            txPo.setTxHash(ethTxHash);
         }
         txPo.setDelete(true);
         txPo.setDeletedHeight(blockHeight + EthConstant.ROLLBACK_NUMER);
@@ -427,6 +428,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
         HeterogeneousTransactionInfo txInfo = ethTxStorageService.findByTxHash(txHash);
         if (txInfo != null) {
             txInfo.setTxType(HeterogeneousChainTxType.WITHDRAW);
+            Long txTime = txInfo.getTxTime();
+            if (StringUtils.isBlank(txInfo.getFrom())) {
+                txInfo = ethParseTxHelper.parseWithdrawTransaction(txHash);
+                txInfo.setTxTime(txTime);
+            }
         } else {
             txInfo = ethParseTxHelper.parseWithdrawTransaction(txHash);
             if (txInfo == null) {
@@ -474,6 +480,15 @@ public class EthDocking implements IHeterogeneousChainDocking {
         info.setTxTime(txTime);
         info.setSigners(signers);
         return info;
+    }
+
+    @Override
+    public HeterogeneousChangePendingInfo getChangeVirtualBankPendingInfo(String nerveTxHash) throws Exception {
+        List changeInfo = getPendingManagerChangeInfo(nerveTxHash);
+        HeterogeneousChangePendingInfo pendingInfo = new HeterogeneousChangePendingInfo();
+        pendingInfo.setNerveTxHash(nerveTxHash);
+        pendingInfo.setOrginTxCount(Integer.parseInt(changeInfo.get(0).toString()));
+        return pendingInfo;
     }
 
     @Override
@@ -528,22 +543,23 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
-    public String createOrSignManagerChangesTx(String nerveTxHash, String[] addAddresses, String[] removeAddresses, String[] currentAddresses) throws NulsException {
+    public String createOrSignManagerChangesTx(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException {
         logger().info("准备发送虚拟银行变更ETH交易，nerveTxHash: {}", nerveTxHash);
         try {
+            // 准备数据，以此校验交易数据是否一致，从合约view函数中提取
+            EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
+            po.setNerveTxHash(nerveTxHash);
+            po.setAddAddresses(addAddresses);
+            po.setRemoveAddresses(removeAddresses);
+            po.setOrginTxCount(orginTxCount);
             // 交易准备
             HeterogeneousAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.CHANGE);
             if (account == null) {
+                // 数据一致性检查
+                this.checkChangeDataInconsistency(nerveTxHash, po);
                 return EMPTY_STRING;
             }
             // 业务验证
-            Set<String> allSet = null;
-            // add by Mimi at 2020-04-10 赋值为空，变量无意义
-            currentAddresses = null;
-            // end code by Mimi
-            if (currentAddresses != null) {
-                allSet = new HashSet<>(Arrays.asList(currentAddresses));
-            }
             if (addAddresses == null) {
                 addAddresses = new String[0];
             }
@@ -556,10 +572,6 @@ public class EthDocking implements IHeterogeneousChainDocking {
                 String add = addAddresses[a];
                 add = add.toLowerCase();
                 addAddresses[a] = add;
-                if (allSet != null && allSet.contains(add)) {
-                    logger().error("待加入中存在地址-已经是管理员");
-                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_1);
-                }
                 if (!addSet.add(add)) {
                     logger().error("重复的待加入地址列表");
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_2);
@@ -572,20 +584,14 @@ public class EthDocking implements IHeterogeneousChainDocking {
                 String remove = removeAddresses[r];
                 remove = remove.toLowerCase();
                 removeAddresses[r] = remove;
-                if (allSet != null && !allSet.contains(remove)) {
-                    logger().error("待退出中存在地址-不是管理员");
-                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_3);
-                }
                 if (!removeSet.add(remove)) {
                     logger().error("重复的待退出地址列表");
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_4);
                 }
                 removeList.add(new Address(remove));
             }
-            if (currentAddresses != null && currentAddresses.length + addAddresses.length - removeAddresses.length > 15) {
-                logger().error("Maximum 15 managers");
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_5);
-            }
+            // 数据一致性检查
+            this.checkChangeDataInconsistency(nerveTxHash, po);
             // 获取管理员账户
             String fromAddress = account.getAddress();
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
@@ -593,22 +599,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
                 logger().error("退出的管理员不能参与管理员变更交易");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_6);
             }
-            EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
-            po.setNerveTxHash(nerveTxHash);
-            po.setAddAddresses(addAddresses);
-            po.setRemoveAddresses(removeAddresses);
-            po.setCurrentAddresses(currentAddresses);
-            // 校验交易数据是否一致，从合约view函数中提取
-            List pendingManagerChangeInfo = getPendingManagerChangeInfo(nerveTxHash);
-            if (!pendingManagerChangeInfo.isEmpty() && !validatePendingManagerChangeInfo(pendingManagerChangeInfo, po)) {
-                logger().error("管理员变更交易数据不一致, pendingManagerChangeInfo: {}, po: {}", Arrays.toString(pendingManagerChangeInfo.toArray()), po.toString());
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY);
-            }
-            Function createOrSignManagerChangeFunction = EthUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList);
+            Function createOrSignManagerChangeFunction = EthUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, orginTxCount);
             // 验证合约后发出交易
             return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignManagerChangeFunction, HeterogeneousChainTxType.CHANGE);
         } catch (Exception e) {
-            logger().error(e);
+            logger().error(String.format("adds: %s, removes: %s", addAddresses != null ? Arrays.toString(addAddresses) : "[]", removeAddresses != null ? Arrays.toString(removeAddresses) : "[]"), e);
             if (e instanceof NulsException) {
                 throw (NulsException) e;
             }
@@ -621,7 +616,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
         logger().info("准备发送虚拟银行合约升级授权交易，nerveTxHash: {}", nerveTxHash);
         try {
             // 交易准备
-            HeterogeneousAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW);
+            HeterogeneousAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.UPGRADE);
             if (account == null) {
                 return EMPTY_STRING;
             }
@@ -643,12 +638,195 @@ public class EthDocking implements IHeterogeneousChainDocking {
         }
     }
 
+    private boolean checkManagerInconsistency(Set<String> allManagerSet, Set<String> allManagersInContract) {
+        if (allManagerSet.size() != allManagersInContract.size()) {
+            return false;
+        }
+        for (String manager : allManagerSet) {
+            if (!allManagersInContract.contains(manager)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException {
+        try {
+            boolean sendRecoveryII = nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_II);
+            if (sendRecoveryII) {
+                nerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_II.length());
+            }
+            EthRecoveryDto recoveryDto = new EthRecoveryDto(nerveTxHash, seedManagers, allManagers);
+            Set<String> allManagersInContract = getAllManagers();
+            if (logger().isDebugEnabled()) {
+                logger().debug("恢复机制数据: allManagers is {}, allManagersInContract is {}", Arrays.toString(allManagers), Arrays.toString(allManagersInContract.toArray()));
+            }
+            if (sendRecoveryII) {
+                return this.recoveryII(recoveryDto, allManagersInContract);
+            }
+            Set<String> removeSet = new HashSet<>(allManagersInContract);
+            for(String seed : seedManagers) {
+                removeSet.remove(seed);
+            }
+            // 剔除现有合约管理员
+            String[] removes = new String[removeSet.size()];
+            if (removeSet.size() != 0) {
+                // 执行恢复第一步
+                removeSet.toArray(removes);
+                String txHash = this.recoveryI(nerveTxHash, removes, recoveryDto);
+                // 第一步已执行完成
+                if (StringUtils.isBlank(txHash)) {
+                    // 执行恢复第二步
+                    return this.recoveryII(recoveryDto, allManagersInContract);
+                }
+                return txHash;
+            } else {
+                // 执行恢复第二步
+                return this.recoveryII(recoveryDto, allManagersInContract);
+            }
+        } catch (Exception e) {
+            logger().error(e);
+            if (e instanceof NulsException) {
+                throw (NulsException) e;
+            }
+            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+        }
+    }
+
+    private String recovery(String nerveTxKey, String[] adds, String[] removes, EthRecoveryDto recoveryDto) throws NulsException {
+        try {
+            // 当前虚拟银行触发恢复机制时，持久化保存调用参数，以提供给第二步恢复时使用
+            ethTxStorageService.saveRecovery(nerveTxKey, recoveryDto);
+            // 准备数据，以此校验交易数据是否一致，从合约view函数中提取
+            EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
+            po.setRecoveryDto(recoveryDto);
+            po.setNerveTxHash(nerveTxKey);
+            po.setAddAddresses(adds);
+            po.setRemoveAddresses(removes);
+            po.setOrginTxCount(1);
+            // 交易准备
+            HeterogeneousAccount account = this.createTxStart(nerveTxKey, HeterogeneousChainTxType.RECOVERY);
+            if (account == null) {
+                // 数据一致性检查
+                this.checkChangeDataInconsistency(nerveTxKey, po);
+                return EMPTY_STRING;
+            }
+            // 业务验证
+            if (adds == null) {
+                adds = new String[0];
+            }
+            if (removes == null) {
+                removes = new String[0];
+            }
+            List<Address> addList = new ArrayList<>();
+            for (int a = 0, addSize = adds.length; a < addSize; a++) {
+                String add = adds[a];
+                add = add.toLowerCase();
+                addList.add(new Address(add));
+            }
+            List<Address> removeList = new ArrayList<>();
+            for (int r = 0, removeSize = removes.length; r < removeSize; r++) {
+                String remove = removes[r];
+                remove = remove.toLowerCase();
+                removeList.add(new Address(remove));
+            }
+            // 数据一致性检查
+            this.checkChangeDataInconsistency(nerveTxKey, po);
+            // 获取管理员账户
+            String fromAddress = account.getAddress();
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            Function createOrSignManagerChangeFunction = EthUtil.getCreateOrSignManagerChangeFunction(nerveTxKey, addList, removeList, 1);
+            // 验证合约后发出交易
+            return this.createTxComplete(nerveTxKey, po, fromAddress, priKey, createOrSignManagerChangeFunction, HeterogeneousChainTxType.RECOVERY);
+        } catch (Exception e) {
+            logger().error(String.format("removes: %s", Arrays.toString(removes)), e);
+            if (e instanceof NulsException) {
+                throw (NulsException) e;
+            }
+            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+        }
+    }
+
+    private String recoveryI(String nerveTxHash, String[] removes, EthRecoveryDto recoveryDto) throws NulsException {
+        return this.recovery(EthConstant.ETH_RECOVERY_I + nerveTxHash, null, removes, recoveryDto);
+    }
+
+    private String recoveryII(EthRecoveryDto recoveryDto, Set<String> allManagersInContract) throws NulsException {
+        // 添加当前nerve管理员
+        Set<String> allManagerSet = new HashSet<>(Arrays.asList(recoveryDto.getAllManagers()));
+        // 检查合约内管理员是否与nerve管理员一致
+        if (checkManagerInconsistency(allManagerSet, allManagersInContract)) {
+            if (checkManagerInconsistency(new HashSet<>(Arrays.asList(recoveryDto.getSeedManagers())), allManagersInContract)) {
+                logger().info("[确认]网络中仅有种子管理员，不再发送第二步恢复，将发起确认重置虚拟银行异构链(合约)");
+                try {
+                    String nerveTxHash = recoveryDto.getRealNerveTxHash();
+                    Transaction nerveTx = EthContext.getConverterCoreApi().getNerveTx(nerveTxHash);
+                    ethCallBackManager.getTxConfirmedProcessor().txConfirmed(
+                            HeterogeneousChainTxType.RECOVERY,
+                            nerveTxHash,
+                            null, //ethTxHash,
+                            null, //txPo.getBlockHeight(),
+                            nerveTx.getTime(), //txPo.getTxTime(),
+                            EthContext.MULTY_SIGN_ADDRESS,
+                            null  //txPo.getSigners()
+                    );
+                } catch (Exception e) {
+                    logger().error(e);
+                    if (e instanceof NulsException) {
+                        throw (NulsException) e;
+                    }
+                    throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+                }
+                return null;
+            }
+            logger().info("[结束]合约已经恢复管理员");
+            return null;
+        }
+        for(String seed : recoveryDto.getSeedManagers()) {
+            allManagerSet.remove(seed);
+        }
+        String[] adds = new String[allManagerSet.size()];
+        allManagerSet.toArray(adds);
+        return this.recovery(EthConstant.ETH_RECOVERY_II + recoveryDto.getRealNerveTxHash(), adds, null, recoveryDto);
+    }
+
+    private void checkChangeDataInconsistency(String nerveTxHash, EthUnconfirmedTxPo po) throws Exception {
+        List pendingManagerChangeInfo = getPendingManagerChangeInfo(nerveTxHash);
+        if (logger().isDebugEnabled()) {
+            logger().debug("一致性检查准备数据, change from contract: {}, sending tx po: [count:{},hash:{},adds:{},removes:{}]",
+                    Arrays.toString(pendingManagerChangeInfo.toArray()),
+                    po.getOrginTxCount(),
+                    nerveTxHash,
+                    Arrays.toString(po.getAddAddresses()),
+                    Arrays.toString(po.getRemoveAddresses())
+            );
+        }
+        // 检查一致性
+        if (!pendingManagerChangeInfo.isEmpty() && !validatePendingManagerChangeInfo(pendingManagerChangeInfo, po)) {
+            logger().error("管理员变更交易数据不一致, change from contract: {}, sending tx po: [count:{},hash:{},adds:{},removes:{}]",
+                    Arrays.toString(pendingManagerChangeInfo.toArray()),
+                    po.getOrginTxCount(),
+                    nerveTxHash,
+                    Arrays.toString(po.getAddAddresses()),
+                    Arrays.toString(po.getRemoveAddresses())
+            );
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY);
+        }
+    }
+
     private HeterogeneousAccount createTxStart(String nerveTxHash, HeterogeneousChainTxType txType) throws Exception {
+        // 本地发起的交易，保存nerve交易hash，表示此交易在本节点发出过，不一定成功发出eth交易，仅代表被触发过
+        ethTxRelationStorageService.saveNerveTxHash(nerveTxHash);
+        String realNerveTxHash = nerveTxHash;
+        if (nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_I) || nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_II)) {
+            realNerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_I.length());
+        }
         // 根据nerve交易hash前两位算出顺序种子
-        int seed = new BigInteger(nerveTxHash.substring(0, 1), 16).intValue() + 1;
+        int seed = new BigInteger(realNerveTxHash.substring(0, 1), 16).intValue() + 1;
         int bankSize = EthContext.getConverterCoreApi().getVirtualBankSize();
         if (bankSize > 16) {
-            seed += new BigInteger(nerveTxHash.substring(1, 2), 16).intValue() + 1;
+            seed += new BigInteger(realNerveTxHash.substring(1, 2), 16).intValue() + 1;
         }
         int mod = seed % bankSize + 1;
         // 按顺序等待固定时间后再发出ETH交易
@@ -658,14 +836,20 @@ public class EthDocking implements IHeterogeneousChainDocking {
         } else {
             bankOrder -= mod - 1;
         }
-        int waitting = (bankOrder - 1) * EthConstant.INTERVAL_WAITTING;
+        int waitting = (bankOrder - 1) * EthContext.getIntervalWaitting();
         if (logger().isDebugEnabled()) {
-            logger().debug("顺序计算参数 seed: {}, mod: {}, bankOrder: {}, waitting: {}", seed, mod, bankOrder, waitting);
+            logger().debug("顺序计算参数 bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}, waitting: {}",
+                    bankSize,
+                    seed,
+                    mod,
+                    EthContext.getConverterCoreApi().getVirtualBankOrder(),
+                    bankOrder,
+                    waitting);
         }
-        logger().info("等待{}秒后发出[{}]的ETH交易", waitting, txType);
+        logger().info("等待{}秒后发出[{}]的ETH交易, nerveTxHash: {}", waitting, txType, nerveTxHash);
         TimeUnit.SECONDS.sleep(waitting);
         // 向ETH网络请求验证
-        boolean isCompleted = isCompletedTransaction(nerveTxHash);
+        boolean isCompleted = ethParseTxHelper.isCompletedTransaction(nerveTxHash);
         if (isCompleted) {
             logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
             return null;
@@ -680,20 +864,29 @@ public class EthDocking implements IHeterogeneousChainDocking {
         // 验证合约交易合法性
         EthCall ethCall = ethWalletApi.validateContractCall(fromAddress, EthContext.MULTY_SIGN_ADDRESS, txFunction);
         if (ethCall.isReverted()) {
+            // 当验证为重复签名时，则说明当前节点已签名此交易，返回 EMPTY_STRING 表明不再执行
+            if (ConverterUtil.isDuplicateSignature(ethCall.getRevertReason())) {
+                logger().info("[{}]当前节点已签名此交易，不再执行, nerveTxHash: {}", txType, nerveTxHash);
+                return EMPTY_STRING;
+            }
             logger().error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
         BigInteger estimateGas = ethWalletApi.ethEstimateGas(fromAddress, EthContext.MULTY_SIGN_ADDRESS, txFunction);
+        if (logger().isDebugEnabled()) {
+            logger().debug("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
+        }
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             logger().error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
         }
         BigInteger hardGasLimit = txType == HeterogeneousChainTxType.CHANGE ? EthConstant.ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE : EthConstant.ETH_GAS_LIMIT_OF_MULTY_SIGN;
         BigInteger gasLimit = hardGasLimit.compareTo(estimateGas) > 0 ? hardGasLimit : estimateGas;
-        String ethTxHash = ethWalletApi.callContract(fromAddress, priKey, EthContext.MULTY_SIGN_ADDRESS, gasLimit, txFunction);
-        // docking发起交易时，把交易关系记录到db中
-        ethTxRelationStorageService.save(ethTxHash, nerveTxHash);
+        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, EthContext.MULTY_SIGN_ADDRESS, gasLimit, txFunction);
+        String ethTxHash = ethSendTransactionPo.getTxHash();
+        // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
+        ethTxRelationStorageService.save(ethTxHash, nerveTxHash, ethSendTransactionPo);
 
         // 保存未确认交易
         po.setTxHash(ethTxHash);
@@ -703,15 +896,16 @@ public class EthDocking implements IHeterogeneousChainDocking {
         EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
         // 监听此交易的打包状态
         ethListener.addListeningTx(ethTxHash);
-        logger().info("Nerve网络向ETH网络发出[{}]请求, 详情: {}", txType, po.superString());
+        logger().info("Nerve网络向ETH网络发出[{}]交易, nerveTxHash: {}, 详情: {}", txType, nerveTxHash, po.toString());
         return ethTxHash;
     }
 
     private boolean validatePendingWithdrawInfo(List pendingWithdrawInfo, EthUnconfirmedTxPo po) {
-        String to = pendingWithdrawInfo.get(1).toString();
-        BigInteger value = new BigInteger(pendingWithdrawInfo.get(2).toString());
-        Boolean isERC20 = Boolean.parseBoolean(pendingWithdrawInfo.get(3).toString());
-        String erc20 = pendingWithdrawInfo.get(4).toString();
+        int i = 0;
+        String to = pendingWithdrawInfo.get(i++).toString();
+        BigInteger value = new BigInteger(pendingWithdrawInfo.get(i++).toString());
+        Boolean isERC20 = Boolean.parseBoolean(pendingWithdrawInfo.get(i++).toString());
+        String erc20 = pendingWithdrawInfo.get(i++).toString();
         if (!to.equals(po.getTo())) {
             return false;
         }
@@ -735,7 +929,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
         Function pendingWithdrawTransactionFunction = EthUtil.getPendingWithdrawTransactionFunction(nerveTxHash);
         List<Type> valueTypes = ethWalletApi.callViewFunction(EthContext.MULTY_SIGN_ADDRESS, pendingWithdrawTransactionFunction);
         List<Object> list = valueTypes.stream().map(type -> type.getValue()).collect(Collectors.toList());
-        if (!list.isEmpty() && Integer.parseInt(list.get(5).toString()) == 0) {
+        if (!list.isEmpty() && Integer.parseInt(list.get(list.size() - 1).toString()) == 0) {
             return Collections.emptyList();
         }
         return list;
@@ -743,11 +937,14 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     private boolean validatePendingManagerChangeInfo(List pendingManagerChangeInfo, EthUnconfirmedTxPo po) {
         String nerveTxHash = po.getNerveTxHash();
-        int i = 1;
+        int i = 0;
+        int orginTxCount = Integer.parseInt(pendingManagerChangeInfo.get(i++).toString());
+        if (po.getOrginTxCount() != orginTxCount) {
+            return false;
+        }
         String key = (String) pendingManagerChangeInfo.get(i++);
         if (!nerveTxHash.equals(key)) {
-            // 新的成员变更交易，覆盖之前合约内的变更交易
-            return true;
+            return false;
         }
         // 检查加入列表
         int poAddSize;
@@ -798,17 +995,27 @@ public class EthDocking implements IHeterogeneousChainDocking {
         Function pendingManagerChangeTransactionFunction = EthUtil.getPendingManagerChangeTransactionFunction(nerveTxHash);
         List<Type> valueTypes = ethWalletApi.callViewFunction(EthContext.MULTY_SIGN_ADDRESS, pendingManagerChangeTransactionFunction);
         List<Object> list = valueTypes.stream().map(type -> type.getValue()).collect(Collectors.toList());
-        if (!list.isEmpty() && Integer.parseInt(list.get(list.size() - 1).toString()) == 0) {
+        // 当从合约里查询的变更交易中，合并的原始nerve交易数量txCount、合约内多签数量signedCount，都是0时，则是不存在的交易，即返回空集合
+        if (!list.isEmpty() && Integer.parseInt(list.get(0).toString()) == 0 && Integer.parseInt(list.get(list.size() - 1).toString()) == 0) {
             return Collections.emptyList();
         }
         return list;
     }
 
-    private boolean isCompletedTransaction(String nerveTxHash) throws Exception {
-        Function isCompletedFunction = EthUtil.getIsCompletedFunction(nerveTxHash);
-        List<Type> valueTypes = ethWalletApi.callViewFunction(EthContext.MULTY_SIGN_ADDRESS, isCompletedFunction);
-        boolean isCompleted = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
-        return isCompleted;
+    private Set<String> getAllManagers() throws Exception {
+        Function allManagersFunction = EthUtil.getAllManagersFunction();
+        List<Type> typeList = ethWalletApi.callViewFunction(EthContext.MULTY_SIGN_ADDRESS, allManagersFunction);
+        List<String> results = new ArrayList();
+        for(Type type : typeList) {
+            results.add(type.getValue().toString());
+        }
+        String resultStr = results.get(0).substring(1, results.get(0).length() - 1);
+        String[] resultArr = resultStr.split(",");
+        Set<String> resultList = new HashSet<>();
+        for(String result : resultArr) {
+            resultList.add(result.trim().toLowerCase());
+        }
+        return resultList;
     }
 
     private String getKeystorePath() {

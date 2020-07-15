@@ -3,5 +3,6 @@
   "debug": 0,
   "logPath": "../../../../logs",
   "dataPath": "../../../../data",
-  "active.module": ""
+  "active.module": "",
+  "serviceManagerPort": 8771
 }

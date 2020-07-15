@@ -69,12 +69,24 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     private int byzantineRatio;
 
-    private  BigInteger distributionFee;
+    private BigInteger distributionFee;
 
     /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
      */
     private String multySignAddressSet;
+    /**
+     * 是否异构链主网
+     */
+    private boolean heterogeneousMainNet;
+
+    public boolean isHeterogeneousMainNet() {
+        return heterogeneousMainNet;
+    }
+
+    public void setHeterogeneousMainNet(boolean heterogeneousMainNet) {
+        this.heterogeneousMainNet = heterogeneousMainNet;
+    }
 
     public String getTxDataRoot() {
         return dataPath + File.separator + ModuleE.CV.name;

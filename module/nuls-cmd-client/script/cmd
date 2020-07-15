@@ -1,4 +1,5 @@
 #!/bin/bash
+cd `dirname $0`
 JAVA_HOME=$1
 NULSTAR_URL=$3
 LIBS="../../libs"
@@ -15,8 +16,8 @@ JAVA=${JAVA_HOME}/bin/java
 #do
 # PUB_LIB="$PUB_LIB:""$jar"
 #done
-
-APP=`ps -ef|grep -w "name=cmd-client "|grep -v grep|wc -l`
+ROOT=`pwd`
+APP=`ps -ef|grep -w "name=cmd-client"|grep "${ROOT}"|grep -v grep|wc -l`
 if [ $APP -eq 1 ]; then
     APP_PID=`ps -ef|grep -w "name=cmd-client "|grep -v grep|awk '{print $2}'`
     PID_EXIST=`ps -f -p $APP_PID | grep java`
@@ -37,7 +38,7 @@ do
     fi
     PUB_LIB="${PUB_LIB}../../libs/${line}"
 done < ./dependent.conf
-PUB_LIB="${PUB_LIB}:./cmd-client-1.0.0.jar"
+PUB_LIB="${PUB_LIB}:${ROOT}/cmd-client-1.0.0.jar"
 # Get standard environment variables
 
 JAVA_OPTS="-Xms128m -Xmx128m -Dapp.name=cmd-client --add-opens java.base/java.lang=ALL-UNNAMED --illegal-access=warn $2 "

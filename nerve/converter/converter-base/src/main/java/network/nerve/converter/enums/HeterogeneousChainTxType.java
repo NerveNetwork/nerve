@@ -31,5 +31,6 @@ public enum HeterogeneousChainTxType {
     DEPOSIT,
     WITHDRAW,
     CHANGE,
-    UPGRADE;
+    UPGRADE,
+    RECOVERY;
 }

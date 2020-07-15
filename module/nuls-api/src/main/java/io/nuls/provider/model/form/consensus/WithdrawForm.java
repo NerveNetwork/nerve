@@ -32,7 +32,7 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import io.nuls.provider.model.form.Base;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @ApiModel(description = "退出共识表单数据")
 public class WithdrawForm extends Base {

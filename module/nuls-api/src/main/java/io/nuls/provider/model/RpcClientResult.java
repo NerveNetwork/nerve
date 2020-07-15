@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class RpcClientResult {
 

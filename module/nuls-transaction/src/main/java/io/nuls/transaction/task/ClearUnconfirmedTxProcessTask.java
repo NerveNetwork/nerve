@@ -38,6 +38,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.nuls.transaction.constant.TxContext.UNCONFIRMED_TX_EXPIRE_SEC;
+
 /**
  * 未确认交易清理机制
  */
@@ -134,9 +136,9 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
         List<Transaction> expireTxList = new ArrayList<>();
         long currentTimeSeconds = NulsDateUtils.getCurrentTimeSeconds();
         //过滤指定时间内过期的交易
-        List<TransactionUnconfirmedPO> expireTxPOList = txPOList.stream().filter(txPo -> currentTimeSeconds - txConfig.getUnconfirmedTxExpire() > txPo.getCreateTime()).collect(Collectors.toList());
+        List<TransactionUnconfirmedPO> expireTxPOList = txPOList.stream().filter(txPo -> currentTimeSeconds - UNCONFIRMED_TX_EXPIRE_SEC > txPo.getCreateTime()).collect(Collectors.toList());
         expireTxPOList.forEach(txPo -> expireTxList.add(txPo.getTx()));
-        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次处理后超过过期时间{}秒的交易数:{}", txConfig.getUnconfirmedTxExpire(), expireTxList.size());
+        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次处理后超过过期时间{}秒的交易数:{}", UNCONFIRMED_TX_EXPIRE_SEC, expireTxList.size());
         return expireTxList;
     }
 

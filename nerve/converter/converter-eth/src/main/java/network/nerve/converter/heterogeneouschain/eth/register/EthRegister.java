@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.eth.register;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
@@ -68,10 +69,8 @@ import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.
  */
 @Component("ethRegister")
 public class EthRegister implements IHeterogeneousChainRegister {
-
     @Autowired
     private EthERC20StorageService ethERC20StorageService;
-
     @Autowired
     private ETHWalletApi ethWalletApi;
     @Autowired
@@ -114,6 +113,8 @@ public class EthRegister implements IHeterogeneousChainRegister {
             isInitial = true;
             // 存放配置实例
             EthContext.setConfig(config);
+            // 初始化默认API
+            initDefualtAPI();
             // 解析ETH API URL
             initEthWalletRPC();
             // 存放nerveChainId
@@ -125,16 +126,34 @@ public class EthRegister implements IHeterogeneousChainRegister {
         }
     }
 
+    private void initDefualtAPI() throws NulsException {
+        ethWalletApi.init(ethWalletRpcProcessing(EthContext.getConfig().getCommonRpcAddress()));
+    }
+
     private void initEthWalletRPC() {
-        EthContext.RPC_ADDRESS_LIST.add(EthContext.getConfig().getRpcAddress().trim());
+        EthContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(EthContext.getConfig().getMainRpcAddress()));
+        String orderRpcAddresses = EthContext.getConfig().getOrderRpcAddresses();
+        if(StringUtils.isNotBlank(orderRpcAddresses)) {
+            String[] rpcArray = orderRpcAddresses.split(",");
+            for(String rpc : rpcArray) {
+                EthContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+            }
+        }
         String standbyRpcAddresses = EthContext.getConfig().getStandbyRpcAddresses();
-        if(StringUtils.isBlank(standbyRpcAddresses)) {
-            return;
+        if(StringUtils.isNotBlank(standbyRpcAddresses)) {
+            String[] rpcArray = standbyRpcAddresses.split(",");
+            for(String rpc : rpcArray) {
+                EthContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+            }
         }
-        String[] rpcArray = standbyRpcAddresses.split(",");
-        for(String rpc : rpcArray) {
-            EthContext.RPC_ADDRESS_LIST.add(rpc.trim());
+    }
+
+    private String ethWalletRpcProcessing(String rpc) {
+        if (StringUtils.isBlank(rpc)) {
+            return rpc;
         }
+        rpc = rpc.trim();
+        return rpc;
     }
 
     @Override

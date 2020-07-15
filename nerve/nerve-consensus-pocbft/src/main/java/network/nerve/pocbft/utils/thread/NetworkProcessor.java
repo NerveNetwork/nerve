@@ -3,10 +3,10 @@ package network.nerve.pocbft.utils.thread;
 import network.nerve.pocbft.model.bo.Chain;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import network.nerve.pocbft.utils.manager.ChainManager;
-import network.nerve.pocnetwork.constant.NetworkCmdConstant;
-import network.nerve.pocnetwork.model.ConsensusNet;
-import network.nerve.pocnetwork.service.ConsensusNetService;
-import network.nerve.pocnetwork.service.NetworkService;
+import network.nerve.pocbft.network.constant.NetworkCmdConstant;
+import network.nerve.pocbft.network.model.ConsensusNet;
+import network.nerve.pocbft.network.service.ConsensusNetService;
+import network.nerve.pocbft.network.service.NetworkService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +27,7 @@ public class NetworkProcessor implements Runnable {
         while (true) {
             boolean netStatus;
             //如果不是共识节点或则共识网络未组好则直接返回
-            if (chain.isCanPacking()) {
+            if (chain.isSynchronizedHeight()) {
                 try {
                     ConsensusNetService consensusNetService = SpringLiteContext.getBean(ConsensusNetService.class);
                     updatePocGroup(consensusNetService, chain);
@@ -35,7 +35,7 @@ public class NetworkProcessor implements Runnable {
                     netStatus = consensusNetService.getNetStatus(chain);
                     if (isChange) {
                         //通知回调
-                        chain.getLogger().info("=====通知共识网络状态变更={}", netStatus);
+                        chain.getLogger().info("=====共识网络状态变更={}", netStatus);
                         chainManager.netWorkStateChange(chain, netStatus);
                     }
                     //有未连接peer，进行重连
@@ -47,7 +47,7 @@ public class NetworkProcessor implements Runnable {
                 }
             }
             try {
-                Thread.sleep(10000L);
+                Thread.sleep(5000L);
             } catch (InterruptedException e) {
                 chain.getLogger().error(e);
             }
@@ -76,7 +76,7 @@ public class NetworkProcessor implements Runnable {
                 consensusNet.setHadConnect(true);
                 ips.add(consensusNet.getNodeId().split(":")[0]);
                 //连接通知
-                chain.getLogger().debug("已连接通知:node = {}",consensusNet.getNodeId());
+                //chain.getLogger().debug("已连接通知:node = {}",consensusNet.getNodeId());
                 //给链接到的节点本节点的回执信息，用于对方节点将本节点设置为共识网络节点
                 networkService.sendIdentityMessage(chain.getChainId(), consensusNet.getNodeId(), consensusNet.getPubKey(), true);
             }

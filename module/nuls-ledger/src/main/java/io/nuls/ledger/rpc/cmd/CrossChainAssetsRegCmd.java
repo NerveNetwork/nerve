@@ -133,6 +133,11 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
             List<Map<String, Object>> list = (List<Map<String, Object>>) params.get("crossChainAssetList");
             boolean usable;
             for(Map<String, Object> assetMap : list) {
+                int assetChainId = Integer.parseInt(assetMap.get("assetChainId").toString());
+                // 当链内资产被注册为跨链资产后，跨链模块会把此资产登记为跨链资产并通知账本，此时，账本应该忽略，资产不修改成跨链资产
+                if (assetType == 3 && chainId == assetChainId) {
+                    continue;
+                }
                 usable = (boolean) assetMap.get("usable");
                 if (usable) {
                     LedgerAsset asset = new LedgerAsset();

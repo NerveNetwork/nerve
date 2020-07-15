@@ -82,9 +82,6 @@ public class ConverterBootstrap extends RpcModule {
 
     public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
         initSys();
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         NulsRpcModuleBootstrap.run("io.nuls,network.nerve.converter", args);
     }
 

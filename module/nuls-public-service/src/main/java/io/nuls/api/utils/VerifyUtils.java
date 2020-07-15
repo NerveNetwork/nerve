@@ -27,7 +27,7 @@ import io.nuls.api.model.rpc.RpcResultError;
 import java.util.List;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class VerifyUtils {
 

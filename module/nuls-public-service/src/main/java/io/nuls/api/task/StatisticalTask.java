@@ -40,7 +40,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class StatisticalTask implements Runnable {
 

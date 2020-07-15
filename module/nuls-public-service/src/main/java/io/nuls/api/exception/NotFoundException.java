@@ -25,7 +25,7 @@ import io.nuls.api.model.rpc.RpcErrorCode;
 import io.nuls.api.model.rpc.RpcResultError;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class NotFoundException extends JsonRpcException {
 

@@ -29,7 +29,7 @@ public class DexTxPackageProcessor implements ModuleTxPackageProcessor {
             if (process == 0) {
 //                LoggerUtil.dexLog.debug("-------packProduce 0, height:" + height + ", blockTime:" + blockTime);
                 time1 = System.currentTimeMillis();
-                Map<String, List<Transaction>> map = dexService.doPacking(txs, blockTime, height);
+                Map<String, List<Transaction>> map = dexService.doPacking(txs, blockTime, height, false);
                 List<Transaction> txList = map.get("dealTxList");
                 List<String> newlyList = new ArrayList<>();
                 List<String> rmHashList = new ArrayList<>();
@@ -87,19 +87,23 @@ public class DexTxPackageProcessor implements ModuleTxPackageProcessor {
             tx = txs.get(i);
             if (tx.getType() == TxType.TRADING_DEAL) {
                 dealTxList1.add(tx);
+                txs.remove(i);
+                i--;
             } else if (tx.getType() == TxType.ORDER_CANCEL_CONFIRM) {
                 dealTxList1.add(tx);
+                txs.remove(i);
+                i--;
             }
         }
         //根据区块打包的挂单交易，生成成交交易
 
-        Map<String, List<Transaction>> map = dexService.doPacking(txs, blockTime, height);
+        Map<String, List<Transaction>> map = dexService.doPacking(txs, blockTime, height, true);
 
         List<Transaction> removeTxList = map.get("removeTxList");
         if (!removeTxList.isEmpty()) {
             LoggerUtil.dexLog.error("--------batch validate dexTxs fail------------");
-            for(Transaction x : removeTxList) {
-                LoggerUtil.dexLog.error("--------txHash:" + x.getHash().toHex() +",type:" + x.getType());
+            for (Transaction x : removeTxList) {
+                LoggerUtil.dexLog.error("--------txHash:" + x.getHash().toHex() + ",type:" + x.getType());
             }
             throw new NulsException(DexErrorCode.SYNC_BATCH_VALIDATE_ERROR);
         }

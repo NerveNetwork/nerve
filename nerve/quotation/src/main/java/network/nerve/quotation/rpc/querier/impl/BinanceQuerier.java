@@ -49,7 +49,7 @@ public class BinanceQuerier implements Querier {
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().debug("BinanceQuerier, 取价anchorToken:{}", anchorToken);
+        chain.getLogger().info("BinanceQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = (anchorToken.replace("-","")).toUpperCase();
         String url = baseurl + CMD + symbol;
         try {
@@ -65,7 +65,7 @@ public class BinanceQuerier implements Querier {
             }
             Map<String,Object> data = JSONUtils.json2map(response.body());
             BigDecimal res = new BigDecimal((String)data.get("price"));
-            chain.getLogger().debug("Binance获取到交易对[{}]价格:{}", symbol, res);
+            chain.getLogger().info("Binance获取到交易对[{}]价格:{}", symbol, res);
             return res;
         } catch (Throwable e) {
             chain.getLogger().error("调用{}接口, Binance获取价格失败", url);

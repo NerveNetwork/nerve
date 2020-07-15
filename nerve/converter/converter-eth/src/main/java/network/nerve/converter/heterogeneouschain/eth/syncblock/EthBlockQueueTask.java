@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * 多线程下载区块的任务
+ * 多线程下载区块的任务（不再使用）
  *
  * @author: Mimi
  * @date: 2019-08-09
  */
+@Deprecated
 public class EthBlockQueueTask implements Runnable {
 
     public static final LinkedBlockingDeque<EthBlock.Block> ETH_BLOCK_QUEUE = new LinkedBlockingDeque<>();

@@ -1,16 +1,5 @@
 package network.nerve.pocbft.utils.manager;
 
-import network.nerve.pocbft.cache.VoteCache;
-import network.nerve.pocbft.model.bo.Chain;
-import network.nerve.pocbft.model.bo.StackingAsset;
-import network.nerve.pocbft.model.bo.config.ChainConfig;
-import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
-import network.nerve.pocbft.model.bo.round.MeetingMember;
-import network.nerve.pocbft.model.bo.round.MeetingRound;
-import network.nerve.pocbft.rpc.call.CallMethodUtils;
-import network.nerve.pocbft.rpc.call.NetWorkCall;
-import network.nerve.pocbft.utils.ConsensusNetUtil;
-import network.nerve.pocbft.utils.LoggerUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.ProtocolLoader;
@@ -28,12 +17,17 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import io.nuls.economic.base.service.EconomicService;
 import io.nuls.economic.nuls.constant.ParamConstant;
 import io.nuls.economic.nuls.model.bo.ConsensusConfigInfo;
-import network.nerve.pocbft.constant.CommandConstant;
-import network.nerve.pocbft.message.VoteMessage;
 import network.nerve.pocbft.constant.ConsensusConstant;
+import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.model.bo.StackingAsset;
+import network.nerve.pocbft.model.bo.config.ChainConfig;
+import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
+import network.nerve.pocbft.network.service.ConsensusNetService;
+import network.nerve.pocbft.rpc.call.CallMethodUtils;
 import network.nerve.pocbft.storage.ConfigService;
 import network.nerve.pocbft.storage.PubKeyStorageService;
-import network.nerve.pocnetwork.service.ConsensusNetService;
+import network.nerve.pocbft.utils.ConsensusNetUtil;
+import network.nerve.pocbft.utils.LoggerUtil;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,8 +50,6 @@ public class ChainManager {
     @Autowired
     private PunishManager punishManager;
     @Autowired
-    private RoundManager roundManager;
-    @Autowired
     private ThreadManager threadManager;
     @Autowired
     private ConsensusChainConfig config;
@@ -75,13 +67,13 @@ public class ChainManager {
     /**
      * 初始化
      * Initialization chain
-     * */
+     */
     public void initChain() throws Exception {
         //加载可参与抵押的资产信息
-        stackingAssetList = JSONUtils.json2list( IoUtils.read(ConsensusConstant.STACKING_CONFIG_FILE), StackingAsset.class);
+        stackingAssetList = JSONUtils.json2list(IoUtils.read(ConsensusConstant.STACKING_CONFIG_FILE), StackingAsset.class);
         stackingAssetList.forEach(stackingAsset -> {
             //如果没有配置chainId 则默认为本链资产
-            if(stackingAsset.getChainId() == null){
+            if (stackingAsset.getChainId() == null) {
                 stackingAsset.setChainId(config.getChainId());
             }
         });
@@ -90,13 +82,13 @@ public class ChainManager {
             Log.info("链初始化失败！");
             return;
         }
-        for (Map.Entry<Integer, ChainConfig> entry : configMap.entrySet()){
+        for (Map.Entry<Integer, ChainConfig> entry : configMap.entrySet()) {
             Chain chain = new Chain();
             int chainId = entry.getKey();
             ChainConfig chainConfig = entry.getValue();
             chain.setConfig(chainConfig);
-            chain.setSeedNodeList(List.of(chainConfig.getSeedNodes().split(ConsensusConstant.SEED_NODE_SEPARATOR)));
-            chain.setThreadPool(ThreadUtils.createThreadPool(6, 100, new NulsThreadFactory("consensus"+ chainId)));
+            chain.setSeedAddressList(List.of(chainConfig.getSeedNodes().split(ConsensusConstant.SEED_NODE_SEPARATOR)));
+            chain.setThreadPool(ThreadUtils.createThreadPool(3, 100, new NulsThreadFactory("consensus" + chainId)));
             /*
              * 初始化链日志对象
              * Initialization Chain Log Objects
@@ -109,12 +101,12 @@ public class ChainManager {
             initTable(chain);
             chainMap.put(chainId, chain);
             ProtocolLoader.load(chainId);
-            Map<String,Object> param = new HashMap<>(4);
+            Map<String, Object> param = new HashMap<>(4);
             param.put(ParamConstant.CONSENUS_CONFIG, new ConsensusConfigInfo(chainId, chainConfig.getAssetId(), chainConfig.getPackingInterval(),
                     chainConfig.getInflationAmount(), chainConfig.getTotalInflationAmount(), chainConfig.getInitHeight(), chainConfig.getDeflationRatio(), chainConfig.getDeflationHeightInterval(), chainConfig.getAwardAssetId()));
             economicService.registerConfig(param);
             List<String> seedNodePubKeyList = List.of(chainConfig.getPubKeyList().split(ConsensusConstant.SEED_NODE_SEPARATOR));
-            for (String pubKey:seedNodePubKeyList) {
+            for (String pubKey : seedNodePubKeyList) {
                 chain.getSeedNodePubKeyList().add(HexUtil.decode(pubKey));
             }
         }
@@ -123,9 +115,9 @@ public class ChainManager {
     /**
      * 注册链交易
      * Registration Chain Transaction
-     * */
-    public void registerTx(){
-        for (Chain chain:chainMap.values()) {
+     */
+    public void registerTx() {
+        for (Chain chain : chainMap.values()) {
             /*
              * 链交易注册
              * Chain Trading Registration
@@ -138,9 +130,9 @@ public class ChainManager {
     /**
      * 加载链缓存数据并启动链
      * Load the chain to cache data and start the chain
-     * */
-    public void runChain(){
-        for (Chain chain:chainMap.values()) {
+     */
+    public void runChain() {
+        for (Chain chain : chainMap.values()) {
             /*
             加载链缓存数据
             Load chain caching entity
@@ -154,8 +146,8 @@ public class ChainManager {
             threadManager.createChainThread(chain);
 
             /*
-            * 创建定时任务
-            * */
+             * 创建定时任务
+             * */
             threadManager.createChainScheduler(chain);
         }
     }
@@ -177,13 +169,13 @@ public class ChainManager {
             If the system is running for the first time, the local database does not have chain information,
             and the main chain configuration information needs to be read from the configuration file at this time.
             */
-            if(configMap == null){
+            if (configMap == null) {
                 configMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_2);
             }
             if (configMap.size() == 0) {
                 ChainConfig chainConfig = config;
                 boolean saveSuccess = configService.save(chainConfig, chainConfig.getChainId());
-                if(saveSuccess){
+                if (saveSuccess) {
                     configMap.put(chainConfig.getChainId(), chainConfig);
                 }
             }
@@ -285,96 +277,41 @@ public class ChainManager {
     }
 
     /**
-     * 初始化共识网络
-     * @param chain chain info
-     * */
-    public void initConsensusNet(Chain chain){
-        Set<String> packAddressList = agentManager.getPackAddressList(chain, chain.getNewestHeader().getHeight());
-        packAddressList.addAll(chain.getSeedNodeList());
-        List<byte[]> localAddressList = CallMethodUtils.getEncryptedAddressList(chain);
-        if(localAddressList.isEmpty()){
-            return;
-        }
-        String packAddress;
-        for (byte[] address:localAddressList) {
-            packAddress = AddressTool.getStringAddressByBytes(address);
-            if(packAddressList.contains(packAddress)){
-                ConsensusNetUtil.initConsensusNet(chain, packAddress, packAddressList);
-                break;
-            }
-        }
-    }
-
-    /**
      * 修改节点共识网络状态
-     * @param chain  链信息
-     * @param state  共识网络状态
-     * */
-    public void netWorkStateChange(Chain chain, boolean state){
+     *
+     * @param chain 链信息
+     * @param state 共识网络状态
+     */
+    public void netWorkStateChange(Chain chain, boolean state) {
         //修改共识状态
-        chain.setNetworkState(state);
-        if(!state){
-            chain.getLogger().warn("Consensus network reset");
-            VoteCache.CONSENSUS_NET_CHANGE_UNAVAILABLE = true;
-            VoteManager.stopVote(chain);
-            return;
-        }
-        VoteCache.CONSENSUS_NET_CHANGE_UNAVAILABLE = false;
-        //链刚启动初始化共识轮次和投票轮次
-        ConsensusNetUtil.initRound(chain,true);
+        chain.setNetworkStateOk(state);
     }
 
-    /**
-     * 共识网络节点链接上本节点
-     * @param chain    链信息
-     * @param nodeId   链接节点信息
-     * */
-    public void consensusNodeLink(Chain chain, String nodeId){
-        //如果本节点为正常的共识节点，将本节点最后一次的投票结果广播给该节点（有可能这个节点为刚启动的节点，需要收到投票信息初始化轮次）
-        if(VoteCache.CURRENT_BLOCK_VOTE_DATA != null){
-            MeetingRound round = roundManager.getRoundByIndex(chain, VoteCache.CURRENT_BLOCK_VOTE_DATA.getRoundIndex());
-            if(round == null){
-                chain.getLogger().warn("Local round not initialized, data exception");
-                return;
-            }
-            MeetingMember member = round.getMyMember();
-            if(member == null){
-                chain.getLogger().warn("The current node is not a consensus node, and the consensus network networking is abnormal");
-                return;
-            }
-            VoteMessage message = VoteCache.CURRENT_BLOCK_VOTE_DATA.getStageVoteMessage(VoteCache.CURRENT_BLOCK_VOTE_DATA.getVoteStage()).get(AddressTool.getStringAddressByBytes(member.getAgent().getPackingAddress()));
-            if(message == null){
-               message = new VoteMessage(VoteCache.CURRENT_BLOCK_VOTE_DATA);
-            }
-            NetWorkCall.sendToNode(chain.getChainId(), message, nodeId, CommandConstant.MESSAGE_VOTE);
-        }
-    }
-
-    public boolean assetStackingVerify(int chainId, int assetId){
+    public boolean assetStackingVerify(int chainId, int assetId) {
         boolean isDefaultAsset = (chainId == config.getMainChainId() && assetId == config.getMainAssetId()) || (chainId == config.getChainId() && assetId == config.getAssetId());
-        if(isDefaultAsset){
+        if (isDefaultAsset) {
             return true;
         }
-        for (StackingAsset stackingAsset : stackingAssetList){
-            if(stackingAsset.getChainId() == chainId && stackingAsset.getAssetId() == assetId){
+        for (StackingAsset stackingAsset : stackingAssetList) {
+            if (stackingAsset.getChainId() == chainId && stackingAsset.getAssetId() == assetId) {
                 return true;
             }
         }
         return false;
     }
 
-    public StackingAsset getAssetBySymbol(String simple){
-        for (StackingAsset stackingAsset : stackingAssetList){
-            if(simple.equals(stackingAsset.getSimple())){
+    public StackingAsset getAssetBySymbol(String simple) {
+        for (StackingAsset stackingAsset : stackingAssetList) {
+            if (simple.equals(stackingAsset.getSimple())) {
                 return stackingAsset;
             }
         }
         return null;
     }
 
-    public StackingAsset getAssetByAsset(int chainId, int assetId){
-        for (StackingAsset stackingAsset : stackingAssetList){
-            if(stackingAsset.getChainId() == chainId && stackingAsset.getAssetId() == assetId){
+    public StackingAsset getAssetByAsset(int chainId, int assetId) {
+        for (StackingAsset stackingAsset : stackingAssetList) {
+            if (stackingAsset.getChainId() == chainId && stackingAsset.getAssetId() == assetId) {
                 return stackingAsset;
             }
         }

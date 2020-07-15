@@ -1,4 +1,5 @@
 package io.nuls.economic.nuls.model.bo;
+
 import java.math.BigInteger;
 
 /**
@@ -7,7 +8,7 @@ import java.math.BigInteger;
  *
  * @author tag
  * 2019/7/23
- * */
+ */
 public class ConsensusConfigInfo {
     private int chainId;
     private int assertId;
@@ -19,9 +20,10 @@ public class ConsensusConfigInfo {
     private long deflationTimeInterval;
     private int awardAssetId;
 
-    public ConsensusConfigInfo(){}
+    public ConsensusConfigInfo() {
+    }
 
-    public ConsensusConfigInfo(int chainId, int assertId, long packingInterval, BigInteger inflationAmount, BigInteger totalInflationAmount, long initTime, double deflationRatio, long deflationTimeInterval, int awardAssetId){
+    public ConsensusConfigInfo(int chainId, int assertId, long packingInterval, BigInteger inflationAmount, BigInteger totalInflationAmount, long initTime, double deflationRatio, long deflationTimeInterval, int awardAssetId) {
         this.chainId = chainId;
         this.assertId = assertId;
         this.packingInterval = packingInterval;
@@ -51,6 +53,10 @@ public class ConsensusConfigInfo {
 
     public long getPackingInterval() {
         return packingInterval;
+    }
+
+    public long getMaxBlockInterval() {
+        return 2 * packingInterval;
     }
 
     public void setPackingInterval(long packingInterval) {

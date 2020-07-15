@@ -27,6 +27,7 @@ package network.nerve.converter.storage.impl;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
@@ -41,6 +42,12 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
  */
 @Component
 public class ProposalStorageServiceImpl implements ProposalStorageService {
+    /**
+     * 提案执行业务hash 与提案交易hash的关系 前缀
+     */
+    private final String EXE_BUSINESS_PREFIX = "exeBusinessPrefix_";
+
+
 
     @Override
     public boolean save(Chain chain, ProposalPO po) {
@@ -83,6 +90,43 @@ public class ProposalStorageServiceImpl implements ProposalStorageService {
         }
         try {
             return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_PREFIX + chain.getChainId(), stringToBytes(hash.toHex()));
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean saveExeBusiness(Chain chain, String exeHash, NulsHash proposalHash){
+        if (StringUtils.isBlank(exeHash) || null == proposalHash) {
+            return false;
+        }
+        try {
+            return RocksDBService.put(ConverterDBConstant.DB_PROPOSAL_PREFIX + chain.getChainId(),stringToBytes(EXE_BUSINESS_PREFIX + exeHash), proposalHash.getBytes());
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
+
+    @Override
+    public NulsHash getExeBusiness(Chain chain, String exeHash) {
+        byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_PROPOSAL_PREFIX + chain.getChainId(),
+                stringToBytes(EXE_BUSINESS_PREFIX + exeHash));
+        if(null == bytes || bytes.length == 0){
+            return null;
+        }
+        return new NulsHash(bytes);
+    }
+
+    @Override
+    public boolean deleteExeBusiness(Chain chain, String exeHash) {
+        if (StringUtils.isBlank(exeHash)) {
+            chain.getLogger().error("proposalTxHash key is null");
+            return false;
+        }
+        try {
+            return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_PREFIX + chain.getChainId(), stringToBytes(EXE_BUSINESS_PREFIX + exeHash));
         } catch (Exception e) {
             chain.getLogger().error(e);
             return false;

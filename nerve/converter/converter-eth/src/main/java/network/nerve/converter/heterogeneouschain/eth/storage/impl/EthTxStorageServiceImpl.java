@@ -26,6 +26,7 @@ package network.nerve.converter.heterogeneouschain.eth.storage.impl;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.model.EthRecoveryDto;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthTxStorageService;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.utils.ConverterDBUtil;
@@ -40,6 +41,7 @@ public class EthTxStorageServiceImpl implements EthTxStorageService {
 
     private final String baseArea = EthDBConstant.DB_ETH;
     private final String KEY_PREFIX = "BROADCAST-";
+    private final String RECOVERY_KEY_PREFIX = "RECOVERY-";
 
     @Override
     public int save(HeterogeneousTransactionInfo po) throws Exception {
@@ -59,5 +61,19 @@ public class EthTxStorageServiceImpl implements EthTxStorageService {
     @Override
     public void deleteByTxHash(String txHash) throws Exception {
         RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash));
+    }
+
+    @Override
+    public int saveRecovery(String nerveTxKey, EthRecoveryDto recovery) throws Exception {
+        if (recovery == null) {
+            return 0;
+        }
+        ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX + nerveTxKey), recovery);
+        return 1;
+    }
+
+    @Override
+    public EthRecoveryDto findRecoveryByNerveTxKey(String nerveTxKey) {
+        return ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX + nerveTxKey), EthRecoveryDto.class);
     }
 }

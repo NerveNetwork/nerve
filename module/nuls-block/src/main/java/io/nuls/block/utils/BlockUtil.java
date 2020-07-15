@@ -468,8 +468,7 @@ public class BlockUtil {
         if (hash == null || nodeId == null) {
             return null;
         }
-        HashMessage message = new HashMessage();
-        message.setRequestHash(hash);
+        HashMessage message = new HashMessage(hash,height);
         ChainContext context = ContextManager.getContext(chainId);
         int singleDownloadTimeout = context.getParameters().getSingleDownloadTimeout();
         NulsLogger logger = context.getLogger();

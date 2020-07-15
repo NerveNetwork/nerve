@@ -65,6 +65,20 @@ public class ConverterUtil {
         return error.contains("timeout") || error.contains("timed out");
     }
 
+    public static boolean isDuplicateSignature(String error) {
+        if (StringUtils.isBlank(error)) {
+            return false;
+        }
+        return error.contains("Duplicate signature");
+    }
+
+    public static boolean isCompletedTransaction(String error) {
+        if (StringUtils.isBlank(error)) {
+            return false;
+        }
+        return error.contains("Transaction has been completed");
+    }
+
     public static <T> T getInstance(byte[] bytes, Class<? extends BaseNulsData> clazz) throws NulsException {
         if (null == bytes || bytes.length == 0) {
             throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);

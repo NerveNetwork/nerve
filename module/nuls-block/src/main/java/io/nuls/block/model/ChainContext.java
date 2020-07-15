@@ -31,6 +31,7 @@ import io.nuls.block.thread.monitor.TxGroupRequestor;
 import io.nuls.block.utils.LoggerUtil;
 import io.nuls.block.utils.SingleBlockCacher;
 import io.nuls.block.utils.SmallBlockCacher;
+import io.nuls.block.utils.VoteResultCache;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.CollectionUtils;
 import io.nuls.core.thread.ThreadUtils;
@@ -131,6 +132,8 @@ public class ChainContext {
      * 一次区块下载过程中用到的参数
      */
     private BlockDownloaderParams downloaderParams;
+
+    private VoteResultCache voteResultCache = new VoteResultCache();
 
     /**
      * 同步区块缓存
@@ -422,5 +425,9 @@ public class ChainContext {
         System.out.println("=======2======"+System.nanoTime());
         countDownLatch.await();
         System.out.println("=======3======"+System.nanoTime());
+    }
+
+    public VoteResultCache getVoteResultCache() {
+        return voteResultCache;
     }
 }

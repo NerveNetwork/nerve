@@ -24,11 +24,16 @@
  */
 package io.nuls.network;
 
+import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.network.model.Node;
+import io.nuls.network.model.VersionMessageBodyTest;
+import io.nuls.network.model.dto.IpAddress;
+import io.nuls.network.model.message.body.VersionMessageBody;
 import io.nuls.network.utils.LoggerUtil;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -38,6 +43,41 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Test1 {
+
+    public static void main(String[] args) throws Exception {
+        testa();
+        testb();
+    }
+
+    private static void testb() throws Exception {
+        VersionMessageBodyTest body = new VersionMessageBodyTest();
+        body.setAddrMe(new IpAddress("127.0.0.1", 1234));
+        body.setAddrYou(new IpAddress("127.0.0.124", 1234));
+        body.setBlockHash("abcdefh");
+        body.setBlockHeight(10);
+        body.setProtocolVersion(1);
+        body.setExtend("testb ok");
+        byte[] bytes = body.serialize();
+
+        VersionMessageBody test = new VersionMessageBody();
+        test.parse(bytes,0);
+        System.out.println(test.getExtend());
+    }
+    private static void testa() throws Exception {
+        VersionMessageBody body = new VersionMessageBody();
+        body.setAddrMe(new IpAddress("127.0.0.1", 1234));
+        body.setAddrYou(new IpAddress("127.0.0.124", 1234));
+        body.setBlockHash("abcdefh");
+        body.setBlockHeight(10);
+        body.setProtocolVersion(1);
+        body.setReverseCheck((byte) 1);
+        body.setExtend("testa ok");
+        byte[] bytes = body.serialize();
+
+        VersionMessageBodyTest test = new VersionMessageBodyTest();
+        test.parse(bytes,0);
+        System.out.println(test.getExtend());
+    }
 
 
     @Test
@@ -129,6 +169,21 @@ public class Test1 {
 
     @Test
     public void test8() {
+        VersionMessageBodyTest body = new VersionMessageBodyTest();
+        body.setAddrMe(new IpAddress("127.0.0.1", 1234));
+        body.setAddrYou(new IpAddress("127.0.0.124", 1234));
+        body.setBlockHash("abcdefh");
+        body.setBlockHeight(10);
+        body.setProtocolVersion(1);
 
+        try {
+            byte[] bytes = body.serialize();
+
+            VersionMessageBody body1 = new VersionMessageBody();
+            body1.parse(new NulsByteBuffer(bytes));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

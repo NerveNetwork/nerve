@@ -62,8 +62,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import static io.nuls.transaction.constant.TxConstant.CACHED_SIZE;
-import static io.nuls.transaction.constant.TxConstant.VERIFY;
+import static io.nuls.transaction.constant.TxConstant.*;
+import static io.nuls.transaction.constant.TxContext.BLOCK_TX_TIME_RANGE_SEC;
 
 /**
  * @author: Charlie
@@ -102,7 +102,6 @@ public class TxPackageServiceImpl implements TxPackageService {
         long startTime = NulsDateUtils.getCurrentTimeMillis();
         long packableTime = endtimestamp - startTime;
         long height = chain.getBestBlockHeight() + 1;
-        LoggerUtil.LOG.debug("[打包-区块时间]:{}, 高度:{}", blockTime, height);
         List<TxPackageWrapper> packingTxList = new ArrayList<>();
         //记录账本的孤儿交易,返回给共识的时候给过滤出去,因为在因高度变化而导致重新打包的时候,需要还原到待打包队列
         Set<TxPackageWrapper> orphanTxSet = new HashSet<>();
@@ -110,15 +109,15 @@ public class TxPackageServiceImpl implements TxPackageService {
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
         NulsLogger log = chain.getLogger();
         try {
-            log.info("[Package start] -打包总可用时间：{}, -可打包容量：{}B , - height:{}, - 当前待打包队列交易hash数:{}, - 待打包队列实际交易数:{}",
-                    packableTime, maxTxDataSize, height, packablePool.packableHashQueueSize(chain), packablePool.packableTxMapSize(chain));
+            log.info("[Package start] 区块时间:{}, - height:{}, -打包总可用时间：{}, -可打包容量：{}B , - 当前待打包队列交易hash数:{}, - 待打包队列实际交易数:{}",
+                    blockTime, height, packableTime, maxTxDataSize, packablePool.packableHashQueueSize(chain), packablePool.packableTxMapSize(chain));
             if (packableTime <= TxConstant.BASIC_PACKAGE_RESERVE_TIME) {
                 //直接打空块
                 return null;
             }
             long collectTime = 0L, batchModuleTime = 0L;
             long collectTimeStart = NulsDateUtils.getCurrentTimeMillis();
-            boolean rs = collectProcessTransactionsBasic(chain, endtimestamp, maxTxDataSize, packingTxList, orphanTxSet, moduleVerifyMap);
+            boolean rs = collectProcessTransactionsBasic(chain, blockTime, endtimestamp, maxTxDataSize, packingTxList, orphanTxSet, moduleVerifyMap);
             if (!rs) {
                 return null;
             }
@@ -197,7 +196,7 @@ public class TxPackageServiceImpl implements TxPackageService {
      * @return false 表示直接出空块
      * @throws NulsException
      */
-    private boolean collectProcessTransactionsBasic(Chain chain, long endtimestamp, long maxTxDataSize, List<TxPackageWrapper> packingTxList,
+    private boolean collectProcessTransactionsBasic(Chain chain, long blockTime, long endtimestamp, long maxTxDataSize, List<TxPackageWrapper> packingTxList,
                                                     Set<TxPackageWrapper> orphanTxSet, Map<String, List<String>> moduleVerifyMap) throws NulsException {
 
         //向账本模块发送要批量验证coinData的标识
@@ -208,6 +207,9 @@ public class TxPackageServiceImpl implements TxPackageService {
         Set<String> duplicatesVerify = new HashSet<>();
         List<TxPackageWrapper> currentBatchPackableTxs = new ArrayList<>();
         NulsLogger log = chain.getLogger();
+        // 打包在该区块中交易的时间, 要在区块时间的一定范围内.
+        long txTimeRangStart = blockTime - BLOCK_TX_TIME_RANGE_SEC;
+        long txTimeRangEnd = blockTime + BLOCK_TX_TIME_RANGE_SEC;
         for (int index = 0; ; index++) {
             long currentTimeMillis = NulsDateUtils.getCurrentTimeMillis();
             long currentReserve = endtimestamp - currentTimeMillis;
@@ -248,13 +250,9 @@ public class TxPackageServiceImpl implements TxPackageService {
             try {
                 tx = packablePool.poll(chain);
                 if (tx == null && batchProcessListSize == 0) {
-//                    Thread.sleep(10L);
-//                    continue;
-                    /**
-                     * 2020-04-08 lc
-                     * 如果待打包队列为空了, 改为不等待 ,立即处理
-                     */
-                    process = true;
+                    // 6.28 重置成打包无交易,等待模式
+                    Thread.sleep(10L);
+                    continue;
                 } else if (tx == null && batchProcessListSize > 0) {
                     //达到处理该批次的条件
                     process = true;
@@ -280,6 +278,15 @@ public class TxPackageServiceImpl implements TxPackageService {
                         process = true;
                     } else {
                         TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
+                        if (txRegister.getModuleCode().equals(ModuleE.CS.abbr)) {
+                            // 如果是共识模块的交易, 先验证交易时间, 在区块时间的一定范围内
+                            long txTime = tx.getTime();
+                            if (txTime < txTimeRangStart || txTime > txTimeRangEnd) {
+                                chain.getLogger().error("[TxPackage] The transction time does not match the block time, blockTime:{}, txTime:{}, range:±{}",
+                                        blockTime, txTime, BLOCK_TX_TIME_RANGE_SEC);
+                                continue;
+                            }
+                        }
                         //限制跨链交易数量
                         if (txRegister.getModuleCode().equals(ModuleE.CC.abbr)) {
                             if (allCorssTxCount + (++batchCorssTxCount) >= TxConstant.BASIC_PACKAGE_CROSS_TX_MAX_COUNT) {
@@ -338,10 +345,9 @@ public class TxPackageServiceImpl implements TxPackageService {
                     batchProcessList.clear();
                     currentBatchPackableTxs.clear();
                     batchCorssTxCount = 0;
-//                    if (maxDataSize) {
-//                        break;
-//                    }
-                    break;
+                    if (maxDataSize) {
+                        break;
+                    }
                 }
             } catch (Exception e) {
                 currentBatchPackableTxs.clear();
@@ -454,7 +460,8 @@ public class TxPackageServiceImpl implements TxPackageService {
         NulsLogger log = chain.getLogger();
         BlockHeader blockHeader = TxUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
         long blockHeight = blockHeader.getHeight();
-        LoggerUtil.LOG.debug("[验区-区块时间]:{}, 高度:{}", blockHeader.getTime(), blockHeight);
+        long blockTime = blockHeader.getTime();
+        LoggerUtil.LOG.debug("[验区-区块时间]:{}, 高度:{}", blockTime, blockHeight);
         boolean isLogDebug = log.isDebugEnabled();
         if (isLogDebug) {
             log.debug("[验区块交易] 开始 -----高度:{} -----区块交易数:{}", blockHeight, txStrList.size());
@@ -466,13 +473,25 @@ public class TxPackageServiceImpl implements TxPackageService {
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
         List<byte[]> keys = new ArrayList<>();
         int totalSize = 0;
+        // 打包在该区块中交易的时间, 要在区块时间的一定范围内.
+        long txTimeRangStart = blockTime - BLOCK_TX_TIME_RANGE_SEC;
+        long txTimeRangEnd = blockTime + BLOCK_TX_TIME_RANGE_SEC;
         for (String txStr : txStrList) {
             Transaction tx = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
+            int type = tx.getType();
+            TxRegister txRegister = TxManager.getTxRegister(chain, type);
+            if (txRegister.getModuleCode().equals(ModuleE.CS.abbr)) {
+                // 如果是共识模块的交易, 先验证交易时间, 在区块时间的一定范围内
+                long txTime = tx.getTime();
+                if (txTime < txTimeRangStart || txTime > txTimeRangEnd) {
+                    chain.getLogger().error("[verifyBlockTx] The transction time does not match the block time, blockTime:{}, txTime:{}, range:±{}",
+                            blockTime, txTime, BLOCK_TX_TIME_RANGE_SEC);
+                    throw new NulsException(TxErrorCode.TX_VERIFY_FAIL);
+                }
+            }
             totalSize += tx.size();
             txList.add(new TxVerifyWrapper(tx, txStr));
-            int type = tx.getType();
             verifySysTxCount(onlyOneTxTypes, type);
-            TxRegister txRegister = TxManager.getTxRegister(chain, type);
             if (null == txRegister) {
                 log.error("txType:{}", type);
                 throw new NulsException(TxErrorCode.TX_TYPE_INVALID);

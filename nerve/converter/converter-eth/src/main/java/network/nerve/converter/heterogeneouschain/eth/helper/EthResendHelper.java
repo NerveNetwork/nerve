@@ -23,8 +23,11 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.helper;
 
+import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.eth.storage.EthTxRelationStorageService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +41,8 @@ import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstan
 @Component
 public class EthResendHelper {
 
+    @Autowired
+    private EthTxRelationStorageService ethTxRelationStorageService;
     private Map<String, Integer> resendMap = new HashMap<>();
     private Map<String, Object> lockedMap = new HashMap<>();
 
@@ -62,6 +67,23 @@ public class EthResendHelper {
             resendMap.remove(nerveTxHash);
             lockedMap.remove(nerveTxHash);
         }
+    }
+
+    /**
+     * 是否当前节点发出的交易
+     */
+    public boolean currentNodeSent(String ethTxHash) {
+        if (StringUtils.isBlank(ethTxHash)) {
+            return false;
+        }
+        return ethTxRelationStorageService.findNerveTxHash(ethTxHash) != null;
+    }
+
+    /**
+     * 获取已发出的交易信息
+     */
+    public EthSendTransactionPo getSentTransactionInfo(String ethTxHash) {
+        return ethTxRelationStorageService.findEthSendTxPo(ethTxHash);
     }
 
     private int getResendTimes(String nerveTxHash) {

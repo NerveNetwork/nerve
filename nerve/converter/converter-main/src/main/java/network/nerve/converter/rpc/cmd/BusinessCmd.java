@@ -150,11 +150,13 @@ public class BusinessCmd extends BaseCmd {
             List<VirtualBankDirectorDTO> list = new ArrayList<>();
             for (VirtualBankDirector director : mapVirtualBank.values()) {
                 VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
-                // 获取异构链地址余额
-                if(checkBalance){
-                  for(HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()){
-                      String balance = getHeterogeneousAddressBalance(chain, addr.getChainId(), addr.getAddress());
-                      addr.setBalance(balance);
+                for(HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()){
+                  IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                  String chainSymbol = heterogeneousDocking.getChainSymbol();
+                  addr.setSymbol(chainSymbol);
+                  if(checkBalance) {
+                      BigDecimal balance = heterogeneousDocking.getBalance(addr.getAddress()).stripTrailingZeros();
+                      addr.setBalance(balance.toPlainString());
                   }
                 }
                 list.add(directorDTO);
@@ -165,18 +167,6 @@ public class BusinessCmd extends BaseCmd {
         } catch (Exception e) {
             errorLogProcess(chain, e);
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
-        }
-    }
-
-
-    private String getHeterogeneousAddressBalance(Chain chain, int heterogeneousChainId, String address){
-        try {
-            IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            BigDecimal balance = heterogeneousDocking.getBalance(address).stripTrailingZeros();
-            return balance.toPlainString();
-        } catch (NulsException e) {
-            chain.getLogger().error(e);
-            return null;
         }
     }
 
@@ -226,6 +216,7 @@ public class BusinessCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
             @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash"),
             @Parameter(parameterName = "businessAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "地址（账户、节点地址等）"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "链内交易hash"),
             @Parameter(parameterName = "voteRangeType", requestType = @TypeDescriptor(value = byte.class), parameterDes = "投票范围类型"),
             @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "备注"),
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "签名地址"),
@@ -273,6 +264,55 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+    
+    @CmdAnnotation(cmd = ConverterCmdConstant.RESET_VIRTUAL_BANK, version = 1.0, description = "重置虚拟银行异构链(合约)")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "签名地址"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    })
+    )
+    public Response resetVirtualBank(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+                throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            int heterogeneousChainId = ((Integer) params.get("heterogeneousChainId")).byteValue();
+            SignAccountDTO signAccountDTO = new SignAccountDTO();
+            signAccountDTO.setAddress((String) params.get("address"));
+            signAccountDTO.setPassword((String) params.get("password"));
+
+            Transaction tx = assembleTxService.createResetVirtualBankTx(chain, heterogeneousChainId, signAccountDTO);
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            map.put("hex", RPCUtil.encode(tx.serialize()));
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+
 
 
     @CmdAnnotation(cmd = ConverterCmdConstant.VOTE_PROPOSAL, version = 1.0, description = "投票提案")

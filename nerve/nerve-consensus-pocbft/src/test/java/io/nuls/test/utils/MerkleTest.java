@@ -14,7 +14,7 @@ import java.util.Random;
 import static org.junit.Assert.assertEquals;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class MerkleTest {
 

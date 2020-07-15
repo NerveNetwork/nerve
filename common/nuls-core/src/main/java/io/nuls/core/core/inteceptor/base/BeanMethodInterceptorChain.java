@@ -36,7 +36,7 @@ import java.util.List;
  * Method the interceptor chain: one method can be more interceptors to intercept,
  * between multiple interceptors sequence formed a chain of interceptors, behind each blocker can decide whether to continue the interceptor
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 public class BeanMethodInterceptorChain {
 

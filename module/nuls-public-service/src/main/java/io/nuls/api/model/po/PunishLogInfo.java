@@ -2,6 +2,8 @@ package io.nuls.api.model.po;
 
 public class PunishLogInfo extends TxDataInfo {
 
+    private String _id;
+
     private String txHash;
 
     private int type;
@@ -17,6 +19,14 @@ public class PunishLogInfo extends TxDataInfo {
     private int packageIndex;
 
     private String reason;
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
 
     public String getTxHash() {
         return txHash;

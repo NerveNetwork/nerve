@@ -9,7 +9,7 @@ import io.nuls.core.exception.NulsException;
 import java.io.IOException;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class VoteProposalPO extends BaseNulsData {
 

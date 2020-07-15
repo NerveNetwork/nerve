@@ -25,6 +25,7 @@
 package network.nerve.converter.core.business;
 
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.model.bo.Chain;
 
 /**
  * @author: Loki
@@ -40,4 +41,28 @@ public interface HeterogeneousService {
      * @return true 要组装补贴手续费
      */
     boolean isAssembleCurrentAssetFee(int heterogeneousChainId, int heterogeneousAssetId) throws NulsException;
+
+    /**
+     * 缓存并持久化异构链正在执行虚拟银行变更交易 状态
+     * @param chain
+     * @param status
+     * @return
+     */
+    boolean saveExeHeterogeneousChangeBankStatus(Chain chain, Boolean status);
+
+    /**
+     * 持久化正在执行取消节点银行资格的提案 状态
+     * @param chain
+     * @param status
+     * @return
+     */
+    boolean saveExeDisqualifyBankProposalStatus(Chain chain, Boolean status);
+
+    /**
+     * 是否正在重置异构链(合约) 状态
+     * @param chain
+     * @param status
+     * @return
+     */
+    boolean saveResetVirtualBankStatus(Chain chain, Boolean status);
 }

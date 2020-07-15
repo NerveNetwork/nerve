@@ -547,15 +547,15 @@ public class TransactionController {
 
     /**
      * 获取跨链交易列表
-     *
+     * type
+     *   1:生态内
+     *   2:异构跨链
      * @return
      */
     @RpcMethod("getCrossChainTxList")
     public RpcResult getCrossChainTxList(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
-        int chainId, pageNumber, pageSize, type;
-        boolean isHidden;
-        String address = null;
+        int chainId, pageNumber, pageSize, type = 0;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -571,14 +571,12 @@ public class TransactionController {
         } catch (Exception e) {
             return RpcResult.paramError("[pageSize] is inValid");
         }
+
         if(params.size() > 3){
             try {
-                address = (String) params.get(4);
+                type = (int) params.get(3);
             } catch (Exception e) {
-                return RpcResult.paramError("[address] is inValid");
-            }
-            if (!AddressTool.validAddress(chainId, address)) {
-                return RpcResult.paramError("[address] is inValid");
+                return RpcResult.paramError("[type] is inValid");
             }
         }
         if (pageNumber <= 0) {
@@ -587,40 +585,22 @@ public class TransactionController {
         if (pageSize <= 0 || pageSize > 100) {
             pageSize = 10;
         }
+        int[] types;
+        if(type == 1){
+            types = new int[]{CROSS_CHAIN};
+        }else if(type == 2){
+            types = new int[]{RECHARGE,WITHDRAWAL};
+        } else {
+            types = new int[]{CROSS_CHAIN,RECHARGE,WITHDRAWAL};
+        }
         PageInfo<MiniCrossChainTransactionInfo> pageInfo;
         if (!CacheManager.isChainExist(chainId)) {
             pageInfo = new PageInfo<>(pageNumber, pageSize);
             return RpcResult.success(pageInfo);
         } else {
-            return RpcResult.success(txService.getCrossChainTxList(chainId, address,pageNumber, pageSize));
+            return RpcResult.success(txService.getCrossChainTxList(chainId, null,pageNumber, pageSize,types));
         }
 
-//        return RpcResult.success(List.of(
-//                "blockHeight", 100,
-//                "txHash", "ede390e75a24d7b1bf471a64edeaab890d42b485aa9760413a3163cbcefe2b2a",
-//                "outerTxHash", "ede390e75a24d7b1bf471a64edeaab890d42b485aa9760413a3163cbcefe2b2a",
-//                "symbol", "HT",
-//                "network", "ETH",
-//                "time", 1584415437606L,
-//                "amount", 10000,
-//                "state", "SUCCESS"
-//        ));
-//        List list = pageInfo.getList().stream().map(d -> {
-//            MiniTransactionInfo tx = d;
-//            ConverterTxInfo converterTxInfo = converterTxService.getByTxHash(chainId, tx.getHash());
-//            SymbolRegInfo symbolRegInfo = symbolRegService.get(converterTxInfo.getAssetChainId(), converterTxInfo.getAssetId());
-//            return Map.of(
-//                    "blockHeight", d.getHeight(),
-//                    "txHash", d.getHash(),
-//                        "crossChainType",converterTxInfo.getCrossChainType(),
-//                    "converterType",converterTxInfo.getConverterType(),
-//                    "outerTxHash", converterTxInfo.getOuterTxHash(),
-//                    "symbol", symbolRegInfo.getSymbol(),
-//                    "network", symbolRegInfo.getFullName(),
-//                    "time", d.getCreateTime() * 1000L,
-//                    "amount", d.getValue());
-//        }).collect(Collectors.toList());
-//        return RpcResult.success(new PageInfo(pageInfo.getPageNumber(), pageInfo.getPageSize(), pageInfo.getTotalCount(), list));
     }
 
 }

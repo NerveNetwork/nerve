@@ -28,6 +28,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 
@@ -65,9 +66,16 @@ public class ProposalTxData extends BaseNulsData {
     private byte[] address;
 
     /**
+     * 链内交易hash(例如 提现失败后的提案)
+     */
+    private byte[] hash;
+
+    /**
      * 投票范围类型
      */
     private byte voteRangeType;
+
+
 
     @Override
     public String toString() {
@@ -77,6 +85,7 @@ public class ProposalTxData extends BaseNulsData {
         builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
         builder.append(String.format("\theterogeneousTxHash: %s", heterogeneousTxHash)).append(lineSeparator);
         builder.append(String.format("\taddress: %s", AddressTool.getStringAddressByBytes(address))).append(lineSeparator);
+        builder.append(String.format("\thash: %s", HexUtil.encode(hash))).append(lineSeparator);
         builder.append(String.format("\tvoteRangeType: %s", voteRangeType)).append(lineSeparator);
         builder.append(String.format("\tcontent: %s", content)).append(lineSeparator);
         return builder.toString();
@@ -89,7 +98,9 @@ public class ProposalTxData extends BaseNulsData {
         stream.writeUint16(heterogeneousChainId);
         stream.writeString(heterogeneousTxHash);
         stream.writeBytesWithLength(address);
+        stream.writeBytesWithLength(hash);
         stream.writeByte(voteRangeType);
+
     }
 
     @Override
@@ -99,6 +110,7 @@ public class ProposalTxData extends BaseNulsData {
         this.heterogeneousChainId = byteBuffer.readUint16();
         this.heterogeneousTxHash = byteBuffer.readString();
         this.address = byteBuffer.readByLengthByte();
+        this.hash = byteBuffer.readByLengthByte();
         this.voteRangeType = byteBuffer.readByte();
 
 
@@ -112,6 +124,7 @@ public class ProposalTxData extends BaseNulsData {
         size += SerializeUtils.sizeOfString(this.content);
         size += SerializeUtils.sizeOfString(this.heterogeneousTxHash);
         size += SerializeUtils.sizeOfBytes(this.address);
+        size += SerializeUtils.sizeOfBytes(this.hash);
         return size;
     }
 
@@ -163,4 +176,11 @@ public class ProposalTxData extends BaseNulsData {
         this.voteRangeType = voteRangeType;
     }
 
+    public byte[] getHash() {
+        return hash;
+    }
+
+    public void setHash(byte[] hash) {
+        this.hash = hash;
+    }
 }

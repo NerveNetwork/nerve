@@ -24,6 +24,8 @@
 
 package network.nerve.converter.model.bo;
 
+import java.math.BigDecimal;
+
 /**
  * 异构链配置
  * @author: Loki
@@ -43,9 +45,13 @@ public class HeterogeneousCfg {
      */
     private String multySignAddress;
     /**
+     *  节点启动时默认使用的API服务地址
+     */
+    private String commonRpcAddress;
+    /**
      *  API服务地址
      */
-    private String rpcAddress;
+    private String mainRpcAddress;
     /**
      *  默认起始同步高度
      */
@@ -55,9 +61,22 @@ public class HeterogeneousCfg {
      */
     private int txBlockConfirmations;
     /**
+     *  每个虚拟银行节点发送异构链交易的间隔时间（单位：秒）
+     */
+    private String intervalWaittingSendTransaction;
+    /**
+     *  API服务地址列表(多个服务地址以逗号隔开，组成一个字符串)
+     */
+    private String orderRpcAddresses;
+    /**
      *  API备用服务地址列表(多个备用服务地址以逗号隔开，组成一个字符串)
      */
     private String standbyRpcAddresses;
+
+    /**
+     * 异构链地址初始最小余额, 用于加入虚拟银行验证
+     */
+    private BigDecimal initialBalance;
 
     public int getChainId() {
         return chainId;
@@ -83,17 +102,21 @@ public class HeterogeneousCfg {
         this.symbol = symbol;
     }
 
-//    public BigInteger getWithdrawalSignFeeNvt() {
-//        return withdrawalSignFeeNvt;
-//    }
-//
-//    public void setWithdrawalSignFeeNvt(BigInteger withdrawalSignFeeNvt) {
-//        this.withdrawalSignFeeNvt = withdrawalSignFeeNvt;
-//    }
-//
-//    public void setWithdrawalSignFeeNvt(double withdrawalSignFeeNvt) {
-//        this.withdrawalSignFeeNvt = new BigDecimal(withdrawalSignFeeNvt).movePointRight(8).toBigInteger();
-//    }
+    public String getIntervalWaittingSendTransaction() {
+        return intervalWaittingSendTransaction;
+    }
+
+    public void setIntervalWaittingSendTransaction(String intervalWaittingSendTransaction) {
+        this.intervalWaittingSendTransaction = intervalWaittingSendTransaction;
+    }
+
+    public String getCommonRpcAddress() {
+        return commonRpcAddress;
+    }
+
+    public void setCommonRpcAddress(String commonRpcAddress) {
+        this.commonRpcAddress = commonRpcAddress;
+    }
 
     public String getMultySignAddress() {
         return multySignAddress;
@@ -103,12 +126,20 @@ public class HeterogeneousCfg {
         this.multySignAddress = multySignAddress;
     }
 
-    public String getRpcAddress() {
-        return rpcAddress;
+    public String getMainRpcAddress() {
+        return mainRpcAddress;
     }
 
-    public void setRpcAddress(String rpcAddress) {
-        this.rpcAddress = rpcAddress;
+    public void setMainRpcAddress(String mainRpcAddress) {
+        this.mainRpcAddress = mainRpcAddress;
+    }
+
+    public String getOrderRpcAddresses() {
+        return orderRpcAddresses;
+    }
+
+    public void setOrderRpcAddresses(String orderRpcAddresses) {
+        this.orderRpcAddresses = orderRpcAddresses;
     }
 
     public long getDefaultStartHeight() {
@@ -133,5 +164,13 @@ public class HeterogeneousCfg {
 
     public void setStandbyRpcAddresses(String standbyRpcAddresses) {
         this.standbyRpcAddresses = standbyRpcAddresses;
+    }
+
+    public BigDecimal getInitialBalance() {
+        return initialBalance;
+    }
+
+    public void setInitialBalance(BigDecimal initialBalance) {
+        this.initialBalance = initialBalance;
     }
 }

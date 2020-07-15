@@ -22,14 +22,14 @@ public interface SymbolQuotationPriceService {
     PageInfo<SymbolQuotationRecordInfo> queryQuotationList(String symbol, int pageIndex, int pageSize,long startTime,long endTime);
 
     /**
-     * 获取最新报价
+     * 获取最新兑USDT报价
      * @param symbol
      * @return
      */
     StackSymbolPriceInfo getFreshUsdtPrice(String symbol);
 
     /**
-     * 获取最新报价
+     * 获取最新兑USDT报价
      * @param assetChainId
      * @param assetId
      * @return
@@ -39,7 +39,7 @@ public interface SymbolQuotationPriceService {
     /**
      * 获取最新报价
      * @param symbol
-     * @param currency
+     * @param currency       计价资产
      * @return
      */
     StackSymbolPriceInfo getFreshPrice(String symbol, String currency);
@@ -48,7 +48,7 @@ public interface SymbolQuotationPriceService {
      * 获取最新报价
      * @param assetChainId
      * @param assetId
-     * @param currency
+     * @param currency      计价资产
      * @return
      */
     StackSymbolPriceInfo getFreshPrice(int assetChainId, int assetId, String currency);
@@ -58,5 +58,12 @@ public interface SymbolQuotationPriceService {
      * @return
      */
     List<StackSymbolPriceInfo> getAllFreshPrice();
+
+    /**
+     * 查询最后一轮报价数据
+     * @param symbol
+     * @return
+     */
+    List<SymbolQuotationRecordInfo> queryLastQuotationList(String symbol);
 
 }

@@ -40,7 +40,6 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteStatusEnum;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
@@ -50,12 +49,10 @@ import network.nerve.converter.model.po.VirtualBankTemporaryChangePO;
 import network.nerve.converter.rpc.call.AccountCall;
 import network.nerve.converter.rpc.call.BlockCall;
 import network.nerve.converter.rpc.call.ConsensusCall;
-import network.nerve.converter.storage.DisqualificationStorageService;
-import network.nerve.converter.storage.ProposalStorageService;
-import network.nerve.converter.storage.ProposalVotingStorageService;
-import network.nerve.converter.storage.VirtualBankStorageService;
+import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.VirtualBankUtil;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -72,6 +69,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     private AssembleTxService assembleTxService;
     @Autowired
     private VirtualBankStorageService virtualBankStorageService;
+    @Autowired
+    private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
@@ -139,10 +138,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         for (ProposalPO po : list) {
             if (latestBasicBlock.getHeight() >= po.getVoteEndHeight()) {
                 // 提案投票结束 修改状态 从投票中列表中移除, 更新提案数据库
-                if (po.getType() == ProposalTypeEnum.OTHER.value()) {
-                    // 提案是其他类型, 直接设置为结束
-                    po.setStatus(ProposalVoteStatusEnum.COMPLETED.value());
-                } else if (po.getStatus() == ProposalVoteStatusEnum.VOTING.value()) {
+                if (po.getStatus() == ProposalVoteStatusEnum.VOTING.value()) {
                     // 提案还在投票中说明还没通过, 则设置为被否决.
                     po.setStatus(ProposalVoteStatusEnum.REJECTED.value());
                 }
@@ -258,6 +254,10 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             return null;
         }
 
+        if (chain.getResetVirtualBank().get() || chain.getExeDisqualifyBankProposal().get()) {
+            // 当正在执行重置虚拟银行合约 或执行踢出虚拟银行提案时, 不进行银行变更检查
+            return null;
+        }
         // 根据最新共识列表,计算出最新的有虚拟银行资格的成员(非当前实际生效的虚拟应银行成员)
         List<AgentBasic> listVirtualBank = calcNewestVirtualBank(chain, listAgent);
         //当前已生效的
@@ -281,7 +281,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             }
             // 查询是否在撤销资格列表中
             String addr = disqualificationStorageService.find(chain, AddressTool.getAddress(director.getAgentAddress()));
-            if (rs && StringUtils.isBlank(addr)) {
+            if (rs || StringUtils.isNotBlank(addr)) {
                 //表示已经不是虚拟银行节点, 需要立即发布虚拟银行变更交易
                 virtualBankTemporaryChange.getListOutAgents().add(AddressTool.getAddress(director.getAgentAddress()));
 
@@ -336,6 +336,42 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
+     * 判断节点出块地址对应的异构地址余额是否满足条件
+     * @param agentBasic
+     * @return 满足:true, 不满足:false
+     */
+    private boolean checkHeterogeneousAddressBalance(Chain chain, AgentBasic agentBasic){
+        List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
+        for (IHeterogeneousChainDocking hInterface : hInterfaces) {
+            String pubKey = agentBasic.getPubKey();
+            if(StringUtils.isBlank(pubKey)){
+//                chain.getLogger().debug("[]The agent packing address public key not exist, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
+//                        agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
+                return false;
+            }
+            String hAddress = hInterface.generateAddressByCompressedPublicKey(agentBasic.getPubKey());
+            BigDecimal balance = hInterface.getBalance(hAddress).stripTrailingZeros();
+            boolean rs = false;
+            for(HeterogeneousCfg cfg :chain.getListHeterogeneous()){
+                if(cfg.getType() != 1){
+                    // 非主资产, 无需验证
+                    continue;
+                }
+                if(cfg.getChainId() == hInterface.getChainId() && cfg.getInitialBalance().compareTo(balance) < 0){
+                    rs = true;
+                }
+            }
+            // 所有异构链地址都需要满足条件
+            if(!rs){
+                chain.getLogger().warn("The agent heterogeneous address insufficient balance, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
+                        agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 根据最新的排好序的共识列表 统计出最新的有虚拟银行资格的成员
      *
      * @param listAgent
@@ -346,8 +382,13 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         List<AgentBasic> listVirtualBank = new ArrayList<>();
         // 排除种子节点
         for (AgentBasic agentBasic : listAgent) {
+            // 排除已被撤销虚拟银行资格的节点地址
             String disqualificationAddress = disqualificationStorageService.find(chain, AddressTool.getAddress(agentBasic.getAgentAddress()));
-            if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress)) {
+
+            // 排除节点出块地址对应的异构地址余额不满足初始值的节点
+//            boolean join = checkHeterogeneousAddressBalance(chain, agentBasic);
+            boolean join = true;
+            if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress) && join) {
                 listVirtualBank.add(agentBasic);
             }
         }
@@ -452,6 +493,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
                     virtualBankStorageService.save(chain, director);
+                    virtualBankAllHistoryStorageService.save(chain, director);
                 }
             }
         }

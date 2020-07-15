@@ -25,7 +25,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.constant.ErrorCode;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RpcResult<T> {

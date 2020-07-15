@@ -195,12 +195,15 @@ public class MongoTransactionServiceImpl implements TransactionService, Initiali
     }
 
     @Override
-    public PageInfo<MiniCrossChainTransactionInfo> getCrossChainTxList(int chainId, String address, int pageIndex, int pageSize){
+    public PageInfo<MiniCrossChainTransactionInfo> getCrossChainTxList(int chainId, String address, int pageIndex, int pageSize,int... types){
+        if (types.length == 0){
+            types = new int[]{TxType.CROSS_CHAIN,TxType.RECHARGE,TxType.WITHDRAWAL};
+        }
         Bson filter = null;
         if(StringUtils.isNotBlank(address)){
             filter = Filters.eq("address",address);
         }
-        PageInfo<MiniTransactionInfo> txList = getTxList(chainId,pageIndex,pageSize,true,filter,TxType.CROSS_CHAIN,TxType.RECHARGE,TxType.WITHDRAWAL);
+        PageInfo<MiniTransactionInfo> txList = getTxList(chainId,pageIndex,pageSize,true,filter,types);
 
         List<MiniCrossChainTransactionInfo> list = txList.getList().stream().map(d->{
             ConverterTxInfo converterTxInfo = converterTxService.getByTxHash(chainId,d.getHash());

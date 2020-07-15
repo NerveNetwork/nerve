@@ -29,6 +29,7 @@ import io.nuls.block.manager.ContextManager;
 import io.nuls.block.message.HashListMessage;
 import io.nuls.block.message.SmallBlockMessage;
 import io.nuls.block.model.*;
+import io.nuls.block.rpc.call.ConsensusCall;
 import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.rpc.call.TransactionCall;
 import io.nuls.block.service.BlockService;
@@ -86,8 +87,8 @@ public class SmallBlockHandler implements MessageProcessor {
 
         BlockHeader header = smallBlock.getHeader();
         NulsHash blockHash = header.getHash();
-        if(header.getHeight() <= context.getLatestHeight()){
-            logger.debug("The block has been confirmed locally,height:{},hash:{}",header.getHeight(),header.getHash());
+        if (header.getHeight() <= context.getLatestHeight()) {
+            logger.debug("The block has been confirmed locally,height:{},hash:{}", header.getHeight(), header.getHash());
             return;
         }
         //阻止恶意节点提前出块,拒绝接收未来一定时间外的区块
@@ -99,63 +100,78 @@ public class SmallBlockHandler implements MessageProcessor {
             return;
         }
 
-//        logger.debug("recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
+//        logger.info("recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
         context.getCachedHashHeightMap().put(blockHash, header.getHeight());
         NetworkCall.setHashAndHeight(chainId, blockHash, header.getHeight(), nodeId);
 
+        if (message.getVoteResult() != null) {
+            ConsensusCall.noticeVoteResult(chainId, message.getVoteResult());
+            context.getVoteResultCache().cache(blockHash, message.getVoteResult());
+        } else {
+            System.out.println();
+        }
+
         //防止节点统计网络最新高度过程中收到新的小区块，造成消息丢失
         if (context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
+//            logger.info("Node status is in synchronization,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             try {
                 context.getSynCompleteLock().lock();
-                if(context.getStatus().equals(StatusEnum.SYNCHRONIZING)){
-//                    logger.debug("Node status is in synchronization" );
-                    return;
+                if (context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
+                    if (context.getLatestHeight() <= header.getHeight()) {
+                        return;
+                    }
                 }
-            }finally {
+            } finally {
                 context.getSynCompleteLock().unlock();
             }
         }
         SmallBlockCacher.cacheNode(blockHash, nodeId, false);
-        filterMessage(chainId, blockHash, nodeId, header, smallBlock);
+        filterMessage(chainId, blockHash, nodeId, header, smallBlock, message.getVoteResult());
     }
 
-    private void filterMessage(int chainId, NulsHash blockHash, String nodeId, BlockHeader header, SmallBlock smallBlock){
+    private void filterMessage(int chainId, NulsHash blockHash, String nodeId, BlockHeader header, SmallBlock smallBlock, byte[] voteResult) {
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
-        if(header.getHeight() <= context.getLatestHeight()){
-            logger.info("The block has been confirmed locally,height:{},hash:{}",header.getHeight(),header.getHash());
+        if (header.getHeight() <= context.getLatestHeight()) {
+//            logger.info("The block has been confirmed locally,height:{},hash:{}", header.getHeight(), header.getHash());
             return;
         }
         //如果当前区块正在处理则缓存当前消息
-        if(!SmallBlockCacher.processBlockList.addIfAbsent(blockHash)){
+        if (!SmallBlockCacher.processBlockList.addIfAbsent(blockHash)) {
             MessageInfo messageInfo = new MessageInfo(chainId, nodeId, blockHash, header, smallBlock);
             List<MessageInfo> messageInfoList = SmallBlockCacher.pendMessageMap.computeIfAbsent(blockHash, k -> new ArrayList<>());
             messageInfoList.add(messageInfo);
-            logger.debug("Chunk in process, cache new messages received" );
+            logger.debug("Chunk in process,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             return;
         }
-        handleMessage(chainId, blockHash, nodeId, header, smallBlock);
+        handleMessage(chainId, blockHash, nodeId, header, smallBlock, voteResult);
         SmallBlockCacher.processBlockList.remove(blockHash);
     }
 
-    private void handleMessage(int chainId, NulsHash blockHash, String nodeId, BlockHeader header, SmallBlock smallBlock) {
+    private void handleMessage(int chainId, NulsHash blockHash, String nodeId, BlockHeader header, SmallBlock smallBlock, byte[] voteResult) {
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
         BlockForwardEnum status = SmallBlockCacher.getStatus(chainId, blockHash);
-        logger.debug("status:{}, context status:{}",status,context.getStatus());
+        logger.debug("status:{}, context status:{}", status, context.getStatus());
         //1.已收到完整区块,丢弃
         if (COMPLETE.equals(status) || ERROR.equals(status)) {
+            logger.debug("已收到完整区块,丢弃,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             return;
         }
+
+        logger.info("recieve smallBlock from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash() + ",result:" + (voteResult == null ? null : voteResult.length));
         //2.已收到部分区块,还缺失交易信息,发送HashListMessage到源节点
         if (INCOMPLETE.equals(status) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
+            logger.info("收到smallBlock,但缺少部分交易");
             CachedSmallBlock block = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
             if (block == null) {
+                logger.info("未找到smallBlock");
                 SmallBlockCacher.processBlockList.remove(blockHash);
                 return;
             }
             List<NulsHash> missingTransactions = block.getMissingTransactions();
             if (missingTransactions == null) {
+                logger.info("未找到丢失交易");
                 return;
             }
             HashListMessage request = new HashListMessage();
@@ -168,6 +184,7 @@ public class SmallBlockHandler implements MessageProcessor {
             task.setExcuteTime(blockConfig.getTxGroupTaskDelay());
             TxGroupRequestor.addTask(chainId, blockHash.toString(), task);
             handlePendMessage(blockHash);
+            logger.info("发送回执索要缺失交易信息");
             return;
         }
 
@@ -207,7 +224,7 @@ public class SmallBlockHandler implements MessageProcessor {
 
             //获取没有的交易
             if (!missTxHashList.isEmpty()) {
-                logger.debug("block height:" + header.getHeight() + ", total tx count:" + header.getTxCount() + " , get group tx of " + missTxHashList.size());
+                logger.info("send HashListMessage block height:" + header.getHeight() + ", total tx count:" + header.getTxCount() + " , get group tx of " + missTxHashList.size());
                 //这里的smallBlock的subTxList中包含一些非系统交易,用于跟TxGroup组合成完整区块
                 CachedSmallBlock cachedSmallBlock = new CachedSmallBlock(missTxHashList, smallBlock, txMap, nodeId, false);
                 SmallBlockCacher.cacheSmallBlock(chainId, cachedSmallBlock);
@@ -231,17 +248,17 @@ public class SmallBlockHandler implements MessageProcessor {
             if (!b) {
                 SmallBlockCacher.setStatus(chainId, blockHash, ERROR);
                 SmallBlockCacher.nodeMap.remove(blockHash);
-                logger.debug("block save error hash-" +  block.getHeader().getHash());
+                logger.debug("block save error hash-" + block.getHeader().getHash());
             }
             SmallBlockCacher.pendMessageMap.remove(blockHash);
         }
     }
 
-    private void handlePendMessage(NulsHash blockHash){
+    private void handlePendMessage(NulsHash blockHash) {
         List<MessageInfo> messageInfoList = SmallBlockCacher.pendMessageMap.get(blockHash);
-        if(messageInfoList != null && !messageInfoList.isEmpty()){
+        if (messageInfoList != null && !messageInfoList.isEmpty()) {
             MessageInfo messageInfo = messageInfoList.remove(0);
-            handleMessage(messageInfo.getChainId(), messageInfo.getBlockHash(), messageInfo.getNodeId(), messageInfo.getHeader(), messageInfo.getSmallBlock());
+            handleMessage(messageInfo.getChainId(), messageInfo.getBlockHash(), messageInfo.getNodeId(), messageInfo.getHeader(), messageInfo.getSmallBlock(), null);
         }
     }
 }

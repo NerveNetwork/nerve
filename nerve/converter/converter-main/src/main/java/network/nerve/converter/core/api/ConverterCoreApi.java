@@ -23,17 +23,26 @@
  */
 package network.nerve.converter.core.api;
 
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
+import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
 import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
+import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 
 /**
@@ -46,6 +55,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private Chain nerveChain;
     @Autowired
     private VirtualBankService virtualBankService;
+    @Autowired
+    private ChainManager chainManager;
+    @Autowired
+    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
 
     private NulsLogger logger() {
         return nerveChain.getLogger();
@@ -64,6 +77,20 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isVirtualBankByCurrentNode() {
         try {
             return virtualBankService.getCurrentDirector(nerveChain.getChainId()) != null;
+        } catch (NulsException e) {
+            logger().error("查询节点状态失败", e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isSeedVirtualBankByCurrentNode() {
+        try {
+            VirtualBankDirector currentDirector = virtualBankService.getCurrentDirector(nerveChain.getChainId());
+            if(null != currentDirector){
+                return currentDirector.getSeedNode();
+            }
+            return false;
         } catch (NulsException e) {
             logger().error("查询节点状态失败", e);
             return false;
@@ -99,5 +126,41 @@ public class ConverterCoreApi implements IConverterCoreApi {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Override
+    public boolean isRunning() {
+        return SyncStatusEnum.RUNNING == nerveChain.getLatestBasicBlock().getSyncStatusEnum();
+    }
+
+    @Override
+    public HeterogeneousWithdrawTxInfo getWithdrawTxInfo(String nerveTxHash) throws NulsException {
+        Transaction tx = TransactionCall.getConfirmedTx(nerveChain, NulsHash.fromHex(nerveTxHash));
+        CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
+        CoinTo withdrawCoinTo = null;
+        for (CoinTo coinTo : coinData.getTo()) {
+            if (coinTo.getAssetsId() != nerveChain.getConfig().getAssetId()) {
+                withdrawCoinTo = coinTo;
+                break;
+            }
+        }
+        if(null == withdrawCoinTo){
+            nerveChain.getLogger().error("Withdraw transaction cointo data error, no withdrawCoinTo. hash:{}", nerveTxHash);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+        HeterogeneousAssetInfo heterogeneousAssetInfo =
+                heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsId());
+        if(null == heterogeneousAssetInfo) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+        }
+
+        WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+        HeterogeneousWithdrawTxInfo info = new HeterogeneousWithdrawTxInfo();
+        info.setHeterogeneousChainId(heterogeneousAssetInfo.getChainId());
+        info.setAssetId(heterogeneousAssetInfo.getAssetId());
+        info.setNerveTxHash(nerveTxHash);
+        info.setToAddress(txData.getHeterogeneousAddress());
+        info.setValue(withdrawCoinTo.getAmount());
+        return info;
     }
 }

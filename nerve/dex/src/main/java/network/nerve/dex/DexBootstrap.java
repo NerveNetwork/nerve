@@ -45,9 +45,6 @@ public class DexBootstrap extends RpcModule {
 
 
     public static void main(String[] args) throws Exception {
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
         NulsRpcModuleBootstrap.run("io.nuls,network.nerve.dex", args);
     }
 

@@ -31,7 +31,7 @@ import java.lang.annotation.*;
  * After the annotation is marked with the attributes used to mark the bean,
  * the system is automatically assigned to the field during the initialization phase.
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)

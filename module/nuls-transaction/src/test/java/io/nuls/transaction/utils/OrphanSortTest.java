@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class OrphanSortTest {
 

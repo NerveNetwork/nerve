@@ -32,7 +32,7 @@ public class SymbolRegInfo {
     private boolean queryPrice;
 
     /**
-     * 资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产]
+     * 资产类型 [1-链内普通资产 2-平行链资产 3-异构链资产]
      */
     private Integer source;
 

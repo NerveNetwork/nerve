@@ -17,6 +17,7 @@ import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.model.bo.*;
 import network.nerve.quotation.storage.ConfigStorageService;
 import network.nerve.quotation.storage.ConfirmFinalQuotationStorageService;
+import network.nerve.quotation.storage.QuotationIntradayStorageService;
 import network.nerve.quotation.storage.QuotationStorageService;
 import network.nerve.quotation.task.CalculatorTask;
 import network.nerve.quotation.task.CollectorTask;
@@ -24,9 +25,7 @@ import network.nerve.quotation.util.CommonUtil;
 import network.nerve.quotation.util.LoggerUtil;
 import network.nerve.quotation.util.TimeUtil;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +43,9 @@ public class ChainManager {
 
     @Autowired
     private ConfirmFinalQuotationStorageService confirmFinalQuotationStorageService;
+
+    @Autowired
+    private QuotationIntradayStorageService quotationIntradayStorageService;
 
     @Autowired
     private QuConfig quConfig;
@@ -89,7 +91,11 @@ public class ChainManager {
                 QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
             }
         }
+        // 当天已执行报价的token(不一定完成了最终报价)
+        List<String> allTokens = quotationIntradayStorageService.getAll(chain);
+        QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.addAll(allTokens);
     }
+
 
     /**
      * 注册交易
@@ -204,6 +210,7 @@ public class ChainManager {
             RocksDBService.createTable(QuotationConstant.DB_LAST_QUOTATION_PREFIX + chainId);
             RocksDBService.createTable(QuotationConstant.DB_CONFIRM_FINAL_QUOTATION_PREFIX + chainId);
             RocksDBService.createTable(QuotationConstant.DB_CONFIRM_LAST_FINAL_QUOTATION_PREFIX + chainId);
+            RocksDBService.createTable(QuotationConstant.DB_INTRADAY_QUOTATION_NODE_PREFIX + chainId);
         } catch (Exception e) {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {
                 logger.error(e);

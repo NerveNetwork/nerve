@@ -52,7 +52,7 @@ public interface ProtocolService {
     void receiveOtherCtx(int chainId, String nodeId, NewOtherCtxMessage messageBody);
 
     /**
-     * 广播跨链交易Hash给其他链节点
+     * 接收其他链广播过来的跨链交易Hash
      * @param chainId     消息所属链Id
      * @param nodeId      发送此消息的节点Id
      * @param messageBody 消息体

@@ -48,7 +48,6 @@ import java.util.Map;
 @Component
 public class ConfigStorageServiceImpl implements ConfigStorageService {
 
-
     @Override
     public boolean save(ConfigBean bean, int chainID) throws Exception {
         if (bean == null) {

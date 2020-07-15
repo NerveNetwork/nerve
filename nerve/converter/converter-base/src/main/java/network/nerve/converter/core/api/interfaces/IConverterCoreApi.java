@@ -24,6 +24,8 @@
 package network.nerve.converter.core.api.interfaces;
 
 import io.nuls.base.data.Transaction;
+import io.nuls.core.exception.NulsException;
+import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
 
 /**
  * @author: Mimi
@@ -41,6 +43,11 @@ public interface IConverterCoreApi {
     boolean isVirtualBankByCurrentNode();
 
     /**
+     * 当前节点是否为种子虚拟银行
+     */
+    boolean isSeedVirtualBankByCurrentNode();
+
+    /**
      * 获取当前节点加入虚拟银行时的顺序
      */
     int getVirtualBankOrder();
@@ -54,4 +61,15 @@ public interface IConverterCoreApi {
      * 获取Nerve交易
      */
     Transaction getNerveTx(String hash);
+
+    /**
+     * 当前节点是否在运行状态
+     */
+    boolean isRunning();
+
+    /**
+     * 获取异构链提现数据
+     */
+    HeterogeneousWithdrawTxInfo getWithdrawTxInfo(String nerveTxHash) throws NulsException;
+
 }

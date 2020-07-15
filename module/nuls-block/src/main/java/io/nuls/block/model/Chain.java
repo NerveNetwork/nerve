@@ -25,6 +25,7 @@ import io.nuls.base.data.Block;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.block.constant.ChainTypeEnum;
+import io.nuls.block.utils.VoteResultCache;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

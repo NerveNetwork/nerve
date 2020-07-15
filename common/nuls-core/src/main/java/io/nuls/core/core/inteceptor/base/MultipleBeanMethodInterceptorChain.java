@@ -37,7 +37,7 @@ import java.util.List;
  * Multiple interceptors chain.Only when one method has multiple connector chains,
  * The chain is initialized and assembled every time a method is executed.
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 public class MultipleBeanMethodInterceptorChain extends BeanMethodInterceptorChain {
 

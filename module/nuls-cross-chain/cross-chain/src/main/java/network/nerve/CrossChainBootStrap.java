@@ -34,6 +34,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * 跨链模块启动类
  * Cross Chain Module Startup and Initialization Management
+ *
  * @author tag
  * 2019/4/10
  */
@@ -47,16 +48,13 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
     @Autowired
     private ChainManager chainManager;
 
-    public static void main(String[] args){
-        if (args == null || args.length == 0) {
-            args = new String[]{"ws://" + HostInfo.getLocalIP() + ":7771"};
-        }
+    public static void main(String[] args) {
         NulsRpcModuleBootstrap.run(CONTEXT_PATH, args);
     }
+
     /**
      * 初始化模块，比如初始化RockDB等，在此处初始化后，可在其他bean的afterPropertiesSet中使用
      * 在onStart前会调用此方法
-     *
      */
     @Override
     public void init() {
@@ -72,7 +70,7 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
              * */
             registerRpcPath(RPC_PATH);
             chainManager.initChain();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -93,26 +91,26 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
     @Override
     public boolean doStart() {
         try {
-            while (!isDependencieReady(ModuleE.NW.abbr) || !isDependencieReady(ModuleE.TX.abbr)  || !isDependencieReady(ModuleE.CS.abbr)){
+            while (!isDependencieReady(ModuleE.NW.abbr) || !isDependencieReady(ModuleE.TX.abbr) || !isDependencieReady(ModuleE.CS.abbr)) {
                 Log.debug("wait depend modules ready");
                 Thread.sleep(2000L);
             }
             return true;
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
             return false;
         }
     }
 
     @Override
-    public void onDependenciesReady(Module module){
+    public void onDependenciesReady(Module module) {
         try {
             /*
              * 注册交易
              * Registered transactions
              */
-            if(module.getName().equals(ModuleE.TX.abbr)){
-                for (Integer chainId:chainManager.getChainMap().keySet()) {
+            if (module.getName().equals(ModuleE.TX.abbr)) {
+                for (Integer chainId : chainManager.getChainMap().keySet()) {
                     RegisterHelper.registerTx(chainId, ProtocolGroupManager.getCurrentProtocol(chainId));
                 }
             }
@@ -121,20 +119,20 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
              */
             if (ModuleE.NW.abbr.equals(module.getName())) {
                 RegisterHelper.registerMsg(ProtocolGroupManager.getOneProtocol());
-                for (Chain chain:chainManager.getChainMap().values()) {
-                    if(!chain.isMainChain()){
+                for (Chain chain : chainManager.getChainMap().values()) {
+                    if (!chain.isMainChain()) {
                         NetWorkCall.activeCrossNet(chain.getChainId(), chain.getConfig().getMaxOutAmount(), chain.getConfig().getMaxInAmount(), nulsCrossChainConfig.getCrossSeedIps());
                     }
                 }
             }
             /*
-             * 如果为主网，向链管理模块过去完整的跨链注册信息
+             * 如果为主网，向链管理模块获取完整的跨链注册信息
              */
             if (nulsCrossChainConfig.isMainNet() && (ModuleE.CM.abbr.equals(module.getName()))) {
                 RegisteredChainMessage registeredChainMessage = registeredCrossChainService.get();
-                if(registeredChainMessage != null && registeredChainMessage.getChainInfoList() != null){
+                if (registeredChainMessage != null && registeredChainMessage.getChainInfoList() != null) {
                     chainManager.setRegisteredCrossChainList(registeredChainMessage.getChainInfoList());
-                }else{
+                } else {
                     registeredChainMessage = ChainManagerCall.getRegisteredChainInfo();
                     registeredCrossChainService.save(registeredChainMessage);
                     chainManager.setRegisteredCrossChainList(registeredChainMessage.getChainInfoList());
@@ -149,11 +147,7 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
                 AccountCall.addAddressPrefix(chainManager.getPrefixList());
             }
 
-            //智能合约交易注册
-            if (module.getName().equals(ModuleE.SC.abbr)) {
-                chainManager.registerContractTx();
-            }
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.error(e);
         }
     }
@@ -190,6 +184,7 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
         RocksDBService.createTable(DB_NAME_CONSUME_LANGUAGE);
         RocksDBService.createTable(DB_NAME_CONSUME_CONGIF);
         RocksDBService.createTable(DB_NAME_LOCAL_VERIFIER);
+        RocksDBService.createTable(DB_NAME_TOTAL_OUT_AMOUNT);
         /*
             已注册跨链的链信息操作表
             Registered Cross-Chain Chain Information Operating Table

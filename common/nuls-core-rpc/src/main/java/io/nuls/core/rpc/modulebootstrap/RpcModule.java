@@ -120,7 +120,7 @@ public abstract class RpcModule implements InitializingBean {
                 }
                 dependentReadyState.put(module, Boolean.TRUE);
             }
-            Log.info("RMB:ModuleReadyListener :{}", module);
+//            Log.info("RMB:ModuleReadyListener :{}", module);
             tryRunModule();
             ConnectData connectData = ConnectManager.getConnectDataByRole(module.getName());
             connectData.addCloseEvent(() -> {
@@ -155,7 +155,7 @@ public abstract class RpcModule implements InitializingBean {
     void addFollower(Module module) {
         synchronized (this) {
             if (!followerList.containsKey(module)) {
-                Log.info("RMB:registerModuleDependencies :{}", module);
+//                Log.info("RMB:registerModuleDependencies :{}", module);
                 followerList.put(module, Boolean.FALSE);
                 if(dependentReadyState.containsKey(module)){
                     dependentReadyState.put(module, Boolean.FALSE);
@@ -165,12 +165,12 @@ public abstract class RpcModule implements InitializingBean {
                     ConnectData connectData = ConnectManager.getConnectDataByRole(module.getName());
                     connectData.addCloseEvent(() -> {
                         if (!ConnectManager.ROLE_CHANNEL_MAP.containsKey(module.getName())) {
-                            Log.warn("RMB:follower:{}模块触发连接断开事件", module);
+//                            Log.warn("RMB:follower:{}模块触发连接断开事件", module);
                             //修改通知状态为未通知
                             followerList.remove(module);
                         }
                     });
-                    Log.debug("绑定连接断开事件:{}",module.name);
+//                    Log.debug("绑定连接断开事件:{}",module.name);
                 } catch (Exception e) {
                     Log.error("RMB:获取follower:{}模块连接发生异常.", module, e);
                 }
@@ -195,7 +195,7 @@ public abstract class RpcModule implements InitializingBean {
                 Response cmdResp = ResponseMessageProcessor.requestAndResponse(module.getName(), "listenerDependenciesReady", MapUtils.beanToLinkedMap(this.moduleInfo()),1000L);
                 if (cmdResp.isSuccess()) {
                     followerList.put(module, Boolean.TRUE);
-                    Log.info("notify follower {} is Ready success", module);
+//                    Log.info("notify follower {} is Ready success", module);
                     return true;
                 } else {
                     return false;
@@ -278,7 +278,7 @@ public abstract class RpcModule implements InitializingBean {
         }
         if (dependencieReady) {
             if (!isRunning()) {
-                Log.info("RMB:dependencie state");
+//                Log.info("RMB:dependencie state");
                 dependentReadyState.forEach((key, value) -> Log.debug("{}:{}", key.getName(), value));
                 Log.info("RMB:module try running");
                 CountDownLatch latch = new CountDownLatch(1);

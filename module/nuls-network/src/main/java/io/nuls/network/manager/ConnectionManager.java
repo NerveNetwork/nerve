@@ -35,6 +35,7 @@ import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import io.nuls.network.cfg.NetworkConfig;
 import io.nuls.network.constant.ManagerStatusEnum;
+import io.nuls.network.constant.NetworkContext;
 import io.nuls.network.constant.NodeConnectStatusEnum;
 import io.nuls.network.constant.NodeStatusEnum;
 import io.nuls.network.model.Node;
@@ -133,6 +134,9 @@ public class ConnectionManager extends BaseManager {
         LoggerUtil.logger(nodeGroup.getChainId()).debug("client node {} connect success !", node.getId());
         //发送握手
         VersionMessage versionMessage = MessageFactory.getInstance().buildVersionMessage(node, nodeGroup.getMagicNumber());
+
+        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------主动发送握手连接，ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
+        versionMessage.getMsgBody().setReverseCheck(NetworkContext.reverseCheck);
         MessageManager.getInstance().sendHandlerMsg(versionMessage, node, true);
     }
 

@@ -27,7 +27,9 @@ import org.web3j.abi.TypeReference;
 import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint8;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -46,17 +48,20 @@ public interface EthConstant {
     int ETH_ASSET_ID = 1;
     int ETH_DECIMALS = 18;
     int RESEND_TIME = 30;
-    int INTERVAL_WAITTING = 5;
+    int DEFAULT_INTERVAL_WAITTING = 5;
+    String ETH_RECOVERY_I = "recovery1";
+    String ETH_RECOVERY_II = "recovery2";
     String ETH_ERC20_STANDARD_FILE = "ethTokens.json";
 
     String METHOD_HASH_CREATEORSIGNWITHDRAW = "0x46b4c37e";
-    String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0xf16cb636";
+    String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0xbdeaa8ba";
     String METHOD_HASH_CREATEORSIGNUPGRADE = "0x976cd397";
 
     String METHOD_CREATE_OR_SIGN_WITHDRAW = "createOrSignWithdraw";
     String METHOD_CREATE_OR_SIGN_MANAGERCHANGE = "createOrSignManagerChange";
     String METHOD_CREATE_OR_SIGN_UPGRADE = "createOrSignUpgrade";
 
+    String METHOD_VIEW_ALL_MANAGERS_TRANSACTION = "allManagers";
     String METHOD_VIEW_IS_COMPLETED_TRANSACTION = "isCompletedTx";
     String METHOD_VIEW_PENDING_WITHDRAW = "pendingWithdrawTx";
     String METHOD_VIEW_PENDING_MANAGERCHANGE = "pendingManagerChangeTx";
@@ -85,7 +90,8 @@ public interface EthConstant {
             List.of(
                     new TypeReference<Utf8String>(){},
                     new TypeReference<DynamicArray<Address>>(){},
-                    new TypeReference<DynamicArray<Address>>(){}
+                    new TypeReference<DynamicArray<Address>>(){},
+                    new TypeReference<Uint8>(){}
             )
     );
 
@@ -125,11 +131,23 @@ public interface EthConstant {
     byte[] EMPTY_BYTE = new byte[]{0};
     BigInteger ETH_GAS_LIMIT_OF_ETH = BigInteger.valueOf(21000L);
     BigInteger ETH_GAS_LIMIT_OF_USDT = BigInteger.valueOf(60000L);
-    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN = BigInteger.valueOf(300000L);
-    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE = BigInteger.valueOf(400000L);
+    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN = BigInteger.valueOf(400000L);
+    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE = BigInteger.valueOf(600000L);
     BigInteger ETH_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
+    BigDecimal NUMBER_1_DOT_1 = new BigDecimal("1.1");
+    BigDecimal NUMBER_1_DOT_2 = new BigDecimal("1.2");
 
     Long ROLLBACK_NUMER = 100L;
 
     long MINUTES_20 = 20 * 60 * 1000L;
+    long MINUTES_10 = 10 * 60 * 1000L;
+    long MINUTES_5 = 5 * 60 * 1000L;
+    long MINUTES_3 = 3 * 60 * 1000L;
+    long MINUTES_2 = 2 * 60 * 1000L;
+    long MINUTES_1 = 1 * 60 * 1000L;
+    long SECOND_30 = 30 * 1000L;
+    long SECOND_20 = 20 * 1000L;
+    long SECOND_10 = 10 * 1000L;
+    BigInteger GWEI_2 = BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_3 = BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9));
 }

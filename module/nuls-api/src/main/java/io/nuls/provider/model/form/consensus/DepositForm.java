@@ -32,7 +32,7 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import io.nuls.provider.model.form.Base;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @ApiModel(name = "委托参与共识表单数据")
 public class DepositForm extends Base {

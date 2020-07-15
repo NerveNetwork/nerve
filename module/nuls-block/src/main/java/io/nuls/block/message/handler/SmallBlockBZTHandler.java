@@ -90,8 +90,9 @@ public class SmallBlockBZTHandler implements MessageProcessor {
 
         BlockHeader header = smallBlock.getHeader();
         NulsHash blockHash = header.getHash();
-        if(header.getHeight() <= context.getLatestHeight()){
-            logger.info("The block has been confirmed locally,height:{},hash:{}",header.getHeight(),header.getHash());
+
+        if (header.getHeight() <= context.getLatestHeight()) {
+//            logger.info("The block has been confirmed locally,height:{},hash:{}",header.getHeight(),header.getHash());
             return;
         }
         //阻止恶意节点提前出块,拒绝接收未来一定时间外的区块
@@ -102,17 +103,17 @@ public class SmallBlockBZTHandler implements MessageProcessor {
             logger.error("header.getTime()-" + header.getTime() + ", currentTime-" + currentTime + ", validBlockInterval-" + validBlockInterval);
             return;
         }
-
-        logger.debug("recieve smallBlockBZTMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
+        context.getCachedHashHeightMap().put(blockHash, header.getHeight());
+        NetworkCall.setHashAndHeight(chainId, blockHash, header.getHeight(), nodeId);
         if (context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
             return;
         }
         BlockForwardEnum status = SmallBlockCacher.getStatus(chainId, blockHash);
         //1.已收到完整区块,丢弃
-        if (COMPLETE.equals(status) || CONSENSUS_COMPLETE.equals(status)|| ERROR.equals(status) || CONSENSUS_ERROR.equals(status)) {
+        if (COMPLETE.equals(status) || CONSENSUS_COMPLETE.equals(status) || ERROR.equals(status) || CONSENSUS_ERROR.equals(status)) {
             return;
         }
-
+        logger.info("recieve smallBlockBZTMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
         SmallBlockCacher.cacheNode(blockHash, nodeId, true);
         //2.已收到部分区块,还缺失交易信息,发送HashListMessage到源节点
         if (INCOMPLETE.equals(status) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
@@ -192,11 +193,11 @@ public class SmallBlockBZTHandler implements MessageProcessor {
             Block block = BlockUtil.assemblyBlock(header, txMap, txHashList);
             block.setNodeId(nodeId);
             logger.debug("record recv BZT block, block create time-" + DateUtils.timeStamp2DateStr(block.getHeader().getTime() * 1000) + ", hash-" + block.getHeader().getHash());
-            boolean b = blockService.saveConsensusBlock(chainId, block, 1, true, true, false,true,nodeId);
+            boolean b = blockService.saveConsensusBlock(chainId, block, 1, true, true, false, true, nodeId);
             if (!b) {
                 SmallBlockCacher.setStatus(chainId, blockHash, CONSENSUS_ERROR);
                 SmallBlockCacher.consensusNodeMap.remove(blockHash);
-                logger.debug("BZT block save error hash-" +  block.getHeader().getHash());
+                logger.debug("BZT block save error hash-" + block.getHeader().getHash());
             }
         }
     }

@@ -3,13 +3,19 @@ package io.nuls.ledger.test.cmd;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.account.AccountService;
+import io.nuls.base.api.provider.account.facade.ImportAccountByPrivateKeyReq;
 import io.nuls.base.api.provider.transaction.TransferService;
 import io.nuls.base.api.provider.transaction.facade.TransferReq;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.data.Address;
+import io.nuls.core.constant.BaseConstant;
+import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
@@ -32,7 +38,7 @@ public class BackupAccountBalanceTest {
 
     @Before
     public void before() throws Exception {
-        ServiceManager.init(4, Provider.ProviderType.RPC);
+        ServiceManager.init(5, Provider.ProviderType.RPC);
         NoUse.mockModule();
     }
 
@@ -43,8 +49,8 @@ public class BackupAccountBalanceTest {
      */
     @Test
     public void testBackupAccountState() throws Exception {
-        AddressTool.addPrefix(4,"TNVT");
-        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr,"getAllAccount", Map.of("chainId",4));
+        AddressTool.addPrefix(5,"TNVT");
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr,"getAllAccount", Map.of("chainId",5));
         Map<String,String> data = (Map<String, String>) ((Map)response.getResponseData()).get("getAllAccount");
         Map<String, BigInteger> balance = new HashMap<>();
         data.entrySet().forEach(entry->{
@@ -77,8 +83,8 @@ public class BackupAccountBalanceTest {
      */
     @Test
     public void testRestoreAccount() throws IOException {
-        String formAddress = "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA";
-        File file = new File("/Users/zhoulijun/workspace/nuls/nerve-network-package" + File.separator + "account-balance");
+        String formAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        File file = new File("/Users/zhoulijun/workspace/nuls/nerve-network-package" + File.separator + "account-balance.0619");
         BufferedReader reader = new BufferedReader(new FileReader(file));
         String line = reader.readLine();
         while(line != null){
@@ -91,11 +97,15 @@ public class BackupAccountBalanceTest {
                 continue ;
             }
             BigInteger amount = new BigInteger(key[1]);
+            if(amount.compareTo(BigInteger.valueOf(25000000000000L)) > 0){
+                amount = BigInteger.valueOf(
+                        25000000000000L);
+            }
             int chainId = Integer.parseInt(keyAry[1]);
             int assetId = Integer.parseInt(keyAry[2]);
             TransferService transferService = ServiceManager.get(TransferService.class);
             TransferReq.TransferReqBuilder builder =
-                    new TransferReq.TransferReqBuilder(4, assetId)
+                    new TransferReq.TransferReqBuilder(5, assetId)
                             .addForm(chainId, assetId, formAddress, "nuls123456", amount)
                             .addTo(chainId, assetId, address, amount);
             Result<String> result = transferService.transfer(builder.build(new TransferReq()));
@@ -105,6 +115,124 @@ public class BackupAccountBalanceTest {
                 Log.info("{}",result);
             }
 
+        }
+    }
+
+
+    @Test
+    public void testMain() throws IOException {
+        int chainId = 5;
+        int assetId = 1;
+        String password = "nuls123456";
+        BigInteger amount = BigInteger.valueOf(
+                21000000000000L);
+        String formAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        String prikey = "9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b";
+        AccountService accountService = ServiceManager.get(AccountService.class);
+        accountService.importAccountByPrivateKey(new ImportAccountByPrivateKeyReq(password,prikey,true));
+        Map<String,String> ip = new HashMap<>();
+        ip.put("nuls01","172.21.42.125");
+        ip.put("nuls02","172.21.42.121");
+        ip.put("nuls03","172.21.42.124");
+        ip.put("nuls04","172.21.42.138");
+        ip.put("nuls05","172.21.42.123");
+        ip.put("nuls06","172.21.42.150");
+        ip.put("nuls07","172.21.42.147");
+        ip.put("nuls08","172.21.42.140");
+        ip.put("nuls09","172.21.42.130");
+        ip.put("nuls10","172.21.42.149");
+        ip.put("nuls11","172.21.42.135");
+        ip.put("nuls12","172.21.42.142");
+        ip.put("nuls13","172.21.42.122");
+        ip.put("nuls14","172.21.42.139");
+        ip.put("nuls15","172.21.42.141");
+        ip.put("nuls16","172.21.42.127");
+        ip.put("nuls17","172.21.42.133");
+        ip.put("nuls18","172.21.42.128");
+        ip.put("nuls19","172.21.42.146");
+        ip.put("nuls20","172.21.42.137");
+        ip.put("nuls21","172.21.42.143");
+        ip.put("nuls22","172.21.42.144");
+        ip.put("nuls23","172.21.42.148");
+        ip.put("nuls24","172.21.42.132");
+        ip.put("nuls25","172.21.42.126");
+        ip.put("nuls26","172.21.42.145");
+        ip.put("nuls27","172.21.42.136");
+        ip.put("nuls28","172.21.42.131");
+        ip.put("nuls29","172.21.42.129");
+        ip.put("nuls30","172.21.42.134");
+        String file_path = System.getProperty("user.dir") + "/.temp/";
+        File file = new File(file_path);
+        if(!file.exists()){
+            file.mkdir();
+        }
+        String addressPrefix = "TNVT";
+        System.out.println(String.format("%02d",9));
+        BufferedWriter cp = new BufferedWriter(new FileWriter(new File(file_path + "cp")));
+        BufferedWriter ca = new BufferedWriter(new FileWriter(new File(file_path + "ca")));
+        BufferedWriter pp = new BufferedWriter(new FileWriter(new File(file_path + "pp")));
+        BufferedWriter pa = new BufferedWriter(new FileWriter(new File(file_path + "pa")));
+        BufferedWriter pascript = new BufferedWriter(new FileWriter(new File(file_path + "pascript")));
+        BufferedWriter ccscript = new BufferedWriter(new FileWriter(new File(file_path + "ccscript")));
+        BufferedWriter calias = new BufferedWriter(new FileWriter(new File(file_path + "calias")));
+
+//        pascript.write("#!/bin/bash");
+        pascript.newLine();
+        try{
+            int count = ip.size();
+            for (int i = 0; i < count; i++) {
+                String id = String.format("nuls%02d",i+1);
+                String nk = ip.get(id);
+                ECKey key = new ECKey();
+                Address address = new Address(chainId, addressPrefix, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(key.getPubKey()));
+                cp.write(nk + "=" + key.getPrivateKeyAsHex());
+                cp.newLine();
+                String caddress = AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix());
+                ca.write(id + "=" + nk + "=" + caddress);
+                ca.newLine();
+                TransferService transferService = ServiceManager.get(TransferService.class);
+                TransferReq.TransferReqBuilder builder =
+                        new TransferReq.TransferReqBuilder(chainId, assetId)
+                                .addForm(chainId, assetId, formAddress, password, amount)
+                                .addTo(chainId, assetId, caddress, amount);
+                Result<String> result = transferService.transfer(builder.build(new TransferReq()));
+                if(result.isFailed()){
+                    Log.error("失败:{}",result.getMessage());
+                }else{
+                    Log.info("{}",result);
+                }
+                ImportAccountByPrivateKeyReq req = new ImportAccountByPrivateKeyReq(password,key.getPrivateKeyAsHex(),true);
+                req.setChainId(chainId);
+                accountService.importAccountByPrivateKey(req);
+                key = new ECKey();
+                address = new Address(chainId, addressPrefix, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(key.getPubKey()));
+                pp.write(nk + "=" +  key.getPrivateKeyAsHex());
+                pp.newLine();
+                String paddress = AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix());
+                pa.write(id + "=" + nk + "=" + paddress);
+                pa.newLine();
+                pascript.write("ssh root@"+nk+" 'bash -s ' < ./remote-import-address " + key.getPrivateKeyAsHex());
+                pascript.newLine();
+                ccscript.write("createagent " + caddress + " " + paddress + " 200000 " + caddress + " " + password);
+                ccscript.newLine();
+                calias.write("setalias " + caddress + " " + String.format("nuls%02d",i+1) + " " + password);
+                calias.newLine();
+            }
+            cp.flush();
+            ca.flush();
+            pp.flush();
+            pa.flush();
+            calias.flush();
+            pascript.flush();
+            ccscript.flush();
+        }finally {
+            cp.close();
+            ca.close();
+            pp.close();
+            pa.close();
+            calias.close();
+            pascript.close();
+            ccscript.close();
         }
     }
 

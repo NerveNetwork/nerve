@@ -25,7 +25,7 @@ import io.nuls.core.rpc.util.NulsDateUtils;
 import java.math.BigInteger;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class PocRoundItem {
 

@@ -161,7 +161,6 @@ public class EthUtil {
                 List.of(new Utf8String(nerveTxHash)),
                 List.of(
                         new TypeReference<Address>() {},
-                        new TypeReference<Address>() {},
                         new TypeReference<Uint256>() {},
                         new TypeReference<Bool>() {},
                         new TypeReference<Address>() {},
@@ -175,7 +174,7 @@ public class EthUtil {
                 EthConstant.METHOD_VIEW_PENDING_MANAGERCHANGE,
                 List.of(new Utf8String(nerveTxHash)),
                 List.of(
-                        new TypeReference<Address>() {},
+                        new TypeReference<Uint8>() {},
                         new TypeReference<Utf8String>() {},
                         new TypeReference<DynamicArray<Address>>() {},
                         new TypeReference<DynamicArray<Address>>() {},
@@ -193,6 +192,15 @@ public class EthUtil {
         );
     }
 
+    public static Function getAllManagersFunction() {
+        return new Function(
+                EthConstant.METHOD_VIEW_ALL_MANAGERS_TRANSACTION,
+                List.of(),
+                List.of(new TypeReference<DynamicArray<Address>>() {
+                })
+        );
+    }
+
     public static Function getCreateOrSignWithdrawFunction(String nerveTxHash, String toAddress, BigInteger value, boolean isContractAsset, String contractAddressERC20) {
         return new Function(
                 EthConstant.METHOD_CREATE_OR_SIGN_WITHDRAW,
@@ -202,12 +210,13 @@ public class EthUtil {
         );
     }
 
-    public static Function getCreateOrSignManagerChangeFunction(String nerveTxHash, List<Address> addList, List<Address> removeList) {
+    public static Function getCreateOrSignManagerChangeFunction(String nerveTxHash, List<Address> addList, List<Address> removeList, int orginTxCount) {
         return new Function(
                 EthConstant.METHOD_CREATE_OR_SIGN_MANAGERCHANGE,
                 List.of(new Utf8String(nerveTxHash),
                         new DynamicArray(Address.class, addList),
-                        new DynamicArray(Address.class, removeList)),
+                        new DynamicArray(Address.class, removeList),
+                        new Uint8(orginTxCount)),
                 List.of(new TypeReference<Type>() {
                 })
         );

@@ -41,7 +41,7 @@ import io.nuls.core.core.annotation.Component;
  * @date: 2020/6/9
  */
 @Component
-public class VoteProposalProcess  implements CommandProcessor {
+public class VoteProposalProcess implements CommandProcessor {
 
     @Autowired
     Config config;

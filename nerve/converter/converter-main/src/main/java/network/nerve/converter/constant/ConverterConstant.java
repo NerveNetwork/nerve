@@ -20,7 +20,8 @@ public interface ConverterConstant {
     String SYS_ALLOW_NULL_ARRAY_ELEMENT = "protostuff.runtime.allow_null_array_element";
     String SYS_FILE_ENCODING = "file.encoding";
 
-    String HETEROGENEOUS_CONFIG = "heterogeneous.json";
+    String HETEROGENEOUS_MAINNET_CONFIG = "heterogeneous_mainnet.json";
+    String HETEROGENEOUS_TESTNET_CONFIG = "heterogeneous_testnet.json";
 
     String RPC_VERSION = "1.0";
 
@@ -63,4 +64,5 @@ public interface ConverterConstant {
     int MAGIC_NUM_100 = 100;
 
     int MAX_CHECK_TIMES = 10;
+
 }

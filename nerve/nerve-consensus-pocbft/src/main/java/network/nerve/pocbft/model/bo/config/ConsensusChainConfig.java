@@ -40,7 +40,24 @@ public class ConsensusChainConfig extends ChainConfig implements ModuleConfig {
      * Cross-Chain Transaction Fee Proportion of Main Chain Fee Collection
      * */
     private int mainChainCommissionRatio;
+    private int maxCoinToOfCoinbase;
+    private long minRewardHeight;
 
+    public int getMaxCoinToOfCoinbase() {
+        return maxCoinToOfCoinbase;
+    }
+
+    public void setMaxCoinToOfCoinbase(int maxCoinToOfCoinbase) {
+        this.maxCoinToOfCoinbase = maxCoinToOfCoinbase;
+    }
+
+    public long getMinRewardHeight() {
+        return minRewardHeight;
+    }
+
+    public void setMinRewardHeight(long minRewardHeight) {
+        this.minRewardHeight = minRewardHeight;
+    }
 
     public String getDataFolder() {
         return dataPath + File.separator + ModuleE.CS.name;

@@ -66,6 +66,16 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
      */
     private List<HeterogeneousAddress> signedHeterogeneousAddress;
 
+    public HeterogeneousConfirmedVirtualBank() {
+    }
+
+    public HeterogeneousConfirmedVirtualBank(int heterogeneousChainId, String heterogeneousAddress, String heterogeneousTxHash, long effectiveTime, List<HeterogeneousAddress> signedHeterogeneousAddress) {
+        this.heterogeneousChainId = heterogeneousChainId;
+        this.heterogeneousAddress = heterogeneousAddress;
+        this.heterogeneousTxHash = heterogeneousTxHash;
+        this.effectiveTime = effectiveTime;
+        this.signedHeterogeneousAddress = signedHeterogeneousAddress;
+    }
 
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {

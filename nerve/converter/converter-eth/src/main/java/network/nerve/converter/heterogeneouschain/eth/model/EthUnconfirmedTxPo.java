@@ -47,11 +47,20 @@ public class EthUnconfirmedTxPo extends HeterogeneousTransactionInfo implements 
     private int resendTimes;
     private long createDate;
     private int dbVersion;
+    private EthRecoveryDto recoveryDto;
 
     public EthUnconfirmedTxPo() {
         status = MultiSignatureStatus.INITIAL;
         createDate = System.currentTimeMillis();
         dbVersion = 0;
+    }
+
+    public EthRecoveryDto getRecoveryDto() {
+        return recoveryDto;
+    }
+
+    public void setRecoveryDto(EthRecoveryDto recoveryDto) {
+        this.recoveryDto = recoveryDto;
     }
 
     public int getBlockHeightTimes() {
@@ -146,6 +155,10 @@ public class EthUnconfirmedTxPo extends HeterogeneousTransactionInfo implements 
         final StringBuilder sb = new StringBuilder("{");
         sb.append("\"status\":")
                 .append('\"').append(status).append('\"');
+        sb.append(",\"ethTxHash\":")
+                .append('\"').append(getTxHash()).append('\"');
+        sb.append(",\"nerveTxHash\":")
+                .append('\"').append(getNerveTxHash()).append('\"');
         sb.append(",\"validateTx\":")
                 .append(validateTx);
         sb.append(",\"delete\":")
@@ -158,6 +171,8 @@ public class EthUnconfirmedTxPo extends HeterogeneousTransactionInfo implements 
                 .append(createDate);
         sb.append(",\"dbVersion\":")
                 .append(dbVersion);
+        sb.append(",\"recoveryDto\":")
+                .append(recoveryDto);
         sb.append(",\"baseInfo\":")
                 .append(super.toString());
         sb.append('}');

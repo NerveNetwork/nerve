@@ -38,7 +38,7 @@ import io.nuls.core.parse.JSONUtils;
 import java.util.Map;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class CommandResult {
 

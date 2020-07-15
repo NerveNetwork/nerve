@@ -21,7 +21,7 @@
 package io.nuls.provider.model.jsonrpc;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public enum RpcErrorCode {
     // 参数不对

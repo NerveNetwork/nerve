@@ -36,7 +36,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class BlockRoundData extends BaseNulsData {
 

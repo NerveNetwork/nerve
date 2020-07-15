@@ -8,7 +8,6 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import network.nerve.pocbft.service.impl.RandomSeedService;
 import network.nerve.pocbft.utils.manager.ChainManager;
-import network.nerve.pocbft.utils.manager.RoundManager;
 
 import java.util.List;
 import java.util.Map;
@@ -21,8 +20,6 @@ import java.util.Map;
 @Component("CoinBaseProcessorV1")
 public class CoinBaseProcessor implements TransactionProcessor {
 
-    @Autowired
-    private RoundManager roundManager;
     @Autowired
     private ChainManager chainManager;
     @Autowired

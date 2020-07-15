@@ -11,7 +11,7 @@ import org.bouncycastle.util.encoders.Hex;
 import java.io.IOException;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class RandomSeedStatusPo extends BaseNulsData {
 

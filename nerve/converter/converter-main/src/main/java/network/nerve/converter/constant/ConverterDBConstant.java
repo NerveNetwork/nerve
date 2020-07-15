@@ -32,6 +32,13 @@ package network.nerve.converter.constant;
  * @author: qinyifeng
  */
 public interface ConverterDBConstant {
+
+    /** 持久化异构链正在执行虚拟银行变更交易 状态key*/
+    String EXE_HETEROGENEOUS_CHANGE_BANK_KEY = "exeHeterogeneousChangeBankKey";
+    /** 持久化正在执行取消节点银行资格的提案 状态key*/
+    String EXE_DISQUALIFY_BANK_PROPOSAL_KEY = "exeDisqualifyBankProposalKey";
+    /** 是否正在重置异构链(合约) 状态key*/
+    String RESET_VIRTUALBANK_KEY = "resetVirtualBankKey";
     /**
      * 配置信息表名
      * chain configuration table name
@@ -54,6 +61,11 @@ public interface ConverterDBConstant {
     String DB_VIRTUAL_BANK_PREFIX = "cv_table_virtual_bank_";
 
     /**
+     * 历史所有虚拟银行信息持久化表(只增不减)
+     */
+    String DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX = "cv_table_all_history_virtual_bank_";
+
+    /**
      * 确认虚拟银行变更交易 业务存储表
      */
     String DB_CFM_VIRTUAL_BANK_PREFIX = "cv_confirm_virtual_bank_";
@@ -68,6 +80,11 @@ public interface ConverterDBConstant {
      * 异构链组件/提案执行 执行过的交易, 防止二次执行
      */
     String DB_ASYNC_PROCESSED_PREFIX = "cv_async_processed_";
+
+    /**
+     * 重置虚拟银行异构链
+     */
+    String DB_RESET_BANK_PREFIX = "cv_reset_bank_";
 
     /**
      * 等待调用组件的数据表

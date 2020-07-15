@@ -28,6 +28,7 @@ import io.nuls.base.data.po.BlockHeaderPo;
 import io.nuls.block.constant.LocalBlockStateEnum;
 import io.nuls.block.constant.StatusEnum;
 import io.nuls.block.manager.BlockChainManager;
+import io.nuls.block.manager.ChainManager;
 import io.nuls.block.manager.ContextManager;
 import io.nuls.block.model.*;
 import io.nuls.block.rpc.call.*;
@@ -37,6 +38,7 @@ import io.nuls.block.storage.RollbackStorageService;
 import io.nuls.block.utils.BlockUtil;
 import io.nuls.block.utils.ChainGenerator;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.thread.ThreadUtils;
@@ -144,22 +146,22 @@ public class BlockSynchronizer implements Runnable {
                 BlockChainManager.setMasterChain(chainId, ChainGenerator.generateMasterChain(chainId, block, blockService));
             }
             //系统启动后自动回滚区块,回滚数量testAutoRollbackAmount写在配置文件中
-            if (firstStart) {
-                firstStart = false;
-                int testAutoRollbackAmount = blockConfig.getTestAutoRollbackAmount();
-                if (testAutoRollbackAmount > 0) {
-                    if (latestHeight < testAutoRollbackAmount) {
-                        testAutoRollbackAmount = (int) (latestHeight);
-                    }
-                    for (int i = 0; i < testAutoRollbackAmount; i++) {
-                        boolean b = blockService.rollbackBlock(chainId, latestHeight--, true);
-                        if (!b || latestHeight == 0) {
-                            break;
-                        }
-                    }
-                }
-                rollbackToHeight(latestHeight, chainId);
-            }
+//            if (firstStart) {
+//                firstStart = false;
+//                int testAutoRollbackAmount = blockConfig.getTestAutoRollbackAmount();
+//                if (testAutoRollbackAmount > 0) {
+//                    if (latestHeight < testAutoRollbackAmount) {
+//                        testAutoRollbackAmount = (int) (latestHeight);
+//                    }
+//                    for (int i = 0; i < testAutoRollbackAmount; i++) {
+//                        boolean b = blockService.rollbackBlock(chainId, latestHeight--, true);
+//                        if (!b || latestHeight == 0) {
+//                            break;
+//                        }
+//                    }
+//                }
+//                rollbackToHeight(latestHeight, chainId);
+//            }
             while (true) {
                 if (synchronize()) {
                     break;
@@ -174,23 +176,23 @@ public class BlockSynchronizer implements Runnable {
 
     /**
      * 回滚区块到指定高度
-     * */
-    private void rollbackToHeight(long latestHeight, int chainId){
+     */
+    private void rollbackToHeight(long latestHeight, int chainId) {
         BlockConfig blockConfig = SpringLiteContext.getBean(BlockConfig.class);
         long height = blockConfig.getRollbackHeight();
-        if(height > 0){
+        if (height > 0) {
             RollbackStorageService rollbackService = SpringLiteContext.getBean(RollbackStorageService.class);
             RollbackInfoPo po = rollbackService.get(chainId);
-            if(po == null || po.getHeight() != height){
-                if(latestHeight > height + 1000){
+            if (po == null || po.getHeight() != height) {
+                if (latestHeight > height + 1000) {
                     ContextManager.getContext(chainId).getLogger().warn("If the rollback height is greater than 1000,p;ease replace the data package");
                     System.exit(1);
                 }
-                while (latestHeight >= height){
-                    if(!blockService.rollbackBlock(chainId, latestHeight--, true)){
+                while (latestHeight >= height) {
+                    if (!blockService.rollbackBlock(chainId, latestHeight--, true)) {
                         latestHeight++;
                     }
-                    if ( latestHeight == 0) {
+                    if (latestHeight == 0) {
                         break;
                     }
                 }
@@ -203,7 +205,6 @@ public class BlockSynchronizer implements Runnable {
     /**
      * 等待网络稳定
      * 每隔5秒请求一次getAvailableNodes,连续5次节点数大于minNodeAmount就认为网络稳定
-     *
      */
     private List<Node> waitUntilNetworkStable() throws InterruptedException {
         ChainContext context = ContextManager.getContext(chainId);
@@ -214,6 +215,11 @@ public class BlockSynchronizer implements Runnable {
         List<Node> availableNodes;
         int nodeAmount;
         int count = 0;
+        int min = 0;
+        if (firstStart) {
+            firstStart = false;
+            min = 5;
+        }
         while (true) {
             availableNodes = NetworkCall.getAvailableNodes(chainId);
             nodeAmount = availableNodes.size();
@@ -223,7 +229,7 @@ public class BlockSynchronizer implements Runnable {
                 count = 0;
             }
             logger.info("minNodeAmount = " + minNodeAmount + ", current nodes amount=" + nodeAmount + ", wait until network stable......");
-            if (count >= 3) {
+            if (count >= min) {
                 return availableNodes;
             }
             Thread.sleep(waitNetworkInterval);
@@ -250,9 +256,10 @@ public class BlockSynchronizer implements Runnable {
         BlockDownloaderParams downloaderParams = statistics(availableNodes, context);
         context.setDownloaderParams(downloaderParams);
 
-        if(downloaderParams.getNodes() == null || downloaderParams.getNodes().isEmpty()){
+        if (downloaderParams.getNodes() == null || downloaderParams.getNodes().isEmpty()) {
             //网络上没有可用的一致节点,就是节点高度都不一致,或者一致的节点比例不够
-            logger.warn("There are no consistent nodes available on the network, availableNodes-" + availableNodes);
+//            logger.warn("There are no consistent nodes available on the network, availableNodes-" + availableNodes);
+            Thread.sleep(1000);
             return false;
         }
         int size = downloaderParams.getNodes().size();
@@ -335,7 +342,7 @@ public class BlockSynchronizer implements Runnable {
             context.getSynCompleteLock().lock();
             BlockDownloaderParams newestParams = statistics(NetworkCall.getAvailableNodes(chainId), context);
             return newestParams.getNetLatestHeight() <= context.getLatestBlock().getHeader().getHeight();
-        }finally {
+        } finally {
             context.getSynCompleteLock().unlock();
         }
     }
@@ -391,16 +398,13 @@ public class BlockSynchronizer implements Runnable {
         }
         ChainParameters parameters = context.getParameters();
         double div = DoubleUtils.div(count, filterAvailableNodes.size(), 2);
-        byte percent = calculateConsistencyNodePercent(parameters.getConsistencyNodePercent(), filterAvailableNodes.size());
-        if (div * 100 < percent) {
-            return params;
-        }
         List<Node> nodeList = nodeMap.get(key);
         params.setNodes(nodeList);
         Map<String, Node> statusMap = new ConcurrentHashMap<>();
         nodeList.forEach(e -> statusMap.put(e.getId(), e));
         params.setNodeMap(statusMap);
         Node node = nodeList.get(0);
+        Log.info("统计比例："+div+", height:"+node.getHeight());
         params.setNetLatestHash(node.getHash());
         params.setNetLatestHeight(node.getHeight());
 

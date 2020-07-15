@@ -24,6 +24,7 @@ import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Block;
 import io.nuls.base.data.BlockHeader;
+import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.SmallBlock;
 import io.nuls.block.constant.BlockErrorCode;
 import io.nuls.block.manager.ContextManager;
@@ -33,6 +34,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
@@ -56,39 +58,6 @@ public class ConsensusCall {
     private static BlockService service;
 
     /**
-     * 共识验证
-     *
-     * @param chainId  链Id/chain id
-     * @param block
-     * @param download 0区块下载中,1接收到最新区块
-     * @return
-     */
-    public static Result verify(int chainId, Block block, int download) {
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        try {
-            Map<String, Object> params = new HashMap<>(5);
-//            params.put(Constants.VERSION_KEY_STR, "1.0");
-            params.put(Constants.CHAIN_ID, chainId);
-            params.put("download", download);
-            params.put("block", RPCUtil.encode(block.serialize()));
-            Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_validBlock", params, 10 * 60 * 1000);
-            if (response.isSuccess()) {
-                Map responseData = (Map) response.getResponseData();
-                Map v = (Map) responseData.get("cs_validBlock");
-                boolean value = (Boolean) v.get("value");
-                if (value) {
-                    List contractList = (List) v.get("contractList");
-                    return Result.getSuccess(BlockErrorCode.SUCCESS).setData(contractList);
-                }
-            }
-            return Result.getFailed(ErrorCode.init(response.getResponseErrorCode()));
-        } catch (Exception e) {
-            logger.error("", e);
-            return Result.getFailed(BlockErrorCode.BLOCK_VERIFY_ERROR);
-        }
-    }
-
-    /**
      * 共识BZT验证
      *
      * @param chainId
@@ -96,8 +65,8 @@ public class ConsensusCall {
      * @param nodeId
      * @return
      */
-    public static Result verifyCs(int chainId, Block block, String nodeId,int download,
-                                   boolean basicVerify,boolean byzantineVerify) {
+    public static Result verifyCs(int chainId, Block block, String nodeId, int download,
+                                  boolean basicVerify, boolean byzantineVerify) {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
         try {
             Map<String, Object> params = new HashMap<>(3);
@@ -113,8 +82,9 @@ public class ConsensusCall {
                 Map v = (Map) responseData.get("cs_validBlock");
                 boolean value = (Boolean) v.get("value");
                 if (value) {
-                    List contractList = (List) v.get("contractList");
-                    return Result.getSuccess(BlockErrorCode.SUCCESS).setData(contractList);
+//                    boolean bztValue = (Boolean)v.get("bzt_value");
+//                    List contractList = (List) v.get("contractList");
+                    return Result.getSuccess(BlockErrorCode.SUCCESS).setData(v);
                 }
             }
             return Result.getFailed(ErrorCode.init(response.getResponseErrorCode()));
@@ -265,4 +235,45 @@ public class ConsensusCall {
         }
     }
 
+    public static byte[] getVoteResult(int chainId, NulsHash hash) {
+        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        try {
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("blockHash", hash.toHex());
+            Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_getVoteResult", params);
+            if (response.isSuccess()) {
+                Map responseData = (Map) response.getResponseData();
+                Map v = (Map) responseData.get("cs_getVoteResult");
+
+                String voteResult = (String) v.get("voteResult");
+                if(null == voteResult){
+                    return null;
+                }
+                return HexUtil.decode(voteResult);
+
+            }
+            return null;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return null;
+    }
+
+    public static boolean noticeVoteResult(int chainId, byte[] voteResult) {
+        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        try {
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("voteResult", HexUtil.encode(voteResult));
+            Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_noticeVoteResult", params);
+            if (response.isSuccess()) {
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            logger.error("", e);
+        }
+        return false;
+    }
 }

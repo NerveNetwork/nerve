@@ -41,7 +41,7 @@ public enum DepositFixedType {
      * */
     FIVE_YEARS((byte)5, 155520000),
 
-    TEST((byte)7,  300),
+//    TEST((byte)7,  300),
 
     /**
      * 十年

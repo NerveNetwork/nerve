@@ -21,11 +21,13 @@
 package io.nuls.block.service.impl;
 
 import io.nuls.base.RPCUtil;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.*;
 import io.nuls.base.data.po.BlockHeaderPo;
 import io.nuls.block.constant.BlockErrorCode;
 import io.nuls.block.manager.BlockChainManager;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.SaverManager;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.SmallBlockMessage;
 import io.nuls.block.model.*;
@@ -33,6 +35,7 @@ import io.nuls.block.rpc.call.*;
 import io.nuls.block.service.BlockService;
 import io.nuls.block.storage.BlockStorageService;
 import io.nuls.block.storage.ChainStorageService;
+import io.nuls.block.thread.BlockSaver;
 import io.nuls.block.thread.CacheBlockProcessor;
 import io.nuls.block.utils.BlockUtil;
 import io.nuls.block.utils.ChainGenerator;
@@ -52,6 +55,7 @@ import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.message.MessageUtil;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.channel.manager.ConnectManager;
+import io.nuls.core.rpc.util.NulsDateUtils;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -246,7 +250,7 @@ public class BlockServiceImpl implements BlockService {
                 return null;
             }
             block.setTxs(transactions);
-            logger.debug("get block time-" + (System.nanoTime() - l) + ", height-" + height);
+//            logger.debug("get block time-" + (System.nanoTime() - l) + ", height-" + height);
             return block;
         } catch (Exception e) {
             logger.error("error when getBlock by height", e);
@@ -317,14 +321,17 @@ public class BlockServiceImpl implements BlockService {
             if (isVerifyBlock(chainId, hash)) {
                 BlockSaveTemp blockSaveTemp = getBlockBasicVerifyResult(chainId, hash);
                 if (null != blockSaveTemp) {
-                    logger.debug("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
-                    return saveBlock(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null);
+                    logger.info("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
+                    // 这里改成异步
+                    SaverManager.offer(new BlockSaver.Saver(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null));
+                    return true;
                 } else {
+                    logger.warn("基础验证还没做，已经收到投票结果了");
                     //异常数据
                     return false;
                 }
             }
-
+            logger.warn("isVerifyBlock： false,");
         } else {
             //拜占庭失败，进行信息清理
             logger.warn("hash={},bzt失败了...", hash);
@@ -334,7 +341,9 @@ public class BlockServiceImpl implements BlockService {
 
     }
 
-    private void putTempBlock(int chainId, NulsHash hash, Block block, byte bztAndBaseVerify) {
+    private synchronized void putTempBlock(int chainId, NulsHash hash, Block block, byte bztAndBaseVerify) {
+        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        logger.info("put varify flag:{}-{}", hash.toHex(), bztAndBaseVerify);
         Map<NulsHash, BlockSaveTemp> mapBasicVerify = ContextManager.getContext(chainId).getBlockVerifyResult();
         BlockSaveTemp blockSaveTemp = mapBasicVerify.get(hash);
         if (null == blockSaveTemp) {
@@ -345,6 +354,7 @@ public class BlockServiceImpl implements BlockService {
                 mapBasicVerify.get(hash).setBlock(block);
             }
             if (bztAndBaseVerify != 0) {
+                logger.info("do it.");
                 mapBasicVerify.get(hash).setBztAndBaseVerify((byte) (blockSaveTemp.getBztAndBaseVerify() | bztAndBaseVerify));
             }
         }
@@ -394,11 +404,10 @@ public class BlockServiceImpl implements BlockService {
      **/
     private boolean saveBlock(int chainId, Block block, boolean localInit, int download, boolean needLock,
                               boolean broadcast, boolean forward, boolean isRecPocNet, String nodeId) {
-
         long startTime = System.nanoTime();
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
-        if(context.isStoping()){
+        if (context.isStoping()) {
             logger.warn("The system is about to stop.......");
             return false;
         }
@@ -414,37 +423,46 @@ public class BlockServiceImpl implements BlockService {
 //        logger.debug("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
         try {
             if (block.getHeader().getHeight() > 0 && block.getHeader().getHeight() <= context.getLatestHeight()) {
-                logger.debug("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
+                logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
                 return true;
             }
             //默认不进行拜占庭校验
-            boolean byzantine;
+            boolean needByzantine;
             //默认必须基础校验
-            boolean basicVerify = true;
-            boolean isBZTFlag = isVerifyBZT(chainId, hash);
+            boolean needBasicVerify = true;
+            boolean didBZTFlag = isVerifyBZT(chainId, hash);
             //还未bzt过,并且不是共识传送，并且不是同步区块情况下byzantine=true
-            if (isBZTFlag || isRecPocNet || download == 0) {
-                byzantine = false;
+            if (didBZTFlag || isRecPocNet || download == 0) {
+                needByzantine = false;
             } else {
-                byzantine = true;
+                needByzantine = true;
             }
 
             if (isVerifyBlock(chainId, hash)) {
                 //已经基础校验过
-                basicVerify = false;
+                needBasicVerify = false;
             }
             //基础与bzt校验存在一个
-            if (basicVerify || byzantine) {
+            if (needBasicVerify || needByzantine) {
                 //1.验证区块
-                Result result = verifyBlock(chainId, block, localInit, download, basicVerify, byzantine, nodeId, isRecPocNet);
+                Result result = verifyBlock(chainId, block, localInit, download, needBasicVerify, needByzantine, nodeId, isRecPocNet);
                 if (result.isFailed()) {
-                    logger.debug("verifyBlock fail! height-" + height);
+                    logger.error("verifyBlock fail! height-" + height + "," + result.getErrorCode().getMsg());
                     return false;
                 } else {
                     //成功进行基础校验置位
-                    logger.debug("=======verifyBlock success hash={} basicVerify={} ", hash, basicVerify);
-                    if (basicVerify) {
+                    logger.debug("=======verifyBlock success hash={} basicVerify={} ", hash, needBasicVerify);
+                    if (needBasicVerify) {
                         putTempBlock(chainId, hash, block, (byte) BLOCK_FLAG);
+                    }
+                    if (null != result.getData()) {
+                        Boolean bztValue = (Boolean) ((Map<String, Object>) result.getData()).get("bzt_value");
+                        if (null != bztValue && bztValue) {
+                            didBZTFlag = true;
+                            //把拜占庭结果放集合里
+                            putTempBlock(chainId, hash, null, (byte) BZT_FLAG);
+                            logger.info("验证的同时，得到了拜占庭结果");
+                        }
                     }
                 }
             }
@@ -452,7 +470,7 @@ public class BlockServiceImpl implements BlockService {
             if (download == 1) {
                 if (isRecPocNet && broadcast) {
                     logger.debug("=======broadcastPocNetBlock hash={}", hash);
-                    if (isBZTFlag) {
+                    if (didBZTFlag) {
                         CachedSmallBlock cachedSmallBlock = SmallBlockCacher.getCachedSmallBlock(chainId, hash);
                         if (cachedSmallBlock != null) {
                             cachedSmallBlock.setPocNet(false);
@@ -464,23 +482,24 @@ public class BlockServiceImpl implements BlockService {
                         broadcastPocNetBlock(chainId, block);
                         SmallBlockCacher.setStatus(chainId, hash, CONSENSUS_COMPLETE);
                     }
-                } else if (broadcast) {
+                } else if (broadcast && didBZTFlag) {
                     broadcastBlock(chainId, block);
                 }
-                if (forward && isBZTFlag) {
-                    forwardBlock(chainId, hash, null);
+                if (forward && didBZTFlag) {
+                    forwardBlock(chainId, hash, height, null);
                 }
             }
             /**
              * 拜占庭没完成，先返回等待
              */
             if (download == 1 && !isVerifyBZTAndBlock(chainId, hash)) {
-                logger.debug("wait for BZTAndBlock  bzt={} block={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
+                logger.info("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
                 return true;
             }
 
             //区块持久化
             if (!persistBlock(chainId, block, localInit, download)) {
+                logger.warn("presist ", height);
                 return false;
             }
 
@@ -511,7 +530,9 @@ public class BlockServiceImpl implements BlockService {
             //清除共识标识
             clearConsensusFlag(chainId, hash);
             context.getFutureBlockCache().remove(height);
-            logger.info("save block success, time-" + (elapsedNanos / 1000000) + "ms, height-" + height + ", txCount-" + block.getHeader().getTxCount() + ", hash-" + hash + ", size-" + block.size());
+
+            logger.info("save block,height-" + height + ",time-" + (elapsedNanos / 1000000) + "ms,blocktime: " + NulsDateUtils.timeStamp2Str(block.getHeader().getTime() * 1000) + ",txCount-" + block.getHeader().getTxCount() + ",hash-" + hash + ", size-" + block.size() + "\n\n");
+
             //区块处理完成之后，查看本地是否缓存有下一个区块，如果存在下一个区块则直接拿出下一个区块保存
             if (height > 0 && download == 1) {
                 handleCacheBlock(chainId, height + 1);
@@ -521,7 +542,7 @@ public class BlockServiceImpl implements BlockService {
             if (needLock) {
                 lock.unlockWrite(l);
             }
-            if(context.isStoping()){
+            if (context.isStoping()) {
                 logger.warn("The system is about to stop.......");
             }
 
@@ -720,25 +741,37 @@ public class BlockServiceImpl implements BlockService {
     }
 
     @Override
-    public boolean forwardBlock(int chainId, NulsHash hash, String excludeNode) {
-        HashMessage message = new HashMessage(hash);
+    public boolean forwardBlock(int chainId, NulsHash hash, long height, String excludeNode) {
+        HashMessage message = new HashMessage(hash, height);
         return NetworkCall.broadcast(chainId, message, excludeNode, FORWARD_SMALL_BLOCK_MESSAGE);
     }
 
     @Override
-    public boolean forwardPocNetBlock(int chainId, NulsHash hash, String excludeNode) {
-        HashMessage message = new HashMessage(hash);
+    public boolean forwardPocNetBlock(int chainId, NulsHash hash, long height, String excludeNode) {
+        HashMessage message = new HashMessage(hash, height);
         return NetworkCall.broadcastPocNet(chainId, message, excludeNode, FORWARD_SMALL_BLOCK_MESSAGE);
     }
 
     @Override
     public boolean broadcastBlock(int chainId, Block block) {
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
+        ChainContext context = ContextManager.getContext(chainId);
+        NulsLogger logger = context.getLogger();
         SmallBlockMessage message = new SmallBlockMessage();
         message.setSmallBlock(BlockUtil.getSmallBlock(chainId, block));
         String excludeNodes = null;
         if (SmallBlockCacher.nodeMap.containsKey(block.getHeader().getHash())) {
             excludeNodes = String.join(",", SmallBlockCacher.nodeMap.get(block.getHeader().getHash()));
+        }
+        byte[] voteResult = context.getVoteResultCache().get(block.getHeader().getHash());
+        if (null == voteResult) {
+            voteResult = ConsensusCall.getVoteResult(chainId, block.getHeader().getHash());
+            if (null != voteResult) {
+                context.getVoteResultCache().cache(block.getHeader().getHash(), voteResult);
+            }
+        }
+        message.setVoteResult(voteResult);
+        if (null == message.getVoteResult()) {
+            logger.info("没有投票结果 -" + block.getHeader().getHash());
         }
         boolean broadcast = NetworkCall.broadcast(chainId, message, excludeNodes, SMALL_BLOCK_MESSAGE);
         logger.debug("hash-" + block.getHeader().getHash() + ", broadcast-" + broadcast);

@@ -24,7 +24,9 @@
 package network.nerve.converter.heterogeneouschain.eth.context;
 
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 
@@ -59,12 +61,15 @@ public class EthContext implements Serializable {
     public static int NERVE_CHAINID = 1;
     public static String MULTY_SIGN_ADDRESS;
     public static List<String> RPC_ADDRESS_LIST = new ArrayList<>();
+    public static List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
      * 日志实例
      */
     private static NulsLogger logger;
     private static HeterogeneousCfg config;
     private static IConverterCoreApi converterCoreApi;
+
+    private static Integer intervalWaitting;
 
     public static IConverterCoreApi getConverterCoreApi() {
         return converterCoreApi;
@@ -80,6 +85,19 @@ public class EthContext implements Serializable {
 
     public static void setConfig(HeterogeneousCfg config) {
         EthContext.config = config;
+    }
+
+    public static int getIntervalWaitting() {
+        if (intervalWaitting != null) {
+            return intervalWaitting;
+        }
+        String interval = config.getIntervalWaittingSendTransaction();
+        if(StringUtils.isNotBlank(interval)) {
+            intervalWaitting = Integer.parseInt(interval);
+        } else {
+            intervalWaitting = EthConstant.DEFAULT_INTERVAL_WAITTING;
+        }
+        return intervalWaitting;
     }
 
     public static void setLogger(NulsLogger logger) {

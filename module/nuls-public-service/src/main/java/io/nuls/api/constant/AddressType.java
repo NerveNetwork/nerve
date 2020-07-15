@@ -21,7 +21,7 @@
 package io.nuls.api.constant;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class AddressType {
 

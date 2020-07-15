@@ -71,7 +71,7 @@ public class DexService {
      * @return
      * @throws NulsException
      */
-    public Map<String, List<Transaction>> doPacking(List<Transaction> txList, long blockTime, long blockHeight) throws NulsException {
+    public Map<String, List<Transaction>> doPacking(List<Transaction> txList, long blockTime, long blockHeight, boolean isValidate) throws NulsException {
         lock.lock();
 
         try {
@@ -155,6 +155,9 @@ public class DexService {
             //如果index小于txList.size()，说明因为成交交易达到上限，导致有一部分交易需要取消打包
             if (index != txList.size() - 1) {
                 for (int i = index + 1; i < txList.size(); i++) {
+                    if(isValidate) {
+                        LoggerUtil.dexLog.error("------validate txs counts error-----");
+                    }
                     removeTxList.add(txList.get(i));
                 }
             }

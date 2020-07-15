@@ -50,12 +50,31 @@ public class BlockExtendsDataTest {
         data.setConsensusMemberCount(1);
         data.setPackingIndexOfRound(1);
         data.setRoundIndex(1);
-        data.setRoundStartTime(1568131190L);
+        data.setRoundStartTime(1594278000L);
         data.setMainVersion((short) 1);
         data.setBlockVersion((short) 1);
         data.setEffectiveRatio((byte) 90);
         data.setContinuousIntervalCount((short) 100);
         data.setStateRoot(HexUtil.decode("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
         System.out.println(HexUtil.encode(data.serialize()));
+    }
+
+    @Test
+    public void test2() {
+//        ,
+//        {
+//            "address": "NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus",
+//                "amount": 2000000000000000,
+//                "lockTime": 1628524800
+//        }
+        long start = 1628524800L;
+        StringBuilder ss = new StringBuilder();
+        for (int i = 0; i < 20; i++) {
+            ss.append(",{\"address\":\"NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus\",\"amount\": 2000000000000000,\"lockTime\":");
+            long lockTime = start+i*30*24*60*60;
+            ss.append(lockTime);
+            ss.append("}");
+        }
+        System.out.println(ss.toString());
     }
 }

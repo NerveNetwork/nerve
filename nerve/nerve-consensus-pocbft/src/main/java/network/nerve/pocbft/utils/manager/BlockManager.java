@@ -1,15 +1,19 @@
 package network.nerve.pocbft.utils.manager;
 
-import network.nerve.pocbft.cache.VoteCache;
-import network.nerve.pocbft.model.bo.Chain;
-import network.nerve.pocbft.rpc.call.CallMethodUtils;
-import network.nerve.pocbft.utils.ConsensusAwardUtil;
-import network.nerve.pocbft.utils.compare.BlockHeaderComparator;
 import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
 import network.nerve.pocbft.constant.ConsensusConstant;
+import network.nerve.pocbft.constant.ConsensusErrorCode;
+import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.rpc.call.CallMethodUtils;
+import network.nerve.pocbft.utils.ConsensusAwardUtil;
+import network.nerve.pocbft.utils.compare.BlockHeaderComparator;
+import network.nerve.pocbft.v1.RoundController;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,8 +27,6 @@ import java.util.List;
  */
 @Component
 public class BlockManager {
-    @Autowired
-    private RoundManager roundManager;
 
     @Autowired
     private PunishManager punishManager;
@@ -45,11 +47,11 @@ public class BlockManager {
         /*
         如果新增区块有轮次变化，则删除最小轮次区块
          */
-        BlockHeader newestHeader = chain.getNewestHeader();
+        BlockHeader newestHeader = chain.getBestHeader();
         BlockExtendsData newestExtendsData = newestHeader.getExtendsData();
         BlockExtendsData receiveExtendsData = blockHeader.getExtendsData();
         long receiveRoundIndex = receiveExtendsData.getRoundIndex();
-        if(chain.getBlockHeaderList().size() >0){
+        if (chain.getBlockHeaderList().size() > 0) {
             BlockExtendsData lastExtendsData = chain.getBlockHeaderList().get(0).getExtendsData();
             long lastRoundIndex = lastExtendsData.getRoundIndex();
             if (receiveRoundIndex > newestExtendsData.getRoundIndex() && (receiveRoundIndex - ConsensusConstant.INIT_BLOCK_HEADER_COUNT > lastRoundIndex)) {
@@ -66,18 +68,20 @@ public class BlockManager {
                 punishManager.clear(chain);
             }
         }
+
+        //这里切换轮次
+        RoundController roundController = SpringLiteContext.getBean(RoundController.class);
+        roundController.switchPackingIndex(receiveExtendsData.getRoundIndex(), receiveExtendsData.getRoundStartTime(),
+                receiveExtendsData.getPackingIndexOfRound() + 1, blockHeader.getTime() + chain.getConfig().getPackingInterval());
+
         chain.getBlockHeaderList().add(blockHeader);
-        chain.setNewestHeader(blockHeader);
-        chain.getLogger().info("区块保存，高度为：" + blockHeader.getHeight() + " , txCount: " + blockHeader.getTxCount() + ",本地最新区块高度为：" + chain.getNewestHeader().getHeight() + ", 轮次:" + receiveExtendsData.getRoundIndex());
-        //清除已经缓存了的比本节点轮次大的轮次信息
-        roundManager.clearRound(chain,receiveRoundIndex);
-        chain.getLogger().debug("区块同步状态：{},是否为共识节点：{}", download,chain.isPacker());
-        if(download == 1 && chain.isPacker() && VoteCache.CURRENT_BLOCK_VOTE_DATA != null){
-            //切换当前投票轮次
-            VoteManager.switchBlockVoteData(chain, blockHeader);
-        }
+        chain.setBestHeader(blockHeader);
+        chain.getLogger().info("区块保存，高度为：" + blockHeader.getHeight() + " , txCount: " + blockHeader.getTxCount() + ",本地最新区块高度为：" + chain.getBestHeader().getHeight() + ", 轮次:" + receiveExtendsData.getRoundIndex() + "\n\n");
+
+
+
         //如果存在没保存公钥节点则保存节点公钥
-        if(!chain.getUnBlockAgentList().isEmpty()){
+        if (!chain.getUnBlockAgentList().isEmpty()) {
             agentManager.setPubkey(chain, blockHeader.getBlockSignature().getPublicKey());
         }
     }
@@ -90,10 +94,13 @@ public class BlockManager {
      * @param height block height
      */
     public void chainRollBack(Chain chain, int height) {
+        if(height>0){
+            throw new NulsRuntimeException(ConsensusErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
         chain.getLogger().info("区块开始回滚，回滚到的高度：" + height);
         List<BlockHeader> headerList = chain.getBlockHeaderList();
         headerList.sort(new BlockHeaderComparator());
-        BlockHeader originalBlocHeader = chain.getNewestHeader();
+        BlockHeader originalBlocHeader = chain.getBestHeader();
         BlockExtendsData originalExtendsData = originalBlocHeader.getExtendsData();
         long originalRound = originalExtendsData.getRoundIndex();
         BlockHeader rollBackHeader;
@@ -106,33 +113,33 @@ public class BlockManager {
             }
         }
         chain.setBlockHeaderList(headerList);
-        chain.setNewestHeader(headerList.get(headerList.size() - 1));
-        BlockHeader newestBlocHeader = chain.getNewestHeader();
+        chain.setBestHeader(headerList.get(headerList.size() - 1));
+        BlockHeader newestBlocHeader = chain.getBestHeader();
         BlockExtendsData bestExtendsData = newestBlocHeader.getExtendsData();
         long currentRound = bestExtendsData.getRoundIndex();
         //如果有轮次变化，回滚之后如果本地区块不足指定轮次的区块，则需向区块获取区块补足并回滚本地
-        if(currentRound != originalRound){
+        if (currentRound != originalRound) {
             BlockHeader lastestBlocHeader = chain.getBlockHeaderList().get(0);
             BlockExtendsData lastestExtendsData = lastestBlocHeader.getExtendsData();
             long minRound = lastestExtendsData.getRoundIndex();
-            int localRoundCount = (int)(currentRound - minRound + 1);
+            int localRoundCount = (int) (currentRound - minRound + 1);
             int diffRoundCount = ConsensusConstant.INIT_BLOCK_HEADER_COUNT - localRoundCount;
-            if(diffRoundCount > 0){
+            if (diffRoundCount > 0) {
                 try {
-                    CallMethodUtils.getRoundBlockHeaders(chain,diffRoundCount,lastestBlocHeader.getHeight());
-                }catch (Exception e){
+                    CallMethodUtils.getRoundBlockHeaders(chain, diffRoundCount, lastestBlocHeader.getHeight());
+                } catch (Exception e) {
                     chain.getLogger().error(e);
                 }
             }
             long roundIndex;
             //回滚轮次
-            if(bestExtendsData.getPackingIndexOfRound() > 1){
+            if (bestExtendsData.getPackingIndexOfRound() > 1) {
                 roundIndex = bestExtendsData.getRoundIndex();
-            }else{
-                roundIndex = bestExtendsData.getRoundIndex()-1;
+            } else {
+                roundIndex = bestExtendsData.getRoundIndex() - 1;
             }
-            roundManager.rollBackRound(chain, roundIndex);
+//            roundManager.rollBackRound(chain, roundIndex);
         }
-        chain.getLogger().info("区块回滚成功，回滚到的高度为：" + height + ",本地最新区块高度为：" + chain.getNewestHeader().getHeight());
+        chain.getLogger().info("区块回滚成功，回滚到的高度为：" + height + ",本地最新区块高度为：" + chain.getBestHeader().getHeight());
     }
 }

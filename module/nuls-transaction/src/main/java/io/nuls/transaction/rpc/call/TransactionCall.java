@@ -134,7 +134,7 @@ public class TransactionCall {
      */
     public static boolean txProcess(Chain chain, String cmd, String moduleCode, Map<String, Object> params) {
         try {
-            Map result = (Map) TransactionCall.requestAndResponse(moduleCode, cmd, params, TxConstant.TIMEOUT);
+            Map result = (Map) TransactionCall.requestAndResponse(moduleCode, cmd, params, TxConstant.REQUEST_TIME_OUT);
             Boolean value = (Boolean) result.get("value");
             if (null == value) {
                 chain.getLogger().error("call module-{} {} response value is null, error:{}",

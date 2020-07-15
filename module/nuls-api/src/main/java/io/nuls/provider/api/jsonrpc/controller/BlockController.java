@@ -52,7 +52,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Niels
+ * @author Eva
  */
 @Controller
 @Api(type = ApiType.JSONRPC)

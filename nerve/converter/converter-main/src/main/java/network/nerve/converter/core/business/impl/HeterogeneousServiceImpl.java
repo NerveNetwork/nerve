@@ -31,6 +31,10 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.storage.PersistentCacheStroageService;
+
+import static network.nerve.converter.constant.ConverterDBConstant.*;
 
 /**
  * @author: Loki
@@ -40,8 +44,11 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 public class HeterogeneousServiceImpl implements HeterogeneousService {
 
 
+
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
+    @Autowired
+    private PersistentCacheStroageService persistentCacheStroageService;
 
     /**
      * 判断是否需要组装当前网络的主资产补贴异构链交易手续费
@@ -55,5 +62,23 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
         IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
         return heterogeneousDocking.isSupportContractAssetByCurrentChain()
                 && heterogeneousAssetId != ConverterConstant.ALL_MAIN_ASSET_ID;
+    }
+
+    @Override
+    public boolean saveExeHeterogeneousChangeBankStatus(Chain chain, Boolean status) {
+        chain.getHeterogeneousChangeBankExecuting().set(status);
+        return persistentCacheStroageService.saveCacheState(chain, EXE_HETEROGENEOUS_CHANGE_BANK_KEY, status ? 1 : 0);
+    }
+
+    @Override
+    public boolean saveExeDisqualifyBankProposalStatus(Chain chain, Boolean status) {
+        chain.getExeDisqualifyBankProposal().set(status);
+        return persistentCacheStroageService.saveCacheState(chain, EXE_DISQUALIFY_BANK_PROPOSAL_KEY, status ? 1 : 0);
+    }
+
+    @Override
+    public boolean saveResetVirtualBankStatus(Chain chain, Boolean status) {
+        chain.getResetVirtualBank().set(status);
+        return persistentCacheStroageService.saveCacheState(chain, RESET_VIRTUALBANK_KEY, status ? 1 : 0);
     }
 }

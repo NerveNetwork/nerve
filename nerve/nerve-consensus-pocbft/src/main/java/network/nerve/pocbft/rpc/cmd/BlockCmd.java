@@ -59,6 +59,40 @@ public class BlockCmd extends BaseCmd {
     }
 
     /**
+     * 获取区块签名结果
+     * */
+    @CmdAnnotation(cmd = CMD_GET_VOTE_RESULT, priority = CmdPriority.HIGH, version = 1.0, description = "获取区块签名结果/get block voted result")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    @Parameter(parameterName = PARAM_BLOCK_HASH, requestType = @TypeDescriptor(value = String.class), parameterDes = "区块hash")
+    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "voteResult",valueType = String.class, description = "区块投票结果")
+    }))
+    public Response getVoteResult(Map<String,Object> params){
+        Result result = service.getVoteResult(params);
+        if(result.isFailed()){
+            return failed(result.getErrorCode());
+        }
+        return success(result.getData());
+    }
+
+    /**
+     * 推送区块签名结果
+     * */
+    @CmdAnnotation(cmd = CMD_NOTICE_VOTE_RESULT, priority = CmdPriority.HIGH, version = 1.0, description = "推送区块签名结果/push block voted result")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    @Parameter(parameterName = "voteResult", requestType = @TypeDescriptor(value = String.class), parameterDes = "区块签名结果")
+    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "result",valueType = Boolean.class, description = "操作结果")
+    }))
+    public Response noticeVoteResult(Map<String,Object> params){
+        Result result = service.noticeVoteResult(params);
+        if(result.isFailed()){
+            return failed(result.getErrorCode());
+        }
+        return success(result.getData());
+    }
+
+    /**
      * 接收需缓存的区块
      * */
     @CmdAnnotation(cmd = CMD_RECEIVE_HEADER_LIST, version = 1.0, description = "接收并缓存区块列表/Receive and cache block lists")

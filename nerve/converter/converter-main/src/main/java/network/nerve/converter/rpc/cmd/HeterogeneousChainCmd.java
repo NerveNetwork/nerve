@@ -39,16 +39,21 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
+import network.nerve.converter.model.bo.AgentBasic;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.LatestBasicBlock;
+import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.utils.LoggerUtil;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -70,6 +75,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
     @Autowired
     private ConverterConfig converterConfig;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO, version = 1.0, description = "异构链资产信息查询")
     @Parameters(value = {
@@ -90,7 +97,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
         Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
-            if(chainId != converterConfig.getChainId()) {
+            if (chainId != converterConfig.getChainId()) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chain ID");
             }
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
@@ -157,15 +164,18 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType=boolean.class, description = "true/false")
+            @Key(name = "value", valueType = boolean.class, description = "true/false")
     })
     )
     public Response validateHeterogeneousContractAssetRegPendingTx(Map params) {
         Chain chain = null;
         try {
+            if (!converterCoreApi.isVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+            }
             // check parameters
             if (params == null) {
-                LoggerUtil.LOG.warn("ac_transfer params is null");
+                LoggerUtil.LOG.warn("params is null");
                 throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
             }
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
@@ -192,7 +202,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             }
             HeterogeneousAssetInfo assetInfo = docking.getAssetByContractAddress(contractAddress);
             // 资产已存在
-            if(assetInfo != null) {
+            if (assetInfo != null) {
                 LoggerUtil.LOG.error("资产已存在");
                 throw new NulsException(ConverterErrorCode.ASSET_EXIST);
             }
@@ -235,9 +245,12 @@ public class HeterogeneousChainCmd extends BaseCmd {
     public Response createHeterogeneousContractAssetRegPendingTx(Map params) {
         Chain chain = null;
         try {
+            if (!converterCoreApi.isVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+            }
             // check parameters
             if (params == null) {
-                LoggerUtil.LOG.warn("ac_transfer params is null");
+                LoggerUtil.LOG.warn("params is null");
                 throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
             }
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
@@ -284,6 +297,52 @@ public class HeterogeneousChainCmd extends BaseCmd {
             errorLogProcess(chain, e);
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
+    }
+
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_ADDRESS, version = 1.0, description = "查询共识节点打包地址对应的异构链地址")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链ID"),
+            @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "共识节点打包地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousAddress", description = "异构链地址"),
+    })
+    )
+    public Response getHeterogeneousAddress(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+        try {
+            Integer chainId = Integer.parseInt(params.get("chainId").toString());
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            String packingAddress = params.get("packingAddress").toString();
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            Chain chain = chainManager.getChain(chainId);
+            LatestBasicBlock latestBasicBlock = chain.getLatestBasicBlock();
+            // 获取最新共识列表
+            List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, latestBasicBlock.getHeight());
+            if (null == listAgent) {
+                chain.getLogger().error("向共识模块获取共识节点列表数据为null");
+                return failed(ConverterErrorCode.DATA_ERROR, "empty agent list");
+            }
+            String pubKey = null;
+            for (AgentBasic agentBasic : listAgent) {
+                if (agentBasic.getPackingAddress().equals(packingAddress)) {
+                    pubKey = agentBasic.getPubKey();
+                    break;
+                }
+            }
+            if (StringUtils.isBlank(pubKey)) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            rtMap.put("heterogeneousAddress", docking.generateAddressByCompressedPublicKey(pubKey));
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
     }
 
     private void errorLogProcess(Chain chain, Exception e) {

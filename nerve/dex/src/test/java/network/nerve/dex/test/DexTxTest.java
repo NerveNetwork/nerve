@@ -16,6 +16,7 @@ import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import network.nerve.dex.model.txData.TradingOrder;
 import network.nerve.dex.model.txData.TradingOrderCancel;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class DexTxTest {
 //        importPriKey("d3413fcc17913623256b6451698ca1d50629a3c8a760ad86d03b6fcda2d3a1af", password); //TNVTdN9i7xo3PmLj376B17Qntng3DyVio4Bqd
 
 
-//        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp   TNVTdN9i97WuLcebKwEYrdiZJJ4NWAvC7B77i
+        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp   TNVTdN9i97WuLcebKwEYrdiZJJ4NWAvC7B77i
 //        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe   TNVTdN9iBXUrnDjcUqnn9WFCb4KFJmsaox6vY
 //        importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn            TNVTdN9iEEaQ68quQYtSu6XMUzd2rwUBtYb7k
 
@@ -98,13 +99,13 @@ public class DexTxTest {
     public void sendCreateCoinTradingTx() {
         try {
             Map params = new HashMap();
-            params.put("address", "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+            params.put("address", "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
             params.put("password", password);
-            params.put("quoteAssetChainId", 4);
-            params.put("quoteAssetId", 3);
-            params.put("scaleQuoteDecimal", 6);
-            params.put("baseAssetChainId", 4);
-            params.put("baseAssetId", 4);
+            params.put("quoteAssetChainId", 2);
+            params.put("quoteAssetId", 1);
+            params.put("scaleQuoteDecimal", 8);
+            params.put("baseAssetChainId", 5);
+            params.put("baseAssetId", 1);
             params.put("scaleBaseDecimal", 8);
             params.put("minBaseAmount", new BigInteger("1000"));
             params.put("minQuoteAmount", new BigInteger("1000"));
@@ -225,12 +226,17 @@ public class DexTxTest {
 
 
         public static void main(String[] args) throws NulsException {
-//            String txHex = "e5007a8bd45e007a07174ccb22d8b990d51a2a9d3e54c43c36afe1c189c47b8c87434b199939e21104000198980dd5d44f66d249c1e16bdf96e392d88309390100e1f505000000000000000000000000000000000000000000000000000000000050d6dc010000000000000000000000000000000000000000000000000000000000d2021704000198980dd5d44f66d249c1e16bdf96e392d8830939040002000050d6dc01000000000000000000000000000000000000000000000000000000082eb33b6db9beaee7001704000198980dd5d44f66d249c1e16bdf96e392d883093904000100a086010000000000000000000000000000000000000000000000000000000000082eb33b6db9beaee700011704000198980dd5d44f66d249c1e16bdf96e392d8830939040002000050d6dc01000000000000000000000000000000000000000000000000000000feffffffffffffff6a2103af80fe5894a4bc170abdad90bbaad38840576136b3fc498a291bb92335c4ad0e473045022100f9166111735ba879bd3072249d66c5505bdfb6d789671444202a3474c6afba3f0220649320415ad42d7261ca21e123b429595c0c711d0a7fefa5bebfa433d1743020";
-//            Transaction transaction = new Transaction();
-//            transaction.parse(new NulsByteBuffer(HexUtil.decode(txHex)));
+            String txHex = "e5001c85e85e00911ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0270679f060000000000000000000000000000000000000000000000000000000000e1f5050000000000000000000000000000000000000000000000000000000017050001f390fea4a51157eda93f07719a73a4f92becd2c6058c0117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010010eea00600000000000000000000000000000000000000000000000000000000088bb2a83be13eda3f000117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010070679f0600000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102f0536147426e1c8ab5a327f69277e15d4e9b33e65552a1af73033465d6385bf74730450220313b3a22fe89c4385629203b9f7026d94fc8ed7987b40185081df3fddd6aa6a2022100837edce656540997738523f496d12f8c221e9fef58b4b7ad97e8120382f60ce6";
+            Transaction transaction = new Transaction();
+            transaction.parse(new NulsByteBuffer(HexUtil.decode(txHex)));
 //            byte[] bytes = transaction.getTransactionSignature();
 //            System.out.println(HexUtil.encode(bytes));tradingOrder
-//            System.out.println(transaction.getCoinDataInstance());
+            System.out.println(transaction.getCoinDataInstance());
+            TradingOrder tradingOrder = new TradingOrder();
+            tradingOrder.parse(new NulsByteBuffer(transaction.getTxData()));
+            System.out.println(AddressTool.getStringAddressByBytes(tradingOrder.getFeeAddress(), "TNVT"));
+            System.out.println(transaction.getHash().toHex());
+            //1ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07
 //            TradingOrder tradingOrder = new TradingOrder();
 //            tradingOrder.parse(new NulsByteBuffer(transaction.getTxData()));
 //            System.out.println(tradingOrder);
@@ -240,18 +246,7 @@ public class DexTxTest {
 //            Address address = new Address(4, "TNVT", BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(signature.getP2PHKSignatures().get(0).getPublicKey()));
 //            System.out.println("=".repeat(100));
 //            System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
-            int count = 1;
-            String addressPrefix = "NERVE";
-            int chainId = 5;
-            for (var i= 0;i<count;i++){
-                    ECKey key = ECKey.fromPrivate(HexUtil.decode("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75"));
-                    Address address = new Address(chainId, addressPrefix, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(key.getPubKey()));
-                    System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
-                    System.out.println("publicKey :" + key.getPublicKeyAsHex());
-                    System.out.println("privateKey:" + key.getPrivateKeyAsHex());
-                    System.out.println("=".repeat(100));
-            }
-
+            System.out.println(AddressTool.getChainIdByAddress("TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf"));
         }
 
 }

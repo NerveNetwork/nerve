@@ -51,7 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * The simplified version of the ROC framework, referring to the use of the spring-framework,
  * implements a simple dependency injection and aspect-oriented programming for dynamic proxy implementations.
  *
- * @author Niels Wang
+ * @author Eva Wang
  */
 public class SpringLiteContext {
 
@@ -168,12 +168,12 @@ public class SpringLiteContext {
                 });
             }
         });
-        Optional<String> maxItem = values.keySet().stream().max((d1, d2) -> d1.length() > d2.length() ? 1 : -1);
-        int maxKeyLength = maxItem.isPresent() ? maxItem.get().length() : 0;
-        Log.info("Configuration information:");
-        values.forEach((key, value) -> {
-            Log.info("{} : {} ==> {}", key + " ".repeat(Math.max(0, maxKeyLength - key.length())), value.getValue(), value.getConfigFile());
-        });
+//        Optional<String> maxItem = values.keySet().stream().max((d1, d2) -> d1.length() > d2.length() ? 1 : -1);
+//        int maxKeyLength = maxItem.isPresent() ? maxItem.get().length() : 0;
+//        Log.info("Configuration information:");
+//        values.forEach((key, value) -> {
+//            Log.info("{} : {} ==> {}", key + " ".repeat(Math.max(0, maxKeyLength - key.length())), value.getValue(), value.getConfigFile());
+//        });
     }
 
     /**

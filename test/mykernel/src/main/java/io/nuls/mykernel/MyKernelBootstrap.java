@@ -76,6 +76,9 @@ public class MyKernelBootstrap implements ModuleConfig {
     @Value("active.config")
     private String config;
 
+    @Value("serviceManagerPort")
+    private int nulstarPort = 7771;
+
     private static List<String> MODULE_STOP_LIST_SCRIPT = new ArrayList<>();
 
     static String[] args;
@@ -183,7 +186,7 @@ public class MyKernelBootstrap implements ModuleConfig {
                 try {
                     String cmd = modules.getAbsolutePath() + File.separator + "start.sh "
                             + " --jre " + System.getProperty("java.home")
-                            + " --managerurl " + "ws://127.0.0.1:7771/ "
+                            + " --managerurl " + "ws://127.0.0.1:"+ nulstarPort+"/ "
                             + (StringUtils.isNotBlank(logPath) ? " --logpath " + logPath: "")
                             + (StringUtils.isNotBlank(dataPath) ? " --datapath " + dataPath : "")
                             + (StringUtils.isNotBlank(logLevel) ? " --loglevel " + logLevel : "")
@@ -213,15 +216,14 @@ public class MyKernelBootstrap implements ModuleConfig {
 
     public boolean doStart() {
         startOtherModule(args);
-        int port = 7771;
         String host = "0.0.0.0";
         String path = "/";
         try {
-            NoUse.startKernel(host, port, path);
+            NoUse.startKernel(host, nulstarPort, path);
         } catch (Exception e) {
             log.error("mykernel start fail",e);
         }
-        log.info("MYKERNEL STARTED. URL: ws://{}{}", host + ":" + port, path);
+        log.info("MYKERNEL STARTED. URL: ws://{}{}", host + ":" + nulstarPort, path);
         return false;
     }
 

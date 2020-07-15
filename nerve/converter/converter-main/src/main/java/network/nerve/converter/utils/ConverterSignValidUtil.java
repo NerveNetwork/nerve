@@ -29,6 +29,7 @@ import io.nuls.base.signture.SignatureUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.VirtualBankDirector;
 
 import java.util.Set;
 
@@ -44,7 +45,7 @@ public class ConverterSignValidUtil {
      * @param tx
      * @throws NulsException
      */
-    public static void validateSign(Chain chain, Transaction tx) throws NulsException {
+    public static void validateVirtualBankSign(Chain chain, Transaction tx) throws NulsException {
         // 签名资格 从交易签名中获取签名地址
         Set<String> addressSet = SignatureUtil.getAddressFromTX(tx, chain.getChainId());
         if (addressSet == null) {
@@ -104,4 +105,35 @@ public class ConverterSignValidUtil {
         }
     }
 
+
+    /**
+     * 验证由种子节点签名,以及正确性
+     * @param chain
+     * @param tx
+     * @throws NulsException
+     */
+    public static void validateSeedNodeSign(Chain chain, Transaction tx) throws NulsException {
+        // 签名资格 从交易签名中获取签名地址
+        Set<String> addressSet = SignatureUtil.getAddressFromTX(tx, chain.getChainId());
+        if (addressSet == null) {
+            throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
+        }
+        boolean hasSeedSigner = false;
+        for (String address : addressSet) {
+            // 种子节点一定是虚拟银行成员
+            VirtualBankDirector director = chain.getDirectorByAgent(address);
+            if(null != director && director.getSeedNode()){
+                hasSeedSigner = true;
+                break;
+            }
+        }
+        if (!hasSeedSigner) {
+            throw new NulsException(ConverterErrorCode.SIGNER_NOT_SEED);
+        }
+        // 验证签名本身正确性
+        boolean rs = SignatureUtil.validateTransactionSignture(chain.getChainId(), tx);
+        if (!rs) {
+            throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
+        }
+    }
 }

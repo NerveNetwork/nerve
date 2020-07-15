@@ -48,6 +48,8 @@ public class NetworkResetMonitor extends BaseMonitor {
         return INSTANCE;
     }
 
+    private long lastResetTime;
+
     @Override
     protected void process(int chainId, ChainContext context, NulsLogger commonLog) {
         ChainParameters parameters = context.getParameters();
@@ -56,7 +58,7 @@ public class NetworkResetMonitor extends BaseMonitor {
         //如果(当前时间戳-最新区块时间戳)>重置网络阈值,通知网络模块重置可用节点
         long currentTime = NulsDateUtils.getCurrentTimeMillis();
         commonLog.debug("chainId-" + chainId + ",currentTime-" + currentTime + ",blockTime-" + time + ",diffrence-" + (currentTime - time));
-        if (currentTime - time > reset) {
+        if (currentTime - time > reset&&currentTime-lastResetTime>reset) {
             commonLog.info("chainId-" + chainId + ",NetworkReset!");
             NetworkCall.resetNetwork(chainId);
             //重新开启区块同步线程
@@ -64,6 +66,7 @@ public class NetworkResetMonitor extends BaseMonitor {
             TransactionCall.notice(chainId, MODULE_WAITING);
             CrossChainCall.notice(chainId, MODULE_WAITING);
             BlockSynchronizer.syn(chainId);
+            lastResetTime = currentTime;
         }
     }
 

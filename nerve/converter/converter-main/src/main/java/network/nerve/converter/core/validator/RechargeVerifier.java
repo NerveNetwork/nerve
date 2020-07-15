@@ -44,6 +44,7 @@ import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.RechargeTxData;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
+import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -69,6 +70,8 @@ public class RechargeVerifier {
     private ProposalStorageService proposalStorageService;
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    @Autowired
+    private RechargeStorageService rechargeStorageService;
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
         CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
@@ -81,6 +84,12 @@ public class RechargeVerifier {
         }
         CoinTo coinTo = listCoinTo.get(0);
         RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
+        if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
+            // 该原始交易已执行过充值
+            chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
+                    tx.getHash().toHex(), txData.getOriginalTxHash());
+            throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
+        }
         // 通过链内资产id 获取异构链信息
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsId());
 

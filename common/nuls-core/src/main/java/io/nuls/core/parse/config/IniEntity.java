@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @author Niels
+ * @author Eva
  */
 public class IniEntity {
 

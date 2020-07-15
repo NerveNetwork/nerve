@@ -1,6 +1,6 @@
 package network.nerve.pocbft.utils.validator;
 
-import network.nerve.pocbft.cache.VoteCache;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.round.MeetingMember;
 import network.nerve.pocbft.model.bo.round.MeetingRound;
@@ -21,14 +21,13 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.utils.enumeration.PunishReasonEnum;
 import network.nerve.pocbft.utils.manager.*;
+import network.nerve.pocbft.v1.RoundController;
 
 import java.io.IOException;
 import java.util.*;
 
 @Component
 public class BlockValidator {
-    @Autowired
-    private RoundManager roundManager;
 
     @Autowired
     private CoinDataManager coinDataManager;
@@ -60,14 +59,12 @@ public class BlockValidator {
         //区块轮次信息验证
         RoundValidResult roundValidResult;
         String blockHeaderHash = blockHeader.getHash().toHex();
-        try {
-            roundValidResult = roundValidate(chain, blockHeader, blockHeaderHash);
-        } catch (NulsException e) {
-            throw new NulsException(e);
-        }
+
+        roundValidResult = roundValidate(chain, blockHeader, blockHeaderHash);
+
         MeetingRound currentRound = roundValidResult.getRound();
         BlockExtendsData extendsData = blockHeader.getExtendsData();
-        MeetingMember member = currentRound.getMember(extendsData.getPackingIndexOfRound());
+        MeetingMember member = currentRound.getMemberByOrder(extendsData.getPackingIndexOfRound());
         boolean validResult = punishValidate(block, currentRound, member, chain, blockHeaderHash);
         if (!validResult) {
             throw new NulsException(ConsensusErrorCode.BLOCK_PUNISH_VALID_ERROR);
@@ -76,12 +73,7 @@ public class BlockValidator {
         if (!validResult) {
             throw new NulsException(ConsensusErrorCode.BLOCK_COINBASE_VALID_ERROR);
         }
-        if (roundValidResult.isHasRoundChange()) {
-            roundManager.addRound(chain, currentRound);
-            if(chain.isCanPacking() && chain.isNetworkState() && currentRound.getMyMember() != null && VoteCache.CURRENT_BLOCK_VOTE_DATA == null){
-                VoteCache.initCurrentVoteRound(chain ,currentRound.getIndex(), member.getPackingIndexOfRound(), currentRound.getMemberCount(), chain.getNewestHeader().getHeight() + 1, currentRound.getStartTime());
-            }
-        }
+
     }
 
     /**
@@ -91,11 +83,13 @@ public class BlockValidator {
      * @param chain       chain info
      * @param blockHeader block header info
      */
-    private RoundValidResult roundValidate(Chain chain, BlockHeader blockHeader, String blockHeaderHash) throws  NulsException {
+    private RoundValidResult roundValidate(Chain chain, BlockHeader blockHeader, String blockHeaderHash) throws NulsException {
+
         BlockExtendsData extendsData = blockHeader.getExtendsData();
-        BlockHeader bestBlockHeader = chain.getNewestHeader();
+        BlockHeader bestBlockHeader = chain.getBestHeader();
         BlockExtendsData bestExtendsData = bestBlockHeader.getExtendsData();
         RoundValidResult roundValidResult = new RoundValidResult();
+
         /*
         该区块为本地最新区块之前的区块
         * */
@@ -103,51 +97,45 @@ public class BlockValidator {
                 || (extendsData.getRoundIndex() == bestExtendsData.getRoundIndex() && extendsData.getPackingIndexOfRound() <= bestExtendsData.getPackingIndexOfRound());
         if (isBeforeBlock) {
             chain.getLogger().error("new block roundData error, block height : " + blockHeader.getHeight() + " , hash :" + blockHeaderHash);
+            chain.getLogger().error("1:{}={}.{}={}", extendsData.getRoundIndex(), bestExtendsData.getRoundIndex(),
+                    extendsData.getPackingIndexOfRound(), bestExtendsData.getPackingIndexOfRound());
             throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
-        if (chain.getNewestHeader().getHeight() == 0) {
+
+        RoundController roundController = SpringLiteContext.getBean(RoundController.class);
+        if (null == roundController) {
+            throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
+        }
+        MeetingRound currentRound = roundController.getCurrentRound();
+        if (null == currentRound || !currentRound.isConfirmed() || currentRound.getIndex() < extendsData.getRoundIndex()) {
+            currentRound = roundController.getRound(extendsData.getRoundIndex(), extendsData.getRoundStartTime());
+        }
+        //容错机制，避免本地轮次切换时出现错误
+        if (currentRound.getIndex() == extendsData.getRoundIndex() && currentRound.getStartTime() != extendsData.getRoundStartTime() && bestExtendsData.getRoundIndex() != extendsData.getRoundIndex()) {
+            currentRound.setStartTime(extendsData.getRoundStartTime());
+            currentRound.resetMemberOrder();
+        }
+
+        if (chain.getBestHeader().getHeight() == 0) {
             chain.getRoundList().clear();
         }
-        //找到区块所在轮次
-        MeetingRound currentRound = roundManager.getCurrentRound(chain);
+
         boolean hasChangeRound = false;
-        if (currentRound == null || extendsData.getRoundIndex() < currentRound.getIndex()) {
-            MeetingRound round = roundManager.getRoundByIndex(chain, extendsData.getRoundIndex());
-            if (round != null) {
-                currentRound = round;
-            } else {
-                try {
-                    currentRound = roundManager.getRound(chain, extendsData, false);
-                }catch (Exception e){
-                    throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
-                }
-            }
-            if (chain.getRoundList().isEmpty()) {
-                hasChangeRound = true;
-            }
-        } else if (extendsData.getRoundIndex() > currentRound.getIndex()) {
-            MeetingRound tempRound;
-            try {
-                tempRound = roundManager.getRound(chain, extendsData, false);
-            }catch (Exception e){
-                throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
-            }
-            //如果新生成的轮次与当前轮次连续则将当前轮次设为新生成轮次的preRound
-            if (tempRound.getIndex() == currentRound.getIndex() + 1) {
-                tempRound.setPreRound(currentRound);
-            }
-            hasChangeRound = true;
-            currentRound = tempRound;
+        if (currentRound == null) {
+            chain.getLogger().warn(currentRound.toString());
+            throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
         //验证轮次共识节点数量是否一致
         if (extendsData.getConsensusMemberCount() != currentRound.getMemberCount()) {
             chain.getLogger().error("block height " + blockHeader.getHeight() + " packager count is error! hash :" + blockHeaderHash);
+            chain.getLogger().warn(currentRound.toString());
             throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
         // 验证打包人是否正确
-        MeetingMember member = currentRound.getMember(extendsData.getPackingIndexOfRound());
+        MeetingMember member = currentRound.getMemberByOrder(extendsData.getPackingIndexOfRound());
         if (!Arrays.equals(member.getAgent().getPackingAddress(), blockHeader.getPackingAddress(chain.getConfig().getChainId()))) {
             chain.getLogger().error("block height " + blockHeader.getHeight() + " packager error! hash :" + blockHeaderHash);
+            chain.getLogger().warn(currentRound.toString());
             throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
         roundValidResult.setRound(currentRound);
@@ -176,14 +164,14 @@ public class BlockValidator {
         for (int index = 1; index < txs.size(); index++) {
             tx = txs.get(index);
             if (tx.getType() == TxType.COIN_BASE) {
-                chain.getLogger().debug("Coinbase transaction more than one! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+                chain.getLogger().info("Coinbase transaction more than one! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
                 return false;
             }
             if (tx.getType() == TxType.YELLOW_PUNISH) {
                 if (yellowPunishTx == null) {
                     yellowPunishTx = tx;
                 } else {
-                    chain.getLogger().debug("Yellow punish transaction more than one! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+                    chain.getLogger().info("Yellow punish transaction more than one! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
                     return false;
                 }
             } else if (tx.getType() == TxType.RED_PUNISH) {
@@ -195,6 +183,7 @@ public class BlockValidator {
          Check the correctness of yellow card trading in block trading
         */
         if (!verifyYellowPunish(block, currentRound, member, chain, blockHeaderHash, yellowPunishTx)) {
+            chain.getLogger().info("yellow punish tx wrong.");
             return false;
         }
 
@@ -227,20 +216,20 @@ public class BlockValidator {
      * 区块CoinBase交易验证
      * Block CoinBase transaction verification
      *
-     * @param block        block info
-     * @param member       Node packing information
-     * @param chain        chain info
+     * @param block  block info
+     * @param member Node packing information
+     * @param chain  chain info
      */
-    private boolean coinBaseValidate(Block block, MeetingMember member, Chain chain, String blockHeaderHash, boolean settleConsensusAward) throws NulsException, IOException{
+    private boolean coinBaseValidate(Block block, MeetingMember member, Chain chain, String blockHeaderHash, boolean settleConsensusAward) throws NulsException, IOException {
         Transaction tx = block.getTxs().get(0);
         if (tx.getType() != TxType.COIN_BASE) {
-            chain.getLogger().debug("CoinBase transaction order wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+            //chain.getLogger().debug("CoinBase transaction order wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
             return false;
         }
         Transaction coinBaseTransaction;
         try {
-            coinBaseTransaction = ConsensusManager.createCoinBaseTx(chain, member, block.getTxs(),  block.getHeader().getTime(), settleConsensusAward,false);
-        }catch (Exception e){
+            coinBaseTransaction = ConsensusManager.createCoinBaseTx(chain, member.getAgent().getRewardAddress(), block.getTxs(), block.getHeader().getTime(), settleConsensusAward, false);
+        } catch (Exception e) {
             chain.getLogger().error(e);
             return false;
         }
@@ -249,23 +238,48 @@ public class BlockValidator {
             chain.getLogger().error("the coin base tx is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
             return false;
         } else if (!tx.getHash().equals(coinBaseTransaction.getHash())) {
-            CoinFromComparator fromComparator = new CoinFromComparator();
             CoinToComparator toComparator = new CoinToComparator();
 
             CoinData coinBaseCoinData = coinBaseTransaction.getCoinDataInstance();
-            coinBaseCoinData.getFrom().sort(fromComparator);
             coinBaseCoinData.getTo().sort(toComparator);
             coinBaseTransaction.setCoinData(coinBaseCoinData.serialize());
 
             Transaction originTransaction = new Transaction();
             originTransaction.parse(tx.serialize(), 0);
             CoinData originCoinData = originTransaction.getCoinDataInstance();
-            originCoinData.getFrom().sort(fromComparator);
             originCoinData.getTo().sort(toComparator);
             originTransaction.setCoinData(originCoinData.serialize());
 
             if (!originTransaction.getHash().equals(coinBaseTransaction.getHash())) {
                 chain.getLogger().error("the coin base tx is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+//                chain.getLogger().error("区块中：" + tx.getCoinData().length + ", 本地生成：" + coinBaseTransaction.getCoinData().length);
+                CoinData coins = new CoinData();
+                try {
+                    coins.parse(tx.getCoinData(), 0);
+                } catch (NulsException e) {
+                    chain.getLogger().error(e);
+                }
+                if (null != coins.getTo() && !coins.getTo().isEmpty()) {
+                    for (CoinTo coinTo : coins.getTo()) {
+                        chain.getLogger().info("coinbase : " + AddressTool.getStringAddressByBytes(coinTo.getAddress()) + ", " + coinTo.getAmount().toString());
+                    }
+                } else {
+                    chain.getLogger().info("coinbase : nothing");
+                }
+                chain.getLogger().error("===========================");
+                coins = new CoinData();
+                try {
+                    coins.parse(coinBaseTransaction.getCoinData(), 0);
+                } catch (NulsException e) {
+                    chain.getLogger().error(e);
+                }
+                if (null != coins.getTo() && !coins.getTo().isEmpty()) {
+                    for (CoinTo coinTo : coins.getTo()) {
+                        chain.getLogger().info("coinbase_local : " + AddressTool.getStringAddressByBytes(coinTo.getAddress()) + ", " + coinTo.getAmount().toString());
+                    }
+                } else {
+                    chain.getLogger().info("coinbase_local : nothing");
+                }
                 return false;
             }
         }
@@ -284,17 +298,17 @@ public class BlockValidator {
      */
     private boolean verifyYellowPunish(Block block, MeetingRound currentRound, MeetingMember member, Chain chain, String blockHeaderHash, Transaction yellowPunishTx) {
         try {
-            Transaction newYellowPunishTX = punishManager.createYellowPunishTx(chain, chain.getNewestHeader(), member, currentRound, block.getHeader().getTime());
+            Transaction newYellowPunishTX = punishManager.createYellowPunishTx(chain, chain.getBestHeader(), member, currentRound, block.getHeader().getTime());
             boolean isMatch = (yellowPunishTx == null && newYellowPunishTX == null) || (yellowPunishTx != null && newYellowPunishTX != null);
             if (!isMatch) {
-                chain.getLogger().debug("The yellow punish tx is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+                chain.getLogger().info("The yellow punish tx is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
                 return false;
             } else if (yellowPunishTx != null && !yellowPunishTx.getHash().equals(newYellowPunishTX.getHash())) {
-                chain.getLogger().debug("The yellow punish tx's hash is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
+                chain.getLogger().info("The yellow punish tx's hash is wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash);
                 return false;
             }
         } catch (Exception e) {
-            chain.getLogger().debug("The tx's wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash, e);
+            chain.getLogger().error("The tx's wrong! height: " + block.getHeader().getHeight() + " , hash : " + blockHeaderHash, e);
             return false;
         }
         return true;
@@ -302,11 +316,12 @@ public class BlockValidator {
 
     /**
      * 红牌验证
-     * @param chain               链信息
-     * @param redPunishTxs        红牌交易列表
-     * @param blockHeaderHash     区块Hash
-     * @param punishAddress       黄牌处罚地址
-     * @param block               区块
+     *
+     * @param chain           链信息
+     * @param redPunishTxs    红牌交易列表
+     * @param blockHeaderHash 区块Hash
+     * @param punishAddress   黄牌处罚地址
+     * @param block           区块
      */
     private boolean verifyRedPunish(Chain chain, List<Transaction> redPunishTxs, String blockHeaderHash, Set<String> punishAddress, Block block) throws NulsException {
         int countOfTooMuchYP = 0;
@@ -316,16 +331,17 @@ public class BlockValidator {
             if (data.getReasonCode() == PunishReasonEnum.TOO_MUCH_YELLOW_PUNISH.getCode()) {
                 countOfTooMuchYP++;
                 if (!punishAddress.contains(AddressTool.getStringAddressByBytes(data.getAddress()))) {
-                    chain.getLogger().debug("There is a wrong red punish tx!" + blockHeaderHash);
+                    chain.getLogger().info("There is a wrong red punish tx!" + blockHeaderHash);
                     return false;
                 }
                 if (redTx.getTime() != block.getHeader().getTime()) {
-                    chain.getLogger().debug("red punish CoinData & TX time is wrong! " + blockHeaderHash);
+                    chain.getLogger().info("red punish CoinData & TX time is wrong! " + blockHeaderHash);
                     return false;
                 }
             } else if (data.getReasonCode() == PunishReasonEnum.BIFURCATION.getCode()) {
                 boolean result = verifyBifurcate(chain, redTx, data);
                 if (!result) {
+                    chain.getLogger().info("red punish CoinData & TX time is wrong! " + blockHeaderHash);
                     return false;
                 }
             }
@@ -338,7 +354,7 @@ public class BlockValidator {
             }
         }
         if (countOfTooMuchYP != punishAddress.size()) {
-            chain.getLogger().debug("There is a wrong red punish tx!" + blockHeaderHash);
+            chain.getLogger().info("There is a wrong red punish tx!" + blockHeaderHash);
             return false;
         }
         return true;
@@ -381,7 +397,7 @@ public class BlockValidator {
             BlockExtendsData blockExtendsData = header1.getExtendsData();
             roundIndex[i] = blockExtendsData.getRoundIndex();
             //证据是否重复
-            if(heightSet.contains(header1.getHeight())){
+            if (heightSet.contains(header1.getHeight())) {
                 chain.getLogger().error("Bifurcated evidence with duplicate data");
                 return false;
             }
@@ -392,8 +408,8 @@ public class BlockValidator {
             }
             //区块签名者是否为节点处罚者
             Agent agent = agentManager.getAgentByAddress(chain, punishData.getAddress());
-            if(!Arrays.equals(AddressTool.getAddress(header1.getBlockSignature().getPublicKey(), chain.getConfig().getChainId()), agent.getPackingAddress())
-                    || !Arrays.equals(AddressTool.getAddress(header2.getBlockSignature().getPublicKey(), chain.getConfig().getChainId()), agent.getPackingAddress())){
+            if (!Arrays.equals(AddressTool.getAddress(header1.getBlockSignature().getPublicKey(), chain.getConfig().getChainId()), agent.getPackingAddress())
+                    || !Arrays.equals(AddressTool.getAddress(header2.getBlockSignature().getPublicKey(), chain.getConfig().getChainId()), agent.getPackingAddress())) {
                 chain.getLogger().error("Whether there is a block out of the penalty node in the branch evidence block!");
                 return false;
             }

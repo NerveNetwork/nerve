@@ -36,4 +36,8 @@ public interface BlockService {
      * @return Result
      * */
     Result chainRollBack(Map<String,Object> params);
+
+    Result getVoteResult(Map<String, Object> params);
+
+    Result noticeVoteResult(Map<String, Object> params);
 }
