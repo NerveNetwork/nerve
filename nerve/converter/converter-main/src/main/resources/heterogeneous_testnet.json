@@ -1,0 +1,20 @@
+[
+  {
+    "chainId": 101,
+    "type": 1,
+    "symbol": "ETH",
+    "commonRpcAddress": "https://ropsten.infura.io/v3/840832a822b14c3b9c99ef8c6aac9e35",
+    "mainRpcAddress": "https://ropsten.infura.io/v3/cf9ce39514724372bfeac13262e164af",
+    "orderRpcAddresses": "https://ropsten.infura.io/v3/7e086d9f3bdc48e4996a3997b33b032f,https://ropsten.infura.io/v3/7d2be3a2cbf44481af20420875fdb6dd,https://ropsten.infura.io/v3/139c27ec86714c71a32e89f38475cde0,https://ropsten.infura.io/v3/5a49045f963c40f8a6313bfea814023f,https://ropsten.infura.io/v3/3dfe0fb0628249ed8d520f20821c6a72,https://ropsten.infura.io/v3/75e572ef8b3d4d71a2c79feb5c71ed32,https://ropsten.infura.io/v3/a0191215457f4eb2947398a113bd5f29,https://ropsten.infura.io/v3/cb0030d51dbd44bcaa895ead95dd82ef,https://ropsten.infura.io/v3/036a97713cf34083a2016860c0054550,https://ropsten.infura.io/v3/b553e73504ae4bbf94a07be1c29fd770,https://ropsten.infura.io/v3/e3a420a7fd224e9bbd83b236d0d968e4,https://ropsten.infura.io/v3/e5bebdd645e64ac0b86a9355b090976e,https://ropsten.infura.io/v3/3cf511bbaebe499f98f867238aaaadbb,https://ropsten.infura.io/v3/7c4a25d3893d49d288b2e4ada9937a1b",
+    "standbyRpcAddresses": "https://ropsten.infura.io/v3/f87510d4ea1843babe467dc652d22531,https://ropsten.infura.io/v3/e81110266e064ad6a21990561a18a6eb,https://ropsten.infura.io/v3/24eeffba17f946ecb4f53edbe64b7888,https://ropsten.infura.io/v3/be85064ef1314396a01a17ef0c321c52,https://ropsten.infura.io/v3/70bd96cf422d4e7d9c6e5d26148ad97a,https://ropsten.infura.io/v3/5405e218bf9549ae8022e71e88e5fb3a,https://ropsten.infura.io/v3/4f7e4ca5fcaf461497a3442ad9a3363b,https://ropsten.infura.io/v3/83463b68332f4cfba7b925d1cefd7753,https://ropsten.infura.io/v3/b40b1579c99943f9a43833db0bea16eb,https://ropsten.infura.io/v3/547c581bb80343e683ac2344ae044d27,https://ropsten.infura.io/v3/cd2a4a839c3c49b48ce1338d6a86c304,https://ropsten.infura.io/v3/a747f6348e0244248c44032c78361d00,https://ropsten.infura.io/v3/ee8a4cc5c84c43d39c8b27c5dd3b209e,https://ropsten.infura.io/v3/31631d8c37e343a9b7b1d621c5e87886,https://ropsten.infura.io/v3/56d0d72ab1f345bf8ec97e02c477f5fd",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 5,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1
+  },
+  {
+    "chainId": 101,
+    "type": 2,
+    "symbol": "ERC20"
+  }
+]

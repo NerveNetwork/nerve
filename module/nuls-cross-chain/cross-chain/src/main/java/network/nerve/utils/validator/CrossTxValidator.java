@@ -110,7 +110,7 @@ public class CrossTxValidator {
                 if (!verifyResult) {
                     throw new NulsException(NulsCrossChainErrorCode.SIGNATURE_ERROR);
                 }
-                //todo ? 此处乘以5的目的是什么
+
                 txSize += P2PHKSignature.SERIALIZE_LENGTH * (chain.getVerifierList().size() * 5);
             }
         } else {
@@ -124,7 +124,7 @@ public class CrossTxValidator {
                 verifierChainId = config.getMainChainId();
                 int txType = TxType.CROSS_CHAIN;
                 if (tx.getTxData() != null) {
-                    //todo 这行代码的目的是什么
+
                     txType = ByteUtils.bytesToInt(tx.getTxData());
                 }
                 realCtx = TxUtil.friendConvertToMain(chain, tx, txType, true);
@@ -150,7 +150,7 @@ public class CrossTxValidator {
                 chain.getLogger().info("签名拜占庭验证失败！");
                 throw new NulsException(NulsCrossChainErrorCode.CTX_SIGN_BYZANTINE_FAIL);
             }
-            //todo 当前只适用于主网与平行链之间相互跨链，如果存在平行链之间相互跨链，则需要按其他方式计算
+
             txSize -= tx.getTransactionSignature().length;
         }
 
