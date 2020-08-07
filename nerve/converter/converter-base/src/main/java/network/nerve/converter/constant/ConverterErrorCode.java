@@ -111,5 +111,6 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode RESET_TX_NOT_EXIST = ErrorCode.init(ModuleE.CV.getPrefix() + "_0086");
     ErrorCode HETEROGENEOUS_ASSET_NOT_FOUND = ErrorCode.init(ModuleE.CV.getPrefix() + "_0087");
     ErrorCode WITHDRAWAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0088");
+    ErrorCode AGENT_IS_NOT_SEED_VIRTUAL_BANK = ErrorCode.init(ModuleE.CV.getPrefix() + "_0089");
 
 }

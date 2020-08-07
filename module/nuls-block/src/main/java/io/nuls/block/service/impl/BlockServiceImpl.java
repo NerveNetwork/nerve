@@ -21,13 +21,12 @@
 package io.nuls.block.service.impl;
 
 import io.nuls.base.RPCUtil;
-import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.*;
 import io.nuls.base.data.po.BlockHeaderPo;
 import io.nuls.block.constant.BlockErrorCode;
 import io.nuls.block.manager.BlockChainManager;
 import io.nuls.block.manager.ContextManager;
-import io.nuls.block.manager.SaverManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.SmallBlockMessage;
 import io.nuls.block.model.*;
@@ -323,7 +322,7 @@ public class BlockServiceImpl implements BlockService {
                 if (null != blockSaveTemp) {
                     logger.info("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
                     // 这里改成异步
-                    SaverManager.offer(new BlockSaver.Saver(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null));
+                    RunnableManager.offer(new BlockSaver.Saver(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null));
                     return true;
                 } else {
                     logger.warn("基础验证还没做，已经收到投票结果了");
@@ -331,7 +330,7 @@ public class BlockServiceImpl implements BlockService {
                     return false;
                 }
             }
-            logger.warn("isVerifyBlock： false,");
+//            logger.warn("isVerifyBlock： false,");
         } else {
             //拜占庭失败，进行信息清理
             logger.warn("hash={},bzt失败了...", hash);
@@ -354,7 +353,7 @@ public class BlockServiceImpl implements BlockService {
                 mapBasicVerify.get(hash).setBlock(block);
             }
             if (bztAndBaseVerify != 0) {
-                logger.info("do it.");
+//                logger.info("do it.");
                 mapBasicVerify.get(hash).setBztAndBaseVerify((byte) (blockSaveTemp.getBztAndBaseVerify() | bztAndBaseVerify));
             }
         }

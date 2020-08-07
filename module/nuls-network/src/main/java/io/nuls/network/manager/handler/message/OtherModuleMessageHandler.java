@@ -98,10 +98,11 @@ public class OtherModuleMessageHandler extends BaseMessageHandler {
             LoggerUtil.logger(chainId).error("unknown mssages. cmd={},handler may be unRegistered to network.", cmd);
             return NetworkEventResult.getResultSuccess();
         }
-        for (Map.Entry<String,CmdPriority> entry : protocolRoles.entrySet()) {
+        for (Map.Entry<String, CmdPriority> entry : protocolRoles.entrySet()) {
             try {
                 Request request = MessageUtil.newRequest(BaseConstant.MSG_PROCESS, paramMap, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);
-                if ("0".equals(ResponseMessageProcessor.requestOnly(entry.getKey(), request))) {
+                String result = ResponseMessageProcessor.requestOnly(entry.getKey(), request);
+                if ("0".equals(result)) {
                     if (nodeGroup.getCacheMsgQueue().size() > NetworkConstant.MAX_CACHE_MSG_QUEUE) {
                         LoggerUtil.COMMON_LOG.error("chainId = {},cmd={},CacheMsgQueue size={}.RPC fail,drop msg", chainId, cmd, nodeGroup.getCacheMsgQueue().size());
                     } else {
@@ -109,6 +110,8 @@ public class OtherModuleMessageHandler extends BaseMessageHandler {
                         RpcCacheMessage peerMessage = new RpcCacheMessage(node.getId(), cmd, messageBody);
                         nodeGroup.getCacheMsgQueue().addLast(peerMessage);
                     }
+//                } else {
+//                    LoggerUtil.logger(chainId).info(cmd + ":" + result);
                 }
             } catch (Exception e) {
                 LoggerUtil.logger(chainId).error("{}", e.getMessage());

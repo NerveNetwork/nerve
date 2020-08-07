@@ -89,7 +89,7 @@ public class EthBlockAnalysis {
             long txTime = block.getTimestamp().longValue();
             for (int i = 0; i < size; i++) {
                 org.web3j.protocol.core.methods.response.Transaction tx = (org.web3j.protocol.core.methods.response.Transaction) ethTransactionResults.get(i).get();
-                boolean addUnconfirmTx = false;
+                boolean isDepositTx = false;
                 boolean isBroadcastTx = false;
                 String nerveTxHash = null;
                 String ethTxHash = tx.getHash();
@@ -133,7 +133,7 @@ public class EthBlockAnalysis {
                             EthContext.logger().error("[{}]不是ETH充值交易[2]", ethTxHash);
                             break;
                         }
-                        addUnconfirmTx = true;
+                        isDepositTx = true;
                         txType = HeterogeneousChainTxType.DEPOSIT;
                         po.setIfContractAsset(false);
                         po.setTo(tx.getTo());
@@ -150,7 +150,7 @@ public class EthBlockAnalysis {
                     if (ethERC20Helper.isERC20(tx.getTo(), po)) {
                         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
                         if (ethERC20Helper.hasERC20WithListeningAddress(txReceipt, po, toAddress -> ethListener.isListeningAddress(toAddress))) {
-                            addUnconfirmTx = true;
+                            isDepositTx = true;
                             txType = HeterogeneousChainTxType.DEPOSIT;
                             po.setNerveAddress(EthUtil.covertNerveAddressByEthTx(tx));
                             EthContext.logger().info("监听到ETH网络的ERC20充值交易[{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
@@ -163,7 +163,7 @@ public class EthBlockAnalysis {
                 } while (false);
                 // 检查是否被Nerve网络确认，产生原因是当前节点解析eth交易比其他节点慢，其他节点确认了此交易后，当前节点才解析到此交易
                 EthUnconfirmedTxPo txPoFromDB = null;
-                if(isBroadcastTx || addUnconfirmTx) {
+                if(isBroadcastTx || isDepositTx) {
                     txPoFromDB = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
                     if(txPoFromDB != null && txPoFromDB.isDelete()) {
                         EthContext.logger().info("ETH交易[{}]已被[Nerve网络]确认，不再处理", ethTxHash);
@@ -181,7 +181,7 @@ public class EthBlockAnalysis {
                     continue;
                 }
                 // 充值交易放入需要确认30个区块的待确认交易队列中
-                if (addUnconfirmTx) {
+                if (isDepositTx) {
                     po.setTxType(txType);
                     po.setTxHash(ethTxHash);
                     po.setBlockHeight(blockHeight);

@@ -66,7 +66,7 @@ public class TxCheckAndCreateProcessTask implements Runnable {
                 }else if(null == txPO && checkTx.getCheckTimes() <= 0){
                     // 检查次数耗尽, 还是没有交易 则执行创建
                     try {
-                        boolean rs =  byzantineTransactionHelper.genByzantineTransaction(chain,
+                        boolean rs = byzantineTransactionHelper.genByzantineTransaction(chain,
                                 checkTx.getHash().toHex(),
                                 checkTx.getType(),
                                 checkTx.getOriginalHash(),

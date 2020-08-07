@@ -133,6 +133,9 @@ public interface EthConstant {
     BigInteger ETH_GAS_LIMIT_OF_USDT = BigInteger.valueOf(60000L);
     BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN = BigInteger.valueOf(400000L);
     BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE = BigInteger.valueOf(600000L);
+    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE_MAX = BigInteger.valueOf(700000L);
+    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_RECOVERY = BigInteger.valueOf(800000L);
+    BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN_CHANGE_THRESHOLD = BigInteger.valueOf(610000L);
     BigInteger ETH_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     BigDecimal NUMBER_1_DOT_1 = new BigDecimal("1.1");
     BigDecimal NUMBER_1_DOT_2 = new BigDecimal("1.2");

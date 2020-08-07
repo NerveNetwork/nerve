@@ -119,15 +119,15 @@ public class NodeMaintenanceTask implements Runnable {
                 break;
             }
         }
-        connectNodeList.forEach(n -> {
-            try {
-                LoggerUtil.logger(nodeGroup.getChainId()).info("maintenance:chainId={},isCross={},node={}", nodeGroup.getChainId(), isCross, n.get().getId());
-            } catch (InterruptedException e) {
-                LoggerUtil.COMMON_LOG.error(e);
-            } catch (ExecutionException e) {
-                LoggerUtil.COMMON_LOG.error(e);
-            }
-        });
+//        connectNodeList.forEach(n -> {
+//            try {
+//                LoggerUtil.logger(nodeGroup.getChainId()).info("maintenance:chainId={},isCross={},node={}", nodeGroup.getChainId(), isCross, n.get().getId());
+//            } catch (InterruptedException e) {
+//                LoggerUtil.COMMON_LOG.error(e);
+//            } catch (ExecutionException e) {
+//                LoggerUtil.COMMON_LOG.error(e);
+//            }
+//        });
 
     }
 
@@ -142,7 +142,7 @@ public class NodeMaintenanceTask implements Runnable {
         });
 
         node.setDisconnectListener(() -> {
-            LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
+            LoggerUtil.logger(node.getNodeGroup().getChainId()).info("NodeMaintenanceTask connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
             connectionManager.nodeConnectDisconnect(node);
         });
         return connectionManager.connection(node);

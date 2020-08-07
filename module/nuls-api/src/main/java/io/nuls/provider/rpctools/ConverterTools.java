@@ -39,9 +39,30 @@ public class ConverterTools implements CallRpc {
     public Result<List<VirtualBankDirectorDTO>> getVirtualBankInfo(int chainId) {
         Map<String, Object> params = new HashMap<>(2);
         params.put("chainId", chainId);
-        params.put("balance", true);
+        // 默认不查余额 容易超时
+//        params.put("balance", true);
         try {
             return callRpc(ModuleE.CV.abbr, "cv_virtualBankInfo", params, (Function<Map<String, Object>, Result<List<VirtualBankDirectorDTO>>>) res -> {
+                if(res == null){
+                    return new Result();
+                }
+                return new Result(res.get("list"));
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 获取已撤销虚拟银行资格节点地址列表
+     * @param chainId
+     * @return
+     */
+    public Result<String> getDisqualification(int chainId) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_disqualification", params, (Function<Map<String, Object>, Result<String>>) res -> {
                 if(res == null){
                     return new Result();
                 }

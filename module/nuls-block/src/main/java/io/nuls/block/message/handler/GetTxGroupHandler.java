@@ -25,6 +25,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.HashListMessage;
 import io.nuls.block.message.TxGroupMessage;
 import io.nuls.block.rpc.call.NetworkCall;
@@ -58,17 +59,8 @@ public class GetTxGroupHandler implements MessageProcessor {
         if (message == null) {
             return;
         }
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        List<NulsHash> hashList = message.getTxHashList();
-        logger.debug("recieve HashListMessage from node-" + nodeId + ", txcount:" + hashList.size());
-        TxGroupMessage request = new TxGroupMessage();
-        List<Transaction> transactions = TransactionCall.getTransactions(chainId, hashList, true);
-        if (transactions.isEmpty()) {
-            return;
-        }
-        logger.debug("transactions size:" + transactions.size());
-        request.setBlockHash(message.getBlockHash());
-        request.setTransactions(transactions);
-        NetworkCall.sendToNode(chainId, request, nodeId, TXGROUP_MESSAGE);
+        message.setChainId(chainId);
+        message.setNodeId(nodeId);
+        RunnableManager.offerHashListMsg(message);
     }
 }

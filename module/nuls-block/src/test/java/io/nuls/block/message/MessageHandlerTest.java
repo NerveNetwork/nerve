@@ -20,17 +20,21 @@
 
 package io.nuls.block.message;
 
+import io.nuls.base.RPCUtil;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.rpc.info.Constants;
+import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.nuls.block.constant.CommandConstant.GET_BLOCK_BY_HEIGHT_MESSAGE;
 import static io.nuls.block.constant.CommandConstant.GET_BLOCKS_BY_HEIGHT_MESSAGE;
 import static io.nuls.block.constant.CommandConstant.GET_BLOCK_MESSAGE;
 
@@ -39,16 +43,35 @@ import static io.nuls.block.constant.CommandConstant.GET_BLOCK_MESSAGE;
  */
 public class MessageHandlerTest {
 
+    @Before
+    public void before() throws Exception {
+        NoUse.mockModule();
+    }
+
+
     @Test
     public void getBlock() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
-        params.put(Constants.CHAIN_ID, 1);
-        params.put("nodes", "192.168.1.191:8003");
-        HashMessage message = new HashMessage(NulsHash.fromHex("00208d10744a059e403b100866f65d96ce33aedbcf498d1faa7d9f2eff041195d5aa"), 1);
+        params.put(Constants.CHAIN_ID, 9);
+        params.put("nodeId", "192.168.1.191:8003");
+        HashMessage message = new HashMessage(NulsHash.fromHex("e26f981b73de6348d8f884570787d099b2e28ae95c8f4d994d5212fba89e251a"), 1);
         params.put("messageBody", HexUtil.encode(message.serialize()));
-        params.put("command", GET_BLOCK_MESSAGE);
-        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.BL.abbr, GET_BLOCK_MESSAGE, params);
+        params.put("cmd", GET_BLOCK_MESSAGE);
+
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.BL.abbr, "msgProcess", params);
+        System.out.println(response);
+    }
+    @Test
+    public void getBlockByHeight() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, 5);
+        params.put("nodes", "127.0.0.1:17001");
+
+        params.put("messageBody", HexUtil.encode(new HeightMessage(123).serialize()));
+        params.put("command", GET_BLOCK_BY_HEIGHT_MESSAGE);
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.BL.abbr, GET_BLOCK_BY_HEIGHT_MESSAGE, params);
         System.out.println(response);
     }
 

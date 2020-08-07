@@ -178,14 +178,15 @@ public interface IHeterogeneousChainDocking {
     HeterogeneousTransactionInfo getWithdrawTransaction(String txHash) throws Exception;
 
     /**
-     * 获取变更管理员确认交易的信息
+     * 获取确认交易的信息
      */
-    HeterogeneousConfirmedInfo getChangeVirtualBankConfirmedTxInfo(String txHash) throws Exception;
+    HeterogeneousConfirmedInfo getConfirmedTxInfo(String txHash) throws Exception;
 
     /**
      * 获取变更管理员待处理交易的信息
      */
     HeterogeneousChangePendingInfo getChangeVirtualBankPendingInfo(String nerveTxHash) throws Exception;
+
     /**
      * 创建或签名提现交易
      *

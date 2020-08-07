@@ -1,14 +1,7 @@
 package io.nuls.api.test;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoCredential;
-import com.mongodb.ServerAddress;
-import com.mongodb.client.MongoDatabase;
-import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.db.DepositService;
 import io.nuls.api.db.mongo.MongoDBService;
-import io.nuls.api.db.mongo.MongoDepositServiceImpl;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import org.junit.Before;
@@ -52,7 +45,7 @@ public class DepositServiceTest extends BaseTestCase {
     public void testGetDepositList(){
         DepositService depositService = SpringLiteContext.getBean(DepositService.class);
         Log.info("{}",depositService.getAgentDepositTotal(4,25291));
-        Log.info("{}",depositService.getStackingTotalByNVT(4,25291));
+//        Log.info("{}",depositService.getStackingTotalAndTransferNVT(4,25291));
 
     }
 

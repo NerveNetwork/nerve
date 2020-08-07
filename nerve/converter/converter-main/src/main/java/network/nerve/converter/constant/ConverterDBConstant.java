@@ -92,6 +92,11 @@ public interface ConverterDBConstant {
     String DB_PENDING_PREFIX = "cv_pending_";
 
     /**
+     * 虚拟银行调用异构链, 合并交易时, key与各交易的对应关系
+     */
+    String DB_MERGE_COMPONENT_PREFIX = "cv_merge_component_";
+
+    /**
      * 等待执行的提案
      */
     String DB_EXE_PROPOSAL_PENDING_PREFIX = "cv_exe_proposal_pending_";

@@ -31,7 +31,7 @@ public class VoteResultProcessor extends BasicRunnable {
 
     private RoundController roundController;
 
-    private HashSetDuplicateProcessor<NulsHash> duplicateProcessor = new HashSetDuplicateProcessor<>(50);
+    private HashSetDuplicateProcessor<NulsHash> duplicateProcessor = new HashSetDuplicateProcessor<>(1024);
 
     public VoteResultProcessor(Chain chain) {
         super(chain);

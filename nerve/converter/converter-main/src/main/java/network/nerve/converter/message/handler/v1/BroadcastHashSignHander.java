@@ -64,7 +64,7 @@ public class BroadcastHashSignHander implements MessageProcessor {
             return;
         }
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            LoggerUtil.LOG.info("当前非虚拟银行成员节点, 不处理消息:{}", ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+            LoggerUtil.LOG.debug("当前非虚拟银行成员节点, 不处理消息:{}", ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
             return;
         }
 

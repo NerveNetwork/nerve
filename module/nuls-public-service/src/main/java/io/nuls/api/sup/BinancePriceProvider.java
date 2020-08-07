@@ -50,7 +50,7 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
             return BigDecimal.ZERO;
         }
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"/api/v3/ticker/price?symbol=" + symbol+ "USDT"))
+                .uri(URI.create(url+"api/v3/ticker/price?symbol=" + symbol+ "USDT"))
                 .timeout(Duration.ofMillis(5000))
                 .build();
         try {

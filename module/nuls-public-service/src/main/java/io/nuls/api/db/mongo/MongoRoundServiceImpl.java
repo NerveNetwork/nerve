@@ -1,7 +1,10 @@
 package io.nuls.api.db.mongo;
 
-import com.mongodb.client.model.Sorts;
+import com.mongodb.client.model.*;
+import io.nuls.api.cache.ApiCache;
 import io.nuls.api.db.RoundService;
+import io.nuls.api.manager.CacheManager;
+import io.nuls.api.model.po.CurrentRound;
 import io.nuls.api.model.po.PocRound;
 import io.nuls.api.model.po.PocRoundItem;
 import io.nuls.api.utils.DocumentTransferTool;
@@ -9,9 +12,11 @@ import io.nuls.api.utils.LoggerUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.mongodb.client.model.Filters.eq;
 import static io.nuls.api.constant.DBTableConstant.ROUND_ITEM_TABLE;
@@ -37,7 +42,7 @@ public class MongoRoundServiceImpl implements RoundService {
         if (null == document) {
             return null;
         }
-        return DocumentTransferTool.toInfo(document, "id",PocRoundItem.class);
+        return DocumentTransferTool.toInfo(document, "id", PocRoundItem.class);
     }
 
     public List<PocRoundItem> getRoundItemList(int chainId, long roundIndex) {
@@ -94,5 +99,57 @@ public class MongoRoundServiceImpl implements RoundService {
         }
         return roundList;
     }
+
+    @Override
+    public void setRoundItemYellow(int chainId, long roundIndex, int orderIndex, String agentHash) {
+        Bson bson = Filters.and(
+                Filters.eq("agentHash", agentHash),
+                Filters.eq("yellow", false),
+                Filters.or(
+                        Filters.lt("roundIndex", roundIndex),
+                        Filters.and(Filters.eq("roundIndex", roundIndex), Filters.lt("order", orderIndex))
+                ),
+                Filters.eq("blockHeight", 0));
+        List<Document> list = mongoDBService.query(ROUND_ITEM_TABLE + chainId, bson);
+        BulkWriteOptions options = new BulkWriteOptions();
+        options.ordered(false);
+        list.forEach(d -> {
+            d.put("yellow", true);
+
+            long modifyCount = mongoDBService.update(ROUND_ITEM_TABLE + chainId, Filters.eq("_id", d.get("_id")), d);
+            if (modifyCount > 0) {
+                PocRound round = getRound(chainId, (Long) d.get("roundIndex"));
+                ApiCache apiCache = CacheManager.getCache(chainId);
+                CurrentRound currentRound = apiCache.getCurrentRound();
+                if(currentRound != null && currentRound.getIndex() == round.getIndex()){
+                    currentRound.setYellowCardCount((int) (currentRound.getYellowCardCount() + modifyCount));
+                }
+                int yellowCardCount = (int) (round.getYellowCardCount() + modifyCount);
+                round.setYellowCardCount(yellowCardCount);
+                saveRound(chainId, round);
+            }
+        });
+    }
+
+
+    @Override
+    public void setRoundItemRed(int chainId, long roundIndex, int orderIndex, String agentHash) {
+        Bson bson = Filters.and(
+                Filters.eq("agentHash", agentHash),
+                Filters.eq("yellow", false),
+                Filters.or(
+                        Filters.lt("roundIndex", roundIndex),
+                        Filters.and(Filters.eq("roundIndex", roundIndex), Filters.lt("order", orderIndex))
+                ),
+                Filters.eq("blockHeight", 0));
+        Optional<Document> item = mongoDBService.query(ROUND_ITEM_TABLE + chainId, bson,Sorts.descending("roundIndex")).stream().findFirst();
+        item.ifPresent(d -> {
+            PocRound round = getRound(chainId, (Long) d.get("roundIndex"));
+            int redCardCount = (round.getRedCardCount() + 1);
+            round.setRedCardCount(redCardCount);
+            saveRound(chainId, round);
+        });
+    }
+
 
 }

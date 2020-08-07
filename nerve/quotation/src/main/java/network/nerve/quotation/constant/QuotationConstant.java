@@ -89,6 +89,5 @@ public interface QuotationConstant {
     String NERVE_PRICE = "NERVE_PRICE";
     String NERVE_ANCHORTOKEN = "NVT-USDT";
 
-    /** nerve 的价格是否基于NULS来计算 默认值0:不是, 1:是**/
-    byte NERVE_BASED_NULS = 0;
+    long TIMEOUT_MILLIS = 10000L;
 }

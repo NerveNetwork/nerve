@@ -14,6 +14,10 @@ import io.nuls.core.core.annotation.Component;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +50,18 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
         if(list == null || list.isEmpty()){
             return ;
         }
+        list.forEach(d->{
+            StackSymbolPriceInfo prevPrice = getFreshPrice(d.getSymbol(),d.getCurrency());
+            BigDecimal change;
+            //如果获取最近一次报价的价格是0，则不计算与上一次的涨跌幅
+            if(prevPrice.getPrice().equals(BigDecimal.ZERO)){
+                change = BigDecimal.ZERO;
+            }else{
+                change = d.getPrice().subtract(prevPrice.getPrice());
+                change = change.divide(prevPrice.getPrice(), MathContext.DECIMAL64).setScale(4, RoundingMode.HALF_DOWN);
+            }
+            d.setChange(change.doubleValue());
+        });
         save(list,TABLE);
         list.forEach(d->{
             //清掉本地缓存

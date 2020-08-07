@@ -6,6 +6,9 @@ import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.pocbft.constant.ConsensusConstant;
 import io.nuls.core.core.annotation.Component;
+import network.nerve.pocbft.network.message.v1.thread.DisConnectProcessor;
+import network.nerve.pocbft.network.message.v1.thread.IdentityProcessor;
+import network.nerve.pocbft.network.message.v1.thread.ShareProcessor;
 import network.nerve.pocbft.utils.thread.*;
 import network.nerve.pocbft.v1.thread.ConsensusThread;
 import network.nerve.pocbft.v1.thread.VoteMsgProcessor;
@@ -33,6 +36,9 @@ public class ThreadManager {
         //所有共识核心功能都从这里开始
         chain.getThreadPool().execute(new ConsensusThread(chain));
         chain.getThreadPool().execute(new VoteResultProcessor(chain));
+        chain.getThreadPool().execute(new IdentityProcessor(chain));
+        chain.getThreadPool().execute(new ShareProcessor(chain));
+        chain.getThreadPool().execute(new DisConnectProcessor(chain));
     }
 
     /**

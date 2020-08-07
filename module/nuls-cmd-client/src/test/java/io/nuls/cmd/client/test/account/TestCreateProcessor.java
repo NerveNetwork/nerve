@@ -64,7 +64,7 @@ public class TestCreateProcessor {
         String cmd = "address";
 
 
-        ECKey ecKey = ECKey.fromPrivate(HexUtil.decode("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b"));
+        ECKey ecKey = ECKey.fromPrivate(HexUtil.decode("2349820348023948234982357923561293479238579234792374923472343434"));
         Address address = new Address(chainId, addressPrefix, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(ecKey.getPubKey()));
         System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
         address =  new Address(2, "tNULS", BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(ecKey.getPubKey()));

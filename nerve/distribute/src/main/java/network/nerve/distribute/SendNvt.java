@@ -3,6 +3,9 @@ package network.nerve.distribute;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.ledger.LedgerProvider;
+import io.nuls.base.api.provider.ledger.facade.AccountBalanceInfo;
+import io.nuls.base.api.provider.ledger.facade.GetBalanceReq;
 import io.nuls.base.api.provider.transaction.TransferService;
 import io.nuls.base.api.provider.transaction.facade.TransferReq;
 import io.nuls.base.basic.AddressTool;
@@ -137,18 +140,29 @@ public class SendNvt extends Base {
         }
     }
 
+
+
     public static void main(String[] args) throws Exception {
 
         ServiceManager.init(CHAIN_ID, Provider.ProviderType.RPC);
-        NoUse.mockModule();
-        //向NRC20持币地址转账
-        sendNvtForNRC20();
-        TimeUnit.SECONDS.sleep(20);
-        //向NULS持币地址空投
-        sendNvtForNuls();
-        //向pocm委托地址空投
-//        sendNvtForPocm();
-        System.exit(0);
+        NoUse.mockModule(7771);
+        LedgerProvider ledgerProvider = ServiceManager.get(LedgerProvider.class);
+        List<Item> list = read(NULS);
+        BigInteger total = list.stream().map(d->{
+            GetBalanceReq req = new GetBalanceReq(1,9,d.getAddress());
+            Result<AccountBalanceInfo> res = ledgerProvider.getBalance(req);
+            Log.info("{}",res.getData());
+            return res.getData().getTotal();
+        }).reduce(BigInteger::add).orElse(BigInteger.ZERO);
+        Log.info("total : {}",total);
+//        //向NRC20持币地址转账
+//        sendNvtForNRC20();
+//        TimeUnit.SECONDS.sleep(20);
+//        //向NULS持币地址空投
+//        sendNvtForNuls();
+//        //向pocm委托地址空投
+////        sendNvtForPocm();
+//        System.exit(0);
     }
 
 }

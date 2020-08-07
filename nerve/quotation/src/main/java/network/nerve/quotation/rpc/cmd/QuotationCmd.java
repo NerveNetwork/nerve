@@ -41,7 +41,6 @@ import io.nuls.core.rpc.model.Parameters;
 import io.nuls.core.rpc.model.TypeDescriptor;
 import io.nuls.core.rpc.model.message.Response;
 import network.nerve.quotation.constant.QuotationConstant;
-import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.constant.QuotationErrorCode;
 import network.nerve.quotation.manager.ChainManager;
 import network.nerve.quotation.model.bo.Chain;
@@ -51,11 +50,9 @@ import network.nerve.quotation.model.po.ConfirmFinalQuotationPO;
 import network.nerve.quotation.service.QuotationService;
 import network.nerve.quotation.storage.ConfirmFinalQuotationStorageService;
 import network.nerve.quotation.util.CommonUtil;
-import network.nerve.quotation.util.TimeUtil;
 import network.nerve.quotation.util.LoggerUtil;
+import network.nerve.quotation.util.TimeUtil;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,11 +137,7 @@ public class QuotationCmd extends BaseCmd {
             }
 
             if (null == confirmFinalQuotationPO) {
-                //如果当前需要获取nerve的价格，并且
-                if (key.equals(QuotationConstant.NERVE_PRICE)
-                        && QuotationContext.nerveBasedNuls != QuotationConstant.NERVE_BASED_NULS) {
-                    confirmFinalQuotationPO = getNervePriceSpecial(chain, date);
-                } else if (!keyExist) {
+                if (!keyExist) {
                     return failed(QuotationErrorCode.QUOTATION_KEY_NOT_EXIST);
                 } else {
                     confirmFinalQuotationPO = new ConfirmFinalQuotationPO();
@@ -161,32 +154,6 @@ public class QuotationCmd extends BaseCmd {
             errorLogProcess(chain, e);
             return failed(QuotationErrorCode.SYS_UNKOWN_EXCEPTION);
         }
-    }
-
-    /**
-     * 如果不存在nerve的价格，则取nuls价格的十分之一
-     *
-     * @param chain
-     * @param date
-     * @return
-     */
-    private ConfirmFinalQuotationPO getNervePriceSpecial(Chain chain, String date) {
-        String dbKey = CommonUtil.assembleKey(date, QuotationConstant.NULS_ANCHORTOKEN);
-        ConfirmFinalQuotationPO confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey);
-        if (null == confirmFinalQuotationPO) {
-            // 带日期的查不到就查最近一次的(不带日期key)
-            confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalLastTimeQuotation(chain, QuotationConstant.NULS_ANCHORTOKEN);
-            if(null == confirmFinalQuotationPO){
-                chain.getLogger().warn("暂无任何最终报价. 基于NULS key:{}", QuotationConstant.NULS_ANCHORTOKEN);
-                return null;
-            }
-        }
-        BigDecimal p1 = new BigDecimal(String.valueOf(confirmFinalQuotationPO.getPrice()));
-        BigDecimal p2 = new BigDecimal("10.0");
-        double nerve = p1.divide(p2, 6, RoundingMode.HALF_UP).doubleValue();
-        confirmFinalQuotationPO.setPrice(nerve);
-        confirmFinalQuotationPO.setAnchorToken(QuotationConstant.NERVE_ANCHORTOKEN);
-        return confirmFinalQuotationPO;
     }
 
     @CmdAnnotation(cmd = "test_final", version = 1.0, description = "测试接口")

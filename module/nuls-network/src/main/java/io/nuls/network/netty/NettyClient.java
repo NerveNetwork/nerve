@@ -39,6 +39,8 @@ import io.nuls.core.log.Log;
 import io.nuls.network.model.Node;
 import io.nuls.network.netty.handler.ClientChannelHandler;
 
+import java.util.concurrent.TimeUnit;
+
 import static io.nuls.network.constant.NetworkConstant.CONNETCI_TIME_OUT;
 
 /**
@@ -87,7 +89,7 @@ public class NettyClient {
     public boolean start() {
         try {
             ChannelFuture future = boot.connect(node.getIp(), node.getRemotePort());
-            future.await();
+            future.await(1, TimeUnit.SECONDS);
             return future.isSuccess();
         } catch (Exception e) {
             Log.error(e);

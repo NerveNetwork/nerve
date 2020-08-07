@@ -152,9 +152,24 @@ public class DepositManager {
             if(deposit.getDelHeight() != -1 && deposit.getDelHeight() <= height){
                 continue;
             }
+            StringBuilder ss = new StringBuilder();
+            ss.append(AddressTool.getStringAddressByBytes(deposit.getAddress()));
+            ss.append("-");
+            ss.append(deposit.getAssetChainId());
+            ss.append("-");
+            ss.append(deposit.getAssetId());
+            ss.append("-");
+            ss.append(deposit.getDeposit().toString());
             realAmount = calcDepositBase(chain, deposit, date);
+            ss.append("-real:");
+            ss.append(realAmount.toString());
             totalAmount = totalAmount.add(realAmount);
+
+            ss.append("-total:");
+            ss.append(totalAmount.toString());
+
             address = AddressTool.getStringAddressByBytes(deposit.getAddress());
+            chain.getLogger().info(ss.toString());
             depositMap.merge(address, realAmount, (oldValue, value) -> oldValue.add(value));
         }
         return totalAmount;

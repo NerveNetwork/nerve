@@ -9,6 +9,7 @@ import network.nerve.pocbft.model.bo.round.MeetingRound;
 import network.nerve.pocbft.v1.RoundController;
 import network.nerve.pocbft.v1.VoteController;
 import network.nerve.pocbft.v1.entity.BasicRunnable;
+import network.nerve.pocbft.v1.entity.VoteResultStageOneQueue;
 import network.nerve.pocbft.v1.entity.VoteStageResult;
 import network.nerve.pocbft.v1.message.VoteMessage;
 import network.nerve.pocbft.v1.utils.CsUtils;
@@ -22,6 +23,7 @@ public class StageOneProcessor extends BasicRunnable {
 
     private final VoteController voteController;
 
+
     public StageOneProcessor(Chain chain, RoundController roundController, VoteController voteController) {
         super(chain);
         this.roundController = roundController;
@@ -34,17 +36,21 @@ public class StageOneProcessor extends BasicRunnable {
         while (this.running) {
             try {
                 doit();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.error(e);
             }
         }
     }
 
     private void doit() throws InterruptedException {
-
-        VoteStageResult result = chain.getConsensusCache().getStageOneQueue().take();
+        VoteResultStageOneQueue queue = chain.getConsensusCache().getStageOneQueue();
+        VoteStageResult result = queue.take();
 //            log.info("收到第一阶段结果：{}-{}-{}-{}: {}",result.getHeight(),result.getRoundIndex(),result.getPackingIndexOfRound(),
 //                    result.getVoteRoundIndex(),result.getBlockHash().toHex());
+        if (result.getRoundIndex() < chain.getConsensusCache().getLastConfirmedRoundIndex() ||
+                (result.getRoundIndex() == chain.getConsensusCache().getLastConfirmedRoundIndex() && result.getPackingIndexOfRound() <= chain.getConsensusCache().getLastConfirmedRoundPackingIndex())) {
+            return;
+        }
         //修改得到结果标识，判断是否已超时
         chain.getConsensusCache().getBestBlocksVotingContainer().getStage1ResultRecorder()
                 .insertAndCheck(result.getHeight() + ConsensusConstant.SEPARATOR + result.getVoteRoundIndex());

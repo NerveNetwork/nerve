@@ -54,7 +54,7 @@ import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.AsyncProcessedTxStorageService;
 import network.nerve.converter.storage.CfmChangeBankStorageService;
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
-import network.nerve.converter.storage.TxSubsequentProcessStorageService;
+import network.nerve.converter.storage.MergeComponentStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -82,6 +82,10 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
     private VirtualBankService virtualBankService;
     @Autowired
     private HeterogeneousService heterogeneousService;
+    @Autowired
+    private MergeComponentStorageService mergeComponentStorageService;
+    @Autowired
+    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
 
     @Override
     public int getType() {
@@ -193,7 +197,7 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                     heterogeneousConfirmedChangeVBStorageService.deleteByTxHash(tx.getHash().toHex());
                 }
 
-                MergedComponentCallPO mergedTxPO = txSubsequentProcessStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());
+                MergedComponentCallPO mergedTxPO = mergeComponentStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());
                 if (null != mergedTxPO) {
                     /**
                      * 因为可能有多个变更交易合并执行异构链, 但只有一个key,
@@ -208,7 +212,7 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                     if (null != inAgents) {
                         for (byte[] agentAddress : inAgents) {
                             VirtualBankDirector director = chain.getDirectorByAgent(AddressTool.getStringAddressByBytes(agentAddress));
-                            if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
+                            if (null != director && director.getSignAddress().equals(signAccountDTO.getAddress())) {
                                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, false);
                                 chain.getLogger().info("[ChangeVirtualBank] 当前节点加入虚拟银行变更交易已确认, 复原异构链调用状态:{}", chain.getHeterogeneousChangeBankExecuting().get());
                                 break;
@@ -228,12 +232,6 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
             return false;
         }
     }
-
-    @Autowired
-    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
-    @Autowired
-    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
-
 
     @Override
     public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
@@ -268,7 +266,7 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                  * 只有虚拟银行节点才会有该记录
                  */
                 NulsHash changeVirtualBankTxHash = txData.getChangeVirtualBankTxHash();
-                MergedComponentCallPO mergedTxPO = txSubsequentProcessStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());
+                MergedComponentCallPO mergedTxPO = mergeComponentStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());
                 if (null != mergedTxPO) {
                     heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
                 } else if (null != signAccountDTO) {
@@ -279,7 +277,7 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                     if (null != inAgents) {
                         for (byte[] agentAddress : inAgents) {
                             VirtualBankDirector director = chain.getDirectorByAgent(AddressTool.getStringAddressByBytes(agentAddress));
-                            if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
+                            if (null == director || director.getSignAddress().equals(signAccountDTO.getAddress())) {
                                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
                                 chain.getLogger().info("[ChangeVirtualBank] 当前节点加入虚拟银行变更确认交易已回滚, 异构链调用状态仍不变:{}", chain.getHeterogeneousChangeBankExecuting().get());
                                 break;

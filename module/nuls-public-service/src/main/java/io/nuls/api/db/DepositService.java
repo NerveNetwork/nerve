@@ -38,7 +38,7 @@ public interface DepositService {
 
     BigInteger getAgentDepositTotal(int chainId,long height);
 
-    BigInteger getStackingTotalByNVT(int chainId,long height);
+//    BigInteger getStackingTotalAndTransferNVT(int chainId, long height);
 
     /**
      * 获取指定地址所有stacking 转换成nvt的价值
@@ -46,9 +46,25 @@ public interface DepositService {
      * @param address
      * @return
      */
-    BigInteger getStackingTotalByNVT(int chainId,String address);
+    BigInteger getStackingTotalAndTransferNVT(int chainId, String address);
 
-    Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height);
+//    Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height);
+
+    /**
+     * 获取所有资产的stack合计，转换成NVT的价值
+     * @param chainId
+     * @return
+     */
+    BigInteger getStackingTotalAndTransferNVT(int chainId);
+
+    /**
+     * 获取指定资产的stack合计，转换成NVT的价值
+     * @param chainId
+     * @param assetChainId
+     * @param assetId
+     * @return
+     */
+    BigInteger getStackingTotalAndTransferNVT(int chainId,int assetChainId,int assetId);
 
     /**
      * 查询各种币种的合计
@@ -56,6 +72,8 @@ public interface DepositService {
      * @return
      */
     List<DepositInfo> getDepositSumList(int chainId,int... depositInfoTypes);
+
+    List<DepositInfo> getDepositSumList(int chainId,String address,int... depositInfoTypes);
 
     /**
      * 获取指定地址参与stacking的列表

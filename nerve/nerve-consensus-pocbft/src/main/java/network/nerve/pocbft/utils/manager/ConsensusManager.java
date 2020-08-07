@@ -291,6 +291,9 @@ public class ConsensusManager {
                         continue;
                     }
                     String key = resultData.getKey();
+                    if (resultData.getFee().compareTo(BigInteger.ZERO) < 0) {
+                        chain.getLogger().error("CoinTo < 0 ::tyType={}", txType);
+                    }
                     if (awardAssetMap.containsKey(key)) {
                         awardAssetMap.put(key, awardAssetMap.get(key).add(resultData.getFee()));
                     } else {
@@ -420,7 +423,7 @@ public class ConsensusManager {
         for (Map.Entry<String, BigInteger> entry : fromAmountMap.entrySet()) {
             BigInteger from = entry.getValue();
             BigInteger to = toAmountMap.get(entry.getKey());
-            if(to==null){
+            if (to == null) {
                 to = BigInteger.ZERO;
             }
             BigInteger val = from.subtract(to);

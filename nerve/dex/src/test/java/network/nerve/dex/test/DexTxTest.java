@@ -27,11 +27,11 @@ import java.util.Map;
 
 public class DexTxTest {
 
-    static int chainId = 4;
+    static int chainId = 5;
     static int assetId = 1;
     static String password = "nuls123456";//"nuls123456";
 
-    static String address20 = "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA";
+    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
     static String address21 = "tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD";
     static String address22 = "tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24";
     static String address23 = "tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD";
@@ -59,7 +59,7 @@ public class DexTxTest {
 //        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe   TNVTdN9iBXUrnDjcUqnn9WFCb4KFJmsaox6vY
 //        importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn            TNVTdN9iEEaQ68quQYtSu6XMUzd2rwUBtYb7k
 
-        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG  TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
+        importPriKey("2349820348023948234982357923561293479238579234792374923472343434", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG  TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
         importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD  TNVTdN9iB7VveoFG4GwYMRAFAF2Rsyrj9mjR3
 //        importPriKey("7d7347f49eb41fadae814415e777666a5adac2eaa3b41eb6c58fb6c705098d1a", password);// TNVTdN9i3RVt2u8ueS2u7y8aTUt7GzB2SC3HX
 //        importPriKey("01e32f257c851a3553ca627c229eedfebef5ff4f359195978f56896b01ab3069", password);
@@ -103,12 +103,12 @@ public class DexTxTest {
             params.put("password", password);
             params.put("quoteAssetChainId", 2);
             params.put("quoteAssetId", 1);
-            params.put("scaleQuoteDecimal", 8);
+            params.put("scaleQuoteDecimal", 4);
             params.put("baseAssetChainId", 5);
             params.put("baseAssetId", 1);
-            params.put("scaleBaseDecimal", 8);
-            params.put("minBaseAmount", new BigInteger("1000"));
-            params.put("minQuoteAmount", new BigInteger("1000"));
+            params.put("scaleBaseDecimal", 4);
+            params.put("minBaseAmount", new BigInteger("10000"));
+            params.put("minQuoteAmount", new BigInteger("10000"));
 
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createCoinTradingTx", params);
 
@@ -198,10 +198,11 @@ public class DexTxTest {
             Map params = new HashMap();
             params.put("address", address20);
             params.put("password", password);
-            params.put("tradingHash", "f21a9ef245f9243e579cdd2269feb5425283b9ac507a54967914aaa749978ac6");
-            params.put("scaleQuoteDecimal", 6);
-            params.put("scaleBaseDecimal", 6);
-            params.put("minTradingAmount", 100000);
+            params.put("tradingHash", "42420bc5be64d55dfb5a963ed4dd203cbdb3c446ed8357f23838a35610bb6f32");
+            params.put("scaleQuoteDecimal", 4);
+            params.put("scaleBaseDecimal", 4);
+            params.put("minQuoteAmount", 100000);
+            params.put("minBaseAmount", 100000);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_editCoinTradingTx", params);
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_editCoinTradingTx");
             String txHash = (String) callResult.get("txHash");

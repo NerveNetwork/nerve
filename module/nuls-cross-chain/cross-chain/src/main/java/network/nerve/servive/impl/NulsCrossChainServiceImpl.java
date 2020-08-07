@@ -301,6 +301,8 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                         ChainManagerCall.ctxAssetCirculateCommit(chainId, txStrList, headerStr);
                     }
                     //发起拜占庭验证
+                    //清空交易原始签名
+                    ctx.setTransactionSignature(null);
                     chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, ctx, syncStatus));
                 }
                 //这里处理转出总数的维护

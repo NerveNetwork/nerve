@@ -1,26 +1,47 @@
 [
   {
     "name": "Huobi",
-    "baseurl": "http://hbg.zhoulijun.top",
+    "baseurl": "https://api-aws.huobi.pro",
     "collector": "network.nerve.quotation.rpc.querier.impl.HuobiQuerier",
     "weight": "0.30"
   },
   {
     "name": "Binance",
-    "baseurl": "http://binanceapi.zhoulijun.top",
+    "baseurl": "https://api.binance.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.BinanceQuerier",
     "weight": "0.70"
   },
   {
     "name": "Okex",
-    "baseurl": "https://www.okex.com",
+    "baseurl": "https://aws.okex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.OkexQuerier",
     "weight": "0.30"
   },
   {
     "name": "Dex",
-    "baseurl": "http://beta.nervedex.com/",
+    "baseurl": "http://api.nervedex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
+    "weight": "0.10"
+  },
+  {
+
+    "name": "AEX",
+    "baseurl": "https://api.aex.zone/v3/ticker.php",
+    "collector": "network.nerve.quotation.rpc.querier.impl.AexQuerier",
+    "weight": "0.10"
+  },
+  {
+
+    "name": "MXC",
+    "baseurl": "https://www.mxc.io",
+    "collector": "network.nerve.quotation.rpc.querier.impl.MxcQuerier",
+    "weight": "0.10"
+  },
+  {
+
+    "name": "Bitz",
+    "baseurl": "https://api.bitzspeed.com/",
+    "collector": "network.nerve.quotation.rpc.querier.impl.BitzQuerier",
     "weight": "0.10"
   }
 ]

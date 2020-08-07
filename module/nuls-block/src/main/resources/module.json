@@ -11,7 +11,7 @@
   "testAutoRollbackAmount": 0,
   "rollbackHeight": 878000,
   "blockMaxSize": 5242880,
-  "resetTime": 600000,
+  "resetTime": 300000,
   "chainSwtichThreshold": 3,
   "cacheSize": 1000,
   "heightRange": 1000,
@@ -20,11 +20,11 @@
   "minNodeAmount": 1,
   "downloadNumber": 10,
   "extendMaxSize": 1024,
-  "validBlockInterval": 5000,
+  "validBlockInterval": 10000,
   "smallBlockCache": 30,
   "orphanChainMaxAge": 10,
-  "singleDownloadTimeout": 10000,
-  "waitNetworkInterval": 5000,
+  "singleDownloadTimeout": 20000,
+  "waitNetworkInterval": 6000,
   "cachedBlockSizeLimit": 20971520,
   "genesisBlockPath": ""
 }

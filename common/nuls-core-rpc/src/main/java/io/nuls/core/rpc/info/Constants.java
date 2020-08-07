@@ -184,7 +184,6 @@ public class Constants {
     public static final String BOOLEAN_FALSE = "0";
 
 
-
     public static final String ZERO = "0";
 
     /**
@@ -212,12 +211,12 @@ public class Constants {
      * Get the next messageId
      */
     public static String nextSequence() {
-        return System.currentTimeMillis()+""+SEQUENCE.incrementAndGet();
+        return System.currentTimeMillis() + "" + SEQUENCE.incrementAndGet();
     }
 
     public static final int TRY_COUNT = 3;
 
-    public static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
+    public static final int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 2;
 
     public static final int QUEUE_SIZE = 100000;
 

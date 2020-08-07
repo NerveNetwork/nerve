@@ -80,4 +80,25 @@ public class ConverterController {
         Result<List<VirtualBankDirectorDTO>> result = converterTools.getVirtualBankInfo(chainId);
         return ResultUtil.getJsonRpcResult(result);
     }
+
+
+    @RpcMethod("getDisqualification")
+    @ApiOperation(description = "获取已撤销虚拟银行资格节点地址列表", order = 603)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    })
+    @ResponseData(name = "返回值", description = "返回一个List对象", responseType = @TypeDescriptor(value = List.class,
+            collectionElement = String.class)
+    )
+    public RpcResult getDisqualification(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        Result<String> result = converterTools.getDisqualification(chainId);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 }

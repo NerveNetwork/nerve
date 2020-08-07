@@ -31,10 +31,13 @@ import network.nerve.quotation.rpc.querier.Querier;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+
+import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
 
 /**
  * @author: Loki
@@ -47,27 +50,30 @@ public class OkexQuerier implements Querier {
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().info("OkexQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = anchorToken.toUpperCase();
         String url = String.format(baseurl + CMD_FORMAT, symbol);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofMillis(5000))
+                .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                 .build();
         try {
             HttpResponse<String> response =
                     CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+            Map<String, Object> responseData = JSONUtils.json2map(response.body());
             if(response.statusCode() != 200){
                 chain.getLogger().error("调用{}接口, Okex获取价格失败, statusCode:{}", url, response.statusCode());
+                chain.getLogger().error("{}", JSONUtils.obj2PrettyJson(responseData));
                 return null;
             }
-            Map<String, Object> responseDate = JSONUtils.json2map(response.body());
-            BigDecimal res = new BigDecimal((String) responseDate.get("last"));
-            chain.getLogger().info("Okex获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+
+            BigDecimal res = new BigDecimal((String) responseData.get("last"));
+            chain.getLogger().info("Okex 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
             return res;
+        } catch (HttpConnectTimeoutException e) {
+            chain.getLogger().error("Okex, 调用接口 {}, anchorToken:{} 超时", url, anchorToken);
+            return null;
         } catch (Throwable e) {
-            chain.getLogger().error("调用{}接口Okex获取价格失败", url);
-            chain.getLogger().error(e);
+            chain.getLogger().error("Okex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
             return null;
         }
     }

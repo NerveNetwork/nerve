@@ -27,4 +27,7 @@ public interface RoundService {
 
     List<PocRound> getRoundList(int chainId, int pageIndex, int pageSize);
 
+    void setRoundItemYellow(int chainId, long roundIndex, int orderIndex, String agentHash);
+
+    void setRoundItemRed(int chainId, long roundIndex, int orderIndex, String agentHash);
 }

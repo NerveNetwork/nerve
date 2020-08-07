@@ -131,8 +131,8 @@ public class NodeDiscoverTask implements Runnable {
                     node.setStatus(NodeStatusEnum.CONNECTABLE);
                     canConnectNodes.put(node.getId(), node);
                     verifyNodes.remove(node.getId());
-                    LoggerUtil.logger(node.getNodeGroup().getChainId()).info("add cross node,remove from verifyNodes:{}", node.getId());
-                    LoggerUtil.logger(node.getNodeGroup().getChainId()).info("share cross node={}", node.getId());
+//                    LoggerUtil.logger(node.getNodeGroup().getChainId()).info("add cross node,remove from verifyNodes:{}", node.getId());
+//                    LoggerUtil.logger(node.getNodeGroup().getChainId()).info("share cross node={}", node.getId());
                     doShare(node, true);
                 } else {
                     node.setStatus(NodeStatusEnum.UNAVAILABLE);
@@ -231,15 +231,15 @@ public class NodeDiscoverTask implements Runnable {
                 break;
             }
         }
-        discoverList.forEach(n -> {
-            try {
-                LoggerUtil.logger(n.get().getNodeGroup().getChainId()).info("discover node={},status={}", n.get().getId(), n.get().getStatus());
-            } catch (InterruptedException e) {
-                LoggerUtil.COMMON_LOG.error(e);
-            } catch (ExecutionException e) {
-                LoggerUtil.COMMON_LOG.error(e);
-            }
-        });
+//        discoverList.forEach(n -> {
+//            try {
+//                LoggerUtil.logger(n.get().getNodeGroup().getChainId()).info("discover node={},status={}", n.get().getId(), n.get().getStatus());
+//            } catch (InterruptedException e) {
+//                LoggerUtil.COMMON_LOG.error(e);
+//            } catch (ExecutionException e) {
+//                LoggerUtil.COMMON_LOG.error(e);
+//            }
+//        });
 
     }
 
@@ -281,7 +281,7 @@ public class NodeDiscoverTask implements Runnable {
         node.setConnectStatus(NodeConnectStatusEnum.CONNECTING);
         node.setConnectedListener(() -> {
             //探测可连接后，断开连接
-            LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("verify node:{},connect success", node.getId());
+            LoggerUtil.logger(node.getNodeGroup().getChainId()).info("探测成功并断开---verify node:{},connect success", node.getId());
             node.setConnectStatus(NodeConnectStatusEnum.CONNECTED);
             node.getChannel().close();
         });
@@ -326,7 +326,7 @@ public class NodeDiscoverTask implements Runnable {
      * @param node
      */
     private void doShare(Node node, boolean isLocalToCrossShare) {
-        LoggerUtil.COMMON_LOG.info("doShare node={},isLocalToCrossShare={}", node.getId(), isLocalToCrossShare);
+//        LoggerUtil.COMMON_LOG.info("doShare node={},isLocalToCrossShare={}", node.getId(), isLocalToCrossShare);
         if (node.isCrossConnect()) {
             //网络组内跨链节点不传播, 本地网分享传播给跨链外网
             if (isLocalToCrossShare) {

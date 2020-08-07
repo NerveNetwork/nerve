@@ -87,7 +87,7 @@ public class TaskManager extends BaseManager {
     }
 
     private void nwInfosThread() {
-        executorService.scheduleWithFixedDelay(new NwInfosPrintTask(), 5, 180, TimeUnit.SECONDS);
+        executorService.scheduleWithFixedDelay(new NwInfosPrintTask(), 5, 60, TimeUnit.SECONDS);
     }
 
 

@@ -32,4 +32,7 @@ public class VoteMessageQueue {
         return this.voteMessageQueue.take();
     }
 
+    public int size() {
+        return voteMessageQueue.size();
+    }
 }

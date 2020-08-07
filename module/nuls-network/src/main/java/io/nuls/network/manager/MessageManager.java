@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 消息管理器，用于收发消息
@@ -192,7 +193,7 @@ public class MessageManager extends BaseManager {
      * @param asyn           boolean
      */
     public void sendGetAddressMessage(NodeGroup nodeGroup, boolean isConnectCross, boolean isCrossAddress, boolean asyn) {
-        LoggerUtil.logger(nodeGroup.getChainId()).info("sendGetAddrMessage chainId={},isCross={}", nodeGroup.getChainId(), isConnectCross);
+//        LoggerUtil.logger(nodeGroup.getChainId()).info("sendGetAddrMessage chainId={},isCross={}", nodeGroup.getChainId(), isConnectCross);
         List<Node> nodes = new ArrayList<>();
         if (isConnectCross) {
             nodes.addAll(nodeGroup.getCrossNodeContainer().getConnectedNodes().values());
@@ -237,7 +238,7 @@ public class MessageManager extends BaseManager {
         for (Node node : nodes) {
             if (NodeConnectStatusEnum.AVAILABLE == node.getConnectStatus()) {
                 GetAddrMessage getAddrMessage = MessageFactory.getInstance()
-                        .buildGetAddrMessage(messageNodeGroup.getChainId(),connectNodeGroup.getMagicNumber(), isCrossAddress);
+                        .buildGetAddrMessage(messageNodeGroup.getChainId(), connectNodeGroup.getMagicNumber(), isCrossAddress);
                 sendHandlerMsg(getAddrMessage, node, asyn);
             }
         }
@@ -339,7 +340,7 @@ public class MessageManager extends BaseManager {
                 });
             } else {
                 ChannelFuture future = node.getChannel().writeAndFlush(Unpooled.wrappedBuffer(message.serialize()));
-                future.await();
+                future.await(5, TimeUnit.SECONDS);
                 boolean success = future.isSuccess();
                 if (!success) {
                     return new NetworkEventResult(false, NetworkErrorCode.NET_BROADCAST_FAIL);
@@ -378,6 +379,11 @@ public class MessageManager extends BaseManager {
                 continue;
             }
             try {
+//                if (cmd.equals("vote")) {
+//                    Log.info("vote vote vote ~~~~~~ send vote message, node={}, asyn = {} ", node.getId(), asyn);
+//                }
+                boolean failed = false;
+
                 if (asyn) {
                     node.getChannel().eventLoop().execute(() -> {
                         Channel channel = node.getChannel();
@@ -396,11 +402,15 @@ public class MessageManager extends BaseManager {
                     });
                 } else {
                     ChannelFuture future = node.getChannel().writeAndFlush(Unpooled.wrappedBuffer(message));
-                    future.await();
+                    future.await(2, TimeUnit.SECONDS);
                     boolean success = future.isSuccess();
                     if (!success) {
-                        return new NetworkEventResult(false, NetworkErrorCode.NET_BROADCAST_FAIL);
+                        failed = true;
+                        continue;
                     }
+                }
+                if (failed) {
+                    return new NetworkEventResult(false, NetworkErrorCode.NET_BROADCAST_FAIL);
                 }
             } catch (Exception e) {
                 Log.error(e);

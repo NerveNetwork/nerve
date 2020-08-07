@@ -48,6 +48,7 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.*;
+import network.nerve.converter.storage.DisqualificationStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 
@@ -71,6 +72,8 @@ public class BusinessCmd extends BaseCmd {
     private ChainManager chainManager;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
+    @Autowired
+    private DisqualificationStorageService disqualificationStorageService;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -367,6 +370,41 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.DISQUALIFICATION, version = 1.0, description = "获取已撤销虚拟银行资格节点地址列表")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "节点地址")
+    })
+    )
+    public Response getDisqualification(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+                throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            List<String> list = disqualificationStorageService.findAll(chain);
+            Map<String, List<String>> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("list", list);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
 
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {

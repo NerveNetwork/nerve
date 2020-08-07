@@ -10,6 +10,9 @@ import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.parse.SerializeUtils;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
@@ -18,19 +21,56 @@ import static junit.framework.TestCase.assertTrue;
  */
 public class AddressToolTest {
 
+    @Test
+    public void createAgent() {
+        List<String> prilist = new ArrayList<>();
+        prilist.add("2d2d04ca5f74dd17736a30b7b65ea2dc9eff61136cceec8d3b4da8ddc65314d7");
+        prilist.add("5d1ce6ed0460d7470c3d09b980549f5f546352f0b770281cb11fe92870c01587");
+        prilist.add("5acab1876e59ef00044fe989bbd709117eb22179b1e4b9b7dcf23b89b149c5d1");
+        prilist.add("38b83f5c78c6532cbf200fb1bf73dcbacf6dde555a56a06440f69535f0aca04e");
+        prilist.add("c320819698f92ca53382dace76e9d668b1f54c28c989086b1eeec3598b59a6b4");
+        prilist.add("217e1b8cafb6bb0a2dcebaa41d8f54db03c3aff546364c039f5785b9f3d32916");
+        prilist.add("d9ba26ba205c552778b7363deb55969a6f9a4abe54ad4c955109b0de7cb5a53e");
+        prilist.add("0b70ac59f895ff9ad2cfb9af0af86d55e6cfda738c4bedf5d27dc2d3fc0bac48");
+        prilist.add("ad19eaaa4ccbc6829416e15ff82a485ca13c88ba08dfa46e400a579549650a95");
+        prilist.add("22e76a5ca4cb9d00742ffbb587267b58cbc5befc93fdec121eff4d2256e543be");
+        List<String> list = new ArrayList<>();
+        for(String pri:prilist){
+            ECKey ecKey = ECKey.fromPrivate(HexUtil.decode(pri));
+            String val = AddressTool.getAddressString(ecKey.getPubKey(),5);
+            list.add(val);
+        }
+        List<String> result = new ArrayList<>();
+        result.add("createagent TNVTdTSPLQeuiKZ7RViZ96A2mcCtiL9faDcJ6 " + list.get(0) + " 200000 TNVTdTSPLQeuiKZ7RViZ96A2mcCtiL9faDcJ6 nuls123456");
+        result.add("createagent TNVTdTSPV85z3f7ca6TKrFj8rN2DYyF9LhyB9 " + list.get(1) + " 200000 TNVTdTSPV85z3f7ca6TKrFj8rN2DYyF9LhyB9 nuls123456");
+        result.add("createagent TNVTdTSPUPj4mGpCjqaT7jLW8fB67TEwQTqVW " + list.get(2) + " 200000 TNVTdTSPUPj4mGpCjqaT7jLW8fB67TEwQTqVW nuls123456");
+        result.add("createagent TNVTdTSPTftjzTzmzVJsRtxyUJecvc7acRW5D " + list.get(3) + " 200000 TNVTdTSPTftjzTzmzVJsRtxyUJecvc7acRW5D nuls123456");
+        result.add("createagent TNVTdTSPPypPVVymvKv6eJv1PboiMryjFzCnc " + list.get(4) + " 200000 TNVTdTSPPypPVVymvKv6eJv1PboiMryjFzCnc nuls123456");
+        result.add("createagent TNVTdTSPR1CW3fJCubqWQULPC3PxBv7rMpQSM " + list.get(5) + " 200000 TNVTdTSPR1CW3fJCubqWQULPC3PxBv7rMpQSM nuls123456");
+        result.add("createagent TNVTdTSPQsLJSDBkR8oEbuBfgk6b5NNKaNfVM " + list.get(6) + " 200000 TNVTdTSPQsLJSDBkR8oEbuBfgk6b5NNKaNfVM nuls123456");
+        result.add("createagent TNVTdTSPS2BuZ36ft6g9FqEoji2GQCtYSTvjn " + list.get(7) + " 200000 TNVTdTSPS2BuZ36ft6g9FqEoji2GQCtYSTvjn nuls123456");
+        result.add("createagent TNVTdTSPGBwJWXbzAuBuBPprZV6kzdNodf1yn " + list.get(8) + " 200000 TNVTdTSPGBwJWXbzAuBuBPprZV6kzdNodf1yn nuls123456");
+        result.add("createagent TNVTdTSPUWnpvU5Hp9WHKoUZnX4qgonDKeVRF " + list.get(9) + " 200000 TNVTdTSPUWnpvU5Hp9WHKoUZnX4qgonDKeVRF nuls123456");
+
+        for (String val : result) {
+            System.out.println(val);
+        }
+    }
+
+
     public static void main(String[] args) {
-        System.out.println(AddressTool.getAddressString(HexUtil.decode("03890847cf4c9a22179b217217b306228a80c6c96bcc77e71342e09e00bb0bda30"),9));
+        System.out.println(AddressTool.getAddressString(HexUtil.decode("03890847cf4c9a22179b217217b306228a80c6c96bcc77e71342e09e00bb0bda30"), 9));
     }
 
     @Test
-    public void createNerveAddr(){
+    public void createNerveAddr() {
         ECKey ecKey = new ECKey();
         System.out.println(ecKey.getPrivateKeyAsHex());
         System.out.println(ecKey.getPublicKeyAsHex());
 //        f07d26a6cc0e931602f638fdf5b7dfa94ac8e1a0f9b5885feb78db17a4a7400a
 //        034e7ebe781dc25d5603c78616c939beabb1bd89ef5a2a182d292535146828c509
 //        TNVTdTSPG3sAwUkrGBqoVVzDjHYqvQKMX1khf
-        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(),5));
+        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(), 5));
 //        a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca
 //        02401b78e28d293ad840f9298c2c7e522c68776e3badf092c2dbf457af1b8ed43e
 //                TNERVEfTSPQvEngihwxqwCNPq3keQL1PwrcLbtj
@@ -41,10 +81,11 @@ public class AddressToolTest {
     }
 
     @Test
-    public void test7y(){
-        String address = "NULSd6Hgam8YajetEDnCoJBdEFkMNP41PfH7y";
-        System.out.println(AddressTool.validAddress(1,address));
+    public void test7y() {
+        String address = "TNVTdTSPMsBqXoEVtkAyPBVyduftKvZVQopFD";
+        System.out.println(AddressTool.validAddress(5, address));
     }
+
     @Test
     public void createAccountByPrefix() {
         AddressTool.addPrefix(4, "LJS");
@@ -58,12 +99,12 @@ public class AddressToolTest {
     @Test
     public void creaateMainNetAccount() {
         System.out.println("=======================main net=======================");
-        while (true){
+        while (true) {
             ECKey key = new ECKey();
             Address address = new Address(1, (byte) 1, SerializeUtils.sha256hash160(key.getPubKey()));
             String value = address.getBase58();
-            if(value.toUpperCase().endsWith("55"))
-            System.out.println(value + "===========" + key.getPrivateKeyAsHex());
+            if (value.toUpperCase().endsWith("55"))
+                System.out.println(value + "===========" + key.getPrivateKeyAsHex());
         }
     }
 
@@ -85,7 +126,7 @@ public class AddressToolTest {
         long monthReward = 41095890410959L;
         while (init < total) {
             monthReward = (long) DoubleUtils.mul(monthReward, rate);
-            if(0==monthReward){
+            if (0 == monthReward) {
                 break;
             }
             init = init + monthReward;
@@ -93,7 +134,7 @@ public class AddressToolTest {
         }
         System.out.println(init);
         System.out.println(month);
-        System.out.println(month/12);
+        System.out.println(month / 12);
     }
 
     @Test

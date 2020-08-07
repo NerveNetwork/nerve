@@ -34,7 +34,6 @@ import io.nuls.api.model.rpc.*;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.api.utils.PropertyUtils;
 import io.nuls.api.utils.VerifyUtils;
-import io.nuls.base.RPCUtil;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.converter.ConverterService;
 import io.nuls.base.api.provider.converter.facade.GetHeterogeneousAssetInfoReq;
@@ -51,19 +50,13 @@ import io.nuls.core.core.annotation.RpcMethod;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.MapUtils;
 import org.bson.conversions.Bson;
-import org.checkerframework.checker.units.qual.min;
-import org.checkerframework.framework.qual.Covariant;
 
-import javax.validation.constraints.Min;
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import static io.nuls.core.constant.TxType.*;
-import static io.nuls.core.constant.TxType.WITHDRAWAL;
 
 /**
  * @author Eva
@@ -85,7 +78,8 @@ public class AccountController {
     @Autowired
     SymbolRegService symbolRegService;
 
-
+    @Autowired
+    private StatisticalService statisticalService;
     @Autowired
     private ConverterTxService converterTxService;
 
@@ -194,7 +188,7 @@ public class AccountController {
 
     public RpcResult getAccountTxsForCrossChain(List<Object> params,Bson crossExpand) {
         VerifyUtils.verifyParams(params, 5);
-        int chainId, pageNumber, pageSize, type;
+        int chainId, pageNumber, pageSize, type = 0;
         String address;
         try {
             chainId = (int) params.get(0);
@@ -229,7 +223,7 @@ public class AccountController {
         try {
             PageInfo<TxRelationInfo> pageInfo;
             if (CacheManager.isChainExist(chainId)) {
-                pageInfo = accountService.pageAccountTxs(crossExpand,chainId, address, pageNumber, pageSize, 0, -1, -1,null,null);
+                pageInfo = accountService.pageAccountTxs(crossExpand,chainId, address, pageNumber, pageSize, type, -1, -1,null,null);
                 result.setResult(pageInfo);
             } else {
                 result.setResult(new PageInfo<>(pageNumber, pageSize));
@@ -424,10 +418,18 @@ public class AccountController {
             AssetInfo defaultAsset = apiCache.getChainInfo().getDefaultAsset();
             BalanceInfo balanceInfo = WalletRpcHandler.getAccountBalance(chainId, address, defaultAsset.getChainId(), defaultAsset.getAssetId());
             accountInfo.setBalance(balanceInfo.getBalance());
-            BigInteger stackingTotal = depositService.getStackingTotalByNVT(chainId,address);
+            BigInteger stackingTotal = depositService.getStackingTotalAndTransferNVT(chainId,address);
             accountInfo.setTimeLock(balanceInfo.getTimeLock());
             Map<String,Object> res = MapUtils.beanToLinkedMap(accountInfo);
             res.put("stackingTotal",stackingTotal);
+            statisticalService
+                    .getAssetSnapshotAggSum(chainId, 4)
+                    .stream()
+                    .filter(d->d.getAssetId() == ApiContext.defaultAssetId && d.getAssetChainId() == ApiContext.defaultChainId)
+                    .findFirst().ifPresent(assetSnapshotInfo -> {
+                        BigDecimal rate = new BigDecimal(balanceInfo.getTotalBalance()).divide(new BigDecimal(assetSnapshotInfo.getTotal()), MathContext.DECIMAL64).setScale(4,RoundingMode.HALF_DOWN);
+                        res.put("rate",rate);
+            });
             return result.setResult(res);
         }
 
@@ -475,7 +477,7 @@ public class AccountController {
     @RpcMethod("getCoinRanking")
     public RpcResult getCoinRanking(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
-        int chainId, pageNumber, pageSize;
+        int chainId, pageNumber, pageSize,assetChainId = ApiContext.defaultChainId,assetId = ApiContext.defaultAssetId;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -499,9 +501,44 @@ public class AccountController {
             pageSize = 10;
         }
 
+        if(params.size() > 3){
+            try {
+                assetChainId = (int) params.get(3);
+            } catch (Exception e) {
+                return RpcResult.paramError("[assetChainId] is inValid");
+            }
+        }
+        if(params.size() > 4){
+            try {
+                assetId = (int) params.get(4);
+            } catch (Exception e) {
+                return RpcResult.paramError("[assetId] is inValid");
+            }
+        }
+
         PageInfo<MiniAccountInfo> pageInfo;
         if (CacheManager.isChainExist(chainId)) {
-            pageInfo = accountService.getCoinRanking(pageNumber, pageSize, chainId);
+            pageInfo = accountService.getCoinRanking(pageNumber, pageSize, chainId,assetChainId,assetId);
+            if(pageInfo.getList().isEmpty()){
+                return new RpcResult().setResult(pageInfo);
+            }
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(assetChainId,assetId);
+            final int filterAssetChainId = assetChainId,filterAsstId = assetId;
+            Optional<AssetSnapshotInfo> assetSnapshotInfoList = statisticalService.getAssetSnapshotAggSum(chainId, 4)
+                    .stream().filter(d->d.getAssetId() == filterAsstId && d.getAssetChainId() == filterAssetChainId).findFirst();
+            for (var info : pageInfo.getList() ){
+                BalanceInfo balanceInfo = WalletRpcHandler.getAccountBalance(chainId, info.getAddress(), assetChainId, assetId);
+                info.setLockBalance(balanceInfo.getConsensusLock());
+                info.setDecimals(symbolRegInfo.getDecimals());
+                AliasInfo aliasInfo = aliasService.getAliasByAddress(chainId,info.getAddress());
+                if(aliasInfo != null){
+                    info.setAlias(aliasInfo.getAlias());
+                }
+                assetSnapshotInfoList.ifPresent(assetSnapshotInfo -> {
+                    BigDecimal rate = new BigDecimal(balanceInfo.getTotalBalance()).divide(new BigDecimal(assetSnapshotInfo.getTotal()), MathContext.DECIMAL64).setScale(4,RoundingMode.HALF_DOWN);
+                    info.setRate(rate);
+                });
+            }
         } else {
             pageInfo = new PageInfo<>(pageNumber, pageSize);
         }

@@ -14,6 +14,7 @@ import io.nuls.crosschain.base.constant.CommandConstant;
 import io.nuls.crosschain.base.message.BroadCtxSignMessage;
 import io.nuls.crosschain.base.message.GetCtxStateMessage;
 import io.nuls.crosschain.base.model.bo.ChainInfo;
+import io.nuls.crosschain.base.model.bo.txdata.CrossTransferData;
 import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainChangeData;
 import io.nuls.crosschain.base.model.bo.txdata.VerifierChangeData;
 import io.nuls.crosschain.base.model.bo.txdata.VerifierInitData;
@@ -68,6 +69,7 @@ public class TxUtil {
         return friendConvertToMain(chain,friendCtx,ctxType,false);
     }
 
+
     /**
      * 友链协议跨链交易转主网协议跨链交易
      * Friendly Chain Protocol Cross-Chain Transaction to Main Network Protocol Cross-Chain Transaction
@@ -76,12 +78,20 @@ public class TxUtil {
         Transaction mainCtx = new Transaction(ctxType);
         mainCtx.setRemark(friendCtx.getRemark());
         mainCtx.setTime(friendCtx.getTime());
-        mainCtx.setTxData(friendCtx.getTxData());
         //还原并重新结算CoinData
         CoinData realCoinData = friendCtx.getCoinDataInstance();
         restoreCoinData(realCoinData);
         mainCtx.setCoinData(realCoinData.serialize());
-
+        int fromChainId = AddressTool.getChainIdByAddress(realCoinData.getFrom().get(0).getAddress());
+        //如果是发起链则需要重构txData，将发起链的交易hash设置到txData中
+        if(chain.getChainId() == fromChainId){
+            CrossTransferData crossTransferData = new CrossTransferData();
+            crossTransferData.parse(friendCtx.getTxData(),0);
+            crossTransferData.setSourceHash(friendCtx.getHash().getBytes());
+            mainCtx.setTxData(crossTransferData.serialize());
+        }else{
+            mainCtx.setTxData(friendCtx.getTxData());
+        }
         if(needSign){
             mainCtx.setTransactionSignature(friendCtx.getTransactionSignature());
         }
@@ -222,6 +232,7 @@ public class TxUtil {
             List<String> packers = (List<String>) packerInfo.get(ParamConstant.PARAM_PACK_ADDRESS_LIST);
             NulsHash convertHash = hash;
             if (!config.isMainNet()) {
+                //发起链为平行链时，进行协议转账，转换成主网协议，并且将发起链的交易hash存入交易的txData中
                 Transaction mainCtx = TxUtil.friendConvertToMain(chain, ctx, TxType.CROSS_CHAIN);
                 convertHash = mainCtx.getHash();
                 convertCtxService.save(hash, mainCtx, chainId);

@@ -33,6 +33,8 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -48,6 +50,7 @@ public class BlockConsumer implements Callable<Boolean> {
 
     private int chainId;
     private BlockService blockService;
+    private Map<Long, Integer> failedTimesMap = new HashMap<>();
 
     BlockConsumer(int chainId) {
         this.chainId = chainId;
@@ -71,8 +74,20 @@ public class BlockConsumer implements Callable<Boolean> {
                     begin = System.nanoTime();
                     boolean saveBlock = blockService.saveBlock(chainId, block, true);
                     if (!saveBlock) {
+                        int value = failedTimesMap.compute(block.getHeader().getHeight(), (k, v) -> {
+                            if (v == null) {
+                                return 1;
+                            }
+                            return ++v;
+                        });
+                        if (value > 3) {
+                            logger.info("连续3次同步区块失败，开始进行停止节点操作");
+                            context.stopBlock();
+                        }
                         logger.error("saving block exception, height-" + pendingHeight + ", hash-" + block.getHeader().getHash());
                         context.setNeedSyn(false);
+                        Thread.sleep(180000L);
+
                         return false;
                     }
                     pendingHeight++;
@@ -81,8 +96,8 @@ public class BlockConsumer implements Callable<Boolean> {
                 }
                 Thread.sleep(10);
                 long end = System.nanoTime();
-                //超过10秒没有高度更新
-                if ((end - begin) / 1000000 > 5000) {
+                //超过1秒没有高度更新
+                if ((end - begin) / 1000000 > 1000) {
                     updateNodeStatus(context);
                     punishNode(pendingHeight, params.getNodes(), context);
                     retryDownload(pendingHeight, context);
@@ -130,6 +145,18 @@ public class BlockConsumer implements Callable<Boolean> {
         boolean download = false;
         BlockDownloaderParams downloaderParams = context.getDownloaderParams();
         List<Node> nodeList = downloaderParams.getNodes();
+        nodeList.sort(new Comparator<Node>() {
+            @Override
+            public int compare(Node o1, Node o2) {
+                int val = o1.getCredit() - o2.getCredit();
+                if (val < 0) {
+                    return 1;
+                } else if(val > 0) {
+                    return -1;
+                }
+                return 0;
+            }
+        });
         for (Node node : nodeList) {
             if (node.getNodeEnum().equals(NodeEnum.TIMEOUT)) {
                 continue;

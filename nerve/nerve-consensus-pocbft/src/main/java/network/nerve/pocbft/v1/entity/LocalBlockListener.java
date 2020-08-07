@@ -19,6 +19,7 @@ public class LocalBlockListener extends BasicObject {
     public void onChange(BlockHeader header) {
         try {
             //第一次变化时，进行投票，之后变化应该不用管
+//            log.info("区块投票：{}-{}", header.getHeight(), header.getHash().toHex());
             this.voteController.doVote(header);
         } catch (Exception e) {
             chain.getLogger().error(e);

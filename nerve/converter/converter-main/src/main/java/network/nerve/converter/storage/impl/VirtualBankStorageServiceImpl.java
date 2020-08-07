@@ -49,7 +49,7 @@ public class VirtualBankStorageServiceImpl implements VirtualBankStorageService 
 
     @Override
     public boolean save(Chain chain, VirtualBankDirector po) {
-        if(null == po){
+        if (null == po) {
             return false;
         }
         try {
@@ -58,7 +58,21 @@ public class VirtualBankStorageServiceImpl implements VirtualBankStorageService 
             chain.getLogger().error(e);
             return false;
         }
+    }
 
+    @Override
+    public boolean update(Chain chain, VirtualBankDirector director) {
+        VirtualBankDirector directorStorage = findBySignAddress(chain, director.getSignAddress());
+        if (null == directorStorage) {
+            return save(chain, director);
+        }
+        directorStorage.setHeterogeneousAddrMap(director.getHeterogeneousAddrMap());
+        directorStorage.setSignAddrPubKey(director.getSignAddrPubKey());
+        directorStorage.setAgentHash(director.getAgentHash());
+        directorStorage.setAgentAddress(director.getAgentAddress());
+        directorStorage.setRewardAddress(director.getRewardAddress());
+        directorStorage.setSeedNode(director.getSeedNode());
+        return save(chain, directorStorage);
     }
 
     @Override
@@ -67,8 +81,8 @@ public class VirtualBankStorageServiceImpl implements VirtualBankStorageService 
     }
 
     @Override
-    public boolean deleteBySignAddress(Chain chain, String address){
-        if(StringUtils.isBlank(address)){
+    public boolean deleteBySignAddress(Chain chain, String address) {
+        if (StringUtils.isBlank(address)) {
             chain.getLogger().error("deleteBySignAddress key is null");
             return false;
         }
@@ -83,11 +97,11 @@ public class VirtualBankStorageServiceImpl implements VirtualBankStorageService 
     @Override
     public Map<String, VirtualBankDirector> findAll(Chain chain) {
         List<Entry<byte[], byte[]>> listEntry = RocksDBService.entryList(ConverterDBConstant.DB_VIRTUAL_BANK_PREFIX + chain.getChainId());
-        if(null == listEntry){
+        if (null == listEntry) {
             return null;
         }
         Map<String, VirtualBankDirector> map = new HashMap<>();
-        for(Entry<byte[], byte[]> entry : listEntry){
+        for (Entry<byte[], byte[]> entry : listEntry) {
             VirtualBankDirector vbd = ConverterDBUtil.getModel(entry.getValue(), VirtualBankDirector.class);
             map.put(vbd.getSignAddress(), vbd);
         }

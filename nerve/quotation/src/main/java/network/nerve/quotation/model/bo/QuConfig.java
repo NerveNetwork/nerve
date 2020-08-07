@@ -48,7 +48,7 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private int effectiveQuotation;
     private String quoteStartHm;
     private String quoteEndHm;
-    private byte nerveBasedNuls;
+
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
     }
@@ -107,14 +107,6 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setQuoteEndHm(String quoteEndHm) {
         this.quoteEndHm = quoteEndHm;
-    }
-
-    public byte getNerveBasedNuls() {
-        return nerveBasedNuls;
-    }
-
-    public void setNerveBasedNuls(byte nerveBasedNuls) {
-        this.nerveBasedNuls = nerveBasedNuls;
     }
 
 }

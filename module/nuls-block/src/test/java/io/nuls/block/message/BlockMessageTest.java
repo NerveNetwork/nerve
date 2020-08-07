@@ -15,7 +15,7 @@ public class BlockMessageTest {
         BlockMessage message = new BlockMessage();
         message.setBlock(null);
         message.setSyn(false);
-        message.setRequestHash(NulsHash.calcHash("123".getBytes()));
+        message.setRequestHash(NulsHash.fromHex("e26f981b73de6348d8f884570787d099b2e28ae95c8f4d994d5212fba89e251a"));
 
         System.out.println(HexUtil.encode(message.serialize()));
     }

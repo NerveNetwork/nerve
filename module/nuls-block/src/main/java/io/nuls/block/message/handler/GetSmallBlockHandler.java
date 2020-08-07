@@ -25,6 +25,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.SmallBlock;
 import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.SmallBlockMessage;
 import io.nuls.block.model.CachedSmallBlock;
@@ -59,34 +60,9 @@ public class GetSmallBlockHandler implements MessageProcessor {
         if (message == null) {
             return;
         }
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        NulsHash blockHash = message.getRequestHash();
-        logger.debug("recieve " + message + " from node-" + nodeId + ", hash:" + blockHash);
-        CachedSmallBlock cachedSmallBlock = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
-        if (cachedSmallBlock == null) {
-            return;
-        }
-        SmallBlock smallBlock = SmallBlockCacher.getSmallBlock(chainId, blockHash);
-        if (smallBlock != null) {
-            SmallBlockMessage smallBlockMessage = new SmallBlockMessage();
-            smallBlockMessage.setSmallBlock(smallBlock);
 
-
-            byte[] voteResult = ContextManager.getContext(chainId).getVoteResultCache().get(blockHash);
-            if (null == voteResult) {
-                voteResult = ConsensusCall.getVoteResult(chainId, blockHash);
-                if(null != voteResult){
-                    ContextManager.getContext(chainId).getVoteResultCache().cache(blockHash,voteResult);
-                }
-            }
-
-            smallBlockMessage.setVoteResult(voteResult);
-
-            if (cachedSmallBlock.isPocNet()) {
-                NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_BZT_MESSAGE);
-            } else {
-                NetworkCall.sendToNode(chainId, smallBlockMessage, nodeId, SMALL_BLOCK_MESSAGE);
-            }
-        }
+        message.setChainId(chainId);
+        message.setNodeId(nodeId);
+        RunnableManager.offerGetSmallBlockMsg(message);
     }
 }

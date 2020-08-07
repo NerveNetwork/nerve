@@ -524,6 +524,12 @@ public class RequestMessageProcessor {
         if (cmd == null) {
             return MessageUtil.newFailResponse("", CMD_NOT_FOUND);
         }
-        return (Response) method.invoke(cmd, params);
+        long start = System.currentTimeMillis();
+        Response response = (Response) method.invoke(cmd, params);
+        long use = System.currentTimeMillis() - start;
+        if (use > 100) {
+            Log.info(invokeMethod + ": use -- {}ms ----{}", use, invokeClass);
+        }
+        return response;
     }
 }

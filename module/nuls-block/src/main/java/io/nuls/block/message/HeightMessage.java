@@ -39,6 +39,8 @@ import static io.nuls.block.utils.LoggerUtil.COMMON_LOG;
 public class HeightMessage extends BaseBusinessMessage {
 
     private long height;
+    private int chainId;
+    private String nodeId;
 
     public HeightMessage() {
     }
@@ -81,5 +83,21 @@ public class HeightMessage extends BaseBusinessMessage {
         return "HeightMessage{" +
                 "height=" + height +
                 '}';
+    }
+
+    public int getChainId() {
+        return chainId;
+    }
+
+    public void setChainId(int chainId) {
+        this.chainId = chainId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
     }
 }

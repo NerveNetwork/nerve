@@ -57,15 +57,11 @@ public class DexService {
      * 注： 由于一个区块打包时间有限，因此一个区块最多允许生成成交交易的上限为（tempCacheSize）
      * 1. 每次打包时，将所有交易对的盘口数据复制一定数量（tempCacheSize）的委托单到临时缓存里（tempDexManager）
      * 2. 循环所有临时缓存的交易对盘口，若有可以匹配的挂单，则生成成交交易
-     * 3.
-     * <p>
-     * ，若发现有新增的委托买(卖)单交易，需要判断新增挂单的盘口内是否有可以匹配成交的买(卖)单
-     * <p>
+     * 3. 若发现有新增的委托买(卖)单交易，需要判断新增挂单的盘口内是否有可以匹配成交的买(卖)单
      * 打包区块撮合成交并非是最终的区块确认存储，不能直接去修改盘口内已有买(卖)单数据，因此打包时撮合的流程是：
-     * 1.优先处理撤销挂单，撤销的买(卖)单不再参与成交撮合
-     * 2.针对本次新增买(卖)单，复制对应盘口内一定数量买盘和卖盘到临时缓存中
-     * 3.将本次打包的新增买(卖)单添加到临时缓存中对应的盘口中
-     * 4.循环取出临时缓存中各个交易对的买盘和卖盘数据，做撮合验证，撮合成功后生成成交交易，并更新临时缓存中买盘和卖盘的数据
+     * 1.针对本次新增买(卖)单，复制对应盘口内一定数量买盘和卖盘到临时缓存中
+     * 2.将本次打包的新增买(卖)单添加到临时缓存中对应的盘口中
+     * 3.循环取出临时缓存中各个交易对的买盘和卖盘数据，做撮合验证，撮合成功后生成成交交易，并更新临时缓存中买盘和卖盘的数据
      *
      * @param txList
      * @return
@@ -81,7 +77,8 @@ public class DexService {
             time0 = System.currentTimeMillis();
             //首先复制所有交易对到临时盘口中
             for (TradingContainer container : dexManager.getAllContainer().values()) {
-                copyContainerToTemp(container.getCoinTrading().getHash().toHex());
+                TradingContainer copy = container.copy(dexPackingSize);
+                tempDexManager.addContainer(copy);
             }
 
             List<CancelDeal> cancelList = new ArrayList<>();
@@ -155,7 +152,7 @@ public class DexService {
             //如果index小于txList.size()，说明因为成交交易达到上限，导致有一部分交易需要取消打包
             if (index != txList.size() - 1) {
                 for (int i = index + 1; i < txList.size(); i++) {
-                    if(isValidate) {
+                    if (isValidate) {
                         LoggerUtil.dexLog.error("------validate txs counts error-----");
                     }
                     removeTxList.add(txList.get(i));
@@ -163,12 +160,15 @@ public class DexService {
             }
 
             time2 = System.currentTimeMillis();
-//            LoggerUtil.dexLog.debug("---匹配订单耗时：" + (time2 - time0) + "-----成交交易个数：" + dealTxList.size());
-//            LoggerUtil.dexLog.debug("");
-//            LoggerUtil.dexLog.debug("---打包总耗时：" + (time2 - time0));
-//            LoggerUtil.dexLog.debug("");
+            if (time2 - time0 > 200) {
+                LoggerUtil.dexLog.info("----高度:{},耗时:{},isValidate:{}", blockHeight, (time2 - time0), isValidate);
+                LoggerUtil.dexLog.info("----打包交易条数:{},isValidate:{},成交交易个数:{},removeTxList:{}", txList.size(), dealTxList.size(), removeTxList.size());
+            }
+
             return returnTxMap();
         } catch (IOException e) {
+            LoggerUtil.dexLog.error("------Dex service doPacking error-----");
+            LoggerUtil.dexLog.info("----高度:{},isValidate:{}", blockHeight, isValidate);
             LoggerUtil.dexLog.error(e);
             throw new NulsException(DexErrorCode.FAILED);
         } finally {
@@ -217,43 +217,6 @@ public class DexService {
             throw new NulsException(DexErrorCode.DATA_ERROR, "canceltx coindata from to amount not equals");
         }
         return coinData;
-    }
-
-    /**
-     * 拷贝盘口数据到临时缓存，供打包使用
-     *
-     * @param tradingHash
-     * @return
-     */
-    private TradingContainer copyContainerToTemp(String tradingHash) {
-        TradingContainer container = dexManager.getTradingContainer(tradingHash);
-
-        TradingContainer tempContainer = new TradingContainer();
-        CoinTradingPo tradingPo = container.getCoinTrading().copy();
-        tempContainer.setCoinTrading(tradingPo);
-        //拷贝卖盘最后dexPackingSize + 1条挂单
-        LinkedList<TradingOrderPo> sellOrderList = new LinkedList<>();
-        int start = 0;
-        if (container.getSellOrderList().size() > dexPackingSize + 1) {
-            start = container.getSellOrderList().size() - dexPackingSize - 1;
-        }
-        for (int i = start; i < container.getSellOrderList().size(); i++) {
-            sellOrderList.add(container.getSellOrderList().get(i).copy());
-        }
-        tempContainer.setSellOrderList(sellOrderList);
-        //拷贝买盘最前面dexPackingSize + 1条
-        LinkedList<TradingOrderPo> buyOrderList = new LinkedList<>();
-        int end = dexPackingSize + 1;
-        if (end > container.getBuyOrderList().size()) {
-            end = container.getBuyOrderList().size();
-        }
-        for (int i = 0; i < end; i++) {
-            buyOrderList.add(container.getBuyOrderList().get(i).copy());
-        }
-        tempContainer.setBuyOrderList(buyOrderList);
-        tempDexManager.addContainer(tempContainer);
-
-        return tempContainer;
     }
 
     /**
@@ -343,7 +306,7 @@ public class DexService {
             if (dealTxList.size() >= dexPackingSize) {
                 return;
             }
-            sellOrder = getLastSellOrder(container.getSellOrderList());
+            sellOrder = getFirstSellOrder(container.getSellOrderList());
             buyOrder = getFirstBuyOrder(container.getBuyOrderList());
 
             if (buyOrder == null || sellOrder == null) {
@@ -440,28 +403,38 @@ public class DexService {
      * @param buyOrderList
      * @return
      */
-    private TradingOrderPo getFirstBuyOrder(List<TradingOrderPo> buyOrderList) {
-        for (int i = 0; i < buyOrderList.size(); i++) {
-            TradingOrderPo buyOrder = buyOrderList.get(i);
-            if (!buyOrder.isOver() && !tempCancelOrderSet.contains(buyOrder.getOrderHash().toHex())) {
-                return buyOrder;
+    private TradingOrderPo getFirstBuyOrder(NavigableMap<BigInteger, Map<String, TradingOrderPo>> buyOrderList) {
+        if(buyOrderList.isEmpty()) {
+            return null;
+        }
+        for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : buyOrderList.entrySet()) {
+            Map<String, TradingOrderPo> map = entry.getValue();
+            for (TradingOrderPo buyOrder : map.values()) {
+                if (!buyOrder.isOver() && !tempCancelOrderSet.contains(buyOrder.getOrderHash().toHex())) {
+                    return buyOrder;
+                }
             }
         }
         return null;
     }
 
     /**
-     * 卖盘也是价格从高到低排序好的，每次因从卖单价格最低的一条开始取出进行撮合
+     * 卖盘是价格从低到高排序好的，每次因从卖单价格最低的一条开始取出进行撮合
      * 若卖单已被撤销，继续取出下一条进行撮合验证
      *
      * @param sellOrderList
      * @return
      */
-    private TradingOrderPo getLastSellOrder(List<TradingOrderPo> sellOrderList) {
-        for (int i = sellOrderList.size() - 1; i >= 0; i--) {
-            TradingOrderPo sellOrder = sellOrderList.get(i);
-            if (!sellOrder.isOver() && !tempCancelOrderSet.contains(sellOrder.getOrderHash().toHex())) {
-                return sellOrder;
+    private TradingOrderPo getFirstSellOrder(NavigableMap<BigInteger, Map<String, TradingOrderPo>> sellOrderList) {
+        if(sellOrderList.isEmpty()) {
+            return null;
+        }
+        for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : sellOrderList.entrySet()) {
+            Map<String, TradingOrderPo> map = entry.getValue();
+            for (TradingOrderPo buyOrder : map.values()) {
+                if (!buyOrder.isOver() && !tempCancelOrderSet.contains(buyOrder.getOrderHash().toHex())) {
+                    return buyOrder;
+                }
             }
         }
         return null;

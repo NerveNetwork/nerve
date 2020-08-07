@@ -318,7 +318,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         // 统计加入的节点
         for (AgentBasic agentBasic : listVirtualBank) {
             // 判断当前生效的虚拟银行中不存在该节点, 表示该节点是新增节点
-            if (!mapCurrentVirtualBank.containsKey(agentBasic.getPackingAddress()) && StringUtils.isNotBlank(agentBasic.getPubKey())) {
+            if (!mapCurrentVirtualBank.containsKey(agentBasic.getPackingAddress())) {
                 virtualBankTemporaryChange.getListInAgents().add(AddressTool.getAddress(agentBasic.getAgentAddress()));
                 try {
                     chain.getLogger().debug("InAgent:{}", JSONUtils.obj2json(agentBasic));
@@ -387,8 +387,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
 
             // 排除节点出块地址对应的异构地址余额不满足初始值的节点
 //            boolean join = checkHeterogeneousAddressBalance(chain, agentBasic);
-            boolean join = true;
-            if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress) && join) {
+            boolean packaged = StringUtils.isNotBlank(agentBasic.getPubKey());
+            if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress) && packaged) {
                 listVirtualBank.add(agentBasic);
             }
         }

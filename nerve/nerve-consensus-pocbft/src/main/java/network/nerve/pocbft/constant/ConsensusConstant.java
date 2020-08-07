@@ -110,11 +110,6 @@ public interface ConsensusConstant {
     String RPC_VERSION = "1.0";
 
     /**
-     * 轮次缓存数量
-     */
-    int ROUND_CACHE_COUNT = 10;
-
-    /**
      * 接口调用失败重试次数
      */
     int RPC_CALL_TRY_COUNT = 5;
@@ -133,59 +128,18 @@ public interface ConsensusConstant {
     byte VOTE_STAGE_ONE = 1;
     byte VOTE_STAGE_TWO = 2;
 
-    long VOTE_INIT_ROUND = 1;
-    byte INIT_PACING_INDEX = 1;
-
-    /**
-     * 向其他节点获取数据超时时间（单位：S）
-     */
-    int GET_DATA_TIME_OUT = 1;
-
-    /**
-     * 投票期间各阶段等待时间(ms)
-     */
-    long VOTE_STAGE_ONE_WAIT_TIME = 600;
-    long VOTE_STAGE_ONE_RESULT_WAIT_TIME = 800;
-    /**
-     * 第二阶段投票超时时间（秒）
-     */
-    long VOTE_STAGE_TWO_TIME_OUT = 10;
-
-    /**
-     * 毫秒
-     */
-    long WAIT_VOTE_RESULT_MIN_TIME = 100;
-
-    byte FINAL_VOTE_ROUND_SIGN = 0;
-
-
-    /**
-     * 投票结果类型
-     */
-    byte PREVIOUS_BLOCK = 4;
-    byte PREVIOUS_ROUND = 0;
-    byte CURRENT_ROUND = 1;
-    byte CURRENT_BLOCK = 2;
-    byte FUTURE = 3;
-
     /**
      * index
      */
     long INIT_ROUND_INDEX = 2;
 
-    /**
-     * 区块投票信息缓存数
-     */
-    int BLOCK_VOTE_CACHE_COUNT = 500;
-
     String DATE_FORMAT = "yyyyMMdd";
 
     String DEFALT_KEY = "NERVE_PRICE";
 
-    //todo 主网的结算时间为1天，24*
-    int ONE_DAY_SECONDS = 60 * 60;
+    int ONE_DAY_SECONDS = 24 * 60 * 60;
     int ONE_DAY_MILLISECONDS = ONE_DAY_SECONDS * 1000;
-    int HALF_DAY_MILLISECONDS = 30 * 60 * 1000;
+    int HALF_DAY_MILLISECONDS = 12 * 60 * 60 * 1000;
 
     /**
      * 共识网络节点 正常出块最低比例常量60%
@@ -195,16 +149,4 @@ public interface ConsensusConstant {
 
     String STACKING_CONFIG_FILE = "stacking-asset.json";
 
-    /**
-     * 节点重启时，等待投票轮次初始化时间(10S),如果这个时间内还未其他节点的投票信息，则初始化本地轮次
-     */
-    long WAIL_INIT_VOTE_ROUND_TIME = 10;
-    /**
-     * 节点重启时，初始化轮次间隔时间
-     */
-    long INIT_CONSENSUS_ROUND_TIME = 60;
-    /**
-     * 节点启动需要在轮次30秒之后才计算轮次
-     */
-    long INIT_CONSENSUS_ROUND_WAIT_TIME = 30;
 }

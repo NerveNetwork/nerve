@@ -199,7 +199,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0xd135fab4d7b083BAB5C4e8006441039f5b3Eef17,0x4310A8225e8542A403d4f873dea36B1c556BE15A,0x282aAd555cA7DaCF10142F134521627C4468f179,0xc8fe37a1A5D612D037B70D67EA8f57cE49B85111,0x3eCEd496928C385acE2dE521b166A27E3170D7b8,0x6b611bab94d21130B20DfE243A78192920a8daB5,0xC6A3Ed9D25978251320971341b088B3434De086b,0xDa994c7213Ef684F13C25AD404C463D50c9A7ADA,0xC9e08F32da4Ba5C1F344d07580ed19ec2B8c2e11,0xaff9C6DB3023D2ABAa4eb6C2dd9747Be282AA7c8";
+        String pubkeySet = "0x2C53cB522E1115Dce064D365DAc89640De501152,0xb61f272a3228990fB8fCB7eB281bedE8D2582577,0x5c9CCECde85A0F4B75d947dd5Fb462aF526c3ce8,0x97777E110691fB1327de1C1A783f0250F7A0BbF7,0x722f18ed05380854E5C11c9Ad053663DE916f689,0x3cF1D13D157c5286b21A38dd9C2e393dC06d3040,0x683d72D5A85Aa2AEDeb0138a2A2A74b601D44382,0xC6ED8e5ED5C647ecA0dD74B1247203aBcd709ca5,0x05f6f3B6d4a302e666f5717301d70Db8B6679b3e,0xbF62b3de20e1fD2151c9A2B444dF4AFf8D580244";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -364,4 +364,55 @@ public class EthAccountTest extends Base {
         resultMap.put("address", address);
         return resultMap;
     }
+
+    @Test
+    public void batchGenAddress() throws Exception {
+        List<String> orderList = new ArrayList<>();
+        orderList.add("130");
+        orderList.add("131");
+        orderList.add("132");
+        orderList.add("133");
+        orderList.add("134");
+        orderList.add("135");
+        orderList.add("136");
+        orderList.add("137");
+        orderList.add("138");
+        orderList.add("139");
+        orderList.add("140");
+        orderList.add("143");
+        orderList.add("148");
+        orderList.add("146");
+        orderList.add("150");
+        List<String> list = new ArrayList<>();
+        list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");
+        list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");
+        list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");
+        list.add("f89e2563ec7c977cafa2efa41551bd3651d832d587b7d8d8912ebc2b91e24bbd");
+        list.add("8c6715620151478cdd4ee8c95b688f2c2112a21a266f060973fa776be3f0ebd7");
+        list.add("fe4b382664ff5947eb01287168ad74de2fe6d4c2205034f5e252f57556d0d69f");
+        list.add("8654762fcab3ee948a47da4195fee877b8cc7be3fd6c73b81f4cd068805ebd5e");
+        list.add("d04808897f8ab1963118019604f691fcde848f093b1fbbdf0092b6a46c0e4b2e");
+        list.add("8eaf166834f729194932693ff2328ff2ea00092c60555ef32a9078da4f1b4f39");//nuls138
+        list.add("184178c84dfb879606332ccd5fd795478797d720869a1941fb3940c056374010");
+        list.add("7ce38177977192924fc45d896aca3f2f694a4e1ba43da6e5fc056b9bae832c21");
+        list.add("40fa95bfc159fd92ca680148b8d6dbc4897ee1af6123169ea3872869799de098");
+        list.add("bee8ad6c2beacb20bfe07763eaabe39b5f7fa82026d2b60cd35310052bdfbbe7");
+        list.add("5398d7c9036fffc2129d4878fbddca170157f4d3a3f3d2bada5a7e39e2d31547");
+        list.add("b7bc0066706a7e148860bda21ab7c9cc63f856290df11ce2b2f18b99161a59b8");
+        int i = 0;
+        for(String prikey : list) {
+            System.out.print("nuls" + orderList.get(i++) + ": ");
+            io.nuls.core.crypto.ECKey nEckey = io.nuls.core.crypto.ECKey.fromPrivate(HexUtil.decode(Numeric.cleanHexPrefix(prikey)));
+            Address address = new Address(chainId, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(nEckey.getPubKey()));
+            System.out.print(String.format("NULS address: %s", address.toString()));
+            Credentials credentials = Credentials.create(prikey);
+            System.out.println(String.format(", ETH address: %s", credentials.getAddress()));
+        }
+    }
+
+    @Test
+    public void batchCreateAddress() throws Exception {
+
+    }
+
 }

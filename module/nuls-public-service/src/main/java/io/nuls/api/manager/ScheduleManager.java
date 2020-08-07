@@ -38,7 +38,7 @@ public class ScheduleManager {
         executorService.scheduleAtFixedRate(new GetGlobalInfoTask(ApiContext.defaultChainId), 5, 2, TimeUnit.SECONDS);
 
         //每小时执行一次币种兑USDT价格采集
-        executorService.scheduleAtFixedRate(new ActualSymbolUsdtPriceTask(),10,3600,TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(new ActualSymbolUsdtPriceTask(),10,60,TimeUnit.SECONDS);
 
         //每小时执行一次统计数据缓存
         executorService.scheduleAtFixedRate(new ReportTask(),10,10,TimeUnit.SECONDS);

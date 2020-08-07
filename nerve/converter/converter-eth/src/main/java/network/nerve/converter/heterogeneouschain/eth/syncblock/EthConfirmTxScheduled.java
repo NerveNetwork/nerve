@@ -254,6 +254,10 @@ public class EthConfirmTxScheduled implements Runnable {
         if(txPo == null) {
             txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         }
+        if (txPo == null) {
+            logger().warn("[充值任务异常] DB中未获取到PO，队列中PO: {}", po.toString());
+            return !isReOfferQueue;
+        }
         // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，从队列中移除
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
@@ -318,8 +322,12 @@ public class EthConfirmTxScheduled implements Runnable {
         boolean isReOfferQueue = true;
         String ethTxHash = po.getTxHash();
         EthUnconfirmedTxPo txPo = poFromDB;
-        if(txPo == null) {
+        if (txPo == null) {
             txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
+        }
+        if (txPo == null) {
+            logger().warn("[提现任务异常] DB中未获取到PO，队列中PO: {}", po.toString());
+            return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
         // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，不放回队列

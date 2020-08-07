@@ -13,6 +13,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.dex.context.DexConfig;
 import network.nerve.dex.context.DexConstant;
+import network.nerve.dex.context.DexContext;
 import network.nerve.dex.context.DexErrorCode;
 import network.nerve.dex.manager.DexManager;
 import network.nerve.dex.manager.TradingContainer;
@@ -84,12 +85,15 @@ public class TradingOrderValidator {
         if (order.getAmount().compareTo(BigInteger.ZERO) == 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "orderAmount error");
         }
+        if(Arrays.equals(DexContext.sysFeeAddress, order.getAddress())) {
+            throw new NulsException(DexErrorCode.DATA_ERROR, "sysFeeAddress can't create tradingOrder");
+        }
         if (order.getFeeAddress() != null) {
             if (!AddressTool.validNormalAddress(order.getFeeAddress(), config.getChainId())) {
                 throw new NulsException(DexErrorCode.DATA_ERROR, "feeAddress error");
             }
         }
-        if(order.getFeeScale() > 5) {
+        if(order.getFeeScale() > 98) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "feeScale error");
         }
         //判断from里的地址是否和委托地址一致

@@ -1,5 +1,8 @@
 package network.nerve.pocbft.utils.enumeration;
 public enum DepositTimeType {
+
+//    TEST((byte)7, 5, 300, "5分钟"),
+
     /**
      * 定期委托3个月
      * */

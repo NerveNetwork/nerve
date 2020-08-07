@@ -66,7 +66,10 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Loki
@@ -131,8 +134,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createConfirmedChangeVirtualBankTx(Chain chain, NulsHash changeVirtualBankTxHash, List<HeterogeneousConfirmedVirtualBank> listConfirmed, long txTime) throws NulsException {
         Transaction tx = this.createConfirmedChangeVirtualBankTxWithoutSign(chain, changeVirtualBankTxHash, listConfirmed, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-
-        confirmedChangeVirtualBankVerifier.validate(chain, tx);
+//        confirmedChangeVirtualBankVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
 
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, changeVirtualBankTxHash.toHex());
@@ -152,7 +154,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         txData.setChangeVirtualBankTxHash(changeVirtualBankTxHash);
         txData.setListConfirmed(listConfirmed);
         List<byte[]> agentList = new ArrayList<>();
-        for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
+        List<VirtualBankDirector> directorList = new ArrayList<>(chain.getMapVirtualBank().values());
+        directorList.sort((o1, o2) -> o2.getAgentAddress().compareTo(o1.getAgentAddress()));
+        for (VirtualBankDirector director : directorList) {
             byte[] address = AddressTool.getAddress(director.getAgentAddress());
             agentList.add(address);
         }
@@ -419,18 +423,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createConfirmProposalTx(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException {
-        ProposalTypeEnum typeEnum = ProposalTypeEnum.getEnum(confirmProposalTxData.getType());
-        if (null == typeEnum) {
-            //枚举
-            throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
-        }
-        byte[] txDataBytes = null;
-        try {
-            txDataBytes = confirmProposalTxData.serialize();
-        } catch (IOException e) {
-            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
-        }
-        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.CONFIRM_PROPOSAL, txDataBytes, txTime);
+        Transaction tx = this.createConfirmProposalTxWithoutSign(chain, confirmProposalTxData, txTime);
         // 拜占庭交易流程
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
         confirmProposalVerifier.validate(chain, tx);
@@ -438,22 +431,48 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte proposalType = confirmProposalTxData.getType();
         BroadcastHashSignMessage message;
         if (ProposalTypeEnum.REFUND.value() == proposalType
-                || ProposalTypeEnum.TRANSFER.value() == proposalType
-                || ProposalTypeEnum.EXPELLED.value() == proposalType) {
+                || ProposalTypeEnum.EXPELLED.value() == proposalType
+                || ProposalTypeEnum.WITHDRAW.value() == proposalType) {
             List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
             ProposalExeBusinessData business = ConverterUtil.getInstance(
                     confirmProposalTxData.getBusinessData(),
                     ProposalExeBusinessData.class);
             heterogeneousHashList.add(new HeterogeneousHash(business.getHeterogeneousChainId(), business.getHeterogeneousTxHash()));
-            message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+            message = new BroadcastHashSignMessage(tx, p2PHKSignature, business.getProposalTxHash().toHex(), heterogeneousHashList);
+        } else if(ProposalTypeEnum.UPGRADE.value() == proposalType){
+            List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+            ConfirmUpgradeTxData business = ConverterUtil.getInstance(
+                    confirmProposalTxData.getBusinessData(),
+                    ConfirmUpgradeTxData.class);
+            heterogeneousHashList.add(new HeterogeneousHash(business.getHeterogeneousChainId(), business.getHeterogeneousTxHash()));
+            message = new BroadcastHashSignMessage(tx, p2PHKSignature, business.getNerveTxHash().toHex(), heterogeneousHashList);
         } else {
-            message = new BroadcastHashSignMessage(tx, p2PHKSignature);
+            ProposalExeBusinessData business = ConverterUtil.getInstance(
+                    confirmProposalTxData.getBusinessData(),
+                    ProposalExeBusinessData.class);
+            message = new BroadcastHashSignMessage(tx, p2PHKSignature, business.getProposalTxHash().toHex());
         }
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
         chain.getLogger().debug(tx.format(ConfirmProposalTxData.class));
         return tx;
     }
 
+    @Override
+    public Transaction createConfirmProposalTxWithoutSign(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException {
+        ProposalTypeEnum typeEnum = ProposalTypeEnum.getEnum(confirmProposalTxData.getType());
+        if (null == typeEnum) {
+            //枚举
+            throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
+        }
+        byte[] txDataBytes;
+        try {
+            txDataBytes = confirmProposalTxData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.CONFIRM_PROPOSAL, txDataBytes, txTime);
+        return tx;
+    }
 
     @Override
     public Transaction createDistributionFeeTx(Chain chain, NulsHash basisTxHash, List<byte[]> listRewardAddress, long txTime) throws NulsException {

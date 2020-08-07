@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Object> {
 
-    private ThreadPoolExecutor requestExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L,TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    private ThreadPoolExecutor requestExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
 
-    private ThreadPoolExecutor responseExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L,TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    private ThreadPoolExecutor responseExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -50,34 +50,42 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
             Message message = JSONUtils.byteArray2pojo(bytes, Message.class);
             MessageType messageType = MessageType.valueOf(message.getMessageType());
             int priority = CmdPriority.DEFAULT.getPriority();
-            TextMessageHandler messageHandler = new TextMessageHandler((SocketChannel) ctx.channel(), message,priority);
-            if(messageType.equals(MessageType.Response)
+            TextMessageHandler messageHandler = new TextMessageHandler((SocketChannel) ctx.channel(), message, priority);
+            if (messageType.equals(MessageType.Response)
                     || messageType.equals(MessageType.NegotiateConnectionResponse)
-                    || messageType.equals(MessageType.Ack) ){
+                    || messageType.equals(MessageType.Ack)) {
+                int queueSize = responseExecutorService.getQueue().size();
+                if (queueSize > 10) {
+                    Log.warn("response executor queue:{}", queueSize);
+                }
                 responseExecutorService.execute(messageHandler);
-            }else{
-                if(messageType.equals(MessageType.Request)){
+            } else {
+                int queueSize = requestExecutorService.getQueue().size();
+                if (queueSize > 10) {
+                    Log.warn("request executor queue:{}", queueSize);
+                }
+                if (messageType.equals(MessageType.Request)) {
                     Request request = JSONUtils.map2pojo((Map) message.getMessageData(), Request.class);
-                    if(request.getRequestMethods().size() == 1){
-                        for (String cmd:request.getRequestMethods().keySet()) {
-                            if(ConnectManager.CMD_PRIORITY_MAP.containsKey(cmd)){
+                    if (request.getRequestMethods().size() == 1) {
+                        for (String cmd : request.getRequestMethods().keySet()) {
+                            if (ConnectManager.CMD_PRIORITY_MAP.containsKey(cmd)) {
                                 messageHandler.setPriority(ConnectManager.CMD_PRIORITY_MAP.get(cmd));
                             }
                         }
                     }
                     messageHandler.setRequest(request);
                     requestExecutorService.execute(messageHandler);
-                }else if(messageType.equals(MessageType.RequestOnly)){
+                } else if (messageType.equals(MessageType.RequestOnly)) {
                     Request request = JSONUtils.map2pojo((Map) message.getMessageData(), Request.class);
                     ConnectData connectData = ConnectManager.CHANNEL_DATA_MAP.get(ctx.channel());
                     int messageSize = bytes.length;
-                    if(!connectData.requestOnlyQueueReachLimit()){
+                    if (!connectData.requestOnlyQueueReachLimit()) {
                         connectData.getRequestOnlyQueue().offer(new RequestOnly(request, messageSize));
                         connectData.addRequestOnlyQueueMemSize(messageSize);
-                    }else{
-                        Log.debug("RequestOnly队列缓存已满，丢弃新接收到的消息，messageId:{},队列所占内存：{}", message.getMessageID(),connectData.getRequestOnlyQueueMemSize());
+                    } else {
+                        Log.debug("RequestOnly队列缓存已满，丢弃新接收到的消息，messageId:{},队列所占内存：{}", message.getMessageID(), connectData.getRequestOnlyQueueMemSize());
                     }
-                }else{
+                } else {
                     requestExecutorService.execute(messageHandler);
                 }
             }

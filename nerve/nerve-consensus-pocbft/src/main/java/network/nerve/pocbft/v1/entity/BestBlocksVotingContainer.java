@@ -21,15 +21,16 @@ public class BestBlocksVotingContainer {
     /**
      * 已投票的记录
      */
-    private HashSetDuplicateProcessor<String> localStage1VotedRecorder = new HashSetDuplicateProcessor<>(64);
+    private HashSetDuplicateProcessor<String> localStage1VotedRecorder = new HashSetDuplicateProcessor<>(1024);
     /**
      * 已得到结果记录
      */
-    private HashSetDuplicateProcessor<String> stage1ResultRecorder = new HashSetDuplicateProcessor<>(64);
+    private HashSetDuplicateProcessor<String> stage1ResultRecorder = new HashSetDuplicateProcessor<>(1024);
 
     private long currentHeight;
     private int currentVoteRoundIndex;
     private NulsHash votedBlockHash;
+    private long votedHeight;
 
     private Map<NulsHash, BlockHeader> map = new HashMap<>();
 
@@ -40,7 +41,7 @@ public class BestBlocksVotingContainer {
     public void addBlock(Chain chain, BlockHeader header) {
         lock.lock();
         try {
-            if (currentHeight < header.getHeight()) {
+            if (currentHeight < header.getHeight() || NulsHash.EMPTY_NULS_HASH.equals(this.votedBlockHash)) {
                 this.clear(true);
                 currentHeight = header.getHeight();
                 if (null != this.listener) {
@@ -56,6 +57,9 @@ public class BestBlocksVotingContainer {
     }
 
     public BlockHeader calcNextVotingItem(Chain chain, long votingHeight, long roundIndex, int packingIndexOfRound, long roundStartTime) {
+        if (votingHeight == votedHeight && !NulsHash.EMPTY_NULS_HASH.equals(votedBlockHash)) {
+            return map.get(votedBlockHash);
+        }
         List<NulsHash> list = new ArrayList<>();
         list.addAll(map.keySet());
         list.sort(new Comparator<NulsHash>() {
@@ -75,8 +79,8 @@ public class BestBlocksVotingContainer {
             if (roundIndex == data.getRoundIndex() && packingIndexOfRound == data.getPackingIndexOfRound()
                     && roundStartTime == data.getRoundStartTime()) {
                 return header;
-            } else {
-                chain.getLogger().info("区块不适合本次投票：{}", header.getHash().toHex());
+//            } else {
+//                chain.getLogger().info("区块不适合本次投票：{}", header.getHash().toHex());
             }
 
         }
@@ -116,21 +120,9 @@ public class BestBlocksVotingContainer {
         return stage1ResultRecorder;
     }
 
-    public NulsHash getVotedBlockHash() {
-        return votedBlockHash;
-    }
-
-    /**
-     * 更新当前缓存的正在投票的信息
-     *
-     * @param message
-     */
-    public void votedStage1(VoteMessage message) {
-        this.votedBlockHash = message.getBlockHash();
-    }
-
     public void votedStage2(VoteMessage message) {
         this.votedBlockHash = message.getBlockHash();
+        this.votedHeight = message.getHeight();
     }
 
     public int getCurrentVoteRoundIndex() {

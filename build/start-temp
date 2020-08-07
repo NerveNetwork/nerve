@@ -1,9 +1,8 @@
 #!/bin/bash
 MODULE_PATH=$(cd `dirname $0`;pwd)
 cd "${MODULE_PATH}"
-
-
 APP_NAME="%APP_NAME%" # %APP_NAME 注入
+. func
 if [ -z "${APP_NAME}" ]; then
     echoRed "APP_NAME 未配置"
     exit 0;
@@ -65,6 +64,7 @@ log(){
     echo "${now}    $@" >> ${STDOUT_FILE}
     echoGreen "$@"
 }
+
 #获取参数
 if [ ! -n "$1" ]; then 
     echo "args is error" 
@@ -116,7 +116,6 @@ STDOUT_FILE=$LOGS_DIR/stdout.log
 if [ -z "${config}" ]; then
     config="../../../../nuls.ncf"
 fi
-
 _dataPath=`getModuleItem ${config} "dataPath"`
 _logPath=`getModuleItem ${config} "logPath"`
 _logLevel=`getModuleItem ${config} "logLevel"`
@@ -131,6 +130,9 @@ if [ ! -d ${_logPath} ]; then
 fi
 logpath="-Dlog.path=`get_fullpath ${_logPath}`/$APP_NAME";
 logLevel="-Dlog.level=$_logLevel";
+if [ -n "${LOG_LEVEL}" ]; then  #for env
+   logLevel="-Dlog.level=$LOG_LEVEL";
+fi
 cd $MODULE_PATH
 
 checkLogDir(){
@@ -140,8 +142,8 @@ checkLogDir(){
 }
 
 checkIsRunning(){
-    if [ ! -z "`ps -ef|grep -w "name=${APP_NAME} "|grep -v grep|awk '{print $2}'`" ]; then
-        pid=`ps -ef|grep -w "name=${APP_NAME} "|grep -v grep|awk '{print $2}'`
+    if [ ! -z "`ps -ef|grep -w "${JAR_FILE} "|grep -v grep|awk '{print $2}'`" ]; then
+        pid=`ps -ef|grep -w "${JAR_FILE} "|grep -v grep|awk '{print $2}'`
 
         if [ -n "${RESTART}" ];
         then
@@ -193,7 +195,7 @@ CLASSPATH=" -classpath ${CLASSPATH}:${JAR_FILE} "
 JAVA_OPTS=" -server -XX:+UseG1GC -XX:MaxGCPauseMillis=50 -Xms${JOPT_XMS}m -Xmx${JOPT_XMX}m -XX:MetaspaceSize=${JOPT_METASPACESIZE}m -XX:MaxMetaspaceSize=${JOPT_MAXMETASPACESIZE}m -XX:+ParallelRefProcEnabled -XX:+TieredCompilation -XX:+ExplicitGCInvokesConcurrent $JAVA_OPTS"
 JAVA_OPTS="${JAVA_OPTS} ${logpath} ${logLevel} ${datapath} "
 JAVA_OOM_DUMP="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=${LOGS_DIR}/oom-${START_DATE}.hprof"
-JAVA_OPTS="$JAVA_OPTS $JAVA_GC_LOG $JAVA_OOM_DUMP  -Dapp.name=$APP_NAME -Dactive.config=${config} "
+JAVA_OPTS="$JAVA_OPTS $JAVA_GC_LOG $JAVA_OOM_DUMP  -Dapp.name=${APP_NAME} -Dactive.config=${config} "
 if [ -n "${DEBUG_PORT}" ]; then
     JAVA_OPTS="${JAVA_OPTS} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=${DEBUG_PORT} "
 fi

@@ -134,7 +134,9 @@ public class ServerChannelHandler extends BaseChannelHandler {
         if (node != null && node.getDisconnectListener() != null) {
             node.getDisconnectListener().action();
         }
-        LoggerUtil.COMMON_LOG.info("Server Node is channelUnregistered:{}:{}", channel.remoteAddress().getHostString(), channel.remoteAddress().getPort());
+
+        LoggerUtil.COMMON_LOG.error("Server Node is channelUnregistered:{}:{}", channel.remoteAddress().getHostString(), channel.remoteAddress().getPort());
+        LoggerUtil.COMMON_LOG.error("Server local port is {}", channel.localAddress().getPort());
     }
 
 }

@@ -43,6 +43,9 @@ public class ConsensusIdentitiesMsg extends BaseBusinessMessage {
     private ConsensusIdentitiesSub consensusIdentitiesSub = new ConsensusIdentitiesSub();
     //对identityList的签名
     private P2PHKSignature sign = null;
+    private String nodeId;
+    private String msgStr;
+
     public ConsensusIdentitiesMsg(ConsensusNet consensusNet) {
         consensusIdentitiesSub.setConsensusNet(consensusNet);
         consensusIdentitiesSub.setMessageTime(NulsDateUtils.getCurrentTimeSeconds());
@@ -97,5 +100,21 @@ public class ConsensusIdentitiesMsg extends BaseBusinessMessage {
         size += SerializeUtils.sizeOfNulsData(consensusIdentitiesSub);
         size += SerializeUtils.sizeOfNulsData(sign);
         return size;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public String getMsgStr() {
+        return msgStr;
+    }
+
+    public void setMsgStr(String msgStr) {
+        this.msgStr = msgStr;
     }
 }

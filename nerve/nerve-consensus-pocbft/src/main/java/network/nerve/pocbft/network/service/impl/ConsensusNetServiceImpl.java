@@ -114,7 +114,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     public boolean netStatusChange(Chain chain) {
         ConsensusNetGroup group = GROUPS_MAP.get(chain.getChainId());
         if (null != group) {
-            return group.statusChange(ConsensusConstant.POC_NETWORK_NODE_PERCENT, chain);
+            return group.statusChange(chain);
         }
         return false;
     }
@@ -190,6 +190,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
             chain.getLogger().error("=======================createConsensusNetwork error. self Pub or priv is null");
             return false;
         }
+        chain.getLogger().info("开始组建共识网络");
         ConsensusNetGroup group = GROUPS_MAP.computeIfAbsent(chainId, val -> new ConsensusNetGroup(chainId));
 
 
@@ -300,6 +301,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     @Override
     public void cleanConsensusNetwork(int chainId) {
         Chain chain = chainManager.getChainMap().get(chainId);
+        chain.getLogger().info("清理共识网络连接");
         //发送移除消息
         if (!GROUPS_MAP.isEmpty()) {
             networkService.sendDisConnectMessage(chain, GROUPS_MAP.get(chainId).getConsensusNetIps());
@@ -398,7 +400,9 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
             params.put("ips", GROUPS_MAP.get(chainId).getConsensusNetIps());
             params.put("messageBody", messageBodyHex);
             params.put("command", cmd);
+            params.put("isForward",false);
             params.put("excludeNodes", excludeNodes);
+
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, NetworkCmdConstant.NW_BROADCAST_CONSENSUS_NET, params);
             //chain.getLogger().debug("broadcast: " + cmd + ", success:" + response.isSuccess());
             if (response.isSuccess()) {
@@ -421,7 +425,6 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
      */
     @Override
     public boolean broadCastConsensusNetHalfSync(int chainId, String cmd, String messageBodyHex, String excludeNodes) {
-
         ConsensusNetGroup group = GROUPS_MAP.get(chainId);
         if (null == group) {
             return false;
@@ -459,7 +462,6 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
             params.put("ips", ips);
             params.put("messageBody", messageBodyHex);
             params.put("command", cmd);
-
             params.put("excludeNodes", excludeNodes);
 
             Request request = MessageUtil.newRequest(NetworkCmdConstant.NW_BROADCAST_CONSENSUS_NET, params, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);

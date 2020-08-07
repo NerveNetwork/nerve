@@ -4,6 +4,7 @@ import io.nuls.api.ApiContext;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.*;
 import io.nuls.api.db.SymbolRegService;
+import io.nuls.api.exception.UnableAssetException;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.dto.LedgerAssetDTO;
 import io.nuls.api.model.entity.*;
@@ -23,7 +24,6 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -137,7 +137,13 @@ public class AnalysisHandler {
         for (int i = 0; i < txList.size(); i++) {
             Transaction tx = txList.get(i);
             tx.setStatus(TxStatusEnum.CONFIRMED);
-            TransactionInfo txInfo = toTransaction(chainId, tx);
+            TransactionInfo txInfo;
+            try {
+                txInfo = toTransaction(chainId, tx);
+            }catch (UnableAssetException unableAssetException){
+                Log.error("解析交易失败:{}",unableAssetException.getCustomMessage());
+                continue;
+            }
             if (txInfo.getType() == TxType.RED_PUNISH) {
                 PunishLogInfo punishLog = (PunishLogInfo) txInfo.getTxData();
                 punishLog.setRoundIndex(blockHeader.getRoundIndex());
@@ -187,7 +193,7 @@ public class AnalysisHandler {
         return info;
     }
 
-    public static List<CoinFromInfo> toCoinFromList(CoinData coinData) {
+    public static List<CoinFromInfo> toCoinFromList(CoinData coinData) throws UnableAssetException {
         if (coinData == null || coinData.getFrom() == null) {
             return null;
         }
@@ -204,7 +210,7 @@ public class AnalysisHandler {
             SymbolRegInfo symbolRegInfo = symbolRegService.get(from.getAssetsChainId(),from.getAssetsId());
             if(symbolRegInfo == null){
                 Log.error("数据异常，未找到对应资产注册信息:{}",from.getAssetsChainId() + "-" + from.getAssetsId());
-                throw new RuntimeException();
+                throw new UnableAssetException(from.getAssetsChainId(),from.getAssetsId());
             }
             fromInfo.setSymbol(symbolRegInfo.getSymbol());
             fromInfoList.add(fromInfo);
@@ -212,7 +218,7 @@ public class AnalysisHandler {
         return fromInfoList;
     }
 
-    public static List<CoinToInfo> toCoinToList(CoinData coinData) {
+    public static List<CoinToInfo> toCoinToList(CoinData coinData) throws UnableAssetException {
         if (coinData == null || coinData.getTo() == null) {
             return null;
         }
@@ -228,7 +234,7 @@ public class AnalysisHandler {
             SymbolRegInfo symbolRegInfo = symbolRegService.get(coinToInfo.getChainId(),coinToInfo.getAssetsId());
             if(symbolRegInfo == null){
                 Log.error("数据异常，未找到对应资产注册信息:{}",coinToInfo.getChainId() + "-" + coinToInfo.getAssetsId());
-                throw new RuntimeException();
+                throw new UnableAssetException(coinToInfo.getChainId(),coinToInfo.getAssetsId());
             }
             coinToInfo.setSymbol(symbolRegInfo.getSymbol());
             toInfoList.add(coinToInfo);

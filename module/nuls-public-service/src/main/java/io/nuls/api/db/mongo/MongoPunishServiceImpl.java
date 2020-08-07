@@ -86,7 +86,7 @@ public class MongoPunishServiceImpl implements PunishService {
         List<Document> documentList = mongoDBService.pageQuery(PUNISH_TABLE + chainId, filter, Sorts.descending("time"), pageIndex, pageSize);
         List<PunishLogInfo> punishLogList = new ArrayList<>();
         for (Document document : documentList) {
-            punishLogList.add(DocumentTransferTool.toInfo(document,"txHash", PunishLogInfo.class));
+            punishLogList.add(DocumentTransferTool.toInfo(document, PunishLogInfo.class));
         }
         PageInfo<PunishLogInfo> pageInfo = new PageInfo<>(pageIndex, pageSize, totalCount, punishLogList);
         return pageInfo;

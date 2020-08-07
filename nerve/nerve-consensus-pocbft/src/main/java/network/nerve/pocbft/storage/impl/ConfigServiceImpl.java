@@ -1,7 +1,7 @@
 package network.nerve.pocbft.storage.impl;
 
 import network.nerve.pocbft.model.bo.config.ChainConfig;
-import network.nerve.pocbft.storage.ConfigService;
+import network.nerve.pocbft.storage.ConfigService1;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -21,7 +21,7 @@ import java.util.Map;
  * 2018/11/8
  * */
 @Component
-public class ConfigServiceImpl implements ConfigService {
+public class ConfigServiceImpl implements ConfigService1 {
     @Override
     public boolean save(ChainConfig bean, int chainID) throws Exception{
         if(bean == null){

@@ -66,60 +66,64 @@ public class CollectorTask implements Runnable {
 
     @Override
     public void run() {
-        try {
-            if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteStartH, QuotationContext.quoteStartM, QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
-                return;
-            }
-            if (!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))) {
-                return;
-            }
-            QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.clear();
-            List<QuotationActuator> quteList = chain.getQuote();
-            Map<String, Double> pricesMap = new HashMap<>();
-            for (QuotationActuator qa : quteList) {
-                String anchorToken = qa.getAnchorToken();
-                if(QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)){
-                    //当天已存在该key的已确认报价交易
-                    continue;
+        while (true) {
+            try {
+                if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteStartH, QuotationContext.quoteStartM, QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
+                    break;
                 }
-                if (QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.containsKey(anchorToken)) {
-                    //如果未确认的报价交易缓存中已存在该key, 则需要从交易模块获取该笔交易是否已确认
-                    String txHash = QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.get(anchorToken);
-                    boolean confirmed = QuotationCall.isConfirmed(chain, txHash);
-                    chain.getLogger().info("[CollectorTask] 获取交易是否已确认：{}, hash:{}", confirmed, txHash);
-                    if (confirmed) {
-                        chain.getLogger().info("[CollectorTask] {}已报价", anchorToken);
-                        //加入已报价确认
-                        QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
+                if (!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))) {
+                    break;
+                }
+                QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.clear();
+                List<QuotationActuator> quteList = chain.getQuote();
+                Map<String, Double> pricesMap = new HashMap<>();
+                for (QuotationActuator qa : quteList) {
+                    String anchorToken = qa.getAnchorToken();
+                    if(QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)){
+                        //当天已存在该key的已确认报价交易
                         continue;
-                    } else {
-                        quotationIntradayStorageService.delete(chain, anchorToken);
                     }
+                    if (QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.containsKey(anchorToken)) {
+                        //如果未确认的报价交易缓存中已存在该key, 则需要从交易模块获取该笔交易是否已确认
+                        String txHash = QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.get(anchorToken);
+                        boolean confirmed = QuotationCall.isConfirmed(chain, txHash);
+                        chain.getLogger().info("[CollectorTask] 获取交易是否已确认：{}, hash:{}", confirmed, txHash);
+                        if (confirmed) {
+                            chain.getLogger().info("[CollectorTask] {}已报价", anchorToken);
+                            //加入已报价确认
+                            QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
+                            continue;
+                        } else {
+                            quotationIntradayStorageService.delete(chain, anchorToken);
+                        }
+                    }
+                    Collector collector = getCollector(qa.getCollector());
+                    BigDecimal price = collector.enquiry(chain, anchorToken);
+                    if (null == price || price.doubleValue() == 0) {
+                        chain.getLogger().error("[CollectorTask] [{}]没有获取到第三方平均报价", anchorToken);
+                        continue;
+                    }
+                    chain.getLogger().info("[CollectorTask] [{}]第三方平均报价为：{} \n\n", anchorToken, price.doubleValue());
+                    pricesMap.put(anchorToken, price.doubleValue());
                 }
-                Collector collector = getCollector(qa.getCollector());
-                BigDecimal price = collector.enquiry(chain, anchorToken);
-                if (null == price || price.doubleValue() == 0) {
-                    chain.getLogger().error("[CollectorTask] [{}]没有获取到第三方平均报价", anchorToken);
-                    continue;
+                Transaction tx = null;
+                if (pricesMap.isEmpty() || null == (tx = createAndSendTx(chain, pricesMap))) {
+                    break;
                 }
-                chain.getLogger().info("[CollectorTask] [{}]第三方平均报价为：{}", anchorToken, price.doubleValue());
-                pricesMap.put(anchorToken, price.doubleValue());
-            }
-            Transaction tx = null;
-            if (pricesMap.isEmpty() || null == (tx = createAndSendTx(chain, pricesMap))) {
-                return;
-            }
-            chain.getLogger().info("[Quotation] 节点执行报价交易 txHash: {}", tx.getHash().toHex());
-            chain.getLogger().info("{}", tx.format(Quotation.class));
-            //记录成功发送报价交易的token (如果由自己节点交易确认的时候来记录,容易出现重复报价)
-            String txHash = tx.getHash().toHex();
-            pricesMap.forEach((key, value) -> {
-                QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.put(key, txHash);
-                quotationIntradayStorageService.save(chain, key);
-            });
+                chain.getLogger().info("[Quotation] 节点执行报价交易 txHash: {}", tx.getHash().toHex());
+                chain.getLogger().info("{}", tx.format(Quotation.class));
+                //记录成功发送报价交易的token (如果由自己节点交易确认的时候来记录,容易出现重复报价)
+                String txHash = tx.getHash().toHex();
+                pricesMap.forEach((key, value) -> {
+                    QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.put(key, txHash);
+                    quotationIntradayStorageService.save(chain, key);
+                });
 
-        } catch (Throwable e) {
-            chain.getLogger().error("CollectorTask error", e);
+                break;
+            } catch (Throwable e) {
+                chain.getLogger().error("CollectorTask error", e);
+                break;
+            }
         }
     }
 

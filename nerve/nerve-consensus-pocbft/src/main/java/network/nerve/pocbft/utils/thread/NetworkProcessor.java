@@ -41,7 +41,10 @@ public class NetworkProcessor implements Runnable {
                     //有未连接peer，进行重连
                     processConnect(consensusNetService, chain);
                     //如果存在未连接的共识节点，进行自身地址重分享
-                    processShareSelf(consensusNetService, chain);
+
+                    if (!chain.isNetworkStateOk()) {
+                        processShareSelf(consensusNetService, chain);
+                    }
                 } catch (Exception e) {
                     chain.getLogger().error(e);
                 }

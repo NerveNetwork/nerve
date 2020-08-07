@@ -1,5 +1,6 @@
 package network.nerve.pocbft.v1.cache;
 
+import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.log.Log;
 import network.nerve.pocbft.v1.entity.*;
@@ -7,10 +8,8 @@ import network.nerve.pocbft.v1.message.VoteMessage;
 import network.nerve.pocbft.v1.message.VoteResultMessage;
 import network.nerve.pocbft.v1.utils.HashSetDuplicateProcessor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.security.Identity;
+import java.util.*;
 
 /**
  * @author Eva
@@ -26,6 +25,10 @@ public class ConsensusCache {
      * VoteMessageQueue
      */
     private VoteMessageQueue voteMessageQueue = new VoteMessageQueue();
+    private BlockHeaderQueue blockHeaderQueue = new BlockHeaderQueue();
+    private IdentityMessageQueue identityMessageQueue = new IdentityMessageQueue();
+    private IdentityMessageQueue disConnectMessageQueue = new IdentityMessageQueue();
+    private ShareMessageQueue shareMessageQueue = new ShareMessageQueue();
 
     /**
      * 第一阶段的结果
@@ -50,10 +53,26 @@ public class ConsensusCache {
      */
     private PackingQueue packingQueue = new PackingQueue();
 
+    private long lastConfirmedRoundIndex;
+    private int lastConfirmedRoundPackingIndex;
+
+    public long getLastConfirmedRoundIndex() {
+        return lastConfirmedRoundIndex;
+    }
+
+    public void setLastConfirmed(long lastConfirmedRoundIndex, int lastConfirmedRoundPackingIndex) {
+        this.lastConfirmedRoundIndex = lastConfirmedRoundIndex;
+        this.lastConfirmedRoundPackingIndex = lastConfirmedRoundPackingIndex;
+    }
+
+    public int getLastConfirmedRoundPackingIndex() {
+        return lastConfirmedRoundPackingIndex;
+    }
+
     /**
      * 消息去重
      */
-    private HashSetDuplicateProcessor<String> msgDuplicateProcessor = new HashSetDuplicateProcessor<>(1000);
+    private HashSetDuplicateProcessor<String> msgDuplicateProcessor = new HashSetDuplicateProcessor<>(2048);
 
     public HashSetDuplicateProcessor<String> getMsgDuplicateProcessor() {
         return msgDuplicateProcessor;
@@ -111,4 +130,19 @@ public class ConsensusCache {
         return signResultMap.get(blockHash);
     }
 
+    public IdentityMessageQueue getIdentityMessageQueue() {
+        return identityMessageQueue;
+    }
+
+    public ShareMessageQueue getShareMessageQueue() {
+        return shareMessageQueue;
+    }
+
+    public IdentityMessageQueue getDisConnectMessageQueue() {
+        return disConnectMessageQueue;
+    }
+
+    public BlockHeaderQueue getBlockHeaderQueue() {
+        return blockHeaderQueue;
+    }
 }

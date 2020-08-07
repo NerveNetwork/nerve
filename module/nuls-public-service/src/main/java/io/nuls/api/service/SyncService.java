@@ -2,6 +2,7 @@ package io.nuls.api.service;
 
 
 import io.nuls.api.ApiContext;
+import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.ApiErrorCode;
@@ -12,6 +13,7 @@ import io.nuls.api.db.mongo.MongoAccountServiceImpl;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.po.mini.CancelDepositInfo;
+import io.nuls.api.model.rpc.BalanceInfo;
 import io.nuls.api.utils.DBUtil;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.base.basic.AddressTool;
@@ -56,6 +58,9 @@ public class SyncService {
     private PunishService punishService;
     @Autowired
     private RoundManager roundManager;
+
+    @Autowired
+    RoundService roundService;
 
     @Autowired
     BlockTimeService blockTimeService;
@@ -208,48 +213,47 @@ public class SyncService {
             //根据区块头的打包地址，查询打包节点的节点信息，修改相关统计数据
             //According to the packed address of the block header, query the node information of the packed node, and modify related statistics.
             if (blockInfo.getTxList() != null && !blockInfo.getTxList().isEmpty()) {
-                calcCommissionReward(chainId,headerInfo, blockInfo.getTxList().get(0));
+                calcCommissionReward(chainId,headerInfo, blockInfo.getTxList());
             }
         }
     }
 
     /**
-     * 分别记录当前块，代理节点自己的和委托人的奖励
-     * Record the current block, the agent node's own and the principal's reward
-     *
-     * @param coinBaseTx
+     * 出块节点增加总打包数量
+     * 如果有coinbase，切收益地址是出块地址的收益地址，增加节点的总收益和更新收益最后发放时间
+     * @param chainId
+     * @param headerInfo
+     * @param txs
      */
-    private void calcCommissionReward(int chainId,BlockHeaderInfo headerInfo,TransactionInfo coinBaseTx) {
-
+    private void calcCommissionReward(int chainId,BlockHeaderInfo headerInfo,List<TransactionInfo> txs) {
         CacheManager.getCache(chainId).getAgentMap().values().stream().filter(d->d.getPackingAddress().equals(headerInfo.getPackingAddress())).findFirst()
                 .ifPresent(packingAgentInfo->{
                     packingAgentInfo.setTotalPackingCount(packingAgentInfo.getTotalPackingCount() + 1);
                     packingAgentInfo.setVersion(headerInfo.getAgentVersion());
                     headerInfo.setByAgentInfo(packingAgentInfo);
                 });
-        List<CoinToInfo> list = coinBaseTx.getCoinTos();
-        if (null == list || list.isEmpty()) {
-            return;
-        }
-        AssetInfo assetInfo = CacheManager.getCacheChain(chainId).getDefaultAsset();
-        for (CoinToInfo output : list) {
-            //奖励只计算本链的共识资产
-            AgentInfo agentInfo = queryAgentInfo(chainId,output.getAddress(),3);
-            if(agentInfo != null){
-                if (output.getChainId() == assetInfo.getChainId() && output.getAssetsId() == assetInfo.getAssetId()) {
-                    agentInfo.setReward(agentInfo.getReward().add(output.getAmount()));
-                }
-                agentInfo.setTotalPackingCount(agentInfo.getTotalPackingCount() + 1);
-                agentInfo.setLastRewardHeight(headerInfo.getHeight());
-                agentInfo.setVersion(headerInfo.getAgentVersion());
-                headerInfo.setByAgentInfo(agentInfo);
+        txs.stream().filter(d->d.getType()==TxType.COIN_BASE).findFirst().ifPresent(tx->{
+            List<CoinToInfo> list = tx.getCoinTos();
+            if (null == list || list.isEmpty()) {
+                return;
             }
-        }
+            AssetInfo assetInfo = CacheManager.getCacheChain(chainId).getDefaultAsset();
+            for (CoinToInfo output : list) {
+                //找到奖励地址为转入地址的节点
+                AgentInfo agentInfo = queryAgentInfo(chainId,output.getAddress(),3);
+                if(agentInfo != null){
+                    if (output.getChainId() == assetInfo.getChainId() && output.getAssetsId() == assetInfo.getAssetId()) {
+                        agentInfo.setReward(agentInfo.getReward().add(output.getAmount()));
+                    }
+                    agentInfo.setLastRewardHeight(headerInfo.getHeight());
+                }
+            }
+        });
     }
 
     /**
      * 处理各种交易
-     *
+     * 
      * @param txs
      */
     private void processTxs(int chainId, List<TransactionInfo> txs) {
@@ -289,7 +293,8 @@ public class SyncService {
                 processSymbolQuotation(chainId, tx);
             } else if (tx.getType() == TxType.CONFIRM_WITHDRAWAL || tx.getType() == TxType.RECHARGE){
                 processConverterTx(chainId,tx);
-            } else if (tx.getType() == TxType.TRADING_ORDER || tx.getType() == TxType.ORDER_CANCEL_CONFIRM){
+            }
+            else if (tx.getType() == TxType.TRADING_ORDER || tx.getType() == TxType.ORDER_CANCEL_CONFIRM || tx.getType() == TxType.TRADING_DEAL ){
                 processDexTx(chainId,tx);
             } else if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
                 processChangeVirtualBankTx(chainId,tx);
@@ -328,18 +333,77 @@ public class SyncService {
     private void processDexTx(int chainId, TransactionInfo tx) {
         addressSet.clear();
         int index = 0;
-        if (tx.getCoinFroms() != null) {
+        //存储各个地址的净转入转出，from减，to加 ，结果为负数时属于净转出，反之为净转入。为0时属于锁定，不计入总的转出转入
+        Map<String,BigInteger> txBalance = new HashMap<>();
+        //1.计算账户余额
+        /*
+            from locked 为0时，减少可用余额
+            from locked 为-1时，减少锁定余额
+            to   locked 为0时，增加可用余额
+            to   locked 为-2时，增加锁定余额
+         */
+        //2.保存交易用户关系表
+        if(tx.getCoinFroms() != null){
             for (CoinFromInfo input : tx.getCoinFroms()) {
-                addressSet.add(input.getAddress());
-                AccountLedgerInfo ledgerInfo = calcBalance(chainId, input);
+                txBalance.compute(input.getAddress(),(key,oldVal)->{
+                    if(oldVal == null){
+                        return input.getAmount().negate();
+                    }else{
+                        return oldVal.subtract(input.getAmount());
+                    }
+                });
+                AccountInfo accountInfo = queryAccountInfo(chainId, input.getAddress());
+                AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, input.getAddress(), input.getChainId(), input.getAssetsId());
+                switch (input.getLocked()){
+                    case 0:
+                        accountInfo.setTotalBalance(accountInfo.getTotalBalance().subtract(input.getAmount()));
+                        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().subtract(input.getAmount()));
+                        break;
+                    case -1:
+                        accountInfo.setConsensusLock(accountInfo.getConsensusLock().subtract(input.getAmount()));
+                        accountInfo.setTotalBalance(accountInfo.getTotalBalance().subtract(input.getAmount()));
+                        ledgerInfo.setConsensusLock(ledgerInfo.getConsensusLock().subtract(input.getAmount()));
+                        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().subtract(input.getAmount()));
+                }
                 txRelationInfoSet.add(new TxRelationInfo(input, tx, ledgerInfo.getTotalBalance(),index++));
+            };
+        }
+        if(tx.getCoinTos() != null){
+            for (CoinToInfo out : tx.getCoinTos()) {
+                txBalance.compute(out.getAddress(),(key,oldVal)->{
+                    if(oldVal == null){
+                        return out.getAmount();
+                    }else{
+                        return oldVal.add(out.getAmount());
+                    }
+                });
+                AccountInfo accountInfo = queryAccountInfo(chainId, out.getAddress());
+                AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, out.getAddress(), out.getChainId(), out.getAssetsId());
+                switch ((int) out.getLockTime()){
+                    case 0:
+                        accountInfo.setTotalBalance(accountInfo.getTotalBalance().add(out.getAmount()));
+                        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().add(out.getAmount()));
+                        break;
+                    case -2:
+                        accountInfo.setConsensusLock(accountInfo.getConsensusLock().add(out.getAmount()));
+                        ledgerInfo.setConsensusLock(ledgerInfo.getConsensusLock().add(out.getAmount()));
+                        accountInfo.setTotalBalance(accountInfo.getTotalBalance().add(out.getAmount()));
+                        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().add(out.getAmount()));
+                }
+                txRelationInfoSet.add(new TxRelationInfo(out, tx, ledgerInfo.getTotalBalance(),index++));
+            };
+        }
+        //3.计算账户总转出和总转入，from - to 负数为净转出，正数为净转入
+        txBalance.entrySet().forEach(entry->{
+            AccountInfo accountInfo = queryAccountInfo(chainId, entry.getKey());
+            if(entry.getValue().compareTo(BigInteger.ZERO) < 0){
+                accountInfo.setTotalOut(accountInfo.getTotalOut().add(entry.getValue()));
+            } else if (entry.getValue().compareTo(BigInteger.ZERO) > 0){
+                accountInfo.setTotalIn(accountInfo.getTotalIn().add(entry.getValue()));
             }
-        }
-
-        for (String address : addressSet) {
-            AccountInfo accountInfo = queryAccountInfo(chainId, address);
             accountInfo.setTxCount(accountInfo.getTxCount() + 1);
-        }
+            addressSet.add(entry.getKey());
+        });
     }
 
     private void processCoinBaseTx(int chainId, TransactionInfo tx) {
@@ -653,9 +717,12 @@ public class SyncService {
         //累加账户交易总数
         accountInfo.setTxCount(accountInfo.getTxCount() + 1);
         //改变账户共识锁定数量
-        accountInfo.setConsensusLock(accountInfo.getConsensusLock().add(depositInfo.getAmount()));
+        if(depositInfo.getAssetChainId() == ApiContext.defaultChainId && depositInfo.getAssetId() == ApiContext.defaultAssetId){
+            accountInfo.setConsensusLock(accountInfo.getConsensusLock().add(depositInfo.getAmount()));
+        }
         //修改账本数据
         AccountLedgerInfo ledgerInfo = calcBalance(chainId, depositInfo.getAssetChainId(), depositInfo.getAssetId(), accountInfo, tx.getFee().getValue());
+        ledgerInfo.setConsensusLock(ledgerInfo.getConsensusLock().add(depositInfo.getAmount()));
         //保存交易流水
         SymbolRegInfo symbolRegInfo = symbolRegService.get(depositInfo.getAssetChainId(),depositInfo.getAssetId());
         depositInfo.setSymbol(symbolRegInfo.getSymbol());
@@ -834,6 +901,30 @@ public class SyncService {
         return ledgerInfo;
     }
 
+    private AccountLedgerInfo calcBalanceForDex(int chainId, CoinFromInfo input) {
+        ChainInfo chainInfo = CacheManager.getCacheChain(chainId);
+
+        if (input.getChainId() == chainInfo.getChainId() && input.getAssetsId() == chainInfo.getDefaultAsset().getAssetId()) {
+            AccountInfo accountInfo = queryAccountInfo(chainId, input.getAddress());
+            switch (input.getLocked()){
+                case 0: //委托挂单
+                    accountInfo.setTotalOut(accountInfo.getTotalOut().add(input.getAmount()));
+                    accountInfo.setTotalBalance(accountInfo.getTotalBalance().subtract(input.getAmount()));
+                    break;
+            }
+
+            if (accountInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0) {
+                throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "account[" + accountInfo.getAddress() + "] totalBalance < 0");
+            }
+        }
+        AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, input.getAddress(), input.getChainId(), input.getAssetsId());
+        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().subtract(input.getAmount()));
+        if (ledgerInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0) {
+            //  throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "accountLedger[" + DBUtil.getAccountAssetKey(ledgerInfo.getAddress(), ledgerInfo.getChainId(), ledgerInfo.getAssetId()) + "] totalBalance < 0");
+        }
+        return ledgerInfo;
+    }
+
     private AccountLedgerInfo calcBalance(int chainId, CoinFromInfo input) {
         ChainInfo chainInfo = CacheManager.getCacheChain(chainId);
         if (input.getChainId() == chainInfo.getChainId() && input.getAssetsId() == chainInfo.getDefaultAsset().getAssetId()) {
@@ -860,7 +951,7 @@ public class SyncService {
                 throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "account[" + accountInfo.getAddress() + "] totalBalance < 0");
             }
         }
-        AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, accountInfo.getAddress(), assetChainId, assetId);
+        AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, accountInfo.getAddress(), ApiContext.defaultChainId, assetId);
         ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().subtract(fee));
 //        if (ledgerInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0) {
 //            throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "accountLedger[" + DBUtil.getAccountAssetKey(ledgerInfo.getAddress(), ledgerInfo.getChainId(), ledgerInfo.getAssetId()) + "] totalBalance < 0");
@@ -873,8 +964,7 @@ public class SyncService {
      * 解析区块和所有交易后，将数据存储到数据库中
      * Store entity in the database after parsing the block and all transactions
      */
-    public void
-    save(int chainId, BlockInfo blockInfo) {
+    public void  save(int chainId, BlockInfo blockInfo) {
         long height = blockInfo.getHeader().getHeight();
 
         long time1, time2;
@@ -912,7 +1002,7 @@ public class SyncService {
         aliasService.saveAliasList(chainId, aliasInfoList);
 
         //存储红黄牌惩罚记录
-        punishService.savePunishList(chainId, punishLogList);
+        savePunishList(chainId, punishLogList);
 
         //存储链信息
         chainService.saveChainList(chainInfoList);
@@ -929,12 +1019,12 @@ public class SyncService {
                 syncInfo.setStep(2);
                 chainService.updateStep(syncInfo);
             case 2 :
-                ledgerService.saveLedgerList(chainId, accountLedgerInfoMap);
+                //存储账户信息表
+                accountService.saveAccounts(chainId, accountInfoMap);
                 syncInfo.setStep(3);
                 chainService.updateStep(syncInfo);
             case 3 :
-                //存储账户信息表
-                accountService.saveAccounts(chainId, accountInfoMap);
+                ledgerService.saveLedgerList(chainId, accountLedgerInfoMap);
                 syncInfo.setStep(4);
                 chainService.updateStep(syncInfo);
             case 4 :
@@ -967,6 +1057,19 @@ public class SyncService {
         //完成解析
         syncInfo.setStep(100);
         chainService.updateStep(syncInfo);
+
+    }
+
+    private void savePunishList(int chainId, List<PunishLogInfo> punishLogList) {
+        this.punishService.savePunishList(chainId,punishLogList);
+        punishLogList.forEach(d->{
+            AgentInfo agentInfo = agentService.getAgentByAgentAddress(chainId,d.getAddress());
+            if(d.getType() == PUBLISH_YELLOW){
+                roundService.setRoundItemYellow(chainId,d.getRoundIndex(),d.getPackageIndex(),agentInfo.getTxHash());
+            }else{
+                roundService.setRoundItemRed(chainId,d.getRoundIndex(),d.getPackageIndex(),agentInfo.getTxHash());
+            }
+        });
 
     }
 

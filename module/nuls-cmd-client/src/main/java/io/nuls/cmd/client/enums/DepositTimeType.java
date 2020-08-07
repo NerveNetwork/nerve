@@ -1,7 +1,7 @@
 package io.nuls.cmd.client.enums;
 public enum DepositTimeType {
 
-//    TEST((byte)7, 5, 300),
+    TEST((byte)7, 5, 300),
 
     /**
      * 定期委托3个月

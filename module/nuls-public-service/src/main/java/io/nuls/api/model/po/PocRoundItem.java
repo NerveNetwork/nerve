@@ -55,6 +55,11 @@ public class PocRoundItem {
 
     private Boolean yellow = false;
 
+    /**
+     * 预计出块高度
+     */
+    private int planHeight;
+
     public String getId() {
         return id;
     }
@@ -162,5 +167,13 @@ public class PocRoundItem {
 
     public void setYellow(Boolean yellow) {
         this.yellow = yellow;
+    }
+
+    public int getPlanHeight() {
+        return planHeight;
+    }
+
+    public void setPlanHeight(int planHeight) {
+        this.planHeight = planHeight;
     }
 }

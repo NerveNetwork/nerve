@@ -42,6 +42,8 @@ public class SmallBlockMessage extends BaseBusinessMessage {
     private SmallBlock smallBlock;
 
     private byte[] voteResult;
+    private int chainId;
+    private String nodeId;
 
     public SmallBlockMessage() {
     }
@@ -80,5 +82,21 @@ public class SmallBlockMessage extends BaseBusinessMessage {
 
     public void setVoteResult(byte[] voteResult) {
         this.voteResult = voteResult;
+    }
+
+    public void setChainId(int chainId) {
+        this.chainId = chainId;
+    }
+
+    public int getChainId() {
+        return chainId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
     }
 }

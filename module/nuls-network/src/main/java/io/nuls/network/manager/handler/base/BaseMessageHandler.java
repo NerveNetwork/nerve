@@ -36,6 +36,8 @@ import io.nuls.network.model.message.base.BaseMessage;
 import io.nuls.network.model.message.base.MessageHeader;
 import io.nuls.network.utils.LoggerUtil;
 
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * base message handler
@@ -60,10 +62,10 @@ public abstract class BaseMessageHandler implements BaseMeesageHandlerInf {
             header.setMagicNumber(header.getMagicNumber());
             BaseNulsData body = message.getMsgBody();
             header.setPayloadLength(body.size());
-            Log.debug("***************magicNumber:{},node:{}**************",header.getMagicNumber(), node.getId());
+            Log.debug("***************magicNumber:{},node:{}**************", header.getMagicNumber(), node.getId());
             ChannelFuture future = node.getChannel().writeAndFlush(Unpooled.wrappedBuffer(message.serialize()));
             if (!asyn) {
-                future.await();
+                future.await(5, TimeUnit.SECONDS);
                 boolean success = future.isSuccess();
                 if (!success) {
                     return NetworkEventResult.getResultFail(NetworkErrorCode.NET_MESSAGE_SEND_FAIL);

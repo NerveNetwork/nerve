@@ -1,5 +1,7 @@
 package network.nerve.dex.tx;
 
+import io.nuls.base.data.CoinFrom;
+import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.ModuleTxPackageProcessor;
 import io.nuls.core.constant.TxType;
@@ -111,11 +113,67 @@ public class DexTxPackageProcessor implements ModuleTxPackageProcessor {
 
         //比对成交交易是否一致
         if (dealTxList1.size() != dealTxList2.size()) {
+            LoggerUtil.dexLog.error("--------dealTxList fail 比对长度不一致 ------------");
+            LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
+            for(Transaction tx1 :dealTxList1) {
+                for(CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
+                    LoggerUtil.dexLog.error(from.toString());
+                }
+            }
+            LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
+            for(Transaction tx1 :dealTxList1) {
+                for(CoinTo to : tx1.getCoinDataInstance().getTo()) {
+                    LoggerUtil.dexLog.error(to.toString());
+                }
+            }
+            LoggerUtil.dexLog.error("---------------- ------------");
+            LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
+            for(Transaction tx1 :dealTxList2) {
+                for(CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
+                    LoggerUtil.dexLog.error(from.toString());
+                }
+            }
+            LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
+            for(Transaction tx1 :dealTxList2) {
+                for(CoinTo to : tx1.getCoinDataInstance().getTo()) {
+                    LoggerUtil.dexLog.error(to.toString());
+                }
+            }
+
             throw new NulsException(DexErrorCode.SYNC_BATCH_VALIDATE_ERROR);
         }
 
         for (int i = 0; i < dealTxList1.size(); i++) {
             if (!equals(dealTxList1.get(i), dealTxList2.get(i))) {
+                LoggerUtil.dexLog.error("---------------- ------------");
+                LoggerUtil.dexLog.error("--------dealTxList fail 金额不一致 ------------");
+
+                LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
+                for(Transaction tx1 :dealTxList1) {
+                    for(CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
+                        LoggerUtil.dexLog.error(from.toString());
+                    }
+                }
+
+                LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
+                for(Transaction tx1 :dealTxList1) {
+                    for(CoinTo to : tx1.getCoinDataInstance().getTo()) {
+                        LoggerUtil.dexLog.error(to.toString());
+                    }
+                }
+                LoggerUtil.dexLog.error("---------------- ------------");
+                LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
+                for(Transaction tx1 :dealTxList2) {
+                    for(CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
+                        LoggerUtil.dexLog.error(from.toString());
+                    }
+                }
+                LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
+                for(Transaction tx1 :dealTxList2) {
+                    for(CoinTo to : tx1.getCoinDataInstance().getTo()) {
+                        LoggerUtil.dexLog.error(to.toString());
+                    }
+                }
                 throw new NulsException(DexErrorCode.SYNC_BATCH_VALIDATE_ERROR);
             }
         }

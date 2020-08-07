@@ -79,11 +79,14 @@ public class BlockManager {
         chain.getLogger().info("区块保存，高度为：" + blockHeader.getHeight() + " , txCount: " + blockHeader.getTxCount() + ",本地最新区块高度为：" + chain.getBestHeader().getHeight() + ", 轮次:" + receiveExtendsData.getRoundIndex() + "\n\n");
 
 
-
         //如果存在没保存公钥节点则保存节点公钥
         if (!chain.getUnBlockAgentList().isEmpty()) {
             agentManager.setPubkey(chain, blockHeader.getBlockSignature().getPublicKey());
         }
+
+// 准备修改共识奖励计算的触发器
+//        chain.getConsensusCache().getBlockHeaderQueue().offer(blockHeader);
+
     }
 
     /**
@@ -94,7 +97,7 @@ public class BlockManager {
      * @param height block height
      */
     public void chainRollBack(Chain chain, int height) {
-        if(height>0){
+        if (height > 0) {
             throw new NulsRuntimeException(ConsensusErrorCode.SYS_UNKOWN_EXCEPTION);
         }
         chain.getLogger().info("区块开始回滚，回滚到的高度：" + height);

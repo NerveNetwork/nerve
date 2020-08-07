@@ -156,12 +156,12 @@ public class BlockController {
         if (blockHeaderInfo == null) {
             return RpcResult.dataNotFound();
         }
-        BlockHexInfo hexInfo = blockService.getBlockHexInfo(chainId, blockHeaderInfo.getHeight());
-        if (hexInfo == null) {
+        Result<BlockInfo> result = WalletRpcHandler.getBlockInfo(chainId,blockHeaderInfo.getHash());
+        if (result == null || result.getData() == null) {
             return RpcResult.dataNotFound();
         }
         try {
-            BlockInfo blockInfo = AnalysisHandler.toBlockInfo(hexInfo.getBlockHex(), chainId);
+            BlockInfo blockInfo = result.getData();
             blockInfo.setHeader(blockHeaderInfo);
             return RpcResult.success(blockInfo);
         } catch (Exception e) {
@@ -195,12 +195,12 @@ public class BlockController {
         if (blockHeaderInfo == null) {
             return RpcResult.dataNotFound();
         }
-        BlockHexInfo hexInfo = blockService.getBlockHexInfo(chainId, blockHeaderInfo.getHeight());
-        if (hexInfo == null) {
+        Result<BlockInfo> result = WalletRpcHandler.getBlockInfo(chainId,blockHeaderInfo.getHash());
+        if (result == null || result.getData() == null) {
             return RpcResult.dataNotFound();
         }
         try {
-            BlockInfo blockInfo = AnalysisHandler.toBlockInfo(hexInfo.getBlockHex(), chainId);
+            BlockInfo blockInfo = result.getData();
             blockInfo.setHeader(blockHeaderInfo);
             return RpcResult.success(blockInfo);
         } catch (Exception e) {

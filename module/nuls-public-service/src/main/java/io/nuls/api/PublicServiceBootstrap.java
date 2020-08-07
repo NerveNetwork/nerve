@@ -51,6 +51,7 @@ import io.nuls.core.rpc.modulebootstrap.RpcModule;
 import io.nuls.core.rpc.modulebootstrap.RpcModuleState;
 import io.nuls.core.rpc.util.AddressPrefixDatas;
 import org.bouncycastle.util.encoders.Hex;
+import org.checkerframework.checker.units.qual.A;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -166,6 +167,7 @@ public class PublicServiceBootstrap extends RpcModule {
         ApiContext.BUSINESS_ADDRESS = apiConfig.getBusinessAddress();
         ApiContext.TEAM_ADDRESS = apiConfig.getTeamAddress();
         ApiContext.COMMUNITY_ADDRESS = apiConfig.getCommunityAddress();
+        ApiContext.LOCKED_ADDRESS = apiConfig.getLockedAddress().split(",");
         JSONUtils.getInstance().configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 
         ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);

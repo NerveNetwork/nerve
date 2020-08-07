@@ -60,12 +60,17 @@ public class BlockDownloader implements Callable<Boolean> {
 
     @Override
     public Boolean call() {
+
         ChainContext context = ContextManager.getContext(chainId);
+        NulsLogger logger = context.getLogger();
+        if (context.isStoping()) {
+            logger.warn("The system is about to stop.......");
+            return false;
+        }
         BlockDownloaderParams downloaderParams = context.getDownloaderParams();
         List<Node> nodes = downloaderParams.getNodes();
         long netLatestHeight = downloaderParams.getNetLatestHeight();
         long startHeight = downloaderParams.getLocalLatestHeight() + 1;
-        NulsLogger logger = context.getLogger();
         try {
 //            logger.info("BlockDownloader start work from " + startHeight + " to " + netLatestHeight + ", nodes-" + nodes);
             ChainParameters chainParameters = context.getParameters();
@@ -74,6 +79,10 @@ public class BlockDownloader implements Callable<Boolean> {
             AtomicInteger cachedBlockSize = context.getCachedBlockSize();
             long limit = context.getParameters().getCachedBlockSizeLimit() * 80 / 100;
             while (startHeight <= netLatestHeight && context.isNeedSyn()) {
+                if (startHeight > context.getLatestHeight() + 2000) {
+                    Thread.sleep(1000L);
+                    continue;
+                }
                 int cachedSize = cachedBlockSize.get();
                 while (cachedSize > cachedBlockSizeLimit) {
                     logger.info("BlockDownloader wait! cached block:" + context.getBlockMap().size() + ", total block size:" + cachedSize);
@@ -102,6 +111,7 @@ public class BlockDownloader implements Callable<Boolean> {
                 long endHeight = startHeight + size - 1;
                 //组装批量获取区块消息
                 HeightRangeMessage message = new HeightRangeMessage(startHeight, endHeight);
+                logger.info("请求下载区块:{}-{}", startHeight, endHeight);
                 //发送消息给目标节点
                 boolean b = NetworkCall.sendToNode(chainId, message, node.getId(), GET_BLOCKS_BY_HEIGHT_MESSAGE);
                 if (b) {

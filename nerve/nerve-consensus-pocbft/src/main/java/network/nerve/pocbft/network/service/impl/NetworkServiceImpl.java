@@ -49,6 +49,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put(Constants.CHAIN_ID, chainId);
             params.put("nodeId", nodeId);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addDirectConnect", params);
+            chain.getLogger().info("连接一个节点：{}, result:{}",nodeId,response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addDirectConnect");
                 return Boolean.valueOf(data.get("value").toString());
@@ -70,6 +71,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("groupFlag", groupFlag);
             params.put("ips", ips);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addIps", params);
+            chain.getLogger().info("增加节点ips.size：{}，result:{}",ips.size(),response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addIps");
                 return Boolean.valueOf(data.get("value").toString());
@@ -91,6 +93,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("groupFlag", groupFlag);
             params.put("ips", ips);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_removeIps", params);
+            chain.getLogger().info("删除节点ips.size：{}，result:{}",ips.size(),response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_removeIps");
                 return Boolean.valueOf(data.get("value").toString());
@@ -136,6 +139,7 @@ public class NetworkServiceImpl implements NetworkService {
             List<String> ips = new ArrayList<>();
             ips.add(peerNodeId.split(":")[0]);
             params.put("ips", ips);
+            params.put("isForward",false);
             ConsensusNet consensusNet = new ConsensusNet();
             ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chainId);
             if (null == consensusKeys) {
@@ -180,6 +184,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("messageBody", HexUtil.encode(consensusIdentitiesMsg.serialize()));
             params.put("command", NetworkCmdConstant.POC_DIS_CONN_MESSAGE);
             boolean result = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, NetworkCmdConstant.NW_BROADCAST_CONSENSUS_NET, params).isSuccess();
+            chain.getLogger().info("发送断联消息，ips.size：{}，result:{}",ips.size(),result);
             //chain.getLogger().debug("broadcast: " + NetworkCmdConstant.POC_DIS_CONN_MESSAGE + ", success:" + result);
             return result;
         } catch (Exception e) {

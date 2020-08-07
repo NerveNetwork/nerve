@@ -125,7 +125,7 @@ public class AgentDepositManager {
             chain.getLogger().error("Append agent deposit record save error!");
             return false;
         }
-        chain.getAppendDepositList().add(po);
+        chain.getReduceDepositList().add(po);
         return true;
     }
 

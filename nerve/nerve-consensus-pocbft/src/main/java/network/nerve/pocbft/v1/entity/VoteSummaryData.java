@@ -55,10 +55,10 @@ public class VoteSummaryData extends BasicObject {
             count = stageTwoMap.size();
         }
         double result = DoubleUtils.div(count, round.getMemberCount());
-        if (vote.getVoteStage() == 2) {
+//        if (vote.getVoteStage() == 2) {
             log.info("收到投票({})：{}-{}-{}-{}-{}={}=========={}%", vote.getVoteStage(), this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
                     vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
-        }
+//        }
 
         if (result * 100 > chain.getConfig().getByzantineRate()) {
 

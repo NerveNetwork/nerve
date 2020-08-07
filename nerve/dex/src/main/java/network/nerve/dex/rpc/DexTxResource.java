@@ -270,7 +270,7 @@ public class DexTxResource extends BaseCmd {
 
             AccountCall.txSignature(dexConfig.getChainId(), address, password, priKey, tx);
             String txStr = RPCUtil.encode(tx.serialize());
-//            TransactionCall.sendTx(dexConfig.getChainId(), txStr);
+            TransactionCall.sendTx(dexConfig.getChainId(), txStr);
             Map<String, Object> result = new HashMap<>(2);
             result.put("txHash", tx.getHash().toHex());
             return success(result);

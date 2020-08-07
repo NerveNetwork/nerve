@@ -25,16 +25,11 @@ package network.nerve.converter.core.heterogeneous.callback.management;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import network.nerve.converter.core.business.AssembleTxService;
-import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.callback.DepositTxSubmitterImpl;
 import network.nerve.converter.core.heterogeneous.callback.TxConfirmedProcessorImpl;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
-import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
-import network.nerve.converter.storage.*;
 
 import java.util.Collection;
 import java.util.Map;
@@ -50,25 +45,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class HeterogeneousCallBackManager {
 
     @Autowired
-    private AssembleTxService assembleTxService;
-    @Autowired
     private ChainManager chainManager;
     @Autowired
-    private HeterogeneousDockingManager heterogeneousDockingManager;
-    @Autowired
-    private HeterogeneousConfirmedChangeVBStorageService heterogeneousConfirmedChangeVBStorageService;
-    @Autowired
-    private VirtualBankService virtualBankService;
-    @Autowired
-    private ProposalStorageService proposalStorageService;
-    @Autowired
-    private ProposalExeStorageService proposalExeStorageService;
-    @Autowired
-    private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
-    @Autowired
-    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
-    @Autowired
-    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
+    private CallBackBeanManager callBackBeanManager;
 
     /**
      * 管理每个异构链组件的充值交易监听回调器
@@ -80,18 +59,11 @@ public class HeterogeneousCallBackManager {
     private Map<Integer, ITxConfirmedProcessor> txConfirmedProcessorMap = new ConcurrentHashMap<>();
 
     public IDepositTxSubmitter createOrGetDepositTxSubmitter(int nerveChainId, int heterogeneousChainId) {
-        return depositTxSubmitterMap.computeIfAbsent(heterogeneousChainId, hChainId -> new DepositTxSubmitterImpl(chainManager.getChain(nerveChainId), hChainId, assembleTxService, heterogeneousDockingManager, ledgerAssetRegisterHelper));
+        return depositTxSubmitterMap.computeIfAbsent(heterogeneousChainId, hChainId -> new DepositTxSubmitterImpl(chainManager.getChain(nerveChainId), hChainId, callBackBeanManager));
     }
 
     public ITxConfirmedProcessor createOrGetTxConfirmedProcessor(int nerveChainId, int heterogeneousChainId) {
-        return txConfirmedProcessorMap.computeIfAbsent(heterogeneousChainId, hChainId -> new TxConfirmedProcessorImpl(chainManager.getChain(nerveChainId), hChainId,
-                assembleTxService,
-                heterogeneousDockingManager,
-                heterogeneousConfirmedChangeVBStorageService,
-                proposalStorageService,
-                proposalExeStorageService,
-                txSubsequentProcessStorageService,
-                asyncProcessedTxStorageService));
+        return txConfirmedProcessorMap.computeIfAbsent(heterogeneousChainId, hChainId -> new TxConfirmedProcessorImpl(chainManager.getChain(nerveChainId), hChainId, callBackBeanManager));
     }
 
     public Collection<IDepositTxSubmitter> getAllDepositTxSubmitter() {

@@ -1,5 +1,8 @@
 package io.nuls.api.model.po.mini;
 
+import io.nuls.api.ApiContext;
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class MiniAccountInfo {
@@ -11,6 +14,12 @@ public class MiniAccountInfo {
     private int type;
 
     private BigInteger totalBalance;
+
+    private BigInteger lockBalance;
+
+    private int decimals;
+
+    private BigDecimal rate;
 
     private BigInteger totalOut;
 
@@ -62,5 +71,29 @@ public class MiniAccountInfo {
 
     public void setType(int type) {
         this.type = type;
+    }
+
+    public BigInteger getLockBalance() {
+        return lockBalance;
+    }
+
+    public void setLockBalance(BigInteger lockBalance) {
+        this.lockBalance = lockBalance;
+    }
+
+    public int getDecimals() {
+        return decimals;
+    }
+
+    public void setDecimals(int decimals) {
+        this.decimals = decimals;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
+    }
+
+    public void setRate(BigDecimal rate) {
+        this.rate = rate;
     }
 }

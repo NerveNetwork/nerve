@@ -26,8 +26,7 @@ package network.nerve.converter.core.heterogeneous.callback;
 import io.nuls.base.data.Transaction;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
-import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.helper.LedgerAssetRegisterHelper;
+import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.RechargeTxDTO;
 
@@ -45,15 +44,11 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
      */
     private int hChainId;
     private AssembleTxService assembleTxService;
-    private HeterogeneousDockingManager heterogeneousDockingManager;
-    private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
 
-    public DepositTxSubmitterImpl(Chain nerveChain, int hChainId, AssembleTxService assembleTxService, HeterogeneousDockingManager heterogeneousDockingManager, LedgerAssetRegisterHelper ledgerAssetRegisterHelper) {
+    public DepositTxSubmitterImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
         this.hChainId = hChainId;
-        this.assembleTxService = assembleTxService;
-        this.heterogeneousDockingManager = heterogeneousDockingManager;
-        this.ledgerAssetRegisterHelper = ledgerAssetRegisterHelper;
+        this.assembleTxService = callBackBeanManager.getAssembleTxService();
     }
 
     /**
@@ -72,12 +67,6 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     @Override
     public String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                          Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
-        /*IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
-        // 向账本登记(覆盖登记)异构链资产
-        HeterogeneousAssetInfo assetInfo = docking.getAssetByAssetId(assetId);
-        ledgerAssetRegisterHelper.crossChainAssetReg(nerveChain.getChainId(), assetInfo.getChainId(), assetInfo.getAssetId(),
-                assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());*/
-
         // 组装Nerve充值交易
         RechargeTxDTO dto = new RechargeTxDTO();
         dto.setOriginalTxHash(txHash);

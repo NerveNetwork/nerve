@@ -58,6 +58,10 @@
                     <artifactId>nuls-base</artifactId>
                     <groupId>io.nuls.v2</groupId>
                 </exclusion>
+                <exclusion>
+                    <groupId>io.nuls.v2</groupId>
+                    <artifactId>nuls-core</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

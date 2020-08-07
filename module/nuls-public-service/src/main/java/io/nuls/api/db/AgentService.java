@@ -8,13 +8,15 @@ import java.util.List;
 
 public interface AgentService {
 
-     void initCache();
+    void initCache();
 
     AgentInfo getAgentByHash(int chainID, String agentHash);
 
     PageInfo<AgentInfo> getAgentByHashList(int chainID, int pageNumber, int pageSize, List<String> hashList);
 
-    AgentInfo getAgentByRewardAddress(int chainID, String packingAddress);
+    AgentInfo getAgentByPackingAddress(int chainID, String packingAddress);
+
+    AgentInfo getAgentByRewardAddress(int chainID, String rewardAddress);
 
     AgentInfo getAgentByAgentAddress(int chainID, String agentAddress);
 
@@ -32,5 +34,5 @@ public interface AgentService {
 
     long agentsCount(int chainId, long startHeight);
 
-    BigInteger getConsensusCoinTotal(int chainId);
+    BigInteger getNvtConsensusCoinTotal(int chainId);
 }

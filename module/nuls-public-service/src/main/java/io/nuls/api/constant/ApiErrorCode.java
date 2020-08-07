@@ -21,14 +21,20 @@
 package io.nuls.api.constant;
 
 import io.nuls.core.constant.CommonCodeConstanst;
+import io.nuls.core.constant.ErrorCode;
 
 /**
- * 协议升级模块的错误信息表
+ * 错误信息表
  *
  * @author captain
  * @version 1.0
  * @date 18-11-20 上午11:01
  */
 public interface ApiErrorCode extends CommonCodeConstanst {
+
+    /**
+     * 无法识别的asset
+     */
+    ErrorCode UNABLE_ASSET = ErrorCode.init("ps_0001");
 
 }

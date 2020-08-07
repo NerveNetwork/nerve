@@ -89,11 +89,15 @@ public class TransactionCall extends BaseCall {
      * @throws NulsException
      */
     public static Transaction getConfirmedTx(Chain chain, NulsHash hash) throws NulsException {
+        return getConfirmedTx(chain, hash.toHex());
+    }
+
+    public static Transaction getConfirmedTx(Chain chain, String hash) throws NulsException {
         try {
             Map<String, Object> params = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
             params.put(Constants.VERSION_KEY_STR, ConverterConstant.RPC_VERSION);
             params.put(Constants.CHAIN_ID, chain.getChainId());
-            params.put("txHash", hash.toHex());
+            params.put("txHash", hash);
             HashMap map = (HashMap) requestAndResponse(ModuleE.TX.abbr, "tx_getConfirmedTx", params);
             String txStr = (String)map.get("tx");
             if(StringUtils.isBlank(txStr)){

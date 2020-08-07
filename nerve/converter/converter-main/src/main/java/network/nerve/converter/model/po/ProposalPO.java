@@ -35,10 +35,15 @@ public class ProposalPO extends BaseNulsData {
      * 异构链原始交易hash
      */
     private String heterogeneousTxHash;
+    /**
+     * 异构链合约地址 变更合约提案使用
+     */
+    private String heterogeneousMultySignAddress;
 
     private byte[] address;
 
     private byte[] nerveHash;
+
     /**
      * 投票范围类型
      */
@@ -78,6 +83,7 @@ public class ProposalPO extends BaseNulsData {
         stream.writeString(content);
         stream.writeUint16(heterogeneousChainId);
         stream.writeString(heterogeneousTxHash);
+        stream.writeString(heterogeneousMultySignAddress);
         stream.writeBytesWithLength(address);
         stream.writeBytesWithLength(nerveHash);
         stream.writeByte(voteRangeType);
@@ -111,6 +117,7 @@ public class ProposalPO extends BaseNulsData {
         this.content = byteBuffer.readString();
         this.heterogeneousChainId = byteBuffer.readUint16();
         this.heterogeneousTxHash = byteBuffer.readString();
+        this.heterogeneousMultySignAddress = byteBuffer.readString();
         this.address = byteBuffer.readByLengthByte();
         this.nerveHash = byteBuffer.readByLengthByte();
         this.voteRangeType = byteBuffer.readByte();
@@ -144,6 +151,7 @@ public class ProposalPO extends BaseNulsData {
         size += SerializeUtils.sizeOfString(this.content);
         size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfString(this.heterogeneousTxHash);
+        size += SerializeUtils.sizeOfString(this.heterogeneousMultySignAddress);
         size += SerializeUtils.sizeOfBytes(this.address);
         size += SerializeUtils.sizeOfBytes(this.nerveHash);
         size += 1;
@@ -277,6 +285,14 @@ public class ProposalPO extends BaseNulsData {
 
     public void setFavorList(List<String> favorList) {
         this.favorList = favorList;
+    }
+
+    public String getHeterogeneousMultySignAddress() {
+        return heterogeneousMultySignAddress;
+    }
+
+    public void setHeterogeneousMultySignAddress(String heterogeneousMultySignAddress) {
+        this.heterogeneousMultySignAddress = heterogeneousMultySignAddress;
     }
 
     /**

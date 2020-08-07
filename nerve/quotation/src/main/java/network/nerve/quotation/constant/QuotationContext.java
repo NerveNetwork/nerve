@@ -42,8 +42,6 @@ public class QuotationContext {
 
     /** 统计报价时, 有效报价节点的数量*/
     public static int effectiveQuotation = 5;
-
-    public static byte nerveBasedNuls = 0;
     /**
      * 记录当天无需再计算最终报价的token
      * 1. 记录当前已提供最终报价的token,以防2次报价

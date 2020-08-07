@@ -64,4 +64,16 @@ public class ConverterResource {
         RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
         return clientResult;
     }
+
+    @GET
+    @Path("/disqualification")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "获取已撤销虚拟银行资格节点地址列表", order = 603)
+    @ResponseData(name = "返回值", description = "返回一个List对象", responseType = @TypeDescriptor(value = List.class,
+            collectionElement = String.class))
+    public RpcClientResult getDisqualification() {
+        Result<String> result = converterTools.getDisqualification(config.getChainId());
+        RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
+        return clientResult;
+    }
 }

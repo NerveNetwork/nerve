@@ -14,7 +14,7 @@ public class VoteResultStageTwoQueue {
     /**
      * 投票结果去重
      */
-    private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(50);
+    private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(1024);
     /**
      * 所有第二阶段的结果都提交到这里
      */

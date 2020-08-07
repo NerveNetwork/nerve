@@ -8,7 +8,6 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
-import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
 import io.nuls.core.rpc.modulebootstrap.NulsRpcModuleBootstrap;
@@ -165,7 +164,6 @@ public class QuotationBootstrap extends RpcModule {
             }
         }
         QuotationContext.effectiveQuotation = quConfig.getEffectiveQuotation();
-        QuotationContext.nerveBasedNuls = quConfig.getNerveBasedNuls();
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);
         LoggerUtil.LOG.info("effectiveQuotation : {}", QuotationContext.effectiveQuotation);

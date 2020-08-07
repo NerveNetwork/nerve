@@ -11,6 +11,7 @@ import io.nuls.core.crypto.ECKey;
 import io.nuls.core.model.ArraysTool;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.crosschain.base.model.bo.ChainInfo;
+import io.nuls.crosschain.base.model.bo.txdata.CrossTransferData;
 import network.nerve.constant.NulsCrossChainConfig;
 import network.nerve.constant.NulsCrossChainErrorCode;
 import network.nerve.model.bo.Chain;
@@ -72,6 +73,10 @@ public class CrossTxValidator {
         }
         byte[] fromAddress = null;
         for (CoinFrom from : coinData.getFrom()) {
+            //如果是合约地址不加入去重判断
+            if (AddressTool.validContractAddress(from.getAddress(),AddressTool.getChainIdByAddress(from.getAddress()))) {
+                continue;
+            }
             if (fromAddress == null) {
                 fromAddress = from.getAddress();
                 continue;
@@ -110,7 +115,7 @@ public class CrossTxValidator {
                 if (!verifyResult) {
                     throw new NulsException(NulsCrossChainErrorCode.SIGNATURE_ERROR);
                 }
-
+                //todo ? 此处乘以5的目的是什么
                 txSize += P2PHKSignature.SERIALIZE_LENGTH * (chain.getVerifierList().size() * 5);
             }
         } else {
@@ -124,10 +129,12 @@ public class CrossTxValidator {
                 verifierChainId = config.getMainChainId();
                 int txType = TxType.CROSS_CHAIN;
                 if (tx.getTxData() != null) {
-
-                    txType = ByteUtils.bytesToInt(tx.getTxData());
+                    CrossTransferData crossTransferData = new CrossTransferData();
+                    crossTransferData.parse(tx.getTxData(),0);
+                    txType = crossTransferData.getSourceType();
                 }
-                realCtx = TxUtil.friendConvertToMain(chain, tx, txType, true);
+                //转换回主网协议时，不需要重新设置txData
+                realCtx = TxUtil.friendConvertToMain(chain, tx, txType,true);
             }
             chainInfo = chainManager.getChainInfo(verifierChainId);
             if (chainInfo == null) {
@@ -150,7 +157,7 @@ public class CrossTxValidator {
                 chain.getLogger().info("签名拜占庭验证失败！");
                 throw new NulsException(NulsCrossChainErrorCode.CTX_SIGN_BYZANTINE_FAIL);
             }
-
+            //todo 当前只适用于主网与平行链之间相互跨链，如果存在平行链之间相互跨链，则需要按其他方式计算
             txSize -= tx.getTransactionSignature().length;
         }
 

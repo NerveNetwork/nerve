@@ -382,17 +382,6 @@ public class PocConsensusController {
         agentInfo.setYellowCardCount((int) count);
         ApiCache apiCache = CacheManager.getCache(chainId);
         List<PocRoundItem> itemList = apiCache.getCurrentRound().getItemList();
-        PocRoundItem roundItem = null;
-        if (null != itemList) {
-            for (PocRoundItem item : itemList) {
-                if (item.getPackingAddress().equals(agentInfo.getPackingAddress())) {
-                    roundItem = item;
-                    break;
-                }
-            }
-        }
-
-
 
         Result<AgentInfo> result = WalletRpcHandler.getAgentInfo(chainId, agentHash);
         if (result.isSuccess()) {
@@ -413,7 +402,7 @@ public class PocConsensusController {
         }else if(agentInfo.getStatus() == 1){
             consusensWeight = ApiContext.superAgentDepositBase;
         }
-        BigDecimal interest = stackingService.getInterestRate(ApiContext.localAssertBase,consusensWeight);
+        BigDecimal interest = stackingService.getInterestRate(ApiContext.reservegentDepositBase,consusensWeight);
 
         ApiCache cache = CacheManager.getCache(chainId);
         //计算节点排名
@@ -959,17 +948,17 @@ public class PocConsensusController {
         }else{
             lastIndex = lastItem.get().getOrder();
         }
-        itemList.forEach(d->{
-            if(d.getOrder() < lastIndex && d.getBlockHeight() == 0){
-                d.setYellow(true);
-            }else{
-                if(d.getTime() < NulsDateUtils.getCurrentTimeSeconds() && d.getBlockHeight() == 0){
-                    d.setYellow(true);
-                }else{
-                    d.setYellow(false);
-                }
-            }
-        });
+//        itemList.forEach(d->{
+//            if(d.getOrder() < lastIndex && d.getBlockHeight() == 0){
+//                d.setYellow(true);
+//            }else{
+//                if(d.getTime() < NulsDateUtils.getCurrentTimeSeconds() && d.getBlockHeight() == 0){
+//                    d.setYellow(true);
+//                }else{
+//                    d.setYellow(false);
+//                }
+//            }
+//        });
         round.setItemList(itemList);
         round.initByPocRound(pocRound);
         return new RpcResult().setResult(round);
@@ -1006,19 +995,43 @@ public class PocConsensusController {
     public RpcResult getStackingInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
+        String address=null;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
             return RpcResult.paramError("[chainId] is inValid");
         }
-        List<DepositInfo> list = depositService.getDepositSumList(chainId,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
+        try {
+            if(params.size() > 1){
+                address = (String) params.get(1);
+            }
+        } catch (Exception e) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        List<DepositInfo> list = depositService.getDepositSumList(chainId,address,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
         Map<String, BigInteger> symbolList = list.stream().map(d -> Map.of(d.getSymbol(), d.getAmount())).reduce(new HashMap<>(list.size()),
                 (d1, d2) -> {
                     d1.putAll(d2);
                     return d1;
                 });
+        Map<String,SymbolUsdPercentDTO> rateList = new HashMap<>(list.size());
+        SymbolUsdPercentDTO maxPer = null;
+        BigDecimal totalPer = BigDecimal.ZERO;
+        for (DepositInfo depositInfo : list){
+            SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(depositInfo.getSymbol(),symbolList);
+            rateList.put(depositInfo.getSymbol(),dto);
+            if(maxPer == null){
+                maxPer = dto;
+            }else if(maxPer.getPer().compareTo(dto.getPer()) < 0){
+                maxPer = dto;
+            }
+            totalPer = totalPer.add(dto.getPer());
+        }
+        if(totalPer.compareTo(BigDecimal.ONE) < 0){
+            maxPer.setPer(maxPer.getPer().add(BigDecimal.ONE.subtract(totalPer)));
+        }
         List<Map<String, Object>> resList = list.stream().map(d -> {
-            SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(d.getSymbol(),symbolList);
+            SymbolUsdPercentDTO dto = rateList.get(d.getSymbol());
             Map<String, Object> m = Map.of(
                     "rate", dto.getPer(),
                     "usdValue", dto.getUsdVal(),
@@ -1195,9 +1208,16 @@ public class PocConsensusController {
         }
         PageInfo<DepositInfo> pageInfo = depositService
                 .getStackRecordByAddress(chainId,pageNumber,pageSize,address);
-        return RpcResult.success(pageInfo);
+        return RpcResult.success(new PageInfo<>(pageInfo.getPageNumber(), pageSize, pageInfo.getTotalCount(),
+                pageInfo.getList().stream().map(d->{
+                    Map res = MapUtils.beanToLinkedMap(d);
+                    DepositFixedType depositFixedType = DepositFixedType.valueOf(d.getFixedType());
+                    if(!depositFixedType.equals(DepositFixedType.NONE)){
+                        res.put("endTime",d.getCreateTime() + depositFixedType.getTime());
+                    }
+                    return res;
+                }).collect(Collectors.toList())));
     }
-
 
     @RpcMethod("pageFinishStackingListByAddress")
     public RpcResult pageFinishStackingListByAddress(List<Object> params){

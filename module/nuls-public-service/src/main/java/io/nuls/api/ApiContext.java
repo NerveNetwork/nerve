@@ -126,6 +126,9 @@ public class ApiContext {
     //销毁地址公钥
     public static byte[] blackHolePublicKey;
 
+    //名义锁定地址
+    public static String[] LOCKED_ADDRESS = new String[0];
+
     /**
      * 种子节点数量
      */

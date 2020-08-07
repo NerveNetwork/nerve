@@ -171,13 +171,21 @@ public class MongoDepositServiceImpl implements DepositService {
      */
     @Override
     public List<DepositInfo> getDepositList(int chainId, long endHeight, int... types) {
-
         Bson bson = Filters.and(Filters.lte("blockHeight", endHeight), Filters.or(Filters.eq("deleteHeight", -1), Filters.gt("deleteHeight", endHeight)));
         List<Bson> typeFileer = new ArrayList<>();
         for (int i = 0;i<types.length;i++) {
             typeFileer.add(Filters.eq("type",types[i]));
         }
-        bson = Filters.and(bson,Filters.or(typeFileer.toArray(new Bson[typeFileer.size()])));
+//        List<Document> list = this.mongoDBService.query(DEPOSIT_TABLE + chainId, bson);
+//        List<DepositInfo> resultList = new ArrayList<>();
+//        for (Document document : list) {
+//            resultList.add(DocumentTransferTool.toInfo(document, "key", DepositInfo.class));
+//        }
+        return getDepositList(chainId,bson,Filters.or(typeFileer.toArray(new Bson[typeFileer.size()])));
+    }
+
+    public List<DepositInfo> getDepositList(int chainId, Bson... bsons) {
+        Bson bson = Filters.and(bsons);
         List<Document> list = this.mongoDBService.query(DEPOSIT_TABLE + chainId, bson);
         List<DepositInfo> resultList = new ArrayList<>();
         for (Document document : list) {
@@ -185,8 +193,6 @@ public class MongoDepositServiceImpl implements DepositService {
         }
         return resultList;
     }
-
-
 
 
     @Override
@@ -295,25 +301,36 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositList.stream().map(d->d.getAmount()).reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
+//    @Override
+//    public BigInteger getStackingTotalAndTransferNVT(int chainId, long height) {
+////        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
+//        return getStackingTotalByNVTGroupSymbol(chainId,height).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
+//    }
+
     @Override
-    public BigInteger getStackingTotalByNVT(int chainId,long height) {
-//        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
-        return getStackingTotalByNVTGroupSymbol(chainId,height).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
+    public BigInteger getStackingTotalAndTransferNVT(int chainId) {
+        List<DepositInfo> depositList = this.getDepositList(chainId, Filters.eq("deleteHeight", -1));
+        return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
     @Override
-    public Map<String,BigInteger> getStackingTotalByNVTGroupSymbol(int chainId, long height) {
-        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
-        return assetToNvtValue(depositList);
+    public BigInteger getStackingTotalAndTransferNVT(int chainId, int assetChainId,int assetId) {
+        Bson[] bson = new Bson[]{
+                Filters.eq("deleteHeight", -1),
+                Filters.eq("assetChainId",assetChainId),
+                Filters.eq("assetId",assetId)
+        };
+        List<DepositInfo> depositList = this.getDepositList(chainId, bson);
+        return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
     @Override
-    public BigInteger getStackingTotalByNVT(int chainId,String address){
+    public BigInteger getStackingTotalAndTransferNVT(int chainId, String address){
         List<DepositInfo> depositList = pageDepositList(chainId,address,null,true,1,Integer.MAX_VALUE,DepositInfoType.STACKING).getList();
-        return assetToNvtValue(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
+        return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
-    private  Map<String,BigInteger> assetToNvtValue( List<DepositInfo>  depositList){
+    private  Map<String,BigInteger> assetToNvt( List<DepositInfo>  depositList){
         SymbolPrice nvtUsdtPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
         Map<String,BigInteger> res = new HashMap<>();
         depositList.stream().forEach(d->{
@@ -332,8 +349,14 @@ public class MongoDepositServiceImpl implements DepositService {
         return res;
     }
 
+
     @Override
     public List<DepositInfo> getDepositSumList(int chainId,int... depositInfoTypes){
+        return getDepositSumList(chainId,null,depositInfoTypes);
+    }
+
+    @Override
+    public List<DepositInfo> getDepositSumList(int chainId,String address,int... depositInfoTypes){
         Bson id = new Document()
                 .append("assetChainId","$assetChainId")
                 .append("assetId","$assetId")
@@ -341,11 +364,11 @@ public class MongoDepositServiceImpl implements DepositService {
                 .append("symbol","$symbol");
         Bson sum = new Document("$sum","$amount");
         Bson match = ne("_id", null);
-//        for (var i = 0;i<depositInfoTypes.length;i++){
-//            match = Filters.and(match,);
-//        }
         if(depositInfoTypes.length > 0){
             match = Filters.and(match,Filters.or(Arrays.stream(depositInfoTypes).mapToObj(t->Filters.eq("type",t)).collect(Collectors.toList())));
+        }
+        if(StringUtils.isNotBlank(address)){
+            match = Filters.and(match,Filters.eq("address",address));
         }
         match = Aggregates.match(match);
         Bson group = new Document().append("_id",id).append("sum",sum);

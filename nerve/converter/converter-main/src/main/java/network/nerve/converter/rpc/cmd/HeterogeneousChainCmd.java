@@ -245,8 +245,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
     public Response createHeterogeneousContractAssetRegPendingTx(Map params) {
         Chain chain = null;
         try {
-            if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
             }
             // check parameters
             if (params == null) {

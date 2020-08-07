@@ -204,6 +204,8 @@ public interface AssembleTxService {
      */
     Transaction createConfirmProposalTx(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException;
 
+    Transaction createConfirmProposalTxWithoutSign(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException;
+
     /**
      * 组装并发布 补贴手续费交易
      *

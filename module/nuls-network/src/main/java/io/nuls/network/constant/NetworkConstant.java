@@ -39,13 +39,13 @@ public interface NetworkConstant {
      * ========================================
      */
 
-    int READ_IDEL_TIME_OUT = 0;
-    int WRITE_IDEL_TIME_OUT = 0;
+    int READ_IDEL_TIME_OUT = 120;
+    int WRITE_IDEL_TIME_OUT = 120;
     /**
      * 读写都不存在情况下，600秒超时，单位s
      * 60 seconds timeout, unit s when there is no reading or writing
      */
-    int ALL_IDLE_TIME_OUT = 600;
+    int ALL_IDLE_TIME_OUT = 120;
     /**
      * 在未正式传递握手业务数据前,允许的最大连接数
      */
@@ -56,8 +56,7 @@ public interface NetworkConstant {
      */
     int MAX_FRAME_LENGTH = 10 * 1024 * 1024;
     /**
-     * netty 发起连接的超时时间,单位秒
-     * netty connect time out,unit s
+     * netty 发起连接的超时时间,单位毫秒
      */
     int CONNETCI_TIME_OUT = 6000;
 

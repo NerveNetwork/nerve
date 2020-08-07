@@ -134,6 +134,8 @@ public class ChainManager {
             RocksDBService.createTable(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chainId);
             // 等待调用组件的数据表
             RocksDBService.createTable(ConverterDBConstant.DB_PENDING_PREFIX + chainId);
+            // 虚拟银行调用异构链, 合并交易时, key与各交易的对应关系
+            RocksDBService.createTable(ConverterDBConstant.DB_MERGE_COMPONENT_PREFIX + chainId);
             // 确认补贴手续费交易业务 数据表
             RocksDBService.createTable(ConverterDBConstant.DB_DISTRIBUTION_FEE_PREFIX + chainId);
             // 提案存储表

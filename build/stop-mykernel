@@ -1,21 +1,10 @@
 #!/bin/bash
 cd `dirname $0`
-total=0
-NERVE_STOP_FILE=`pwd`/.nerve-stop
-echo 1 > $NERVE_STOP_FILE
-while [ 1 == 1 ]
-do
-    if((total==5)); then
-        break;
-    fi
-    cmd=`cat $NERVE_STOP_FILE`;
-    if [ "$cmd" == "2" ]; then
-        break;
-    fi
-    ((total+=1))
-    sleep 1
-done
-APP_NAME="mykernel"
+. func
+
+chainName=`getModuleItem ./nuls.ncf "chainName"`
+
+APP_NAME="${chainName}_kernel"
 KILL_WAIT_COUNT=120
 MODULE_PATH=`dirname $0`
 MODULE_PATH=`cd $MODULE_PATH; pwd`;
@@ -52,6 +41,21 @@ APP=`ps -ef|grep -w "name=${APP_NAME} "|grep -v grep|wc -l`
 if [ $APP -eq 1 ]; then
     PID_EXIST=`ps -f -p ${APP_PID} | grep java`
     if [ ! -z "$PID_EXIST" ]; then
+    total=0
+    NERVE_STOP_FILE=`pwd`/.nerve-stop
+    echo 1 > $NERVE_STOP_FILE
+    while [ 1 == 1 ]
+    do
+        if((total==5)); then
+            break;
+        fi
+        cmd=`cat $NERVE_STOP_FILE`;
+        if [ "$cmd" == "2" ]; then
+            break;
+        fi
+        ((total+=1))
+        sleep 1
+    done
         stop ${APP_PID}
     else
         echoRed "${APP_NAME} is not running"

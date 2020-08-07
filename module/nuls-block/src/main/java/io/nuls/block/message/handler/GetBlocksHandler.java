@@ -25,14 +25,19 @@ import io.nuls.base.data.Block;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.BlockMessage;
 import io.nuls.block.message.HeightRangeMessage;
 import io.nuls.block.model.ChainContext;
 import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.service.BlockService;
+import io.nuls.block.utils.HashSetDuplicateProcessor;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.log.logback.NulsLogger;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static io.nuls.block.constant.CommandConstant.BLOCK_MESSAGE;
 import static io.nuls.block.constant.CommandConstant.GET_BLOCKS_BY_HEIGHT_MESSAGE;
@@ -47,13 +52,6 @@ import static io.nuls.block.constant.CommandConstant.GET_BLOCKS_BY_HEIGHT_MESSAG
 @Component("GetBlocksHandlerV1")
 public class GetBlocksHandler implements MessageProcessor {
 
-    @Autowired
-    private BlockService service;
-
-    private void sendBlock(int chainId, Block block, String nodeId, NulsHash requestHash) {
-        BlockMessage blockMessage = new BlockMessage(requestHash, block, true);
-        NetworkCall.sendToNode(chainId, blockMessage, nodeId, BLOCK_MESSAGE);
-    }
 
     @Override
     public String getCmd() {
@@ -66,30 +64,10 @@ public class GetBlocksHandler implements MessageProcessor {
         if (message == null) {
             return;
         }
-        ChainContext context = ContextManager.getContext(chainId);
-        NulsLogger logger = context.getLogger();
-        long startHeight = message.getStartHeight();
-        long endHeight = message.getEndHeight();
-        if (startHeight < 0L || startHeight > endHeight || endHeight - startHeight > context.getParameters().getDownloadNumber()) {
-            logger.error("PARAMETER_ERROR");
-            return;
-        }
-//        logger.debug("recieve HeightRangeMessage from node-" + nodeId + ", start:" + startHeight + ", end:" + endHeight);
-        NulsHash requestHash;
-        try {
-            requestHash = NulsHash.calcHash(message.serialize());
-            Block block;
-            do {
-                block = service.getBlock(chainId, startHeight++);
-                if (block == null) {
-                    NetworkCall.sendFail(chainId, requestHash, nodeId);
-                    return;
-                }
-                sendBlock(chainId, block, nodeId, requestHash);
-            } while (endHeight >= startHeight);
-            NetworkCall.sendSuccess(chainId, requestHash, nodeId);
-        } catch (Exception e) {
-            logger.error("error occur when send block", e);
-        }
+        message.setNodeId(nodeId);
+        message.setChainId(chainId);
+
+        RunnableManager.offerGetBlocksMsg(message);
     }
+
 }

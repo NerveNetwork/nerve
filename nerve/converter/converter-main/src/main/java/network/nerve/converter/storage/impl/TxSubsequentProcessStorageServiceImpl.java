@@ -27,7 +27,6 @@ package network.nerve.converter.storage.impl;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.po.MergedComponentCallPO;
 import network.nerve.converter.model.po.TxSubsequentProcessKeyListPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
@@ -48,7 +47,6 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
 
     private final byte[] PENDING_TX_ALL_KEY = stringToBytes("PENDING_TX_ALL");
 
-    private final String MERGED_TX_KEY = "MERGED_TX_KEY_";
 
     @Override
     public boolean save(Chain chain, TxSubsequentProcessPO po) {
@@ -113,25 +111,5 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
             list.add(this.get(chain, txHash));
         }
         return list;
-    }
-
-
-    @Override
-    public boolean saveMergeComponentCall(Chain chain, String hash, MergedComponentCallPO po) {
-        if (po == null) {
-            return false;
-        }
-        int chainId = chain.getChainId();
-        try {
-            return ConverterDBUtil.putModel(DB_PENDING_PREFIX + chainId, stringToBytes(MERGED_TX_KEY + hash), po);
-        } catch (Exception e) {
-            chain.getLogger().error(e);
-            return false;
-        }
-    }
-
-    @Override
-    public MergedComponentCallPO findMergedTx(Chain chain, String hash) {
-        return ConverterDBUtil.getModel(DB_PENDING_PREFIX + chain.getChainId(),stringToBytes(MERGED_TX_KEY + hash), MergedComponentCallPO.class);
     }
 }

@@ -77,7 +77,7 @@ public class ConnectRpc extends BaseCmd {
                 return failed(NetworkErrorCode.PARAMETER_ERROR);
             }
             if (nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0])) {
-                LoggerUtil.logger(chainId).info("connected success:{}, had exist.", nodeId);
+                LoggerUtil.logger(chainId).info("已连接，connected success:{}, had exist.", nodeId);
                 rtMap.put("value", true);
                 return success(rtMap);
             }
@@ -92,7 +92,7 @@ public class ConnectRpc extends BaseCmd {
             });
 
             node.setDisconnectListener(() -> {
-                LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
+                LoggerUtil.logger(node.getNodeGroup().getChainId()).info("connectRpc connected disconnect:{},iscross={}", node.getId(), node.isCrossConnect());
                 connectionManager.nodeConnectDisconnect(node);
             });
             if (connectionManager.connection(node)) {
@@ -133,7 +133,7 @@ public class ConnectRpc extends BaseCmd {
         String module = String.valueOf(params.get("module"));
         String groupFlag = String.valueOf(params.get("groupFlag"));
         List<String> ips = (List) params.get("ips");
-        LoggerUtil.logger(chainId).info("addIps {}-{} ip={}", module, groupFlag, ips.get(0));
+//        LoggerUtil.logger(chainId).info("addIps {}-{} ip={}", module, groupFlag, ips.get(0));
         BusinessGroupManager businessGroupManager = BusinessGroupManager.getInstance();
         Map<String, Object> rtMap = new HashMap<>(1);
         try {
@@ -162,12 +162,12 @@ public class ConnectRpc extends BaseCmd {
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
         String module = String.valueOf(params.get("module"));
         String groupFlag = String.valueOf(params.get("groupFlag"));
-        LoggerUtil.logger(chainId).info("getBusinessGroupNodes {}-{}", module, groupFlag);
+//        LoggerUtil.logger(chainId).info("getBusinessGroupNodes {}-{}", module, groupFlag);
         BusinessGroupManager businessGroupManager = BusinessGroupManager.getInstance();
         Map<String, Object> rtMap = new HashMap<>(1);
         try {
             List<String> ips = businessGroupManager.getIps(chainId, module, groupFlag);
-            LoggerUtil.logger(chainId).info("getBusinessGroupNodes ips={}", ips.size());
+//            LoggerUtil.logger(chainId).info("getBusinessGroupNodes ips={}", ips.size());
             rtMap.put("list", ips);
             return success(rtMap);
         } catch (Exception e) {
@@ -194,7 +194,7 @@ public class ConnectRpc extends BaseCmd {
         String module = String.valueOf(params.get("module"));
         String groupFlag = String.valueOf(params.get("groupFlag"));
         List<String> ips = (List) params.get("ips");
-        LoggerUtil.logger(chainId).info("remove {}-{} ip={}", module, groupFlag, ips.get(0));
+        LoggerUtil.logger(chainId).info("---removeIps {}-{} ip={}", module, groupFlag, ips.get(0));
         BusinessGroupManager businessGroupManager = BusinessGroupManager.getInstance();
         Map<String, Object> rtMap = new HashMap<>(1);
         try {

@@ -37,9 +37,9 @@ public class AppTest {
 
         TradingContainer container = new TradingContainer();
         LinkedList<TradingOrderPo> buyList = new LinkedList<>();
-        container.setBuyOrderList(buyList);
+//        container.setBuyOrderList(buyList);
         LinkedList<TradingOrderPo> sellList = new LinkedList<>();
-        container.setSellOrderList(sellList);
+//        container.setSellOrderList(sellList);
 
         Random random = new Random();
         TradingOrderPo po1;
@@ -67,9 +67,9 @@ public class AppTest {
 
         for (int i = 0; i < size; i++) {
             int index = random.nextInt(container.getBuyOrderList().size());
-            po1 = container.getBuyOrderList().get(index);
+//            po1 = container.getBuyOrderList().get(index);
 
-            container.removeTradingOrder(po1);
+//            container.removeTradingOrder(po1);
         }
         System.out.println("--------------------------  size:" + container.getBuyOrderList().size());
     }
@@ -84,9 +84,9 @@ public class AppTest {
 
         TradingContainer container = new TradingContainer();
         LinkedList<TradingOrderPo> buyList = new LinkedList<>();
-        container.setBuyOrderList(buyList);
+//        container.setBuyOrderList(buyList);
         LinkedList<TradingOrderPo> sellList = new LinkedList<>();
-        container.setSellOrderList(sellList);
+//        container.setSellOrderList(sellList);
 
         Random random = new Random();
         TradingOrderPo po1;
@@ -111,23 +111,23 @@ public class AppTest {
         System.out.println("--------------------------  size:" + size);
 
 
-        for (int i = 0; i < size; i++) {
-            po1 = container.getSellOrderList().get(i).copy();
-            po1.setDealAmount(BigInteger.TEN);
-            try {
-                container.updateTradingOrder(po1);
-            } catch (NulsException e) {
-                e.printStackTrace();
-            }
-        }
-
-        for (int i = 0; i < size; i++) {
-            po1 = container.getSellOrderList().get(i);
-            if (po1.getDealAmount().intValue() != 10) {
-                System.out.println(po1.getDealAmount());
-            }
-
-        }
+//        for (int i = 0; i < size; i++) {
+//            po1 = container.getSellOrderList().get(i).copy();
+//            po1.setDealAmount(BigInteger.TEN);
+//            try {
+//                container.updateTradingOrder(po1);
+//            } catch (NulsException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        for (int i = 0; i < size; i++) {
+//            po1 = container.getSellOrderList().get(i);
+//            if (po1.getDealAmount().intValue() != 10) {
+//                System.out.println(po1.getDealAmount());
+//            }
+//
+//        }
         System.out.println("--------------------------  size:" + container.getSellOrderList().size());
     }
 

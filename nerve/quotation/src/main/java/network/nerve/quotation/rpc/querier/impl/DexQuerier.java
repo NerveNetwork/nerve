@@ -31,51 +31,62 @@ import network.nerve.quotation.rpc.querier.Querier;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
 
+import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
+
 /**
  * 去DEX获取价格
+ *
  * @author: Loki
  * @date: 2020/6/16
  */
 @Component
 public class DexQuerier implements Querier {
 
-    /** 获取交易对价格接口 */
+    /**
+     * 获取交易对价格接口
+     */
     private final String CMD = "/coin/trading/price/";
+
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().info("DexQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = anchorToken.toUpperCase();
         String url = baseurl + CMD + symbol;
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .timeout(Duration.ofMillis(5000))
+                    .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                     .build();
             HttpResponse<String> response =
                     CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            if(response.statusCode() != 200){
-                chain.getLogger().error("调用{}接口, Dex, statusCode:{}", url, response.statusCode());
+            if (response.statusCode() != 200) {
+                chain.getLogger().error("Bitz 调用{}接口, 获取价格失败, anchorToken:{}, status:{}",
+                        url,
+                        anchorToken,
+                        response.statusCode());
                 return null;
             }
             Map<String, Object> body = JSONUtils.json2map(response.body());
             Map data = (Map) body.get("data");
             boolean success = (Boolean) data.get("success");
-            if(!success){
+            if (!success) {
                 chain.getLogger().warn("Dex没有获取到交易对[{}]价格", symbol);
                 return null;
             }
             Map result = (Map) data.get("result");
-            BigDecimal res = new BigDecimal((String)result.get("price"));
-            chain.getLogger().info("Dex获取到交易对[{}]价格:{}", symbol, res);
+            BigDecimal res = new BigDecimal(result.get("price").toString());
+            chain.getLogger().info("Dex 获取到交易对[{}]价格:{}", symbol, res);
             return res;
+        } catch (HttpConnectTimeoutException e) {
+            chain.getLogger().error("Dex, 调用接口 {}, anchorToken:{} 超时", url, anchorToken);
+            return null;
         } catch (Throwable e) {
-            chain.getLogger().error("调用{}接口, Dex获取价格失败", url);
-            chain.getLogger().error(e);
+            chain.getLogger().error("Dex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
             return null;
         }
     }

@@ -24,7 +24,7 @@ import network.nerve.pocbft.model.bo.config.ChainConfig;
 import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
 import network.nerve.pocbft.network.service.ConsensusNetService;
 import network.nerve.pocbft.rpc.call.CallMethodUtils;
-import network.nerve.pocbft.storage.ConfigService;
+//import network.nerve.pocbft.storage.ConfigService;
 import network.nerve.pocbft.storage.PubKeyStorageService;
 import network.nerve.pocbft.utils.ConsensusNetUtil;
 import network.nerve.pocbft.utils.LoggerUtil;
@@ -41,8 +41,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class ChainManager {
-    @Autowired
-    private ConfigService configService;
+//    @Autowired
+//    private ConfigService configService;
     @Autowired
     private AgentManager agentManager;
     @Autowired
@@ -88,7 +88,7 @@ public class ChainManager {
             ChainConfig chainConfig = entry.getValue();
             chain.setConfig(chainConfig);
             chain.setSeedAddressList(List.of(chainConfig.getSeedNodes().split(ConsensusConstant.SEED_NODE_SEPARATOR)));
-            chain.setThreadPool(ThreadUtils.createThreadPool(3, 100, new NulsThreadFactory("consensus" + chainId)));
+            chain.setThreadPool(ThreadUtils.createThreadPool(6, 100, new NulsThreadFactory("consensus" + chainId)));
             /*
              * 初始化链日志对象
              * Initialization Chain Log Objects
@@ -163,22 +163,22 @@ public class ChainManager {
             读取数据库链信息配置
             Read database chain information configuration
              */
-            Map<Integer, ChainConfig> configMap = configService.getList();
+            Map<Integer, ChainConfig> configMap = null;// configService.getList();
             /*
             如果系统是第一次运行，则本地数据库没有存储链信息，此时需要从配置文件读取主链配置信息
             If the system is running for the first time, the local database does not have chain information,
             and the main chain configuration information needs to be read from the configuration file at this time.
             */
-            if (configMap == null) {
+//            if (configMap == null) {
                 configMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_2);
-            }
-            if (configMap.size() == 0) {
+//            }
+//            if (configMap.size() == 0) {
                 ChainConfig chainConfig = config;
-                boolean saveSuccess = configService.save(chainConfig, chainConfig.getChainId());
-                if (saveSuccess) {
+//                boolean saveSuccess = configService.save(chainConfig, chainConfig.getChainId());
+//                if (saveSuccess) {
                     configMap.put(chainConfig.getChainId(), chainConfig);
-                }
-            }
+//                }
+//            }
             return configMap;
         } catch (Exception e) {
             Log.error(e);

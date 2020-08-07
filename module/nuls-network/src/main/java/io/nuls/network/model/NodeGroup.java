@@ -280,36 +280,36 @@ public class NodeGroup implements Dto {
      * @return
      */
     public void stopConnectedSeeds(boolean isCross) {
-        try {
-            //如果当前节点是共识节点或是种子节点，则不主动断开种子节点连接
-            if (NetworkContext.isConsensusNode || isSeeds()) {
-                return;
-            }
-            List<Node> nodes = null;
-            int canConnectNodesNum = 0;
-            if (isCross) {
-                nodes = crossNodeContainer.getConnectedSeedNodes();
-                canConnectNodesNum = crossNodeContainer.getCanConnectNodes().size();
-            } else {
-                nodes = localNetNodeContainer.getConnectedSeedNodes();
-                canConnectNodesNum = localNetNodeContainer.getCanConnectNodes().size();
-            }
-            //连接的种子数量大于1，并且可用连接数量大于0
-            if (nodes.size() > 1 && canConnectNodesNum > 0) {
-                Collections.shuffle(nodes);
-                while (canConnectNodesNum < nodes.size()) {
-                    nodes.remove(0);
-                }
-            } else {
-                return;
-            }
-            //断开连接
-            for (Node node : nodes) {
-                node.close();
-            }
-        } catch (Exception e) {
-            Log.error(e);
-        }
+//        try {
+//            //如果当前节点是共识节点或是种子节点，则不主动断开种子节点连接
+//            if (NetworkContext.isConsensusNode || isSeeds()) {
+//                return;
+//            }
+//            List<Node> nodes = null;
+//            int canConnectNodesNum = 0;
+//            if (isCross) {
+//                nodes = crossNodeContainer.getConnectedSeedNodes();
+//                canConnectNodesNum = crossNodeContainer.getCanConnectNodes().size();
+//            } else {
+//                nodes = localNetNodeContainer.getConnectedSeedNodes();
+//                canConnectNodesNum = localNetNodeContainer.getCanConnectNodes().size();
+//            }
+//            //连接的种子数量大于1，并且可用连接数量大于0
+//            if (nodes.size() > 1 && canConnectNodesNum > 0) {
+//                Collections.shuffle(nodes);
+//                while (canConnectNodesNum < nodes.size()) {
+//                    nodes.remove(0);
+//                }
+//            } else {
+//                return;
+//            }
+//            //断开连接
+//            for (Node node : nodes) {
+//                node.close();
+//            }
+//        } catch (Exception e) {
+//            Log.error(e);
+//        }
     }
 
     /**

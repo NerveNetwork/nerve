@@ -19,10 +19,8 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.nuls.api.constant.DBTableConstant.*;
 
@@ -259,22 +257,24 @@ public class MongoAccountServiceImpl implements AccountService {
         return txRelationInfoList;
     }
 
-    public PageInfo<MiniAccountInfo> getCoinRanking(int pageIndex, int pageSize, int chainId) {
-        Bson sort = Sorts.descending("totalBalance");
+    public PageInfo<MiniAccountInfo> getCoinRanking(int pageIndex, int pageSize, int chainId, int assetChainId,int assetId) {
         List<MiniAccountInfo> accountInfoList = new ArrayList<>();
-        Bson filter = Filters.ne("totalBalance", 0);
-        BasicDBObject fields = new BasicDBObject();
-        fields.append("_id", 1).append("alias", 1).append("totalBalance", 1).append("totalOut", 1).append("totalIn", 1).append("type", 1);
+        Bson filter = Filters.and(Filters.ne("totalBalance", 0),Filters.eq("chainId",assetChainId),Filters.eq("assetId",assetId));
 
-        List<Document> docsList = this.mongoDBService.pageQuery(ACCOUNT_TABLE + chainId, filter, fields, sort, pageIndex, pageSize);
-        long totalCount = mongoDBService.getCount(ACCOUNT_TABLE + chainId, filter);
+        BasicDBObject fields = new BasicDBObject();
+        fields.append("_id", 1).append("address", 1).append("totalBalance", 1);
+        List<Document> docsList = this.mongoDBService.query(ACCOUNT_LEDGER_TABLE + chainId, filter, fields);
         for (Document document : docsList) {
-            MiniAccountInfo accountInfo = DocumentTransferTool.toInfo(document, "address", MiniAccountInfo.class);
-//            List<Output> outputs = utxoService.getAccountUtxos(accountInfo.getAddress());
-//            CalcUtil.calcBalance(accountInfo, outputs, blockHeaderService.getBestBlockHeight());
+            MiniAccountInfo accountInfo = DocumentTransferTool.toInfo(document, MiniAccountInfo.class);
             accountInfoList.add(accountInfo);
         }
-        PageInfo<MiniAccountInfo> pageInfo = new PageInfo<>(pageIndex, pageSize, totalCount, accountInfoList);
+        Long index = (long)((pageIndex - 1) * pageSize);
+        PageInfo<MiniAccountInfo> pageInfo = new PageInfo<>(pageIndex, pageSize, docsList.size(),
+                accountInfoList.stream()
+                        .sorted(Comparator.comparing(MiniAccountInfo::getTotalBalance).reversed())
+                        .skip(index).limit(pageSize)
+                        .collect(Collectors.toList())
+        );
         return pageInfo;
     }
 

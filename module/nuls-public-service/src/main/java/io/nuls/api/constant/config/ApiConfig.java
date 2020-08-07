@@ -70,12 +70,21 @@ public class ApiConfig implements ModuleConfig {
 
     private String communityAddress;
 
+    private String lockedAddress = "";
+
     private String blackHolePublicKey;
 
     private String mongoUser;
 
     private String mongoPwd;
 
+    public String getLockedAddress() {
+        return lockedAddress;
+    }
+
+    public void setLockedAddress(String lockedAddress) {
+        this.lockedAddress = lockedAddress;
+    }
 
     public String getEncoding() {
         return encoding;

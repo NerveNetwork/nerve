@@ -123,6 +123,24 @@ public class MongoAgentServiceImpl implements AgentService {
     }
 
     @Override
+    public AgentInfo getAgentByPackingAddress(int chainID, String packingAddress) {
+        Collection<AgentInfo> agentInfos = CacheManager.getCache(chainID).getAgentMap().values();
+        AgentInfo agentInfo = null;
+        for (AgentInfo agent : agentInfos) {
+            if (!packingAddress.equals(agent.getPackingAddress())) {
+                continue;
+            }
+            if (null == agentInfo || agent.getCreateTime() > agentInfo.getCreateTime()) {
+                agentInfo = agent;
+            }
+        }
+        if (agentInfo == null) {
+            return null;
+        }
+        return agentInfo.copy();
+    }
+
+    @Override
     public AgentInfo getAliveAgentByAgentAddress(int chainID, String agentAddress) {
         Collection<AgentInfo> agentInfos = CacheManager.getCache(chainID).getAgentMap().values();
         AgentInfo agentInfo = null;
@@ -168,6 +186,7 @@ public class MongoAgentServiceImpl implements AgentService {
         }
     }
 
+    @Override
     public void rollbackAgentList(int chainId, List<AgentInfo> agentInfoList) {
         initCache();
         if (agentInfoList.isEmpty()) {
@@ -286,7 +305,7 @@ public class MongoAgentServiceImpl implements AgentService {
     }
 
     @Override
-    public BigInteger getConsensusCoinTotal(int chainId) {
+    public BigInteger getNvtConsensusCoinTotal(int chainId) {
         BigInteger total = BigInteger.ZERO;
 
         ApiCache apiCache = CacheManager.getCache(chainId);

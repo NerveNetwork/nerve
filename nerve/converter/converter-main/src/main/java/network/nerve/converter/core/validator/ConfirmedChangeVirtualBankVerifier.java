@@ -24,11 +24,14 @@
 
 package network.nerve.converter.core.validator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.VirtualBankService;
@@ -40,14 +43,20 @@ import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedInfo;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.po.ConfirmedChangeVirtualBankPO;
+import network.nerve.converter.model.po.MergedComponentCallPO;
+import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.model.txdata.ConfirmedChangeVirtualBankTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.CfmChangeBankStorageService;
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
+import network.nerve.converter.storage.MergeComponentStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 确认虚拟银行变更交易业务验证器
@@ -67,6 +76,8 @@ public class ConfirmedChangeVirtualBankVerifier {
     private HeterogeneousConfirmedChangeVBStorageService heterogeneousConfirmedChangeVBStorageService;
     @Autowired
     private VirtualBankService virtualBankService;
+    @Autowired
+    private MergeComponentStorageService mergeComponentStorageService;
 
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
@@ -103,54 +114,136 @@ public class ConfirmedChangeVirtualBankVerifier {
             }
         }
 
-
         List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
 
         for (HeterogeneousConfirmedVirtualBank confirmed : listConfirmed) {
-            IHeterogeneousChainDocking HeterogeneousInterface =
-                    heterogeneousDockingManager.getHeterogeneousDocking(confirmed.getHeterogeneousChainId());
-            if (null == HeterogeneousInterface) {
-                // 异构链不存在
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
-            }
-            long startTimeHeterogeneousCall = NulsDateUtils.getCurrentTimeMillis();
-            HeterogeneousConfirmedInfo info = null;
-            try {
-                info = HeterogeneousInterface.getChangeVirtualBankConfirmedTxInfo(confirmed.getHeterogeneousTxHash());
-            } catch (Exception e) {
-                chain.getLogger().error(e);
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
-            }
-            chain.getLogger().debug("[validate]虚拟银行变更确认交易, 调用异构链[getChangeVirtualBankConfirmedTxInfo]时间:{}, txhash:{}",
-                    NulsDateUtils.getCurrentTimeMillis() - startTimeHeterogeneousCall,
-                    tx.getHash().toHex());
-            if (null == info) {
-                // 变更交易不存在
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
-            }
+            if(StringUtils.isBlank(confirmed.getHeterogeneousTxHash())){
+                // 说明合并交易后(加入和退出银行出现抵消的情况)没有实际执行异构链的需要, 直接发出确认交易
+                // 找出合并的交易, 验证合并是否是抵消情况
+                String cvTxhash = changeVirtualBankTx.getHash().toHex();
+                String mergedTxKey = mergeComponentStorageService.getMergedTxKeyByMember(chain, cvTxhash);
+                if(StringUtils.isBlank(mergedTxKey)){
+                    // 不存在合并key
+                    chain.getLogger().error("变更交易不存在合并key, 当前hash:{}, 变更交易hash:{}", tx.getHash().toHex(),  cvTxhash);
+                    throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
+                }
+                MergedComponentCallPO mergedTx = mergeComponentStorageService.findMergedTx(chain, mergedTxKey);
+                List<Transaction> list = new ArrayList<>();
+                for(String hash : mergedTx.getListTxHash()){
+                    if(hash.equals(cvTxhash)){
+                        list.add(changeVirtualBankTx);
+                        continue;
+                    }
+                    Transaction cvBankTx = TransactionCall.getConfirmedTx(chain, hash);
+                    if(null == cvBankTx){
+                        chain.getLogger().error("银行变更交易合并成员交易不存在, hash:{}, 变更交易hash:{}",tx.getHash().toHex(), hash);
+                        throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
+                    }
+                    list.add(cvBankTx);
+                }
+                boolean rs = validMergedQuits(chain, list);
+                if(!rs){
+                    chain.getLogger().error("合并没有出现抵消情况, hash:{}",tx.getHash().toHex());
+                    throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                }
 
-            if (confirmed.getEffectiveTime() != info.getTxTime()) {
-                // 异构交易生效时间不匹配
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_TIME_MISMATCH);
-            }
-            if (!confirmed.getHeterogeneousAddress().equals(info.getMultySignAddress())) {
-                // 变更交易数据不匹配
-                throw new NulsException(ConverterErrorCode.VIRTUAL_BANK_MULTIADDRESS_MISMATCH);
-            }
+            }else {
+                // 正常验证
+                IHeterogeneousChainDocking HeterogeneousInterface =
+                        heterogeneousDockingManager.getHeterogeneousDocking(confirmed.getHeterogeneousChainId());
+                if (null == HeterogeneousInterface) {
+                    // 异构链不存在
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
+                }
+                long startTimeHeterogeneousCall = NulsDateUtils.getCurrentTimeMillis();
+                HeterogeneousConfirmedInfo info = null;
+                try {
+                    info = HeterogeneousInterface.getConfirmedTxInfo(confirmed.getHeterogeneousTxHash());
+                } catch (Exception e) {
+                    chain.getLogger().error(e);
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
+                }
+                chain.getLogger().debug("[validate]虚拟银行变更确认交易, 调用异构链[getChangeVirtualBankConfirmedTxInfo]时间:{}, txhash:{}",
+                        NulsDateUtils.getCurrentTimeMillis() - startTimeHeterogeneousCall,
+                        tx.getHash().toHex());
+                if (null == info) {
 
-            // 验证 异构链签名列表
-            List<HeterogeneousAddress> signedList = confirmed.getSignedHeterogeneousAddress();
-            if (null == signedList || signedList.isEmpty()) {
-                // 异构链签名列表是空的
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY);
-            }
-            List<HeterogeneousAddress> heterogeneousSigners = info.getSigners();
-            if (!HeterogeneousUtil.listHeterogeneousAddressEquals(signedList, heterogeneousSigners)) {
-                // 异构链签名列表不匹配
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
+                    // 变更交易不存在
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
+                }
+
+                if (confirmed.getEffectiveTime() != info.getTxTime()) {
+                    // 异构交易生效时间不匹配
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_TIME_MISMATCH);
+                }
+                if (!confirmed.getHeterogeneousAddress().equals(info.getMultySignAddress())) {
+                    // 变更交易数据不匹配
+                    throw new NulsException(ConverterErrorCode.VIRTUAL_BANK_MULTIADDRESS_MISMATCH);
+                }
+
+                // 验证 异构链签名列表
+                List<HeterogeneousAddress> signedList = confirmed.getSignedHeterogeneousAddress();
+                if (null == signedList || signedList.isEmpty()) {
+                    // 异构链签名列表是空的
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY);
+                }
+                List<HeterogeneousAddress> heterogeneousSigners = info.getSigners();
+                if (!HeterogeneousUtil.listHeterogeneousAddressEquals(signedList, heterogeneousSigners)) {
+                    // 异构链签名列表不匹配
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
+                }
             }
         }
 
+    }
+
+    /**
+     * 验证原始变更交易合并是否会抵消, 从而无需调用异构链交易
+     * @param list
+     */
+    private boolean validMergedQuits(Chain chain, List<Transaction> list) throws NulsException{
+        Map<String, Integer> mapAllDirector = new HashMap<>(list.size());
+        for(Transaction tx : list) {
+            ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getCoinData(), ChangeVirtualBankTxData.class);
+            for(byte[] addressBytes : txData.getInAgents()) {
+                String address = AddressTool.getStringAddressByBytes(addressBytes);
+                mapAllDirector.compute(address, (k, v) -> {
+                    if (null == v) {
+                        return 1;
+                    } else {
+                        return v + 1;
+                    }
+                });
+            }
+            for(byte[] addressBytes : txData.getOutAgents()) {
+                String address = AddressTool.getStringAddressByBytes(addressBytes);
+                mapAllDirector.compute(address, (k, v) -> {
+                    if (null == v) {
+                        return -1;
+                    } else {
+                        return v - 1;
+                    }
+                });
+            }
+        }
+        int inCount = 0;
+        int outCount = 0;
+        for (Integer count : mapAllDirector.values()) {
+            if (count < 0) {
+                outCount++;
+            } else if (count > 0) {
+                inCount++;
+            }
+        }
+        if(inCount == 0 && outCount == 0){
+            return true;
+        }
+        try {
+            chain.getLogger().error("[ConfirmedChangeVirtualBankVerifier]合并没有抵消, inSize:{}, outSize:{}, mapAllDirector:{}", inCount, outCount, JSONUtils.obj2json(mapAllDirector));
+        } catch (JsonProcessingException e) {
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+        return false;
     }
 
 }

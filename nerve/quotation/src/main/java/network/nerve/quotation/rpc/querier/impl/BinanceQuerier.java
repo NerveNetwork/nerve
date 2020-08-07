@@ -31,10 +31,13 @@ import network.nerve.quotation.rpc.querier.Querier;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+
+import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
 
 /**
  * Binance Quotes Latest
@@ -44,32 +47,39 @@ import java.util.Map;
  */
 @Component
 public class BinanceQuerier implements Querier {
-    /** 获取交易对价格接口 */
+    /**
+     * 获取交易对价格接口
+     */
     private final String CMD = "/api/v3/ticker/price?symbol=";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().info("BinanceQuerier, 取价anchorToken:{}", anchorToken);
-        String symbol = (anchorToken.replace("-","")).toUpperCase();
+        String symbol = (anchorToken.replace("-", "")).toUpperCase();
         String url = baseurl + CMD + symbol;
         try {
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofMillis(5000))
-                .build();
+                    .uri(URI.create(url))
+                    .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
+                    .build();
             HttpResponse<String> response =
                     CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            if(response.statusCode() != 200){
-                chain.getLogger().error("调用{}接口, Binance获取价格失败, statusCode:{}", url, response.statusCode());
+            Map<String, Object> data = JSONUtils.json2map(response.body());
+            if (response.statusCode() != 200) {
+                chain.getLogger().error("Binance 调用{}接口, 获取价格失败, anchorToken:{}, code:{}, msg:{}",
+                        url,
+                        anchorToken,
+                        data.get("code").toString(),
+                        data.get("msg").toString());
                 return null;
             }
-            Map<String,Object> data = JSONUtils.json2map(response.body());
-            BigDecimal res = new BigDecimal((String)data.get("price"));
-            chain.getLogger().info("Binance获取到交易对[{}]价格:{}", symbol, res);
+            BigDecimal res = new BigDecimal((String) data.get("price"));
+            chain.getLogger().info("Binance 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
             return res;
+        } catch (HttpConnectTimeoutException e) {
+            chain.getLogger().error("Binance, 调用接口 {}, anchorToken:{} 超时", url, anchorToken);
+            return null;
         } catch (Throwable e) {
-            chain.getLogger().error("调用{}接口, Binance获取价格失败", url);
-            chain.getLogger().error(e);
+            chain.getLogger().error("Binance, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
             return null;
         }
     }

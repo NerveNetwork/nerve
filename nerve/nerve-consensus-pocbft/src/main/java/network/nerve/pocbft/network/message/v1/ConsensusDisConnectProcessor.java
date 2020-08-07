@@ -103,32 +103,9 @@ public class ConsensusDisConnectProcessor implements MessageProcessor {
         if (message == null || duplicateMsg(message)) {
             return;
         }
-        String msgHash =  message.getMsgHash().toHex();
-        //chain.getLogger().debug("DisConnect message,msgHash={} recv from node={}", msgHash, nodeId);
-        try {
-            //校验签名
-            if (!SignatureUtil.validateSignture(message.getConsensusIdentitiesSub().serialize(), message.getSign())) {
-                chain.getLogger().error("msgHash={} recv pocDisConn from node={} validateSignture false", msgHash, nodeId);
-                return;
-            }
-        } catch (NulsException e) {
-            chain.getLogger().error("msgHash={} recv pocDisConn from node={} error", msgHash, nodeId);
-            chain.getLogger().error(e);
-        } catch (IOException e) {
-            chain.getLogger().error("msgHash={} recv pocDisConn from node={} error", msgHash, nodeId);
-            chain.getLogger().error(e);
-        }
-        //获取自身的共识信息
-        ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chainId);
-        if (null == consensusKeys) {
-            //非共识节点，无需处理
-            //chain.getLogger().debug("=======不是共识节点，不处理{}消息", nodeId);
-        } else {
-            //获取对方公钥
-            byte[] pubKey = message.getSign().getPublicKey();
-            //清除IP
-            consensusNetService.disConnNode(chain,pubKey);
-        }
+        message.setNodeId(nodeId);
+        chain.getConsensusCache().getDisConnectMessageQueue().offer(message);
+
         //chain.getLogger().debug("=====================consensusDisConnProcessor deal end");
     }
 }

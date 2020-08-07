@@ -6,7 +6,7 @@
   },
   {
     "assetId": "1",
-    "chainId": "2",
+    "chainId": "1",
     "oracleKey": "NULS_PRICE",
     "simple": "NULS"
   },

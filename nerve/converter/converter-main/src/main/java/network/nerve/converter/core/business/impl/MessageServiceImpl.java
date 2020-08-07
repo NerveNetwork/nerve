@@ -47,6 +47,7 @@ import network.nerve.converter.model.po.TransactionPO;
 import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.storage.TxStorageService;
 import network.nerve.converter.utils.ConverterSignUtil;
+import network.nerve.converter.utils.LoggerUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +73,7 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == p2PHKSignature || null == p2PHKSignature.getPublicKey() || null == p2PHKSignature.getSignData()) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        chain.getLogger().debug("收到节点[{}]新交易签名 hash: {}, 签名地址:{}", nodeId, hash.toHex(),
+        LoggerUtil.LOG.debug("收到节点[{}]新交易签名 hash: {}, 签名地址:{}", nodeId, hash.toHex(),
                 AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chainId)));
         TransactionPO txPO = txStorageService.get(chain, hash);
         if (null == txPO) {
@@ -80,7 +81,7 @@ public class MessageServiceImpl implements MessageService {
             UntreatedMessage untreatedMessage = new UntreatedMessage(chainId, nodeId, message, hash);
             chain.getFutureMessageMap().putIfAbsent(hash, new ArrayList<>());
             chain.getFutureMessageMap().get(hash).add(untreatedMessage);
-            chain.getLogger().info("当前节点还未确认该交易，缓存签名消息 hash:{}", hash.toHex());
+            LoggerUtil.LOG.info("当前节点还未确认该交易，缓存签名消息 hash:{}", hash.toHex());
 
             if(TxType.PROPOSAL == message.getType()){
                 // 如果是提案交易, 则需要主动向发送索要交易,非交易发起节点 无法创建该交易
@@ -98,7 +99,7 @@ public class MessageServiceImpl implements MessageService {
         }
         //如果该交易已经被打包了，所以不需要再广播该交易的签名
         if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || message.getP2PHKSignature() == null) {
-            chain.getLogger().debug("交易在本节点已经处理完成,Hash:{}\n\n", hash.toHex());
+            LoggerUtil.LOG.debug("交易在本节点已经处理完成,Hash:{}\n\n", hash.toHex());
             return;
         }
         try {
@@ -113,7 +114,7 @@ public class MessageServiceImpl implements MessageService {
     public void getTx(Chain chain, String nodeId, GetTxMessage message) {
         NulsHash hash = message.getHash();
         String nativeHex = hash.toHex();
-        chain.getLogger().info("节点:{},向本节点获取完整的交易，Hash:{}", nodeId, nativeHex);
+        LoggerUtil.LOG.info("节点:{},向本节点获取完整的交易，Hash:{}", nodeId, nativeHex);
         TransactionPO txPO = txStorageService.get(chain, hash);
         if(null == txPO){
             chain.getLogger().error("当前节点不存在该交易,Hash:{}", nativeHex);
@@ -123,10 +124,10 @@ public class MessageServiceImpl implements MessageService {
         newTxMessage.setTx(txPO.getTx());
         //把完整交易发送给请求节点
         if(!NetWorkCall.sendToNode(chain, newTxMessage, nodeId, ConverterCmdConstant.NEW_TX_MESSAGE)){
-            chain.getLogger().info("发送完整的交易到节点:{}, 失败! Hash:{}\n\n", nodeId, nativeHex);
+            LoggerUtil.LOG.info("发送完整的交易到节点:{}, 失败! Hash:{}\n\n", nodeId, nativeHex);
             return;
         }
-        chain.getLogger().info("将完整的交易发送给链内节点:{}, Hash:{}\n\n", nodeId, nativeHex);
+        LoggerUtil.LOG.info("将完整的交易发送给链内节点:{}, Hash:{}\n\n", nodeId, nativeHex);
     }
 
     @Override
@@ -134,11 +135,11 @@ public class MessageServiceImpl implements MessageService {
         Transaction tx = message.getTx();
         NulsHash localHash = tx.getHash();
         String localHashHex = localHash.toHex();
-        chain.getLogger().info("收到链内节点:{}发送过来的完整交易,Hash:{}", nodeId, localHashHex);
+        LoggerUtil.LOG.info("收到链内节点:{}发送过来的完整交易,Hash:{}", nodeId, localHashHex);
         //判断本节点是否已经收到过该交易，如果已收到过直接忽略
         TransactionPO txPO = txStorageService.get(chain, localHash);
         if (txPO != null) {
-            chain.getLogger().debug("已收到并处理过该交易,Hash:{}\n\n", localHashHex);
+            LoggerUtil.LOG.debug("已收到并处理过该交易,Hash:{}\n\n", localHashHex);
             return;
         }
         // 验证该交易
@@ -169,7 +170,7 @@ public class MessageServiceImpl implements MessageService {
             }
             BroadcastHashSignMessage msg = new BroadcastHashSignMessage(tx, p2PHKSignature);
             NetWorkCall.broadcast(chain, msg, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-            chain.getLogger().debug("[newTx-message] 广播本节点对提案的签名 txhash:{}, 签名地址:{}",
+            LoggerUtil.LOG.debug("[newTx-message] 广播本节点对提案的签名 txhash:{}, 签名地址:{}",
                     message.getTx().getHash().toHex(),
                     AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId())));
         }

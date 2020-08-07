@@ -15,18 +15,18 @@ public class RoundCache {
 
     private MeetingRound currentRound;
 
-    private List<String> keyList = new ArrayList<>();
-    private Map<String, MeetingRound> roundMap = new HashMap<>();
+    private List<Long> keyList = new ArrayList<>();
+    private Map<Long, MeetingRound> roundMap = new HashMap<>();
 
-    public MeetingRound get(String key) {
+    public MeetingRound get(Long key) {
         return roundMap.get(key);
     }
 
-    public void put(String key, MeetingRound round) {
+    public void put(Long key, MeetingRound round) {
         this.roundMap.put(key, round);
         keyList.add(key);
         if (keyList.size() > 50) {
-            String oldKey = keyList.remove(0);
+            Long oldKey = keyList.remove(0);
             roundMap.remove(oldKey);
         }
     }
@@ -37,6 +37,7 @@ public class RoundCache {
 
     public void switchRound(MeetingRound round) {
         this.currentRound = round;
+        this.put(round.getIndex(),round);
     }
 
     public void clear() {
@@ -44,14 +45,14 @@ public class RoundCache {
     }
 
     public MeetingRound getRoundByIndex(long roundIndex) {
-        for (Map.Entry<String, MeetingRound> entry : roundMap.entrySet()) {
+        for (Map.Entry<Long, MeetingRound> entry : roundMap.entrySet()) {
             if (entry.getValue().getIndex() == roundIndex) {
                 return entry.getValue();
             }
         }
 //        找不到的情况，看看里面都存了啥
-        for (Map.Entry<String, MeetingRound> entry : roundMap.entrySet()) {
-            Log.info(entry.getKey());
+        for (Map.Entry<Long, MeetingRound> entry : roundMap.entrySet()) {
+            Log.info(entry.getKey()+"");
         }
         return null;
     }

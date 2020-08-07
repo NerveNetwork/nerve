@@ -78,8 +78,11 @@ public class NodeRpc extends BaseCmd {
     public Response addNodes(Map params) {
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
         int isCross = Integer.valueOf(String.valueOf(params.get("isCross")));
+
+
         try {
             String nodes = String.valueOf(params.get("nodes"));
+            LoggerUtil.logger(chainId).info("----------addNodes, nodes:" + nodes);
             if (chainId < 0 || StringUtils.isBlank(nodes)) {
                 return failed(NetworkErrorCode.PARAMETER_ERROR);
             }
@@ -126,6 +129,8 @@ public class NodeRpc extends BaseCmd {
         if (chainId < 0 || StringUtils.isBlank(nodes)) {
             return failed(NetworkErrorCode.PARAMETER_ERROR);
         }
+        LoggerUtil.logger(chainId).info("----------delNodes, nodes:" + nodes);
+
         String[] peers = nodes.split(",");
         NodeGroup nodeGroup = nodeGroupManager.getNodeGroupByChainId(chainId);
         for (String nodeId : peers) {

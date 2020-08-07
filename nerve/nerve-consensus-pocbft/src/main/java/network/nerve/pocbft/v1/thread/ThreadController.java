@@ -6,6 +6,8 @@ import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.v1.entity.BasicObject;
 import network.nerve.pocbft.v1.entity.BasicRunnable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -17,6 +19,7 @@ public class ThreadController extends BasicObject {
      * 专用线程池
      */
     private ThreadPoolExecutor threadPool;
+    private List<BasicRunnable> list = new ArrayList<>();
 
     public ThreadController(Chain chain) {
         super(chain);
@@ -24,12 +27,17 @@ public class ThreadController extends BasicObject {
     }
 
     public void execute(BasicRunnable runnable) {
+        list.add(runnable);
         threadPool.execute(runnable);
     }
 
     public void shutdown() {
         if (threadPool != null) {
+            for (BasicRunnable runnable : list) {
+                runnable.stop();
+            }
             threadPool.shutdown();
+            list.clear();
             this.init();
         }
     }

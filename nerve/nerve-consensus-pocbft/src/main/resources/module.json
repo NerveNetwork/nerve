@@ -17,6 +17,6 @@
   "byzantineRate": 66,
   "agentCountMax": 35,
   "mainChainCommissionRatio": 60,
-  "maxCoinToOfCoinbase": 10,
-  "minRewardHeight": 1
+  "maxCoinToOfCoinbase": 3000,
+  "minRewardHeight": 1350000
 }

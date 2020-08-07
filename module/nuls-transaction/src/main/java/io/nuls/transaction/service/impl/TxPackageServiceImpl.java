@@ -25,9 +25,7 @@
 package io.nuls.transaction.service.impl;
 
 import io.nuls.base.RPCUtil;
-import io.nuls.base.data.BlockHeader;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
@@ -526,9 +524,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             List<String> txHashList = TransactionCall.txModuleValidator(chain,
                     entry.getKey(), entry.getValue(), blockHeaderStr);
             if (txHashList != null && txHashList.size() > 0) {
-                if (isLogDebug) {
-                    log.debug("batch module verify fail, module-code:{},  return count:{}", entry.getKey(), txHashList.size());
-                }
+                log.error("batch module verify fail, module-code:{},  return count:{}", entry.getKey(), txHashList.size());
                 throw new NulsException(TxErrorCode.TX_VERIFY_FAIL);
             }
         }
@@ -633,6 +629,20 @@ public class TxPackageServiceImpl implements TxPackageService {
                             txService.baseValidateTx(chain, tx, txRegister);
                         } catch (Exception e) {
                             chain.getLogger().error("batchVerify failed, single tx verify failed. hash:{}, -type:{}", tx.getHash().toHex(), tx.getType());
+                            try {
+                                chain.getLogger().error("-------tx from------");
+                                for (CoinFrom from : tx.getCoinDataInstance().getFrom()) {
+                                    chain.getLogger().error(from.toString());
+                                }
+
+                                chain.getLogger().error("-------tx to------");
+                                for (CoinTo to : tx.getCoinDataInstance().getTo()) {
+                                    chain.getLogger().error(to.toString());
+                                }
+                            } catch (NulsException ee) {
+                                e.printStackTrace();
+                            }
+
                             chain.getLogger().error(e);
                             return false;
                         }

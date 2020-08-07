@@ -12,6 +12,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.MessageUtil;
@@ -676,5 +677,23 @@ public class CallMethodUtils {
         } catch (Exception e) {
             throw new NulsException(e);
         }
+    }
+
+    public static int getAssetPrecision(int chainId, int assetChainId, int assetId) throws NulsException {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("assetChainId", assetChainId);
+        params.put("assetId", assetId);
+        Response cmdResp = null;
+        try {
+            cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "lg_get_asset", params);
+        } catch (Exception e) {
+            throw new NulsException(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
+        }
+
+        Map<String, Object> result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("lg_get_asset");
+        return (int) result.get("decimalPlace");
     }
 }

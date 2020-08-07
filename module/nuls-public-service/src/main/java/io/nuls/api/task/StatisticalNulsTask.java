@@ -4,9 +4,8 @@ package io.nuls.api.task;
 import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
-import io.nuls.api.db.AccountService;
-import io.nuls.api.db.AgentService;
-import io.nuls.api.db.StackSnapshootService;
+import io.nuls.api.constant.ConverterTxType;
+import io.nuls.api.db.*;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.AssetInfo;
 import io.nuls.api.model.po.CoinContextInfo;
@@ -19,9 +18,9 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.model.StringUtils;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class StatisticalNulsTask implements Runnable {
 
@@ -33,19 +32,30 @@ public class StatisticalNulsTask implements Runnable {
 
     private StackSnapshootService stackSnapshootService;
 
+    private ConverterTxService converterTxService;
+
+    private DepositService depositService;
 
     public StatisticalNulsTask(int chainId) {
         this.chainId = chainId;
         accountService = SpringLiteContext.getBean(AccountService.class);
         agentService = SpringLiteContext.getBean(AgentService.class);
         stackSnapshootService = SpringLiteContext.getBean(StackSnapshootService.class);
+        depositService = SpringLiteContext.getBean(DepositService.class);
+        converterTxService = SpringLiteContext.getBean(ConverterTxService.class);
     }
 
     @Override
     public void run() {
         try {
+            //账户持有总资产
             BigInteger totalCoin = accountService.getAllAccountBalance(chainId);
-            BigInteger consensusTotal = agentService.getConsensusCoinTotal(chainId);
+            //通过跨链转移到外部链的总资产
+            BigInteger crossOutTotal = getCrossOutTotal();
+            totalCoin = totalCoin.add(crossOutTotal);
+            BigInteger consensusTotal = agentService.getNvtConsensusCoinTotal(chainId);
+            BigInteger nvtStackTotal = depositService.getStackingTotalAndTransferNVT(ApiContext.defaultChainId,ApiContext.defaultChainId,ApiContext.defaultAssetId);
+            BigInteger allAssetStackTotalForNvt = depositService.getStackingTotalAndTransferNVT(ApiContext.defaultChainId);
             BigInteger rewardTotal = stackSnapshootService.queryRewardTotal(chainId);
 
             ApiCache apiCache = CacheManager.getCache(chainId);
@@ -91,6 +101,8 @@ public class StatisticalNulsTask implements Runnable {
             contextInfo.setUnmapped(unmapped);
             contextInfo.setTotal(totalCoin);
             contextInfo.setConsensusTotal(consensusTotal);
+            contextInfo.setNvtStackTotal(nvtStackTotal);
+            contextInfo.setStackTotalForNvtValue(allAssetStackTotalForNvt);
             contextInfo.setDestroy(destroyNuls);
 
             BigInteger circulation = totalCoin.subtract(destroyNuls);
@@ -107,6 +119,17 @@ public class StatisticalNulsTask implements Runnable {
             LoggerUtil.commonLog.error(e);
         }
 
+    }
+
+    /**
+     * 查询跨链转出的总量
+     * @return
+     */
+    private BigInteger getCrossOutTotal() {
+        Map<ConverterTxType,BigInteger> totalData = converterTxService.aggTotal(ApiContext.defaultChainId,ApiContext.defaultAssetId);
+        BigInteger outTotal = totalData.getOrDefault(ConverterTxType.OUT,BigInteger.ZERO);
+        BigInteger inTotal = totalData.getOrDefault(ConverterTxType.IN,BigInteger.ZERO);
+        return outTotal.subtract(inTotal);
     }
 
 

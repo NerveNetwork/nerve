@@ -1,4 +1,4 @@
-/*
+package io.nuls.transaction.utils;/*
  * MIT License
  *
  * Copyright (c) 2017-2019 nuls.io
@@ -23,50 +23,62 @@
  *
  */
 
-package io.nuls.transaction.utils;
-
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author: Niels Wang
+ * @author: Eva Wang
  * @date: 2018/7/9
  */
-public class HashSetDuplicateProcessor {
+public class HashSetDuplicateProcessor<T> {
 
+    private Set<T> set1 = new HashSet<>();
+    private Set<T> set2 = new HashSet<>();
     private final int maxSize;
     private final int percent90;
-    private Set<String> set1 = new HashSet<>();
-    private Set<String> set2 = new HashSet<>();
 
     public HashSetDuplicateProcessor(int maxSize) {
         this.maxSize = maxSize;
         this.percent90 = maxSize * 9 / 10;
     }
 
-    public synchronized boolean insertAndCheck(String hash) {
-        boolean result = set1.add(hash);
+    /**
+     * 插入一个元素，并检查是否存在
+     *
+     * @param t
+     * @return 存在：false，不存在：true
+     */
+    public boolean insertAndCheck(T t) {
+        boolean result = set1.add(t);
         if (!result) {
             return result;
         }
         int size = set1.size();
         if (size >= maxSize) {
-            set2.add(hash);
             set1.clear();
             set1.addAll(set2);
             set2.clear();
+            set1.add(t);
         } else if (size >= percent90) {
-            set2.add(hash);
+            set2.add(t);
         }
         return result;
     }
 
-    public boolean contains(String hash) {
-        return set1.contains(hash);
+    public boolean check(T t) {
+        return !set1.contains(t);
+    }
+    public boolean contains(T t) {
+        return set1.contains(t);
     }
 
-    public void remove(String hash) {
+    public void remove(T hash) {
         set1.remove(hash);
         set2.remove(hash);
+    }
+
+    public void clear() {
+        set1.clear();
+        set2.clear();
     }
 }

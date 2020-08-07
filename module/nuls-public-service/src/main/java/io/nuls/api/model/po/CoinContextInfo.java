@@ -9,6 +9,16 @@ public class CoinContextInfo {
 
     private BigInteger consensusTotal;
 
+    /**
+     * 使用nvt参与stack的总数
+     */
+    private BigInteger nvtStackTotal;
+
+    /**
+     * 所有参与stack的资产总数，转换成NVT的数量
+     */
+    private BigInteger stackTotalForNvtValue;
+
     private BigInteger circulation;
 
     private BigInteger dailyReward;
@@ -138,5 +148,21 @@ public class CoinContextInfo {
 
     public void setRewardTotal(BigInteger rewardTotal) {
         this.rewardTotal = rewardTotal;
+    }
+
+    public BigInteger getNvtStackTotal() {
+        return nvtStackTotal;
+    }
+
+    public void setNvtStackTotal(BigInteger nvtStackTotal) {
+        this.nvtStackTotal = nvtStackTotal;
+    }
+
+    public BigInteger getStackTotalForNvtValue() {
+        return stackTotalForNvtValue;
+    }
+
+    public void setStackTotalForNvtValue(BigInteger stackTotalForNvtValue) {
+        this.stackTotalForNvtValue = stackTotalForNvtValue;
     }
 }

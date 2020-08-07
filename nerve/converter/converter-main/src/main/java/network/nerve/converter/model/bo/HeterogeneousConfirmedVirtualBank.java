@@ -39,7 +39,7 @@ import java.util.List;
  * @date: 2020-03-11
  */
 public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
-
+    private String nerveTxHash;
     /**
      * 异构链id
      */
@@ -69,7 +69,8 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
     public HeterogeneousConfirmedVirtualBank() {
     }
 
-    public HeterogeneousConfirmedVirtualBank(int heterogeneousChainId, String heterogeneousAddress, String heterogeneousTxHash, long effectiveTime, List<HeterogeneousAddress> signedHeterogeneousAddress) {
+    public HeterogeneousConfirmedVirtualBank(String nerveTxHash, int heterogeneousChainId, String heterogeneousAddress, String heterogeneousTxHash, long effectiveTime, List<HeterogeneousAddress> signedHeterogeneousAddress) {
+        this.nerveTxHash = nerveTxHash;
         this.heterogeneousChainId = heterogeneousChainId;
         this.heterogeneousAddress = heterogeneousAddress;
         this.heterogeneousTxHash = heterogeneousTxHash;
@@ -124,6 +125,14 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
         return size;
     }
 
+    public String getNerveTxHash() {
+        return nerveTxHash;
+    }
+
+    public void setNerveTxHash(String nerveTxHash) {
+        this.nerveTxHash = nerveTxHash;
+    }
+
     public int getHeterogeneousChainId() {
         return heterogeneousChainId;
     }
@@ -169,9 +178,12 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        HeterogeneousConfirmedVirtualBank bank = (HeterogeneousConfirmedVirtualBank) o;
+        HeterogeneousConfirmedVirtualBank that = (HeterogeneousConfirmedVirtualBank) o;
 
-        if (heterogeneousTxHash != null ? !heterogeneousTxHash.equals(bank.heterogeneousTxHash) : bank.heterogeneousTxHash != null)
+        if (heterogeneousChainId != that.heterogeneousChainId) return false;
+        if (!nerveTxHash.equals(that.nerveTxHash)) return false;
+        if (!heterogeneousAddress.equals(that.heterogeneousAddress)) return false;
+        if (heterogeneousTxHash != null ? !heterogeneousTxHash.equals(that.heterogeneousTxHash) : that.heterogeneousTxHash != null)
             return false;
 
         return true;
@@ -179,6 +191,10 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
 
     @Override
     public int hashCode() {
-        return heterogeneousTxHash != null ? heterogeneousTxHash.hashCode() : 0;
+        int result = nerveTxHash.hashCode();
+        result = 31 * result + heterogeneousChainId;
+        result = 31 * result + heterogeneousAddress.hashCode();
+        result = 31 * result + (heterogeneousTxHash != null ? heterogeneousTxHash.hashCode() : 0);
+        return result;
     }
 }

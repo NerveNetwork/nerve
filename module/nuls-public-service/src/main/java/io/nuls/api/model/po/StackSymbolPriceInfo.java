@@ -37,6 +37,11 @@ public class StackSymbolPriceInfo extends TxDataInfo implements SymbolPrice{
 
     private Integer assetId;
 
+    /**
+     * 较上一次喂价的涨幅
+     */
+    private double change;
+
     public StackSymbolPriceInfo() {}
 
     public static StackSymbolPriceInfo empty(String symbol, String currency){
@@ -120,5 +125,13 @@ public class StackSymbolPriceInfo extends TxDataInfo implements SymbolPrice{
 
     public void setAssetId(Integer assetId) {
         this.assetId = assetId;
+    }
+
+    public double getChange() {
+        return change;
+    }
+
+    public void setChange(double change) {
+        this.change = change;
     }
 }

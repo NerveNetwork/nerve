@@ -22,6 +22,7 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.storage.AgentStorageService;
 import network.nerve.pocbft.storage.VirtualAgentStorageService;
+import network.nerve.pocbft.utils.compare.AgentPoDepositComparator;
 import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import java.math.BigDecimal;
@@ -325,12 +326,12 @@ public class AgentManager {
         }
         agentList.sort(new AgentDepositComparator());
         for (Agent agent : agentList) {
+            if (packAgentList.size() >= chain.getConsensusAgentCountMax()) {
+                break;
+            }
             if (agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0) {
                 packAgentList.add(agent);
             } else {
-                break;
-            }
-            if (packAgentList.size() >= chain.getConsensusAgentCountMax()) {
                 break;
             }
         }
@@ -358,12 +359,12 @@ public class AgentManager {
         }
         agentList.sort(new AgentDepositComparator());
         for (Agent agent : agentList) {
+            if (packBasicAgentList.size() >= chain.getConsensusAgentCountMax()) {
+                break;
+            }
             if (agent.getDeposit().compareTo(chain.getConfig().getPackDepositMin()) >= 0) {
                 packBasicAgentList.add(new AgentBasicDTO(agent));
             } else {
-                break;
-            }
-            if (packBasicAgentList.size() >= chain.getConsensusAgentCountMax()) {
                 break;
             }
         }
@@ -490,8 +491,12 @@ public class AgentManager {
                 }
             }
         }
-        Map<NulsHash, AgentPo> sortAgentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_64);
-        agentMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().getDeposit())).forEach(e -> sortAgentMap.put(e.getKey(), e.getValue()));
+
+        List<AgentPo> sortAgentList = new ArrayList<>(agentMap.values());
+        sortAgentList.sort(AgentPoDepositComparator.getInstance());
+
+//        Map<NulsHash, AgentPo> sortAgentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_64);
+//        agentMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().getDeposit())).forEach(e -> sortAgentMap.put(e.getKey(), e.getValue()));
         //虚拟银行权重*4，共识节点权重*3，未出快节点权重*1
         int maxConsensusAgentCount = chain.getConsensusAgentCountMax();
         List<String> virtualBankList = new ArrayList<>();
@@ -503,25 +508,41 @@ public class AgentManager {
         String rewardAddress;
         String agentAddress;
         int count = 1;
-        double baseWeight = chain.getConfig().getLocalAssertBase();
-        for (AgentPo agentPo : sortAgentMap.values()) {
-            rewardAddress = AddressTool.getStringAddressByBytes(agentPo.getRewardAddress());
+        double baseWeight = 1;
+        for (AgentPo agentPo : sortAgentList) {
+            StringBuilder ss = new StringBuilder();
+            ss.append(AddressTool.getStringAddressByBytes(agentPo.getAgentAddress()));
+            ss.append("-");
+            ss.append(agentPo.getDeposit().toString());
+            baseWeight = chain.getConfig().getLocalAssertBase();
 
+            rewardAddress = AddressTool.getStringAddressByBytes(agentPo.getRewardAddress());
             agentAddress = AddressTool.getStringAddressByBytes(agentPo.getAgentAddress());
             //如果为虚拟银行则按虚拟银行计算
             realDeposit = new BigDecimal(agentPo.getDeposit());
             if (!virtualBankList.isEmpty() && virtualBankList.contains(agentAddress)) {
+                ss.append("-虚拟银行");
                 baseWeight = baseWeight * chain.getConfig().getSuperAgentDepositBase();
             } else if (count <= maxConsensusAgentCount) {
+                ss.append("-共识节点");
                 baseWeight = baseWeight * chain.getConfig().getAgentDepositBase();
             } else if (count > maxConsensusAgentCount) {
+                ss.append("-后补节点");
                 baseWeight = baseWeight * chain.getConfig().getReservegentDepositBase();
             }
+            ss.append("-");
+            ss.append(baseWeight);
             baseWeight = Math.sqrt(baseWeight);
             BigDecimal weightSqrt = new BigDecimal(baseWeight).setScale(4, BigDecimal.ROUND_HALF_UP);
             realDeposit = DoubleUtils.mul(realDeposit, weightSqrt);
-            totalAmount = totalAmount.add(realDeposit);
+            ss.append("-");
+            ss.append(realDeposit.toString());
 
+            totalAmount = totalAmount.add(realDeposit);
+            ss.append("-total:");
+            ss.append(totalAmount.toString());
+
+            chain.getLogger().info(ss.toString());
             depositMap.merge(rewardAddress, realDeposit, (oldValue, value) -> oldValue.subtract(value));
             count++;
         }

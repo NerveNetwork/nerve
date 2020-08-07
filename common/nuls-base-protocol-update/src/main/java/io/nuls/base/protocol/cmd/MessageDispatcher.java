@@ -18,7 +18,6 @@ import java.util.Map;
 /**
  * 消息统一分发，各个有消息要处理的模块写具体实现
  *
- *
  * @author captain
  * @version 1.0
  * @date 2019/5/23 21:05
@@ -59,7 +58,12 @@ public final class MessageDispatcher extends BaseCmd {
         String msgStr = (String) params.get("messageBody");
         for (MessageProcessor processor : processors) {
             if (cmd.equals(processor.getCmd())) {
+                long start = System.currentTimeMillis();
                 processor.process(chainId, nodeId, msgStr);
+                long use = System.currentTimeMillis() - start;
+                if (use > 200) {
+                    Log.warn("====={}===user:{}ms", cmd, use);
+                }
             }
         }
         return success();

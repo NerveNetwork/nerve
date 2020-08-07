@@ -89,7 +89,7 @@ public class RoundManager {
         currentRound.setProducedBlockCount(currentRound.getProducedBlockCount() + 1);
         currentRound.setEndHeight(blockInfo.getHeader().getHeight());
         currentRound.setLostRate(DoubleUtils.div(header.getPackingIndexOfRound() - currentRound.getProducedBlockCount(), header.getPackingIndexOfRound()));
-        this.fillPunishCount(blockInfo.getTxList(), currentRound, true);
+//        this.fillPunishCount(blockInfo.getTxList(), currentRound, true);
 
         apiCache.setCurrentRound(currentRound);
         mongoRoundServiceImpl.updateRoundItem(chainId, item);
@@ -97,24 +97,24 @@ public class RoundManager {
     }
 
 
-    private void fillPunishCount(List<TransactionInfo> txs, CurrentRound round, boolean add) {
-        int redCount = 0;
-        int yellowCount = 0;
-        for (TransactionInfo tx : txs) {
-            if (tx.getType() == TxType.YELLOW_PUNISH) {
-                yellowCount += tx.getTxDataList() != null ? tx.getTxDataList().size() : 0;
-            } else if (tx.getType() == TxType.RED_PUNISH) {
-                redCount++;
-            }
-        }
-        if (add) {
-            round.setYellowCardCount(round.getYellowCardCount() + yellowCount);
-            round.setRedCardCount(round.getRedCardCount() + redCount);
-        } else {
-            round.setYellowCardCount(round.getYellowCardCount() - yellowCount);
-            round.setRedCardCount(round.getRedCardCount() - redCount);
-        }
-    }
+//    private void fillPunishCount(List<TransactionInfo> txs, CurrentRound round, boolean add) {
+//        int redCount = 0;
+//        int yellowCount = 0;
+//        for (TransactionInfo tx : txs) {
+//            if (tx.getType() == TxType.YELLOW_PUNISH) {
+//                yellowCount += tx.getTxDataList() != null ? tx.getTxDataList().size() : 0;
+//            } else if (tx.getType() == TxType.RED_PUNISH) {
+//                redCount++;
+//            }
+//        }
+//        if (add) {
+//            round.setYellowCardCount(round.getYellowCardCount() + yellowCount);
+//            round.setRedCardCount(round.getRedCardCount() + redCount);
+//        } else {
+//            round.setYellowCardCount(round.getYellowCardCount() - yellowCount);
+//            round.setRedCardCount(round.getRedCardCount() - redCount);
+//        }
+//    }
 
     private void processNextRound(int chainId, BlockInfo blockInfo) {
         ApiCache apiCache = CacheManager.getCache(chainId);
@@ -201,7 +201,11 @@ public class RoundManager {
                 item.setPackingAddress(sorter.getSeedAddress());
 
             }
-            item.setTime(round.getStartTime() + (int)blockTimeInfo.getAvgConsumeTime() * (index - 1));
+            int avgConsumeTime = 2;
+            if(blockTimeInfo != null){
+                avgConsumeTime = (int) blockTimeInfo.getAvgConsumeTime();
+            }
+            item.setTime(round.getStartTime() + avgConsumeTime * (index - 2));
             itemList.add(item);
         }
         round.setItemList(itemList);
@@ -212,7 +216,7 @@ public class RoundManager {
         round.setYellowCardCount(0);
         round.setLostRate(DoubleUtils.div(header.getPackingIndexOfRound() - round.getProducedBlockCount(), header.getPackingIndexOfRound()));
 
-        fillPunishCount(blockInfo.getTxList(), round, true);
+//        fillPunishCount(blockInfo.getTxList(), round, true);
         if (round.getIndex() == 1) {
             CurrentRound round1 = new CurrentRound();
             round1.setStartTime(header.getRoundStartTime());
@@ -323,7 +327,7 @@ public class RoundManager {
         currentRound.setProducedBlockCount(currentRound.getProducedBlockCount() - 1);
         currentRound.setEndHeight(blockInfo.getHeader().getHeight() - 1);
         currentRound.setLostRate(DoubleUtils.div(currentRound.getMemberCount() - currentRound.getProducedBlockCount(), currentRound.getMemberCount()));
-        this.fillPunishCount(blockInfo.getTxList(), currentRound, false);
+//        this.fillPunishCount(blockInfo.getTxList(), currentRound, false);
 
         this.mongoRoundServiceImpl.updateRound(chainId, currentRound.toPocRound());
         apiCache.setCurrentRound(currentRound);

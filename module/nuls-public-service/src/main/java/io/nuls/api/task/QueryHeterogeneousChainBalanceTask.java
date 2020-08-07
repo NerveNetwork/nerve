@@ -11,6 +11,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,17 +29,29 @@ public class QueryHeterogeneousChainBalanceTask implements Runnable {
         HeterogeneousChainAssetBalanceManager manager = SpringLiteContext.getBean(HeterogeneousChainAssetBalanceManager.class);
         Map<Integer, Map<String,BigDecimal>> balanceList = manager.getBalanceList();
         Log.info("查询虚拟银行节点异构资产余额");
-        Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq());
-        if(virtualBankDirectorDTOResult.isFailed()){
-            Log.error("查询虚拟银行资产信息失败:{}:{}",virtualBankDirectorDTOResult.getStatus(),virtualBankDirectorDTOResult.getMessage());
+        try{
+            Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq());
+            if(virtualBankDirectorDTOResult.isFailed()){
+                Log.error("查询虚拟银行资产信息失败:{}:{}",virtualBankDirectorDTOResult.getStatus(),virtualBankDirectorDTOResult.getMessage());
+            }
+            if(virtualBankDirectorDTOResult.getList() != null && !virtualBankDirectorDTOResult.getList().isEmpty()){
+                virtualBankDirectorDTOResult.getList().forEach(bank->{
+                    if(bank.getHeterogeneousAddresses() != null &&  !bank.getHeterogeneousAddresses().isEmpty()){
+                        bank.getHeterogeneousAddresses().forEach(address->{
+                            balanceList.putIfAbsent(address.getChainId(),new HashMap<>());
+                            balanceList.get(address.getChainId()).put(address.getAddress(),new BigDecimal(address.getBalance()).setScale(ApiContext.defaultDecimals, RoundingMode.HALF_DOWN));
+                            Log.info("{}地址:{},余额:{}",address.getSymbol(),address.getAddress(),address.getBalance());
+                        });
+                    }else{
+                        Log.warn("地址:{} 未获取到异构链地址",bank.getAgentAddress());
+                    }
+                });
+            }else{
+                Log.warn("未获取到银行节点列表");
+            }
+        }catch (Throwable e){
+            Log.error("查询虚拟银行资产余额，出现异常",e);
         }
-        virtualBankDirectorDTOResult.getList().forEach(bank->{
-            bank.getHeterogeneousAddresses().forEach(address->{
-                balanceList.putIfAbsent(address.getChainId(),new HashMap<>());
-                balanceList.get(address.getChainId()).put(address.getAddress(),new BigDecimal(address.getBalance()).setScale(ApiContext.defaultDecimals));
-                Log.info("{}地址:{},余额:{}",address.getSymbol(),address.getAddress(),address.getBalance());
-            });
-        });
     }
 
 

@@ -162,7 +162,7 @@ public class RoundController extends BasicObject {
     public MeetingRound getRound(long roundIndex, long roundStartTime) {
 //        chain.getRoundLock().lock();
 //        try {
-        MeetingRound round = roundCache.get(roundIndex + ConsensusConstant.SEPARATOR + roundStartTime);
+        MeetingRound round = roundCache.get(roundIndex);
         if (null == round) {
             round = calcRound(roundIndex, roundStartTime, false);
         }
@@ -231,7 +231,7 @@ public class RoundController extends BasicObject {
         round.setPackingIndexOfRound((int) index);
         round.setDelayedSeconds(initData.getDelayedSeconds());
         if (cache) {
-            roundCache.put(round.getIndex() + ConsensusConstant.SEPARATOR + round.getStartTime(), round);
+            roundCache.put(round.getIndex(), round);
         }
         updateConsensusNetList(round);
 
@@ -359,7 +359,9 @@ public class RoundController extends BasicObject {
             round.setPackingIndexOfRound(1);
         } else {
             long delayedTime = nextPackingStartTime - roundStartTime - (nextPackingIndex - 1) * chain.getConfig().getPackingInterval();
-            round.setDelayedSeconds(delayedTime);
+            if (delayedTime > round.getDelayedSeconds()) {
+                round.setDelayedSeconds(delayedTime);
+            }
         }
         this.switchRound(round, true);
     }
@@ -375,13 +377,15 @@ public class RoundController extends BasicObject {
 
     public MeetingRound getRoundByIndex(long roundIndex) {
 //        log.info("run here");
-        MeetingRound round = this.roundCache.getRoundByIndex(roundIndex);
-        if (round != null) {
-            return round;
-        }
+
         MeetingRound currentRound = getCurrentRound();
         if (null != currentRound && currentRound.getIndex() <= roundIndex) {
             return currentRound;
+        }
+
+        MeetingRound round = this.roundCache.getRoundByIndex(roundIndex);
+        if (round != null) {
+            return round;
         }
 
         RoundInitData data = new RoundInitData();

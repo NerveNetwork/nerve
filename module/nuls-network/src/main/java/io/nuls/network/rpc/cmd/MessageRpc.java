@@ -229,25 +229,28 @@ public class MessageRpc extends BaseCmd {
             @Key(name = "list", valueType = List.class, valueElement = String.class, description = "可发送连接集合")
     }))
     public Response sendByIps(Map params) {
+        long time1, time2;
+        time1 = System.currentTimeMillis();
         List<String> rtList = new ArrayList<>();
         Map<String, Object> rtMap = new HashMap<>();
         int percent = NetworkConstant.FULL_BROADCAST_PERCENT;
+        int chainId = 0;
         String excludeNodes = "";
-        Map<String, Integer> excludeNodesMap = new HashMap<>();
+        List<String> excludeNodesList = new ArrayList<>();
         if (null != params.get("excludeNodes")) {
             excludeNodes = String.valueOf(params.get("excludeNodes"));
             String[] excludeNodeArray = excludeNodes.split(NetworkConstant.COMMA);
             for (String excludeNode : excludeNodeArray) {
-                excludeNodesMap.put(excludeNode.split(NetworkConstant.COLON)[0], 1);
+                excludeNodesList.add(excludeNode.split(NetworkConstant.COLON)[0]);
             }
         }
 
         try {
-            int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
+            chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
             List<String> ips = (List) (params.get("ips"));
-            Map<String, Integer> ipsMap = new HashMap<>();
-            for (String ip : ips) {
-                ipsMap.put(ip, 1);
+            Boolean isForward = (Boolean) (params.get("isForward"));
+            if (null == isForward) {
+                isForward = false;
             }
             String messageBodyStr = String.valueOf(params.get("messageBody"));
             byte[] messageBody = RPCUtil.decode(messageBodyStr);
@@ -269,24 +272,54 @@ public class MessageRpc extends BaseCmd {
             byte[] message = new byte[headerByte.length + messageBody.length];
             System.arraycopy(headerByte, 0, message, 0, headerByte.length);
             System.arraycopy(messageBody, 0, message, headerByte.length, messageBody.length);
-            Collection<Node> nodesCollection = nodeGroup.getAvailableNodes(false);
+            List<Node> nodesCollection = nodeGroup.getAvailableNodes(false);
             List<Node> nodes = new ArrayList<>();
+//            if (ips.size() == 1) {
             for (Node node : nodesCollection) {
-                if (null != ipsMap.get(node.getIp())) {
-                    if (excludeNodesMap.get(node.getIp()) == null) {
-                        nodes.add(node);
-                    }
-                    rtList.add(node.getIp());
+                if (!ips.contains(node.getIp())) {
+                    continue;
                 }
+                if (excludeNodesList.contains(node.getIp())) {
+                    continue;
+                }
+                nodes.add(node);
+                rtList.add(node.getIp());
             }
+//            } else if (isForward) {
+//                nodes.addAll(nodesCollection);
+//                if (nodes.size() > 15) {
+//                    int size = nodes.size() / 3;
+//                    List<Node> list = new ArrayList<>();
+//                    for (int i = 0; i < size; i++) {
+//                        list.add(nodes.remove(new Random().nextInt(nodes.size())));
+//                    }
+//                    nodes = list;
+//                }
+//            } else {
+//                nodes.addAll(nodesCollection);
+//            }
+
+            time2 = System.currentTimeMillis();
+//            LoggerUtil.logger(chainId).info("------------sendByIps find Nodes use:{} , node size:{}", (time2 - time1), nodes.size());
+            time1 = System.currentTimeMillis();
+
             if (nodes.size() > 0) {
-                NetworkEventResult result = messageManager.broadcastToNodes(message, cmd, nodes, false, percent);
-                if(nodes.size()>20&&!result.isSuccess()){
-                    System.out.println();
+                NetworkEventResult result = messageManager.broadcastToNodes(message, cmd, nodes, true, percent);
+                if (nodes.size() < ips.size() / 2) {
+                    LoggerUtil.logger(chainId).info("sendByIps [{}] nodes.size=={},ips:{}", cmd, nodes.size(), ips.size());
                 }
+            } else {
+                LoggerUtil.logger(chainId).info("FALSE sendByIps [{}] nodes.size=={},ips:{}", cmd, nodes.size(), ips.size());
             }
         } catch (Exception e) {
-            LoggerUtil.COMMON_LOG.error(e);
+            if (chainId != 0) {
+                LoggerUtil.logger(chainId).error("------------sendByIps message error");
+                LoggerUtil.logger(chainId).error(e);
+            } else {
+                LoggerUtil.COMMON_LOG.error("------------sendByIps message error");
+                LoggerUtil.COMMON_LOG.error(e);
+            }
+
             return failed(NetworkErrorCode.PARAMETER_ERROR);
         }
         rtMap.put("list", rtList);
@@ -329,12 +362,23 @@ public class MessageRpc extends BaseCmd {
                 Node availableNode = nodeGroup.getAvailableNode(nodeId);
                 if (null != availableNode) {
                     nodesList.add(availableNode);
-                } else {
-                    LoggerUtil.logger(chainId).error("cmd={},node = {} is not available!", cmd, nodeId);
+                }
+            }
+            //如果节点id不存在，则寻找相同ip的节点
+            if (nodesList.isEmpty()) {
+                List<String> ips = new ArrayList<>();
+                for (String nodeId : nodeIds) {
+                    ips.add(nodeId.split(":")[0]);
+                }
+                List<Node> list = nodeGroup.getAvailableNodes(false);
+                for (Node node : list) {
+                    if (ips.contains(node.getIp())) {
+                        nodesList.add(node);
+                    }
                 }
             }
             if (nodesList.size() > 0) {
-                messageManager.broadcastToNodes(message, cmd, nodesList, true, NetworkConstant.FULL_BROADCAST_PERCENT);
+                messageManager.broadcastToNodes(message, cmd, nodesList, false, NetworkConstant.FULL_BROADCAST_PERCENT);
             } else {
                 LoggerUtil.logger(chainId).error("cmd={},send peer number=0", cmd);
             }
@@ -408,7 +452,7 @@ public class MessageRpc extends BaseCmd {
                 }
             }
             if (nodes.size() > 0) {
-                LoggerUtil.COMMON_LOG.info("=====sendByGroupIps nodes = {},cmd={}", nodes.size(), cmd);
+//                LoggerUtil.COMMON_LOG.info("=====sendByGroupIps nodes = {},cmd={}", nodes.size(), cmd);
                 messageManager.broadcastToNodes(message, cmd, nodes, true, percent);
             } else {
                 LoggerUtil.COMMON_LOG.info("=====sendByGroupIps nodes = 0,cmd={}", cmd);

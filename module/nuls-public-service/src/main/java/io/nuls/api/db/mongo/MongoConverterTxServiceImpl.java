@@ -1,15 +1,20 @@
 package io.nuls.api.db.mongo;
 
 import com.mongodb.client.model.Filters;
+import io.nuls.api.constant.ApiConstant;
+import io.nuls.api.constant.ConverterTxType;
+import io.nuls.api.constant.DBTableConstant;
 import io.nuls.api.db.ConverterTxService;
 import io.nuls.api.model.po.ConverterTxInfo;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
-import java.util.List;
-import java.util.Objects;
+import java.math.BigInteger;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static io.nuls.api.constant.DBTableConstant.CONVERTER_TX_TABLE;
 
@@ -49,6 +54,25 @@ public class MongoConverterTxServiceImpl implements ConverterTxService {
         Objects.requireNonNull(txHash,"txHash can't be null");
         Document doc = mongoDBService.findOne(CONVERTER_TX_TABLE + chainId,Filters.eq("_id",txHash));
         return doc == null ? null : DocumentTransferTool.toInfo(doc,"txHash",ConverterTxInfo.class);
+    }
+
+    @Override
+    public Map<ConverterTxType,BigInteger> aggTotal(int chainId, int assetId) {
+        Bson match = Filters.and(Filters.eq("assetChainId",chainId),Filters.eq("assetId",assetId));
+        Map<ConverterTxType,BigInteger> res = new HashMap<>(2);
+        mongoDBService.query(CONVERTER_TX_TABLE + chainId,match)
+            .stream().forEach(doc->{
+                ConverterTxInfo info = DocumentTransferTool.toInfo(doc,"txHash",ConverterTxInfo.class);
+                ConverterTxType converterTxType = ConverterTxType.valueOf(info.getConverterType());
+                res.compute(converterTxType,(key,old)->{
+                    if(old == null){
+                        return info.getAmount();
+                    }else{
+                        return info.getAmount().add(old);
+                    }
+                });
+        });
+        return res;
     }
 
     public void setMongoDBService(MongoDBService mongoDBService) {

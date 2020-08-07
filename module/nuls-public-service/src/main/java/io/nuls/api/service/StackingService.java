@@ -79,7 +79,7 @@ public class StackingService {
                 .findFirst()
                 .orElseThrow(()-> new IllegalArgumentException("not support symbol :" + symbol + ":" + timeType )).getValue();
 
-        return rate.multiply(baseInterest);
+        return new BigDecimal(Math.sqrt(rate.doubleValue())).multiply(baseInterest);
     }
 
     /**

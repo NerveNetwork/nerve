@@ -72,11 +72,11 @@ public class BusinessGroupManager {
     }
 
     public void printGroupsInfo(int chainId, String moduleName, String flag) {
-        String key = chainId + NetworkConstant.DOWN_LINE + moduleName + NetworkConstant.DOWN_LINE + flag;
-        Map<String, String> map = businessGroupMap.get(key);
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            LoggerUtil.logger(chainId).info("{} ip={}", key, entry.getKey());
-        }
+//        String key = chainId + NetworkConstant.DOWN_LINE + moduleName + NetworkConstant.DOWN_LINE + flag;
+//        Map<String, String> map = businessGroupMap.get(key);
+//        for (Map.Entry<String, String> entry : map.entrySet()) {
+//            LoggerUtil.logger(chainId).info("{} ip={}", key, entry.getKey());
+//        }
     }
 
     public void removeNodes(int chainId, String moduleName, String flag, List<String> ips) {

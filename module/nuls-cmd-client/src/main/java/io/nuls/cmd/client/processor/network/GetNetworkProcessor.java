@@ -29,11 +29,16 @@ package io.nuls.cmd.client.processor.network;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.network.NetworkProvider;
+import io.nuls.base.api.provider.network.facade.RemoteNodeInfo;
 import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.processor.CommandProcessor;
 import io.nuls.cmd.client.processor.CommandGroup;
 import io.nuls.core.core.annotation.Component;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author: zhoulijun
@@ -67,27 +72,46 @@ public class GetNetworkProcessor implements CommandProcessor {
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,1);
-        checkArgs(("info".equals(args[1]) || "nodes".equals(args[1])),getCommandDescription());
+        checkArgsNumber(args, 1);
+        checkArgs(("info".equals(args[1]) || "nodes".equals(args[1])), getCommandDescription());
         return true;
     }
 
     @Override
     public CommandResult execute(String[] args) {
         String cmd = args[1];
-        Result<?> result;
-        if("info".equals(cmd)){
+        Result result;
+        if ("info".equals(cmd)) {
             result = networkProvider.getInfo();
             if (result.isFailed()) {
                 return CommandResult.getFailed(result);
             }
             return CommandResult.getSuccess(result);
-        }else{
+        } else {
             result = networkProvider.getNodesInfo();
             if (result.isFailed()) {
                 return CommandResult.getFailed(result);
             }
-            return CommandResult.getResult(CommandResult.dataTransformList(result));
+            List<RemoteNodeInfo> list = (List<RemoteNodeInfo>) result.getList();
+            List<String> resultList = new ArrayList<>();
+            for (RemoteNodeInfo info : list) {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(info.getBlockHeight());
+                stringBuilder.append("-");
+                stringBuilder.append(info.getBlockHash());
+                stringBuilder.append("-");
+                stringBuilder.append(info.getPeer());
+                resultList.add(stringBuilder.toString());
+            }
+
+            Collections.sort(resultList);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String str : resultList) {
+                stringBuilder.append(str);
+                stringBuilder.append("\n");
+            }
+            stringBuilder.append("total count:" + resultList.size());
+            return new CommandResult().setSuccess(true).setMessage(stringBuilder.toString());
         }
 
     }

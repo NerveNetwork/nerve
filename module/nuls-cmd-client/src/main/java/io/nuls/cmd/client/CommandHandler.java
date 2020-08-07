@@ -114,6 +114,7 @@ public class CommandHandler implements InitializingBean {
         register(getBean(SetAliasProcessor.class));
         //transfer
         register(getBean(TransferProcessor.class));
+//        register(getBean(BatchTransferProcessor.class));
 //        //批量交易测试命令
 //        register(getBean(TransferTestProcessor.class));
         //transfer by alias
@@ -148,18 +149,18 @@ public class CommandHandler implements InitializingBean {
         register(getBean(CreateAgentProcessor.class));
 //        //stop consensus node
         register(getBean(StopAgentProcessor.class));
-//
-//        //deposit to agent
-//        register(getBean(ChangeAgentDepositProcessor.AppendAgentDeposit.class));
-//        register(getBean(ChangeAgentDepositProcessor.ReduceAgentDeposit.class));
-//
-//        //staking
-//        register(getBean(DepositProcessor.Deposit.class));
-//        register(getBean(DepositProcessor.DepositFixed.class));
-//        register(getBean(WithdrawProcessor.class));
-//
-//        register(getBean(GetAgentsProcessor.class));
-//        register(getBean(GetAgentInfoProcessor.class));
+
+        //deposit to agent
+        register(getBean(ChangeAgentDepositProcessor.AppendAgentDeposit.class));
+        register(getBean(ChangeAgentDepositProcessor.ReduceAgentDeposit.class));
+
+        //staking
+        register(getBean(DepositProcessor.Deposit.class));
+        register(getBean(DepositProcessor.DepositFixed.class));
+        register(getBean(WithdrawProcessor.class));
+
+        register(getBean(GetAgentsProcessor.class));
+        register(getBean(GetAgentInfoProcessor.class));
         /**
          * system
          */

@@ -258,7 +258,7 @@ public class NulsLogger {
      * @return 日志记录点的全路径
      */
 
-    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.sss");
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     private String getLogTrace() {
         StringBuilder logTrace = new StringBuilder("");

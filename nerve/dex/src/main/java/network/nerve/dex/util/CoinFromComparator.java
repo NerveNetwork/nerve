@@ -2,6 +2,7 @@ package network.nerve.dex.util;
 
 import io.nuls.base.data.CoinFrom;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 public class CoinFromComparator implements Comparator<CoinFrom> {
@@ -23,11 +24,21 @@ public class CoinFromComparator implements Comparator<CoinFrom> {
         } else if (o1.getAmount().compareTo(o2.getAmount()) > 0) {
             return 1;
         }
-        if (o1.getAddress().hashCode() < o2.getAddress().hashCode()) {
+
+        if (o1.getAssetsChainId() < o2.getAssetsChainId()) {
             return -1;
-        } else if (o1.getAddress().hashCode() > o2.getAddress().hashCode()) {
+        } else if (o1.getAssetsChainId() > o2.getAssetsChainId()) {
             return 1;
         }
-        return 0;
+        if (o1.getAssetsId() < o2.getAssetsId()) {
+            return -1;
+        } else if (o1.getAssetsId() > o2.getAssetsId()) {
+            return 1;
+        }
+        int i = Arrays.compare(o1.getNonce(), o2.getNonce());
+        if (i != 0) {
+            return i;
+        }
+       return Arrays.compare(o1.getAddress(), o2.getAddress());
     }
 }

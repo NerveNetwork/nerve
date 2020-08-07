@@ -104,6 +104,7 @@ public class CommonUtil {
             boolean isMatchSign = false;
             validAddress = AddressTool.getAddressString(signature.getPublicKey(), chain.getChainId());
             if(signedList.contains(validAddress)){
+                iterator.remove();
                 break;
             }
             for (String address:addressList) {

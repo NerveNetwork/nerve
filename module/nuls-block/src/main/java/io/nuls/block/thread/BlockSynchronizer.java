@@ -175,34 +175,6 @@ public class BlockSynchronizer implements Runnable {
     }
 
     /**
-     * 回滚区块到指定高度
-     */
-    private void rollbackToHeight(long latestHeight, int chainId) {
-        BlockConfig blockConfig = SpringLiteContext.getBean(BlockConfig.class);
-        long height = blockConfig.getRollbackHeight();
-        if (height > 0) {
-            RollbackStorageService rollbackService = SpringLiteContext.getBean(RollbackStorageService.class);
-            RollbackInfoPo po = rollbackService.get(chainId);
-            if (po == null || po.getHeight() != height) {
-                if (latestHeight > height + 1000) {
-                    ContextManager.getContext(chainId).getLogger().warn("If the rollback height is greater than 1000,p;ease replace the data package");
-                    System.exit(1);
-                }
-                while (latestHeight >= height) {
-                    if (!blockService.rollbackBlock(chainId, latestHeight--, true)) {
-                        latestHeight++;
-                    }
-                    if (latestHeight == 0) {
-                        break;
-                    }
-                }
-                po = new RollbackInfoPo(height);
-                rollbackService.save(po, chainId);
-            }
-        }
-    }
-
-    /**
      * 等待网络稳定
      * 每隔5秒请求一次getAvailableNodes,连续5次节点数大于minNodeAmount就认为网络稳定
      */
@@ -218,7 +190,7 @@ public class BlockSynchronizer implements Runnable {
         int min = 0;
         if (firstStart) {
             firstStart = false;
-            min = 5;
+            min = 3;
         }
         while (true) {
             availableNodes = NetworkCall.getAvailableNodes(chainId);
@@ -404,7 +376,7 @@ public class BlockSynchronizer implements Runnable {
         nodeList.forEach(e -> statusMap.put(e.getId(), e));
         params.setNodeMap(statusMap);
         Node node = nodeList.get(0);
-        Log.info("统计比例："+div+", height:"+node.getHeight());
+        Log.info("统计比例：" + div + ", height:" + node.getHeight());
         params.setNetLatestHash(node.getHash());
         params.setNetLatestHeight(node.getHeight());
 
@@ -480,27 +452,14 @@ public class BlockSynchronizer implements Runnable {
                 return CONSISTENT;
             }
         } else {
-            return checkRollback(0, params);
+//            return checkRollback(0, params);
+            try {
+                Thread.sleep(10000L);
+            } catch (InterruptedException e) {
+                Log.error(e);
+            }
+            return checkLocalBlock(params);
         }
-    }
-
-    private LocalBlockStateEnum checkRollback(int rollbackCount, BlockDownloaderParams params) {
-        //每次最多回滚maxRollback个区块,等待下次同步,这样可以避免被恶意节点攻击,大量回滚正常区块.
-        ChainParameters parameters = ContextManager.getContext(chainId).getParameters();
-        if (params.getLocalLatestHeight() == 0) {
-            return CONFLICT;
-        }
-        if (rollbackCount >= parameters.getMaxRollback()) {
-            return UNCERTAINTY;
-        }
-        blockService.rollbackBlock(chainId, params.getLocalLatestHeight(), true);
-        BlockHeader latestBlockHeader = blockService.getLatestBlockHeader(chainId);
-        params.setLocalLatestHeight(latestBlockHeader.getHeight());
-        params.setLocalLatestHash(latestBlockHeader.getHash());
-        if (checkHashEquality(params)) {
-            return INCONSISTENT;
-        }
-        return checkRollback(rollbackCount + 1, params);
     }
 
     /**

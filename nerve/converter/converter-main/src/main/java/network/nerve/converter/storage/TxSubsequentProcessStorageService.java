@@ -25,7 +25,6 @@
 package network.nerve.converter.storage;
 
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.po.MergedComponentCallPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 
 import java.util.List;
@@ -44,22 +43,4 @@ public interface TxSubsequentProcessStorageService {
     void delete(Chain chain, String txhash);
 
     List<TxSubsequentProcessPO> findAll(Chain chain);
-
-    /**
-     * 记录调用异构链时合并的交易
-     * key为合并交易列表的第一个交易hash, 用于异构链识别
-     * @param chain
-     * @param hash
-     * @param po
-     * @return
-     */
-    boolean saveMergeComponentCall(Chain chain, String hash, MergedComponentCallPO po);
-
-    /**
-     *  根据合并时的hash 来获取合并的各独立交易
-     * @param chain
-     * @param hash
-     * @return
-     */
-    MergedComponentCallPO findMergedTx(Chain chain, String hash);
 }

@@ -130,12 +130,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         if (timeList.size() == 0 && heightList.size() == 0) {
             return true;
         }
-        BigInteger addTimeAmount = BigInteger.ZERO;
-        if (LedgerUtil.getVersion(addressChainId) > 1) {
-            addTimeAmount = unFreezeLockTimeStateV2(timeList);
-        } else {
-            addTimeAmount = unFreezeLockTimeState(timeList);
-        }
+        BigInteger addTimeAmount = unFreezeLockTimeStateV2(timeList);
 
         BigInteger addHeightAmount = unFreezeLockHeightState(addressChainId, heightList, accountState);
         accountState.addTotalToAmount(addTimeAmount);

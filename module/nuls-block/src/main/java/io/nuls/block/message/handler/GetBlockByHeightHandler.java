@@ -25,6 +25,7 @@ import io.nuls.base.data.Block;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.BlockMessage;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.message.HeightMessage;
@@ -48,19 +49,6 @@ import static io.nuls.block.constant.CommandConstant.GET_BLOCK_BY_HEIGHT_MESSAGE
 @Component("GetBlockByHeightHandlerV1")
 public class GetBlockByHeightHandler implements MessageProcessor {
 
-    @Autowired
-    private BlockService service;
-
-    private void sendBlock(int chainId, Block block, String nodeId, NulsHash requestHash) {
-        BlockMessage message = new BlockMessage();
-        message.setRequestHash(requestHash);
-        if (block != null) {
-            message.setBlock(block);
-        }
-        message.setSyn(false);
-        NetworkCall.sendToNode(chainId, message, nodeId, BLOCK_MESSAGE);
-    }
-
     @Override
     public String getCmd() {
         return GET_BLOCK_BY_HEIGHT_MESSAGE;
@@ -72,9 +60,8 @@ public class GetBlockByHeightHandler implements MessageProcessor {
         if (message == null) {
             return;
         }
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        long height = message.getHeight();
-        logger.debug("recieve " + message + " from node-" + nodeId + ", height:" + height);
-        sendBlock(chainId, service.getBlock(chainId, height), nodeId, NulsHash.calcHash(ByteUtils.longToBytes(height)));
+        message.setChainId(chainId);
+        message.setNodeId(nodeId);
+        RunnableManager.offerGetBlockMsg(message);
     }
 }

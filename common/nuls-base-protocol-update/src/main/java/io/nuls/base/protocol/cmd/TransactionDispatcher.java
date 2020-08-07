@@ -170,6 +170,9 @@ public final class TransactionDispatcher extends BaseCmd {
             for (Transaction tx : txs) {
                 List<Transaction> transactions = map.computeIfAbsent(processor.getType(), k -> new ArrayList<>());
                 if (tx.getType() == processor.getType()) {
+                    if (null != blockHeader) {
+                        tx.setBlockHeight(blockHeader.getHeight());
+                    }
                     transactions.add(tx);
                 }
             }

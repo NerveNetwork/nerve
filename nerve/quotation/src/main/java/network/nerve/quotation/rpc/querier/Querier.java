@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
+import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
+
 /**
  * 价格查询器
  * @author: Loki
@@ -38,7 +40,7 @@ import java.time.Duration;
 public interface Querier {
 
     HttpClient CLIENT = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofMillis(5000))
+            .connectTimeout(Duration.ofMillis(TIMEOUT_MILLIS))
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
     /**

@@ -106,7 +106,7 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
         }else if (usdValue.compareTo(BigDecimal.ZERO) == 0){
             rate = BigDecimal.ZERO;
         }else {
-            rate = symbolUsdTxTotalMap.get(symbol).divide(allSymbolTxTotalUsdValue,2, RoundingMode.HALF_UP);
+            rate = symbolUsdTxTotalMap.get(symbol).divide(allSymbolTxTotalUsdValue,4, RoundingMode.HALF_DOWN);
         }
         SymbolUsdPercentDTO res = new SymbolUsdPercentDTO();
         res.setPer(rate);

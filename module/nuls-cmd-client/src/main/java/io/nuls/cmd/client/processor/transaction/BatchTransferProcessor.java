@@ -27,18 +27,29 @@ package io.nuls.cmd.client.processor.transaction;
 
 
 import io.nuls.base.api.provider.Result;
+import io.nuls.base.api.provider.ServiceManager;
+import io.nuls.base.api.provider.transaction.TransferService;
 import io.nuls.base.api.provider.transaction.facade.TransferReq;
 import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.ParameterException;
 import io.nuls.cmd.client.config.Config;
 import io.nuls.cmd.client.processor.CommandProcessor;
+import io.nuls.cmd.client.utils.AssetsUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.log.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * @author: zhoulijun
@@ -78,133 +89,139 @@ public class BatchTransferProcessor extends TransactionBaseProcessor implements 
         return true;
     }
 
-    private TransferReq buildTransferReq(String[] args) {
-        String formAddress = args[1];
-        String toAddress = args[2];
-        BigInteger amount = config.toSmallUnit(new BigDecimal(args[3]));
-        String password;
-        if(args.length == 6){
-            password = args[5];
-        }else{
-            password = getPwd("\nEnter your account password:");
-        }
-        TransferReq.TransferReqBuilder builder =
-                new TransferReq.TransferReqBuilder(config.getChainId(),config.getAssetsId())
-                        .addForm(formAddress,password, amount)
-                        .addTo(toAddress,amount);
-        if(args.length == 5){
-            builder.setRemark(args[4]);
-        }
-        return builder.build(new TransferReq());
-    }
-
     @Override
     public CommandResult execute(String[] args) {
-        String filePath = args[3];
+        String fromAddress = args[1];
+        String filePath = args[2];
+        String remark = "";
+        int assetChainId = config.getChainId();
+        int assetId = config.getAssetsId();
+        if (args.length > 3){
+            assetChainId = Integer.parseInt(args[3]);
+        }
+        if (args.length > 4){
+            assetId = Integer.parseInt(args[4]);
+        }
+        if (args.length > 5){
+            remark = args[5];
+        }
         File file = new File(filePath);
         if(!file.exists()){
             ParameterException.throwParameterException("to address file not exists");
         }
-
-        Result<String> result = transferService.transfer(buildTransferReq(args));
-        if (result.isFailed()) {
-            return CommandResult.getFailed(result);
+        Integer decimalInt = AssetsUtil.getAssetDecimal(assetChainId, assetId);
+        List<Item> list = null;
+        try {
+            list = read(file).stream().map(d-> new Item(d.getAddress(),config.toSmallUnit(new BigDecimal(d.getAmount()),decimalInt))).collect(Collectors.toList());
+        } catch (IOException e) {
+            ParameterException.throwParameterException("read to address file error");
         }
-        return CommandResult.getSuccess(result.getData());
+        List<String> hash = sendNVT(list,fromAddress,getPwd(),assetChainId,assetId,remark);
+        return CommandResult.getSuccess("done \n" + hash.stream().reduce("",(d1,d2)->d1 + "," + d2));
     }
 
-//    public static class Item {
-//        String address;
-//        BigInteger amount;
-//
-//        public Item(String address, BigInteger amount) {
-//            this.address = address;
-//            this.amount = amount;
-//        }
-//
-//        public String getAddress() {
-//            return address;
-//        }
-//
-//        public void setAddress(String address) {
-//            this.address = address;
-//        }
-//
-//        public BigInteger getAmount() {
-//            return amount;
-//        }
-//
-//        public void setAmount(BigInteger amount) {
-//            this.amount = amount;
-//        }
-//    }
-//
-//    private void send(List<Item> to,String fromAddress){
-//        TransferService transferService = ServiceManager.get(TransferService.class);
-//        StringBuilder buf = new StringBuilder();
-//        to = to.stream().filter(d->
-//                !d.getAddress().equals(fromAddress)
-//        ).collect(Collectors.toList());
-//        to.forEach(toAddress->{
-//            buf.append(toAddress.getAddress()).append(":").append(toAddress.getAmount()).append("\n");
-//        });
-//        BigInteger fromAmount = to.stream().map(d->d.getAmount()).reduce(BigInteger::add).orElse(BigInteger.ZERO);
-//        if(fromAmount.equals(BigInteger.ZERO)){
-//            Log.error("to is empty");
-//            System.exit(0);
-//        }
-////        TransferReq.TransferReqBuilder builder =
-////                new TransferReq.TransferReqBuilder(CHAIN_ID, NVT_ASSET_ID)
-////                        .addForm(NVT_CHAIN_ID, NVT_ASSET_ID, fromAddress, password, fromAmount);
-////        to.forEach(toAddress->{
-////            if(toAddress.getAddress().equals(fromAddress)){
-////                return ;
-////            }
-////            builder.addTo(NVT_CHAIN_ID, NVT_ASSET_ID, toAddress.getAddress(), toAddress.getAmount());
-////        });
+    public static class Item {
+        String address;
+        BigInteger amount;
+
+        public Item(String address, BigInteger amount) {
+            this.address = address;
+            this.amount = amount;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public void setAddress(String address) {
+            this.address = address;
+        }
+
+        public BigInteger getAmount() {
+            return amount;
+        }
+
+        public void setAmount(BigInteger amount) {
+            this.amount = amount;
+        }
+    }
+
+    private String send(List<Item> to, String fromAddress, String password, int assetChainId, int assetId, String remark){
+        TransferService transferService = ServiceManager.get(TransferService.class);
+        StringBuilder buf = new StringBuilder();
+        to = to.stream().filter(d->
+                !d.getAddress().equals(fromAddress)
+        ).collect(Collectors.toList());
+        to.forEach(toAddress->{
+            buf.append(toAddress.getAddress()).append(":").append(toAddress.getAmount()).append("\n");
+        });
+        BigInteger fromAmount = to.stream().map(d->d.getAmount()).reduce(BigInteger::add).orElse(BigInteger.ZERO);
+        if(fromAmount.equals(BigInteger.ZERO)){
+            Log.error("to is empty");
+            System.exit(0);
+        }
+        TransferReq.TransferReqBuilder builder =
+                new TransferReq.TransferReqBuilder(config.getChainId(), config.getAssetsId())
+                        .addForm(assetChainId, assetId, fromAddress, password, fromAmount);
+        to.forEach(toAddress->{
+            if(toAddress.getAddress().equals(fromAddress)){
+                return ;
+            }
+            builder.addTo(assetChainId, assetId, toAddress.getAddress(), toAddress.getAmount());
+        });
+        builder.setRemark(remark);
+        Log.info("{}",builder.build(new TransferReq()));
+        return "a";
 //        Result<String> result = transferService.transfer(builder.build(new TransferReq()));
 //        if(result.isFailed()){
 //            Log.error("转账失败,原因:{}",result.getMessage());
 //            Log.error("{}",result);
 //            Log.error("失败地址列表:\n{}",buf.toString());
-//            System.exit(0);
+//            return null;
 //        }
 //        Log.info("转账成功:hash:{}\n{}",result.getData(),buf.toString());
-//    }
-//
-//    private List<Item> read(File file) throws IOException {
-//        BufferedReader reader = new BufferedReader(new FileReader(file));
-//        String line = reader.readLine();
-//        List<Item> res = new ArrayList<>();
-//        while(line != null) {
-//            String[] key = line.split(":");
-//            String address = key[0];
-//            BigInteger amount = new BigInteger(key[1]);
-//            res.add(new Item(address,amount));
-//            line = reader.readLine();
-//        }
-//        return res;
-//    }
-//
-//    static void sendNVT(List<Item> list,String fromAddress) {
-//        int index=0;
-//        int toSize=500;
-//        while(true){
-//            if(index >= list.size()){
-//                break;
-//            }
-//            int targetIndex = index + toSize;
-//            if(targetIndex > list.size()){
-//                targetIndex = list.size();
-//            }
-//            List<Item> temp = list.subList(index,targetIndex);
-//            index += toSize;
-//            send(temp,fromAddress);
-//            try {
-//                TimeUnit.MILLISECONDS.sleep(2L);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+//        return result.getData();
+    }
+
+    private List<Item> read(File file) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+        String line = reader.readLine();
+        List<Item> res = new ArrayList<>();
+        while(line != null) {
+            String[] key = line.split(":");
+            String address = key[0];
+            BigInteger amount = new BigInteger(key[1]);
+            res.add(new Item(address,amount));
+            line = reader.readLine();
+        }
+        return res;
+    }
+
+    private List<String> sendNVT(List<Item> list,String fromAddress,String password,int assetChainId,int assetId,String remark) {
+        int index=0;
+        int toSize=50;
+        List<String> hash = new ArrayList<>();
+        while(true){
+            if(index >= list.size()){
+                break;
+            }
+            int targetIndex = index + toSize;
+            if(targetIndex > list.size()){
+                targetIndex = list.size();
+            }
+            List<Item> temp = list.subList(index,targetIndex);
+            index += toSize;
+            String txHash = send(temp,fromAddress,password,assetChainId,assetId,remark);
+            if(txHash == null){
+                return hash;
+            }
+            hash.add(txHash);
+            try {
+                TimeUnit.MILLISECONDS.sleep(2L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return hash;
+    }
 }

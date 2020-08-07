@@ -135,7 +135,7 @@ public class ConnectionManager extends BaseManager {
         //发送握手
         VersionMessage versionMessage = MessageFactory.getInstance().buildVersionMessage(node, nodeGroup.getMagicNumber());
 
-        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------主动发送握手连接，ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
+//        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------主动发送握手连接，ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
         versionMessage.getMsgBody().setReverseCheck(NetworkContext.reverseCheck);
         MessageManager.getInstance().sendHandlerMsg(versionMessage, node, true);
     }
@@ -195,7 +195,7 @@ public class ConnectionManager extends BaseManager {
             nodesContainer.getDisconnectNodes().put(node.getId(), node);
             nodesContainer.getConnectedNodes().remove(node.getId());
             BusinessGroupManager.getInstance().removeNode(node.getIp());
-//            Log.info("node {} disconnect !", node.getId());
+            Log.info("~~~断开~~~~AVAILABLE out node {} disconnect !", node.getId());
         } else {
             // 如果是未连接成功，标记为连接失败，失败次数+1，记录当前失败时间，供下次尝试连接使用
             if (node.getConnectStatus() == NodeConnectStatusEnum.CONNECTED) {

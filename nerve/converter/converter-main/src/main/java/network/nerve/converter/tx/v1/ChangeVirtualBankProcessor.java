@@ -125,7 +125,12 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain);
+            List<AgentBasic> listAgent;
+            if(null != blockHeader){
+                listAgent = ConsensusCall.getAgentList(chain, blockHeader.getHeight());
+            } else {
+                listAgent = ConsensusCall.getAgentList(chain);
+            }
             // 当前最新有资格成为虚拟银行的(非种子)节点
             List<AgentBasic> listNewestVirtualBank = virtualBankService.calcNewestVirtualBank(chain, listAgent);
             // 区块内业务重复交易检查
@@ -204,6 +209,9 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         }
                         if (!isQuitVirtualBank(chain, listAgent, listNewestVirtualBank, agentAddress)) {
                             failsList.add(tx);
+                            long h = null == blockHeader ? -1 : blockHeader.getHeight();
+                            log.error(h + " - orginalListAgent: " + JSONUtils.obj2json(listAgent) + ", listNewestVirtualBank: " + JSONUtils.obj2json(listNewestVirtualBank));
+                            log.error(h + "- MapVirtualBank: " + JSONUtils.obj2json(chain.getMapVirtualBank()));
                             // 不满足退出虚拟银行节点条件
                             errorCode = ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getMsg());
@@ -237,6 +245,9 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         boolean rs = isJoinVirtualBank(chain, listAgent, listNewestVirtualBank, agentAddress);
                         if (!rs) {
                             failsList.add(tx);
+                            long h = null == blockHeader ? -1 : blockHeader.getHeight();
+                            log.error(h + " - orginalListAgent: " + JSONUtils.obj2json(listAgent) + ", listNewestVirtualBank: " + JSONUtils.obj2json(listNewestVirtualBank));
+                            log.error(h + "- MapVirtualBank: " + JSONUtils.obj2json(chain.getMapVirtualBank()));
                             // 未达到进入虚拟银行的条件
                             errorCode = ConverterErrorCode.CAN_NOT_JOIN_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.CAN_NOT_JOIN_VIRTUAL_BANK.getMsg());
@@ -453,7 +464,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
-                    virtualBankStorageService.save(chain, director);
+                    virtualBankStorageService.update(chain, director);
                     virtualBankAllHistoryStorageService.save(chain, director);
                     chain.getLogger().debug("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
                             director.getAgentAddress(), hInterface.getChainId(), director.getHeterogeneousAddrMap().get(hInterface.getChainId()));

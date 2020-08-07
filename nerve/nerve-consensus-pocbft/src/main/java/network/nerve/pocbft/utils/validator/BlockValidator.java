@@ -22,6 +22,7 @@ import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.utils.enumeration.PunishReasonEnum;
 import network.nerve.pocbft.utils.manager.*;
 import network.nerve.pocbft.v1.RoundController;
+import network.nerve.pocbft.v1.utils.RoundUtils;
 
 import java.io.IOException;
 import java.util.*;
@@ -102,7 +103,7 @@ public class BlockValidator {
             throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
 
-        RoundController roundController = SpringLiteContext.getBean(RoundController.class);
+        RoundController roundController = RoundUtils.getRoundController();
         if (null == roundController) {
             throw new NulsException(ConsensusErrorCode.BLOCK_ROUND_VALIDATE_ERROR);
         }
@@ -202,7 +203,9 @@ public class BlockValidator {
                     if (null == item) {
                         item = currentRound.getPreRound().getMemberByAgentAddress(address);
                     }
-                    if (DoubleUtils.compare(item.getAgent().getRealCreditVal(), ConsensusConstant.RED_PUNISH_CREDIT_VAL) <= 0) {
+                    if (DoubleUtils.compare(item.getAgent().getRealCreditVal(), ConsensusConstant.RED_PUNISH_CREDIT_VAL) <= 0 &&
+                            //如果已经红牌了，就不需要再来一次了
+                            item.getAgent().getDelHeight() <= 0) {
                         punishAddress.add(AddressTool.getStringAddressByBytes(item.getAgent().getAgentAddress()));
                     }
                 }

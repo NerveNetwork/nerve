@@ -35,7 +35,24 @@ import java.util.Map;
  */
 public interface VirtualBankStorageService {
 
+    /**
+     * 如需保存一个已存在对象, 直接使用update方法, 否则会是order产生错误数据
+     *
+     * @param chain
+     * @param virtualBankDirector
+     * @return
+     */
     boolean save(Chain chain, VirtualBankDirector virtualBankDirector);
+
+    /**
+     * 更新除order以外的所有数据, 如果更新一个不存在的对象, 则直接save该对象
+     * @param chain
+     * @param virtualBankDirector
+     * @return
+     */
+    boolean update(Chain chain, VirtualBankDirector virtualBankDirector);
+
+
 
     VirtualBankDirector findBySignAddress(Chain chain, String address);
 

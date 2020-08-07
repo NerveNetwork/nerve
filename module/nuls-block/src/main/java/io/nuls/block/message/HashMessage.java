@@ -41,6 +41,8 @@ public class HashMessage extends BaseBusinessMessage {
     private NulsHash requestHash;
 
     private long height;
+    private int chainId;
+    private String nodeId;
 
     public HashMessage() {
     }
@@ -101,5 +103,21 @@ public class HashMessage extends BaseBusinessMessage {
         return "HashMessage{" +
                 "requestHash=" + requestHash +
                 '}';
+    }
+
+    public void setChainId(int chainId) {
+        this.chainId = chainId;
+    }
+
+    public int getChainId() {
+        return chainId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
     }
 }

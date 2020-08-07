@@ -49,5 +49,6 @@ public interface ConverterCmdConstant {
     String BROADCAST_PROPOSAL = "cv_broadcast_proposal";
     String VOTE_PROPOSAL = "cv_voteProposal";
     String RESET_VIRTUAL_BANK = "cv_resetVirtualBank";
+    String DISQUALIFICATION = "cv_disqualification";
 
 }

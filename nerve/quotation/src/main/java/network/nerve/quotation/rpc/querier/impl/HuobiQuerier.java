@@ -31,11 +31,13 @@ import network.nerve.quotation.rpc.querier.Querier;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
+
+import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
 
 /**
  * Huobi Quotes Latest
@@ -49,38 +51,34 @@ public class HuobiQuerier implements Querier {
     /**
      * 获取交易对价格接口
      */
-    private final String CMD = "/market/tickers";
+    private final String CMD = "/market/detail/merged?symbol=";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        chain.getLogger().info("HuobiQuerier, 取价anchorToken:{}", anchorToken);
         String symbol = (anchorToken.replace("-","")).toLowerCase();
-        String url = baseurl + CMD;
+        String url = baseurl + CMD + symbol;
         try {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
-                    .timeout(Duration.ofMillis(5000))
+                    .timeout(Duration.ofMillis(TIMEOUT_MILLIS))
                     .build();
             HttpResponse<String> response =
                     CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
-            if(response.statusCode() != 200){
-                chain.getLogger().error("调用{}接口, Huobi获取价格失败, statusCode:{}", url, response.statusCode());
+            Map<String, Object> data = JSONUtils.json2map(response.body());
+            String status = data.get("status").toString();
+            if(!"ok".equals(status)){
+                chain.getLogger().error("Huobi 调用{}接口, Huobi获取价格失败, status:{}, {}", url, status, JSONUtils.obj2json(data));
                 return null;
             }
-            Map<String, Object> responseDate = JSONUtils.json2map(response.body());
-            List<Map<String, Object>> dataList = (List) responseDate.get("data");
-            for (Map<String, Object> map : dataList) {
-                if (symbol.equals(map.get("symbol").toString())) {
-                    BigDecimal res = new BigDecimal(String.valueOf(map.get("close")));
-                    chain.getLogger().info("Huobi获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
-                    return res;
-                }
-            }
-            chain.getLogger().error("调用{}接口Huobi获取价格失败, 没有找到交易对[{}]价格", url, symbol.toUpperCase());
+            Map<String, Object> tick = (Map<String, Object>) data.get("tick");
+            BigDecimal res = new BigDecimal(String.valueOf(tick.get("close")));
+            chain.getLogger().info("Huobi 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            return res;
+        } catch (HttpConnectTimeoutException e) {
+            chain.getLogger().error("Huobi, 调用接口 {}, anchorToken:{} 超时", url, anchorToken);
             return null;
         } catch (Throwable e) {
-            chain.getLogger().error("调用{}接口Huobi获取价格失败", url);
-            chain.getLogger().error(e);
+            chain.getLogger().error("Huobi, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
             return null;
         }
     }

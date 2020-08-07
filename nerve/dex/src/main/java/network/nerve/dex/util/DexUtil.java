@@ -230,8 +230,8 @@ public class DexUtil {
     private static void addDealCoinTo(Map<String, Object> map, CoinData coinData, CoinTradingPo tradingPo,
                                       BigInteger quoteAmount, TradingOrderPo buyOrder,
                                       BigInteger baseAmount, TradingOrderPo sellOrder) {
-        //1.首先计算买卖双方各自需要支付的系统手续费，默认系统手续费为 3/10000
-        //若计算出手续费小于资产最小支持位数时，默认收取最小支持位数为手续费
+        //1.首先计算买卖双方各自需要支付的系统手续费，默认系统手续费为 2/10000
+        //若计算出手续费小于资产最小支持位数时，默认收取资产最小单位为手续费
 
         //卖方需要支付的系统手续费
         BigDecimal sellSysFee = new BigDecimal(quoteAmount).multiply(DexContext.sysFeeScaleDecimal).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
@@ -245,50 +245,75 @@ public class DexUtil {
         }
 
         //2.若委托单上有设置运营节点收取手续费地址，也需要计算
+        //卖方需要支付的节点手续费
         BigDecimal sellNodeFee = BigDecimal.ZERO;
-        if (sellOrder.getFeeAddress() != null && sellOrder.getFeeAddress().length > 0 && buyOrder.getFeeScale() > 0) {
-            sellNodeFee = new BigDecimal(quoteAmount).multiply(new BigDecimal(buyOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
+        if (sellOrder.getFeeAddress() != null && sellOrder.getFeeAddress().length > 0 && sellOrder.getFeeScale() > 0) {
+            sellNodeFee = new BigDecimal(quoteAmount).multiply(new BigDecimal(sellOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
             if (sellNodeFee.compareTo(BigDecimal.ONE) < 0) {
                 sellNodeFee = BigDecimal.ONE;
             }
         }
+        //买方需要支付的节点手续费
         BigDecimal buyNodeFee = BigDecimal.ZERO;
-        if (buyOrder.getFeeAddress() != null && buyOrder.getFeeAddress().length > 0 && sellOrder.getFeeScale() > 0) {
-            buyNodeFee = new BigDecimal(baseAmount).multiply(new BigDecimal(sellOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
+        if (buyOrder.getFeeAddress() != null && buyOrder.getFeeAddress().length > 0 && buyOrder.getFeeScale() > 0) {
+            buyNodeFee = new BigDecimal(baseAmount).multiply(new BigDecimal(buyOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
             if (buyNodeFee.compareTo(BigDecimal.ONE) < 0) {
                 buyNodeFee = BigDecimal.ONE;
             }
         }
 
-        BigInteger buyFee = buySysFee.add(buyNodeFee).toBigInteger();
         BigInteger sellFee = sellSysFee.add(sellNodeFee).toBigInteger();
+        BigInteger buyFee = buySysFee.add(buyNodeFee).toBigInteger();
+
         //生成交易的to，将成交后的币转到对方的账户上
         //对方实际收到的数量，是减去了手续费之后的
+        CoinTo to1, to2, to3, to4, to5 = null, to6 = null;
 
         //toList[0] 卖方收到计价币种
-        CoinTo to1 = new CoinTo(sellOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), quoteAmount.subtract(sellFee));
-        coinData.addTo(to1);
+        to1 = new CoinTo(sellOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), quoteAmount.subtract(sellFee));
         //toList[1] 买方收到交易币种
-        CoinTo to2 = new CoinTo(buyOrder.getAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), baseAmount.subtract(buyFee));
-        coinData.addTo(to2);
+        to2 = new CoinTo(buyOrder.getAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), baseAmount.subtract(buyFee));
         //支付手续费
         //toList[2]卖方支付系统手续费
-        CoinTo to3 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellSysFee.toBigInteger());
-        coinData.addTo(to3);
+        to3 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellSysFee.toBigInteger());
         //toList[3]买方支付系统手续费
-        CoinTo to4 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buySysFee.toBigInteger());
-        coinData.addTo(to4);
+        to4 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buySysFee.toBigInteger());
+
         //toList[4]卖方支付节点手续费
         if (sellNodeFee.compareTo(BigDecimal.ZERO) > 0) {
-            CoinTo to5 = new CoinTo(sellOrder.getFeeAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellNodeFee.toBigInteger());
-            coinData.addTo(to5);
+            if (Arrays.equals(DexContext.sysFeeAddress, sellOrder.getFeeAddress())) {
+                //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
+                to3.setAmount(to3.getAmount().add(sellNodeFee.toBigInteger()));
+            } else if (Arrays.equals(sellOrder.getAddress(), sellOrder.getFeeAddress())) {
+                //如果卖单地址和节点手续费地址配置一致，则直接合并
+                to1.setAmount(to1.getAmount().add(sellNodeFee.toBigInteger()));
+            } else {
+                to5 = new CoinTo(sellOrder.getFeeAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellNodeFee.toBigInteger());
+            }
         }
         //toList[5]买方支付节点手续费
         if (buyNodeFee.compareTo(BigDecimal.ZERO) > 0) {
-            CoinTo to6 = new CoinTo(buyOrder.getFeeAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buyNodeFee.toBigInteger());
-            coinData.addTo(to6);
+            if (Arrays.equals(DexContext.sysFeeAddress, buyOrder.getFeeAddress())) {
+                //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
+                to4.setAmount(to4.getAmount().add(buyNodeFee.toBigInteger()));
+            } else if (Arrays.equals(buyOrder.getAddress(), buyOrder.getFeeAddress())) {
+                //如果买单地址和节点手续费地址配置一致，则直接合并
+                to2.setAmount(to2.getAmount().add(buyNodeFee.toBigInteger()));
+            } else {
+                to6 = new CoinTo(buyOrder.getFeeAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buyNodeFee.toBigInteger());
+            }
         }
 
+        coinData.addTo(to1);
+        coinData.addTo(to2);
+        coinData.addTo(to3);
+        coinData.addTo(to4);
+        if (to5 != null) {
+            coinData.addTo(to5);
+        }
+        if (to6 != null) {
+            coinData.addTo(to6);
+        }
         map.put("sellFee", sellFee);
         map.put("buyFee", buyFee);
     }

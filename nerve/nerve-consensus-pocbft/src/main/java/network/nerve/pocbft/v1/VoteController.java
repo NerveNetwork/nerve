@@ -74,6 +74,7 @@ public class VoteController extends BasicObject {
      */
     public void broadcastVote(VoteMessage message) {
         ConsensusNetUtil.broadcastInConsensus(chain.getChainId(), CommandConstant.MESSAGE_VOTE, message.getRawData(), message.getSendNode());
+        log.warn("广播投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
     }
 
     /**
@@ -121,7 +122,7 @@ public class VoteController extends BasicObject {
         }
         message.setSign(sign);
 
-        this.votingContainer.votedStage1(message);
+//        this.votingContainer.votedStage1(message);
         log.info("超时投票：{}-{}-{}-{}:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
 //        log.info("=========================本地投票：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
 //                message.getRoundIndex(), message.getPackingIndexOfRound());
@@ -208,7 +209,7 @@ public class VoteController extends BasicObject {
             return;
         }
         message.setSign(sign);
-        this.votingContainer.votedStage1(message);
+//        this.votingContainer.votedStage1(message);
 //        log.info("=========================本地投票：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
 //                message.getRoundIndex(), message.getPackingIndexOfRound());
         //广播

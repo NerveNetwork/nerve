@@ -53,9 +53,9 @@ public class Base {
     /**
      * 空投门槛
      */
-    static BigInteger MIN = BigInteger.valueOf(1000000000L);
+    static BigInteger MIN = BigInteger.valueOf(0L);
 
-    static int CHAIN_ID = 2;
+    static int CHAIN_ID = 1;
 
     static int NVT_CHAIN_ID = 59999;
 

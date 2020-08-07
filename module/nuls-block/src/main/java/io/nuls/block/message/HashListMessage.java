@@ -44,6 +44,8 @@ public class HashListMessage extends BaseBusinessMessage {
     private NulsHash blockHash;
 
     private List<NulsHash> txHashList = new ArrayList<>();
+    private int chainId;
+    private String nodeId;
 
     public NulsHash getBlockHash() {
         return blockHash;
@@ -95,4 +97,19 @@ public class HashListMessage extends BaseBusinessMessage {
         }
     }
 
+    public void setChainId(int chainId) {
+        this.chainId = chainId;
+    }
+
+    public int getChainId() {
+        return chainId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
 }

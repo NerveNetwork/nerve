@@ -70,6 +70,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     private HeterogeneousDockingManager heterogeneousDockingManager = SpringLiteContext.getBean(HeterogeneousDockingManager.class);
     private AsyncProcessedTxStorageService asyncProcessedTxStorageService = SpringLiteContext.getBean(AsyncProcessedTxStorageService.class);
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService = SpringLiteContext.getBean(TxSubsequentProcessStorageService.class);
+    private MergeComponentStorageService mergeComponentStorageService = SpringLiteContext.getBean(MergeComponentStorageService.class);
     private AssembleTxService assembleTxService = SpringLiteContext.getBean(AssembleTxService.class);
     private VirtualBankStorageService virtualBankStorageService = SpringLiteContext.getBean(VirtualBankStorageService.class);
     private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService = SpringLiteContext.getBean(VirtualBankAllHistoryStorageService.class);
@@ -115,7 +116,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         // 处理银行变更
                         if (chain.getHeterogeneousChangeBankExecuting().get()) {
                             // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
-                            chain.getLogger().info("[Task-CHANGE_VIRTUAL_BANK]  pause new change 正在执行虚拟银行变更异构链交易, 暂停新的银行变更异构处理!");
+                            chain.getLogger().info("[Task-CHANGE_VIRTUAL_BANK] pause new change 正在执行虚拟银行变更异构链交易, 暂停新的银行变更异构处理!");
                             break out;
                         }
                         changeVirtualBankProcessor();
@@ -150,7 +151,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     case TxType.RESET_HETEROGENEOUS_VIRTUAL_BANK:
                         resetHeterogeneousVirtualBank(pendingPO);
                         // 后续已批量处理完成
-                        continue;
+                        break;
                     default:
                 }
                 if (chain.getCurrentIsDirector().get()) {
@@ -200,7 +201,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      *
      * @throws NulsException
      */
-    private void changeVirtualBankProcessor() throws NulsException {
+    private void changeVirtualBankProcessor() throws Exception {
 
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
         if (null == hInterfaces || hInterfaces.isEmpty()) {
@@ -213,33 +214,49 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
         if (chain.getCurrentIsDirector().get()) {
             String key = mergeList.get(0).getTx().getHash().toHex();
-            Result<Integer> result = changeVirtualBankAddress(key, mergeList, hInterfaces);
-            if (result.isFailed() && result.getErrorCode().equals(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY)) {
-                // 根据返回的交易个数 重新合并组装
-                mergeList = getChangeVirtualBankTxs(result.getData());
-                if (mergeList.isEmpty()) {
-                    chain.getLogger().error("虚拟银行变更调用异构链时, 二次获取没有任何合并的交易数据. changeVirtualBank no merged tx list");
-                    throw new NulsException(ConverterErrorCode.DATA_ERROR);
-                }
-                String keyTwo = mergeList.get(0).getTx().getHash().toHex();
-                if (!keyTwo.equals(key)) {
-                    chain.getLogger().error("[虚拟银行变更] 二次合并交易 key不一致!");
-                    throw new NulsException(ConverterErrorCode.DATA_ERROR);
-                }
-                Result<Integer> resultTwo = changeVirtualBankAddress(key, mergeList, hInterfaces);
-                if (resultTwo.isFailed() && resultTwo.getErrorCode().equals(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY)) {
-                    chain.getLogger().error("[虚拟银行变更] 二次合并交易 发送扔失败!.");
-                    throw new NulsException(resultTwo.getErrorCode());
-                }
-            }
-
             /**
              * 存储对应关系
              * key:合并列表中第一个交易hash, value:所有合并交易hash列表
              */
             List<String> hashList = new ArrayList<>();
             mergeList.forEach(k -> hashList.add(k.getTx().getHash().toHex()));
-            txSubsequentProcessStorageService.saveMergeComponentCall(chain, key, new MergedComponentCallPO(hashList));
+            mergeComponentStorageService.saveMergeComponentCall(chain, key, new MergedComponentCallPO(hashList));
+
+            try {
+                Result<Integer> result = changeVirtualBankAddress(key, mergeList, hInterfaces);
+                if (result.isFailed() && result.getErrorCode().equals(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY)) {
+                    // 根据返回的交易个数 重新合并组装
+                    mergeList = getChangeVirtualBankTxs(result.getData());
+                    if (mergeList.isEmpty()) {
+                        chain.getLogger().error("虚拟银行变更调用异构链时, 二次获取没有任何合并的交易数据. changeVirtualBank no merged tx list");
+                        throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                    }
+                    String keyTwo = mergeList.get(0).getTx().getHash().toHex();
+                    if (!keyTwo.equals(key)) {
+                        chain.getLogger().error("[虚拟银行变更] 二次合并交易 key不一致!");
+                        throw new NulsException(ConverterErrorCode.DATA_ERROR);
+                    }
+                    // 删除重新存 虽然key一致 但是合并交易数可能不一致
+                    mergeComponentStorageService.removeMergedTx(chain, key);
+                    List<String> hashListNew = new ArrayList<>();
+                    mergeList.forEach(k -> hashListNew.add(k.getTx().getHash().toHex()));
+                    mergeComponentStorageService.saveMergeComponentCall(chain, key, new MergedComponentCallPO(hashListNew));
+                    Result<Integer> resultTwo = changeVirtualBankAddress(key, mergeList, hInterfaces);
+                    if (resultTwo.isFailed() && resultTwo.getErrorCode().equals(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY)) {
+                        chain.getLogger().error("[虚拟银行变更] 二次合并交易 发送扔失败!.");
+                        throw new NulsException(resultTwo.getErrorCode());
+                    }
+                }
+            } catch (Exception e) {
+                // 删除key
+                try {
+                    mergeComponentStorageService.removeMergedTx(chain, key);
+                } catch (Exception ex) {
+                    throw ex;
+                }
+                throw e;
+            }
+
         }
         // 从队列移除元素
         chain.getPendingTxQueue().removeAll(mergeList);
@@ -256,24 +273,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     }
 
     /**
-     * 移除in和out 相同的节点地址
-     *
-     * @param listAllInDirector
-     * @param listAllOutDirector
-     */
-    public void removeDuplicateData(Set<VirtualBankDirector> listAllInDirector, Set<VirtualBankDirector> listAllOutDirector) {
-        Set<VirtualBankDirector> notExit = new HashSet<>(listAllInDirector);
-        Set<VirtualBankDirector> duplicate = new HashSet<>(listAllInDirector);
-        // 从in移除所有out中重复的元素, 得到in中不在out的中元素
-        notExit.removeAll(listAllOutDirector);
-        // 从in移除in中不在out的中元素, 得到两个set集合相同的元素
-        duplicate.removeAll(notExit);
-        //分别移除
-        listAllInDirector.removeAll(duplicate);
-        listAllOutDirector.removeAll(duplicate);
-    }
-
-    /**
      * 虚拟银行公共地址的变更处理
      *
      * @param key
@@ -282,51 +281,75 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private Result<Integer> changeVirtualBankAddress(String key, List<TxSubsequentProcessPO> mergeList, List<IHeterogeneousChainDocking> hInterfaces) throws NulsException {
-        // 合并发送
-        Set<VirtualBankDirector> listAllInDirector = new HashSet<>();
-        Set<VirtualBankDirector> listAllOutDirector = new HashSet<>();
-        // 合并前原始数量
+        /*
+         * key: 节点, value: in/out 次数(in +1 ;out -1)
+         * value 大于 0, 则组装到加入; value 小于 0, 则组装到退出; value 等于 0, 则不需要变更合约
+         */
+        Map<VirtualBankDirector, Integer> mapAllDirector = new HashMap<>();
+        // 合并前原始交易数量
         int originalMergedCount = mergeList.size();
         chain.getLogger().debug("[bank-可合并的交易] size:{}", mergeList.size());
         for (TxSubsequentProcessPO pendingPO : mergeList) {
             chain.getLogger().debug("----------------------------------------");
             chain.getLogger().debug("[bank-可合并的交易] hash:{}", pendingPO.getTx().getHash().toHex());
-            listAllInDirector.addAll(pendingPO.getListInDirector());
-            listAllOutDirector.addAll(pendingPO.getListOutDirector());
-
-            pendingPO.getListInDirector().forEach(s -> {
-                chain.getLogger().debug("InAddress: {}", s.getAgentAddress());
-            });
-
-            pendingPO.getListOutDirector().forEach(s -> {
-                chain.getLogger().debug("OutAddress: {}", s.getAgentAddress());
-            });
+            for (VirtualBankDirector director : pendingPO.getListInDirector()) {
+                mapAllDirector.compute(director, (k, v) -> {
+                    if (null == v) {
+                        return 1;
+                    } else {
+                        return v + 1;
+                    }
+                });
+                chain.getLogger().debug("InAddress: {}", director.getAgentAddress());
+            }
+            for (VirtualBankDirector director : pendingPO.getListOutDirector()) {
+                mapAllDirector.compute(director, (k, v) -> {
+                    if (null == v) {
+                        return -1;
+                    } else {
+                        return v - 1;
+                    }
+                });
+                chain.getLogger().debug("OutAddress: {}", director.getAgentAddress());
+            }
             chain.getLogger().debug("----------------------------------------");
         }
-        int inCount = listAllInDirector.size();
-        int outCount = listAllOutDirector.size();
-        removeDuplicateData(listAllInDirector, listAllOutDirector);
+        int inCount = 0;
+        int outCount = 0;
+        for (Integer count : mapAllDirector.values()) {
+            if (count < 0) {
+                outCount++;
+            } else if (count > 0) {
+                inCount++;
+            }
+        }
 
         for (IHeterogeneousChainDocking hInterface : hInterfaces) {
             // 组装加入参数
             String[] inAddress = new String[inCount];
-            if (!listAllInDirector.isEmpty()) {
-                int i = 0;
-                for (VirtualBankDirector director : listAllInDirector) {
-                    HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(hInterface.getChainId());
-                    inAddress[i] = heterogeneousAddress.getAddress();
-                    i++;
+            int i = 0;
+            for (Map.Entry<VirtualBankDirector, Integer> map : mapAllDirector.entrySet()) {
+                if (map.getValue() <= 0) {
+                    // 小于等于0的不统计, 只统计加入的(大于0的)
+                    continue;
                 }
+                VirtualBankDirector director = map.getKey();
+                HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(hInterface.getChainId());
+                inAddress[i] = heterogeneousAddress.getAddress();
+                i++;
             }
 
             String[] outAddress = new String[outCount];
-            if (!listAllOutDirector.isEmpty()) {
-                int i = 0;
-                for (VirtualBankDirector director : listAllOutDirector) {
-                    HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(hInterface.getChainId());
-                    outAddress[i] = heterogeneousAddress.getAddress();
-                    i++;
+            i = 0;
+            for (Map.Entry<VirtualBankDirector, Integer> map : mapAllDirector.entrySet()) {
+                if (map.getValue() >= 0) {
+                    // 大于等于0的不统计, 只统计退出的(小于0的)
+                    continue;
                 }
+                VirtualBankDirector director = map.getKey();
+                HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(hInterface.getChainId());
+                outAddress[i] = heterogeneousAddress.getAddress();
+                i++;
             }
 
             // 创建新的虚拟银行异构链多签地址/修改合约成员
@@ -357,6 +380,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                  * 开启正在处理银行变更异构链交易模式
                  */
                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
+                chain.getLogger().info("[开始执行虚拟银行异构链交易, 关闭新异构链变更执行] key:{}", key);
             }
             chain.getLogger().debug("[bank-执行变更] key:{}, inAddress:{}, outAddress:{}",
                     key, Arrays.toString(inAddress), Arrays.toString(outAddress));
@@ -392,7 +416,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 String heterogeneousAddress = heterogeneousInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                 director.getHeterogeneousAddrMap().put(heterogeneousInterface.getChainId(),
                         new HeterogeneousAddress(heterogeneousInterface.getChainId(), heterogeneousAddress));
-                virtualBankStorageService.save(chain, director);
+                virtualBankStorageService.update(chain, director);
                 virtualBankAllHistoryStorageService.save(chain, director);
             }
         }
@@ -452,7 +476,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         List<byte[]> listRewardAddress = new ArrayList<>();
         for (HeterogeneousAddress addr : txData.getListDistributionFee()) {
             String address = chain.getDirectorRewardAddress(addr);
-            if(StringUtils.isBlank(address)){
+            if (StringUtils.isBlank(address)) {
                 String signAddress = virtualBankAllHistoryStorageService.findByHeterogeneousAddress(chain, addr.getAddress());
                 VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
                 address = director.getRewardAddress();
@@ -490,7 +514,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         List<byte[]> listRewardAddress = new ArrayList<>();
         for (HeterogeneousAddress addr : addressList) {
             String address = chain.getDirectorRewardAddress(addr);
-            if(StringUtils.isBlank(address)){
+            if (StringUtils.isBlank(address)) {
                 String signAddress = virtualBankAllHistoryStorageService.findByHeterogeneousAddress(chain, addr.getAddress());
                 VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
                 address = director.getRewardAddress();

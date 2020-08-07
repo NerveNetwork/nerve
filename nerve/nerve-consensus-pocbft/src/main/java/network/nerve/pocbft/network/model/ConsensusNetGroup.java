@@ -59,6 +59,8 @@ public class ConsensusNetGroup {
 
     private boolean allConnected = false;
 
+    private int needChangeToFalse = 0;
+
     private RoundController roundController;
 
     public ConsensusNetGroup(int chainId) {
@@ -171,7 +173,7 @@ public class ConsensusNetGroup {
         this.available = available;
     }
 
-    public boolean statusChange(int percent, Chain chain) {
+    public boolean statusChange(Chain chain) {
         int total = group.size();
         int hadConnect = 0;
         boolean netAvailable = false;
@@ -190,6 +192,8 @@ public class ConsensusNetGroup {
                 hadConnect++;
             }
         }
+        int percent = ConsensusConstant.POC_NETWORK_NODE_PERCENT;
+
         if (total > 0) {
             //增加自身节点
             total = total + 1;
@@ -197,15 +201,21 @@ public class ConsensusNetGroup {
             int connectPercent = (hadConnect * 100 / total);
             if (connectPercent >= percent) {
                 netAvailable = true;
+                needChangeToFalse = 0;
             }
         } else {
             //单节点直接返回
             netAvailable = true;
+            needChangeToFalse = 0;
         }
         if (netAvailable == available) {
 //            chain.getLogger().info("ConsensusNet:{}/{}=={} !availNetNode:{}", hadConnect, total, available, nodeList.size());
             return false;
         } else {
+            if (available && needChangeToFalse < 3) {
+                needChangeToFalse++;
+                return false;
+            }
             chain.getLogger().info("net state  change total={} hadConnect={},{}==to=={}", total, hadConnect, available, netAvailable);
             StringBuilder ss = new StringBuilder("network nodes: ");
             for (String ip : connectedIps) {

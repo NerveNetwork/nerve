@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.model;
 
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
 import org.web3j.crypto.Credentials;
 import org.web3j.utils.Numeric;
@@ -36,6 +37,19 @@ import java.util.Arrays;
  */
 public class EthAccount extends HeterogeneousAccount implements Serializable {
 
+    private int order;
+
+    public EthAccount() {
+    }
+
+    public EthAccount(int order) {
+        this.order = order;
+    }
+
+    public static EthAccount newEmptyAccount(int order) {
+        return new EthAccount(order);
+    }
+
     @Override
     protected boolean validatePubKey(byte[] newPriKey, byte[] orginPubKey) {
         Credentials credentials = Credentials.create(Numeric.toHexStringNoPrefix(newPriKey));
@@ -43,4 +57,15 @@ public class EthAccount extends HeterogeneousAccount implements Serializable {
         return Arrays.equals(pubKey, orginPubKey);
     }
 
+    public int getOrder() {
+        return order;
+    }
+
+    public void setOrder(int order) {
+        this.order = order;
+    }
+
+    public boolean isEmpty() {
+        return StringUtils.isBlank(getAddress());
+    }
 }

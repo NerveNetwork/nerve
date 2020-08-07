@@ -41,6 +41,9 @@ public class HeightRangeMessage extends BaseBusinessMessage {
     private long startHeight;
     private long endHeight;
 
+    private String nodeId;
+    private int chainId;
+
     public HeightRangeMessage() {
     }
 
@@ -89,11 +92,27 @@ public class HeightRangeMessage extends BaseBusinessMessage {
         }
     }
 
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
+
     @Override
     public String toString() {
         return "HeightRangeMessage{" +
                 "startHeight=" + startHeight +
                 ", endHeight=" + endHeight +
                 '}';
+    }
+
+    public void setChainId(int chainId) {
+        this.chainId = chainId;
+    }
+
+    public int getChainId() {
+        return chainId;
     }
 }

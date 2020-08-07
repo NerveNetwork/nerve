@@ -54,6 +54,7 @@ public class AddressTool {
     public static Set<String> BLOCK_HOLE_ADDRESS_SET = new HashSet<>();
 
     static {
+        BLOCK_HOLE_ADDRESS_SET.add("NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L");
     }
 
     /**

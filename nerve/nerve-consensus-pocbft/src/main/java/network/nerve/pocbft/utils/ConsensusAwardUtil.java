@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils;
 
+import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.InflationInfo;
 import network.nerve.pocbft.model.bo.StackingAsset;
@@ -69,44 +70,11 @@ public class ConsensusAwardUtil {
             return amount;
         }
         String dateStr = NulsDateUtils.timeStamp2DateStr(time, ConsensusConstant.DATE_FORMAT, Locale.UK);
-        return getRealAmount(chainId, amount, assetChainId, assetId, dateStr);
+        BigDecimal nvtCount = getRealAmount(chainId, new BigDecimal(amount), assetChainId, assetId, dateStr);
+//        BigDecimal nvtVal = DoubleUtils.mul(nvtCount, Math.pow(10, 8));
+        return nvtCount.toBigInteger();
     }
 
-    /**
-     * 从喂价系统获取对应的数量的NVT
-     *
-     * @param amount       数量
-     * @param assetChainId 资产链ID
-     * @param assetId      资产ID
-     * @param date         交易日期
-     * @return 对应数量的NVT
-     */
-    public static BigInteger getRealAmount(int chainId, BigInteger amount, int assetChainId, int assetId, String date) throws NulsException {
-        if (assetChainId == config.getChainId() && assetId == config.getAssetId()) {
-            return amount;
-        }
-        StackingAsset stackingAsset = chainManager.getAssetByAsset(assetChainId, assetId);
-        double price = CallMethodUtils.getRealAmount(chainId, stackingAsset.getOracleKey(), date);
-        double nervePrice = CallMethodUtils.getRealAmount(chainId, ConsensusConstant.DEFALT_KEY, date);
-        return DoubleUtils.div(DoubleUtils.mul(new BigDecimal(amount), price), new BigDecimal(nervePrice)).toBigInteger();
-    }
-
-    /**
-     * 从喂价系统获取对应的数量的NVT
-     *
-     * @param amount       数量
-     * @param assetChainId 资产链ID
-     * @param assetId      资产ID
-     * @param time         时间（毫秒）
-     * @return 对应数量的NVT
-     */
-    public static BigDecimal getRealAmount(int chainId, BigDecimal amount, int assetChainId, int assetId, long time) throws NulsException {
-        if (assetChainId == config.getChainId() && assetId == config.getAssetId()) {
-            return amount;
-        }
-        String date = NulsDateUtils.timeStamp2DateStr(time, ConsensusConstant.DATE_FORMAT, Locale.UK);
-        return getRealAmount(chainId, amount, assetChainId, assetId, date);
-    }
 
     /**
      * 从喂价系统获取对应的数量的NVT
@@ -124,7 +92,14 @@ public class ConsensusAwardUtil {
         StackingAsset stackingAsset = chainManager.getAssetByAsset(assetChainId, assetId);
         double price = CallMethodUtils.getRealAmount(chainId, stackingAsset.getOracleKey(), date);
         double nervePrice = CallMethodUtils.getRealAmount(chainId, ConsensusConstant.DEFALT_KEY, date);
-        return DoubleUtils.div(DoubleUtils.mul(amount, price), new BigDecimal(nervePrice));
+        int precision = CallMethodUtils.getAssetPrecision(chainId, assetChainId, assetId);
+        if (precision < 0) {
+            Log.warn("这里不应该出现");
+            throw new NulsException(ConsensusErrorCode.DATA_ERROR);
+        }
+        BigDecimal realAmount = DoubleUtils.div(amount, Math.pow(10, precision));
+        BigDecimal nvtVal = DoubleUtils.div(DoubleUtils.mul(realAmount, price), new BigDecimal(nervePrice));
+        return DoubleUtils.mul(nvtVal, Math.pow(10, 8));
     }
 
     /**

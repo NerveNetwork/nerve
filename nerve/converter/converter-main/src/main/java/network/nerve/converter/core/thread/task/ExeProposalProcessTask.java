@@ -263,6 +263,10 @@ public class ExeProposalProcessTask implements Runnable {
         // 向异构链发起合约升级交易
         String exeTxHash = docking.createOrSignUpgradeTx(hash);
         this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
+
+        proposalPO.setHeterogeneousMultySignAddress(docking.getCurrentMultySignAddress());
+        // 存储提案执行的链内hash
+        proposalStorageService.save(chain, proposalPO);
         chain.getLogger().info("[执行提案-{}] proposalHash:{}, exeTxHash:{}",
                 ProposalTypeEnum.UPGRADE,
                 proposalPO.getHash().toHex(),
@@ -366,6 +370,9 @@ public class ExeProposalProcessTask implements Runnable {
         rechargeTxDTO.setToAddress(AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
         rechargeTxDTO.setTxtime(pendingPO.getTime());
         Transaction tx = assembleTxService.createRechargeTx(chain, rechargeTxDTO);
+        proposalPO.setNerveHash(tx.getHash().getBytes());
+        // 存储提案执行的链内hash
+        proposalStorageService.save(chain, proposalPO);
         chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}",
                 ProposalTypeEnum.TRANSFER,
                 proposalPO.getHash().toHex(),
@@ -419,6 +426,9 @@ public class ExeProposalProcessTask implements Runnable {
         Transaction tx = null;
         try {
             tx = assembleTxService.assembleChangeVirtualBankTx(chain, null, outList, pendingPO.getHeight(), pendingPO.getTime());
+            proposalPO.setNerveHash(tx.getHash().getBytes());
+            // 存储提案执行的链内hash
+            proposalStorageService.save(chain, proposalPO);
             boolean rs = this.proposalStorageService.saveExeBusiness(chain, tx.getHash().toHex(), proposalPO.getHash());
             TransactionCall.newTx(chain, tx);
             chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}, saveExeBusiness:{}",

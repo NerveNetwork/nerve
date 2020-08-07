@@ -84,7 +84,7 @@ public class VirtualBankUtil {
         if (ByzantineRateCount % ConverterConstant.MAGIC_NUM_100 > 0) {
             minPassCount++;
         }
-        chain.getLogger().debug("当前共识节点数量为：{}, 拜占庭最少数量为:{}", directorCount, minPassCount);
+        LoggerUtil.LOG.debug("当前共识节点数量为：{}, 拜占庭最少数量为:{}", directorCount, minPassCount);
         return minPassCount;
     }
 

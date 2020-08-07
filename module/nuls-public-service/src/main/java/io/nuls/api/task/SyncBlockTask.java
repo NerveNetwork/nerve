@@ -29,6 +29,8 @@ public class SyncBlockTask implements Runnable {
 
     private Lock synclock = new ReentrantLock();
 
+    private boolean syncStatus = true;
+
     public SyncBlockTask(int chainId) {
         this.chainId = chainId;
         syncService = SpringLiteContext.getBean(SyncService.class);
@@ -40,6 +42,10 @@ public class SyncBlockTask implements Runnable {
         if (!ApiContext.isReady) {
             LoggerUtil.commonLog.info("------- ApiModule wait for successful cross-chain networking  --------");
             return;
+        }
+        if(!syncStatus){
+            Log.error("同步处于停止状态，清检查停止原因");
+            return ;
         }
 //        long start = System.currentTimeMillis();
 ////        symbolRegService.updateSymbolRegList();
@@ -61,7 +67,7 @@ public class SyncBlockTask implements Runnable {
                 run(++resetCount);
             } else {
                 Log.error("连续重试回滚失败，停止模块");
-                System.exit(0);
+                syncStatus = false;
             }
         }
         boolean running = true;
@@ -75,7 +81,8 @@ public class SyncBlockTask implements Runnable {
                     run(++resetCount);
                 } else {
                     Log.error("连续重试同步失败，停止模块");
-                    System.exit(0);
+                    syncStatus = false;
+                    break;
                 }
             }
         }

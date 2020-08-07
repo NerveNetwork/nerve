@@ -50,11 +50,13 @@ public class ConsensusShareMsg extends BaseBusinessMessage {
     //对identityList的签名
     private P2PHKSignature sign = null;
     private transient ConsensusShare consensusShare;
+    private String nodeId;
+
     public ConsensusShareMsg(ConsensusShare consensusShare, byte[] peerPubKey, byte[] pubKey, byte[] privKey) throws IOException {
         this.identityList = ECIESUtil.encrypt(peerPubKey, consensusShare.serialize());
         this.messageTime = NulsDateUtils.getCurrentTimeMillis();
-        ECKey  ecKey = ECKey.fromPrivate(privKey);
-        NulsSignData  nulsSignData = SignatureUtil.signDigest(identityList,ecKey);
+        ECKey ecKey = ECKey.fromPrivate(privKey);
+        NulsSignData nulsSignData = SignatureUtil.signDigest(identityList, ecKey);
         sign = new P2PHKSignature(nulsSignData, ecKey.getPubKey());
     }
 
@@ -67,12 +69,9 @@ public class ConsensusShareMsg extends BaseBusinessMessage {
             ConsensusShare consensusShare = new ConsensusShare();
             consensusShare.parse(enData, 0);
             return consensusShare;
-        } catch (CryptoException e) {
-            e.printStackTrace();
-        } catch (NulsException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -128,6 +127,14 @@ public class ConsensusShareMsg extends BaseBusinessMessage {
 
     public void setSign(P2PHKSignature sign) {
         this.sign = sign;
+    }
+
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
     }
 
     /*public static void main(String[] args) {

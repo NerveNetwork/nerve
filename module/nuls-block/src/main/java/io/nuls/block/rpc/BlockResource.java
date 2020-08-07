@@ -144,7 +144,7 @@ public class BlockResource extends BaseCmd {
         } else {
             service.putBlockBZT(chainId, NulsHash.fromHex(firstHash), !bifurcate);
         }
-        logger.info("putBZTFlag END，Hash={}", firstHash);
+//        logger.info("putBZTFlag END，Hash={}", firstHash);
         return success();
     }
 

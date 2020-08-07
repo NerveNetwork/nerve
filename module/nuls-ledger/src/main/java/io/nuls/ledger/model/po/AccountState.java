@@ -107,6 +107,10 @@ public class AccountState extends BaseNulsData {
         totalFromAmount = totalFromAmount.add(value);
     }
 
+    public void subtractTotalFromAmount(BigInteger value) {
+        totalFromAmount = totalFromAmount.subtract(value);
+    }
+
     public void addTotalToAmount(BigInteger value) {
         totalToAmount = totalToAmount.add(value);
     }

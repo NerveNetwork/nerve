@@ -45,5 +45,4 @@ public interface AsyncProcessedTxStorageService {
     String getComponentCall(Chain chain, String hash);
 
 
-
 }

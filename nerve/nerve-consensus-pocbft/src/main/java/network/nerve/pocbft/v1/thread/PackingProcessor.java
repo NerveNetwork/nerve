@@ -28,7 +28,7 @@ public class PackingProcessor extends BasicRunnable {
         while (this.running) {
             try {
                 doit();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 log.error(e);
             }
         }

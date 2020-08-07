@@ -891,7 +891,8 @@ public class TxServiceImpl implements TxService {
     public void addOrphanTxSet(Chain chain, Set<TxPackageWrapper> orphanTxSet, TxPackageWrapper txPackageWrapper) {
         NulsHash hash = txPackageWrapper.getTx().getHash();
         Integer count = chain.getTxPackageOrphanMap().get(hash);
-        if (count == null || count < TxConstant.PACKAGE_ORPHAN_MAXCOUNT) {
+//        if (count == null || count < TxConstant.PACKAGE_ORPHAN_MAXCOUNT) {
+        if (count != null && count < TxConstant.PACKAGE_ORPHAN_MAXCOUNT) {
             orphanTxSet.add(txPackageWrapper);
             if (count == null) {
                 count = 1;
@@ -904,7 +905,7 @@ public class TxServiceImpl implements TxService {
             chain.getTxPackageOrphanMap().put(hash, count);
         } else {
             //不加回(丢弃), 同时删除map中的key,并清理
-            chain.getLogger().debug("超过5次孤儿交易 hash:{}", hash.toHex());
+            chain.getLogger().debug("清理孤儿交易 hash:{}", hash.toHex());
             clearInvalidTx(chain, txPackageWrapper.getTx());
             chain.getTxPackageOrphanMap().remove(hash);
         }

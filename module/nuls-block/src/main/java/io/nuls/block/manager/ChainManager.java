@@ -76,7 +76,7 @@ public class ChainManager {
                 LoggerUtil.COMMON_LOG.warn("systemTypes doesn't contains coin_base");
                 systemTypes = TransactionCall.getSystemTypes(chainId);
             }
-            SaverManager.startSaver(chainId, service);
+            RunnableManager.startSaver(chainId, service);
             //服务初始化
             service.init(chainId);
 

@@ -25,6 +25,7 @@ import io.nuls.base.data.Block;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.block.manager.ContextManager;
+import io.nuls.block.manager.RunnableManager;
 import io.nuls.block.message.BlockMessage;
 import io.nuls.block.message.HashMessage;
 import io.nuls.block.rpc.call.NetworkCall;
@@ -49,15 +50,6 @@ public class GetBlockHandler implements MessageProcessor {
     @Autowired
     private BlockService service;
 
-    private void sendBlock(int chainId, Block block, String nodeId, NulsHash requestHash) {
-        BlockMessage message = new BlockMessage();
-        message.setRequestHash(requestHash);
-        if (block != null) {
-            message.setBlock(block);
-        }
-        message.setSyn(false);
-        NetworkCall.sendToNode(chainId, message, nodeId, BLOCK_MESSAGE);
-    }
 
     @Override
     public String getCmd() {
@@ -70,13 +62,8 @@ public class GetBlockHandler implements MessageProcessor {
         if (message == null) {
             return;
         }
-        NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        NulsHash requestHash = message.getRequestHash();
-        logger.debug("recieve " + message + " from node-" + nodeId + ", hash:" + requestHash);
-        Block block = service.getBlock(chainId, requestHash);
-        if (block == null) {
-            logger.debug("recieve invalid " + message + " from node-" + nodeId + ", hash:" + requestHash);
-        }
-        sendBlock(chainId, block, nodeId, requestHash);
+        message.setChainId(chainId);
+        message.setNodeId(nodeId);
+        RunnableManager.offerHashMsg(message);
     }
 }
