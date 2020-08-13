@@ -92,9 +92,8 @@ if [ "$cmd" == "last" ]; then
         --name nerve-wallet \
         --restart=always \
         -d \
-        -p 17001:17001 \
-        -p 17002:17002 \
-        -p 17004:17004 \
+        -p 7001:7001 \
+        -p 7002:7002 \
         -v `pwd`/data:/nuls/data \
         -v `pwd`/logs:/nuls/Logs \
         $imageName
