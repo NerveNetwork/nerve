@@ -36,6 +36,8 @@ public interface ConverterCmdConstant {
 
     String NEW_TX_MESSAGE = "newTx";
 
+    String CHECK_RETRY_PARSE_MESSAGE = "checkRetry";
+
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO = "cv_get_heterogeneous_chain_asset_info";
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS = "cv_get_heterogeneous_chain_asset_info_by_address";
     String GET_HETEROGENEOUS_ADDRESS = "cv_get_heterogeneous_address";
@@ -50,5 +52,6 @@ public interface ConverterCmdConstant {
     String VOTE_PROPOSAL = "cv_voteProposal";
     String RESET_VIRTUAL_BANK = "cv_resetVirtualBank";
     String DISQUALIFICATION = "cv_disqualification";
+    String CHECK_RETRY_PARSE = "cv_checkRetryParse";
 
 }

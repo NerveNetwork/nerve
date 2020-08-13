@@ -3,7 +3,9 @@ package io.nuls.api.rpc.controller;
 import io.nuls.api.ApiContext;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.config.ApiConfig;
+import io.nuls.api.db.AgentService;
 import io.nuls.api.db.SymbolQuotationPriceService;
+import io.nuls.api.model.po.AgentInfo;
 import io.nuls.api.model.po.PageInfo;
 import io.nuls.api.model.po.SymbolPrice;
 import io.nuls.api.model.po.SymbolQuotationRecordInfo;
@@ -38,6 +40,9 @@ public class SymbolPriceController {
     SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
     @Autowired
     ApiConfig apiConfig;
+
+    @Autowired
+    AgentService agentService;
 
     /**
      * 获取报价币种的最新价格
@@ -160,8 +165,11 @@ public class SymbolPriceController {
 
     private Map<String,Object> buildRes(SymbolQuotationRecordInfo d){
         SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
+        AgentInfo agentInfo = agentService.getAgentByPackingAddress(ApiContext.defaultChainId,d.getAddress());
         return Map.of(
-                "nodeName" , StringUtils.isNotBlank(d.getAlias()) ? d.getAlias() : d.getAddress().substring(d.getAddress().length()-8).toUpperCase(),
+                "nodeName" , d.getAddress().toUpperCase(),
+                "alias", agentInfo == null ? "" : agentInfo.getAgentAlias(),
+                "agentHash", agentInfo == null ? "" : agentInfo.getTxHash(),
                 "price" , usd.getPrice().multiply(d.getPrice(), MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN),
                 "symbol" , d.getSymbol(),
                 "createdTime", d.getCreateTime()

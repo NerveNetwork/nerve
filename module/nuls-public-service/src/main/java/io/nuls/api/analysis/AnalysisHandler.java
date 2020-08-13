@@ -140,6 +140,7 @@ public class AnalysisHandler {
             TransactionInfo txInfo;
             try {
                 txInfo = toTransaction(chainId, tx);
+                txInfo.setCreateTime(blockHeader.getCreateTime());
             }catch (UnableAssetException unableAssetException){
                 Log.error("解析交易失败:{}",unableAssetException.getCustomMessage());
                 continue;
@@ -560,7 +561,6 @@ public class AnalysisHandler {
         ConverterTxInfo info = new ConverterTxInfo();
         info.setBlockHeight(tx.getBlockHeight());
         info.setCreateTime(tx.getTime() * 1000L);
-        info.setTxHash(tx.getHash().toHex());
         info.setCrossChainType(CrossChainType.CrossPlatform.name());
         if(tx.getType() == TxType.CONFIRM_WITHDRAWAL){
             ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
@@ -572,6 +572,7 @@ public class AnalysisHandler {
             }
             TransactionInfo txInfo = transactionInfoResult.getData();
             CoinToInfo coinTo = txInfo.getCoinTos().stream().filter(d -> d.getChainId() != ApiContext.defaultChainId || d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
+            info.setTxHash(txInfo.getHash());
             info.setAmount(coinTo.getAmount());
             info.setAssetChainId(coinTo.getChainId());
             info.setAssetId(coinTo.getAssetsId());
@@ -579,6 +580,7 @@ public class AnalysisHandler {
             info.setConverterType(ConverterTxType.OUT.name());
             info.setOuterTxHash(txData.getHeterogeneousTxHash());
         }else{
+            info.setTxHash(tx.getHash().toHex());
             CoinTo coinTo = tx.getCoinDataInstance().getTo().stream().filter(d -> d.getAssetsChainId() != ApiContext.defaultChainId || d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
             info.setAmount(coinTo.getAmount());
             info.setAssetChainId(coinTo.getAssetsChainId());

@@ -74,4 +74,20 @@ public interface TxStorageService {
      * @return
      */
     boolean delete(Chain chain, String hash);
+
+    /**
+     * 存CheckRetryParseMessage收到的异构链交易hash
+     * @param chain
+     * @param heterogeneousHash
+     * @return
+     */
+    boolean saveHeterogeneousHash(Chain chain, String heterogeneousHash);
+
+    /**
+     * 取CheckRetryParseMessage收到的异构链交易hash
+     * @param chain
+     * @param heterogeneousHash
+     * @return
+     */
+    String getHeterogeneousHash(Chain chain, String heterogeneousHash);
 }

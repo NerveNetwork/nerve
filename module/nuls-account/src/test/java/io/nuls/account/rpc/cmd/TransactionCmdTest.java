@@ -69,7 +69,7 @@ public class TransactionCmdTest {
 
     public static void importKeyStore() throws Exception {
         CommonRpcOperation.importAccountByPriKeyWithOverwrite("tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG",
-                "2349820348023948234982357923561293479238579234792374923472343434",password);
+                "9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b",password);
 //        CommonRpcOperation.importAccountByPriKeyWithOverwrite("tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG",
 //                "00c940482596e30265f9f9f6216f7d7b507eebc9857c3689efa4378527bab3ba3d",password);
 //        CommonRpcOperation.importAccountByPriKeyWithOverwrite("tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG",

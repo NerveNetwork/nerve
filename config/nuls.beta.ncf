@@ -30,7 +30,7 @@ serviceManagerPort=8771
 port=17001
 crossPort=17002
 #魔法参数
-packetMagic=20200806
+packetMagic=20200812
 #种子节点
 selfSeedIps=seeda.nerve.network:17001,seedb.nerve.network:17001,seedh.nerve.network:17001,seedg.nerve.network:17001,seedc.nerve.network:17001,seede.nerve.network:17001
 #主网的跨链种子连接节点
@@ -197,7 +197,7 @@ initVirtualBankHeight=10
 virtualBankAgentCountWithoutSeed=10
 proposalPrice=20000000000
 proposalVotingDays=10
-distributionFee=1000000000
+distributionFee=10000000000
 byzantineRatio=66
 multySignAddressSet=101:0x44f4eA5028992D160Dc0dc9A3cB93a2e4C913611
 heterogeneousMainNet=false

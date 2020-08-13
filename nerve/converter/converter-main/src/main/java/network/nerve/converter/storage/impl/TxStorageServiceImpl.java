@@ -33,6 +33,7 @@ import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.TransactionPO;
 import network.nerve.converter.storage.TxStorageService;
+import network.nerve.converter.utils.ConverterDBUtil;
 import network.nerve.converter.utils.ConverterUtil;
 
 /**
@@ -42,6 +43,40 @@ import network.nerve.converter.utils.ConverterUtil;
 @Component
 public class TxStorageServiceImpl implements TxStorageService  {
 
+    /**
+     * 异构链 交易key前缀
+     */
+    private static final String HETEROGENEOUS_TX_PREFIX = "HETEROGENEOUS_TX_PREFIX_";
+
+    @Override
+    public boolean saveHeterogeneousHash(Chain chain, String heterogeneousHash) {
+        if (StringUtils.isBlank(heterogeneousHash)) {
+            return false;
+        }
+        try {
+            byte[] key = ConverterDBUtil.stringToBytes(HETEROGENEOUS_TX_PREFIX + heterogeneousHash);
+            byte[] value = ConverterDBUtil.stringToBytes(heterogeneousHash);
+            return RocksDBService.put(ConverterDBConstant.DB_TX_PREFIX + chain.getChainId(), key, value);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
+
+    @Override
+    public String getHeterogeneousHash(Chain chain, String heterogeneousHash) {
+        if (StringUtils.isBlank(heterogeneousHash)) {
+            return null;
+        }
+        try {
+            byte[] key = ConverterDBUtil.stringToBytes(HETEROGENEOUS_TX_PREFIX + heterogeneousHash);
+            byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_TX_PREFIX + chain.getChainId(), key);
+            return null == bytes ? null : ConverterDBUtil.bytesToString(bytes);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
+    }
 
     @Override
     public boolean save(Chain chain, TransactionPO tx) {

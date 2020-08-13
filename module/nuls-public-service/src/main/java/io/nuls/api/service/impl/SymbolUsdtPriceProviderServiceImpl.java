@@ -8,6 +8,7 @@ import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.SymbolPrice;
 import io.nuls.api.model.po.SymbolRegInfo;
 import io.nuls.api.service.SymbolUsdtPriceProviderService;
+import io.nuls.api.sup.BasePriceProvider;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.core.basic.InitializingBean;
 import io.nuls.core.core.annotation.Autowired;
@@ -54,7 +55,7 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
             if( !provider.getExcludeSet().isEmpty() && provider.getExcludeSet().contains(symbol)){
                 continue;
             }
-            BigDecimal price = provider.getProvider().queryPrice(symbol);
+            BigDecimal price = provider.getProvider().queryPrice(BasePriceProvider.ALIAS.getOrDefault(symbol,symbol));
             if(!price.equals(BigDecimal.ZERO)){
                 collect.add(price);
             }
@@ -111,6 +112,7 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
         SymbolUsdPercentDTO res = new SymbolUsdPercentDTO();
         res.setPer(rate);
         res.setTotalUsdVal(allSymbolTxTotalUsdValue);
+        res.setAmount(list.getOrDefault(symbol,BigInteger.ZERO));
         res.setUsdVal(usdValue.setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN));
         return res;
     }

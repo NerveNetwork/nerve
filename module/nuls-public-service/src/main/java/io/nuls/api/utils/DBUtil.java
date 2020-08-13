@@ -19,4 +19,9 @@ public class DBUtil {
     public static String getDepositKey(String hash, String key) {
         return hash + "-" + key;
     }
+
+    public static void main(String[] args) {
+        System.out.println(        DBUtil.getShardNumber("NERVEepb67m2bFMBu4hr7Rbvvm9HwHmgom7MRS"));
+    }
+
 }

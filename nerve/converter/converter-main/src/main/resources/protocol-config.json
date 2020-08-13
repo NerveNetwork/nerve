@@ -131,6 +131,11 @@
         "name": "network.nerve.converter.message.NewTxMessage",
         "protocolCmd": "newTx",
         "handlers": "NewTxHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.CheckRetryParseMessage",
+        "protocolCmd": "checkRetry",
+        "handlers": "CheckRetryParseHandlerV1"
       }
     ],
     "invalidTxs": "",

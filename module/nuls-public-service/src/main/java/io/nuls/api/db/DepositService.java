@@ -1,8 +1,10 @@
 package io.nuls.api.db;
 
 import io.nuls.api.constant.DepositInfoType;
+import io.nuls.api.model.dto.DepositGroupBySymbolSumDTO;
 import io.nuls.api.model.po.DepositInfo;
 import io.nuls.api.model.po.PageInfo;
+import org.bson.conversions.Bson;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -18,13 +20,13 @@ public interface DepositService {
 
     PageInfo<DepositInfo> pageDepositListByAgentHash(int chainID, String hash, int pageIndex, int pageSize);
 
-    List<DepositInfo> getDepositListByHash(int chainID, String hash);
+    List<DepositInfo> getDepositListByHash(int chainID, String txHash);
 
     void rollbackDeposit(int chainId, List<DepositInfo> depositInfoList);
 
     void saveDepositList(int chainId, List<DepositInfo> depositInfoList);
 
-    List<DepositInfo> getDepositList(int chainId, long startHeight);
+    List<DepositInfo> getDepositList(int chainId, Bson... bsons);
 
     List<DepositInfo> getDepositList(int chainId, long startHeight, int... types);
 
@@ -71,9 +73,9 @@ public interface DepositService {
      * @param chainId
      * @return
      */
-    List<DepositInfo> getDepositSumList(int chainId,int... depositInfoTypes);
+    List<DepositGroupBySymbolSumDTO> getDepositSumList(int chainId);
 
-    List<DepositInfo> getDepositSumList(int chainId,String address,int... depositInfoTypes);
+    List<DepositGroupBySymbolSumDTO> getDepositSumList(int chainId,String address);
 
     /**
      * 获取指定地址参与stacking的列表

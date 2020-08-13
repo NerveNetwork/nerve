@@ -4,6 +4,9 @@ import io.nuls.api.model.po.PageInfo;
 import io.nuls.api.model.po.StackSymbolPriceInfo;
 import io.nuls.api.model.po.SymbolQuotationRecordInfo;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.List;
 
 /**
@@ -65,5 +68,23 @@ public interface SymbolQuotationPriceService {
      * @return
      */
     List<SymbolQuotationRecordInfo> queryLastQuotationList(String symbol);
+
+    /**
+     * 计算两个价格的涨跌幅百分比
+     * @param oldVal
+     * @param newVal
+     * @return
+     */
+    public default BigDecimal calcChangeRate(BigDecimal oldVal,BigDecimal newVal){
+        BigDecimal change;
+        //如果获取最近一次报价的价格是0，则不计算与上一次的涨跌幅
+        if(oldVal.equals(BigDecimal.ZERO)){
+            change = BigDecimal.ZERO;
+        }else{
+            change = newVal.subtract(oldVal);
+            change = change.divide(oldVal, MathContext.DECIMAL64).setScale(4, RoundingMode.HALF_DOWN);
+        }
+        return change;
+    }
 
 }

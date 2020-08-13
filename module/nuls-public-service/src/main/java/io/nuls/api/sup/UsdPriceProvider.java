@@ -3,15 +3,9 @@ package io.nuls.api.sup;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.parse.JSONUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -20,14 +14,9 @@ import java.util.Map;
  * @Description: 获取美元兑USDT的汇率
  */
 @Component
-public class UsdPriceProvider implements PriceProvider {
+public class UsdPriceProvider extends BasePriceProvider implements PriceProvider {
 
     public static final int USD_SCALE = 4;
-
-    HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofMillis(5000))
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
 
     public static final String BTC ="BTC";
 
@@ -48,14 +37,8 @@ public class UsdPriceProvider implements PriceProvider {
             return BigDecimal.ONE;
         }
         BigDecimal btcUsdPrice;
-        HttpRequest request = HttpRequest.newBuilder()
-        .uri(URI.create(bitfinexUrl))
-        .timeout(Duration.ofMillis(5000))
-        .build();
         try {
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
-            Map<String,Object> data = JSONUtils.json2map(response.body());
+            Map<String,Object> data = httpRequest(this.bitfinexUrl);
             btcUsdPrice = new BigDecimal((String)data.get("last_price"));
             LoggerUtil.PRICE_PROVIDER_LOG.debug("获取到当前BTC兑USD的价格:{}",btcUsdPrice);
             return btcUsdPrice.divide(btcUsdtPrice,USD_SCALE, RoundingMode.HALF_DOWN);
@@ -64,4 +47,5 @@ public class UsdPriceProvider implements PriceProvider {
             return BigDecimal.ONE;
         }
     }
+
 }

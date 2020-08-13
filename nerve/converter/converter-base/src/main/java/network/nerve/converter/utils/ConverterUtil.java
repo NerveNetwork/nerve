@@ -79,6 +79,27 @@ public class ConverterUtil {
         return error.contains("Transaction has been completed");
     }
 
+    public static boolean isRequestExceeded(String error) {
+        if (StringUtils.isBlank(error)) {
+            return false;
+        }
+        return error.contains("exceeded");
+    }
+
+    public static boolean isRequestDenied(String error) {
+        if (StringUtils.isBlank(error)) {
+            return false;
+        }
+        return error.contains("Invalid response received: 601") || error.contains("nerve denied");
+    }
+
+    public static boolean isRequestExpired(String error) {
+        if (StringUtils.isBlank(error)) {
+            return false;
+        }
+        return error.contains("Invalid response received: 602") || error.contains("nerve expired");
+    }
+
     public static <T> T getInstance(byte[] bytes, Class<? extends BaseNulsData> clazz) throws NulsException {
         if (null == bytes || bytes.length == 0) {
             throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);

@@ -24,11 +24,18 @@
 package network.nerve.converter.core.heterogeneous.callback;
 
 import io.nuls.base.data.Transaction;
+import io.nuls.core.basic.Result;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.rpc.call.TransactionCall;
 
 import java.math.BigInteger;
 
@@ -44,11 +51,17 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
      */
     private int hChainId;
     private AssembleTxService assembleTxService;
+    private IHeterogeneousChainDocking docking;
 
     public DepositTxSubmitterImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
         this.hChainId = hChainId;
         this.assembleTxService = callBackBeanManager.getAssembleTxService();
+        try {
+            this.docking = callBackBeanManager.getHeterogeneousDockingManager().getHeterogeneousDocking(hChainId);
+        } catch (NulsException e) {
+            throw new NulsRuntimeException(e);
+        }
     }
 
     /**
@@ -80,5 +93,35 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
             return null;
         }
         return tx.getHash().toHex();
+    }
+
+    @Override
+    public Result validateDepositTx(String hTxHash) {
+        nerveChain.getLogger().info("验证充值交易: {}", hTxHash);
+        try {
+            HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
+            if (depositTx == null) {
+                return Result.getFailed(ConverterErrorCode.DATA_PARSE_ERROR);
+            }
+            RechargeTxDTO dto = new RechargeTxDTO();
+            dto.setOriginalTxHash(hTxHash);
+            dto.setToAddress(depositTx.getNerveAddress());
+            dto.setAmount(depositTx.getValue());
+            dto.setHeterogeneousChainId(hChainId);
+            dto.setHeterogeneousAssetId(depositTx.getAssetId());
+            dto.setTxtime(depositTx.getTxTime());
+            Transaction tx = assembleTxService.createRechargeTxWithoutSign(nerveChain, dto);
+            Transaction confirmedTx = TransactionCall.getConfirmedTx(nerveChain, tx.getHash());
+            if (confirmedTx != null) {
+                return Result.getFailed(ConverterErrorCode.TX_DUPLICATION);
+            }
+            return Result.getSuccess(ConverterErrorCode.SUCCESS);
+        } catch (Exception e) {
+            nerveChain.getLogger().error(e);
+            if (e instanceof NulsException) {
+                return Result.getFailed(((NulsException) e).getErrorCode());
+            }
+            return Result.getFailed(ConverterErrorCode.DATA_ERROR).setMsg(e.getMessage());
+        }
     }
 }

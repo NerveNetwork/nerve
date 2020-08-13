@@ -9,6 +9,7 @@ import io.nuls.api.constant.config.ApiConfig;
 import io.nuls.api.db.*;
 import io.nuls.api.exception.JsonRpcException;
 import io.nuls.api.manager.CacheManager;
+import io.nuls.api.model.dto.DepositGroupBySymbolSumDTO;
 import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.rpc.RpcErrorCode;
@@ -327,8 +328,14 @@ public class ChainController {
 //        nvtPublishAmount": 1,     //当前发行量    当前通胀量 + 初始发行量
         BigInteger nvtPublishAmount = nvtInflationAmount.add(nvtInitialAmount);
         map.put("nvtPublishAmount", nvtPublishAmount);
+        //          nvtLockedAmount          //当期锁定量   查询几个固定的锁定资产
+        BigInteger nvtLockedAmount = AssetTool.getLockedTotal();
+        map.put("nvtLockedAmount", nvtLockedAmount);
+        BigInteger nvtTurnoverAmount = nvtPublishAmount.subtract(nvtLockedAmount);
+//        nvtTurnoverAmount": 1,     //当前流通量   当前发行量 - 当期锁定量
+        map.put("nvtTurnoverAmount", nvtTurnoverAmount);
 //        nvtDepositTotal": 1,      //当前抵押量
-        BigInteger nvtDepositTotal = agentService.getNvtConsensusCoinTotal(chainId);
+        BigInteger nvtDepositTotal = coinContextInfo.getConsensusTotal();
         map.put("nvtDepositTotal", nvtDepositTotal);
         //nvtStackTotal  //使用nvt参与stack的总量
         BigInteger nvtStackTotal = coinContextInfo.getNvtStackTotal();
@@ -337,24 +344,20 @@ public class ChainController {
         BigInteger allAssetStackTotal = coinContextInfo.getStackTotalForNvtValue();
         map.put("allAssetStackTotal",allAssetStackTotal);
         // nvtStackRate           //当前抵押率   示例 0.41 抵押率  41%
-        BigDecimal nvtStackRate = new BigDecimal(nvtStackTotal).divide(new BigDecimal(nvtPublishAmount), MathContext.DECIMAL64).setScale(4,RoundingMode.HALF_DOWN);
+        BigDecimal nvtStackRate = new BigDecimal(nvtStackTotal).divide(new BigDecimal(nvtTurnoverAmount), MathContext.DECIMAL64).setScale(4,RoundingMode.HALF_DOWN);
         map.put("nvtStackRate", nvtStackRate);
-//          nvtLockedAmount          //当期锁定量   查询几个固定的锁定资产
-        BigInteger nvtLockedAmount = coinContextInfo.getBusiness().add(coinContextInfo.getCommunity()).add(coinContextInfo.getTeam()).add(coinContextInfo.getDestroy());
-        map.put("nvtLockedAmount", nvtLockedAmount);
-//        nvtTurnoverAmount": 1,     //当前流通量   当前发行量 - 当期锁定量
-        map.put("nvtTurnoverAmount", nvtPublishAmount.subtract(nvtLockedAmount));
+
 //        nvtTotal": 1,              //nvt总量     初始发行量 + 通胀总量
         map.put("nvtTotal", ApiContext.totalInflationAmount.add(nvtInitialAmount));
 //        nvtUsdValue": 1,
-        StackSymbolPriceInfo symbolPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultSymbol);
-        BigDecimal nvtTotalUsdtValue = symbolPrice.getPrice().multiply(new BigDecimal(nvtPublishAmount).movePointLeft(ApiContext.defaultDecimals));
+        StackSymbolPriceInfo symbolFreshPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultSymbol);
+        SymbolPrice symbolNowPrice = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiContext.defaultSymbol);
+        BigDecimal nvtTotalUsdtValue = symbolNowPrice.getPrice().multiply(new BigDecimal(nvtPublishAmount).movePointLeft(ApiContext.defaultDecimals));
         //nvtUsdtValue nvt的美元价格
-        map.put("nvtUsdtValue", symbolPrice.getPrice().setScale(ApiConstant.USDT_DECIMAL,RoundingMode.HALF_DOWN));
+        map.put("nvtUsdtValue", symbolNowPrice.getPrice().setScale(ApiConstant.USDT_DECIMAL,RoundingMode.HALF_DOWN));
         map.put("nvtTotalUsdtValue", nvtTotalUsdtValue.movePointRight(ApiContext.defaultDecimals).toBigInteger());
         //nvtUsdtValueChangeRate nvt价格较上一天的涨跌幅，负数为跌，示例： 0.1 较上一日上涨10%
-        map.put("nvtUsdtValueChangeRate",symbolPrice.getChange());
-//        crossChainAssetValue": 1
+        map.put("nvtUsdtValueChangeRate",symbolPriceService.calcChangeRate(symbolFreshPrice.getPrice(),symbolNowPrice.getPrice()).doubleValue());
         return RpcResult.success(map);
     }
 

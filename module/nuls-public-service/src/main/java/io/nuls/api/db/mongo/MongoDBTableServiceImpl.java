@@ -131,6 +131,9 @@ public class MongoDBTableServiceImpl implements DBTableService {
         mongoDBService.createIndex(DBTableConstant.BLOCK_HEADER_TABLE + chainId, Indexes.ascending("hash"));
         //委托记录表
         mongoDBService.createIndex(DBTableConstant.DEPOSIT_TABLE + chainId, Indexes.descending("createTime"));
+
+        mongoDBService.createIndex(DBTableConstant.ROUND_ITEM_TABLE + chainId,Indexes.descending("roundIndex","agentHash"));
+
         //智能合约表
 //        mongoDBService.createIndex(DBTableConstant.CONTRACT_TABLE + chainId, Indexes.descending("createTime"));
 //        //账户token表

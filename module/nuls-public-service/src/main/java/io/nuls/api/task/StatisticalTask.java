@@ -98,7 +98,7 @@ public class StatisticalTask implements Runnable {
         if (null == header || header.getHeight() == 0) {
             return;
         }
-        long hour = 3600 * 1000;
+        long hour = 600 * 1000;
         long start = bestId + 1;
         long end = 0;
         if (bestId == -1) {
@@ -291,7 +291,10 @@ public class StatisticalTask implements Runnable {
     private Map<String,BigInteger> computeAssetTotal(int chainId) {
         List<Document> balanceList = accountLedgerService.getAllBalance(chainId);
         Map<String,BigInteger> res = new HashMap<>();
-        balanceList.stream().map(d->{
+        balanceList.stream().filter(d->{
+            String address = d.getString("address");
+            return !address.equals(ApiContext.blackHoleAddress);
+        }).map(d->{
             String assetChainId = d.get("chainId").toString();
             String assetId = d.get("assetId").toString();
             BigInteger balance = new BigInteger(d.get("balance").toString());

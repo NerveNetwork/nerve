@@ -8,6 +8,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import network.nerve.dex.context.DexConfig;
 import network.nerve.dex.context.DexConstant;
 import network.nerve.dex.context.DexErrorCode;
@@ -40,7 +41,7 @@ public class DexService {
      */
     private DexManager tempDexManager = new DexManager();
     //打包区块时，每次复制盘口内多少挂单，到临时盘口缓存，以及每次打包最多允许生成成交单的数量
-    private static final int dexPackingSize = 100;
+    private static final int dexPackingSize = 200;
     private List<Transaction> dealTxList = new ArrayList<>();
     //存放每次打包的区块中，需要取消打包的交易
     private List<Transaction> removeTxList = new ArrayList<>();
@@ -73,21 +74,31 @@ public class DexService {
         try {
             clear();
 
-            long time0, time1, time2;
-            time0 = System.currentTimeMillis();
+//            long time0, time1, time2;
+//            time0 = System.currentTimeMillis();
             //首先复制所有交易对到临时盘口中
             for (TradingContainer container : dexManager.getAllContainer().values()) {
                 TradingContainer copy = container.copy(dexPackingSize);
                 tempDexManager.addContainer(copy);
             }
+//            time1 = System.currentTimeMillis();
+//            if (time1 - time0 > 50) {
+//                LoggerUtil.dexLog.info("-------复制临时盘口数据，用时：{}, 区块高度：{}, isValidate:{}", (time1 - time0), blockHeight, isValidate);
+//            }
 
             List<CancelDeal> cancelList = new ArrayList<>();
             //每次打包前先判断当前所有临时盘口里是否还有可以匹配的订单，如果有则优先生成成交订单
             for (TradingContainer container : tempDexManager.getAllContainer().values()) {
                 matchingOrder(container, blockTime);
             }
+//            time2 = System.currentTimeMillis();
+//            if (time2 - time1 > 100) {
+//                LoggerUtil.dexLog.info("-------处理之前区块未能打包完的成交交易，用时：{}, 区块高度：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
+//            }
             //如果优先生成的成交交易已经超过打包上限，则不再继续打包剩余交易
             if (dealTxList.size() >= dexPackingSize) {
+                LoggerUtil.dexLog.info("-------达到打包上限了,丢弃本次的所有交易,区块高度：{}, isValidate:{}， txSize:{}", blockHeight, isValidate, txList.size());
+                removeTxList.addAll(txList);
                 return returnTxMap();
             }
 
@@ -99,6 +110,8 @@ public class DexService {
             Map<String, CoinFrom> coinFromMap = new HashMap<>();
             Map<String, CoinTo> coinToMap = new HashMap<>();
             int index = 0;
+//            time1 = System.currentTimeMillis();
+
             for (int i = 0; i < txList.size(); i++) {
                 tx = txList.get(i);
                 tx.setBlockHeight(blockHeight);
@@ -118,10 +131,6 @@ public class DexService {
                             tempOrderPoMap.put(orderPo.getOrderHash().toHex(), orderPo);
                         }
                     }
-//
-//                    if (orderPo == null) {
-//                        LoggerUtil.dexLog.info("---------createCancelDeal order null , hash:" + HexUtil.encode(orderCancel.getOrderHash()));
-//                    }
 
                     createCancelDeal(tx, cancelList, orderCancel, orderPo, coinFromMap, coinToMap);
 
@@ -148,22 +157,24 @@ public class DexService {
             if (cancelList.size() > 0) {
                 createCancelTx(cancelList, coinFromMap, coinToMap, blockTime);
             }
+//            time2 = System.currentTimeMillis();
+//            if (time2 - time1 > 100) {
+//                LoggerUtil.dexLog.info("-------匹配本次区块打包完的所有交易，用时：{}, 区块高度：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
+//                LoggerUtil.dexLog.info("-------txList:{}, dealTxList:{}, cancelList:{}", txList.size(), dealTxList.size(), cancelList.size());
+//            }
 
             //如果index小于txList.size()，说明因为成交交易达到上限，导致有一部分交易需要取消打包
             if (index != txList.size() - 1) {
                 for (int i = index + 1; i < txList.size(); i++) {
-                    if (isValidate) {
-                        LoggerUtil.dexLog.error("------validate txs counts error-----");
-                    }
                     removeTxList.add(txList.get(i));
                 }
             }
 
-            time2 = System.currentTimeMillis();
-            if (time2 - time0 > 200) {
-                LoggerUtil.dexLog.info("----高度:{},耗时:{},isValidate:{}", blockHeight, (time2 - time0), isValidate);
-                LoggerUtil.dexLog.info("----打包交易条数:{},isValidate:{},成交交易个数:{},removeTxList:{}", txList.size(), dealTxList.size(), removeTxList.size());
-            }
+//            time2 = System.currentTimeMillis();
+//            if (time2 - time0 > 100) {
+//                LoggerUtil.dexLog.info("-------高度:{},耗时:{},isValidate:{}", blockHeight, (time2 - time0), isValidate);
+//                LoggerUtil.dexLog.info("-------txList:{}, dealTxList:{}, cancelList:{},removeTxList:{}", txList.size(), dealTxList.size(), cancelList.size(), removeTxList.size());
+//            }
 
             return returnTxMap();
         } catch (IOException e) {
@@ -404,7 +415,7 @@ public class DexService {
      * @return
      */
     private TradingOrderPo getFirstBuyOrder(NavigableMap<BigInteger, Map<String, TradingOrderPo>> buyOrderList) {
-        if(buyOrderList.isEmpty()) {
+        if (buyOrderList.isEmpty()) {
             return null;
         }
         for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : buyOrderList.entrySet()) {
@@ -426,7 +437,7 @@ public class DexService {
      * @return
      */
     private TradingOrderPo getFirstSellOrder(NavigableMap<BigInteger, Map<String, TradingOrderPo>> sellOrderList) {
-        if(sellOrderList.isEmpty()) {
+        if (sellOrderList.isEmpty()) {
             return null;
         }
         for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : sellOrderList.entrySet()) {

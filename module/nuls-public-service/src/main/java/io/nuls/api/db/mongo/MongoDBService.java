@@ -492,7 +492,7 @@ public class MongoDBService implements InitializingBean {
     }
 
     public List<Document> aggReturnDoc(String collName, Bson... param){
-        MongoCollection<Document> col = this.getCollection(collName);
+         MongoCollection<Document> col = this.getCollection(collName);
 //        Log.debug("{}", Arrays.asList(param));
         AggregateIterable<Document> documents = col.aggregate(List.of(param));
         List<Document> list = new ArrayList<>();

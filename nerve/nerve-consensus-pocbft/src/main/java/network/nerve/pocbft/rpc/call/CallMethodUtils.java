@@ -43,7 +43,7 @@ import static network.nerve.pocbft.constant.ParameterConstant.*;
  * 2018/12/26
  */
 public class CallMethodUtils {
-    public static final long MIN_PACK_SURPLUS_TIME = 600;
+    public static final long MIN_PACK_SURPLUS_TIME = 200;
     public static final long CALL_BACK_HANDLE_TIME = 200;
 
     /**

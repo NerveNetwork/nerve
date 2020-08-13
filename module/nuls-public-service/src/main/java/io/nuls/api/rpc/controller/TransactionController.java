@@ -541,7 +541,8 @@ public class TransactionController {
 //                rate = symbolUsdTxTotalMap.get(d.getSymbol()).divide(allSymbolTxTotalUsdValue,2, RoundingMode.HALF_UP);
 //            }
             SymbolUsdPercentDTO symbolUsdPercentDTO = symbolUsdtPriceProviderService.calcRate(d.getSymbol(), symbolList);
-            return Map.of("symbol", d.getSymbol(), "total", d.getTotal(), "txTotal", d.getTxTotal(), "txTotalRate", symbolUsdPercentDTO.getPer(), "usdValue", symbolUsdPercentDTO.getUsdVal());
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(d.getAssetChainId(),d.getAssetId());
+            return Map.of("decimals",symbolRegInfo.getDecimals(),"symbol", d.getSymbol(), "total", d.getTotal(), "txTotal", d.getTxTotal(), "txTotalRate", symbolUsdPercentDTO.getPer(), "usdValue", symbolUsdPercentDTO.getUsdVal());
         }).collect(Collectors.toList()));
     }
 

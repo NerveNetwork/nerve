@@ -313,7 +313,7 @@ public class ExeProposalProcessTask implements Runnable {
         NulsHash proposalHash = proposalPO.getHash();
         String hash = proposalHash.toHex();
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
+            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布退回交易");
             return;
         }
         if (!hasExecutePermission(hash) || !replyAttack(hash, proposalPO.getHeterogeneousTxHash())) {

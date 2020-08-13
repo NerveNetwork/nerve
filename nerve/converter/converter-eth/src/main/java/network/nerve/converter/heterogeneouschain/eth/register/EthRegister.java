@@ -42,6 +42,7 @@ import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.docking.EthDocking;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
@@ -97,6 +98,8 @@ public class EthRegister implements IHeterogeneousChainRegister {
     private EthTxStorageService ethTxStorageService;
     @Autowired
     private EthParseTxHelper ethParseTxHelper;
+    @Autowired
+    private EthAnalysisTxHelper ethAnalysisTxHelper;
 
     private boolean isInitial = false;
 
@@ -131,7 +134,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     private void initEthWalletRPC() {
-        EthContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(EthContext.getConfig().getMainRpcAddress()));
+        //EthContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(EthContext.getConfig().getMainRpcAddress()));
         String orderRpcAddresses = EthContext.getConfig().getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
@@ -179,6 +182,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
         ethDocking.setEthTxStorageService(ethTxStorageService);
         ethDocking.setEthParseTxHelper(ethParseTxHelper);
         ethDocking.setEthCallBackManager(ethCallBackManager);
+        ethDocking.setEthAnalysisTxHelper(ethAnalysisTxHelper);
         return ethDocking;
     }
 

@@ -90,6 +90,8 @@ public class EthUtil {
         account.setPubKey(pubKey);
         account.setPriKey(ecKeyPair.getPrivateKey().toByteArray());
         account.setEncryptedPriKey(new byte[0]);
+        ECKey ecKey = ECKey.fromPrivate(Numeric.hexStringToByteArray(prikey));
+        account.setCompressedPublicKey(Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(true)));
         return account;
     }
 

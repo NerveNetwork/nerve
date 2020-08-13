@@ -86,7 +86,7 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
         if (blockHeaderInfo.getHeight() == 0) {
             return Optional.empty();
         }
-        AtomicInteger totalBlockCount = new AtomicInteger(ONE_DAY_BLOCK_COUNT);
+        AtomicInteger totalBlockCount = new AtomicInteger(0);
         if (lastSnapshootTime == null) {
             getLastSnapshoot(chainId).ifPresentOrElse(d -> lastSnapshootTime = d.getDay(), () ->
                     //如果没有查询到上一次快照数据，设置上次的快照时间为前一天的0点。
@@ -98,7 +98,12 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
         //如果当前块的出块日期大于最后一次快照时间，说明当前块是今天第一个块，也就是奖励发放块
         if (lastSnapshootTime < DateUtil.getDayStartTimestampBySecond(blockHeaderInfo.getCreateTime())) {
             //如果当前的区块高度不足一天的高度，则计算的总高度为实际出块数量。
-            totalBlockCount.set(blockHeaderInfo.getHeight() < ONE_DAY_BLOCK_COUNT ? (int) blockHeaderInfo.getHeight() : ONE_DAY_BLOCK_COUNT);
+            Optional<StackSnapshootInfo> lastSnapshoot = getLastSnapshoot(ApiContext.defaultChainId);
+            if(lastSnapshoot.isPresent()){
+                totalBlockCount.set((int) ((blockHeaderInfo.getHeight() - lastSnapshoot.get().getBlockHeight())));
+            }else{
+                totalBlockCount.set((int) blockHeaderInfo.getHeight());
+            }
             isDayFirstBlock = true;
         }
         if (isDayFirstBlock) {
@@ -145,7 +150,7 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
             BigDecimal totalWeight = agentDepositTotalWeight.add(stackingTotalWeight);
             commonLog.info("本次总权重数为:{}", totalWeight);
             if (totalWeight.compareTo(BigDecimal.ZERO) <= 0) {
-                return Optional.empty();
+                return Optional.of(stackSnapshootInfo);
             }
             stackSnapshootInfo.setStackTotal(stackingTotalForNvt.add(bankTotalDeposit).add(nomalTotalDeposit));
             //计算当天发放的所有委托奖励
@@ -168,6 +173,7 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
             return Optional.empty();
         }
     }
+
 
 
     private BigDecimal[] getStackingTotalWeight(int chainId, long height) {
@@ -252,9 +258,8 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
      */
     @Override
     public BigInteger queryRewardTotal(int chainId) {
-        return mongoDBService.aggReturnDoc(DBTableConstant.STACK_SNAPSHOOT_TABLE + chainId,
-                new Document("$group", new Document("_id", 0).append("total", new Document("$sum", "$rewardTotal")))
-        ).stream().map(d -> new BigInteger(d.get("total").toString())).findFirst().orElse(BigInteger.ZERO);
+        return mongoDBService.query(TABLE + chainId)
+                .stream().map(d->new BigInteger(d.getString("rewardTotal"))).reduce(BigInteger::add).orElse(BigInteger.ZERO);
     }
 
     public void setMongoDBService(MongoDBService mongoDBService) {

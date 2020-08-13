@@ -89,5 +89,5 @@ public interface QuotationConstant {
     String NERVE_PRICE = "NERVE_PRICE";
     String NERVE_ANCHORTOKEN = "NVT-USDT";
 
-    long TIMEOUT_MILLIS = 10000L;
+    int TIMEOUT_MILLIS = 5000;
 }

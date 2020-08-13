@@ -113,4 +113,6 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode WITHDRAWAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0088");
     ErrorCode AGENT_IS_NOT_SEED_VIRTUAL_BANK = ErrorCode.init(ModuleE.CV.getPrefix() + "_0089");
 
+    ErrorCode NODE_NOT_IN_RUNNING = ErrorCode.init(ModuleE.CV.getPrefix() + "_0090");
+
 }

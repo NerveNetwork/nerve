@@ -9,6 +9,7 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthAccountHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
 import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.FunctionEncoder;
@@ -56,15 +57,21 @@ public class ETHWalletApi implements WalletApi {
     private ConverterConfig converterConfig;
     @Autowired
     private AddressBloomFilter addressBloomFilter;
+    @Autowired
+    private EthAccountHelper ethAccountHelper;
 
     protected Web3j web3j;
 
     protected String ethRpcAddress;
     int switchStatus = 0;
     private boolean inited = false;
+    private Map<String, Integer> requestExceededMap = new HashMap<>();
+    private long clearTimeOfRequestExceededMap = 0L;
 
     private Map<String, BigInteger> map = new HashMap<>();
-    private ReentrantLock lock = new ReentrantLock();
+    private ReentrantLock checkLock = new ReentrantLock();
+    private ReentrantLock resetLock = new ReentrantLock();
+    private ReentrantLock reSignLock = new ReentrantLock();
 
     private NulsLogger getLog() {
         return EthContext.logger();
@@ -77,16 +84,48 @@ public class ETHWalletApi implements WalletApi {
             resetWeb3j();
         }
         if (web3j == null) {
-            web3j = Web3j.build(new HttpService(ethRpcAddress));
+            web3j = newInstanceWeb3j(ethRpcAddress);
             this.ethRpcAddress = ethRpcAddress;
             getLog().info("初始化 ETH API URL: {}", ethRpcAddress);
         }
     }
 
     public void checkApi(int order) throws NulsException {
+        long now = System.currentTimeMillis();
+        // 如果使用的是应急API，应急API使用时间内，不检查API切换
+        if (now < clearTimeOfRequestExceededMap) {
+            if (EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                }
+                return;
+            }
+        } else if (clearTimeOfRequestExceededMap != 0){
+            getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+            requestExceededMap.clear();
+            clearTimeOfRequestExceededMap = 0L;
+        }
+
+        String rpc = this.calRpcBySwitchStatus(order, switchStatus);
+        if (!rpc.equals(this.ethRpcAddress)) {
+            checkLock.lock();
+            try {
+                if (!rpc.equals(this.ethRpcAddress)) {
+                    getLog().info("检测到顺序变化，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    changeApi(rpc);
+                }
+            } catch (NulsException e) {
+                throw e;
+            } finally {
+                checkLock.unlock();
+            }
+        }
+    }
+
+    private String calRpcBySwitchStatus(int order, int tempSwitchStatus) throws NulsException {
         String rpc;
         List<String> rpcAddressList = EthContext.RPC_ADDRESS_LIST;
-        if(switchStatus == 1) {
+        if(tempSwitchStatus == 1) {
             rpcAddressList = EthContext.STANDBY_RPC_ADDRESS_LIST;
         }
         int rpcSize = rpcAddressList.size();
@@ -98,23 +137,28 @@ public class ETHWalletApi implements WalletApi {
             int index = this.calRpcIndex(order, rpcSize);
             rpc = rpcAddressList.get(index);
         }
-        if (!rpc.equals(this.ethRpcAddress)) {
-            changeApi(rpc);
-        }
+        return rpc;
     }
 
     private void changeApi(String rpc) throws NulsException {
-        lock.lock();
+        resetWeb3j();
+        init(rpc);
+    }
+
+    private void reSignMainAPI() throws NulsException {
+        this.ethRpcAddress = null;
+        reSignLock.lock();
         try {
-            if (!rpc.equals(this.ethRpcAddress)) {
-                resetWeb3j();
-                init(rpc);
+            if (this.ethRpcAddress == null) {
+                getLog().info("进入重签");
+                changeApi(EthContext.getConfig().getMainRpcAddress());
             }
         } catch (NulsException e) {
             throw e;
         } finally {
-            lock.unlock();
+            reSignLock.unlock();
         }
+
     }
 
     private int calRpcIndex(int order, int rpcSize) {
@@ -127,9 +171,48 @@ public class ETHWalletApi implements WalletApi {
         return index;
     }
 
-    private void switchStandbyAPI() throws NulsException {
-        switchStatus = (switchStatus + 1) % 2;
-        this.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
+    private boolean unavailableRpc(String rpc) {
+        Integer count = requestExceededMap.get(rpc);
+        return (count != null && count > 5);
+    }
+
+    private void switchStandbyAPI(String oldRpc) throws NulsException {
+        getLog().info("ETH API 准备切换，当前API: {}", oldRpc);
+        resetLock.lock();
+        try {
+            // 不相等，说明已经被切换
+            if (!oldRpc.equals(this.ethRpcAddress)) {
+                getLog().info("ETH API 已切换至: {}", this.ethRpcAddress);
+                return;
+            }
+            int expectSwitchStatus = (switchStatus + 1) % 2;
+            int order = EthContext.getConverterCoreApi().getVirtualBankOrder();
+            String rpc = this.calRpcBySwitchStatus(order, expectSwitchStatus);
+            // 检查配置的API是否超额
+            if (unavailableRpc(oldRpc) && unavailableRpc(rpc)) {
+                String mainRpcAddress = EthContext.getConfig().getMainRpcAddress();
+                getLog().info("ETH API 不可用: {} - {}, 准备切换至应急API: {}, ", oldRpc, rpc, mainRpcAddress);
+                if (!mainRpcAddress.equals(this.ethRpcAddress)) {
+                    changeApi(mainRpcAddress);
+                    if (mainRpcAddress.equals(this.ethRpcAddress)) {
+                        clearTimeOfRequestExceededMap = System.currentTimeMillis() + EthConstant.HOURS_3;
+                    }
+                }
+                return;
+            }
+            // 正常切换API
+            if (!rpc.equals(this.ethRpcAddress)) {
+                changeApi(rpc);
+                // 相等，说明切换成功
+                if (rpc.equals(this.ethRpcAddress)) {
+                    switchStatus = expectSwitchStatus;
+                }
+            }
+        } catch (NulsException e) {
+            throw e;
+        } finally {
+            resetLock.unlock();
+        }
     }
 
     private void resetWeb3j() {
@@ -162,13 +245,25 @@ public class ETHWalletApi implements WalletApi {
         return 0L;
     }
 
-    protected void checkIfResetWeb3j(int times) {
+    protected void checkIfResetWeb3j(int times) throws NulsException {
         int mod = times % 6;
         if (mod == 5 && web3j != null && ethRpcAddress != null) {
             getLog().info("重启API服务");
             resetWeb3j();
+            web3j = newInstanceWeb3j(ethRpcAddress);
+        }
+    }
+
+    private Web3j newInstanceWeb3j(String ethRpcAddress) throws NulsException {
+        Web3j web3j;
+        if (EthContext.getConfig().getMainRpcAddress().equals(ethRpcAddress)) {
+            String data = String.valueOf(System.currentTimeMillis());
+            String sign = ethAccountHelper.sign(data);
+            web3j = Web3j.build(new HttpService(ethRpcAddress + String.format("?d=%s&s=%s&p=%s", data, sign, EthContext.ADMIN_ADDRESS_PUBLIC_KEY)));
+        } else {
             web3j = Web3j.build(new HttpService(ethRpcAddress));
         }
+        return web3j;
     }
 
     /**
@@ -756,8 +851,24 @@ public class ETHWalletApi implements WalletApi {
             // 当API连接异常时，重置API连接，使用备用API 异常: ClientConnectionException
             if (e instanceof ClientConnectionException) {
                 getLog().warn("API连接异常时，重置API连接，使用备用API");
-                resetWeb3j();
-                switchStandbyAPI();
+                if (ConverterUtil.isRequestExpired(e.getMessage()) && EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
+                    getLog().info("重新签名应急API: {}", this.ethRpcAddress);
+                    reSignMainAPI();
+                    throw e;
+                }
+                if (ConverterUtil.isRequestDenied(e.getMessage()) && EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
+                    getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    requestExceededMap.clear();
+                    clearTimeOfRequestExceededMap = 0L;
+                    switchStandbyAPI(this.ethRpcAddress);
+                    throw e;
+                }
+                // daily request count exceeded
+                if (ConverterUtil.isRequestExceeded(e.getMessage())) {
+                    Integer count = requestExceededMap.computeIfAbsent(this.ethRpcAddress, r -> 0);
+                    requestExceededMap.put(this.ethRpcAddress, count + 1);
+                }
+                switchStandbyAPI(this.ethRpcAddress);
                 throw e;
             }
             String message = e.getMessage();
@@ -890,15 +1001,15 @@ public class ETHWalletApi implements WalletApi {
      * @throws ExecutionException
      * @throws InterruptedException
      */
-    public BigInteger getERC20Balance(String address, String contractAddress) throws ExecutionException, InterruptedException {
+    public BigInteger getERC20Balance(String address, String contractAddress) throws Exception {
         return this.getERC20BalanceReal(address, contractAddress, DefaultBlockParameterName.PENDING, 0);
     }
 
-    public BigInteger getERC20Balance(String address, String contractAddress, DefaultBlockParameterName status) throws ExecutionException, InterruptedException {
+    public BigInteger getERC20Balance(String address, String contractAddress, DefaultBlockParameterName status) throws Exception {
         return this.getERC20BalanceReal(address, contractAddress, status, 0);
     }
 
-    public BigInteger getERC20BalanceReal(String address, String contractAddress, DefaultBlockParameterName status, int times) throws ExecutionException, InterruptedException {
+    private BigInteger getERC20BalanceReal(String address, String contractAddress, DefaultBlockParameterName status, int times) throws Exception {
         try {
             this.checkIfResetWeb3j(times);
             Function function = new Function("balanceOf",

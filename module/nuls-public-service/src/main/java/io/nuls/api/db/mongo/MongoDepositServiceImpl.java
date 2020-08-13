@@ -6,11 +6,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.*;
 import io.nuls.api.ApiContext;
+import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DepositInfoType;
 import io.nuls.api.db.DepositService;
 import io.nuls.api.db.SymbolQuotationPriceService;
 import io.nuls.api.manager.AssetManager;
 import io.nuls.api.model.dto.AssetBaseInfo;
+import io.nuls.api.model.dto.DepositGroupBySymbolSumDTO;
 import io.nuls.api.model.po.DepositInfo;
 import io.nuls.api.model.po.PageInfo;
 import io.nuls.api.model.po.SymbolPrice;
@@ -26,6 +28,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.logging.Filter;
 import java.util.stream.Collectors;
 
 import static com.mongodb.client.model.Filters.*;
@@ -33,6 +37,13 @@ import static io.nuls.api.constant.DBTableConstant.DEPOSIT_TABLE;
 
 @Component
 public class MongoDepositServiceImpl implements DepositService {
+
+    List<DepositGroupBySymbolSumDTO> groupBySymbolSumDTOListCache = null;
+
+    /**
+     * amount 自动转换为字符串后的统一长度
+     */
+    final static int AMOUNT_STRING_LENGTH = 30;
 
     @Autowired
     private MongoDBService mongoDBService;
@@ -80,7 +91,6 @@ public class MongoDepositServiceImpl implements DepositService {
         Bson bson = Filters.and(Filters.eq("agentHash", hash), Filters.eq("deleteKey", null));
         List<Document> documentList = mongoDBService.pageQuery(DEPOSIT_TABLE + chainID, bson, Sorts.descending("createTime"), pageIndex, pageSize);
         long totalCount = mongoDBService.getCount(DEPOSIT_TABLE + chainID, bson);
-
         List<DepositInfo> depositInfos = new ArrayList<>();
         for (Document document : documentList) {
             DepositInfo depositInfo = DocumentTransferTool.toInfo(document, "key", DepositInfo.class);
@@ -91,10 +101,9 @@ public class MongoDepositServiceImpl implements DepositService {
     }
 
     @Override
-    public List<DepositInfo> getDepositListByHash(int chainID, String hash) {
-        Bson bson = Filters.and(Filters.eq("txHash", hash));
+    public List<DepositInfo> getDepositListByHash(int chainID, String txHash) {
+        Bson bson = Filters.and(Filters.eq("txHash", txHash));
         List<Document> documentList = mongoDBService.query(DEPOSIT_TABLE + chainID, bson);
-
         List<DepositInfo> depositInfos = new ArrayList<>();
         for (Document document : documentList) {
             DepositInfo depositInfo = DocumentTransferTool.toInfo(document, "key", DepositInfo.class);
@@ -104,6 +113,7 @@ public class MongoDepositServiceImpl implements DepositService {
     }
 
     @Override
+    @Deprecated
     public void rollbackDeposit(int chainId, List<DepositInfo> depositInfoList) {
         if (depositInfoList.isEmpty()) {
             return;
@@ -130,14 +140,9 @@ public class MongoDepositServiceImpl implements DepositService {
         }
         List<WriteModel<Document>> modelList = new ArrayList<>();
         for (DepositInfo depositInfo : depositInfoList) {
-//            AssetBaseInfo assetBaseInfo = AssetManager.getAssetBaseInfo(depositInfo.getAssetChainId(),depositInfo.getAssetId());
-//            if(assetBaseInfo == null){
-//                Log.error("未获取到资产{}的基础信息",depositInfo.getAssetChainId() + "-" + depositInfo.getAssetId(),new RuntimeException());
-//                System.exit(0);
-//            }
-//            depositInfo.setDecimal(assetBaseInfo.getDecimals());
-//            depositInfo.setSymbol(assetBaseInfo.getSymbol());
             Document document = DocumentTransferTool.toDocument(depositInfo, "key");
+            //用在左边加0的方式，将amount的字符串补足AMOUNT_STRING_LENGTH位
+            document.put("amount",addLeftZroe(depositInfo.getAmount()));
             if (depositInfo.isNew()) {
                 modelList.add(new InsertOneModel(document));
             } else {
@@ -147,19 +152,6 @@ public class MongoDepositServiceImpl implements DepositService {
         BulkWriteOptions options = new BulkWriteOptions();
         options.ordered(false);
         mongoDBService.bulkWrite(DEPOSIT_TABLE + chainId, modelList, options);
-    }
-
-    @Override
-    public List<DepositInfo> getDepositList(int chainId, long startHeight) {
-//        Bson bson = Filters.and(Filters.lte("blockHeight", startHeight), Filters.eq("type", 0), Filters.or(Filters.eq("deleteHeight", 0), Filters.gt("deleteHeight", startHeight)));
-//
-//        List<Document> list = this.mongoDBService.query(DEPOSIT_TABLE + chainId, bson);
-//        List<DepositInfo> resultList = new ArrayList<>();
-//        for (Document document : list) {
-//            resultList.add(DocumentTransferTool.toInfo(document, "key", DepositInfo.class));
-//        }
-
-        return getDepositList(chainId,startHeight,0);
     }
 
     /**
@@ -176,14 +168,10 @@ public class MongoDepositServiceImpl implements DepositService {
         for (int i = 0;i<types.length;i++) {
             typeFileer.add(Filters.eq("type",types[i]));
         }
-//        List<Document> list = this.mongoDBService.query(DEPOSIT_TABLE + chainId, bson);
-//        List<DepositInfo> resultList = new ArrayList<>();
-//        for (Document document : list) {
-//            resultList.add(DocumentTransferTool.toInfo(document, "key", DepositInfo.class));
-//        }
         return getDepositList(chainId,bson,Filters.or(typeFileer.toArray(new Bson[typeFileer.size()])));
     }
 
+    @Override
     public List<DepositInfo> getDepositList(int chainId, Bson... bsons) {
         Bson bson = Filters.and(bsons);
         List<Document> list = this.mongoDBService.query(DEPOSIT_TABLE + chainId, bson);
@@ -194,7 +182,6 @@ public class MongoDepositServiceImpl implements DepositService {
         return resultList;
     }
 
-
     @Override
     public BigInteger getDepositAmount(int chainId, String address, String agentHash) {
         Bson filter;
@@ -204,19 +191,14 @@ public class MongoDepositServiceImpl implements DepositService {
             filter = Filters.and(Filters.eq("address", address), Filters.eq("agentHash", agentHash));
         }
         final BigInteger[] total = {BigInteger.ZERO};
-        Consumer<Document> listBlocker = new Consumer<>() {
-            @Override
-            public void accept(final Document document) {
-                BigInteger value = new BigInteger(document.getString("amount"));
-                total[0] = total[0].add(value);
-            }
+        Consumer<Document> listBlocker = document -> {
+            BigInteger value = new BigInteger(document.getString("amount"));
+            total[0] = total[0].add(value);
         };
         MongoCollection<Document> collection = mongoDBService.getCollection(DEPOSIT_TABLE + chainId);
-        collection.find(filter).projection(new BasicDBObject().append("amount", 1)).forEach(listBlocker);
-
+        collection.find(filter).projection(new BasicDBObject().append("amount", 1).append("decimal",1)).forEach(listBlocker);
         return total[0];
     }
-
 
     @Override
     public List<String> getAgentHashList(int chainId, String address) {
@@ -301,24 +283,32 @@ public class MongoDepositServiceImpl implements DepositService {
         return depositList.stream().map(d->d.getAmount()).reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
-//    @Override
-//    public BigInteger getStackingTotalAndTransferNVT(int chainId, long height) {
-////        List<DepositInfo> depositList = this.getDepositList(chainId, height, DepositInfoType.STACKING);
-//        return getStackingTotalByNVTGroupSymbol(chainId,height).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
-//    }
-
     @Override
     public BigInteger getStackingTotalAndTransferNVT(int chainId) {
-        List<DepositInfo> depositList = this.getDepositList(chainId, Filters.eq("deleteHeight", -1));
+        Bson typeFilter = Filters.or(
+                Filters.eq("type",DepositInfoType.STACKING),
+                Filters.eq("type",DepositInfoType.APPEND_AGENT_DEPOSIT),
+                Filters.eq("type",DepositInfoType.CREATE_AGENT)
+        );
+        List<DepositInfo> depositList = this.getDepositList(chainId,
+                Filters.eq("deleteHeight", -1),
+                typeFilter
+        );
         return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
     @Override
     public BigInteger getStackingTotalAndTransferNVT(int chainId, int assetChainId,int assetId) {
+        Bson typeFilter = Filters.or(
+                Filters.eq("type",DepositInfoType.STACKING),
+                Filters.eq("type",DepositInfoType.APPEND_AGENT_DEPOSIT),
+                Filters.eq("type",DepositInfoType.CREATE_AGENT)
+        );
         Bson[] bson = new Bson[]{
                 Filters.eq("deleteHeight", -1),
                 Filters.eq("assetChainId",assetChainId),
-                Filters.eq("assetId",assetId)
+                Filters.eq("assetId",assetId),
+                typeFilter
         };
         List<DepositInfo> depositList = this.getDepositList(chainId, bson);
         return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
@@ -326,7 +316,17 @@ public class MongoDepositServiceImpl implements DepositService {
 
     @Override
     public BigInteger getStackingTotalAndTransferNVT(int chainId, String address){
-        List<DepositInfo> depositList = pageDepositList(chainId,address,null,true,1,Integer.MAX_VALUE,DepositInfoType.STACKING).getList();
+        Bson typeFilter = Filters.or(
+                Filters.eq("type",DepositInfoType.STACKING),
+                Filters.eq("type",DepositInfoType.APPEND_AGENT_DEPOSIT),
+                Filters.eq("type",DepositInfoType.CREATE_AGENT)
+        );
+        Bson[] bson = new Bson[]{
+                Filters.eq("deleteHeight", -1),
+                Filters.eq("address",address),
+                typeFilter
+        };
+        List<DepositInfo> depositList = this.getDepositList(chainId,bson);
         return assetToNvt(depositList).values().stream().reduce(BigInteger.ZERO,(d1,d2)->d1.add(d2));
     }
 
@@ -351,43 +351,69 @@ public class MongoDepositServiceImpl implements DepositService {
 
 
     @Override
-    public List<DepositInfo> getDepositSumList(int chainId,int... depositInfoTypes){
-        return getDepositSumList(chainId,null,depositInfoTypes);
+    public List<DepositGroupBySymbolSumDTO> getDepositSumList(int chainId){
+        return getDepositSumList(chainId,null) ;
     }
 
+
     @Override
-    public List<DepositInfo> getDepositSumList(int chainId,String address,int... depositInfoTypes){
-        Bson id = new Document()
-                .append("assetChainId","$assetChainId")
-                .append("assetId","$assetId")
-                .append("decimal","$decimal")
-                .append("symbol","$symbol");
-        Bson sum = new Document("$sum","$amount");
-        Bson match = ne("_id", null);
-        if(depositInfoTypes.length > 0){
-            match = Filters.and(match,Filters.or(Arrays.stream(depositInfoTypes).mapToObj(t->Filters.eq("type",t)).collect(Collectors.toList())));
-        }
+    public List<DepositGroupBySymbolSumDTO> getDepositSumList(int chainId, String address){
+        Bson typeFilter = Filters.or(
+                Filters.eq("type",DepositInfoType.STACKING),
+                Filters.eq("type",DepositInfoType.APPEND_AGENT_DEPOSIT),
+                Filters.eq("type",DepositInfoType.CREATE_AGENT)
+        );
+        List<Bson> bson = new ArrayList<>();
+        bson.add(Filters.eq("deleteHeight", -1));
+        bson.add(typeFilter);
         if(StringUtils.isNotBlank(address)){
-            match = Filters.and(match,Filters.eq("address",address));
+            bson.add(Filters.eq("address",address));
         }
-        match = Aggregates.match(match);
-        Bson group = new Document().append("_id",id).append("sum",sum);
-        List<Document> list = mongoDBService.aggReturnDoc(DEPOSIT_TABLE + chainId,match,new Document("$group",group));
-        return list.stream().map(d->{
-            Document _id = (Document) d.get("_id");
-            Long amount = d.getLong("sum");
-            int assetChainId = _id.getInteger("assetChainId");
-            int assetId = _id.getInteger("assetId");
-            String symbol = _id.getString("symbol");
-            int decimal = _id.getInteger("decimal");
-            DepositInfo di = new DepositInfo();
-            di.setSymbol(symbol);
-            di.setAmount(amount);
-            di.setAssetChainId(assetChainId);
-            di.setAssetId(assetId);
-            di.setDecimal(decimal);
-            return di;
-        }).collect(Collectors.toList());
+        BasicDBObject fields = new BasicDBObject();
+        fields
+                .append("address", 1)
+                .append("amount",1)
+                .append("assetChainId",1)
+                .append("assetId",1)
+                .append("decimal",1)
+                .append("symbol",1);;
+        List<DepositInfo> dataList = this.getDepositList(chainId,bson.toArray(new Bson[bson.size()]));
+        Map<String,DepositGroupBySymbolSumDTO> resData = new HashMap<>();
+        dataList.forEach(d->{
+            String key = d.getAssetChainId() + "-" + d.getAssetId();
+            DepositGroupBySymbolSumDTO dto = new DepositGroupBySymbolSumDTO();
+            dto.setAmount(d.getAmount());
+            dto.setAssetChainId(d.getAssetChainId());
+            dto.setAssetId(d.getAssetId());
+            dto.setDecimal(d.getDecimal());
+            dto.setSymbol(d.getSymbol());
+            resData.compute(key,(mapKey,old)->{
+                if(old == null){
+                    return dto;
+                }else{
+                    old.setAmount(old.getAmount().add(dto.getAmount()));
+                    return old;
+                }
+            });
+        });
+        return new ArrayList<>(resData.values());
+    }
+
+    /**
+     * amount 字段转换为字符串后，如果长度不足@AMOUNT_STRING_LENGTH,在左边用0补齐
+     * @param value
+     * @return
+     */
+    private String addLeftZroe(BigInteger value){
+        String valStr = value.compareTo(BigInteger.ZERO) == -1 ? value.negate().toString() : value.toString();
+        if(valStr.length() > AMOUNT_STRING_LENGTH){
+            throw new IllegalArgumentException("deposit amount size over Amount string max length ,AMOUNT_STARING_LENGTH must lessEquals " + AMOUNT_STRING_LENGTH);
+        }
+        valStr = "0".repeat(AMOUNT_STRING_LENGTH - valStr.length()) + valStr;
+        if(value.compareTo(BigInteger.ZERO) == -1){
+            valStr = "-" + valStr;
+        }
+        return valStr;
     }
 
     public void setMongoDBService(MongoDBService mongoDBService) {
@@ -397,4 +423,5 @@ public class MongoDepositServiceImpl implements DepositService {
     public void setSymbolPriceService(SymbolQuotationPriceService symbolPriceService) {
         this.symbolPriceService = symbolPriceService;
     }
+
 }

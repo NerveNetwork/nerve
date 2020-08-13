@@ -2,6 +2,8 @@ package network.nerve.converter.constant;
 
 import io.nuls.core.crypto.HexUtil;
 
+import java.math.BigInteger;
+
 /**
  * @author: Loki
  * @date: 2018/11/12
@@ -41,21 +43,21 @@ public interface ConverterConstant {
      * 异构链待处理队列的处理器
      */
     String CV_PENDING_THREAD = "cv_pending_thread";
-    long CV_TASK_INITIALDELAY = 30;
+    long CV_TASK_INITIALDELAY = 120;
     long CV_TASK_PERIOD = 3;
     String CV_PENDING_PROPOSAL_THREAD = "cv_pending_proposal_thread";
     /**
      * 收集交易签名队列处理器
      */
     String CV_SIGN_THREAD = "cv_sign_thread";
-    long CV_SIGN_TASK_INITIALDELAY = 20;
+    long CV_SIGN_TASK_INITIALDELAY = 120;
     long CV_SIGN_TASK_PERIOD = 3;
 
     /**
      * 收集交易签名队列处理器
      */
     String CV_CHECK_THREAD = "cv_check_thread";
-    long CV_CHECK_TASK_INITIALDELAY = 20;
+    long CV_CHECK_TASK_INITIALDELAY = 120;
     long CV_CHECK_TASK_PERIOD = 3;
 
     /** 统一所有链的主资产id */
@@ -64,5 +66,7 @@ public interface ConverterConstant {
     int MAGIC_NUM_100 = 100;
 
     int MAX_CHECK_TIMES = 10;
+
+    BigInteger DISTRIBUTION_FEE_OLD = new BigInteger("1000000000");//10
 
 }

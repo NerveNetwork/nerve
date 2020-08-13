@@ -42,6 +42,7 @@ import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
+import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
@@ -51,6 +52,7 @@ import network.nerve.converter.model.dto.*;
 import network.nerve.converter.storage.DisqualificationStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
+import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -74,6 +76,8 @@ public class BusinessCmd extends BaseCmd {
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private DisqualificationStorageService disqualificationStorageService;
+    @Autowired
+    private HeterogeneousService heterogeneousService;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -146,21 +150,21 @@ public class BusinessCmd extends BaseCmd {
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             chain = chainManager.getChain((Integer) params.get("chainId"));
             boolean checkBalance = false;
-            if(null != params.get("balance")) {
+            if (null != params.get("balance")) {
                 checkBalance = (boolean) params.get("balance");
             }
             Map<String, VirtualBankDirector> mapVirtualBank = chain.getMapVirtualBank();
             List<VirtualBankDirectorDTO> list = new ArrayList<>();
             for (VirtualBankDirector director : mapVirtualBank.values()) {
                 VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
-                for(HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()){
-                  IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                  String chainSymbol = heterogeneousDocking.getChainSymbol();
-                  addr.setSymbol(chainSymbol);
-                  if(checkBalance) {
-                      BigDecimal balance = heterogeneousDocking.getBalance(addr.getAddress()).stripTrailingZeros();
-                      addr.setBalance(balance.toPlainString());
-                  }
+                for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+                    IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                    String chainSymbol = heterogeneousDocking.getChainSymbol();
+                    addr.setSymbol(chainSymbol);
+                    if (checkBalance) {
+                        BigDecimal balance = heterogeneousDocking.getBalance(addr.getAddress()).stripTrailingZeros();
+                        addr.setBalance(balance.toPlainString());
+                    }
                 }
                 list.add(directorDTO);
             }
@@ -267,7 +271,7 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
-    
+
     @CmdAnnotation(cmd = ConverterCmdConstant.RESET_VIRTUAL_BANK, version = 1.0, description = "重置虚拟银行异构链(合约)")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
@@ -314,8 +318,6 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
-
-
 
 
     @CmdAnnotation(cmd = ConverterCmdConstant.VOTE_PROPOSAL, version = 1.0, description = "投票提案")
@@ -405,6 +407,52 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_PARSE, version = 1.0, description = "重新解析异构链交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    })
+    )
+    public Response checkRetryParse(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            int heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            String heterogeneousTxHash = params.get("heterogeneousTxHash").toString();
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryParse");
+                map.put("value", false);
+            } else {
+                heterogeneousService.checkRetryParse(chain, heterogeneousChainId, heterogeneousTxHash);
+                map.put("value", true);
+            }
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
 
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {

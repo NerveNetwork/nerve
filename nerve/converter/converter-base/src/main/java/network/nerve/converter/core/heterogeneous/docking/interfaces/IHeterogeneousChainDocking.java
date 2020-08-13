@@ -213,4 +213,9 @@ public interface IHeterogeneousChainDocking {
      * 强制恢复一致
      */
     String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException;
+
+    /**
+     * 重新解析充值交易（当前节点遗漏了异构链交易解析）
+     */
+    Boolean reAnalysisDepositTx(String ethTxHash) throws Exception;
 }

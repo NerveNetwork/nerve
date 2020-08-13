@@ -343,18 +343,22 @@ public class ETHWalletApiTest extends Base {
      */
     @Test
     public void callContractTest() throws Exception {
+        setMain();
+        BigInteger gasPrice = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
         //加载凭证，用私钥
-        Credentials credentials = Credentials.create(getPrivateKey());
-        String contractAddress = "0x945aDdcdCB42A99aae77A10Eb220C4e04f4f7b5b";
-        // args: "zxczxc",["0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17"],[]
-        EthGetTransactionCount transactionCount = ethWalletApi.getWeb3j().ethGetTransactionCount(getFrom(), DefaultBlockParameterName.PENDING).sendAsync().get();
+        Credentials credentials = Credentials.create("");
+        String contractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        EthGetTransactionCount transactionCount = ethWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
-//0xa3c1f84900000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000c11d9943805e56b630a401d4bd9a29550353efa1000000000000000000000000000000000000000000000000016345785d8a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000067765727765720000000000000000000000000000000000000000000000000000
         //创建RawTransaction交易对象
         Function function = new Function(
                 "createOrSignManagerChange",
-                List.of(new Utf8String("zxczxc"), new DynamicArray(Address.class, List.of(new Address("0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17"))),
-                        new DynamicArray(Address.class, List.of()), new Uint8(1)),
+                List.of(new Utf8String("recovery22e8781136a9b09f3d445a52e38998c68709572c0080cbc48022c111af5df34e6"),
+                        new DynamicArray(Address.class, List.of(
+                                new Address("0x4cAa0869a4E0A4A860143b366F336Fcc5D11d4D8"), new Address("0x78c30FA073F6CBE9E544f1997B91DD616D66C590"), new Address("0xb12a6716624431730c3Ef55f80C458371954fA52"), new Address("0x659EC06A7AeDF09b3602E48D0C23cd3Ed8623a88"), new Address("0x1F13E90daa9548DEfae45cd80C135C183558db1f"), new Address("0x8047eC58521dBafF785203Ea070cd23b77257c02"), new Address("0x66fB6D6dF71bBBf1c247769BA955390710da40A5"), new Address("0xbB5bA69105a330218E4a433F5e2a273bf0075E64"), new Address("0x6C9783CC9C9fF9C0F1280E4608AfAaDF08cFb43D"), new Address("0xA28035Bb5082f5c00fa4d3EFc4CB2e0645167444")
+                                )),
+                        new DynamicArray(Address.class, List.of()),
+                        new Uint8(1)),
                 List.of(new TypeReference<Type>() {
                 })
         );
@@ -363,8 +367,8 @@ public class ETHWalletApiTest extends Base {
 
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,
-                EthContext.getEthGasPrice(),
-                BigInteger.valueOf(300000L),
+                gasPrice,
+                BigInteger.valueOf(800000L),
                 contractAddress, encodedFunction
         );
         //签名Transaction，这里要对交易做签名
@@ -545,7 +549,7 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void txInputWithdrawDecoderTest() throws JsonProcessingException {
         // 46b4c37e
-        String input = "0x46b4c37e00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000001ecdaa0af57cafcdead950323ecd79eadc0d649b000000000000000000000000000000000000000000000000002386f26fc1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004061363265653835366435623563633761366635353735353135663336306365623363316434666331346438363538383833613466373135393434343931363839";
+        String input = "0x46b4c37e00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000020a495b1f92b135373cd080a60bd58f7dd073d3300000000000000000000000000000000000000000000000002c68af0bb14000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004034346131336137393261373133316439393630326162393833363433303762643861336363343335623465326436383739636434613330633236623139323339";
         List<Object> typeList = EthUtil.parseInput(input, EthConstant.INPUT_WITHDRAW);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
@@ -553,7 +557,7 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void txInputChangeDecoderTest() throws JsonProcessingException {
-        String changeInput = "0xbdeaa8ba000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000403764353638636639663964336335336536633433636539323738346365633231333061323332356133366134373233646564373935316666373039373665343100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000d29e172537a3fb133f790ebe57ace8221cb8024f";
+        String changeInput = "0xbdeaa8ba000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000260000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000497265636f7665727932326538373831313336613962303966336434343561353265333839393863363837303935373263303038306362633438303232633131316166356466333465360000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000004caa0869a4e0a4a860143b366f336fcc5d11d4d800000000000000000000000078c30fa073f6cbe9e544f1997b91dd616d66c590000000000000000000000000b12a6716624431730c3ef55f80c458371954fa52000000000000000000000000659ec06a7aedf09b3602e48d0c23cd3ed8623a880000000000000000000000001f13e90daa9548defae45cd80c135c183558db1f0000000000000000000000008047ec58521dbaff785203ea070cd23b77257c0200000000000000000000000066fb6d6df71bbbf1c247769ba955390710da40a5000000000000000000000000bb5ba69105a330218e4a433f5e2a273bf0075e640000000000000000000000006c9783cc9c9ff9c0f1280e4608afaadf08cfb43d000000000000000000000000a28035bb5082f5c00fa4d3efc4cb2e06451674440000000000000000000000000000000000000000000000000000000000000000";
         List<Object> typeListOfChange = EthUtil.parseInput(changeInput, EthConstant.INPUT_CHANGE);
         System.out.println(JSONUtils.obj2PrettyJson(typeListOfChange));
     }
@@ -592,23 +596,28 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void ethCallTest() throws Exception {
-        String contractAddress = "0xf7c9bb7e6d6b8f603f17f6af0713d99ee285bddb";
-        // args: "bnmbnm",["0xc11D9943805e56b630A401D4bd9A29550353EFa1","0x11eFE2A9CF96175AB241e4A88A6b79C4f1c70389"],[]
+        setMain();
+        BigInteger gasPrice = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
+        String contractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         Function function = new Function(
                 "createOrSignManagerChange",
-                List.of(new Utf8String("0129833793e14165d04c4961bf1a83c1596539d5365a0a588c48a9f1e5e0172c"),
-                        new DynamicArray(Address.class, List.of(new Address("0x9458de7f162a5a35faf52f6b4c715187ec2269e5"))),
-                        new DynamicArray(Address.class, List.of()), new Uint8(1)),
-                List.of(new TypeReference<Type>() {})
+                List.of(new Utf8String("recovery22e8781136a9b09f3d445a52e38998c68709572c0080cbc48022c111af5df34e6"),
+                        new DynamicArray(Address.class, List.of(
+                                new Address("0x4cAa0869a4E0A4A860143b366F336Fcc5D11d4D8"), new Address("0x78c30FA073F6CBE9E544f1997B91DD616D66C590"), new Address("0xb12a6716624431730c3Ef55f80C458371954fA52"), new Address("0x659EC06A7AeDF09b3602E48D0C23cd3Ed8623a88"), new Address("0x1F13E90daa9548DEfae45cd80C135C183558db1f"), new Address("0x8047eC58521dBafF785203Ea070cd23b77257c02"), new Address("0x66fB6D6dF71bBBf1c247769BA955390710da40A5"), new Address("0xbB5bA69105a330218E4a433F5e2a273bf0075E64"), new Address("0x6C9783CC9C9fF9C0F1280E4608AfAaDF08cFb43D"), new Address("0xA28035Bb5082f5c00fa4d3EFc4CB2e0645167444")
+                        )),
+                        new DynamicArray(Address.class, List.of()),
+                        new Uint8(1)),
+                List.of(new TypeReference<Type>() {
+                })
         );
 
         String encodedFunction = FunctionEncoder.encode(function);
 
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xdd7cbedde731e78e8b8e4b2c212bc42fa7c09d03",//364151
+                "0x0eb9e4427a0af1fa457230bef3481d028488363e",//364151
                 null,
-                BigInteger.valueOf(1_00_0000_0000_0000_0000L),
-                BigInteger.valueOf(10000000L),
+                gasPrice,
+                BigInteger.valueOf(800000L),
                 contractAddress,
                 null,
                 encodedFunction
@@ -653,13 +662,11 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void overrideOneTest() throws Exception {
-        // 设置eth主网
-        setMain();
         String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
         String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
         String hash = ethWalletApi.sendETHWithNonce(from, fromPriKey, from, BigDecimal.ZERO, EthConstant.ETH_GAS_LIMIT_OF_ETH,
-                BigInteger.valueOf(105L).multiply(BigInteger.TEN.pow(9)),//gas price
-                BigInteger.valueOf(18989345));// nonce
+                BigInteger.valueOf(105L).multiply(BigInteger.TEN.pow(9)),
+                ethWalletApi.getLatestNonce(from));
         System.out.println(String.format("hash is %s", hash));
     }
 
@@ -692,6 +699,7 @@ public class ETHWalletApiTest extends Base {
     String[] prikeyOfSeeds;
     String contractAddress;
     boolean newMode = false;
+    boolean mainnet = false;
     String apiURL;
     private void localdev() {
         newMode = true;
@@ -727,6 +735,15 @@ public class ETHWalletApiTest extends Base {
         };
         contractAddress = "0x44f4eA5028992D160Dc0dc9A3cB93a2e4C913611";
         apiURL = "http://seeda.nuls.io:17004/api/converter/bank";
+    }
+
+    private void mainnet() {
+        setMain();
+        mainnet = true;
+        newMode = true;
+        prikeyOfSeeds = new String[]{};
+        contractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        apiURL = "https://api.nerve.network/api/converter/bank";
     }
 
     @Test
@@ -772,8 +789,9 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void balanceOfContractManagerSet() throws Exception {
-        localdev();
+        //localdev();
         //testnet();
+        mainnet();
         BigInteger gasPrice = BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9));
         String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
         String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
@@ -784,7 +802,7 @@ public class ETHWalletApiTest extends Base {
         for (String address : all) {
             BigDecimal balance = ethWalletApi.getBalance(address).movePointLeft(18);
             System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
-            if (balance.compareTo(new BigDecimal(sendAmount)) < 0) {
+            if (!mainnet && balance.compareTo(new BigDecimal(sendAmount)) < 0) {
                 String txHash = ethWalletApi.sendETH(from, fromPriKey, address, new BigDecimal(sendAmount), BigInteger.valueOf(21000L), gasPrice);
                 System.out.print(String.format(", 向[%s]转账%s个ETH, 交易hash: %s", address, sendAmount, txHash));
             }
@@ -796,9 +814,10 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void compareManagersBetweenNerveAndContract() throws Exception {
-//        localdev();
+        //localdev();
         // 测试网环境合约
-        testnet();
+        //testnet();
+        mainnet();
 
         Set<String> managerFromNerve = new HashSet<>();
         SDKContext.wallet_url = "";
@@ -834,8 +853,8 @@ public class ETHWalletApiTest extends Base {
         EthContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
 
         // 本地开发合约重置
-        localdev();
-        //localdevII();
+        //localdev();
+        localdevII();
 
         // 测试网合约重置
         //testnet();
@@ -1153,7 +1172,16 @@ public class ETHWalletApiTest extends Base {
     }
     @Test
     public void test() {
-        System.out.println(new BigInteger("10000000000000000000000000").divide(BigInteger.valueOf(10L).pow(18)));
+        String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
+        System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
+        long price = 100L;
+        System.out.println("1200000 gas cost " + new BigDecimal("1200000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("800000 gas cost " + new BigDecimal("800000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("300000 gas cost " + new BigDecimal("300000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("150000 gas cost " + new BigDecimal("150000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("100000 gas cost " + new BigDecimal("100000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
+
     }
     @Test
     public void maintestSendEth() throws Exception {

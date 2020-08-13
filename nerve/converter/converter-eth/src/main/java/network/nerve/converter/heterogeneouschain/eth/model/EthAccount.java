@@ -39,6 +39,8 @@ public class EthAccount extends HeterogeneousAccount implements Serializable {
 
     private int order;
 
+    private String compressedPublicKey;
+
     public EthAccount() {
     }
 
@@ -55,6 +57,14 @@ public class EthAccount extends HeterogeneousAccount implements Serializable {
         Credentials credentials = Credentials.create(Numeric.toHexStringNoPrefix(newPriKey));
         byte[] pubKey = credentials.getEcKeyPair().getPublicKey().toByteArray();
         return Arrays.equals(pubKey, orginPubKey);
+    }
+
+    public String getCompressedPublicKey() {
+        return compressedPublicKey;
+    }
+
+    public void setCompressedPublicKey(String compressedPublicKey) {
+        this.compressedPublicKey = compressedPublicKey;
     }
 
     public int getOrder() {

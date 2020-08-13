@@ -52,15 +52,7 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
         }
         list.forEach(d->{
             StackSymbolPriceInfo prevPrice = getFreshPrice(d.getSymbol(),d.getCurrency());
-            BigDecimal change;
-            //如果获取最近一次报价的价格是0，则不计算与上一次的涨跌幅
-            if(prevPrice.getPrice().equals(BigDecimal.ZERO)){
-                change = BigDecimal.ZERO;
-            }else{
-                change = d.getPrice().subtract(prevPrice.getPrice());
-                change = change.divide(prevPrice.getPrice(), MathContext.DECIMAL64).setScale(4, RoundingMode.HALF_DOWN);
-            }
-            d.setChange(change.doubleValue());
+            d.setChange(calcChangeRate(prevPrice.getPrice(),d.getPrice()).doubleValue());
         });
         save(list,TABLE);
         list.forEach(d->{
@@ -80,8 +72,6 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
             symbolInfo.ifPresent(si->{
                 d.setAssetChainId(si.getChainId());
                 d.setAssetId(si.getAssetId());
-                //转换成毫秒
-                d.setCreateTime(d.getCreateTime());
             });
             modelList.add(new ReplaceOneModel(new Document("_id",d.get_id()),DocumentTransferTool.toDocument(d), new ReplaceOptions().upsert(true)));
         });
@@ -145,7 +135,7 @@ public class MongoSymbolQuotationPriceServiceImpl implements SymbolQuotationPric
 
     @Override
     public StackSymbolPriceInfo getFreshPrice(int assetChainId, int assetId, String currency) {
-        List<Document> list = mongoDBService.limitQuery(TABLE,new Document("assetChainId",assetChainId).append("assetId",assetId).append("currency",currency),new Document("createTime",1),1,1);
+        List<Document> list = mongoDBService.limitQuery(TABLE,new Document("assetChainId",assetChainId).append("assetId",assetId).append("currency",currency),new Document("createTime",-1),0,1);
         return buildSymbolPriceInfo(list,null,currency);
     }
 

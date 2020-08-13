@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=logs
+logPath=/Users/niels/workspace/nerve-network/Logs
 logLevel=INFO
-dataPath=data
+dataPath=/Users/niels/workspace/nerve-network/data
 #默认本链ID
 chainId=9
 #地址前缀
@@ -29,9 +29,9 @@ packageVersion=%PACKAGE_VERSION%
 [network]
 port=7001
 crossPort=7002
+reverseCheck=0
 #魔法参数
 packetMagic=2020071001
-reverseCheck=0
 #种子节点
 selfSeedIps=seeda.nerve.network:7001,seedb.nerve.network:7001,seedh.nerve.network:7001,seedg.nerve.network:7001,seedc.nerve.network:7001,seede.nerve.network:7001
 #主网的跨链种子连接节点
@@ -155,8 +155,8 @@ explorerHost=0.0.0.0
 [dex]
 #系统收取手续费地址
 sysFeeAddress=NERVEepb6Em8hfKMNNnk3Xag8kN3Sf2tya5UDj
-#系统收取手续费比例（3，表示3/10000）
-sysFeeScale=3
+#系统收取手续费比例（2，表示2/10000）
+sysFeeScale=2
 #创建交易对费用
 createTradingAmount=5000000000000
 
@@ -164,16 +164,15 @@ createTradingAmount=5000000000000
 effectiveQuotation=1
 quoteStartHm=00:00
 quoteEndHm=00:10
-nerveBasedNuls=1
 
 [converter]
 executeChangeVirtualBankPeriodicHeight=1000
 feePubkey=111111111111111111111111111111111111111111111111111111111111111111
 initVirtualBankHeight=10
 virtualBankAgentCountWithoutSeed=10
-proposalPrice=20000000000
+proposalPrice=10000000000
 proposalVotingDays=10
-distributionFee=1000000000
+distributionFee=10000000000
 byzantineRatio=66
 multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5
 heterogeneousMainNet=true

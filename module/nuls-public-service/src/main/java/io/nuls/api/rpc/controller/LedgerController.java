@@ -42,7 +42,14 @@ public class LedgerController {
      */
     @RpcMethod("totalCrossAsset")
     public RpcResult totalCrossAsset(List<Object> param){
-        return RpcResult.success(reportProvider.getAssetTotal().entrySet().stream().filter(d->d.getKey().getChainId() != ApiContext.defaultChainId).map(this::build).collect(Collectors.toList()));
+        return RpcResult.success(reportProvider.getAssetTotal().entrySet().stream().filter(d->d.getKey().getChainId() != ApiContext.defaultChainId).map((entry)->{
+            Asset asset = entry.getKey();
+            BigInteger total = entry.getValue();
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(asset.getChainId(),asset.getAssetId());
+            SymbolPrice symbolPrice = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(symbolRegInfo.getSymbol());
+            SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
+            return Map.of("symbol",symbolRegInfo,"total",usd.transfer(symbolPrice,new BigDecimal(total).movePointLeft(symbolRegInfo.getDecimals())));
+        }).collect(Collectors.toList()));
     }
 
     /**
@@ -51,18 +58,11 @@ public class LedgerController {
      */
     @RpcMethod("totalDepositAsset")
     public RpcResult totalDepositAsset(List<Object> param){
-        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
-        return RpcResult.success(reportProvider.getDepositTotal().entrySet().stream().map(this::build).collect(Collectors.toList()));
+        return RpcResult.success(reportProvider.getDepositGroupByAsset().entrySet().stream().map(entry->{
+            String symbol = entry.getKey().getSymbol();
+            SymbolRegInfo symbolRegInfo = symbolRegService.getFirst(symbol).get();
+            return Map.of("symbol",symbolRegInfo,"total",entry.getValue().getUsdVal().movePointLeft(symbolRegInfo.getDecimals()));
+        }).collect(Collectors.toList()));
     }
-
-    private Map<String,Object> build(Map.Entry<Asset,BigInteger> entry){
-        Asset asset = entry.getKey();
-        BigInteger total = entry.getValue();
-        SymbolRegInfo symbolRegInfo = symbolRegService.get(asset.getChainId(),asset.getAssetId());
-        SymbolPrice symbolPrice = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(symbolRegInfo.getSymbol());
-        SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
-        return Map.of("symbol",symbolRegInfo,"total",usd.transfer(symbolPrice,new BigDecimal(total).movePointLeft(symbolRegInfo.getDecimals())));
-    }
-
 
 }

@@ -142,6 +142,7 @@ public interface EthConstant {
 
     Long ROLLBACK_NUMER = 100L;
 
+    long HOURS_3 = 3L * 60L * 60L * 1000L;
     long MINUTES_20 = 20 * 60 * 1000L;
     long MINUTES_10 = 10 * 60 * 1000L;
     long MINUTES_5 = 5 * 60 * 1000L;

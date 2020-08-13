@@ -23,12 +23,12 @@ if [ ! -f /etc/redhat-release ]; then
     echo "this script only support centos 7"
     exit 0;
 fi
-CENTOSVERSION=`cat /etc/redhat-release| grep '7.'`
-echo $CENTOSVERSION
-if [ -z "$CENTOSVERSION" ]; then
-    echo "this script only support centos 7"
-    exit 0;
-fi
+#CENTOSVERSION=`cat /etc/redhat-release| grep '7.'`
+#echo $CENTOSVERSION
+#if [ -z "$CENTOSVERSION" ]; then
+#    echo "this script only support centos 7"
+#    exit 0;
+#fi
 if ! [ "$USER" == 'root' ]; then
     echo "must login root";
     exit 0;

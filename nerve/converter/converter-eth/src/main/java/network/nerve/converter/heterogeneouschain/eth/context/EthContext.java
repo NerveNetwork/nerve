@@ -52,6 +52,7 @@ public class EthContext implements Serializable {
      */
     public static String ADMIN_ADDRESS;
     public static String ADMIN_ADDRESS_PASSWORD;
+    public static String ADMIN_ADDRESS_PUBLIC_KEY;
 
     /**
      * 待确认交易队列

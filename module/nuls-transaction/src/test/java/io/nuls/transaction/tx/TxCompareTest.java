@@ -106,7 +106,7 @@ public class TxCompareTest {
     //将交易的顺序打乱，再排序，来验证排序是否正确
     @Test
     public void test() throws Exception {
-//        importPriKey("2349820348023948234982357923561293479238579234792374923472343434", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
+//        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
         importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD TNVTdN9iB7VveoFG4GwYMRAFAF2Rsyrj9mjR3
         for (int y = 0; y < 1; y++) {
             System.out.println("------------------");

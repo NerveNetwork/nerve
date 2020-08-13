@@ -2,10 +2,7 @@ package network.nerve.dex.tx.v1.validate;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -39,6 +36,8 @@ public class TradingOrderValidator {
     private DexConfig config;
 
     public Map<String, Object> validateTxs(List<Transaction> txs) {
+//        long time1, time2;
+//        time1 = System.currentTimeMillis();
         //存放验证不通过的交易
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
@@ -57,6 +56,10 @@ public class TradingOrderValidator {
                 invalidTxList.add(tx);
             }
         }
+//        time2 = System.currentTimeMillis();
+//        if (time2 - time1 > 50) {
+//            LoggerUtil.dexLog.info("----TradingOrderValidator----, txCount:{}, use:{} ", blockHeader.getHeight(), txs.size(), (time2 - time1));
+//        }
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("txList", invalidTxList);
         resultMap.put("errorCode", errorCode == null ? null : errorCode.getCode());
@@ -85,7 +88,7 @@ public class TradingOrderValidator {
         if (order.getAmount().compareTo(BigInteger.ZERO) == 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "orderAmount error");
         }
-        if(Arrays.equals(DexContext.sysFeeAddress, order.getAddress())) {
+        if (Arrays.equals(DexContext.sysFeeAddress, order.getAddress())) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "sysFeeAddress can't create tradingOrder");
         }
         if (order.getFeeAddress() != null) {
@@ -93,12 +96,12 @@ public class TradingOrderValidator {
                 throw new NulsException(DexErrorCode.DATA_ERROR, "feeAddress error");
             }
         }
-        if(order.getFeeScale() > 98) {
+        if (order.getFeeScale() > 98) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "feeScale error");
         }
         //判断from里的地址是否和委托地址一致
-        for(CoinFrom from : coinData.getFrom()) {
-            if(!Arrays.equals(from.getAddress(), order.getAddress())) {
+        for (CoinFrom from : coinData.getFrom()) {
+            if (!Arrays.equals(from.getAddress(), order.getAddress())) {
                 throw new NulsException(DexErrorCode.ACCOUNT_VALID_ERROR);
             }
         }

@@ -38,6 +38,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
+import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
@@ -475,7 +476,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     @Override
-    public Transaction createDistributionFeeTx(Chain chain, NulsHash basisTxHash, List<byte[]> listRewardAddress, long txTime) throws NulsException {
+    public Transaction createDistributionFeeTx(Chain chain, NulsHash basisTxHash, List<byte[]> listRewardAddress, long txTime, boolean isProposal) throws NulsException {
         DistributionFeeTxData distributionFeeTxData = new DistributionFeeTxData();
         distributionFeeTxData.setBasisTxHash(basisTxHash);
         byte[] txData = null;
@@ -485,7 +486,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.DISTRIBUTION_FEE, txData, txTime);
-        byte[] coinData = assembleDistributionFeeCoinData(chain, listRewardAddress);
+        byte[] coinData = assembleDistributionFeeCoinData(chain, listRewardAddress, isProposal);
         tx.setCoinData(coinData);
         ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
         chain.getLogger().debug(tx.format(DistributionFeeTxData.class));
@@ -775,10 +776,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      * @return
      * @throws NulsException
      */
-    private byte[] assembleDistributionFeeCoinData(Chain chain, List<byte[]> listRewardAddress) throws NulsException {
+    private byte[] assembleDistributionFeeCoinData(Chain chain, List<byte[]> listRewardAddress, boolean isProposal) throws NulsException {
         byte[] feeFromAdddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-        List<CoinFrom> listFrom = assembleDistributionFeeCoinFrom(chain, feeFromAdddress);
-        List<CoinTo> listTo = assembleDistributionFeeCoinTo(chain, listRewardAddress);
+        List<CoinFrom> listFrom = assembleDistributionFeeCoinFrom(chain, feeFromAdddress, isProposal);
+        List<CoinTo> listTo = assembleDistributionFeeCoinTo(chain, listRewardAddress, isProposal);
         CoinData coinData = new CoinData(listFrom, listTo);
         try {
             return coinData.serialize();
@@ -795,9 +796,21 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      * @return
      * @throws NulsException
      */
-    private List<CoinFrom> assembleDistributionFeeCoinFrom(Chain chain, byte[] feeFromAdddress) throws NulsException {
+    private List<CoinFrom> assembleDistributionFeeCoinFrom(Chain chain, byte[] feeFromAdddress, boolean isProposal) throws NulsException {
         int assetChainId = chain.getConfig().getChainId();
         int assetId = chain.getConfig().getAssetId();
+
+        BigInteger amountFee = null;
+        if (!isProposal) {
+            long height = chain.getLatestBasicBlock().getHeight();
+            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
+                amountFee = ConverterConstant.DISTRIBUTION_FEE_OLD;
+            } else {
+                amountFee = ConverterContext.DISTRIBUTION_FEE;
+            }
+        } else {
+            amountFee = ConverterContext.PROPOSAL_PRICE;
+        }
         //查询手续费暂存地址余额够不够
         NonceBalance currentChainNonceBalance = LedgerCall.getBalanceNonce(
                 chain,
@@ -809,7 +822,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         CoinFrom coinFrom = new CoinFrom(feeFromAdddress,
                 assetChainId,
                 assetId,
-                ConverterContext.DISTRIBUTION_FEE,
+                amountFee,
                 nonce,
                 (byte) 0);
         List<CoinFrom> listFrom = new ArrayList<>();
@@ -825,10 +838,23 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      * @return
      * @throws NulsException
      */
-    private List<CoinTo> assembleDistributionFeeCoinTo(Chain chain, List<byte[]> listRewardAddress) throws NulsException {
+    private List<CoinTo> assembleDistributionFeeCoinTo(Chain chain, List<byte[]> listRewardAddress, boolean isProposal) throws NulsException {
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listRewardAddress.size());
-        BigInteger amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
+
+        BigInteger distributionFee = null;
+        if (!isProposal) {
+            long height = chain.getLatestBasicBlock().getHeight();
+            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
+                distributionFee = ConverterConstant.DISTRIBUTION_FEE_OLD;
+            } else {
+                distributionFee = ConverterContext.DISTRIBUTION_FEE;
+            }
+        } else {
+            distributionFee = ConverterContext.PROPOSAL_PRICE;
+        }
+
+        BigInteger amount = distributionFee.divide(count);
         Map<String, BigInteger> map = calculateDistributionFeeCoinToAmount(listRewardAddress, amount);
         // 组装cointo
         List<CoinTo> listTo = new ArrayList<>();

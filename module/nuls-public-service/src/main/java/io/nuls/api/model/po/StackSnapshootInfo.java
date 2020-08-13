@@ -18,19 +18,19 @@ public class StackSnapshootInfo {
     /**
      * 基础利息
      */
-    private BigDecimal baseInterest;
+    private BigDecimal baseInterest = BigDecimal.ZERO;
 
 
     /**
      * 参与stack的总量
      */
-    private BigInteger stackTotal;
+    private BigInteger stackTotal = BigInteger.ZERO;
 
 
     /**
      * 当日发放收益
      */
-    private BigInteger rewardTotal;
+    private BigInteger rewardTotal = BigInteger.ZERO;
 
 
     /**

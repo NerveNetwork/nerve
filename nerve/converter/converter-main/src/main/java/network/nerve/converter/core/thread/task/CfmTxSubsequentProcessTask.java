@@ -29,6 +29,7 @@ import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
+import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
@@ -92,7 +93,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     // 判断已执行过, 从队列中移除, 并从持久库中移除
                     // 执行成功移除队列头部元素
                     pendingTxQueue.remove();
-                    chain.getLogger().debug("[异构链待处理队列] 判断已执行过移除交易, hash:{}", tx.getHash().toHex());
+                    chain.getLogger().info("[异构链待处理队列] 已执行过,移除交易, hash:{}", tx.getHash().toHex());
                     // 并且从持久化库中移除
                     txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
                     continue;
@@ -102,7 +103,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     if (pendingPO.getIsConfirmedVerifyCount() > ConverterConstant.CONFIRMED_VERIFY_COUNT) {
                         // 移除
                         pendingTxQueue.remove();
-                        chain.getLogger().debug("[异构链待处理队列] 交易未确认(移除处理), hash:{}", tx.getHash().toHex());
+                        chain.getLogger().error("[异构链待处理队列] 交易未确认(移除处理), hash:{}", tx.getHash().toHex());
                         // 并且从持久化库中移除
                         txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
                         continue;
@@ -160,7 +161,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 // 执行成功移除队列头部元素
                 pendingTxQueue.remove();
-                chain.getLogger().debug("[异构链待处理队列] 执行成功移除交易, hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[异构链待处理队列] 执行成功移除交易, hash:{}", tx.getHash().toHex());
                 // 并且从持久化库中移除
                 txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
             }
@@ -202,7 +203,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private void changeVirtualBankProcessor() throws Exception {
-
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
         if (null == hInterfaces || hInterfaces.isEmpty()) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
@@ -288,10 +292,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         Map<VirtualBankDirector, Integer> mapAllDirector = new HashMap<>();
         // 合并前原始交易数量
         int originalMergedCount = mergeList.size();
-        chain.getLogger().debug("[bank-可合并的交易] size:{}", mergeList.size());
+        chain.getLogger().info("[bank-可合并的交易] size:{}", mergeList.size());
         for (TxSubsequentProcessPO pendingPO : mergeList) {
-            chain.getLogger().debug("----------------------------------------");
-            chain.getLogger().debug("[bank-可合并的交易] hash:{}", pendingPO.getTx().getHash().toHex());
+            chain.getLogger().info("----------------------------------------");
+            chain.getLogger().info("[bank-可合并的交易] hash:{}", pendingPO.getTx().getHash().toHex());
             for (VirtualBankDirector director : pendingPO.getListInDirector()) {
                 mapAllDirector.compute(director, (k, v) -> {
                     if (null == v) {
@@ -300,7 +304,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         return v + 1;
                     }
                 });
-                chain.getLogger().debug("InAddress: {}", director.getAgentAddress());
+                chain.getLogger().info("InAddress: {}", director.getAgentAddress());
             }
             for (VirtualBankDirector director : pendingPO.getListOutDirector()) {
                 mapAllDirector.compute(director, (k, v) -> {
@@ -310,9 +314,9 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         return v - 1;
                     }
                 });
-                chain.getLogger().debug("OutAddress: {}", director.getAgentAddress());
+                chain.getLogger().info("OutAddress: {}", director.getAgentAddress());
             }
-            chain.getLogger().debug("----------------------------------------");
+            chain.getLogger().info("----------------------------------------");
         }
         int inCount = 0;
         int outCount = 0;
@@ -382,14 +386,18 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
                 chain.getLogger().info("[开始执行虚拟银行异构链交易, 关闭新异构链变更执行] key:{}", key);
             }
-            chain.getLogger().debug("[bank-执行变更] key:{}, inAddress:{}, outAddress:{}",
+            chain.getLogger().info("[bank-执行变更] key:{}, inAddress:{}, outAddress:{}",
                     key, Arrays.toString(inAddress), Arrays.toString(outAddress));
         }
         return Result.getSuccess(0);
     }
 
 
-    private void heterogeneousContractAssetRegCompleteProcessor(TxSubsequentProcessPO pendingPO) {
+    private void heterogeneousContractAssetRegCompleteProcessor(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         if (!chain.getCurrentIsDirector().get()) {
             return;
         }
@@ -403,6 +411,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
 
     private void initializeHeterogeneousProcessor(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         if (!chain.getCurrentIsDirector().get()) {
             return;
         }
@@ -430,6 +442,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private void withdrawalProcessor(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         if (!chain.getCurrentIsDirector().get()) {
             return;
         }
@@ -452,11 +468,12 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         BigInteger amount = withdrawCoinTo.getAmount();
         String heterogeneousAddress = txData.getHeterogeneousAddress();
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
-        docking.createOrSignWithdrawTx(
+        String ethTxHash = docking.createOrSignWithdrawTx(
                 tx.getHash().toHex(),
                 heterogeneousAddress,
                 amount,
                 heterogeneousAssetInfo.getAssetId());
+        chain.getLogger().info("[withdraw] 调用异构链组件执行提现. hash:{},ethHash:{}", tx.getHash().toHex(), ethTxHash);
     }
 
 
@@ -469,6 +486,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private void confirmWithdrawalDistributionFee(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         if (!chain.getCurrentIsDirector().get()) {
             return;
         }
@@ -484,7 +505,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             listRewardAddress.add(AddressTool.getAddress(address));
         }
         try {
-            assembleTxService.createDistributionFeeTx(chain, txData.getWithdrawalTxHash(), listRewardAddress, pendingPO.getBlockHeader().getTime());
+            assembleTxService.createDistributionFeeTx(chain, txData.getWithdrawalTxHash(), listRewardAddress, pendingPO.getBlockHeader().getTime(), false);
         } catch (NulsException e) {
             if ("tx_0013".equals(e.getErrorCode().getCode())) {
                 chain.getLogger().info("该补贴手续费交易已确认..(原始)提现确认交易txhash:{}", pendingPO.getTx().getHash().toHex());
@@ -499,6 +520,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private void confirmProposalDistributionFee(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         if (!chain.getCurrentIsDirector().get()) {
             return;
         }
@@ -523,7 +548,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
         try {
             // basisTxHash 为确认提案交易hash
-            assembleTxService.createDistributionFeeTx(chain, pendingPO.getTx().getHash(), listRewardAddress, pendingPO.getBlockHeader().getTime());
+            assembleTxService.createDistributionFeeTx(chain, pendingPO.getTx().getHash(), listRewardAddress, pendingPO.getBlockHeader().getTime(), true);
         } catch (NulsException e) {
             if ("tx_0013".equals(e.getErrorCode().getCode())) {
                 chain.getLogger().info("该补贴手续费交易已确认..(原始)提现确认交易txhash:{}", pendingPO.getTx().getHash().toHex());
@@ -539,6 +564,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
      * @throws NulsException
      */
     private void resetHeterogeneousVirtualBank(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
         /**
          * 1.移除所有虚拟银行变更交易 (所有虚拟银行成员都要执行)
          * 2.发起重置异构链交易 (只有种子节点执行)

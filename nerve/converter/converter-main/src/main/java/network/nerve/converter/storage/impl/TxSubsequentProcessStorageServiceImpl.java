@@ -59,7 +59,7 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
             String txHash = po.getTx().getHash().toHex();
             result = ConverterDBUtil.putModel(DB_PENDING_PREFIX + chainId, stringToBytes(txHash), po);
             if (result) {
-                TxSubsequentProcessKeyListPO listPO = ConverterDBUtil.getModel(DB_PENDING_PREFIX,
+                TxSubsequentProcessKeyListPO listPO = ConverterDBUtil.getModel(DB_PENDING_PREFIX + chainId,
                         PENDING_TX_ALL_KEY, TxSubsequentProcessKeyListPO.class);
                 if (listPO == null) {
                     listPO = new TxSubsequentProcessKeyListPO();

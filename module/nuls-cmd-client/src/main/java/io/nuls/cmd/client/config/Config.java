@@ -109,7 +109,7 @@ public class Config implements InitializingBean {
     }
 
     public BigDecimal toBigUnit(BigInteger val,int decimal) {
-        BigDecimal dval = BigDecimal.valueOf(val.longValue());
+        BigDecimal dval = new BigDecimal(val);
         return dval.movePointLeft(decimal);
     }
 

@@ -30,6 +30,7 @@ import io.nuls.api.constant.ReportDataTimeType;
 import io.nuls.api.db.*;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.manager.HeterogeneousChainAssetBalanceManager;
+import io.nuls.api.model.dto.DepositGroupBySymbolSumDTO;
 import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.rpc.RpcErrorCode;
@@ -1008,27 +1009,29 @@ public class PocConsensusController {
         } catch (Exception e) {
             return RpcResult.paramError("[address] is inValid");
         }
-        List<DepositInfo> list = depositService.getDepositSumList(chainId,address,DepositInfoType.STACKING,DepositInfoType.CANCEL_STACKING);
+        List<DepositGroupBySymbolSumDTO> list = depositService.getDepositSumList(chainId,address);
         Map<String, BigInteger> symbolList = list.stream().map(d -> Map.of(d.getSymbol(), d.getAmount())).reduce(new HashMap<>(list.size()),
                 (d1, d2) -> {
                     d1.putAll(d2);
                     return d1;
                 });
         Map<String,SymbolUsdPercentDTO> rateList = new HashMap<>(list.size());
-        SymbolUsdPercentDTO maxPer = null;
-        BigDecimal totalPer = BigDecimal.ZERO;
-        for (DepositInfo depositInfo : list){
-            SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(depositInfo.getSymbol(),symbolList);
-            rateList.put(depositInfo.getSymbol(),dto);
-            if(maxPer == null){
-                maxPer = dto;
-            }else if(maxPer.getPer().compareTo(dto.getPer()) < 0){
-                maxPer = dto;
+        if(list != null && !list.isEmpty()){
+            SymbolUsdPercentDTO maxPer = null;
+            BigDecimal totalPer = BigDecimal.ZERO;
+            for (DepositGroupBySymbolSumDTO depositInfo : list){
+                SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(depositInfo.getSymbol(),symbolList);
+                rateList.put(depositInfo.getSymbol(),dto);
+                if(maxPer == null){
+                    maxPer = dto;
+                }else if(maxPer.getPer().compareTo(dto.getPer()) < 0){
+                    maxPer = dto;
+                }
+                totalPer = totalPer.add(dto.getPer());
             }
-            totalPer = totalPer.add(dto.getPer());
-        }
-        if(totalPer.compareTo(BigDecimal.ONE) < 0){
-            maxPer.setPer(maxPer.getPer().add(BigDecimal.ONE.subtract(totalPer)));
+            if(totalPer.compareTo(BigDecimal.ONE) < 0){
+                maxPer.setPer(maxPer.getPer().add(BigDecimal.ONE.subtract(totalPer)));
+            }
         }
         List<Map<String, Object>> resList = list.stream().map(d -> {
             SymbolUsdPercentDTO dto = rateList.get(d.getSymbol());
@@ -1119,7 +1122,7 @@ public class PocConsensusController {
                     DepositFixedType depositFixedType = DepositFixedType.getValue(timeType);
                     rate = stackingService.getAssetStackingRate(symbol,depositFixedType);
                 }
-                return Map.of("timeType",de.get("timeType"),"totalAddition",rate,"depositType",depositInfoType);
+                return Map.of("timeType",de.get("timeType"),"totalAddition",rate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_DOWN),"depositType",depositInfoType);
             }).collect(Collectors.toList());
             return Map.of("symbol",symbol,"detailList",detail);
         }).collect(Collectors.toList()));
@@ -1317,7 +1320,7 @@ public class PocConsensusController {
         Arrays.stream(DepositFixedType.values()).forEach(d->{
             BigDecimal rate = stackingService.getAssetStackingRate(symbol,d);
             if(d.equals(DepositFixedType.NONE)){
-                res.put(d,rate);
+                res.put(d,rate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_UP));
             }else{
                 Long day = d.getTime() / 3600L / 24;
                 BigDecimal totalRate = rate.divide(BigDecimal.valueOf(365), MathContext.DECIMAL64).multiply(new BigDecimal(day));

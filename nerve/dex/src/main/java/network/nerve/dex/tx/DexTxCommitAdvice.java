@@ -47,8 +47,8 @@ public class DexTxCommitAdvice implements CommonAdvice {
         if (txList.isEmpty()) {
             return;
         }
-        long time1, time2;
-        time1 = System.currentTimeMillis();
+//        long time1, time2;
+//        time1 = System.currentTimeMillis();
 
         Transaction tx;
         for (int i = 0; i < txList.size(); i++) {
@@ -69,10 +69,9 @@ public class DexTxCommitAdvice implements CommonAdvice {
                 orderCancelConfirmProcessor.txCommit(tx);
             }
         }
-        time2 = System.currentTimeMillis();
-        if (time2 - time1 > 200) {
-            LoggerUtil.dexLog.info("----dex commit----");
-            LoggerUtil.dexLog.info("----block height:{}, txCount:{}, use:{} ", blockHeader.getHeight(), txList.size(), (time2 - time1));
-        }
+//        time2 = System.currentTimeMillis();
+//        if (time2 - time1 > 100) {
+//            LoggerUtil.dexLog.info("----dex commit---- block height:{}, txCount:{}, use:{} ", blockHeader.getHeight(), txList.size(), (time2 - time1));
+//        }
     }
 }

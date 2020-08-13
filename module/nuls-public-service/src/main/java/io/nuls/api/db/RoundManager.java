@@ -125,19 +125,10 @@ public class RoundManager {
         }
         List<AgentInfo> agentList = mongoAgentServiceImpl.getAgentListByStartHeight(chainId, startHeight);
         agentList = agentList.stream().sorted(AgentComparator.getInstance()).limit(ApiContext.maxAgentCount - apiCache.getChainInfo().getSeeds().size()).collect(Collectors.toList());
-        List<DepositInfo> depositList = mongoDepositServiceImpl.getDepositList(chainId, startHeight);
         BlockTimeInfo blockTimeInfo = blockTimeService.get(chainId);
         Map<String, AgentInfo> map = new HashMap<>();
-        Map<String, BigInteger> depositMap = new HashMap<>();
         for (AgentInfo agent : agentList) {
             map.put(agent.getTxHash(), agent);
-        }
-        for (DepositInfo deposit : depositList) {
-            BigInteger agentDeposit = depositMap.get(deposit.getAgentHash());
-            if (null == agentDeposit) {
-                agentDeposit = BigInteger.ZERO;
-            }
-            depositMap.put(deposit.getAgentHash(), agentDeposit.add(deposit.getAmount()));
         }
         List<AgentSorter> sorterList = new ArrayList<>();
         for (AgentInfo agent : map.values()) {

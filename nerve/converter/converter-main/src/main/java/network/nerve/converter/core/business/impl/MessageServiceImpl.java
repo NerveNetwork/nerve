@@ -28,16 +28,23 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.P2PHKSignature;
+import io.nuls.core.basic.Result;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.MessageService;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.management.HeterogeneousCallBackManager;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.core.validator.ProposalVerifier;
 import network.nerve.converter.enums.ByzantineStateEnum;
 import network.nerve.converter.message.BroadcastHashSignMessage;
+import network.nerve.converter.message.CheckRetryParseMessage;
 import network.nerve.converter.message.GetTxMessage;
 import network.nerve.converter.message.NewTxMessage;
 import network.nerve.converter.model.bo.Chain;
@@ -65,6 +72,12 @@ public class MessageServiceImpl implements MessageService {
     @Autowired
     private ProposalVerifier proposalVerifier;
 
+    @Autowired
+    private HeterogeneousCallBackManager heterogeneousCallBackManager;
+
+    @Autowired
+    private HeterogeneousDockingManager heterogeneousDockingManager;
+
     @Override
     public void newHashSign(Chain chain, String nodeId, BroadcastHashSignMessage message) {
         int chainId = chain.getChainId();
@@ -83,7 +96,7 @@ public class MessageServiceImpl implements MessageService {
             chain.getFutureMessageMap().get(hash).add(untreatedMessage);
             LoggerUtil.LOG.info("当前节点还未确认该交易，缓存签名消息 hash:{}", hash.toHex());
 
-            if(TxType.PROPOSAL == message.getType()){
+            if (TxType.PROPOSAL == message.getType()) {
                 // 如果是提案交易, 则需要主动向发送索要交易,非交易发起节点 无法创建该交易
                 GetTxMessage msg = new GetTxMessage(hash);
                 NetWorkCall.broadcast(chain, msg, null, ConverterCmdConstant.GET_TX_MESSAGE);
@@ -116,14 +129,14 @@ public class MessageServiceImpl implements MessageService {
         String nativeHex = hash.toHex();
         LoggerUtil.LOG.info("节点:{},向本节点获取完整的交易，Hash:{}", nodeId, nativeHex);
         TransactionPO txPO = txStorageService.get(chain, hash);
-        if(null == txPO){
+        if (null == txPO) {
             chain.getLogger().error("当前节点不存在该交易,Hash:{}", nativeHex);
             return;
         }
         NewTxMessage newTxMessage = new NewTxMessage();
         newTxMessage.setTx(txPO.getTx());
         //把完整交易发送给请求节点
-        if(!NetWorkCall.sendToNode(chain, newTxMessage, nodeId, ConverterCmdConstant.NEW_TX_MESSAGE)){
+        if (!NetWorkCall.sendToNode(chain, newTxMessage, nodeId, ConverterCmdConstant.NEW_TX_MESSAGE)) {
             LoggerUtil.LOG.info("发送完整的交易到节点:{}, 失败! Hash:{}\n\n", nodeId, nativeHex);
             return;
         }
@@ -152,14 +165,14 @@ public class MessageServiceImpl implements MessageService {
         }
         txStorageService.save(chain, new TransactionPO(message.getTx()));
         List<UntreatedMessage> listMsg = chain.getFutureMessageMap().get(localHash);
-        if(null != listMsg){
-            for(UntreatedMessage msg : listMsg){
+        if (null != listMsg) {
+            for (UntreatedMessage msg : listMsg) {
                 chain.getSignMessageByzantineQueue().offer(msg);
             }
             // 清空缓存的签名
             chain.getFutureMessageMap().remove(localHash);
         }
-        if(TxType.PROPOSAL == message.getTx().getType()){
+        if (TxType.PROPOSAL == message.getTx().getType()) {
             P2PHKSignature p2PHKSignature;
             try {
                 p2PHKSignature = ConverterSignUtil.addSignatureByDirector(chain, message.getTx());
@@ -176,4 +189,34 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    @Override
+    public void checkRetryParse(Chain chain, String nodeId, CheckRetryParseMessage message) {
+        int heterogeneousChainId = message.getHeterogeneousChainId();
+        String heterogeneousTxHash = message.getHeterogeneousTxHash();
+        if (heterogeneousChainId <= 0 || StringUtils.isBlank(heterogeneousTxHash)) {
+            chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
+        }
+        String hash = txStorageService.getHeterogeneousHash(chain, heterogeneousTxHash);
+        if(StringUtils.isNotBlank(hash)){
+            // 已经处理过
+            return;
+        }
+        IDepositTxSubmitter submitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(chain.getChainId(), heterogeneousChainId);
+        Result result = submitter.validateDepositTx(heterogeneousTxHash);
+        if(result.isFailed()){
+            chain.getLogger().error("重新解析异构交易, validateDepositTx 验证失败, {}", result.getErrorCode().getCode());
+            return;
+        }
+        try {
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            boolean rs = docking.reAnalysisDepositTx(heterogeneousTxHash);
+            if(rs) {
+                txStorageService.saveHeterogeneousHash(chain, heterogeneousTxHash);
+                NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.CHECK_RETRY_PARSE_MESSAGE);
+                chain.getLogger().info("[checkRetryParse 消息处理完成] 异构chainId: {}, 异构hash:{}", heterogeneousChainId, heterogeneousTxHash);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

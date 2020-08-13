@@ -57,7 +57,7 @@ public class ExeProposalStorageServiceImpl implements ExeProposalStorageService 
             String txHash = po.getProposalTxHash().toHex();
             result = ConverterDBUtil.putModel(DB_EXE_PROPOSAL_PENDING_PREFIX + chainId, stringToBytes(txHash), po);
             if (result) {
-                ExeProposalPOKeyListPO listPO = ConverterDBUtil.getModel(DB_EXE_PROPOSAL_PENDING_PREFIX,
+                ExeProposalPOKeyListPO listPO = ConverterDBUtil.getModel(DB_EXE_PROPOSAL_PENDING_PREFIX + chainId,
                         EXEPROPOSAL_TX_ALL_KEY, ExeProposalPOKeyListPO.class);
                 if (listPO == null) {
                     listPO = new ExeProposalPOKeyListPO();

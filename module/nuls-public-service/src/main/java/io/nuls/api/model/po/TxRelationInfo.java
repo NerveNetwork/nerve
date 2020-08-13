@@ -1,5 +1,6 @@
 package io.nuls.api.model.po;
 
+import io.nuls.api.db.mongo.MongoDepositServiceImpl;
 import io.nuls.api.utils.DocumentTransferTool;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.crypto.Sha256Hash;

@@ -337,14 +337,15 @@ public class VirtualBankServiceImpl implements VirtualBankService {
 
     /**
      * 判断节点出块地址对应的异构地址余额是否满足条件
+     *
      * @param agentBasic
      * @return 满足:true, 不满足:false
      */
-    private boolean checkHeterogeneousAddressBalance(Chain chain, AgentBasic agentBasic){
+    private boolean checkHeterogeneousAddressBalance(Chain chain, AgentBasic agentBasic) {
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
         for (IHeterogeneousChainDocking hInterface : hInterfaces) {
             String pubKey = agentBasic.getPubKey();
-            if(StringUtils.isBlank(pubKey)){
+            if (StringUtils.isBlank(pubKey)) {
 //                chain.getLogger().debug("[]The agent packing address public key not exist, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
 //                        agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
                 return false;
@@ -352,17 +353,17 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             String hAddress = hInterface.generateAddressByCompressedPublicKey(agentBasic.getPubKey());
             BigDecimal balance = hInterface.getBalance(hAddress).stripTrailingZeros();
             boolean rs = false;
-            for(HeterogeneousCfg cfg :chain.getListHeterogeneous()){
-                if(cfg.getType() != 1){
+            for (HeterogeneousCfg cfg : chain.getListHeterogeneous()) {
+                if (cfg.getType() != 1) {
                     // 非主资产, 无需验证
                     continue;
                 }
-                if(cfg.getChainId() == hInterface.getChainId() && cfg.getInitialBalance().compareTo(balance) < 0){
+                if (cfg.getChainId() == hInterface.getChainId() && cfg.getInitialBalance().compareTo(balance) < 0) {
                     rs = true;
                 }
             }
             // 所有异构链地址都需要满足条件
-            if(!rs){
+            if (!rs) {
                 chain.getLogger().warn("The agent heterogeneous address insufficient balance, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
                         agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
                 return false;

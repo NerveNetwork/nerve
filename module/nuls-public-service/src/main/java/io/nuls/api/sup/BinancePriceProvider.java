@@ -7,6 +7,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import org.bson.types.Symbol;
+import org.glassfish.grizzly.utils.ArraySet;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -26,37 +27,20 @@ import java.util.Set;
  * @Description: 功能描述
  */
 @Component
-public class BinancePriceProvider implements PriceProvider, InitializingBean {
-
-    HttpClient client = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofMillis(5000))
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
+public class BinancePriceProvider extends BasePriceProvider implements PriceProvider, InitializingBean {
 
     private int initTryCount = 0 ;
 
-    private String url;
-
     Set<String> supportAssetList = new HashSet<>();
-
-    @Override
-    public void setURL(String url) {
-        this.url = url;
-    }
 
     @Override
     public BigDecimal queryPrice(String symbol) {
         if(!supportAssetList.contains(symbol)){
             return BigDecimal.ZERO;
         }
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"api/v3/ticker/price?symbol=" + symbol+ "USDT"))
-                .timeout(Duration.ofMillis(5000))
-                .build();
         try {
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
-            Map<String,Object> data = JSONUtils.json2map(response.body());
+            String url  = this.url+"api/v3/ticker/price?symbol=" + symbol+ "USDT";
+            Map<String, Object> data = httpRequest(url);
             BigDecimal res = new BigDecimal((String)data.get("price"));
             LoggerUtil.PRICE_PROVIDER_LOG.debug("获取到当前{}兑USDT的价格:{}",symbol,res);
             return res;
@@ -68,14 +52,9 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws NulsException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url+"api/v3/exchangeInfo"))
-                .timeout(Duration.ofMillis(5000))
-                .build();
+        String url = this.url+"api/v3/exchangeInfo";
         try {
-            HttpResponse<String> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofString());
-            Map<String, Object> data = JSONUtils.json2map(response.body());
+            Map<String, Object> data = httpRequest(url);
             List<Map<String, Object>> res = (List<Map<String, Object>>) data.get("symbols");
             res.forEach(d -> {
                 Map<String, Object> item = d;
@@ -84,7 +63,7 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
                 }
                 supportAssetList.add(d.get("baseAsset").toString());
             });
-        }catch (Exception e) {
+        } catch (Exception e) {
             if(initTryCount > 3){
                 Log.error("获取binance的交易对基础信息失败",e);
                 System.exit(0);
@@ -93,4 +72,8 @@ public class BinancePriceProvider implements PriceProvider, InitializingBean {
             afterPropertiesSet();
         }
     }
+
+
+
+
 }

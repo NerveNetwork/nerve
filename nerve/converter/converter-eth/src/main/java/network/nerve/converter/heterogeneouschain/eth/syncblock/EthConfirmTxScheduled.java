@@ -419,18 +419,22 @@ public class EthConfirmTxScheduled implements Runnable {
                         realNerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_I.length());
                         if (txPo.getNerveTxHash().startsWith(EthConstant.ETH_RECOVERY_I)) {
                             // 第一步恢复设置为已完成
-                            ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
+                            if (!EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
+                                ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
+                            }
                             // 第一步恢复执行完成后，种子虚拟银行执行第二步
                             if (EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
                                 logger().info("[{}]已完成恢复第一步的ETH交易[{}]调用恢复第二步", po.getTxType(), ethTxHash);
                                 EthRecoveryDto recoveryDto = ethTxStorageService.findRecoveryByNerveTxKey(nerveTxHash);
                                 if (recoveryDto == null) {
                                     logger().info("第二步恢复交易已提前发出");
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
                                     break;
                                 }
                                 String secondHash = ethRegister.getDockingImpl().forceRecovery(EthConstant.ETH_RECOVERY_II + realNerveTxHash, recoveryDto.getSeedManagers(), recoveryDto.getAllManagers());
                                 if (StringUtils.isNotBlank(secondHash)) {
                                     logger().info("第二步恢复交易已发出，hash: {}", secondHash);
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
                                 }
                             }
                             break;

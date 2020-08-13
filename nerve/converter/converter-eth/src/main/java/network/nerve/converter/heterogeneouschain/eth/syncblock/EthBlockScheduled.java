@@ -29,6 +29,7 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
@@ -55,6 +56,8 @@ public class EthBlockScheduled implements Runnable {
     private ConverterConfig converterConfig;
     @Autowired
     private EthBlockAnalysis ethBlockAnalysis;
+    @Autowired
+    private EthAnalysisTxHelper ethAnalysisTxHelper;
     @Autowired
     private EthCallBackManager ethCallBackManager;
 
@@ -97,6 +100,11 @@ public class EthBlockScheduled implements Runnable {
             }
         } catch (Exception e) {
             EthContext.logger().error("同步ETH当前Price失败", e);
+        }
+        try {
+            ethAnalysisTxHelper.clearHash();
+        } catch (Exception e) {
+            EthContext.logger().error("清理充值交易hash再次验证的集合失败", e);
         }
         try {
 

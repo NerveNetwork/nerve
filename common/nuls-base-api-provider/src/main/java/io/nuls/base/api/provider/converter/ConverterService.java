@@ -54,6 +54,13 @@ public interface ConverterService {
      */
     Result<String> resetBank(ResetBankReq req);
 
+    /**
+     * 检查并重发异构链充值交易
+     * @param req
+     * @return
+     */
+    Result<Boolean> checkRetryParse(CheckRetryParseReq req);
+
     Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 
     Result<Boolean> validateRegisterHeterogeneousAsset(RegisterHeterogeneousAssetReq req);

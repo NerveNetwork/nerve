@@ -21,20 +21,13 @@
 package io.nuls.block.message.handler;
 
 import io.nuls.base.RPCUtil;
-import io.nuls.base.data.Block;
-import io.nuls.base.data.NulsHash;
 import io.nuls.base.protocol.MessageProcessor;
-import io.nuls.block.manager.ContextManager;
 import io.nuls.block.manager.RunnableManager;
-import io.nuls.block.message.BlockMessage;
 import io.nuls.block.message.HashMessage;
-import io.nuls.block.rpc.call.NetworkCall;
 import io.nuls.block.service.BlockService;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.log.logback.NulsLogger;
 
-import static io.nuls.block.constant.CommandConstant.BLOCK_MESSAGE;
 import static io.nuls.block.constant.CommandConstant.GET_BLOCK_MESSAGE;
 
 /**

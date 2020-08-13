@@ -37,6 +37,7 @@ import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManage
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthResendHelper;
@@ -64,6 +65,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
@@ -89,7 +91,9 @@ public class EthDocking implements IHeterogeneousChainDocking {
     private EthAccountStorageService ethAccountStorageService;
     private EthParseTxHelper ethParseTxHelper;
     private EthCallBackManager ethCallBackManager;
+    private EthAnalysisTxHelper ethAnalysisTxHelper;
     private String keystorePath;
+    private ReentrantLock reAnalysisLock = new ReentrantLock();
 
 
     private EthDocking() {
@@ -148,6 +152,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
             ethAccountStorageService.save(account);
             // 覆写这个地址作为虚拟银行管理员地址
             EthContext.ADMIN_ADDRESS = account.getAddress();
+            EthContext.ADMIN_ADDRESS_PUBLIC_KEY = account.getCompressedPublicKey();
             EthContext.ADMIN_ADDRESS_PASSWORD = password;
             logger().info("向ETH异构组件导入节点出块地址信息, address: [{}]", account.getAddress());
             return account;
@@ -263,6 +268,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     @Override
     public void txConfirmedCompleted(String ethTxHash, Long blockHeight) throws Exception {
+        if (StringUtils.isBlank(ethTxHash)) {
+            logger().warn("Empty ethTxHash warning");
+            return;
+        }
+        ethAnalysisTxHelper.removeHash(ethTxHash);
         // 更新db中po的状态，改为delete，在队列任务中确认`ROLLBACK_NUMER`个块之后再移除，便于状态回滚
         EthUnconfirmedTxPo txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         if (txPo == null) {
@@ -715,6 +725,43 @@ public class EthDocking implements IHeterogeneousChainDocking {
         }
     }
 
+    @Override
+    public Boolean reAnalysisDepositTx(String ethTxHash) throws Exception {
+        if (ethAnalysisTxHelper.constainHash(ethTxHash)) {
+            logger().info("重复收集充值交易hash: {}，不再重复解析[0]", ethTxHash);
+            return true;
+        }
+        reAnalysisLock.lock();
+        try {
+            if (ethAnalysisTxHelper.constainHash(ethTxHash)) {
+                logger().info("重复收集充值交易hash: {}，不再重复解析[1]", ethTxHash);
+                return true;
+            }
+            logger().info("重新解析充值交易: {}", ethTxHash);
+            org.web3j.protocol.core.methods.response.Transaction tx = ethWalletApi.getTransactionByHash(ethTxHash);
+            if (tx == null || tx.getBlockNumber() == null) {
+                return false;
+            }
+            HeterogeneousTransactionInfo txInfo = ethParseTxHelper.parseDepositTransaction(tx);
+            if (txInfo == null) {
+                return false;
+            }
+            Long blockHeight = tx.getBlockNumber().longValue();
+            EthBlock.Block block = ethWalletApi.getBlockHeaderByHeight(blockHeight);
+            if (block == null) {
+                return false;
+            }
+            Long txTime = block.getTimestamp().longValue();
+            ethAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
+            ethAnalysisTxHelper.addHash(ethTxHash);
+            return true;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            reAnalysisLock.unlock();
+        }
+    }
+
     private String recovery(String nerveTxKey, String[] adds, String[] removes, EthRecoveryDto recoveryDto) throws NulsException {
         try {
             // 当前虚拟银行触发恢复机制时，持久化保存调用参数，以提供给第二步恢复时使用
@@ -1110,5 +1157,9 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     public void setEthMultiSignAddressHistoryStorageService(EthMultiSignAddressHistoryStorageService ethMultiSignAddressHistoryStorageService) {
         this.ethMultiSignAddressHistoryStorageService = ethMultiSignAddressHistoryStorageService;
+    }
+
+    public void setEthAnalysisTxHelper(EthAnalysisTxHelper ethAnalysisTxHelper) {
+        this.ethAnalysisTxHelper = ethAnalysisTxHelper;
     }
 }

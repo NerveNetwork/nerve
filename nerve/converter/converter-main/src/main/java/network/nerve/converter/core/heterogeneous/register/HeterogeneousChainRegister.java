@@ -81,6 +81,8 @@ public class HeterogeneousChainRegister {
             logger().error("error heterogeneousChainId: {}", heterogeneousChainId);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
+        // 管理异构链组件的接口实现实例
+        heterogeneousDockingManager.registerHeterogeneousDocking(heterogeneousChainId, heterogeneousChainInterface);
         // 多签地址
         String multySignAddress = chainInfo.getMultySignAddress();
         IDepositTxSubmitter depositTxSubmitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(nerveChainId, heterogeneousChainId);
@@ -89,8 +91,6 @@ public class HeterogeneousChainRegister {
         info.setDepositTxSubmitter(depositTxSubmitter);
         info.setTxConfirmedProcessor(txConfirmedProcessor);
         info.setConverterCoreApi(converterCoreApi);
-        // 管理异构链组件的接口实现实例
-        heterogeneousDockingManager.registerHeterogeneousDocking(heterogeneousChainId, heterogeneousChainInterface);
         return info;
     }
 }

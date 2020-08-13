@@ -12,37 +12,24 @@ import java.util.concurrent.TimeUnit;
 public class ScheduleManager {
 
     public void start() {
-//        int corePoolSize = ChainManager.getConfigBeanMap().size();
-//        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(corePoolSize);
-//        for (ConfigBean bean : ChainManager.getConfigBeanMap().values()) {
-//            executorService.scheduleAtFixedRate(new SyncBlockTask(bean.getChainId()), 1, 10, TimeUnit.SECONDS);
-//        }
-
-//        int corePoolSize = CacheManager.getApiCaches().size();
-//        ScheduledExecutorService executorService = Executors.newScheduledThreadPool( corePoolSize * 4);
-//        for (ApiCache apiCache : CacheManager.getApiCaches().values()) {
-//            executorService.scheduleAtFixedRate(new SyncBlockTask(apiCache.getChainInfo().getChainId()), 1, 10, TimeUnit.SECONDS);
-//            executorService.scheduleAtFixedRate(new StatisticalNulsTask(apiCache.getChainInfo().getChainId()), 1, 20, TimeUnit.MINUTES);
-//            executorService.scheduleAtFixedRate(new StatisticalTask(apiCache.getChainInfo().getChainId()), 1, 60, TimeUnit.MINUTES);
-//            executorService.scheduleAtFixedRate(new UnConfirmTxTask(apiCache.getChainInfo().getChainId()), 1, 10, TimeUnit.MINUTES);
-//        }
 
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(6);
         executorService.scheduleAtFixedRate(new DeleteTxsTask(ApiContext.defaultChainId), 2, 60, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new QueryChainInfoTask(ApiContext.defaultChainId), 2, 60, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new SyncBlockTask(ApiContext.defaultChainId), 5, 2, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new StatisticalNulsTask(ApiContext.defaultChainId), 1, 5, TimeUnit.MINUTES);
-        executorService.scheduleAtFixedRate(new StatisticalTask(ApiContext.defaultChainId), 1, 2, TimeUnit.MINUTES);
+        executorService.scheduleAtFixedRate(new StatisticalTask(ApiContext.defaultChainId), 1, 5, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new UnConfirmTxTask(ApiContext.defaultChainId), 1, 2, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new StatisticalRewardTask(ApiContext.defaultChainId), 1, 60, TimeUnit.MINUTES);
         executorService.scheduleAtFixedRate(new GetGlobalInfoTask(ApiContext.defaultChainId), 5, 2, TimeUnit.SECONDS);
 
-        //每小时执行一次币种兑USDT价格采集
-        executorService.scheduleAtFixedRate(new ActualSymbolUsdtPriceTask(),10,60,TimeUnit.SECONDS);
+        //每2分钟执行一次币种兑USDT价格采集
+        executorService.scheduleAtFixedRate(new ActualSymbolUsdtPriceTask(),2,10,TimeUnit.MINUTES);
 
-        //每小时执行一次统计数据缓存
-        executorService.scheduleAtFixedRate(new ReportTask(),10,10,TimeUnit.SECONDS);
+        //每半小时执行一次统计数据缓存
+        executorService.scheduleAtFixedRate(new ReportTask(),1,10,TimeUnit.MINUTES);
 
+        //每5分钟更新虚拟银行节点的ETH余额
         executorService.scheduleAtFixedRate(new QueryHeterogeneousChainBalanceTask(),1,5,TimeUnit.MINUTES);
     }
 }

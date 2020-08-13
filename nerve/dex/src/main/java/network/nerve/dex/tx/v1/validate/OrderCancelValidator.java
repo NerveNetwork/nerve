@@ -1,6 +1,7 @@
 package network.nerve.dex.tx.v1.validate;
 
 import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.CoinFrom;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.ErrorCode;
@@ -25,6 +26,8 @@ public class OrderCancelValidator {
     private TradingOrderStorageService orderStorageService;
 
     public Map<String, Object> validateTxs(List<Transaction> txs) {
+//        long time1, time2;
+//        time1 = System.currentTimeMillis();
         //存放验证不通过的交易
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
@@ -63,6 +66,11 @@ public class OrderCancelValidator {
                         throw new NulsException(DexErrorCode.DATA_ERROR, "coinFrom error");
                     }
                 }
+
+//                time2 = System.currentTimeMillis();
+//                if (time2 - time1 > 50) {
+//                    LoggerUtil.dexLog.info("----OrderCancelValidator----, txCount:{}, use:{} ", blockHeader.getHeight(), txs.size(), (time2 - time1));
+//                }
 
 //                //冲突检测，查看是否有相同的订单
 //                String orderHash = HexUtil.encode(orderCancel.getOrderHash());

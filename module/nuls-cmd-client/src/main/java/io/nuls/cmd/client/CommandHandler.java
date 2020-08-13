@@ -32,10 +32,7 @@ import io.nuls.cmd.client.processor.account.*;
 import io.nuls.cmd.client.processor.block.GetBestBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.block.GetBlockHeaderProcessor;
 import io.nuls.cmd.client.processor.consensus.*;
-import io.nuls.cmd.client.processor.converter.RegisterHeterogeneousAssetProcessor;
-import io.nuls.cmd.client.processor.converter.ResetBankProcess;
-import io.nuls.cmd.client.processor.converter.VoteProposalProcess;
-import io.nuls.cmd.client.processor.converter.WithdrawalProcessor;
+import io.nuls.cmd.client.processor.converter.*;
 import io.nuls.cmd.client.processor.crosschain.CreateCrossTxProcessor;
 import io.nuls.cmd.client.processor.crosschain.GetCrossTxStateProcessor;
 import io.nuls.cmd.client.processor.ledger.GetBalanceProcessor;
@@ -142,6 +139,7 @@ public class CommandHandler implements InitializingBean {
         register(getBean(VoteProposalProcess.class));
         register(getBean(RegisterHeterogeneousAssetProcessor.class));
         register(getBean(ResetBankProcess.class));
+        register(getBean(CheckRetryParseProcess.class));
         /**
          * consensus
          */

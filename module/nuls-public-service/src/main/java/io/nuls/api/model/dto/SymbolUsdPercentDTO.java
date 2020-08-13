@@ -1,6 +1,7 @@
 package io.nuls.api.model.dto;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * @Author: zhoulijun
@@ -24,6 +25,10 @@ public class SymbolUsdPercentDTO {
      * 1 为 100%
      */
     BigDecimal per;
+    /**
+     * 目标项数量
+     */
+    BigInteger amount;
 
     public BigDecimal getTotalUsdVal() {
         return totalUsdVal;
@@ -45,7 +50,18 @@ public class SymbolUsdPercentDTO {
         return per;
     }
 
+
+    public BigInteger getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigInteger amount) {
+        this.amount = amount;
+    }
+
     public void setPer(BigDecimal per) {
         this.per = per;
     }
+
+
 }

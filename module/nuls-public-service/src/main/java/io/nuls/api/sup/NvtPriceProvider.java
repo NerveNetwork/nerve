@@ -1,6 +1,7 @@
 package io.nuls.api.sup;
 
 import io.nuls.api.constant.config.ApiConfig;
+import io.nuls.api.db.SymbolQuotationPriceService;
 import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.core.basic.InitializingBean;
 import io.nuls.core.core.annotation.Autowired;
@@ -15,24 +16,26 @@ import java.math.BigDecimal;
  * @Time: 2020-04-17 14:18
  * @Description: 功能描述
  */
-@Component
+@Deprecated
 public class NvtPriceProvider implements PriceProvider, InitializingBean {
 
     @Autowired
     ApiConfig apiConfig;
 
-    SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
+    SymbolQuotationPriceService  symbolQuotationPriceService;
+
+
 
     @Override
     public void setURL(String url) {}
 
     @Override
     public BigDecimal queryPrice(String symbol) {
-        return symbolUsdtPriceProviderService.getSymbolPriceForUsdt(apiConfig.getMainSymbol()).getPrice();
+        return symbolQuotationPriceService.getFreshUsdtPrice(apiConfig.getSymbol()).getPrice();
     }
 
     @Override
     public void afterPropertiesSet() throws NulsException {
-        symbolUsdtPriceProviderService = SpringLiteContext.getBean(SymbolUsdtPriceProviderService.class);
+        symbolQuotationPriceService = SpringLiteContext.getBean(SymbolQuotationPriceService.class);
     }
 }

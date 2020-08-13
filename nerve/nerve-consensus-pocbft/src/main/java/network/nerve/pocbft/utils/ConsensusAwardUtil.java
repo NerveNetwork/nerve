@@ -151,7 +151,7 @@ public class ConsensusAwardUtil {
             // 如果区块只发放了一部分奖励，则更新存储的数据，等待下一个区块
             if (null != lastestSettleResult) {
                 int issuedCount = (int) (lastestSettleResult.getIssuedCount() + chain.getConfig().getMaxCoinToOfCoinbase());
-                if (issuedCount < lastestSettleResult.getSettleDetails().size()) {
+                if (null != lastestSettleResult.getSettleDetails() && issuedCount < lastestSettleResult.getSettleDetails().size()) {
                     po.getLastestSettleResult().setIssuedCount(issuedCount);
                     lastestSettleResult.setIssuedCount(issuedCount);
                     awardSettleRecordService.save(po, chain.getChainId());

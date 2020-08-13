@@ -39,6 +39,8 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
@@ -77,7 +79,8 @@ public class WithdrawalProcessor implements TransactionProcessor {
     private VirtualBankService virtualBankService;
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
-
+    @Autowired
+    private HeterogeneousDockingManager heterogeneousDockingManager;
     /**
      * 提现异构链与资产是否有效
      * 账户是否有足够提现金额（账本验证）
@@ -172,7 +175,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                             continue outer;
                         }
                     }
-                    //提现资产
+                    // 验证提现资产
                     if (coinTo.getAssetsId() != chain.getConfig().getAssetId()) {
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         // 验证to地址是提现黑洞公钥生成的地址
@@ -192,6 +195,17 @@ public class WithdrawalProcessor implements TransactionProcessor {
                             // 异构链资产不存在
                             errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
                             log.error(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
+                            continue;
+                        }
+                        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
+                        boolean rs = docking.validateAddress(txData.getHeterogeneousAddress());
+                        if(!rs){
+                            failsList.add(tx);
+                            // 异构链地址错误
+                            errorCode = ConverterErrorCode.ADDRESS_ERROR.getCode();
+                            log.error("{},提现异构链地址错误, HeterogeneousAddress:{}",
+                                    ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg(),
+                                    txData.getHeterogeneousAddress());
                             continue;
                         }
                     }

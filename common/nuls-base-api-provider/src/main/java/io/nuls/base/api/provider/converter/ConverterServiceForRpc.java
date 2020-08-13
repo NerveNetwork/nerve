@@ -78,6 +78,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<Boolean> checkRetryParse(CheckRetryParseReq req) {
+        Function<Map, Result> fun = res -> {
+            Boolean rs = (Boolean) res.get("value");
+            return success(rs);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_checkRetryParse", req, fun);
+    }
+
+    @Override
     public Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");

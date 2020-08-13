@@ -25,6 +25,7 @@
 package network.nerve.converter.core.business;
 
 import network.nerve.converter.message.BroadcastHashSignMessage;
+import network.nerve.converter.message.CheckRetryParseMessage;
 import network.nerve.converter.message.GetTxMessage;
 import network.nerve.converter.message.NewTxMessage;
 import network.nerve.converter.model.bo.Chain;
@@ -59,5 +60,13 @@ public interface MessageService {
      * @param message   消息体
      */
     void receiveTx(Chain chain, String nodeId, NewTxMessage message);
+
+    /**
+     * 重新解析(异构链)交易
+     * @param chain
+     * @param nodeId
+     * @param message
+     */
+    void checkRetryParse(Chain chain, String nodeId, CheckRetryParseMessage message);
 
 }

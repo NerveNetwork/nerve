@@ -27,10 +27,6 @@ package network.nerve.quotation.rpc.querier;
 import network.nerve.quotation.model.bo.Chain;
 
 import java.math.BigDecimal;
-import java.net.http.HttpClient;
-import java.time.Duration;
-
-import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
 
 /**
  * 价格查询器
@@ -38,11 +34,6 @@ import static network.nerve.quotation.constant.QuotationConstant.TIMEOUT_MILLIS;
  * @date: 2019/12/10
  */
 public interface Querier {
-
-    HttpClient CLIENT = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofMillis(TIMEOUT_MILLIS))
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
     /**
      * 获取token的价格
      * @param chain

@@ -219,7 +219,8 @@ public interface AssembleTxService {
     Transaction createDistributionFeeTx(Chain chain,
                                         NulsHash basisTxHash,
                                         List<byte[]> listRewardAddress,
-                                        long txTime) throws NulsException;
+                                        long txTime,
+                                        boolean isProposal) throws NulsException;
 
     /**
      * 组装并发布等待注册异构链合约资产交易

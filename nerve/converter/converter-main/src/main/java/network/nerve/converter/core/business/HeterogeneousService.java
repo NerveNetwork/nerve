@@ -65,4 +65,7 @@ public interface HeterogeneousService {
      * @return
      */
     boolean saveResetVirtualBankStatus(Chain chain, Boolean status);
+
+
+    void checkRetryParse(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException;
 }

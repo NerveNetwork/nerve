@@ -37,6 +37,7 @@ import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.basic.AddressPrefixInf;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.data.Address;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -155,6 +156,8 @@ public class PublicServiceBootstrap extends RpcModule {
         ApiContext.mongoUser = apiConfig.getMongoUser();
         ApiContext.mongoPwd = apiConfig.getMongoPwd();
         ApiContext.blackHolePublicKey = Hex.decode(apiConfig.getBlackHolePublicKey());
+        String blockHoleAddress = AddressTool.getAddressString(ApiContext.blackHolePublicKey,ApiContext.defaultChainId);
+        ApiContext.blackHoleAddress = blockHoleAddress;
         if (apiConfig.getDeveloperNodeAddress() != null) {
             ApiContext.DEVELOPER_NODE_ADDRESS = new HashSet(Arrays.asList(apiConfig.getDeveloperNodeAddress().split(",")));
         }

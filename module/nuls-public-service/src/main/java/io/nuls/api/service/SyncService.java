@@ -439,7 +439,6 @@ public class SyncService {
             AccountInfo accountInfo = queryAccountInfo(chainId, address);
             accountInfo.setTxCount(accountInfo.getTxCount() + 1);
         }
-
     }
 
 
@@ -695,7 +694,7 @@ public class SyncService {
     private void processSymbolQuotation(int chainId, TransactionInfo tx) {
         symbolQuotationRecordInfoList = tx.getTxDataList().stream().map(d -> {
                     SymbolQuotationRecordInfo info = (SymbolQuotationRecordInfo) d;
-                    AgentInfo agentInfo = agentService.getAgentByAgentAddress(chainId, info.getAddress());
+                    AgentInfo agentInfo = agentService.getAgentByPackingAddress(chainId, info.getAddress());
                     if (agentInfo != null) {
                         info.setAlias(agentInfo.getAgentAlias());
                     }
@@ -901,30 +900,6 @@ public class SyncService {
         return ledgerInfo;
     }
 
-    private AccountLedgerInfo calcBalanceForDex(int chainId, CoinFromInfo input) {
-        ChainInfo chainInfo = CacheManager.getCacheChain(chainId);
-
-        if (input.getChainId() == chainInfo.getChainId() && input.getAssetsId() == chainInfo.getDefaultAsset().getAssetId()) {
-            AccountInfo accountInfo = queryAccountInfo(chainId, input.getAddress());
-            switch (input.getLocked()){
-                case 0: //委托挂单
-                    accountInfo.setTotalOut(accountInfo.getTotalOut().add(input.getAmount()));
-                    accountInfo.setTotalBalance(accountInfo.getTotalBalance().subtract(input.getAmount()));
-                    break;
-            }
-
-            if (accountInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0) {
-                throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "account[" + accountInfo.getAddress() + "] totalBalance < 0");
-            }
-        }
-        AccountLedgerInfo ledgerInfo = queryLedgerInfo(chainId, input.getAddress(), input.getChainId(), input.getAssetsId());
-        ledgerInfo.setTotalBalance(ledgerInfo.getTotalBalance().subtract(input.getAmount()));
-        if (ledgerInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0) {
-            //  throw new NulsRuntimeException(ApiErrorCode.DATA_ERROR, "accountLedger[" + DBUtil.getAccountAssetKey(ledgerInfo.getAddress(), ledgerInfo.getChainId(), ledgerInfo.getAssetId()) + "] totalBalance < 0");
-        }
-        return ledgerInfo;
-    }
-
     private AccountLedgerInfo calcBalance(int chainId, CoinFromInfo input) {
         ChainInfo chainInfo = CacheManager.getCacheChain(chainId);
         if (input.getChainId() == chainInfo.getChainId() && input.getAssetsId() == chainInfo.getDefaultAsset().getAssetId()) {
@@ -1070,7 +1045,6 @@ public class SyncService {
                 roundService.setRoundItemRed(chainId,d.getRoundIndex(),d.getPackageIndex(),agentInfo.getTxHash());
             }
         });
-
     }
 
     private AccountInfo queryAccountInfo(int chainId, String address) {

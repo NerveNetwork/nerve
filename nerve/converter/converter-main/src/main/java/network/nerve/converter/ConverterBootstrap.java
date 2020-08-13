@@ -38,7 +38,6 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
-import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
 import io.nuls.core.rpc.modulebootstrap.NulsRpcModuleBootstrap;
@@ -246,6 +245,8 @@ public class ConverterBootstrap extends RpcModule {
 
         // 异构链交易手续费补贴
         ConverterContext.DISTRIBUTION_FEE = converterConfig.getDistributionFee();
+
+        ConverterContext.FEE_EFFECTIVE_HEIGHT = converterConfig.getFeeEffectiveHeight();
     }
 
     /**

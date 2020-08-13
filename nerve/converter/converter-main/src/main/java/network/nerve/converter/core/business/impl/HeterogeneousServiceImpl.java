@@ -24,15 +24,24 @@
 
 package network.nerve.converter.core.business.impl;
 
+import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.management.HeterogeneousCallBackManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.message.CheckRetryParseMessage;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.storage.PersistentCacheStroageService;
+import network.nerve.converter.storage.TxStorageService;
+import network.nerve.converter.utils.VirtualBankUtil;
 
 import static network.nerve.converter.constant.ConverterDBConstant.*;
 
@@ -43,12 +52,14 @@ import static network.nerve.converter.constant.ConverterDBConstant.*;
 @Component
 public class HeterogeneousServiceImpl implements HeterogeneousService {
 
-
-
+    @Autowired
+    private HeterogeneousCallBackManager heterogeneousCallBackManager;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private PersistentCacheStroageService persistentCacheStroageService;
+    @Autowired
+    private TxStorageService txStorageService;
 
     /**
      * 判断是否需要组装当前网络的主资产补贴异构链交易手续费
@@ -80,5 +91,36 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
     public boolean saveResetVirtualBankStatus(Chain chain, Boolean status) {
         chain.getResetVirtualBank().set(status);
         return persistentCacheStroageService.saveCacheState(chain, RESET_VIRTUALBANK_KEY, status ? 1 : 0);
+    }
+
+    @Override
+    public void checkRetryParse(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException {
+        /**
+         * 1.调组件
+         * 2.发消息
+         */
+        if (!VirtualBankUtil.isCurrentDirector(chain)) {
+            chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryParse");
+            throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+        }
+        IDepositTxSubmitter submitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(chain.getChainId(), heterogeneousChainId);
+        Result result = submitter.validateDepositTx(heterogeneousTxHash);
+        if(result.isFailed()){
+            chain.getLogger().error("重新解析异构交易, validateDepositTx 验证失败, {}", result.getErrorCode().getCode());
+            return;
+        }
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+        try {
+            boolean rs = docking.reAnalysisDepositTx(heterogeneousTxHash);
+            if(rs) {
+                txStorageService.saveHeterogeneousHash(chain, heterogeneousTxHash);
+                CheckRetryParseMessage message = new CheckRetryParseMessage(heterogeneousChainId, heterogeneousTxHash);
+                NetWorkCall.broadcast(chain, message, ConverterCmdConstant.CHECK_RETRY_PARSE_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new NulsException(e);
+        }
+
     }
 }

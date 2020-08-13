@@ -130,7 +130,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
                 // 根据原始交易 来验证
                 switch (basisTx.getType()) {
                     case TxType.WITHDRAWAL:
-                        String eCode = validWithdrawalDistribution(chain, tx, basisTx);
+                        String eCode = validWithdrawalDistribution(chain, tx, basisTx, blockHeader);
                         if (null != eCode) {
                             failsList.add(tx);
                             errorCode = eCode;
@@ -138,7 +138,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
                         }
                         break;
                     case TxType.PROPOSAL:
-                        eCode = validProposalDistribution(chain, tx, basisTx);
+                        eCode = validProposalDistribution(chain, tx, basisTx, blockHeader);
                         if (null != eCode) {
                             failsList.add(tx);
                             errorCode = eCode;
@@ -168,20 +168,21 @@ public class DistributionFeeProcessor implements TransactionProcessor {
      * @param basisTx
      * @return
      */
-    private String validWithdrawalDistribution(Chain chain, Transaction tx, Transaction basisTx) {
+    private String validWithdrawalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
         // 获取提现确认交易中的 分发手续费地址
         ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basisTx.getHash());
-        return validDistributionFeeAddress(chain, tx, po.getListDistributionFee());
+        return validDistributionFeeAddress(chain, tx, po.getListDistributionFee(), blockHeader, false);
     }
 
     /**
      * 验证补贴续费地址
+     *
      * @param chain
      * @param tx
      * @param listDistributionFee
      * @return
      */
-    private String validDistributionFeeAddress(Chain chain, Transaction tx,  List<HeterogeneousAddress> listDistributionFee){
+    private String validDistributionFeeAddress(Chain chain, Transaction tx, List<HeterogeneousAddress> listDistributionFee, BlockHeader blockHeader, boolean isProposal) {
         if (null == listDistributionFee || listDistributionFee.isEmpty()) {
             chain.getLogger().error(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getMsg());
             return ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getCode();
@@ -190,7 +191,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         List<byte[]> listBasisTxRewardAddressBytes = new ArrayList<>();
         for (HeterogeneousAddress addr : listDistributionFee) {
             String address = chain.getDirectorRewardAddress(addr);
-            if(StringUtils.isBlank(address)){
+            if (StringUtils.isBlank(address)) {
                 String signAddress = virtualBankAllHistoryStorageService.findByHeterogeneousAddress(chain, addr.getAddress());
                 VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
                 address = director.getRewardAddress();
@@ -209,7 +210,20 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         List<byte[]> listDistributionTxRewardAddressBytes = new ArrayList<>();
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listBasisTxRewardAddressBytes.size());
-        BigInteger amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
+        BigInteger amount = null;
+        if (!isProposal) {
+            long height = chain.getLatestBasicBlock().getHeight();
+            if (null != blockHeader) {
+                height = blockHeader.getHeight();
+            }
+            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
+                amount = ConverterConstant.DISTRIBUTION_FEE_OLD.divide(count);
+            } else {
+                amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
+            }
+        } else {
+            amount = ConverterContext.PROPOSAL_PRICE.divide(count);
+        }
 
         // 通过原始数据(确认交易中的列表),计算组装cointo的数据
         Map<String, BigInteger> coinToOriginalMap = assembleTxService.calculateDistributionFeeCoinToAmount(listBasisTxRewardAddressBytes, amount);
@@ -221,7 +235,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         for (CoinTo coinTo : coinData.getTo()) {
             BigInteger originalAmount = coinToOriginalMap.get(AddressTool.getStringAddressByBytes(coinTo.getAddress()));
             if (!BigIntegerUtils.isEqual(coinTo.getAmount(), originalAmount)) {
-                chain.getLogger().error(ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg());
+                chain.getLogger().error("{}, coinToAmount:{}, originalAmount:{}, amount:{}", ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg(), coinTo.getAmount(), originalAmount);
                 return ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getCode();
             }
             listDistributionTxRewardAddressBytes.add(coinTo.getAddress());
@@ -243,17 +257,16 @@ public class DistributionFeeProcessor implements TransactionProcessor {
     }
 
 
-
     /**
      * 验证提案投票交易的手续费补贴分发
      * 通过则返回空, 不通过返回错误码
      *
      * @param chain
-     * @param tx 当前补贴手续费交易
+     * @param tx      当前补贴手续费交易
      * @param basisTx 执行提案确认交易
      * @return
      */
-    private String validProposalDistribution(Chain chain, Transaction tx, Transaction basisTx) {
+    private String validProposalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
         ConfirmProposalTxData txData = null;
         ProposalExeBusinessData businessData = null;
         try {
@@ -272,17 +285,17 @@ public class DistributionFeeProcessor implements TransactionProcessor {
                     businessData.getProposalTxHash().toHex(), txData.getType());
             return ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
         }
-        return validDistributionFeeAddress(chain, tx, businessData.getListDistributionFee());
+        return validDistributionFeeAddress(chain, tx, businessData.getListDistributionFee(), blockHeader, true);
     }
 
 
     @Override
-    public boolean commit ( int chainId, List<Transaction > txs, BlockHeader blockHeader,int syncStatus){
+    public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
         return commit(chainId, txs, blockHeader, syncStatus, true);
     }
 
-    private boolean commit ( int chainId, List<Transaction > txs, BlockHeader blockHeader,int syncStatus,
-    boolean failRollback){
+    private boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus,
+                           boolean failRollback) {
         if (txs.isEmpty()) {
             return true;
         }
@@ -309,11 +322,11 @@ public class DistributionFeeProcessor implements TransactionProcessor {
 
 
     @Override
-    public boolean rollback ( int chainId, List<Transaction > txs, BlockHeader blockHeader){
+    public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
         return rollback(chainId, txs, blockHeader, true);
     }
 
-    private boolean rollback ( int chainId, List<Transaction > txs, BlockHeader blockHeader,boolean failCommit){
+    private boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader, boolean failCommit) {
         if (txs.isEmpty()) {
             return true;
         }

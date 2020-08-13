@@ -7,6 +7,7 @@ import io.nuls.api.constant.DepositFixedType;
 import io.nuls.api.constant.DepositInfoType;
 import io.nuls.api.utils.DBUtil;
 
+import java.beans.Transient;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -24,7 +25,7 @@ public class DepositInfo extends TxDataInfo {
 
     private int decimal;
 
-    private Long amount;
+    private BigInteger amount;
 
     private String agentHash;
 
@@ -75,7 +76,7 @@ public class DepositInfo extends TxDataInfo {
         depositInfo.setCreateTime(tx.getCreateTime());
         depositInfo.setFee(tx.getFee().getValue());
         depositInfo.setNew(true);
-        depositInfo.setAmount(amount.longValue());
+        depositInfo.setAmount(amount);
         depositInfo.setTxHash(tx.getHash());
         depositInfo.setType(depositType);
         depositInfo.setDeleteHeight(BigInteger.ONE.negate().longValue());
@@ -191,22 +192,14 @@ public class DepositInfo extends TxDataInfo {
     public void setAssetId(int assetId) {
         this.assetId = assetId;
     }
-//
-//    public Long getAmount() {
-//        return amount;
-//    }
 
     public BigInteger getAmount() {
-        return BigInteger.valueOf(amount);
-    }
-
-    public void setAmount(Long amount) {
-        this.amount = amount;
+        return amount;
     }
 
     public void setAmount(BigInteger amount) {
         Objects.requireNonNull(amount);
-        this.amount = amount.longValue();
+        this.amount = amount;
     }
 
     public String getAgentHash() {

@@ -1,6 +1,7 @@
 package io.nuls.api.db.mongo;
 
 import com.mongodb.client.model.*;
+import io.nuls.api.ApiContext;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DBTableConstant;
@@ -20,6 +21,9 @@ import org.checkerframework.checker.units.qual.A;
 
 import java.math.BigInteger;
 import java.util.*;
+
+import static com.mongodb.client.model.Filters.gte;
+import static com.mongodb.client.model.Filters.ne;
 
 @Component
 public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
@@ -87,8 +91,9 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
     public Map<String, BigInteger> aggAssetBalanceTotal(int chainId) {
         Bson id = new Document().append("chainId" , "$chainId").append("assetId","$assetId");
         Bson total = new Document().append("$sum","$totalBalance");
+        Bson match = Aggregates.match(ne("address", ApiContext.blackHoleAddress));
         Bson group = new Document("$group",new Document().append("_id",id).append("total",total));
-        return mongoDBService.aggReturnDoc(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId,group)
+        return mongoDBService.aggReturnDoc(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId,match,group)
                 .stream().map(d->{
                     Document doc = (Document) d.get("_id");
                     String assetChainId = doc.get("chainId").toString();

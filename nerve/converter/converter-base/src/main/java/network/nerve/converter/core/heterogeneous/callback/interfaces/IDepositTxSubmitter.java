@@ -23,6 +23,9 @@
  */
 package network.nerve.converter.core.heterogeneous.callback.interfaces;
 
+import io.nuls.core.basic.Result;
+import io.nuls.core.exception.NulsException;
+
 import java.math.BigInteger;
 
 /**
@@ -46,4 +49,10 @@ public interface IDepositTxSubmitter {
      */
     String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
+
+    /**
+     * 验证是否充值交易
+     * @param hTxHash 异构链交易hash
+     */
+    Result validateDepositTx(String hTxHash) ;
 }

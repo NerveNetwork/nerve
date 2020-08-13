@@ -19,25 +19,25 @@
       "name" : "Binance",
       "clazs" : "io.nuls.api.sup.BinancePriceProvider",
       "url" : "http://binanceapi.zhoulijun.top/",
-      "exclude" : "USD"
+      "exclude" : "USD,NVT"
+    },
+    {
+      "name" : "Aex",
+      "clazs" : "io.nuls.api.sup.AexPriceProvider",
+      "url" : "https://api.aex.zone/v3/ticker.php/",
+      "match" : "NVT"
+    },
+    {
+      "name" : "Bitz",
+      "clazs" : "io.nuls.api.sup.BitzPriceProvider",
+      "url" : "https://apiv2.bitz.com/",
+      "match" : "NVT"
     },
     {
       "name" : "USD",
       "clazs" : "io.nuls.api.sup.UsdPriceProvider",
       "url" : "http://bitfinex.zhoulijun.top/",
       "match" : "USD"
-    },
-    {
-      "name" : "TNVT",
-      "clazs" : "io.nuls.api.sup.NvtPriceProvider",
-      "url" : "",
-      "match" : "TNVT"
-    },
-    {
-      "name" : "NVT",
-      "clazs" : "io.nuls.api.sup.NvtPriceProvider",
-      "url" : "",
-      "match" : "NVT"
     },
     {
       "name" : "USDI",

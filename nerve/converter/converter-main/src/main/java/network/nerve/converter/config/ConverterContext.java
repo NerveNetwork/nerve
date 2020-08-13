@@ -72,7 +72,7 @@ public class ConverterContext {
     /**
      * 发提案费用
      */
-    public static BigInteger PROPOSAL_PRICE = BigInteger.valueOf(1000000000);
+    public static BigInteger PROPOSAL_PRICE = new BigInteger("20000000000");
     /**
      * 提案投票时长对应的区块高度
      * 2秒一块 一天出块数为 43,200‬
@@ -89,5 +89,9 @@ public class ConverterContext {
      * 签名拜占庭比例
      */
     public static int BYZANTINERATIO = 66;
+
+
+    /** 特殊处理 */
+    public static long FEE_EFFECTIVE_HEIGHT = 0L;
 
 }
