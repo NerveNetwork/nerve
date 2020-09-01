@@ -4,6 +4,7 @@ import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.api.provider.consensus.ConsensusProvider;
 import io.nuls.base.api.provider.consensus.facade.MultiAgentDepositChangeReq;
+import io.nuls.base.api.provider.transaction.facade.MultiSignTransferRes;
 import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
 import io.nuls.cmd.client.config.Config;
@@ -75,7 +76,7 @@ public abstract class ChangeMultiAgentDepositProcessor extends ConsensusBaseProc
     public CommandResult execute(String[] args) {
         String address = args[1];
         BigInteger deposit = config.toSmallUnit(args[2]);
-        Result<String> result;
+        Result<MultiSignTransferRes> result;
         if(args.length == 4){
             String password = getPwd("\nEnter agent address password:");
             String signAddress = args[3];

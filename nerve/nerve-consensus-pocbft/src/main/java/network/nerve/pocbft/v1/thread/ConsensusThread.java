@@ -108,7 +108,7 @@ public class ConsensusThread extends BasicObject implements Runnable {
     //睡眠1秒钟
     private void sleep(String reason) throws InterruptedException {
         if (null != reason) {
-            log.info(reason + ",睡一下~~~");
+            log.info(reason + ",sleep~~~");
         }
         Thread.sleep(1000);
     }

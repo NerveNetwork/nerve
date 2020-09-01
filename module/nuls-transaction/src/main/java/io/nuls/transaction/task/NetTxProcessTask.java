@@ -139,8 +139,8 @@ public class NetTxProcessTask implements Runnable {
             try {
                 txHashList = TransactionCall.txModuleValidator(chain, moduleCode, moduleList);
             } catch (NulsException e) {
-                chain.getLogger().error("Net new tx verify failed -txModuleValidator Exception:{}, module-code:{}, count:{} , return count:{}",
-                        BaseConstant.TX_VALIDATOR, moduleCode, moduleList.size(), txHashList.size());
+                chain.getLogger().error("Net new tx verify failed -txModuleValidator Exception:{}, module-code:{}, count:{}",
+                        BaseConstant.TX_VALIDATOR, moduleCode, moduleList.size());
                 //出错则删掉整个模块的交易
                 Iterator<TransactionNetPO> its = txNetList.iterator();
                 while (its.hasNext()) {

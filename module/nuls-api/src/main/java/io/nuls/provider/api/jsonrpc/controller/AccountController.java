@@ -549,7 +549,7 @@ public class AccountController {
         if (StringUtils.isBlank(prefix)) {
             result = NulsSDKTool.createOffLineAccount(count, password);
         } else {
-            result = NulsSDKTool.createOffLineAccount(count, prefix, password);
+            result = NulsSDKTool.createOffLineAccount(chainId, count, prefix, password);
         }
         return ResultUtil.getJsonRpcResult(result);
     }

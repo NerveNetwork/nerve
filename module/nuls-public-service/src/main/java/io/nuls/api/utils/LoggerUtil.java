@@ -41,6 +41,8 @@ public class LoggerUtil {
     //modify by zlj : common.log->protocol.log
     public static NulsLogger commonLog = LoggerBuilder.getLogger("public-service");
 
+    public static NulsLogger errorLog = LoggerBuilder.getLogger("app-error");
+
     public static NulsLogger PRICE_PROVIDER_LOG = LoggerBuilder.getLogger("price-provider");
 
 //

@@ -85,7 +85,6 @@ public class DexManager {
         tradingContainerMap.put(hash, container);
         //缓存币对id
         tradingKeyMap.put(DexUtil.getCoinTradingKey1(tradingPo), hash);
-        tradingKeyMap.put(DexUtil.getCoinTradingKey2(tradingPo), hash);
     }
 
     /**
@@ -99,7 +98,6 @@ public class DexManager {
         tradingContainerMap.put(hash, container);
         //缓存币对id
         tradingKeyMap.put(DexUtil.getCoinTradingKey1(tradingPo), hash);
-        tradingKeyMap.put(DexUtil.getCoinTradingKey2(tradingPo), hash);
     }
 
     /**
@@ -117,7 +115,6 @@ public class DexManager {
             throw new NulsException(DexErrorCode.TRADING_MORE_ORDER_EXIST);
         }
         tradingKeyMap.remove(DexUtil.getCoinTradingKey1(tradingPo));
-        tradingKeyMap.remove(DexUtil.getCoinTradingKey2(tradingPo));
         tradingContainerMap.remove(hash);
     }
 

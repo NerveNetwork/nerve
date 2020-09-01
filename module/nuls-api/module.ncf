@@ -11,7 +11,7 @@ Managed=1
 
 [global]
 mainChainId=1
-chainId=1
+chainId=9
 assetsId=1
 
 [nuls-api]

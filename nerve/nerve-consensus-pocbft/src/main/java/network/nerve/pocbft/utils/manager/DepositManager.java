@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils.manager;
 import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.model.bo.StackingAsset;
 import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
 import network.nerve.pocbft.model.bo.tx.txdata.Deposit;
 import network.nerve.pocbft.model.po.DepositPo;
@@ -35,6 +36,9 @@ public class DepositManager {
 
     @Autowired
     private ConsensusChainConfig config;
+
+    @Autowired
+    private static ChainManager chainManager;
 
     /**
      * 初始化委托信息
@@ -125,12 +129,12 @@ public class DepositManager {
     /**
      * 计算委托各账户委托金额并返回总的委托金
      * @param chain        链信息
-     * @param height       高度
+     * @param endHeight       高度
      * @param depositMap   委托
      * @param totalAmount  总委托金额
      * @param date         按那一天的喂价计算
      * */
-    public BigDecimal getDepositByHeight(Chain chain, long height, Map<String, BigDecimal> depositMap, BigDecimal totalAmount, String date) throws NulsException{
+    public BigDecimal getDepositByHeight(Chain chain, long startHeight,long endHeight, Map<String, BigDecimal> depositMap, BigDecimal totalAmount, String date) throws NulsException{
         BigDecimal realAmount;
         String address;
         List<DepositPo> depositList;
@@ -146,10 +150,13 @@ public class DepositManager {
         }
         for (DepositPo deposit:depositList) {
             //有效委托，委托高度要小指定高度且退出委托高度大于指定高度
-            if(deposit.getBlockHeight() > height){
+            if(deposit.getBlockHeight() > endHeight){
                 continue;
             }
-            if(deposit.getDelHeight() != -1 && deposit.getDelHeight() <= height){
+            if(deposit.getDelHeight() != -1 && deposit.getDelHeight() <= endHeight){
+                continue;
+            }
+            if (endHeight > chain.getConfig().getDepositAwardChangeHeight() && deposit.getBlockHeight() > startHeight) {
                 continue;
             }
             StringBuilder ss = new StringBuilder();
@@ -189,10 +196,12 @@ public class DepositManager {
         if(deposit.getAssetChainId() == chain.getChainId() && deposit.getAssetId() == chain.getAssetId()){
             weightSqrt = chain.getConfig().getLocalAssertBase();
         } else if(deposit.getAssetChainId() == config.getMainChainId() && deposit.getAssetId() == config.getMainAssetId()){
-            realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(),realDeposit, deposit.getAssetChainId(), deposit.getAssetId(), date);
+            StackingAsset stackingAsset = chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId());
+            realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(),realDeposit, stackingAsset, date);
             weightSqrt = chain.getConfig().getMainAssertBase();
         }else{
-            realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(),realDeposit, deposit.getAssetChainId(), deposit.getAssetId(), date);
+            StackingAsset stackingAsset = chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId());
+            realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(),realDeposit, stackingAsset, date);
         }
         //如果为定期委托，则根据定期时间乘以相应基数,定期委托到期之后按活期计算权重
         if(deposit.getDepositType() == DepositType.REGULAR.getCode()){

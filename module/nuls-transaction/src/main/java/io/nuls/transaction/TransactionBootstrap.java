@@ -31,8 +31,10 @@ import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
+import io.nuls.core.log.Log;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
-import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
 import io.nuls.core.rpc.modulebootstrap.NulsRpcModuleBootstrap;
@@ -48,8 +50,10 @@ import io.nuls.transaction.manager.ChainManager;
 import io.nuls.transaction.model.bo.Chain;
 import io.nuls.transaction.utils.TxUtil;
 
+import java.util.Map;
 import java.util.Set;
 
+import static io.nuls.transaction.constant.TxConstant.TX_PROTOCOL_FILE;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -80,6 +84,7 @@ public class TransactionBootstrap extends RpcModule {
             initSys();
             //初始化数据库配置文件
             initDB();
+            initModuleProtocolCfg();
             initTransactionContext();
             chainManager.initChain();
             TxUtil.blackHolePublicKey = HexUtil.decode(txConfig.getBlackHolePublicKey());
@@ -172,6 +177,21 @@ public class TransactionBootstrap extends RpcModule {
         }
     }
 
+    /**
+     * 根据chainId 加载特殊的协议配置
+     */
+    private void initModuleProtocolCfg() {
+        try {
+            Map map = JSONUtils.json2map(IoUtils.read(TX_PROTOCOL_FILE + txConfig.getChainId() + ".json"));
+            long first = Long.parseLong(map.get("coinToPtlHeightFirst").toString());
+            txConfig.setCoinToPtlHeightFirst(first);
+            long second = Long.parseLong(map.get("coinToPtlHeightSecond").toString());
+            txConfig.setCoinToPtlHeightSecond(second);
+        } catch (Exception e) {
+            Log.error(e);
+        }
+    }
+
     public void initDB() {
         try {
             //数据文件存储地址
@@ -187,6 +207,8 @@ public class TransactionBootstrap extends RpcModule {
         TxContext.ORPHAN_LIFE_TIME_SEC = txConfig.getOrphanLifeTimeSec();
         TxContext.BLOCK_TX_TIME_RANGE_SEC = txConfig.getBlockTxTimeRangeSec();
         TxContext.UNCONFIRMED_TX_EXPIRE_SEC = txConfig.getUnconfirmedTxExpireSec();
+        TxContext.COINTO_PTL_HEIGHT_FIRST = txConfig.getCoinToPtlHeightFirst();
+        TxContext.COINTO_PTL_HEIGHT_SECOND = txConfig.getCoinToPtlHeightSecond();
     }
 
 }

@@ -8,9 +8,7 @@ import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.transaction.facade.*;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.data.Coin;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.TxStatusEnum;
@@ -35,14 +33,13 @@ import java.util.stream.Collectors;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-08 17:00
- * @Description:
- * 交易服务
+ * @Description: 交易服务
  */
 @Provider(Provider.ProviderType.RPC)
 public class TransferServiceForRpc extends BaseRpcService implements TransferService {
 
     @Override
-    public Result transferTest(int method, String addr1, String addr2,String amount) {
+    public Result transferTest(int method, String addr1, String addr2, String amount) {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -54,70 +51,70 @@ public class TransferServiceForRpc extends BaseRpcService implements TransferSer
             Request request = MessageUtil.newRequest("transferCMDTest", params, Constants.BOOLEAN_TRUE, Constants.ZERO, Constants.ZERO);
             String messageId = ResponseMessageProcessor.requestOnly(ModuleE.TX.abbr, request);
 //            return response.isSuccess() ? Result.fail("","") : new Result();
-            return messageId.equals("0") ? Result.fail("","") : new Result();
+            return messageId.equals("0") ? Result.fail("", "") : new Result();
         } catch (Exception e) {
-            return Result.fail("","fail");
+            return Result.fail("", "fail");
         }
 
     }
 
     @Override
     public Result<String> transfer(TransferReq req) {
-        return callReturnString("ac_transfer",req,"value");
+        return callReturnString("ac_transfer", req, "value");
     }
 
     @Override
     public Result<MultiSignTransferRes> multiSignTransfer(CreateMultiSignTransferReq req) {
-        return callRpc(ModuleE.AC.abbr,"ac_createMultiSignTransfer",req,(Function<Map,Result>)(data->{
-            MultiSignTransferRes res = MapUtils.mapToBean(data,new MultiSignTransferRes());
+        return callRpc(ModuleE.AC.abbr, "ac_createMultiSignTransfer", req, (Function<Map, Result>) (data -> {
+            MultiSignTransferRes res = MapUtils.mapToBean(data, new MultiSignTransferRes());
             return success(res);
         }));
     }
 
     @Override
     public Result<MultiSignTransferRes> signMultiSignTransfer(SignMultiSignTransferReq req) {
-        return callRpc(ModuleE.AC.abbr,"ac_signMultiSignTransaction",req,(Function<Map,Result>)(data->{
-            MultiSignTransferRes res = MapUtils.mapToBean(data,new MultiSignTransferRes());
+        return callRpc(ModuleE.AC.abbr, "ac_signMultiSignTransaction", req, (Function<Map, Result>) (data -> {
+            MultiSignTransferRes res = MapUtils.mapToBean(data, new MultiSignTransferRes());
             return success(res);
         }));
     }
 
     @Override
     public Result<String> transferByAlias(TransferReq req) {
-        return callReturnString("ac_transfer",req,"value");
+        return callReturnString("ac_transfer", req, "value");
     }
 
     @Override
     public Result<Transaction> getTxByHash(GetTxByHashReq req) {
-        return getTx("tx_getTxClient",req) ;
+        return getTx("tx_getTxClient", req);
     }
 
     @Override
     public Result<Transaction> getConfirmedTxByHash(GetConfirmedTxByHashReq req) {
-        return getTx("tx_getConfirmedTxClient",req);
+        return getTx("tx_getConfirmedTxClient", req);
     }
 
     @Override
     public Result<TransactionData> getSimpleTxDataByHash(GetConfirmedTxByHashReq req) {
-        return callRpc(ModuleE.TX.abbr,"tx_getTxClient",req,
-                (Function<Map,Result>)res->tranderTransactionData(tranderTransaction(res))
+        return callRpc(ModuleE.TX.abbr, "tx_getTxClient", req,
+                (Function<Map, Result>) res -> tranderTransactionData(tranderTransaction(res))
         );
     }
 
     @Override
-    protected  <T,R> Result<T> call(String method, Object req, Function<R,Result> res){
-        return callRpc(ModuleE.AC.abbr,method,req,res);
+    protected <T, R> Result<T> call(String method, Object req, Function<R, Result> res) {
+        return callRpc(ModuleE.AC.abbr, method, req, res);
     }
 
-    private Result<Transaction> getTx(String method, BaseReq req){
-        return callRpc(ModuleE.TX.abbr,method,req,(Function<Map,Result>)this::tranderTransaction);
+    private Result<Transaction> getTx(String method, BaseReq req) {
+        return callRpc(ModuleE.TX.abbr, method, req, (Function<Map, Result>) this::tranderTransaction);
     }
 
-    private Result<Transaction> tranderTransaction(Map<String,Object> data){
+    private Result<Transaction> tranderTransaction(Map<String, Object> data) {
         try {
             String hexString = (String) data.get("tx");
-            if(StringUtils.isNull(hexString)){
-                return fail(CommonCodeConstanst.DATA_NOT_FOUND,"not found tx");
+            if (StringUtils.isNull(hexString)) {
+                return fail(CommonCodeConstanst.DATA_NOT_FOUND, "not found tx");
             }
             Transaction transaction = new Transaction();
             transaction.parse(new NulsByteBuffer(RPCUtil.decode(hexString)));
@@ -126,13 +123,13 @@ public class TransferServiceForRpc extends BaseRpcService implements TransferSer
             transaction.setStatus(state == TxStatusEnum.UNCONFIRM.getStatus() ? TxStatusEnum.UNCONFIRM : TxStatusEnum.CONFIRMED);
             return success(transaction);
         } catch (NulsException e) {
-            Log.error("反序列化transaction发生异常",e);
+            Log.error("反序列化transaction发生异常", e);
             return fail(CommonCodeConstanst.DESERIALIZE_ERROR);
         }
     }
 
-    private Result<TransactionData> tranderTransactionData(Result<Transaction>  data){
-        if(data.isFailed())return fail(ErrorCode.init(data.getStatus()),data.getMessage());
+    private Result<TransactionData> tranderTransactionData(Result<Transaction> data) {
+        if (data.isFailed()) return fail(ErrorCode.init(data.getStatus()), data.getMessage());
         try {
             Transaction transaction = data.getData();
             TransactionData res = new TransactionData();
@@ -142,12 +139,12 @@ public class TransferServiceForRpc extends BaseRpcService implements TransferSer
             res.setRemark(ByteUtils.asString(transaction.getRemark()));
             res.setInBlockIndex(transaction.getInBlockIndex());
             res.setSize(transaction.getSize());
-            res.setTime(DateUtils.timeStamp2DateStr(transaction.getTime()*1000));
+            res.setTime(DateUtils.timeStamp2DateStr(transaction.getTime() * 1000));
             res.setTransactionSignature(RPCUtil.encode(transaction.getTransactionSignature()));
             res.setType(transaction.getType());
             CoinData coinData = transaction.getCoinDataInstance();
-            if(coinData != null){
-                res.setFrom(transaction.getCoinDataInstance().getFrom().stream().map(cd->{
+            if (coinData != null) {
+                res.setFrom(transaction.getCoinDataInstance().getFrom().stream().map(cd -> {
                     TransactionCoinData tcd = buildTransactionCoinData(cd);
                     tcd.setNonce(HexUtil.encode(cd.getNonce()));
                     return tcd;
@@ -156,17 +153,23 @@ public class TransferServiceForRpc extends BaseRpcService implements TransferSer
             }
             return success(res);
         } catch (NulsException e) {
-            Log.error("反序列化transaction发生异常",e);
+            Log.error("反序列化transaction发生异常", e);
             return fail(CommonCodeConstanst.DESERIALIZE_ERROR);
         }
     }
 
-    private TransactionCoinData buildTransactionCoinData(Coin coinData){
+    private TransactionCoinData buildTransactionCoinData(Coin coinData) {
         TransactionCoinData tcd = new TransactionCoinData();
         tcd.setAddress(AddressTool.getStringAddressByBytes(coinData.getAddress()));
         tcd.setAmount(coinData.getAmount());
         tcd.setAssetsChainId(coinData.getAssetsChainId());
         tcd.setAssetsId(coinData.getAssetsId());
+        if (coinData instanceof CoinFrom) {
+            tcd.setNonce(HexUtil.encode(((CoinFrom) coinData).getNonce()));
+        } else if (coinData instanceof CoinTo) {
+            tcd.setLockTime(((CoinTo) coinData).getLockTime());
+        }
+
         return tcd;
     }
 

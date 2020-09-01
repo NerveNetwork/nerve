@@ -84,4 +84,7 @@ public interface TxConstant {
 
     int VERIFY = 1;
 
+
+    String TX_PROTOCOL_FILE = "tx-cfg-";
+
 }

@@ -51,7 +51,7 @@ public class ConsensusBootStrap extends RpcModule {
 
     /**
      * 初始化模块，比如初始化RockDB等，在此处初始化后，可在其他bean的afterPropertiesSet中使用
-     * 在onStart前会调用此方法
+     * 在onStart前会调用此方法n
      */
     @Override
     public void init() {

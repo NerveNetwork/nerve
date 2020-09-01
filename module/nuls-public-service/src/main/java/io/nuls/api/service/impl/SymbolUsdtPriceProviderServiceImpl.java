@@ -1,5 +1,6 @@
 package io.nuls.api.service.impl;
 
+import io.nuls.api.ApiContext;
 import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.config.SymbolPriceProviderSourceConfig;
 import io.nuls.api.db.SymbolRegService;
@@ -18,6 +19,7 @@ import io.nuls.core.rockdb.model.Entry;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.*;
 
@@ -64,7 +66,7 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
         if(total.equals(BigDecimal.ZERO)){
             symbolPrice.setPrice(BigDecimal.ZERO);
         }else{
-            symbolPrice.setPrice(collect.size() == 1 ? total : total.divide(new BigDecimal(collect.size()),SymbolPrice.DEFAULT_SCALE, RoundingMode.HALF_DOWN));
+            symbolPrice.setPrice(collect.size() == 1 ? total : total.divide(new BigDecimal(collect.size()),symbolPrice.getDecimal(), RoundingMode.HALF_DOWN));
         }
         if(symbolPrice.getPrice().compareTo(BigDecimal.ZERO) > 0 ){
             LoggerUtil.PRICE_PROVIDER_LOG.info("更新{}价格{}USDT",symbolPrice.getSymbol(),symbolPrice.getPrice());
@@ -76,8 +78,14 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
             return symbolList.get(symbol);
         }else{
             symbolList.entrySet().stream().filter(entry->entry.getKey().equals(symbol)).forEach(this::updateSymbolPrice);
-            return symbolList.containsKey(symbol) ? symbolList.get(symbol) : new ActualSymbolUsdtPriceDTO(symbol);
+            return symbolList.containsKey(symbol) ? symbolList.get(symbol) : new ActualSymbolUsdtPriceDTO(symbol, SymbolPrice.DEFAULT_SCALE);
         }
+    }
+
+    @Override
+    public BigDecimal toUsdValue(String symbol, BigDecimal amount) {
+        SymbolPrice sourceSymbolPrice = getSymbolPriceForUsdt(symbol);
+        return getUsd().transfer(sourceSymbolPrice,amount);
     }
 
     public SymbolPrice getUsd(){
@@ -96,7 +104,8 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
             SymbolRegInfo symbolRegInfo = symbolRegService.getFirst(d.getKey()).get();
             //计算当前币种交易对应的的USD总量
             BigDecimal total = new BigDecimal(d.getValue()).movePointLeft(symbolRegInfo.getDecimals());
-            BigDecimal usdTotal = usdPrice.transfer(symbolPrice,total);
+            BigDecimal usdTotal = usdPrice.transfer(symbolPrice,BigDecimal.ONE).setScale(ApiConstant.USD_DECIMAL,RoundingMode.HALF_DOWN);
+            usdTotal = usdTotal.multiply(total, MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL,RoundingMode.HALF_DOWN);
             symbolUsdTxTotalMap.put(d.getKey(),usdTotal);
             return usdTotal;
         }).reduce(BigDecimal.ZERO,(v1,v2)->v1.add(v2));
@@ -119,7 +128,7 @@ public class SymbolUsdtPriceProviderServiceImpl implements SymbolUsdtPriceProvid
 
     public void init() {
         symbolRegService.getAll().forEach(d->{
-            symbolList.put(d.getSymbol(),new ActualSymbolUsdtPriceDTO(d.getSymbol()));
+            symbolList.put(d.getSymbol(),new ActualSymbolUsdtPriceDTO(d.getSymbol(),d.getDecimals()));
         });
         this.setInited(true);
     }

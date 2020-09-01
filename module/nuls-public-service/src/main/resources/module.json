@@ -56,5 +56,18 @@
       "queryPrice" : false,
       "level" : 0
     }
-  ]
+  ],
+  "symbolIconList" : {
+    "DAI" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/DAI.png",
+    "ENVT" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/ENVT.png",
+    "ETH" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/ETH.png",
+    "HT" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/HT.png",
+    "NULS" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/NULS.png",
+    "NVT" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/NVT.png",
+    "OKB" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/OKB.png",
+    "PAX" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/PAX.png",
+    "USDC" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/USDC.png",
+    "USDT" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/USDT.png",
+    "WBTC" : "https://nuls-cf.oss-us-west-1.aliyuncs.com/icon/WBTC.png"
+  }
 }

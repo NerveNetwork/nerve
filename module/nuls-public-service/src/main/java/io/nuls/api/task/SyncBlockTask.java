@@ -14,6 +14,10 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -29,6 +33,8 @@ public class SyncBlockTask implements Runnable {
 
     private Lock synclock = new ReentrantLock();
 
+    private File stop_file;
+
     private boolean syncStatus = true;
 
     public SyncBlockTask(int chainId) {
@@ -36,6 +42,28 @@ public class SyncBlockTask implements Runnable {
         syncService = SpringLiteContext.getBean(SyncService.class);
         rollbackService = SpringLiteContext.getBean(RollbackService.class);
         symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
+        String stop_file_name = System.getenv("NERVE_STOP_FILE") ;
+        stop_file = new File(stop_file_name);
+        if(!stop_file.exists()){
+            stop_file = null;
+        }
+        Log.info("NERVE_STOP_FILE:{}", stop_file_name);
+    }
+
+    private String read() throws IOException {
+        if(stop_file == null){
+            return null;
+        }
+        BufferedReader in = new BufferedReader(new FileReader(stop_file));
+        try {
+            String line = in.readLine();
+            if (line != null) {
+                return line.substring(0, 1);
+            }
+            return null;
+        } finally {
+            in.close();
+        }
     }
 
     public void run(int resetCount) {
@@ -73,7 +101,13 @@ public class SyncBlockTask implements Runnable {
         boolean running = true;
         while (running) {
             try {
-                running = syncBlock();
+                if(checkStopNotify()){
+                    running = syncBlock();
+                }else{
+                    Log.info("监听到停止信号，停止同步数据");
+                    syncStatus = false;
+                    break;
+                }
             } catch (SyncException e) {
                 Log.error("同步数据失败，失败高度：{},失败原因:{}", e.height,e.getErrorCode(),e);
                 if (resetCount < 3) {
@@ -85,6 +119,19 @@ public class SyncBlockTask implements Runnable {
                     break;
                 }
             }
+        }
+    }
+
+    private boolean checkStopNotify(){
+        try {
+            String val = read();
+            if(val == null){
+                return true;
+            }
+            return false;
+        } catch (IOException e) {
+            Log.warn("读取停止信号文件失败");
+            return true;
         }
     }
 
@@ -169,4 +216,7 @@ public class SyncBlockTask implements Runnable {
             }
         }
     }
+
+
+
 }

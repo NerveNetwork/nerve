@@ -25,12 +25,14 @@ import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
 import io.nuls.api.constant.ApiConstant;
+import io.nuls.api.constant.config.ApiConfig;
 import io.nuls.api.db.*;
 import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.po.*;
 import io.nuls.api.model.po.mini.MiniAccountInfo;
 import io.nuls.api.model.po.mini.MiniCrossChainTransactionInfo;
 import io.nuls.api.model.rpc.*;
+import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.api.utils.LoggerUtil;
 import io.nuls.api.utils.PropertyUtils;
 import io.nuls.api.utils.VerifyUtils;
@@ -79,6 +81,9 @@ public class AccountController {
     SymbolRegService symbolRegService;
 
     @Autowired
+    SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
+
+    @Autowired
     private StatisticalService statisticalService;
     @Autowired
     private ConverterTxService converterTxService;
@@ -86,9 +91,13 @@ public class AccountController {
     @Autowired
     DepositService depositService;
 
+    @Autowired
+    ApiConfig apiConfig;
+
     LedgerProvider ledgerProvider = ServiceManager.get(LedgerProvider.class);
 
     ConverterService converterService = ServiceManager.get(ConverterService.class);
+
 
     @RpcMethod("getAccountList")
     public RpcResult getAccountList(List<Object> params) {
@@ -145,7 +154,7 @@ public class AccountController {
                 return RpcResult.paramError("[type] is inValid");
             }
         }
-        return getAccountTxsForCrossChain(params, filter);
+        return getAccountTxs(params, filter);
     }
 
 
@@ -170,7 +179,7 @@ public class AccountController {
                     Filters.eq("type", TxType.RECHARGE),
                     Filters.eq("type", TxType.WITHDRAWAL));
         }
-        RpcResult listRpc = getAccountTxsForCrossChain(params, filter);
+        RpcResult listRpc = getAccountTxs(params, filter);
         if (listRpc.getResult() != null) {
             PageInfo pageInfo = (PageInfo) listRpc.getResult();
             List<MiniCrossChainTransactionInfo> list = (List<MiniCrossChainTransactionInfo>) pageInfo.getList().stream().map(data -> {
@@ -197,7 +206,7 @@ public class AccountController {
         return listRpc;
     }
 
-    public RpcResult getAccountTxsForCrossChain(List<Object> params, Bson crossExpand) {
+    public RpcResult getAccountTxs(List<Object> params, Bson crossExpand) {
         VerifyUtils.verifyParams(params, 5);
         int chainId, pageNumber, pageSize, type = 0;
         String address;
@@ -725,6 +734,15 @@ public class AccountController {
                 ledgerInfo.setDecimals(assetInfo.getDecimals());
             }
             Map<String, Object> map = MapUtils.beanToMap(ledgerInfo);
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(ledgerInfo.getChainId(), ledgerInfo.getAssetId());
+            BigDecimal usdPrice = symbolUsdtPriceProviderService.toUsdValue(symbolRegInfo.getSymbol(),
+                    BigDecimal.ONE).setScale(ApiConstant.USD_DECIMAL,RoundingMode.HALF_DOWN);
+            map.put("usdPrice",usdPrice);
+            String icon = symbolRegInfo.getIcon();
+            if(StringUtils.isBlank(icon)){
+                icon = apiConfig.getSymbolIconList().get(symbolRegInfo.getSymbol());
+            }
+            map.put("icon",icon);
             return map;
         }).collect(Collectors.toList()));
     }
@@ -793,6 +811,14 @@ public class AccountController {
             Map<String, Object> map = MapUtils.beanToMap(ledgerInfo);
             SymbolRegInfo symbolRegInfo = symbolRegService.get(ledgerInfo.getChainId(), ledgerInfo.getAssetId());
             map.put("source", symbolRegInfo.getSource());
+            String icon = symbolRegInfo.getIcon();
+            if(StringUtils.isBlank(icon)){
+                icon = apiConfig.getSymbolIconList().get(symbolRegInfo.getSymbol());
+            }
+            map.put("icon",icon);
+            BigDecimal usdPrice = symbolUsdtPriceProviderService.toUsdValue(symbolRegInfo.getSymbol(),
+                    BigDecimal.ONE).setScale(ApiConstant.USD_DECIMAL,RoundingMode.HALF_DOWN);
+            map.put("usdPrice",usdPrice);
             io.nuls.base.api.provider.Result<HeterogeneousAssetInfo> heterogeneousAssetInfoResult = converterService.getHeterogeneousAssetInfo(new GetHeterogeneousAssetInfoReq(ledgerInfo.getAssetId()));
             if (heterogeneousAssetInfoResult.isSuccess()) {
                 map.put("chainName", heterogeneousAssetInfoResult.getData().getHeterogeneousChainSymbol());

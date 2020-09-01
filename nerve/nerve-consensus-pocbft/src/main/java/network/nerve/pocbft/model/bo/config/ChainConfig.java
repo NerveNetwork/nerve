@@ -11,6 +11,7 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 
 /**
  * 共识模块配置类
@@ -197,6 +198,38 @@ public class ChainConfig extends BaseNulsData {
 
     private int maxCoinToOfCoinbase;
     private long minRewardHeight;
+    private long depositAwardChangeHeight;
+    private long depositVerifyHeight;
+    private Long v1_3_0Height;
+    private BigInteger minStakingAmount;
+    private BigInteger minAppendAndExitAmount;
+    private Integer exitStakingLockHours;
+
+    private List<AssetsStakingLimitCfg> limitCfgList;
+
+    public List<AssetsStakingLimitCfg> getLimitCfgList() {
+        return limitCfgList;
+    }
+
+    public void setLimitCfgList(List<AssetsStakingLimitCfg> limitCfgList) {
+        this.limitCfgList = limitCfgList;
+    }
+
+    public long getDepositAwardChangeHeight() {
+        return depositAwardChangeHeight;
+    }
+
+    public void setDepositAwardChangeHeight(long depositAwardChangeHeight) {
+        this.depositAwardChangeHeight = depositAwardChangeHeight;
+    }
+
+    public long getDepositVerifyHeight() {
+        return depositVerifyHeight;
+    }
+
+    public void setDepositVerifyHeight(long depositVerifyHeight) {
+        this.depositVerifyHeight = depositVerifyHeight;
+    }
 
     public int getMaxCoinToOfCoinbase() {
         return maxCoinToOfCoinbase;
@@ -580,5 +613,37 @@ public class ChainConfig extends BaseNulsData {
 
     public void setReservegentDepositBase(double reservegentDepositBase) {
         this.reservegentDepositBase = reservegentDepositBase;
+    }
+
+    public void setV130Height(Long v130Height) {
+        this.v1_3_0Height = v130Height;
+    }
+
+    public Long getV130Height() {
+        return v1_3_0Height;
+    }
+
+    public void setMinStakingAmount(BigInteger minStakingAmount) {
+        this.minStakingAmount = minStakingAmount;
+    }
+
+    public BigInteger getMinStakingAmount() {
+        return minStakingAmount;
+    }
+
+    public void setMinAppendAndExitAmount(BigInteger minAppendAndExitAmount) {
+        this.minAppendAndExitAmount = minAppendAndExitAmount;
+    }
+
+    public BigInteger getMinAppendAndExitAmount() {
+        return minAppendAndExitAmount;
+    }
+
+    public void setExitStakingLockHours(Integer exitStakingLockHours) {
+        this.exitStakingLockHours = exitStakingLockHours;
+    }
+
+    public Integer getExitStakingLockHours() {
+        return exitStakingLockHours;
     }
 }

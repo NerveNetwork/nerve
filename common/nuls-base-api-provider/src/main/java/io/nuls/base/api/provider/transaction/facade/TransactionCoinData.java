@@ -29,6 +29,8 @@ public class TransactionCoinData {
      */
     protected BigInteger amount;
 
+    protected Long lockTime;
+
     /**
      * byte[8]
      */
@@ -87,7 +89,17 @@ public class TransactionCoinData {
                 .append(amount)
                 .append(",\"nonce\":\"")
                 .append(nonce).append('\"')
+                .append(",\"lockTime\":\"")
+                .append(lockTime).append('\"')
                 .append('}').toString();
+    }
+
+    public Long getLockTime() {
+        return lockTime;
+    }
+
+    public void setLockTime(Long lockTime) {
+        this.lockTime = lockTime;
     }
 
     @Override
@@ -101,6 +113,8 @@ public class TransactionCoinData {
         if (assetsId != that.assetsId) return false;
         if (address != null ? !address.equals(that.address) : that.address != null) return false;
         if (amount != null ? !amount.equals(that.amount) : that.amount != null) return false;
+        if (lockTime != null ? !lockTime.equals(that.lockTime) : that.lockTime != null) return false;
+
         return nonce != null ? nonce.equals(that.nonce) : that.nonce == null;
     }
 
@@ -111,6 +125,7 @@ public class TransactionCoinData {
         result = 31 * result + assetsId;
         result = 31 * result + (amount != null ? amount.hashCode() : 0);
         result = 31 * result + (nonce != null ? nonce.hashCode() : 0);
+        result = 31 * result + (lockTime != null ? lockTime.hashCode() : 0);
         return result;
     }
 }

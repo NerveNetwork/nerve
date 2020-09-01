@@ -39,6 +39,10 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
     private long unconfirmedTxExpireSec;
     /** 单个交易数据最大值(B)*/
     private long txMaxSize;
+    /** coinTo 不支持金额等于0 的协议生效高度*/
+    private long coinToPtlHeightFirst;
+    /** coinTo 支持金额等于0, 只禁止金额为0的锁定 的协议生效高度*/
+    private long coinToPtlHeightSecond;
 
 
     public String getBlackHolePublicKey() {
@@ -123,6 +127,22 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
 
     public void setTxMaxSize(long txMaxSize) {
         this.txMaxSize = txMaxSize;
+    }
+
+    public long getCoinToPtlHeightFirst() {
+        return coinToPtlHeightFirst;
+    }
+
+    public void setCoinToPtlHeightFirst(long coinToPtlHeightFirst) {
+        this.coinToPtlHeightFirst = coinToPtlHeightFirst;
+    }
+
+    public long getCoinToPtlHeightSecond() {
+        return coinToPtlHeightSecond;
+    }
+
+    public void setCoinToPtlHeightSecond(long coinToPtlHeightSecond) {
+        this.coinToPtlHeightSecond = coinToPtlHeightSecond;
     }
 
     @Override

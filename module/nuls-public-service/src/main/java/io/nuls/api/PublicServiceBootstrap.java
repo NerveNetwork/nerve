@@ -29,6 +29,7 @@ import io.nuls.api.db.mongo.MongoChainServiceImpl;
 import io.nuls.api.db.mongo.MongoDBTableServiceImpl;
 import io.nuls.api.manager.ScheduleManager;
 import io.nuls.api.model.po.ChainInfo;
+import io.nuls.api.model.po.SymbolRegInfo;
 import io.nuls.api.model.po.SyncInfo;
 import io.nuls.api.rpc.jsonRpc.JsonRpcServer;
 import io.nuls.api.service.StackingService;
@@ -43,6 +44,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
@@ -245,12 +247,25 @@ public class PublicServiceBootstrap extends RpcModule {
         } else {
             tableService.initCache();
         }
-
         MongoChainServiceImpl chainService = SpringLiteContext.getBean(MongoChainServiceImpl.class);
         SyncInfo syncInfo = chainService.getSyncInfo(ApiContext.defaultChainId);
         if (syncInfo != null) {
             ApiContext.protocolVersion = syncInfo.getVersion();
         }
+        initSymbolIcon();
+    }
+
+    private void initSymbolIcon() {
+        apiConfig.getSymbolIconList().entrySet().forEach(entry->{
+            Log.info("{}",entry.getKey());
+            List<SymbolRegInfo> symbolRegInfoList = symbolRegService.get(entry.getKey());
+            if(symbolRegInfoList != null && !symbolRegInfoList.isEmpty()){
+                symbolRegInfoList.forEach(symbolRegInfo -> {
+                    symbolRegInfo.setIcon(entry.getValue());
+                    symbolRegService.save(symbolRegInfo);
+                });
+            }
+        });
     }
 
     @Override

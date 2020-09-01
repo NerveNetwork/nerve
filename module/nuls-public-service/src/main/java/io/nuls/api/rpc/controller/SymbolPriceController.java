@@ -167,7 +167,7 @@ public class SymbolPriceController {
         SymbolPrice usd = symbolUsdtPriceProviderService.getSymbolPriceForUsdt(ApiConstant.USD);
         AgentInfo agentInfo = agentService.getAgentByPackingAddress(ApiContext.defaultChainId,d.getAddress());
         return Map.of(
-                "nodeName" , d.getAddress().toUpperCase(),
+                "nodeName" , agentInfo == null ? "" : agentInfo.getAgentId().toUpperCase(),
                 "alias", agentInfo == null ? "" : agentInfo.getAgentAlias(),
                 "agentHash", agentInfo == null ? "" : agentInfo.getTxHash(),
                 "price" , usd.getPrice().multiply(d.getPrice(), MathContext.DECIMAL64).setScale(ApiConstant.USD_DECIMAL, RoundingMode.HALF_DOWN),

@@ -3,21 +3,29 @@ package io.nuls.api.task;
 import com.mongodb.Function;
 import com.mongodb.client.model.Filters;
 import io.nuls.api.ApiContext;
+import io.nuls.api.constant.ApiConstant;
 import io.nuls.api.constant.DepositInfoType;
 import io.nuls.api.db.AccountLedgerService;
 import io.nuls.api.db.DepositService;
+import io.nuls.api.db.SymbolQuotationPriceService;
+import io.nuls.api.db.SymbolRegService;
 import io.nuls.api.model.dto.Asset;
 import io.nuls.api.model.dto.AssetAndDepositType;
 import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.DepositInfo;
+import io.nuls.api.model.po.SymbolPrice;
+import io.nuls.api.model.po.SymbolRegInfo;
 import io.nuls.api.service.SymbolUsdtPriceProviderService;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.log.Log;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,21 +115,106 @@ public class ReportTask implements Runnable {
     AccountLedgerService accountLedgerService;
     ReportProvider reportProvider;
     SymbolUsdtPriceProviderService symbolUsdtPriceProviderService;
+    SymbolQuotationPriceService symbolPriceService;
+    SymbolRegService symbolRegService;
 
     public ReportTask() {
         this.accountLedgerService = SpringLiteContext.getBean(AccountLedgerService.class);
         this.reportProvider = SpringLiteContext.getBean(ReportProvider.class);
         this.symbolUsdtPriceProviderService = SpringLiteContext.getBean(SymbolUsdtPriceProviderService.class);
+        this.symbolPriceService = SpringLiteContext.getBean(SymbolQuotationPriceService.class);
+        this.symbolRegService = SpringLiteContext.getBean(SymbolRegService.class);
     }
 
     @Override
     public void run() {
-        List<DepositInfo> depositInfoList = getDepositList();
-        reportProvider.setDepositGroupByAssetAndType(group(depositInfoList,d->d.getSymbol() + "-" + getType(d)));
-        reportProvider.setDepositGroupByAsset(group(depositInfoList,d->d.getSymbol() + "-"));
-        reportProvider.setDepositGroupByType(group(depositInfoList,d->"-" + getType(d)));
-        calcAssetTotal();
-        calcDepositAddressCount(depositInfoList);
+
+        try{
+            List<DepositInfo> depositInfoList = getDepositList();
+            calcDepositGroupByAssetAndType(depositInfoList);
+            calcDepositGroupByAsset(depositInfoList);
+            calcDepositGroupByType(depositInfoList);
+            calcAssetTotal();
+            calcDepositAddressCount(depositInfoList);
+        }catch (Throwable e){
+            Log.error("ReportTask统计质押数据发生异常：",e);
+        }
+    }
+
+    private void calcDepositGroupByAssetAndType(List<DepositInfo> depositInfoList){
+        Map<String,List<DepositInfo>> groupByAsset = new HashMap<>();
+        depositInfoList.forEach(d->{
+            groupByAsset.putIfAbsent(d.getSymbol(),new ArrayList<>());
+            groupByAsset.get(d.getSymbol()).add(d);
+        });
+        Map<AssetAndDepositType, SymbolUsdPercentDTO> groupByAssetAndType = new HashMap<>();
+        groupByAsset.values().forEach(list->{
+            groupByAssetAndType.putAll(group(list,d->d.getSymbol() + "-" + getType(d)));
+        });
+        reportProvider.setDepositGroupByAssetAndType(groupByAssetAndType);
+    }
+
+    private void calcDepositGroupByType(List<DepositInfo> depositInfoList){
+        Map<AssetAndDepositType, SymbolUsdPercentDTO> listGroupByType = group(toNvtTotalGroupByType(depositInfoList,d->ApiContext.defaultSymbol + "-" + getType(d)),d->ApiContext.defaultSymbol + "-" + getType(d));
+        listGroupByType.entrySet().forEach(d->{
+            d.getValue().setUsdVal(symbolUsdtPriceProviderService.toUsdValue(d.getKey().getSymbol(),
+                    new BigDecimal(d.getValue().getAmount()).movePointLeft(ApiContext.defaultDecimals)).setScale(0,RoundingMode.HALF_DOWN));
+        });
+        reportProvider.setDepositGroupByType(listGroupByType);
+    }
+
+    private void calcDepositGroupByAsset(List<DepositInfo> depositInfoList){
+        List<DepositInfo> transferNvtTotal = toNvtTotalGroupByType(depositInfoList,d->d.getSymbol() + "-NONE");
+        Map<AssetAndDepositType, SymbolUsdPercentDTO> listGroupByAsset = group(transferNvtTotal,d->d.getSymbol() + "-NONE");
+        Map<String,BigInteger> groupTotalByAsset = new HashMap<>(listGroupByAsset.size());
+        depositInfoList.forEach(d->{
+            groupTotalByAsset.compute(d.getSymbol(),(k,old)->{
+                if(old == null){
+                    return d.getAmount();
+                }else{
+                    return d.getAmount().add(old);
+                }
+            });
+        });
+        listGroupByAsset.entrySet().forEach(d->{
+            d.getValue().setUsdVal(symbolUsdtPriceProviderService.toUsdValue(d.getKey().getSymbol(),
+                    new BigDecimal(d.getValue().getAmount()).movePointLeft(ApiContext.defaultDecimals)).setScale(0,RoundingMode.HALF_DOWN));
+            d.getValue().setAmount(groupTotalByAsset.get(d.getKey().getSymbol()));
+            SymbolRegInfo symbolRegInfo = symbolRegService.getFirst(d.getKey().getSymbol()).get();
+            d.getValue().setAmountBigUnit(new BigDecimal(d.getValue().getAmount()).movePointLeft(symbolRegInfo.getDecimals()).setScale(2,RoundingMode.HALF_DOWN));
+        });
+        reportProvider.setDepositGroupByAsset(listGroupByAsset);
+    }
+
+    private List<DepositInfo> toNvtTotalGroupByType(List<DepositInfo> depositInfoList,Function<DepositInfo,String> getKeyFun){
+        Map<String,DepositInfo> resData = new HashMap<>();
+        SymbolPrice nvtUsdtPrice = symbolPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
+        depositInfoList.forEach(d->{
+            BigInteger nvtTotal;
+            if(d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId){
+                nvtTotal = d.getAmount();
+            }else{
+                SymbolPrice symbolPrice = symbolPriceService.getFreshUsdtPrice(d.getAssetChainId(),d.getAssetId());
+                //将当前抵押资产转换成NVT
+                nvtTotal = nvtUsdtPrice.transfer(symbolPrice,new BigDecimal(d.getAmount()).movePointLeft(d.getDecimal())).movePointRight(ApiContext.defaultDecimals).toBigInteger();
+            }
+            resData.compute(getKeyFun.apply(d),(k,od)->{
+                if(od == null){
+                    DepositInfo depositInfo = new DepositInfo();
+                    depositInfo.setAmount(nvtTotal);
+                    depositInfo.setAssetChainId(ApiContext.defaultChainId);
+                    depositInfo.setAssetId(ApiContext.defaultAssetId);
+                    depositInfo.setType(d.getType());
+                    depositInfo.setFixedType(d.getFixedType());
+                    depositInfo.setSymbol(d.getSymbol());
+                    return depositInfo;
+                }else{
+                    od.setAmount(od.getAmount().add(nvtTotal));
+                    return od;
+                }
+            });
+        });
+        return new ArrayList<>(resData.values());
     }
 
     private void calcAssetTotal() {
@@ -132,7 +225,7 @@ public class ReportTask implements Runnable {
             Asset asset = new Asset();
             asset.setAssetId(assetId);
             asset.setChainId(assetChainId);
-            BigInteger balance = new BigInteger(d.get("balance").toString());
+            BigInteger balance = new BigInteger(d.get("totalBalance").toString());
             return Map.of(asset, balance);
         }).reduce(new HashMap<>(), this::merge));
     }
@@ -176,11 +269,13 @@ public class ReportTask implements Runnable {
         BigDecimal totalPer = BigDecimal.ZERO;
         Map<AssetAndDepositType, SymbolUsdPercentDTO> resData = new HashMap<>(tempData.size());
         for (String vi : tempData.keySet()){
-            SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(vi,tempData);
+
             AssetAndDepositType assetAndTimeType = new AssetAndDepositType();
             String[] keyAry = vi.split("-");
             assetAndTimeType.setSymbol(keyAry[0]);
             assetAndTimeType.setType(keyAry[1]);
+            SymbolRegInfo symbolRegInfo = symbolRegService.getFirst(assetAndTimeType.getSymbol()).get();
+            SymbolUsdPercentDTO dto = calcRate(vi,tempData,symbolRegInfo);
             resData.put(assetAndTimeType,dto);
             if(maxPer == null){
                 maxPer = dto;
@@ -189,7 +284,8 @@ public class ReportTask implements Runnable {
             }
             totalPer = totalPer.add(dto.getPer());
         }
-        if(totalPer.compareTo(BigDecimal.ONE) < 0){
+
+        if(totalPer.compareTo(BigDecimal.ZERO) > 0 && totalPer.compareTo(BigDecimal.ONE) < 0){
             maxPer.setPer(maxPer.getPer().add(BigDecimal.ONE.subtract(totalPer)));
         }
         return resData;
@@ -214,6 +310,27 @@ public class ReportTask implements Runnable {
         return od;
     }
 
+    public SymbolUsdPercentDTO calcRate(String key, Map<String, BigInteger> list, SymbolRegInfo symbolRegInfo){
+        Map<String,BigInteger> symbolUsdTxTotalMap = new HashMap<>(list.size());
+        BigInteger allSymbolTxTotalUsdValue =list.entrySet().stream().map(d->{
+            symbolUsdTxTotalMap.put(d.getKey(),d.getValue());
+            return d.getValue();
+        }).reduce(BigInteger::add).orElse(BigInteger.ZERO);
+        BigDecimal rate;
+        BigInteger usdValue = symbolUsdTxTotalMap.getOrDefault(key,BigInteger.ZERO);
+        if(allSymbolTxTotalUsdValue.compareTo(BigInteger.ZERO) == 0){
+            rate = BigDecimal.ONE;
+        }else if (usdValue.compareTo(BigInteger.ZERO) == 0){
+            rate = BigDecimal.ZERO;
+        }else {
+            rate = new BigDecimal(symbolUsdTxTotalMap.get(key)).divide(new BigDecimal(allSymbolTxTotalUsdValue),ApiConstant.RATE_DECIMAL, RoundingMode.HALF_DOWN);
+        }
+        SymbolUsdPercentDTO res = new SymbolUsdPercentDTO();
+        res.setPer(rate);
+        res.setAmount(list.getOrDefault(key,BigInteger.ZERO));
+        res.setAmountBigUnit(new BigDecimal(res.getAmount()).movePointLeft(symbolRegInfo.getDecimals()).setScale(2,RoundingMode.HALF_DOWN));
+        return res;
+    }
 
 
 }

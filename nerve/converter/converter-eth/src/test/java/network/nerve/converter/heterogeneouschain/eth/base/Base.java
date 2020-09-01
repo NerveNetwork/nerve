@@ -58,7 +58,8 @@ public class Base {
         if(ethWalletApi.getWeb3j() != null) {
             ethWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        //String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        String mainEthRpcAddress = "http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         ethWalletApi.setWeb3j(web3j);
         ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
@@ -69,6 +70,16 @@ public class Base {
             ethWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://rinkeby.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        ethWalletApi.setWeb3j(web3j);
+        ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
+    }
+
+    protected void setLocalRpc() {
+        if(ethWalletApi.getWeb3j() != null) {
+            ethWalletApi.getWeb3j().shutdown();
+        }
+        String mainEthRpcAddress = "http://localhost:9898/jsonrpc";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         ethWalletApi.setWeb3j(web3j);
         ethWalletApi.setEthRpcAddress(mainEthRpcAddress);

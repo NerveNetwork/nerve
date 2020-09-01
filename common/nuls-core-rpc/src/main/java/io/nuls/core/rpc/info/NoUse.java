@@ -59,7 +59,7 @@ public class NoUse {
      * Analog Startup Module, Unit Test Specific
      */
     public static void mockModule() throws Exception {
-        mockModule(8771);
+        mockModule(7771);
     }
 
     /**

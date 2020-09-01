@@ -37,4 +37,6 @@ public interface DexConstant {
     BigDecimal PROP = new BigDecimal(10000);
 
     String SYS_FILE_ENCODING = "file.encoding";
+
+    String DEX_CONFIG_FILE = "dex-config-";
 }

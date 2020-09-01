@@ -67,6 +67,10 @@ public interface ConverterConstant {
 
     int MAX_CHECK_TIMES = 10;
 
-    BigInteger DISTRIBUTION_FEE_OLD = new BigInteger("1000000000");//10
+//    BigInteger DISTRIBUTION_FEE_OLD = new BigInteger("1000000000");//10
+    BigInteger DISTRIBUTION_FEE_100 = new BigInteger("10000000000");//100
+
+
+    String CV_PROTOCOL_FILE = "cv-cfg-";
 
 }

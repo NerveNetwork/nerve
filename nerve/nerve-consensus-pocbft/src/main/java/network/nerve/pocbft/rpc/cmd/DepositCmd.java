@@ -68,6 +68,44 @@ public class DepositCmd extends BaseCmd {
     }
 
     /**
+     * 退出共识
+     * */
+    @CmdAnnotation(cmd = CMD_BATCH_WITHDRAW, version = 1.0, description = "退出委托交易/withdraw deposit agent transaction")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "账户地址")
+    @Parameter(parameterName = PARAM_TX_HASH, parameterType = "String", parameterDes = "加入共识交易HASH字符串")
+    @Parameter(parameterName = PARAM_PASSWORD, parameterType = "String", parameterDes = "账户密码")
+    @ResponseData(name = "返回值", description = "批量退出共识交易Hash", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "txHash", description = "批量退出共识交易Hash")
+    }))
+    public Response batchWithdraw(Map<String,Object> params){
+        Result result = service.batchWithdraw(params);
+        if(result.isFailed()){
+            return failed(result.getErrorCode());
+        }
+        return success(result.getData());
+    }
+    /**
+     * 退出共识
+     * */
+    @CmdAnnotation(cmd = CMD_BATCH_STAKING_MERGE, version = 1.0, description = "退出委托交易/withdraw deposit agent transaction")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "账户地址")
+    @Parameter(parameterName = PARAM_TX_HASH, parameterType = "String", parameterDes = "加入共识交易HASH字符串")
+    @Parameter(parameterName = PARAM_PASSWORD, parameterType = "String", parameterDes = "账户密码")
+    @Parameter(parameterName = "timeType", parameterType = "int", parameterDes = "质押期限类型")
+    @ResponseData(name = "返回值", description = "批量合并质押交易Hash", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "txHash", description = "批量合并质押交易Hash")
+    }))
+    public Response batchStakingMerge(Map<String,Object> params){
+        Result result = service.batchStakingMerge(params);
+        if(result.isFailed()){
+            return failed(result.getErrorCode());
+        }
+        return success(result.getData());
+    }
+
+    /**
      * 查询委托信息列表
      * */
     @CmdAnnotation(cmd = CMD_GET_DEPOSIT_LIST, version = 1.0, description = "查询指定账户或指定节点的委托信息/Query delegation information for a specified account or node")

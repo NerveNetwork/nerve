@@ -27,6 +27,7 @@ public interface ConsensusConstant {
     String DB_NAME_DEPOSIT = "deposit";
     String DB_NAME_PUNISH = "punish";
     String DB_NAME_CONFIG = "config";
+    String DB_NAME_STAKING_LIMIT = "staking_limit";
     String DB_NAME_AWARD_SETTLE_RECORD = "award_settle_record";
     String DB_NAME_RANDOM_SEEDS = "random_seed";
     String DB_NAME_PUB_KEY = "pubKey";
@@ -147,6 +148,6 @@ public interface ConsensusConstant {
     int POC_NETWORK_NODE_PERCENT = 50;
     short POC_CONNECT_MAX_FAIL_TIMES = 100;
 
-    String STACKING_CONFIG_FILE = "stacking-asset.json";
+    String STACKING_CONFIG_FILE = "staking-asset";
 
 }

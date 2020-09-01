@@ -105,7 +105,7 @@ public class VoteResultProcessor extends BasicRunnable {
 
 
         if (!chain.isConsonsusNode() || !chain.isNetworkStateOk() || !chain.isSynchronizedHeight()) {
-            log.info("==========dddd===========通知区块模块，拜占庭验证通过：" + resultMessage.getHeight() + "-" + resultMessage.getBlockHash().toHex());
+            log.info("通知区块模块，拜占庭验证通过：" + resultMessage.getHeight() + "-" + resultMessage.getBlockHash().toHex());
             CallMethodUtils.noticeByzantineResult(chain, resultMessage.getHeight(), false, resultMessage.getBlockHash(), null);
             return;
         }

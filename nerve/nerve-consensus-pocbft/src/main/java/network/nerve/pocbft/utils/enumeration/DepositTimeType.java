@@ -1,6 +1,6 @@
 package network.nerve.pocbft.utils.enumeration;
 public enum DepositTimeType {
-    //todo
+
 //    TEST((byte)7, 5, 300, "5分钟"),
 
     /**

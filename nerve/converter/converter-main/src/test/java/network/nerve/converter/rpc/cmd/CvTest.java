@@ -179,7 +179,7 @@ public class CvTest {
 
     @Test
     public void withdrawalERC20() throws Exception {
-        for (int i = 1; i <= 5; i++) {
+        for (int i = 1; i <= 2; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);

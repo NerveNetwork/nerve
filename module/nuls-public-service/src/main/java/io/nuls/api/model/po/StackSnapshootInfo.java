@@ -26,6 +26,11 @@ public class StackSnapshootInfo {
      */
     private BigInteger stackTotal = BigInteger.ZERO;
 
+    /**
+     * 节点保证金的总量
+     */
+    private BigInteger consensusLockTotal = BigInteger.ZERO;
+
 
     /**
      * 当日发放收益
@@ -97,6 +102,14 @@ public class StackSnapshootInfo {
         this.blockHeight = blockHeight;
     }
 
+    public BigInteger getConsensusLockTotal() {
+        return consensusLockTotal;
+    }
+
+    public void setConsensusLockTotal(BigInteger consensusLockTotal) {
+        this.consensusLockTotal = consensusLockTotal;
+    }
+
     @Override
     public String toString() {
         return new StringBuilder("{")
@@ -106,6 +119,8 @@ public class StackSnapshootInfo {
                 .append(baseInterest)
                 .append(",\"stackTotal\":")
                 .append(stackTotal)
+                .append(",\"consensusLockTotal\":")
+                .append(consensusLockTotal)
                 .append(",\"rewardTotal\":")
                 .append(rewardTotal)
                 .append(",\"blockHeight\":")

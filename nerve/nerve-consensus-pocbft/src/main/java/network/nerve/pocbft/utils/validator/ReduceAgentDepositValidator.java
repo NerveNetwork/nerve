@@ -45,8 +45,13 @@ public class ReduceAgentDepositValidator extends BaseValidator {
         //保证金验证
         AgentPo po = (AgentPo) rs.getData();
         BigInteger amount = txData.getAmount();
+
+        BigInteger minAppendAmount = chain.getConfig().getReduceAgentDepositMin();
+        if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
+            minAppendAmount = chain.getConfig().getMinAppendAndExitAmount();
+        }
         //金额小于允许的最小金额
-        if(amount.compareTo(chain.getConfig().getReduceAgentDepositMin()) < 0){
+        if(amount.compareTo(minAppendAmount) < 0){
             chain.getLogger().error("The amount of exit margin is not within the allowed range");
             return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
         }

@@ -71,7 +71,15 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     private BigInteger distributionFee;
 
-    private long feeEffectiveHeight;
+    /**
+     * 第一次协议升级高度 提现手续费100
+     */
+    private long feeEffectiveHeightFirst;
+
+    /**
+     * 第二次协议升级高度 提现手续费10
+     */
+    private long feeEffectiveHeightSecond;
 
     /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
@@ -206,11 +214,19 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
         this.multySignAddressSet = multySignAddressSet;
     }
 
-    public long getFeeEffectiveHeight() {
-        return feeEffectiveHeight;
+    public long getFeeEffectiveHeightFirst() {
+        return feeEffectiveHeightFirst;
     }
 
-    public void setFeeEffectiveHeight(long feeEffectiveHeight) {
-        this.feeEffectiveHeight = feeEffectiveHeight;
+    public void setFeeEffectiveHeightFirst(long feeEffectiveHeightFirst) {
+        this.feeEffectiveHeightFirst = feeEffectiveHeightFirst;
+    }
+
+    public long getFeeEffectiveHeightSecond() {
+        return feeEffectiveHeightSecond;
+    }
+
+    public void setFeeEffectiveHeightSecond(long feeEffectiveHeightSecond) {
+        this.feeEffectiveHeightSecond = feeEffectiveHeightSecond;
     }
 }

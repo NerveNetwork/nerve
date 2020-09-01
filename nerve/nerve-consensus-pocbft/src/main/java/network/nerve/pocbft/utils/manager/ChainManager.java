@@ -1,6 +1,5 @@
 package network.nerve.pocbft.utils.manager;
 
-import io.nuls.base.basic.AddressTool;
 import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.ProtocolLoader;
 import io.nuls.base.protocol.RegisterHelper;
@@ -20,15 +19,18 @@ import io.nuls.economic.nuls.model.bo.ConsensusConfigInfo;
 import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.StackingAsset;
+import network.nerve.pocbft.model.bo.config.AssetsStakingLimitCfg;
+import network.nerve.pocbft.model.bo.config.AssetsType;
 import network.nerve.pocbft.model.bo.config.ChainConfig;
 import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
 import network.nerve.pocbft.network.service.ConsensusNetService;
 import network.nerve.pocbft.rpc.call.CallMethodUtils;
 //import network.nerve.pocbft.storage.ConfigService;
 import network.nerve.pocbft.storage.PubKeyStorageService;
-import network.nerve.pocbft.utils.ConsensusNetUtil;
 import network.nerve.pocbft.utils.LoggerUtil;
 
+import java.math.BigInteger;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,7 +43,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class ChainManager {
-//    @Autowired
+    //    @Autowired
 //    private ConfigService configService;
     @Autowired
     private AgentManager agentManager;
@@ -70,13 +72,17 @@ public class ChainManager {
      */
     public void initChain() throws Exception {
         //加载可参与抵押的资产信息
-        stackingAssetList = JSONUtils.json2list(IoUtils.read(ConsensusConstant.STACKING_CONFIG_FILE), StackingAsset.class);
-        stackingAssetList.forEach(stackingAsset -> {
-            //如果没有配置chainId 则默认为本链资产
-            if (stackingAsset.getChainId() == null) {
-                stackingAsset.setChainId(config.getChainId());
-            }
-        });
+        String stackAssetConfigFilePath = ConsensusConstant.STACKING_CONFIG_FILE+"-"+config.getChainId()+".json";
+        URL url = ChainManager.class.getClassLoader().getResource(stackAssetConfigFilePath);
+        if(url != null){
+            stackingAssetList = JSONUtils.json2list(IoUtils.read(stackAssetConfigFilePath), StackingAsset.class);
+            stackingAssetList.forEach(stackingAsset -> {
+                //如果没有配置chainId 则默认为本链资产
+                if (stackingAsset.getChainId() == null) {
+                    stackingAsset.setChainId(config.getChainId());
+                }
+            });
+        }
         Map<Integer, ChainConfig> configMap = configChain();
         if (configMap == null || configMap.size() == 0) {
             Log.info("链初始化失败！");
@@ -104,6 +110,8 @@ public class ChainManager {
             Map<String, Object> param = new HashMap<>(4);
             param.put(ParamConstant.CONSENUS_CONFIG, new ConsensusConfigInfo(chainId, chainConfig.getAssetId(), chainConfig.getPackingInterval(),
                     chainConfig.getInflationAmount(), chainConfig.getTotalInflationAmount(), chainConfig.getInitHeight(), chainConfig.getDeflationRatio(), chainConfig.getDeflationHeightInterval(), chainConfig.getAwardAssetId()));
+
+
             economicService.registerConfig(param);
             List<String> seedNodePubKeyList = List.of(chainConfig.getPubKeyList().split(ConsensusConstant.SEED_NODE_SEPARATOR));
             for (String pubKey : seedNodePubKeyList) {
@@ -163,27 +171,73 @@ public class ChainManager {
             读取数据库链信息配置
             Read database chain information configuration
              */
-            Map<Integer, ChainConfig> configMap = null;// configService.getList();
-            /*
-            如果系统是第一次运行，则本地数据库没有存储链信息，此时需要从配置文件读取主链配置信息
-            If the system is running for the first time, the local database does not have chain information,
-            and the main chain configuration information needs to be read from the configuration file at this time.
-            */
-//            if (configMap == null) {
-                configMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_2);
-//            }
-//            if (configMap.size() == 0) {
-                ChainConfig chainConfig = config;
-//                boolean saveSuccess = configService.save(chainConfig, chainConfig.getChainId());
-//                if (saveSuccess) {
-                    configMap.put(chainConfig.getChainId(), chainConfig);
-//                }
-//            }
+            Map<Integer, ChainConfig> configMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_2);
+            //加载特殊配置，并设置到config中
+            fillSpecialConfig(config);
+            configMap.put(config.getChainId(), config);
             return configMap;
         } catch (Exception e) {
             Log.error(e);
             return null;
         }
+    }
+
+    private void fillSpecialConfig(ConsensusChainConfig config) {
+        try {
+            Map<String, Object> specConfigMap = JSONUtils.json2map(IoUtils.read("spec-cfg-" + config.getChainId() + ".json"));
+            Long depositAwardChangeHeight = Long.parseLong("" + specConfigMap.get("depositAwardChangeHeight"));
+            Long depositVerifyHeight = Long.parseLong("" + specConfigMap.get("depositVerifyHeight"));
+            Long minRewardHeight = Long.parseLong("" + specConfigMap.get("minRewardHeight"));
+            Long maxCoinToOfCoinbase = Long.parseLong("" + specConfigMap.get("maxCoinToOfCoinbase"));
+
+//            "v130Height": 200000,
+//                    "minStakingAmount": 100000000000,
+//                    "minAppendAndExitAmount":200000000000,
+//                    "exitStakingLockHours":168
+
+            Long v1_3_0Height = Long.parseLong("" + specConfigMap.get("v130Height"));
+            BigInteger minStakingAmount = new BigInteger("" + specConfigMap.get("minStakingAmount"));
+            BigInteger minAppendAndExitAmount = new BigInteger("" + specConfigMap.get("minAppendAndExitAmount"));
+            Integer exitStakingLockHours = Integer.parseInt("" + specConfigMap.get("exitStakingLockHours"));
+
+            config.setDepositAwardChangeHeight(depositAwardChangeHeight);
+            config.setDepositVerifyHeight(depositVerifyHeight);
+            config.setMinRewardHeight(minRewardHeight);
+            config.setMaxCoinToOfCoinbase(maxCoinToOfCoinbase.intValue());
+
+            config.setV130Height(v1_3_0Height);
+            config.setMinStakingAmount(minStakingAmount);
+            config.setMinAppendAndExitAmount(minAppendAndExitAmount);
+            config.setExitStakingLockHours(exitStakingLockHours);
+
+
+            loacLimitCfg(specConfigMap, config);
+
+        } catch (Exception e) {
+            Log.error(e);
+        }
+    }
+
+    private void loacLimitCfg(Map<String, Object> specConfigMap, ConsensusChainConfig config) {
+        List<AssetsStakingLimitCfg> resultList = new ArrayList<>();
+        List<Object> limitList = (List<Object>) specConfigMap.get("limit");
+        for (Object limit : limitList) {
+            Map<String, Object> limitMap = (Map<String, Object>) limit;
+            AssetsStakingLimitCfg cfg = new AssetsStakingLimitCfg();
+            cfg.setKey((String) limitMap.get("key"));
+            cfg.setTotalCount(Long.parseLong("" + limitMap.get("totalCount")));
+            cfg.setAssetsTypeList(new ArrayList<>());
+            List<Object> assetsList = (List<Object>) limitMap.get("assets");
+            for (Object item : assetsList) {
+                Map<String, Object> assets = (Map<String, Object>) item;
+                AssetsType type = new AssetsType();
+                type.setChainId((Integer) assets.get("assetsChainId"));
+                type.setAssetsId((Integer) assets.get("assetsId"));
+                cfg.getAssetsTypeList().add(type);
+            }
+            resultList.add(cfg);
+        }
+        config.setLimitCfgList(resultList);
     }
 
     /**
@@ -287,17 +341,14 @@ public class ChainManager {
         chain.setNetworkStateOk(state);
     }
 
-    public boolean assetStackingVerify(int chainId, int assetId) {
-        boolean isDefaultAsset = (chainId == config.getMainChainId() && assetId == config.getMainAssetId()) || (chainId == config.getChainId() && assetId == config.getAssetId());
-        if (isDefaultAsset) {
-            return true;
-        }
+    public StackingAsset assetStackingVerify(int chainId, int assetId) {
+
         for (StackingAsset stackingAsset : stackingAssetList) {
             if (stackingAsset.getChainId() == chainId && stackingAsset.getAssetId() == assetId) {
-                return true;
+                return stackingAsset;
             }
         }
-        return false;
+        return null;
     }
 
     public StackingAsset getAssetBySymbol(String simple) {

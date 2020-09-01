@@ -12,8 +12,10 @@ import io.nuls.api.model.po.TxRelationInfo;
 import io.nuls.api.model.po.mini.MiniAccountInfo;
 import io.nuls.api.utils.DBUtil;
 import io.nuls.api.utils.DocumentTransferTool;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.BigIntegerUtils;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -82,6 +84,9 @@ public class MongoAccountServiceImpl implements AccountService {
         int i = 0;
         for (AccountInfo accountInfo : accountInfoMap.values()) {
             Document document = DocumentTransferTool.toDocument(accountInfo, "address");
+            if(accountInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0){
+                throw new NulsRuntimeException(CommonCodeConstanst.DATA_ERROR,"数据异常，account 主资产不能为负 address : {}, " + accountInfo.getAddress());
+            }
             document.put("totalBalance", BigIntegerUtils.bigIntegerToString(accountInfo.getTotalBalance(), 32));
 
             if (accountInfo.isNew()) {
@@ -171,8 +176,7 @@ public class MongoAccountServiceImpl implements AccountService {
         List<TxRelationInfo> txRelationInfoList;
         if (end <= unConfirmCount) {
             txRelationInfoList = unConfirmLimitQuery(chainId, filter, start, pageSize);
-        } else if (start - 1 > unConfirmCount) {
-            start = start - 1;
+        } else if (start > unConfirmCount) {
             start = (int) (start - unConfirmCount);
             txRelationInfoList = confirmLimitQuery(chainId, index, filter, start, pageSize);
         } else {

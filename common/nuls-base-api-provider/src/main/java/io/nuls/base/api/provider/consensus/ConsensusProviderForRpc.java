@@ -65,15 +65,15 @@ public class ConsensusProviderForRpc extends BaseRpcService implements Consensus
     }
 
     @Override
-    public Result<String> changeMultiAgentDeposit(MultiAgentDepositChangeReq req) {
+    public Result<MultiSignTransferRes> changeMultiAgentDeposit(MultiAgentDepositChangeReq req) {
         if (req.getAmount().equals(BigInteger.ZERO)) {
             throw new IllegalArgumentException("deposit can't be zero");
         }
         if (req.getAmount().compareTo(BigInteger.ZERO) > 0) {
-            return callReturnString("cs_appendMultiAgentDeposit", req, "txHash");
+            return callRpc(ModuleE.CS.abbr, "cs_appendMultiAgentDeposit", req,  (Function<Map, Result>) (data -> success(MapUtils.mapToBean(data, new MultiSignTransferRes()))));
         } else {
             req.setAmount(req.getAmount().abs());
-            return callReturnString("cs_reduceMultiAgentDeposit", req, "txHash");
+            return callRpc(ModuleE.CS.abbr, "cs_reduceMultiAgentDeposit", req,  (Function<Map, Result>) (data -> success(MapUtils.mapToBean(data, new MultiSignTransferRes()))));
         }
     }
 
@@ -90,6 +90,15 @@ public class ConsensusProviderForRpc extends BaseRpcService implements Consensus
     @Override
     public Result<String> withdraw(WithdrawReq req) {
         return callReturnString("cs_withdraw", req, "txHash");
+    }
+    @Override
+    public Result<String> batchWithdraw(WithdrawReq req) {
+        return callReturnString("cs_batch_withdraw", req, "txHash");
+    }
+
+    @Override
+    public Result<String> batchStakingMerge(BatchStakingMergeReq req) {
+        return callReturnString("cs_batch_staking_merge", req, "txHash");
     }
 
     @Override

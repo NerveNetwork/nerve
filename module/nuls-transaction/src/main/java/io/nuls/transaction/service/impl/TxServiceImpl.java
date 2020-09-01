@@ -50,6 +50,7 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import io.nuls.transaction.cache.PackablePool;
 import io.nuls.transaction.constant.TxConfig;
 import io.nuls.transaction.constant.TxConstant;
+import io.nuls.transaction.constant.TxContext;
 import io.nuls.transaction.constant.TxErrorCode;
 import io.nuls.transaction.manager.TxManager;
 import io.nuls.transaction.model.bo.*;
@@ -286,6 +287,11 @@ public class TxServiceImpl implements TxService {
 
     @Override
     public void baseValidateTx(Chain chain, Transaction tx, TxRegister txRegister) throws NulsException {
+        baseValidateTx(chain, tx, txRegister, null);
+    }
+
+    @Override
+    public void baseValidateTx(Chain chain, Transaction tx, TxRegister txRegister, Long height) throws NulsException {
         if (null == tx) {
             throw new NulsException(TxErrorCode.TX_NOT_EXIST);
         }
@@ -332,7 +338,7 @@ public class TxServiceImpl implements TxService {
             throw new NulsException(TxErrorCode.COINDATA_NOT_FOUND);
         }
         validateCoinFromBase(chain, txRegister, coinData.getFrom());
-        validateCoinToBase(chain, txRegister, coinData.getTo());
+        validateCoinToBase(chain, txRegister, coinData.getTo(), height);
         if (txRegister.getVerifyFee()) {
             validateFee(chain, tx, coinData, txRegister);
         }
@@ -500,7 +506,7 @@ public class TxServiceImpl implements TxService {
 
     }
 
-    private void validateCoinToBase(Chain chain, TxRegister txRegister, List<CoinTo> listTo) throws NulsException {
+    private void validateCoinToBase(Chain chain, TxRegister txRegister, List<CoinTo> listTo, Long height) throws NulsException {
         String moduleCode = txRegister.getModuleCode();
         int type = txRegister.getTxType();
         if (type == TxType.COIN_BASE || ModuleE.SC.abbr.equals(moduleCode)) {
@@ -535,8 +541,21 @@ public class TxServiceImpl implements TxService {
             } else if (addressChainId != chainId) {
                 throw new NulsException(TxErrorCode.COINTO_NOT_SAME_CHAINID);
             }
-            if (coinTo.getAmount().compareTo(BigInteger.ZERO) < 0) {
-                throw new NulsException(TxErrorCode.DATA_ERROR);
+            height = null == height ? chain.getBestBlockHeight() : height;
+            if (height >= TxContext.COINTO_PTL_HEIGHT_SECOND) {
+                // 禁止锁定金额为0的to
+                if (coinTo.getLockTime() < 0L && coinTo.getAmount().compareTo(BigInteger.ZERO) <= 0) {
+                    chain.getLogger().error("交易基础验证失败, 禁止锁定金额为0的to");
+                    throw new NulsException(TxErrorCode.DATA_ERROR);
+                }
+            } else if (height >= TxContext.COINTO_PTL_HEIGHT_FIRST) {
+                if (coinTo.getAmount().compareTo(BigInteger.ZERO) <= 0) {
+                    throw new NulsException(TxErrorCode.DATA_ERROR);
+                }
+            } else {
+                if (coinTo.getAmount().compareTo(BigInteger.ZERO) < 0) {
+                    throw new NulsException(TxErrorCode.DATA_ERROR);
+                }
             }
             //如果不是跨链交易，to中地址对应的链id必须发起交易的链id
             if (type != TxType.CROSS_CHAIN) {

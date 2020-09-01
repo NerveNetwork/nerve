@@ -15,6 +15,7 @@ import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.tx.txdata.CancelDeposit;
 import network.nerve.pocbft.model.bo.tx.txdata.Deposit;
+import network.nerve.pocbft.service.StakingLimitService;
 import network.nerve.pocbft.utils.LoggerUtil;
 import network.nerve.pocbft.utils.manager.ChainManager;
 import network.nerve.pocbft.utils.manager.DepositManager;
@@ -24,7 +25,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 脱出共识交易处理器
+ * 退出staking交易处理器
  *
  * @author tag
  * @date 2019/6/1
@@ -37,6 +38,9 @@ public class WithdrawProcessor implements TransactionProcessor {
     private ChainManager chainManager;
     @Autowired
     private WithdrawValidator validator;
+
+    @Autowired
+    private StakingLimitService stakingLimitService;
 
     @Override
     public int getType() {
@@ -64,7 +68,7 @@ public class WithdrawProcessor implements TransactionProcessor {
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
                 }
-                if(withdrawTx.getTime() < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || withdrawTx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT){
+                if (withdrawTx.getTime() < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || withdrawTx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT) {
                     invalidTxList.add(withdrawTx);
                     chain.getLogger().error("Trading time error,txTime:{},time:{}", withdrawTx.getTime(), time);
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
@@ -181,7 +185,15 @@ public class WithdrawProcessor implements TransactionProcessor {
         //设置退出共识高度
         deposit.setDelHeight(header.getHeight());
 
-        return depositManager.updateDeposit(chain, deposit);
+        boolean result = depositManager.updateDeposit(chain, deposit);
+        if (result) {
+            result = this.stakingLimitService.sub(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+            if (!result) {
+                deposit.setDelHeight(-1L);
+                depositManager.updateDeposit(chain, deposit);
+            }
+        }
+        return result;
     }
 
     private boolean withdrawRollBack(Transaction transaction, Chain chain, BlockHeader header) {
@@ -204,6 +216,14 @@ public class WithdrawProcessor implements TransactionProcessor {
             return false;
         }
         deposit.setDelHeight(-1L);
-        return  depositManager.updateDeposit(chain, deposit);
+        boolean result = depositManager.updateDeposit(chain, deposit);
+        if (result) {
+            result = this.stakingLimitService.add(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+            if (!result) {
+                deposit.setDelHeight(header.getHeight());
+                depositManager.updateDeposit(chain, deposit);
+            }
+        }
+        return result;
     }
 }

@@ -6,7 +6,9 @@ import io.nuls.base.protocol.cmd.TransactionDispatcher;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
@@ -30,6 +32,7 @@ import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -83,6 +86,7 @@ public class DexBootstrap extends RpcModule {
             super.init();
             initSys();
             initDb();
+            initCfg();
             DexContext.sysFeeScaleDecimal = new BigDecimal(dexConfig.getSysFeeScale());
             Address address = new Address(dexConfig.getSysFeeAddress());
             DexContext.sysFeeAddress = address.getAddressBytes();
@@ -122,6 +126,17 @@ public class DexBootstrap extends RpcModule {
         DexUtil.createTable(DexDBConstant.DB_NAME_TRADING_DEAL);
         DexUtil.createTable(DexDBConstant.DB_NAME_COIN_TRADING_EDIT_INFO);
         DexUtil.createTable(DexDBConstant.DB_NAME_NONCE_ORDER);
+    }
+
+
+    private void initCfg() {
+        try {
+            Map map = JSONUtils.json2map(IoUtils.read(DexConstant.DEX_CONFIG_FILE + dexConfig.getChainId() + ".json"));
+            long skipHeight = Long.parseLong(map.get("skipHeight").toString());
+            DexContext.skipHeight = skipHeight;
+        } catch (Exception e) {
+            DexContext.skipHeight = 0;
+        }
     }
 
     /**

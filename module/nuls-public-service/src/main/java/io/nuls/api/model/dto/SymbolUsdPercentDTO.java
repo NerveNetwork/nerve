@@ -25,10 +25,25 @@ public class SymbolUsdPercentDTO {
      * 1 为 100%
      */
     BigDecimal per;
+
     /**
      * 目标项数量
      */
     BigInteger amount;
+
+
+    /**
+     * 目标项数量
+     */
+    BigDecimal amountBigUnit;
+
+    public BigDecimal getAmountBigUnit() {
+        return amountBigUnit;
+    }
+
+    public void setAmountBigUnit(BigDecimal amountBigUnit) {
+        this.amountBigUnit = amountBigUnit;
+    }
 
     public BigDecimal getTotalUsdVal() {
         return totalUsdVal;

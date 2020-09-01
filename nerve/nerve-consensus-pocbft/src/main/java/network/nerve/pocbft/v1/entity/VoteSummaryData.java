@@ -56,7 +56,7 @@ public class VoteSummaryData extends BasicObject {
         }
         double result = DoubleUtils.div(count, round.getMemberCount());
 //        if (vote.getVoteStage() == 2) {
-            log.info("收到投票({})：{}-{}-{}-{}-{}={}=========={}%", vote.getVoteStage(), this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+            log.debug("收到投票({})：{}-{}-{}-{}-{}={}=========={}%", vote.getVoteStage(), this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
                     vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
 //        }
 
@@ -81,7 +81,7 @@ public class VoteSummaryData extends BasicObject {
             } else if (stage2First && vote.getVoteStage() == ConsensusConstant.VOTE_STAGE_TWO) {
                 stage2First = false;
                 data.setResultMessage(new VoteResultMessage(chain, new ArrayList<>(stageTwoMap.values())));
-                log.info("提交2阶段结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+                log.debug("提交2阶段结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
                         vote.getVoteStage(), vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
                 chain.getConsensusCache().getStageTwoQueue().offer(data);
             }

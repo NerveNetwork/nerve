@@ -42,6 +42,7 @@ public class Chain {
 
     private List<QuerierCfg> collectors;
 
+    private LatestBasicBlock latestBasicBlock = new LatestBasicBlock();
 
     public int getChainId(){
         return configBean.getChainId();
@@ -77,5 +78,9 @@ public class Chain {
 
     public void setCollectors(List<QuerierCfg> collectors) {
         this.collectors = collectors;
+    }
+
+    public LatestBasicBlock getLatestBasicBlock() {
+        return latestBasicBlock;
     }
 }

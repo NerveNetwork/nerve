@@ -16,7 +16,5 @@
   "moduleCode": "cs",
   "byzantineRate": 66,
   "agentCountMax": 35,
-  "mainChainCommissionRatio": 60,
-  "maxCoinToOfCoinbase": 3000,
-  "minRewardHeight": 1350000
+  "mainChainCommissionRatio": 60
 }

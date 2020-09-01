@@ -177,17 +177,17 @@ public class StatisticalTask implements Runnable {
         info.setMonth(calendar.get(Calendar.MONTH) + 1);
         info.setYear(calendar.get(Calendar.YEAR));
 
-        BlockTimeInfo nowBlockHeight = blockTimeService.get(ApiContext.defaultChainId);
-        if(nowBlockHeight != null){
-            Long lastBlockHeight = nowBlockHeight.getBlockHeight();
+//        BlockTimeInfo nowBlockHeight = blockTimeService.get(ApiContext.defaultChainId);
+//        if(nowBlockHeight != null){
+//            Long lastBlockHeight = nowBlockHeight.getBlockHeight();
             StatisticalInfo lastStatisticalInfo = statisticalService.getLastStatisticalInfo(ApiContext.defaultChainId);
             Long startBlockHeight = 1L;
             if(lastStatisticalInfo != null){
                 startBlockHeight = lastStatisticalInfo.getLastBlockHeight() + 1L;
             }
-            info.setAssetSnapshotList(buildAsssetSnapshoot(startBlockHeight,lastBlockHeight));
-            info.setLastBlockHeight(lastBlockHeight);
-        }
+            info.setAssetSnapshotList(buildAsssetSnapshoot(startBlockHeight,height));
+            info.setLastBlockHeight(height);
+//        }
 
         try {
             this.statisticalService.insert(chainId, info);
@@ -297,7 +297,7 @@ public class StatisticalTask implements Runnable {
         }).map(d->{
             String assetChainId = d.get("chainId").toString();
             String assetId = d.get("assetId").toString();
-            BigInteger balance = new BigInteger(d.get("balance").toString());
+            BigInteger balance = new BigInteger(d.get("totalBalance").toString());
             return Map.of(assetChainId + ApiConstant.SPACE + assetId,balance);
         }).reduce(res,(d1,d2)->{
             d2.entrySet().forEach(entry->{

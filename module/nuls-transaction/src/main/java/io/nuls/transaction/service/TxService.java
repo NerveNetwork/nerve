@@ -67,6 +67,7 @@ public interface TxService {
      * @param txRegister
      * @throws NulsException
      */
+    void baseValidateTx(Chain chain, Transaction tx, TxRegister txRegister, Long height) throws NulsException;
     void baseValidateTx(Chain chain, Transaction tx, TxRegister txRegister) throws NulsException;
 
     /**

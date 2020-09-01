@@ -10,9 +10,8 @@
   "feePubkey": "111111111111111111111111111111111111111111111111111111111111111111",
   "initVirtualBankHeight": 10,
   "virtualBankAgentCountWithoutSeed": 10,
-  "proposalPrice": 10000000000,
+  "proposalPrice": 1000000000,
   "proposalVotingDays": 10,
-  "distributionFee": 10000000000,
-  "byzantineRatio": 66,
-  "feeEffectiveHeight": 1700000
+  "distributionFee": 1000000000,
+  "byzantineRatio": 66
 }

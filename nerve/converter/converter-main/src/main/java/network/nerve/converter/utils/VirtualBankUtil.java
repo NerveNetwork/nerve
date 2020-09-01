@@ -37,6 +37,7 @@ import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.storage.VirtualBankStorageService;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -193,6 +194,37 @@ public class VirtualBankUtil {
             virtualBankMap.get(director.getSignAddress()).setOrder(i++);
         }
     }
+
+    /**
+     * 根据高度获取协议异构手续费(补贴)
+     * @param chain
+     * @param height
+     * @param isProposal
+     * @return
+     */
+    public static BigInteger calculateFee(Chain chain, Long height, boolean isProposal) {
+        BigInteger fee;
+        if(null == height){
+            height = chain.getLatestBasicBlock().getHeight();
+        }
+        if (!isProposal) {
+            if(height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND){
+                fee = ConverterContext.DISTRIBUTION_FEE;
+            } else if (height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST) {
+                fee = ConverterConstant.DISTRIBUTION_FEE_100;
+            } else {
+                fee = ConverterContext.DISTRIBUTION_FEE;
+            }
+        } else {
+            fee = ConverterContext.PROPOSAL_PRICE;
+        }
+        return fee;
+    }
+
+    public static BigInteger calculateFee(Chain chain, boolean isProposal) {
+        return calculateFee(chain, null, isProposal);
+    }
+
 
 
 }

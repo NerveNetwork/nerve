@@ -230,7 +230,7 @@ public class ConsensusNetGroup {
                 ss.append(":::");
                 ss.append(entry.getKey());
             }
-            chain.getLogger().info(ss.toString());
+            chain.getLogger().debug(ss.toString());
             available = netAvailable;
             return true;
         }

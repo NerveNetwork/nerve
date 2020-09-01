@@ -438,11 +438,11 @@ public class AgentManager {
      * 计算个账户的保证金并返回总的保证金
      *
      * @param chain       链信息
-     * @param height      高度
+     * @param endHeight   高度
      * @param depositMap  委托
      * @param totalAmount 总委托金额
      */
-    public BigDecimal getAgentDepositByHeight(Chain chain, long height, Map<String, BigDecimal> depositMap, BigDecimal totalAmount) {
+    public BigDecimal getAgentDepositByHeight(Chain chain, long startHeight, long endHeight, Map<String, BigDecimal> depositMap, BigDecimal totalAmount) {
         List<AgentPo> poList;
         try {
             poList = agentStorageService.getList(chain.getConfig().getChainId());
@@ -454,10 +454,13 @@ public class AgentManager {
         }
         Map<NulsHash, AgentPo> agentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_64);
         for (AgentPo agent : poList) {
-            if (agent.getBlockHeight() > height) {
+            if (agent.getBlockHeight() > endHeight) {
                 continue;
             }
-            if (agent.getDelHeight() != -1L && agent.getDelHeight() <= height) {
+            if (agent.getDelHeight() != -1L && agent.getDelHeight() <= endHeight) {
+                continue;
+            }
+            if (endHeight > chain.getConfig().getDepositAwardChangeHeight() && agent.getBlockHeight() > startHeight) {
                 continue;
             }
             agentMap.put(agent.getHash(), agent);
@@ -466,7 +469,7 @@ public class AgentManager {
             return totalAmount;
         }
         //获取该高度之后的退出保证金交易
-        Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, height);
+        Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, endHeight);
         BigInteger tempDeposit;
         AgentPo po;
         if (!reduceDepositMap.isEmpty()) {
@@ -480,7 +483,7 @@ public class AgentManager {
             }
         }
         //获取该高度之后的追加保证金交易
-        Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, height);
+        Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, endHeight);
         if (!appendDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : appendDepositMap.entrySet()) {
                 NulsHash agentHash = entry.getKey();
@@ -500,7 +503,7 @@ public class AgentManager {
         //虚拟银行权重*4，共识节点权重*3，未出快节点权重*1
         int maxConsensusAgentCount = chain.getConsensusAgentCountMax();
         List<String> virtualBankList = new ArrayList<>();
-        VirtualAgentPo virtualAgentPo = virtualAgentStorageService.get(height);
+        VirtualAgentPo virtualAgentPo = virtualAgentStorageService.get(endHeight);
         if (virtualAgentPo != null) {
             virtualBankList = virtualAgentPo.getVirtualAgentList();
         }

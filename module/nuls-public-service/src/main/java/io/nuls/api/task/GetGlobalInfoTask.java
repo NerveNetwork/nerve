@@ -21,7 +21,7 @@ public class GetGlobalInfoTask implements Runnable {
             return;
         }
         Map<String, Object> map = result.getData();
-        ApiContext.localHeight = Long.parseLong(map.get("localHeight").toString());
+//        ApiContext.localHeight = Long.parseLong(map.get("localHeight").toString());
         ApiContext.networkHeight = Long.parseLong(map.get("networkHeight").toString());
         ApiContext.bestBlockCreateTime = Long.parseLong(map.get("bestBlockCreateTime").toString());
         if(ApiContext.magicNumber == 0) {

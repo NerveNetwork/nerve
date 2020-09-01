@@ -48,6 +48,8 @@ public interface CommandConstant {
 
     String CMD_DEPOSIT_TO_STACKING = "cs_depositToStacking";
     String CMD_WITHDRAW = "cs_withdraw";
+    String CMD_BATCH_WITHDRAW = "cs_batch_withdraw";
+    String CMD_BATCH_STAKING_MERGE = "cs_batch_staking_merge";
     String CMD_GET_DEPOSIT_LIST = "cs_getDepositList";
     String CMD_GET_ASSET_BY_SYMBOL = "cs_getAssetBySymbol";
     String CMD_GET_CAN_STACKING_ASSET_LIST = "cs_getCanStackingAssetList";

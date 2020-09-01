@@ -13,6 +13,7 @@ import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.tx.txdata.Deposit;
+import network.nerve.pocbft.service.StakingLimitService;
 import network.nerve.pocbft.utils.LoggerUtil;
 import network.nerve.pocbft.utils.manager.ChainManager;
 import network.nerve.pocbft.utils.manager.DepositManager;
@@ -39,6 +40,9 @@ public class DepositProcessor implements TransactionProcessor {
     @Autowired
     private DepositValidator validator;
 
+    @Autowired
+    private StakingLimitService stakingLimitService;
+
     @Override
     public int getType() {
         return TxType.DEPOSIT;
@@ -64,7 +68,7 @@ public class DepositProcessor implements TransactionProcessor {
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
                 }
-                if(depositTx.getTime() < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || depositTx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT){
+                if (depositTx.getTime() < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || depositTx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT) {
                     invalidTxList.add(depositTx);
                     chain.getLogger().error("Trading time error,txTime:{},time:{}", depositTx.getTime(), time);
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
@@ -157,10 +161,25 @@ public class DepositProcessor implements TransactionProcessor {
         deposit.setTxHash(transaction.getHash());
         deposit.setTime(transaction.getTime());
         deposit.setBlockHeight(blockHeader.getHeight());
-        return depositManager.addDeposit(chain, deposit);
+        boolean result = depositManager.addDeposit(chain, deposit);
+        if (result) {
+            result = stakingLimitService.add(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+            if (!result) {
+                depositManager.removeDeposit(chain, transaction.getHash());
+            }
+        }
+        return result;
     }
 
     private boolean depositRollBack(Transaction transaction, Chain chain) {
-        return depositManager.removeDeposit(chain, transaction.getHash());
+        Deposit deposit = depositManager.getDeposit(chain, transaction.getHash());
+        boolean result = depositManager.removeDeposit(chain, transaction.getHash());
+        if (result) {
+            result = stakingLimitService.sub(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+            if (!result) {
+                depositManager.addDeposit(chain, deposit);
+            }
+        }
+        return result;
     }
 }

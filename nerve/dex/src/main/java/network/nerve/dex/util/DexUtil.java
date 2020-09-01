@@ -73,16 +73,6 @@ public class DexUtil {
         return HexUtil.encode(nonce) + "-" + AddressTool.getStringAddressByBytes(address) + "-" + assetChainId + "-" + assetId;
     }
 
-    /**
-     * 获取quote开头的币对id
-     *
-     * @param po
-     * @return
-     */
-    public static String getCoinTradingKey2(CoinTradingPo po) {
-        return po.getQuoteAssetChainId() + "-" + po.getQuoteAssetId() + "-" + po.getBaseAssetChainId() + "-" + po.getBaseAssetId();
-    }
-
     public static byte[] getNonceByHash(NulsHash hash) {
         byte[] out = new byte[8];
         byte[] in = hash.getBytes();
@@ -161,7 +151,7 @@ public class DexUtil {
     private static Map<String, Object> processWithEqual(CoinData coinData, CoinTradingPo tradingPo, BigDecimal price,
                                                         TradingOrderPo buyOrder, TradingOrderPo sellOrder) {
         Map<String, Object> map = new HashMap<>();
-        //首先用卖单的币种剩余数量 * 单价 ，计算得到可以兑换到的计价币种总量
+        //首先用卖单的交易币种剩余数量 * 单价 ，计算得到可以兑换到的计价币种总量
         BigDecimal amount = new BigDecimal(sellOrder.getLeftAmount()).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
         BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
@@ -211,7 +201,7 @@ public class DexUtil {
 
         addDealCoinTo(map, coinData, tradingPo, quoteAmount, buyOrder, sellOrder.getLeftAmount(), sellOrder);
         //检查买单剩余币是否支持继续交易，支持则继续锁定，不支持则退还给买家
-        boolean isBuyOver = addBuyLeftAmountCoinTo(coinData, tradingPo, buyOrder, buyOrder.getLeftQuoteAmount().subtract(quoteAmount));
+        boolean isBuyOver = addBuyLeftAmountCoinTo(coinData, tradingPo, buyOrder, buyOrder.getLeftAmount().subtract(sellOrder.getLeftAmount()), buyOrder.getLeftQuoteAmount().subtract(quoteAmount));
         map.put("isBuyOver", isBuyOver);
         map.put("isSellOver", true);
         map.put("quoteAmount", quoteAmount);
@@ -269,17 +259,17 @@ public class DexUtil {
         //对方实际收到的数量，是减去了手续费之后的
         CoinTo to1, to2, to3, to4, to5 = null, to6 = null;
 
-        //toList[0] 卖方收到计价币种
+        //卖方收到计价币种
         to1 = new CoinTo(sellOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), quoteAmount.subtract(sellFee));
-        //toList[1] 买方收到交易币种
+        //买方收到交易币种
         to2 = new CoinTo(buyOrder.getAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), baseAmount.subtract(buyFee));
         //支付手续费
-        //toList[2]卖方支付系统手续费
+        //卖方支付系统手续费
         to3 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellSysFee.toBigInteger());
-        //toList[3]买方支付系统手续费
+        //买方支付系统手续费
         to4 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buySysFee.toBigInteger());
 
-        //toList[4]卖方支付节点手续费
+        //卖方支付节点手续费
         if (sellNodeFee.compareTo(BigDecimal.ZERO) > 0) {
             if (Arrays.equals(DexContext.sysFeeAddress, sellOrder.getFeeAddress())) {
                 //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
@@ -291,7 +281,7 @@ public class DexUtil {
                 to5 = new CoinTo(sellOrder.getFeeAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellNodeFee.toBigInteger());
             }
         }
-        //toList[5]买方支付节点手续费
+        //买方支付节点手续费
         if (buyNodeFee.compareTo(BigDecimal.ZERO) > 0) {
             if (Arrays.equals(DexContext.sysFeeAddress, buyOrder.getFeeAddress())) {
                 //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
@@ -343,26 +333,30 @@ public class DexUtil {
         }
     }
 
-    private static boolean addBuyLeftAmountCoinTo(CoinData coinData, CoinTradingPo tradingPo, TradingOrderPo buyOrder, BigInteger leftQuoteAmount) {
+    private static boolean addBuyLeftAmountCoinTo(CoinData coinData, CoinTradingPo tradingPo, TradingOrderPo buyOrder, BigInteger leftAmount, BigInteger leftQuoteAmount) {
         //如果剩余买单未成交的币已经小于一定数量时（最小成交额的1/10),
         //或者剩余币数量已经无法购买到兑换币的最小单位则退还给用户，否则继续锁定
 
         boolean buyOver = false;
-        if (buyOrder.getLeftAmount().compareTo(tradingPo.getMinQuoteAmount().divide(BigInteger.TEN)) <= 0) {
+
+        if (leftAmount.compareTo(tradingPo.getMinBaseAmount().divide(BigInteger.TEN)) <= 0 || leftAmount.compareTo(BigInteger.TEN) <= 0) {
             buyOver = true;
         }
+
         if (!buyOver) {
+
             BigDecimal price = new BigDecimal(buyOrder.getPrice()).movePointLeft(tradingPo.getQuoteDecimal());
-            BigDecimal buyAmount = new BigDecimal(leftQuoteAmount);
-            buyAmount = buyAmount.movePointLeft(tradingPo.getQuoteDecimal());
-            buyAmount = buyAmount.divide(price, tradingPo.getBaseDecimal(), RoundingMode.DOWN);
-            buyAmount = buyAmount.movePointRight(tradingPo.getBaseDecimal());
+            BigDecimal sellDecimal = new BigDecimal(leftAmount);
+            sellDecimal = sellDecimal.movePointLeft(tradingPo.getBaseDecimal());
+            sellDecimal = sellDecimal.multiply(price).movePointRight(tradingPo.getQuoteDecimal());      //总量 * 单价 = 总兑换数量
+            sellDecimal = sellDecimal.setScale(0, RoundingMode.DOWN);
             //如果一个都不能兑换，则视为挂单已完全成交
             //这里比较的时候为10，是因为包含手续费需要支付3-8个最小单位
-            if (buyAmount.compareTo(new BigDecimal(10)) <= 0) {
+            if (sellDecimal.compareTo(BigDecimal.TEN) <= 0) {
                 buyOver = true;
             }
         }
+
         CoinTo to = new CoinTo(buyOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), leftQuoteAmount);
         if (buyOver) {
             CoinTo to0 = coinData.getTo().get(0);
@@ -386,9 +380,10 @@ public class DexUtil {
         //或者剩余币数量已经无法购买到兑换币的最小单位则退还给用户，否则继续锁定
         boolean sellOver = false;
 
-        if (leftAmount.compareTo(tradingPo.getMinBaseAmount().divide(BigInteger.TEN)) <= 0) {
+        if (leftAmount.compareTo(tradingPo.getMinBaseAmount().divide(BigInteger.TEN)) <= 0 || leftAmount.compareTo(BigInteger.TEN) <= 0) {
             sellOver = true;
         }
+
         if (!sellOver) {
             //用卖单的价格作为最终成交价, 计算卖单剩余数量的交易币种，可以兑换多少基础币种
             BigDecimal price = new BigDecimal(sellOrder.getPrice()).movePointLeft(tradingPo.getQuoteDecimal());
@@ -398,7 +393,7 @@ public class DexUtil {
             sellDecimal = sellDecimal.setScale(0, RoundingMode.DOWN);
             //如果一个都不能兑换，则视为挂单已完全成交
             //这里比较的时候为10，是因为包含手续费需要支付3-8个最小单位
-            if (sellDecimal.compareTo(new BigDecimal(10)) <= 0) {
+            if (sellDecimal.compareTo(BigDecimal.TEN) <= 0) {
                 sellOver = true;
             }
         }
@@ -449,8 +444,8 @@ public class DexUtil {
         order.setPrice(price);
         order.setType((byte) type);
         order.setAddress(AddressTool.getAddress(address));
-        order.setFeeScale((byte) 5);
-        order.setFeeAddress(AddressTool.getAddress("TNVTdN9iEEaQ68quQYtSu6XMUzd2rwUBtYb7k"));
+//        order.setFeeScale((byte) 5);
+//        order.setFeeAddress(AddressTool.getAddress("TNVTdTSPSrHdJthxhRTCnMZZkUPtPPrrkJKWA"));
         return order;
     }
 }

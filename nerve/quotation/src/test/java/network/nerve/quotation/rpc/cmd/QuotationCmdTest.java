@@ -1,8 +1,6 @@
 package network.nerve.quotation.rpc.cmd;
 
-import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Transaction;
-import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
@@ -14,6 +12,7 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.ConfigBean;
+import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.model.txdata.Quotation;
 import network.nerve.quotation.util.CommonUtil;
 import org.junit.Before;
@@ -44,6 +43,7 @@ public class QuotationCmdTest {
     static String version = "1.0";
 
     static String password = "nuls123456";//"nuls123456";
+
     @Test
     public void importPriKeyTest() {
         //公钥: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
@@ -69,14 +69,16 @@ public class QuotationCmdTest {
         chain = new Chain();
         chain.setConfigBean(new ConfigBean(chainId, assetId));
     }
+
     @Test
     public void getTxs() throws Exception {
-        String txStr = (String)(getTxCfmClient("8cbc547447c195259741118bd61f0e0a552f1f791d5a362cf46f403f2767ac08").get("tx"));
+        String txStr = (String) (getTxCfmClient("8cbc547447c195259741118bd61f0e0a552f1f791d5a362cf46f403f2767ac08").get("tx"));
         Transaction tx = CommonUtil.getInstance(txStr, Transaction.class);//最后一条
         System.out.println(tx.format(Quotation.class));
     }
+
     @Test
-    public void getQuotation() throws Exception{
+    public void getQuotation() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -87,7 +89,7 @@ public class QuotationCmdTest {
     }
 
     @Test
-    public void testFinal() throws Exception{
+    public void testFinal() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -111,7 +113,7 @@ public class QuotationCmdTest {
 
 
     @Test
-    public void quoteTest() throws Exception  {
+    public void quoteTest() throws Exception {
         Map<String, Double> pricesMap = new HashMap<>();
         pricesMap.putIfAbsent("nuls".toUpperCase(), 2.12);
         pricesMap.putIfAbsent("usdt".toUpperCase(), 7.12);
@@ -129,6 +131,7 @@ public class QuotationCmdTest {
         String txHash = (String) result.get("value");
         Log.debug("hash:{}", txHash);
     }
+
     /**
      * 查交易
      */
@@ -139,7 +142,7 @@ public class QuotationCmdTest {
         Response dpResp = ResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, "tx_getConfirmedTxClient", params);
         Map record = (Map) dpResp.getResponseData();
         Log.debug(JSONUtils.obj2PrettyJson(record));
-        return (Map)record.get("tx_getConfirmedTxClient");
+        return (Map) record.get("tx_getConfirmedTxClient");
     }
 
     public static void importPriKey(String priKey, String pwd) {
@@ -163,7 +166,7 @@ public class QuotationCmdTest {
 
 
     @Test
-    public void testGetQoute(){
+    public void testGetQoute() {
 //        RocksDBService.init("/Users/zhoulijun/workspace/nuls/nerve-network-package/NULS_WALLET/data/account");
 //        List<byte[]> list = RocksDBService.entryList("account");
 //        list.stream().forEach(d->{
@@ -176,16 +179,25 @@ public class QuotationCmdTest {
     }
 
     public static void main(String[] args) throws NulsException {
-        String hex = "1e0031eb2d5f006017090001c37c948cea7bc5472dfebcdf4a69603304d0c736014604084e56542d555344544025d7e28d2bc33f084254432d5553445485eb51b832a1c640094e554c532d5553445473def756c1bbdf3f084554482d55534454d7a3703d8aac7740006a2102ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f04730450221009baf056810ed0542a3d867cf4f36d18a60e5c0c0afcd5e869ab5b093a6f1dd4002207955e5bd54d7c8ef8c88755dad5e6b513c70685eeb026f6e0ae5244f111e150c";
-        Transaction tx = new Transaction() ;
-        tx.parse(HexUtil.decode(hex),0);
-        Quotation quotation = new Quotation();
-        quotation.parse(tx.getTxData(),0);
-        Log.info("{}",quotation.getPrices().getPrices().size());
-        Log.info("{}", AddressTool.getStringAddressByBytes(quotation.getAddress()));
-        quotation.getPrices().getPrices().forEach(d->{
-            Log.info("{}:{}",d.getKey(),d.getValue());
+//        String hex = "1e0031eb2d5f006017090001c37c948cea7bc5472dfebcdf4a69603304d0c736014604084e56542d555344544025d7e28d2bc33f084254432d5553445485eb51b832a1c640094e554c532d5553445473def756c1bbdf3f084554482d55534454d7a3703d8aac7740006a2102ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f04730450221009baf056810ed0542a3d867cf4f36d18a60e5c0c0afcd5e869ab5b093a6f1dd4002207955e5bd54d7c8ef8c88755dad5e6b513c70685eeb026f6e0ae5244f111e150c";
+//        Transaction tx = new Transaction();
+//        tx.parse(HexUtil.decode(hex), 0);
+//        Quotation quotation = new Quotation();
+//        quotation.parse(tx.getTxData(), 0);
+//
+//        Log.info("{}", quotation.getPrices().getPrices().size());
+//        Log.info("{}", AddressTool.getStringAddressByBytes(quotation.getAddress()));
+//        quotation.getPrices().getPrices().forEach(d -> {
+//            Log.info("{}:{}", d.getKey(), d.getValue());
+//        });
+
+        // 最终报价txdata
+        String txDataStr = "08084e56542d55534454612b4fbdc159c73f084254432d555344547b14ae471b3ac640094e554c532d5553445412252902ff48dc3f09555344542d55534454000000000000f03f09555344432d5553445467ee21e17bffef3f084441492d55534454f790f0bdbf41f03f084554482d5553445421b07268f1337840085041582d55534454af42ca4faafdef3f";
+        Prices price = CommonUtil.getInstance(txDataStr, Prices.class);
+        price.getPrices().forEach(d -> {
+            Log.info("{}:{}", d.getKey(), d.getValue());
         });
     }
+
 
 }

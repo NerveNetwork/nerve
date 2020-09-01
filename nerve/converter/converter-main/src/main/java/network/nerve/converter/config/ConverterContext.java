@@ -72,7 +72,7 @@ public class ConverterContext {
     /**
      * 发提案费用
      */
-    public static BigInteger PROPOSAL_PRICE = new BigInteger("20000000000");
+    public static BigInteger PROPOSAL_PRICE = new BigInteger("1000000000");
     /**
      * 提案投票时长对应的区块高度
      * 2秒一块 一天出块数为 43,200‬
@@ -83,15 +83,20 @@ public class ConverterContext {
     /**
      * 交易补贴手续费
      */
-    public static BigInteger DISTRIBUTION_FEE = new BigInteger("10000000000");
+    public static BigInteger DISTRIBUTION_FEE = new BigInteger("1000000000");
 
     /**
      * 签名拜占庭比例
      */
     public static int BYZANTINERATIO = 66;
 
-
-    /** 特殊处理 */
-    public static long FEE_EFFECTIVE_HEIGHT = 0L;
+    /**
+     * 第一次协议升级高度 提现手续费100
+     */
+    public static long FEE_EFFECTIVE_HEIGHT_FIRST = 0L;
+    /**
+     * 第二次协议升级高度 提现手续费10
+     */
+    public static long FEE_EFFECTIVE_HEIGHT_SECOND = 0L;
 
 }

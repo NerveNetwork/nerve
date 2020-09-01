@@ -372,7 +372,15 @@ public class DexService {
         tx.setType(TxType.TRADING_DEAL);
         tx.setTime(blockTime);
         CoinData coinData = (CoinData) map.get("coinData");
-        tx.setCoinData(coinData.serialize());
+        try {
+            tx.setCoinData(coinData.serialize());
+        } catch (Exception e) {
+            LoggerUtil.dexLog.error("---  coindata serialize error--------", e);
+            LoggerUtil.dexLog.error("buyOrder:{}", buyOrder.toString());
+            LoggerUtil.dexLog.error("sellOrder:{}", sellOrder.toString());
+            LoggerUtil.dexLog.error(coinData.toString());
+        }
+
 
         TradingDeal deal = new TradingDeal();
         deal.setTradingHash(container.getCoinTrading().getHash().getBytes());

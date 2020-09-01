@@ -26,6 +26,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
 import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.MapUtils;
 import io.nuls.core.rpc.model.ModuleE;
 
@@ -605,11 +606,18 @@ public class ChainController {
             res.put("transfer24Rate",transfer24Per.getPer());
             res.put("transfer24UsdVal",transfer24Per.getUsdVal());
             res.put("addressCount", d.getAddressCount());
-            res.put("icon", asset.getIcon());
+            String icon = asset.getIcon();
+            if(StringUtils.isBlank(icon)){
+                icon = apiConfig.getSymbolIconList().get(asset.getSymbol());
+            }
+            res.put("icon",icon);
             res.put("assetChainId", d.getAssetChainId());
             res.put("assetId", d.getAssetId());
+            res.put("decimal", asset.getDecimals());
             return res;
         }).collect(Collectors.toList()));
     }
+
+
 
 }

@@ -10,4 +10,6 @@ public class DexContext {
     public static BigDecimal sysFeeScaleDecimal;
     //创建币对销毁Nerve数量
     public static BigInteger createTradingAmount;
+
+    public static long skipHeight;
 }

@@ -4,6 +4,7 @@ import io.nuls.api.model.dto.SymbolUsdPercentDTO;
 import io.nuls.api.model.po.SymbolPrice;
 import io.nuls.api.model.po.SymbolRegInfo;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Map;
 
@@ -23,6 +24,15 @@ public interface SymbolUsdtPriceProviderService {
      * @return
      */
     SymbolPrice getSymbolPriceForUsdt(String symbol);
+
+    /**
+     * 转换成usd价值
+     * @param symbol
+     * @param amount
+     * @return
+     */
+    BigDecimal toUsdValue(String symbol,BigDecimal amount);
+
 
     /**
      * 计算指定symbol在list中的usd价值占比

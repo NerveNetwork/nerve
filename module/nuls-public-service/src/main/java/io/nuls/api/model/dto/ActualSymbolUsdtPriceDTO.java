@@ -17,14 +17,18 @@ public class ActualSymbolUsdtPriceDTO implements SymbolPrice {
 
     private BigDecimal price;
 
-    public ActualSymbolUsdtPriceDTO(String symbol){
+    private int decimal;
+
+    public ActualSymbolUsdtPriceDTO(String symbol,int decimal){
         this.symbol = symbol;
+        this.decimal = decimal;
         this.price = BigDecimal.ZERO;
     }
 
-    public ActualSymbolUsdtPriceDTO(String symbol,BigDecimal price){
+    public ActualSymbolUsdtPriceDTO(String symbol,BigDecimal price,int decimal){
         this.symbol = symbol;
         this.price = price;
+        this.decimal = decimal;
     }
 
     @Override
@@ -44,5 +48,9 @@ public class ActualSymbolUsdtPriceDTO implements SymbolPrice {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public int getDecimal() {
+        return decimal;
     }
 }

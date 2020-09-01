@@ -49,7 +49,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put(Constants.CHAIN_ID, chainId);
             params.put("nodeId", nodeId);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addDirectConnect", params);
-            chain.getLogger().info("连接一个节点：{}, result:{}",nodeId,response.isSuccess());
+            chain.getLogger().debug("连接一个节点：{}, result:{}",nodeId,response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addDirectConnect");
                 return Boolean.valueOf(data.get("value").toString());
@@ -71,7 +71,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("groupFlag", groupFlag);
             params.put("ips", ips);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addIps", params);
-            chain.getLogger().info("增加节点ips.size：{}，result:{}",ips.size(),response.isSuccess());
+            chain.getLogger().debug("增加节点ips.size：{}，result:{}",ips.size(),response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addIps");
                 return Boolean.valueOf(data.get("value").toString());

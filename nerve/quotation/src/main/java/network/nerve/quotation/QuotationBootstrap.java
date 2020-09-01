@@ -6,7 +6,10 @@ import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.io.IoUtils;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
@@ -19,12 +22,15 @@ import network.nerve.quotation.constant.QuotationConstant;
 import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.manager.ChainManager;
 import network.nerve.quotation.model.bo.QuConfig;
+import network.nerve.quotation.rpc.call.QuotationCall;
 import network.nerve.quotation.util.LoggerUtil;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static network.nerve.quotation.constant.QuotationConstant.QU_PROTOCOL_FILE;
 
 @Component
 public class QuotationBootstrap extends RpcModule {
@@ -48,6 +54,7 @@ public class QuotationBootstrap extends RpcModule {
                 Module.build(ModuleE.TX),
                 Module.build(ModuleE.CS),
                 Module.build(ModuleE.AC),
+                Module.build(ModuleE.BL),
                 new Module(ModuleE.PU.abbr, ROLE)
         };
     }
@@ -66,6 +73,7 @@ public class QuotationBootstrap extends RpcModule {
             initSys();
             //初始化数据库配置文件
             initDB();
+            initModuleProtocolCfg();
             initQuotationConfig();
             chainManager.initChain();
             ModuleHelper.init(this);
@@ -115,6 +123,10 @@ public class QuotationBootstrap extends RpcModule {
             chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             LoggerUtil.LOG.info("register protocol ...");
         }
+        if (ModuleE.BL.abbr.equals(module.getName())) {
+            chainManager.getChainMap().values().forEach(QuotationCall::subscriptionNewBlockHeight);
+            Log.info("subscription new block height");
+        }
     }
 
     @Override
@@ -138,7 +150,18 @@ public class QuotationBootstrap extends RpcModule {
         RocksDBService.createTable(QuotationConstant.DB_MODULE_CONGIF);
     }
 
-
+    /**
+     * 根据chainId 加载特殊的协议配置
+     */
+    private void initModuleProtocolCfg() {
+        try {
+            Map map = JSONUtils.json2map(IoUtils.read(QU_PROTOCOL_FILE + quConfig.getChainId() + ".json"));
+            long usdtDaiUsdcPaxKeyHeight = Long.parseLong(map.get("usdtDaiUsdcPaxKeyHeight").toString());
+            quConfig.setUsdtDaiUsdcPaxKeyHeight(usdtDaiUsdcPaxKeyHeight);
+        } catch (Exception e) {
+            Log.error(e);
+        }
+    }
     /**
      * 模块配置
      */
@@ -164,6 +187,8 @@ public class QuotationBootstrap extends RpcModule {
             }
         }
         QuotationContext.effectiveQuotation = quConfig.getEffectiveQuotation();
+        QuotationContext.usdtDaiUsdcPaxKeyHeight = quConfig.getUsdtDaiUsdcPaxKeyHeight();
+
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);
         LoggerUtil.LOG.info("effectiveQuotation : {}", QuotationContext.effectiveQuotation);

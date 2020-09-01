@@ -35,6 +35,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -61,7 +62,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static network.nerve.converter.constant.ConverterConstant.DAY_BLOCKS;
+import static network.nerve.converter.constant.ConverterConstant.*;
 
 /**
  * @author: Loki
@@ -90,6 +91,7 @@ public class ConverterBootstrap extends RpcModule {
             //增加地址工具类初始化
             AddressTool.init(addressPrefixDatas);
             initDB();
+            initModuleProtocolCfg();
             initConverterContext();
             chainManager.initChain();
             initHeterogeneousChainInfo();
@@ -209,6 +211,28 @@ public class ConverterBootstrap extends RpcModule {
         }
     }
 
+    /**
+     * 根据chainId 加载特殊的协议配置
+     */
+    private void initModuleProtocolCfg() {
+        try {
+            Map map = JSONUtils.json2map(IoUtils.read(CV_PROTOCOL_FILE + converterConfig.getChainId() + ".json"));
+            long feeEffectiveHeightFirst = Long.parseLong(map.get("feeEffectiveHeightFirst").toString());
+            converterConfig.setFeeEffectiveHeightFirst(feeEffectiveHeightFirst);
+            long feeEffectiveHeightSecond = Long.parseLong(map.get("feeEffectiveHeightSecond").toString());
+            converterConfig.setFeeEffectiveHeightSecond(feeEffectiveHeightSecond);
+        } catch (Exception e) {
+            Log.error(e);
+        }
+    }
+
+    /**
+     * 初始化和注册异构链
+     */
+    private void initHeterogeneousChainInfo() throws Exception {
+        heterogeneousChainManager.initHeterogeneousChainInfo();
+    }
+
     private void initDB() throws Exception {
         // 数据文件存储地址
         RocksDBService.init(converterConfig.getTxDataRoot());
@@ -242,18 +266,11 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.BYZANTINERATIO = converterConfig.getByzantineRatio();
         // 提案可投票持续区块数
         ConverterContext.PROPOSAL_VOTE_TIME_BLOCKS = DAY_BLOCKS * converterConfig.getProposalVotingDays();
-
-        // 异构链交易手续费补贴
-        ConverterContext.DISTRIBUTION_FEE = converterConfig.getDistributionFee();
-
-        ConverterContext.FEE_EFFECTIVE_HEIGHT = converterConfig.getFeeEffectiveHeight();
+        // 异构链交易手续费补贴 第一次协议升级高度
+        ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST = converterConfig.getFeeEffectiveHeightFirst();
+        // 第二次协议升级高度 异构链交易手续费补贴
+        ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND = converterConfig.getFeeEffectiveHeightSecond();
     }
 
-    /**
-     * 初始化和注册异构链
-     */
-    private void initHeterogeneousChainInfo() throws Exception {
-        heterogeneousChainManager.initHeterogeneousChainInfo();
-    }
 
 }

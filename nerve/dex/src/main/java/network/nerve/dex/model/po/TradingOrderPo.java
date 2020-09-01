@@ -237,8 +237,8 @@ public class TradingOrderPo extends BaseNulsData implements Comparable {
 
     @Override
     public String toString() {
-//        return "tradingHash:" + tradingHash.toHex().substring(0, 6) + ", orderHash:" + orderHash.toHex() + ", type: " + type + ", amount:" + amount.toString() + ", dealAmount:" + dealAmount.toString() + ", nonce:" + HexUtil.encode(nonce == null ? "".getBytes() : nonce) + ", price:" + price.toString();
-        return "orderHash:" + orderHash.toHex() + ", type: " + type + ", price:" + price.toString() + ", height:" + blockHeight + ",index:" + index + ", amount:" + amount.toString() + ", dealAmount:" + dealAmount.toString() + ", leftQuoteAmount:" + leftQuoteAmount;
+        return "orderHash:" + orderHash.toHex() + ", type: " + type + ", price:" + price.toString() + ", height:" + blockHeight + ",index:" + index +
+                ", amount:" + amount.toString() + ", dealAmount:" + dealAmount.toString() + ", leftQuoteAmount:" + leftQuoteAmount;
     }
 
     public BigInteger getLeftQuoteAmount() {

@@ -90,4 +90,16 @@ public interface QuotationConstant {
     String NERVE_ANCHORTOKEN = "NVT-USDT";
 
     int TIMEOUT_MILLIS = 5000;
+
+    String BASIC_QUERIER_THREAD = "basicQuerierThread";
+
+    /**
+     * 协议升级的验证key
+     */
+    String ANCHOR_TOKEN_USDT = "USDT-USDT";
+    String ANCHOR_TOKEN_DAI = "DAI-USDT";
+    String ANCHOR_TOKEN_USDC = "USDC-USDT";
+    String ANCHOR_TOKEN_PAX = "PAX-USDT";
+
+    String QU_PROTOCOL_FILE = "qu-cfg-";
 }

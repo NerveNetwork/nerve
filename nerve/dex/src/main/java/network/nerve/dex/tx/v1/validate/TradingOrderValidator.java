@@ -48,7 +48,7 @@ public class TradingOrderValidator {
             try {
                 order = new TradingOrder();
                 order.parse(new NulsByteBuffer(tx.getTxData()));
-                validate(order, tx.getCoinDataInstance());
+                validate(order, tx.getCoinDataInstance(), tx.getBlockHeight());
             } catch (NulsException e) {
                 LoggerUtil.dexLog.error(e);
                 LoggerUtil.dexLog.error("txHash: " + tx.getHash().toHex());
@@ -76,16 +76,16 @@ public class TradingOrderValidator {
      * @param order
      * @return
      */
-    private void validate(TradingOrder order, CoinData coinData) throws NulsException {
+    private void validate(TradingOrder order, CoinData coinData, long blockHeight) throws NulsException {
         //验证交易数据合法性
         if (order.getType() != DexConstant.TRADING_ORDER_BUY_TYPE && order.getType() != DexConstant.TRADING_ORDER_SELL_TYPE) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "tradingOrder type error");
         }
 
-        if (order.getPrice().compareTo(BigInteger.ZERO) == 0) {
+        if (order.getPrice().compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "price error");
         }
-        if (order.getAmount().compareTo(BigInteger.ZERO) == 0) {
+        if (order.getAmount().compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "orderAmount error");
         }
         if (Arrays.equals(DexContext.sysFeeAddress, order.getAddress())) {
@@ -121,6 +121,10 @@ public class TradingOrderValidator {
 
         //判断coinTo里的资产是否和order订单的数量匹配
         CoinTradingPo coinTrading = container.getCoinTrading();
+        if (order.getPrice().compareTo(coinTrading.getMinQuoteAmount()) < 0) {
+            throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+        }
+
         if (order.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
             //验证coinFrom里的资产是否等于挂单委托单资产
             if (coinTo.getAssetsChainId() != coinTrading.getQuoteAssetChainId() ||
@@ -128,8 +132,10 @@ public class TradingOrderValidator {
                 throw new NulsException(DexErrorCode.ORDER_COIN_NOT_EQUAL);
             }
             //验证最小交易额，以及最小小数位数
-            if (order.getAmount().compareTo(coinTrading.getMinQuoteAmount()) < 0) {
-                throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+            if (blockHeight != -1 && blockHeight > DexContext.skipHeight) {
+                if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
+                    throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+                }
             }
 
             //计算可兑换交易币种数量
@@ -142,7 +148,6 @@ public class TradingOrderValidator {
             if (amount.toBigInteger().compareTo(order.getAmount()) < 0) {
                 throw new NulsException(DexErrorCode.DATA_ERROR, "coinTo amount error");
             }
-
         } else {
             if (coinTo.getAssetsChainId() != coinTrading.getBaseAssetChainId() ||
                     coinTo.getAssetsId() != coinTrading.getBaseAssetId()) {

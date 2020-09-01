@@ -51,7 +51,7 @@ public class CsController extends BasicObject {
 
 
         MeetingRound round = roundController.getCurrentRound();
-        log.info(round.toString());
+        log.debug(round.toString());
 
 
         MeetingMember localMember = round.getLocalMember();
@@ -94,7 +94,7 @@ public class CsController extends BasicObject {
             packingData.setPackStartTime(packStartTime);
             packingData.setRound(round);
             chain.getConsensusCache().getPackingQueue().offer(packingData);
-            log.info("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n" + "准备出块{}-{},高度：{},开始时间：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
+            log.info( "准备出块{}-{},高度：{},开始时间：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
                     , round.getIndex(), localMember.getPackingIndexOfRound(), chain.getBestHeader().getHeight() + 1);
         }
         long wait = 0;
@@ -125,13 +125,13 @@ public class CsController extends BasicObject {
             this.voteController.clearMap(chain.getBestHeader().getHeight());
             return;
         }
-        log.info("等待达成一致！" + voteRoundIndex);
+        log.debug("等待达成一致！" + voteRoundIndex);
         this.chain.getConsensusCache().getBestBlocksVotingContainer().setCurrentVoteRoundIndex(voteRoundIndex);
 
         long realWait = packingTimeMills + VOTE_TIME_OUT - (NulsDateUtils.getCurrentTimeMillis() % 1000);
         VoteStageResult result = chain.getConsensusCache().getStageTwoQueue().poll(realWait, TimeUnit.MILLISECONDS);
         if (null == result) {
-            log.info("超时，得到一个空的结果：wait:" + realWait);
+            log.debug("超时，得到一个空的结果：wait:" + realWait);
             // 如果之前投了区块，就不应该再投空块了
             //同一个高度的所有数据都缓存起来，包括当前的投票index
             this.voteController.startNextVoteRound(chain.getBestHeader().getHeight() + 1, round.getIndex(), round.getPackingIndexOfRound(),
@@ -154,12 +154,12 @@ public class CsController extends BasicObject {
                 (result.getRoundIndex() == chain.getConsensusCache().getLastConfirmedRoundIndex() && result.getPackingIndexOfRound() <= chain.getConsensusCache().getLastConfirmedRoundPackingIndex())) {
             return false;
         }
-        log.info("now:{},result:{}-{}-{}-{}-{}-{}-{}-delay:{}", chain.getBestHeader().getHeight(), result.getHeight(), result.getRoundIndex(), result.getPackingIndexOfRound(), result.getRoundStartTime(),
+        log.debug("now:{},result:{}-{}-{}-{}-{}-{}-{}-delay:{}", chain.getBestHeader().getHeight(), result.getHeight(), result.getRoundIndex(), result.getPackingIndexOfRound(), result.getRoundStartTime(),
                 result.getBlockHash(), result.getVoteRoundIndex(), result.getStage(), round.getDelayedSeconds());
         chain.getConsensusCache().setLastConfirmed(result.getRoundIndex(), result.getPackingIndexOfRound());
         if (result.getBlockHash().equals(NulsHash.EMPTY_NULS_HASH)) {
 
-            log.info("下一个节点");
+            log.debug("下一个节点");
 
             long packTime = result.getRoundStartTime() + result.getPackingIndexOfRound() * chain.getConfig().getPackingInterval();
             if (result.getRoundIndex() == round.getIndex()) {
@@ -211,7 +211,7 @@ public class CsController extends BasicObject {
         if (null == localMember) {
             return null;
         }
-        log.info("尝试获取一个确认的轮次，tryIt");
+        log.debug("尝试获取一个确认的轮次，tryIt");
         long packEndTime = round.getStartTime() + round.getDelayedSeconds() + chain.getConfig().getPackingInterval() * round.getPackingIndexOfRound();
         //先表明下自己的态度
 //        log.info("投空块：{}-{}-{}/{},roundStart:{}", height, round.getIndex(), round.getPackingIndexOfRound(), round.getMemberCount(), NulsDateUtils.timeStamp2Str(round.getStartTime() * 1000));
@@ -223,7 +223,7 @@ public class CsController extends BasicObject {
         }
         VoteStageResult result = chain.getConsensusCache().getStageTwoQueue().poll(wait, TimeUnit.MILLISECONDS);
         if (result == null) {
-            log.info("超时，没得到有效结果:{}ms", wait);
+            log.debug("超时，没得到有效结果:{}ms", wait);
             return this.tryIt(roundController.getCurrentRound(), count + 1);
         }
         return result;
@@ -247,7 +247,7 @@ public class CsController extends BasicObject {
         long roundEndTimeMills = round.getStartTimeMills() + round.getMemberCount() * chain.getConfig().getPackingIntervalMills();
         if (roundEndTimeMills <= NulsDateUtils.getCurrentTimeMillis()) {
             //轮次已过时，就重新根据时间计算
-            chain.getLogger().info("尚未达成一致时，初始化轮次，寻找共同的机会");
+            chain.getLogger().debug("尚未达成一致时，初始化轮次，寻找共同的机会");
             round = roundController.initRound();
         }
         long index = (NulsDateUtils.getCurrentTimeMillis() - round.getStartTimeMills()) / chain.getConfig().getPackingIntervalMills();

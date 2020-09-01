@@ -320,7 +320,7 @@ public class BlockServiceImpl implements BlockService {
             if (isVerifyBlock(chainId, hash)) {
                 BlockSaveTemp blockSaveTemp = getBlockBasicVerifyResult(chainId, hash);
                 if (null != blockSaveTemp) {
-                    logger.info("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
+                    logger.debug("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
                     // 这里改成异步
                     RunnableManager.offer(new BlockSaver.Saver(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null));
                     return true;
@@ -342,7 +342,7 @@ public class BlockServiceImpl implements BlockService {
 
     private synchronized void putTempBlock(int chainId, NulsHash hash, Block block, byte bztAndBaseVerify) {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        logger.info("put varify flag:{}-{}", hash.toHex(), bztAndBaseVerify);
+        logger.debug("put varify flag:{}-{}", hash.toHex(), bztAndBaseVerify);
         Map<NulsHash, BlockSaveTemp> mapBasicVerify = ContextManager.getContext(chainId).getBlockVerifyResult();
         BlockSaveTemp blockSaveTemp = mapBasicVerify.get(hash);
         if (null == blockSaveTemp) {
@@ -460,7 +460,7 @@ public class BlockServiceImpl implements BlockService {
                             didBZTFlag = true;
                             //把拜占庭结果放集合里
                             putTempBlock(chainId, hash, null, (byte) BZT_FLAG);
-                            logger.info("验证的同时，得到了拜占庭结果");
+                            logger.debug("验证的同时，得到了拜占庭结果");
                         }
                     }
                 }
@@ -492,7 +492,7 @@ public class BlockServiceImpl implements BlockService {
              * 拜占庭没完成，先返回等待
              */
             if (download == 1 && !isVerifyBZTAndBlock(chainId, hash)) {
-                logger.info("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
+                logger.debug("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
                 return true;
             }
 

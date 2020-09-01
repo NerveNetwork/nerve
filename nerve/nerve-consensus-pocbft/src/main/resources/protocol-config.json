@@ -77,6 +77,22 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "ReduceAgentDepositProcessorV1"
+      },
+      {
+        "type": "32",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "BatchWithdrawProcessorV1"
+      },
+      {
+        "type": "33",
+        "systemTx": false,
+        "unlockTx": true,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "BatchStakingMergeProcessorV1"
       }
     ],
     "validMsgs": [

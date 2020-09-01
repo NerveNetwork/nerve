@@ -156,6 +156,8 @@ public class CommandHandler implements InitializingBean {
         register(getBean(DepositProcessor.Deposit.class));
         register(getBean(DepositProcessor.DepositFixed.class));
         register(getBean(WithdrawProcessor.class));
+        register(getBean(BatchWithdrawProcessor.class));
+        register(getBean(BatchStakingMergeProcessor.class));
 
         register(getBean(GetAgentsProcessor.class));
         register(getBean(GetAgentInfoProcessor.class));

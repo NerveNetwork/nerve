@@ -52,6 +52,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static network.nerve.quotation.constant.QuotationConstant.*;
+import static network.nerve.quotation.constant.QuotationContext.usdtDaiUsdcPaxKeyHeight;
+
 /**
  * @author: Loki
  * @date: 2020-02-19
@@ -143,14 +146,15 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                 }
 
                 String key = price.getKey();
-                if (!validCfg(chain, key)) {
+                long height = null == blockHeader ? chain.getLatestBasicBlock().getHeight() : blockHeader.getHeight();
+                if (!validCfg(chain, key, height)) {
                     failsList.add(tx);
                     errorCode = QuotationErrorCode.QUOTATION_KEY_NOT_EXIST.getCode();
                     log.error(QuotationErrorCode.QUOTATION_KEY_NOT_EXIST.getMsg());
                 }
 
                 //调验证器时交易可能没有打入区块
-                String date =  null == blockHeader ? TimeUtil.nowUTCDate() : TimeUtil.toUTCDate(blockHeader.getTime());
+                String date = null == blockHeader ? TimeUtil.nowUTCDate() : TimeUtil.toUTCDate(blockHeader.getTime());
                 String dbKey = CommonUtil.assembleKey(date, key);
                 //该日期key是否确认过
                 if (!validNoConfirmed(chain, dbKey)) {
@@ -184,7 +188,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
     /**
      * 0.验证对应的key存在于配置的中
      */
-    public boolean validCfg(Chain chain, String key) {
+    public boolean validCfg(Chain chain, String key, long height) {
         List<QuotationActuator> quteList = chain.getQuote();
         boolean cfgKey = false;
         for (QuotationActuator qa : quteList) {
@@ -194,6 +198,16 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             }
         }
         if (cfgKey) {
+            // 协议升级特殊处理
+            if (key.equals(QuotationConstant.ANCHOR_TOKEN_USDT)
+                    || key.equals(ANCHOR_TOKEN_DAI)
+                    || key.equals(ANCHOR_TOKEN_USDC)
+                    || key.equals(ANCHOR_TOKEN_PAX)) {
+                if (height < usdtDaiUsdcPaxKeyHeight) {
+                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    return false;
+                }
+            }
             return true;
         }
         return false;

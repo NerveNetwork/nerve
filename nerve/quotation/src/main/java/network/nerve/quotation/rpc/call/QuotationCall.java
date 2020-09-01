@@ -35,10 +35,11 @@ import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import network.nerve.quotation.constant.QuotationConstant;
 import network.nerve.quotation.constant.QuotationErrorCode;
 import network.nerve.quotation.model.bo.Chain;
+import network.nerve.quotation.rpc.callback.NewBlockHeightInvoke;
 import network.nerve.quotation.util.CommonUtil;
-import network.nerve.quotation.constant.QuotationConstant;
 import network.nerve.quotation.util.LoggerUtil;
 
 import java.io.IOException;
@@ -50,6 +51,28 @@ import java.util.Map;
  * @date: 2019/11/26
  */
 public class QuotationCall {
+
+
+    /**
+     * 区块最新高度
+     * */
+    public static boolean subscriptionNewBlockHeight(Chain chain) {
+        try {
+            Map<String, Object> params = new HashMap<>(QuotationConstant.INIT_CAPACITY_4);
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chain.getChainId());
+            String messageId = ResponseMessageProcessor.requestAndInvoke(ModuleE.BL.abbr, "latestHeight",
+                    params, "0", "1", new NewBlockHeightInvoke(chain));
+            if(null != messageId){
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
+
 
     public static P2PHKSignature signDigest(String address, String password, byte[] data) throws NulsException {
         try {

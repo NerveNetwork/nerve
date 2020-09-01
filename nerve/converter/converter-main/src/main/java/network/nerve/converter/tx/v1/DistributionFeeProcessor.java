@@ -39,7 +39,6 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
-import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -58,6 +57,7 @@ import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.DistributionFeeStorageService;
 import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.utils.ConverterUtil;
+import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -210,21 +210,14 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         List<byte[]> listDistributionTxRewardAddressBytes = new ArrayList<>();
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listBasisTxRewardAddressBytes.size());
-        BigInteger amount = null;
-        if (!isProposal) {
-            long height = chain.getLatestBasicBlock().getHeight();
-            if (null != blockHeader) {
-                height = blockHeader.getHeight();
-            }
-            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
-                amount = ConverterConstant.DISTRIBUTION_FEE_OLD.divide(count);
-            } else {
-                amount = ConverterContext.DISTRIBUTION_FEE.divide(count);
-            }
-        } else {
-            amount = ConverterContext.PROPOSAL_PRICE.divide(count);
-        }
 
+        long height = chain.getLatestBasicBlock().getHeight();
+        if (null != blockHeader) {
+            height = blockHeader.getHeight();
+        }
+        BigInteger distributionFee = VirtualBankUtil.calculateFee(chain, height, isProposal);
+
+        BigInteger amount = distributionFee.divide(count);
         // 通过原始数据(确认交易中的列表),计算组装cointo的数据
         Map<String, BigInteger> coinToOriginalMap = assembleTxService.calculateDistributionFeeCoinToAmount(listBasisTxRewardAddressBytes, amount);
 

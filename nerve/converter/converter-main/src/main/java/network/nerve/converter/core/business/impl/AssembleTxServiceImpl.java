@@ -38,7 +38,6 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
-import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
@@ -800,17 +799,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         int assetChainId = chain.getConfig().getChainId();
         int assetId = chain.getConfig().getAssetId();
 
-        BigInteger amountFee = null;
-        if (!isProposal) {
-            long height = chain.getLatestBasicBlock().getHeight();
-            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
-                amountFee = ConverterConstant.DISTRIBUTION_FEE_OLD;
-            } else {
-                amountFee = ConverterContext.DISTRIBUTION_FEE;
-            }
-        } else {
-            amountFee = ConverterContext.PROPOSAL_PRICE;
-        }
+        BigInteger amountFee = VirtualBankUtil.calculateFee(chain, isProposal);
         //查询手续费暂存地址余额够不够
         NonceBalance currentChainNonceBalance = LedgerCall.getBalanceNonce(
                 chain,
@@ -841,19 +830,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     private List<CoinTo> assembleDistributionFeeCoinTo(Chain chain, List<byte[]> listRewardAddress, boolean isProposal) throws NulsException {
         // 计算 每个节点补贴多少手续费
         BigInteger count = BigInteger.valueOf(listRewardAddress.size());
-
-        BigInteger distributionFee = null;
-        if (!isProposal) {
-            long height = chain.getLatestBasicBlock().getHeight();
-            if (height < ConverterContext.FEE_EFFECTIVE_HEIGHT) {
-                distributionFee = ConverterConstant.DISTRIBUTION_FEE_OLD;
-            } else {
-                distributionFee = ConverterContext.DISTRIBUTION_FEE;
-            }
-        } else {
-            distributionFee = ConverterContext.PROPOSAL_PRICE;
-        }
-
+        BigInteger distributionFee = VirtualBankUtil.calculateFee(chain, isProposal);
         BigInteger amount = distributionFee.divide(count);
         Map<String, BigInteger> map = calculateDistributionFeeCoinToAmount(listRewardAddress, amount);
         // 组装cointo

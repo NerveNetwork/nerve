@@ -152,7 +152,8 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
             if (totalWeight.compareTo(BigDecimal.ZERO) <= 0) {
                 return Optional.of(stackSnapshootInfo);
             }
-            stackSnapshootInfo.setStackTotal(stackingTotalForNvt.add(bankTotalDeposit).add(nomalTotalDeposit));
+            stackSnapshootInfo.setStackTotal(stackingTotalForNvt);
+            stackSnapshootInfo.setConsensusLockTotal(bankTotalDeposit.add(nomalTotalDeposit));
             //计算当天发放的所有委托奖励
             BigDecimal oneBlockReard = getOneBlockRewardForHeight(blockHeaderInfo.getHeight());
             BigDecimal rewardTotal = oneBlockReard.multiply(BigDecimal.valueOf(totalBlockCount.get()));
@@ -166,7 +167,12 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
                 commonLog.info("每一份权重每日可获得:{},预计年化收益率:{}", interst, insterst360);
                 stackSnapshootInfo.setBaseInterest(insterst360);
             }
-            stackSnapshootInfo.setRewardTotal(rewardTotal.toBigInteger());
+            if(blockHeaderInfo.getHeight() < 1350000){
+                //135万之前不产生奖励
+                stackSnapshootInfo.setRewardTotal(BigInteger.ZERO);
+            }else{
+                stackSnapshootInfo.setRewardTotal(rewardTotal.toBigInteger());
+            }
             commonLog.info("快照数据构建完成:{}", stackSnapshootInfo);
             return Optional.of(stackSnapshootInfo);
         } else {
@@ -248,6 +254,11 @@ public class MongoStackSnapshootServiceImpl implements StackSnapshootService {
     @Override
     public List<StackSnapshootInfo> queryList(int chainId, long start, long end) {
         List<Document> list = mongoDBService.query(TABLE + chainId, Filters.and(Filters.gte("_id", start), Filters.lte("_id", end + 1000)), Sorts.ascending("_id"));
+        return list.stream().map(d -> DocumentTransferTool.toInfo(d, ID, StackSnapshootInfo.class)).collect(Collectors.toList());
+    }
+    @Override
+    public List<StackSnapshootInfo> queryListLimit(int chainId, int limitSize) {
+        List<Document> list = mongoDBService.pageQuery(TABLE + chainId, Sorts.descending("_id"),0,limitSize);
         return list.stream().map(d -> DocumentTransferTool.toInfo(d, ID, StackSnapshootInfo.class)).collect(Collectors.toList());
     }
 

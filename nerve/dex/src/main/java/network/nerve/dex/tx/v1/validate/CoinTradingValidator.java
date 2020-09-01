@@ -65,8 +65,11 @@ public class CoinTradingValidator {
                 //首先检测币对信息的合法性
                 validate(tx.getCoinDataInstance().getFrom().get(0), tx.getCoinDataInstance().getTo().get(0), c1);
                 //再检测是否已经存储了相同币对
-                if (dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getBaseAssetChainId(), c1.getBaseAssetId(), c1.getQuoteAssetChainId(), c1.getQuoteAssetId())) ||
-                        dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getQuoteAssetChainId(), c1.getQuoteAssetId(), c1.getBaseAssetChainId(), c1.getBaseAssetId()))) {
+                if (dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getBaseAssetChainId(), c1.getBaseAssetId(), c1.getQuoteAssetChainId(), c1.getQuoteAssetId()))
+//                        ||
+//                        dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getQuoteAssetChainId(), c1.getQuoteAssetId(), c1.getBaseA
+//                        ssetChainId(), c1.getBaseAssetId()))
+            ) {
                     throw new NulsException(DexErrorCode.COIN_TRADING_EXIST);
                 }
                 //最后检测本次打包是否有相同币对
@@ -127,10 +130,10 @@ public class CoinTradingValidator {
             throw new NulsException(DexErrorCode.DATA_ERROR, "quote coin minDecimal error");
         }
 
-        if (c.getMinBaseAmount().compareTo(BigInteger.ZERO) <= 0) {
+        if (c.getMinBaseAmount().compareTo(BigInteger.TEN) < 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "base coin min tradingAmount error");
         }
-        if (c.getMinQuoteAmount().compareTo(BigInteger.ZERO) <= 0) {
+        if (c.getMinQuoteAmount().compareTo(BigInteger.TEN) < 0) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "quote coin min tradingAmount error");
         }
 

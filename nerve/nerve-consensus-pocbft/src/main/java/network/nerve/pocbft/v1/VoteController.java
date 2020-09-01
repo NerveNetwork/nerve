@@ -74,7 +74,7 @@ public class VoteController extends BasicObject {
      */
     public void broadcastVote(VoteMessage message) {
         ConsensusNetUtil.broadcastInConsensus(chain.getChainId(), CommandConstant.MESSAGE_VOTE, message.getRawData(), message.getSendNode());
-        log.warn("广播投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+        log.debug("广播投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
     }
 
     /**
@@ -123,7 +123,7 @@ public class VoteController extends BasicObject {
         message.setSign(sign);
 
 //        this.votingContainer.votedStage1(message);
-        log.info("超时投票：{}-{}-{}-{}:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+        log.debug("超时投票：{}-{}-{}-{}:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
 //        log.info("=========================本地投票：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
 //                message.getRoundIndex(), message.getPackingIndexOfRound());
         //广播
@@ -180,7 +180,7 @@ public class VoteController extends BasicObject {
         BlockExtendsData extendsData = header.getExtendsData();
         MeetingRound round = roundController.getCurrentRound();
         if (round == null || round.getLocalMember() == null) {
-            log.info("本地不是共识节点。");
+            log.debug("本地不是共识节点。");
             return;
         }
         String address = round.getLocalMember().getAgent().getPackingAddressStr();
@@ -226,7 +226,7 @@ public class VoteController extends BasicObject {
 
     public void voteStageTwo(VoteMessage message) {
         this.votingContainer.votedStage2(message);
-        log.info("投票2轮投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+        log.debug("投票2轮投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
         //广播
         this.broadcastVote(message);
         //再给本地

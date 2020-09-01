@@ -57,7 +57,7 @@ public interface ConsensusProvider {
      * @param req
      * @return
      */
-    Result<String> changeMultiAgentDeposit(MultiAgentDepositChangeReq req);
+    Result<MultiSignTransferRes> changeMultiAgentDeposit(MultiAgentDepositChangeReq req);
 
 
     /**
@@ -81,6 +81,8 @@ public interface ConsensusProvider {
      * @return
      */
     Result<String> withdraw(WithdrawReq req);
+
+    Result<String> batchWithdraw(WithdrawReq req);
 
 
     /**
@@ -141,4 +143,6 @@ public interface ConsensusProvider {
      * @return
      */
     Result<BigDecimal> getTotalRewardForBlockHeight(GetTotalRewardForBlockHeightReq req);
+
+    Result<String> batchStakingMerge(BatchStakingMergeReq batchStakingMergeReq);
 }

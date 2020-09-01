@@ -42,11 +42,8 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.ETH_GAS_LIMIT_OF_USDT;
 
 
 public class ETHWalletApiTest extends Base {
@@ -122,7 +119,8 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void blockPublicKeyTest() throws Exception {
-        Long height = 7936920L;
+        setMain();
+        Long height = 7936921L;
         EthBlock.Block block = ethWalletApi.getBlockByHeight(height);
         List<EthBlock.TransactionResult> list = block.getTransactions();
         for (EthBlock.TransactionResult txResult : list) {
@@ -130,6 +128,27 @@ public class ETHWalletApiTest extends Base {
             converPublicKey(tx);
         }
         System.out.println();
+    }
+
+    @Test
+    public void verifySign() {
+        String orginAddress = "0xef938fa3dba029cdedcdbc3d3ce2eda29a605ebc";
+        String hash = "0xf8c3bf62a9aa3e6fc1619c250e48abe7519373d3edf41be62eb5dc45199af2ef";
+        String r = "0x00fdf67dd673decbe19e16bd3067193e52e598d29dae8a1d2cee13e4c40e9c8ee9";
+        String s = "0x35744e9c30f11c75b4b4bab020c178c938363b48201ef7073f4fbe52f470ac05";
+        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+        byte[] hashBytes = Numeric.hexStringToByteArray(hash);
+
+        for (int i = 0; i < 4; i++) {
+            BigInteger recover = Sign.recoverFromSignature(i, signature, hashBytes);
+            if (recover != null) {
+                String address = "0x" + Keys.getAddress(recover);
+                if (orginAddress.toLowerCase().equals(address.toLowerCase())) {
+                    System.out.println(String.format("order: %s", i));
+                    break;
+                }
+            }
+        }
     }
 
     private byte[] getRawTxHashBytes(Transaction tx) {
@@ -636,6 +655,7 @@ public class ETHWalletApiTest extends Base {
         // default ropsten
         //setRinkeby();
         setMain();
+        //setLocalRpc();
         BigInteger gasPrice = ethWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -1174,9 +1194,12 @@ public class ETHWalletApiTest extends Base {
     public void test() {
         String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
-        long price = 100L;
+        long price = 123L;
         System.out.println("1200000 gas cost " + new BigDecimal("1200000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("800000 gas cost " + new BigDecimal("800000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("520000 gas cost " + new BigDecimal("520000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("380000 gas cost " + new BigDecimal("380000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("350000 gas cost " + new BigDecimal("350000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("300000 gas cost " + new BigDecimal("300000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("150000 gas cost " + new BigDecimal("150000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("100000 gas cost " + new BigDecimal("100000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));

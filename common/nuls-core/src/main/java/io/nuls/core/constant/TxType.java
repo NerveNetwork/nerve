@@ -161,6 +161,16 @@ public class TxType {
     public static final int FINAL_QUOTATION = 31;
 
     /**
+     * 批量退出staking交易
+     */
+    public static final int BATCH_WITHDRAW = 32;
+
+    /**
+     * 合并活期staking记录
+     */
+    public static final int BATCH_STAKING_MERGE = 33;
+
+    /**
      * 创建交易对
      */
     public static final int COIN_TRADING = 228;

@@ -63,7 +63,8 @@ public class DexTxResource extends BaseCmd {
             @Parameter(parameterName = "baseAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种chainId"),
             @Parameter(parameterName = "baseAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种assetId"),
             @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种允许最小交易小数位"),
-            @Parameter(parameterName = "minTradingAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额")
+            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额"),
+            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "计价币种交易支持最小额")
     })
     public Response createCoinTradingTx(Map params) {
         //组装交易对txData

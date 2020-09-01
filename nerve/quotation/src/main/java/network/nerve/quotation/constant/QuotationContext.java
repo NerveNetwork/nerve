@@ -57,5 +57,7 @@ public class QuotationContext {
     /** 当天已成功组装到交易中的token, 并且已确认*/
     public static final Set<String> NODE_QUOTED_TX_TOKENS_CONFIRMED = new HashSet<>();
 
+    public static long usdtDaiUsdcPaxKeyHeight = 0L;
+
 
 }

@@ -32,12 +32,12 @@ public class Base {
     /**
      * 查询资产地址
      */
-    static String QUERY_PS_URL = "https://public1.nuls.io/jsonrpc";
+    static String QUERY_PS_URL = "http://seede.nuls.io:8003/jsonrpc";
 
     /**
      * 查询POCM委托地址
      */
-    static String POCM_URL = "https://pocm.nuls.io/api/pocm/total/75320664-9638-47c9-af62-e334665d46f8";
+    static String POCM_URL = "http://seede.nuls.io:8008/pocm/total/75320664-9638-47c9-af62-e334665d46f8";
 
     static File NRC20 = new File(System.getProperty("user.dir") + File.separator + "nrc20");
 
@@ -50,6 +50,8 @@ public class Base {
      */
     static Set<String> EXCLUSION = new HashSet<>();
 
+    static Set<String> NRC20_EXCLUSION = new HashSet<>();
+
     /**
      * 空投门槛
      */
@@ -57,19 +59,19 @@ public class Base {
 
     static int CHAIN_ID = 1;
 
-    static int NVT_CHAIN_ID = 59999;
+    static int NVT_CHAIN_ID = 9;
 
     static int NVT_ASSET_ID = 1;
 
     /**
      * nrc20 映射出金地址
      */
-    static String NVT_FROM_ADDRESS_FOR_NRC20 = "NULSd6HgZaT3KuXGuMomS1yGPTzMgedAMwjCF";
+    static String NVT_FROM_ADDRESS_FOR_NRC20 = "NULSd6HgeiNNZY6r3Rq66Gvrg69Bf1tbVrnVV";
 
     /**
      * nuls空投出金地址
      */
-    static String NVT_FROM_ADDRESS_FOR_NULS = "NULSd6HgZaT3KuXGuMomS1yGPTzMgedAMwjCF";
+    static String NVT_FROM_ADDRESS_FOR_NULS = "NULSd6HgeiNNZY6r3Rq66Gvrg69Bf1tbVrnVV";
 
     /**
      * NVT NRC20合约地址
@@ -181,6 +183,7 @@ public class Base {
         String addressStr = AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix());
         EXCLUSION.add(addressStr);
 
+        NRC20_EXCLUSION.add("NULSd6Hgih8M6TPcvkU9S6pB3JESifdiTCwiZ");
     }
 
     static HttpClient client = HttpClient.newBuilder()
@@ -237,33 +240,5 @@ public class Base {
     }
 
     public static void main(String[] args) throws Exception {
-//        int i = 1;
-//        Map<Integer,String> map = Map.of(1,"AA",2,"BB",3,"CC",4,"DD",5,"EE",6,"FF",7,"GG",8,"HH");
-//        for (; ;) {
-//            ECKey key = new ECKey();
-//            Address address = new Address(9, "NERVE", BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(key.getPubKey()));
-//            if(address.getBase58().endsWith("DEX")){
-//                System.out.println("=".repeat(100));
-//                System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
-//                System.out.println("publicKey :" + key.getPublicKeyAsHex());
-//                System.out.println("privateKey:" + key.getPrivateKeyAsHex());
-//                System.out.println("=".repeat(100));
-//                if(i == 1){
-//                    break;
-//                }
-//                i++;
-//            }
-//
-//        }
-        List<Long> list = new ArrayList<>();
-        list.add(79994165907382134L);
-        list.add(30000000000000000L);
-        list.add(5365426500000L);
-        list.add(256321311445L);
-        list.add(200000000000L);
-        list.add(12212356421L);
-        list.add(32450000L);
-        System.out.println(list.stream().map(d -> BigInteger.valueOf(d)).reduce(BigInteger::add).orElse(BigInteger.ZERO));
-
     }
 }

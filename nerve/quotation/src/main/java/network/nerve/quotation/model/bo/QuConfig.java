@@ -48,6 +48,8 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private int effectiveQuotation;
     private String quoteStartHm;
     private String quoteEndHm;
+    /** USDT DAI USDC PAX 协议升级配置的高度*/
+    private long usdtDaiUsdcPaxKeyHeight;
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
@@ -109,4 +111,11 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
         this.quoteEndHm = quoteEndHm;
     }
 
+    public long getUsdtDaiUsdcPaxKeyHeight() {
+        return usdtDaiUsdcPaxKeyHeight;
+    }
+
+    public void setUsdtDaiUsdcPaxKeyHeight(long usdtDaiUsdcPaxKeyHeight) {
+        this.usdtDaiUsdcPaxKeyHeight = usdtDaiUsdcPaxKeyHeight;
+    }
 }

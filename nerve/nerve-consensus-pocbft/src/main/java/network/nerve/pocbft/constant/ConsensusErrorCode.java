@@ -57,4 +57,6 @@ public interface ConsensusErrorCode extends CommonCodeConstanst {
     ErrorCode REGULAR_DEPOSIT_TIME_TYPE_NOT_EXIST= ErrorCode.init("cs_0048");
     ErrorCode ASSET_NOT_SUPPORT_STACKING= ErrorCode.init("cs_0049");
     ErrorCode ASSET_NO_OFFER_YET= ErrorCode.init("cs_0050");
+    ErrorCode DEPOSIT_ASSET_ERROR = ErrorCode.init("cs_0051");
+    ErrorCode ASSET_NOT_SUPPORT_REGULAR_STACKING= ErrorCode.init("cs_0052");
 }

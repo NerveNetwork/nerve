@@ -44,7 +44,7 @@ import java.util.*;
  *
  * @author tag
  * 2019/07/25
- * */
+ */
 @Component
 public class MultiSignServiceImpl implements MultiSignService {
     @Autowired
@@ -69,7 +69,7 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAgentAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
@@ -79,14 +79,14 @@ public class MultiSignServiceImpl implements MultiSignService {
             tx.setTxData(agent.serialize());
 
             int txSignSize = multiSigAccount.getM() * P2PHKSignature.SERIALIZE_LENGTH;
-            CoinData coinData = coinDataManager.getCoinData(agent.getAgentAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + txSignSize,chain.getConfig().getAgentChainId(),chain.getConfig().getAgentAssetId());
+            CoinData coinData = coinDataManager.getCoinData(agent.getAgentAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + txSignSize, chain.getConfig().getAgentChainId(), chain.getConfig().getAgentAssetId());
             tx.setCoinData(coinData.serialize());
 
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(tx, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(tx, multiSigAccount, priKey);
 
             String txStr = RPCUtil.encode(tx.serialize());
             Map<String, Object> result = new HashMap<>(4);
@@ -94,15 +94,15 @@ public class MultiSignServiceImpl implements MultiSignService {
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
 
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -123,7 +123,7 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
@@ -154,10 +154,10 @@ public class MultiSignServiceImpl implements MultiSignService {
             tx.setCoinData(coinData.serialize());
 
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(tx, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(tx, multiSigAccount, priKey);
 
             String txStr = RPCUtil.encode(tx.serialize());
             Map<String, Object> result = new HashMap<>(4);
@@ -165,15 +165,15 @@ public class MultiSignServiceImpl implements MultiSignService {
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
 
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -194,31 +194,31 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
-            if(agent == null){
+            if (agent == null) {
                 return Result.getFailed(ConsensusErrorCode.AGENT_NOT_EXIST);
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //验证节点是否存在且交易发起者是否为节点创建者
             Result rs = agentManager.creatorValid(chain, agentHash, address);
-            if(rs.isFailed()){
+            if (rs.isFailed()) {
                 return rs;
             }
             Transaction tx = new Transaction(TxType.APPEND_AGENT_DEPOSIT);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
-            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, BigIntegerUtils.stringToBigInteger(dto.getAmount()),agentHash);
+            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, BigIntegerUtils.stringToBigInteger(dto.getAmount()), agentHash);
             tx.setTxData(txData.serialize());
             CoinData coinData = coinDataManager.getCoinData(address, chain, new BigInteger(dto.getAmount()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + P2PHKSignature.SERIALIZE_LENGTH);
             tx.setCoinData(coinData.serialize());
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(tx, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(tx, multiSigAccount, priKey);
 
             String txStr = RPCUtil.encode(tx.serialize());
             Map<String, Object> result = new HashMap<>(4);
@@ -226,15 +226,15 @@ public class MultiSignServiceImpl implements MultiSignService {
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
 
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -255,59 +255,65 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
-            if(agent == null){
+            if (agent == null) {
                 return Result.getFailed(ConsensusErrorCode.AGENT_NOT_EXIST);
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //验证节点是否存在且交易发起者是否为节点创建者
             Result rs = agentManager.creatorValid(chain, agentHash, address);
-            if(rs.isFailed()){
+            if (rs.isFailed()) {
                 return rs;
             }
             AgentPo agentPo = (AgentPo) rs.getData();
             BigInteger amount = new BigInteger(dto.getAmount());
             //金额小于允许的最小金额
-            if(amount.compareTo(chain.getConfig().getReduceAgentDepositMin()) < 0){
+            BigInteger minReduceAmount = chain.getConfig().getReduceAgentDepositMin();
+
+            if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
+                minReduceAmount = chain.getConfig().getMinAppendAndExitAmount();
+            }
+
+            if (amount.compareTo(minReduceAmount) < 0) {
                 chain.getLogger().error("The amount of exit margin is not within the allowed range");
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
             BigInteger maxReduceAmount = agentPo.getDeposit().subtract(chain.getConfig().getDepositMin());
             //退出金额大于当前允许退出的最大金额
-            if(amount.compareTo(maxReduceAmount) > 0){
-                chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}",agentPo.getDeposit(),maxReduceAmount,amount);
+            if (amount.compareTo(maxReduceAmount) > 0) {
+                chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}", agentPo.getDeposit(), maxReduceAmount, amount);
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
             Transaction tx = new Transaction(TxType.REDUCE_AGENT_DEPOSIT);
             long txTime = NulsDateUtils.getCurrentTimeSeconds();
             tx.setTime(txTime);
-            ChangeAgentDepositData txData = new ChangeAgentDepositData(address,amount,agentHash);
+            ChangeAgentDepositData txData = new ChangeAgentDepositData(address, amount, agentHash);
             tx.setTxData(txData.serialize());
             CoinData coinData = coinDataManager.getReduceAgentDepositCoinData(address, chain, amount, txTime + chain.getConfig().getReducedDepositLockTime(), tx.size() + P2PHKSignature.SERIALIZE_LENGTH, agentHash);
             tx.setCoinData(coinData.serialize());
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(tx, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(tx, multiSigAccount, priKey);
             String txStr = RPCUtil.encode(tx.serialize());
             Map<String, Object> result = new HashMap<>(4);
             result.put(PARAM_TX_HASH, tx.getHash().toHex());
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -328,18 +334,18 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             //验证资产是否可以参与stacking
-            if(!chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())){
+            if (null == chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())) {
                 chain.getLogger().error("The current asset does not support stacking");
                 return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
             }
             //如果为存定期则验证定期类型是否存在
-            if(dto.getDepositType() == DepositType.REGULAR.getCode()){
+            if (dto.getDepositType() == DepositType.REGULAR.getCode()) {
                 DepositTimeType depositTimeType = DepositTimeType.getValue(dto.getTimeType());
-                if(depositTimeType == null){
+                if (depositTimeType == null) {
                     chain.getLogger().error("Recurring delegation type does not exist");
                     return Result.getFailed(ConsensusErrorCode.REGULAR_DEPOSIT_TIME_TYPE_NOT_EXIST);
                 }
@@ -349,27 +355,27 @@ public class MultiSignServiceImpl implements MultiSignService {
             Deposit deposit = new Deposit(dto);
             tx.setTxData(deposit.serialize());
             int txSignSize = multiSigAccount.getM() * P2PHKSignature.SERIALIZE_LENGTH;
-            CoinData coinData = coinDataManager.getCoinData(deposit.getAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + txSignSize,chain.getConfig().getAgentChainId(),chain.getConfig().getAgentAssetId());
+            CoinData coinData = coinDataManager.getCoinData(deposit.getAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + txSignSize, dto.getAssetChainId(), dto.getAssetId());
             tx.setCoinData(coinData.serialize());
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(tx, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(tx, multiSigAccount, priKey);
             String txStr = RPCUtil.encode(tx.serialize());
             Map<String, Object> result = new HashMap<>(4);
             result.put(PARAM_TX_HASH, tx.getHash().toHex());
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -390,12 +396,12 @@ public class MultiSignServiceImpl implements MultiSignService {
         try {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
-            if(StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())){
+            if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
             NulsHash hash = NulsHash.fromHex(dto.getTxHash());
-            Transaction depositTransaction = CallMethodUtils.getTransaction(chain,dto.getTxHash());
+            Transaction depositTransaction = CallMethodUtils.getTransaction(chain, dto.getTxHash());
             if (depositTransaction == null) {
                 return Result.getFailed(ConsensusErrorCode.TX_NOT_EXIST);
             }
@@ -404,7 +410,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             Deposit deposit = new Deposit();
             deposit.parse(depositTransaction.getTxData(), 0);
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            if(!Arrays.equals(deposit.getAddress(), address)){
+            if (!Arrays.equals(deposit.getAddress(), address)) {
                 chain.getLogger().error("The account is not the creator of the entrusted transaction");
                 return Result.getFailed(ConsensusErrorCode.ACCOUNT_IS_NOT_CREATOR);
             }
@@ -419,14 +425,14 @@ public class MultiSignServiceImpl implements MultiSignService {
                 return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
             }
             long time = NulsDateUtils.getCurrentTimeSeconds();
-            if(deposit.getDepositType() == DepositType.REGULAR.getCode()){
+            if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
                 DepositTimeType depositTimeType = DepositTimeType.getValue(deposit.getTimeType());
-                if(depositTimeType == null){
+                if (depositTimeType == null) {
                     chain.getLogger().error("Recurring delegation type does not exist");
                     return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
                 }
                 long periodicTime = depositTransaction.getTime() + depositTimeType.getTime();
-                if(time < periodicTime){
+                if (time < periodicTime) {
                     chain.getLogger().error("Term commission not due");
                     return Result.getFailed(ConsensusErrorCode.DEPOSIT_NOT_DUE);
                 }
@@ -437,29 +443,35 @@ public class MultiSignServiceImpl implements MultiSignService {
             cancelDeposit.setJoinTxHash(hash);
             cancelDepositTransaction.setTime(time);
             cancelDepositTransaction.setTxData(cancelDeposit.serialize());
-            CoinData coinData = coinDataManager.getWithdrawCoinData(cancelDeposit.getAddress(), chain, deposit.getDeposit(), 0, cancelDepositTransaction.size() + P2PHKSignature.SERIALIZE_LENGTH, deposit.getAssetChainId(),deposit.getAssetId());
+
+            long lockTime = 0;
+            if (chain.getChainId() == deposit.getAssetChainId() && chain.getAssetId() == deposit.getAssetId() && chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
+                lockTime = cancelDepositTransaction.getTime() + chain.getConfig().getExitStakingLockHours() * 3600;
+            }
+
+            CoinData coinData = coinDataManager.getWithdrawCoinData(cancelDeposit.getAddress(), chain, deposit.getDeposit(), lockTime, cancelDepositTransaction.size() + P2PHKSignature.SERIALIZE_LENGTH, deposit.getAssetChainId(), deposit.getAssetId());
             coinData.getFrom().get(0).setNonce(CallMethodUtils.getNonce(hash.getBytes()));
             cancelDepositTransaction.setCoinData(coinData.serialize());
 
             String priKey = null;
-            if(callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String)callResult.get(PARAM_PUB_KEY)))){
+            if (callResult != null && AddressTool.validSignAddress(multiSigAccount.getPubKeyList(), HexUtil.decode((String) callResult.get(PARAM_PUB_KEY)))) {
                 priKey = (String) callResult.get(PARAM_PRI_KEY);
             }
-            buildMultiSignTransactionSignature(cancelDepositTransaction, multiSigAccount,priKey);
+            buildMultiSignTransactionSignature(cancelDepositTransaction, multiSigAccount, priKey);
             String txStr = RPCUtil.encode(cancelDepositTransaction.serialize());
             Map<String, Object> result = new HashMap<>(4);
             result.put(PARAM_TX_HASH, cancelDepositTransaction.getHash().toHex());
             result.put(PARAM_TX, txStr);
             result.put(PARAM_COMPLETED, false);
-            if(callResult != null && multiSigAccount.getM() == 1){
+            if (callResult != null && multiSigAccount.getM() == 1) {
                 CallMethodUtils.sendTx(chain, txStr);
                 result.put(PARAM_COMPLETED, true);
             }
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(result);
-        }catch(NulsException e){
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
-        }catch (IOException e){
+        } catch (IOException e) {
             chain.getLogger().error(e);
             return Result.getFailed(ConsensusErrorCode.DATA_PARSE_ERROR);
         }
@@ -471,7 +483,7 @@ public class MultiSignServiceImpl implements MultiSignService {
         transactionSignature.setPubKeyList(multiSigAccount.getPubKeyList());
         try {
             List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
-            if(priKey != null && !priKey.isEmpty()){
+            if (priKey != null && !priKey.isEmpty()) {
                 P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByPriKey(transaction, priKey);
                 p2PHKSignatures.add(p2PHKSignature);
             }

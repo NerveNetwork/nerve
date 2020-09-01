@@ -31,6 +31,34 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "NVT-USDT",
           "desc": "NVT相对USDT价格"
+        },
+        {
+          "key": "USDT_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "USDT-USDT",
+          "desc": "USDT价格"
+        },
+        {
+          "key": "DAI_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "DAI-USDT",
+          "desc": "DAI相对USDT价格"
+        },
+        {
+          "key": "USDC_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "USDC-USDT",
+          "desc": "USDC相对USDT价格"
+        },
+        {
+          "key": "PAX_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "PAX-USDT",
+          "desc": "PAX相对USDT价格"
         }
       ]
     }

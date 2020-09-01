@@ -5,6 +5,8 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.annotation.Configuration;
 import io.nuls.core.rpc.model.ModuleE;
 
+import java.util.Map;
+
 @Component
 @Configuration(domain = ModuleE.Constant.PUBLIC_SERVICE)
 public class ApiConfig implements ModuleConfig {
@@ -77,6 +79,16 @@ public class ApiConfig implements ModuleConfig {
     private String mongoUser;
 
     private String mongoPwd;
+
+    private Map<String,String> symbolIconList;
+
+    public Map<String, String> getSymbolIconList() {
+        return symbolIconList;
+    }
+
+    public void setSymbolIconList(Map<String, String> symbolIconList) {
+        this.symbolIconList = symbolIconList;
+    }
 
     public String getLockedAddress() {
         return lockedAddress;

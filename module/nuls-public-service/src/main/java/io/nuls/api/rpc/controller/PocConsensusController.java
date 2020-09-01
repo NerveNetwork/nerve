@@ -20,6 +20,7 @@
 
 package io.nuls.api.rpc.controller;
 
+import com.mongodb.client.model.Filters;
 import io.nuls.api.ApiContext;
 import io.nuls.api.analysis.WalletRpcHandler;
 import io.nuls.api.cache.ApiCache;
@@ -38,6 +39,7 @@ import io.nuls.api.model.rpc.RpcResult;
 import io.nuls.api.rpc.RpcCall;
 import io.nuls.api.service.StackingService;
 import io.nuls.api.service.SymbolUsdtPriceProviderService;
+import io.nuls.api.task.ReportTask;
 import io.nuls.api.utils.AgentComparator;
 import io.nuls.api.utils.VerifyUtils;
 import io.nuls.base.api.provider.ServiceManager;
@@ -61,8 +63,10 @@ import io.nuls.core.model.DateUtils;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.MapUtils;
+import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import org.bson.conversions.Bson;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -119,6 +123,9 @@ public class PocConsensusController {
 
     @Autowired
     HeterogeneousChainAssetBalanceManager heterogeneousChainAssetBalanceManager;
+
+    @Autowired
+    ReportTask.ReportProvider reportProvider;
 
     ConsensusProvider consensusProvider = ServiceManager.get(ConsensusProvider.class);
 
@@ -177,6 +184,39 @@ public class PocConsensusController {
         return result;
     }
 
+    @RpcMethod("getSeedNodeList")
+    public RpcResult getSeedNodeList(List<Object> params){
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        Map<String, VirtualBankDirectorDTO> virtualBankDirectorDTOMap = new HashMap<>();
+        ApiCache apiCache = CacheManager.getCache(chainId);
+        io.nuls.base.api.provider.Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq(false));
+        if (virtualBankDirectorDTOResult.isSuccess()) {
+            virtualBankDirectorDTOResult.getList().forEach(d -> {
+                virtualBankDirectorDTOMap.put(d.getSignAddress(), d);
+            });
+        }
+        return RpcResult.success(apiCache.getChainInfo().getSeeds().stream().map(seedAddress->{
+            Map data = new HashMap();
+            data.put("agentId" , seedAddress.substring(seedAddress.length() - 8).toLowerCase());
+            data.put("agentAddress" , seedAddress);
+            VirtualBankDirectorDTO virtualBankDirectorDTO = virtualBankDirectorDTOMap.get(seedAddress);
+            if (virtualBankDirectorDTO != null) {
+                data.put("networkList", virtualBankDirectorDTO.getHeterogeneousAddresses().parallelStream().map(d -> {
+                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(d.getChainId(), d.getAddress());
+                    d.setBalance(balance.toPlainString());
+                    return d;
+                }).collect(Collectors.toList()));
+            }
+            return data;
+        }).collect(Collectors.toList()));
+    }
+
     @RpcMethod("getConsensusNodes")
     public RpcResult getConsensusNodes(List<Object> params) {
         VerifyUtils.verifyParams(params, 4);
@@ -217,15 +257,15 @@ public class PocConsensusController {
             return new RpcResult().setResult(pageInfo);
         }
         Result<Set<String>> bankListRes = WalletRpcHandler.getVirtualBankAddressList(chainId);
-        if(bankListRes.isFailed()){
+        if (bankListRes.isFailed()) {
             return RpcResult.failed(bankListRes.getErrorCode());
         }
         Set<String> bankList = bankListRes.getData();
-        Map<String,VirtualBankDirectorDTO> virtualBankDirectorDTOMap = new HashMap<>();
+        Map<String, VirtualBankDirectorDTO> virtualBankDirectorDTOMap = new HashMap<>();
         io.nuls.base.api.provider.Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq(false));
-        if(virtualBankDirectorDTOResult.isSuccess()){
-            virtualBankDirectorDTOResult.getList().forEach(d->{
-                virtualBankDirectorDTOMap.put(d.getSignAddress(),d);
+        if (virtualBankDirectorDTOResult.isSuccess()) {
+            virtualBankDirectorDTOResult.getList().forEach(d -> {
+                virtualBankDirectorDTOMap.put(d.getSignAddress(), d);
             });
         }
         List<AgentInfo> agentInfoList = agentService.getAllAgentList(chainId);
@@ -252,39 +292,39 @@ public class PocConsensusController {
             ranking.add(agentInfo);
         }
         Collections.sort(agentInfoList, AgentComparator.getInstance());
-        switch (type){
+        switch (type) {
             case 1:  //筛选共识节点
-                agentInfoList = agentInfoList.stream().filter(d->d.getStatus() == 1).collect(Collectors.toList());
+                agentInfoList = agentInfoList.stream().filter(d -> d.getStatus() == 1).collect(Collectors.toList());
                 break;
             case 2:  //筛选虚拟银行节点
-                agentInfoList = agentInfoList.stream().filter(d->d.isBankNode()).collect(Collectors.toList());
+                agentInfoList = agentInfoList.stream().filter(d -> d.isBankNode()).collect(Collectors.toList());
                 break;
         }
-        Stream<Map> stream = agentInfoList.stream().map(agent->{
-            agent.setRanking(ranking.headSet(agent,true).size());
+        Stream<Map> stream = agentInfoList.stream().map(agent -> {
+            agent.setRanking(ranking.headSet(agent, true).size());
             Map data = MapUtils.beanToMap(agent);
             VirtualBankDirectorDTO virtualBankDirectorDTO = virtualBankDirectorDTOMap.get(agent.getPackingAddress());
-
-            if(virtualBankDirectorDTO != null){
-                data.put("networkList",virtualBankDirectorDTO.getHeterogeneousAddresses().parallelStream().map(d->{
-                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(d.getChainId(),d.getAddress());
+            if (virtualBankDirectorDTO != null) {
+                data.put("networkList", virtualBankDirectorDTO.getHeterogeneousAddresses().parallelStream().map(d -> {
+                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(d.getChainId(), d.getAddress());
                     d.setBalance(balance.toPlainString());
                     return d;
                 }).collect(Collectors.toList()));
-                data.put("order",virtualBankDirectorDTO.getOrder());
+                data.put("order", virtualBankDirectorDTO.getOrder());
+                data.put("ranking",virtualBankDirectorDTO.getOrder());
             }
             return data;
         });
-        if(type == 2){
+        if (type == 2) {
             //虚拟银行 需要重新排序
-            stream = stream.sorted((o1,o2)->{
+            stream = stream.sorted((o1, o2) -> {
                 Integer s1 = (Integer) o1.get("order");
                 Integer s2 = (Integer) o2.get("order");
                 return s1.compareTo(s2);
             });
         }
         List<Map> result = stream.collect(Collectors.toList());
-        return new RpcResult().setResult(new PageInfo<>(1,Integer.MAX_VALUE,agentInfoList.size(),result));
+        return new RpcResult().setResult(new PageInfo<>(1, Integer.MAX_VALUE, agentInfoList.size(), result));
     }
 
 
@@ -319,7 +359,7 @@ public class PocConsensusController {
             return new RpcResult().setResult(pageInfo);
         }
         Result<Set<String>> bankListRes = WalletRpcHandler.getVirtualBankAddressList(chainId);
-        if(bankListRes.isFailed()){
+        if (bankListRes.isFailed()) {
             return RpcResult.failed(bankListRes.getErrorCode());
         }
         Set<String> bankList = bankListRes.getData();
@@ -372,7 +412,7 @@ public class PocConsensusController {
             return RpcResult.dataNotFound();
         }
         Result<Set<String>> bankListRes = WalletRpcHandler.getVirtualBankAddressList(chainId);
-        if(bankListRes.isFailed()){
+        if (bankListRes.isFailed()) {
             return RpcResult.failed(bankListRes.getErrorCode());
         }
         Set<String> bankList = bankListRes.getData();
@@ -398,24 +438,24 @@ public class PocConsensusController {
         }
         agentInfo.setBankNode(bankList.contains(agentInfo.getAgentAddress()));
         double consusensWeight = 1D;
-        if(agentInfo.isBankNode()){
+        if (agentInfo.isBankNode()) {
             consusensWeight = ApiContext.superAgentDepositBase;
-        }else if(agentInfo.getStatus() == 1){
+        } else if (agentInfo.getStatus() == 1) {
             consusensWeight = ApiContext.superAgentDepositBase;
         }
-        BigDecimal interest = stackingService.getInterestRate(ApiContext.reservegentDepositBase,consusensWeight);
+        BigDecimal interest = stackingService.getInterestRate(ApiContext.reservegentDepositBase, consusensWeight);
 
         ApiCache cache = CacheManager.getCache(chainId);
         //计算节点排名
-        int ranking = cache.getAgentMap().entrySet().stream().filter(d->d.getValue().getDeposit().compareTo(agentInfo.getDeposit()) >= 0).collect(Collectors.toList()).size();
+        int ranking = cache.getAgentMap().entrySet().stream().filter(d -> d.getValue().getDeposit().compareTo(agentInfo.getDeposit()) >= 0).collect(Collectors.toList()).size();
         agentInfo.setRanking(ranking);
-        Map<String,Object> res = MapUtils.beanToLinkedMap(agentInfo);
-        res.put("interestRate",interest.setScale(4, RoundingMode.HALF_DOWN));
+        Map<String, Object> res = MapUtils.beanToLinkedMap(agentInfo);
+        res.put("interestRate", interest.setScale(4, RoundingMode.HALF_DOWN));
         io.nuls.base.api.provider.Result<VirtualBankDirectorDTO> virtualBankDirectorDTOResult = converterService.getVirtualBankInfo(new GetVirtualBankInfoReq(false));
-        if(virtualBankDirectorDTOResult.isSuccess()){
-            virtualBankDirectorDTOResult.getList().stream().filter(d->d.getSignAddress().equals(agentInfo.getPackingAddress())).findFirst().ifPresent(d->{
-                res.put("networkList",d.getHeterogeneousAddresses().parallelStream().map(da->{
-                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(da.getChainId(),da.getAddress());
+        if (virtualBankDirectorDTOResult.isSuccess()) {
+            virtualBankDirectorDTOResult.getList().stream().filter(d -> d.getSignAddress().equals(agentInfo.getPackingAddress())).findFirst().ifPresent(d -> {
+                res.put("networkList", d.getHeterogeneousAddresses().parallelStream().map(da -> {
+                    BigDecimal balance = heterogeneousChainAssetBalanceManager.getBalance(da.getChainId(), da.getAddress());
                     da.setBalance(balance.toPlainString());
                     return da;
                 }).collect(Collectors.toList()));
@@ -446,16 +486,16 @@ public class PocConsensusController {
             return RpcResult.dataNotFound();
         }
         Result<Set<String>> bankListRes = WalletRpcHandler.getVirtualBankAddressList(chainId);
-        if(bankListRes.isFailed()){
+        if (bankListRes.isFailed()) {
             return RpcResult.failed(bankListRes.getErrorCode());
         }
         Set<String> bankList = bankListRes.getData();
-        Long maxHeight = blockService.getMaxHeight(chainId,Long.MAX_VALUE);
-        List<AgentInfo> agentInfoList = agentService.getAgentListByStartHeight(chainId,maxHeight);
+        Long maxHeight = blockService.getMaxHeight(chainId, Long.MAX_VALUE);
+        List<AgentInfo> agentInfoList = agentService.getAgentListByStartHeight(chainId, maxHeight);
 //        agentInfoList.sort(Comparator.comparing(AgentInfo::getDeposit));
-        for (var i = 0;i<agentInfoList.size();i++){
+        for (var i = 0; i < agentInfoList.size(); i++) {
             AgentInfo agentInfo = agentInfoList.get(i);
-            if(agentInfo.getAgentAddress().equals(address)){
+            if (agentInfo.getAgentAddress().equals(address)) {
                 agentInfo.setRanking(i + 1);
                 long count = punishService.getYellowCount(chainId, agentInfo.getAgentAddress());
                 if (agentInfo.getTotalPackingCount() != 0 || count != 0) {
@@ -522,7 +562,7 @@ public class PocConsensusController {
         if (!CacheManager.isChainExist(chainId)) {
             return RpcResult.success(new ArrayList<>());
         }
-        List list = this.statisticalService.getStatisticalList(chainId, type, CONSENSUS_LOCKED,0);
+        List list = this.statisticalService.getStatisticalList(chainId, type, CONSENSUS_LOCKED, 0);
         return new RpcResult().setResult(list);
     }
 
@@ -547,7 +587,7 @@ public class PocConsensusController {
         if (!CacheManager.isChainExist(chainId)) {
             return RpcResult.success(new ArrayList<>());
         }
-        List list = this.statisticalService.getStatisticalList(chainId, type, "nodeCount",0);
+        List list = this.statisticalService.getStatisticalList(chainId, type, "nodeCount", 0);
         return new RpcResult().setResult(list);
     }
 
@@ -572,7 +612,7 @@ public class PocConsensusController {
         if (!CacheManager.isChainExist(chainId)) {
             return RpcResult.success(new ArrayList<>());
         }
-        List list = this.statisticalService.getStatisticalList(chainId, type, "annualizedReward",0);
+        List list = this.statisticalService.getStatisticalList(chainId, type, "annualizedReward", 0);
         return new RpcResult().setResult(list);
     }
 
@@ -942,11 +982,11 @@ public class PocConsensusController {
             return RpcResult.dataNotFound();
         }
         List<PocRoundItem> itemList = roundService.getRoundItemList(chainId, roundIndex);
-        Optional<PocRoundItem> lastItem = itemList.stream().sorted(Comparator.comparing(d->-d.getOrder())).filter(d->d.getBlockHeight() != 0).findFirst();
+        Optional<PocRoundItem> lastItem = itemList.stream().sorted(Comparator.comparing(d -> -d.getOrder())).filter(d -> d.getBlockHeight() != 0).findFirst();
         int lastIndex;
-        if(lastItem.isEmpty()){
+        if (lastItem.isEmpty()) {
             lastIndex = itemList.size() + 1;
-        }else{
+        } else {
             lastIndex = lastItem.get().getOrder();
         }
 //        itemList.forEach(d->{
@@ -996,40 +1036,40 @@ public class PocConsensusController {
     public RpcResult getStackingInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
-        String address=null;
+        String address = null;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
             return RpcResult.paramError("[chainId] is inValid");
         }
         try {
-            if(params.size() > 1){
+            if (params.size() > 1) {
                 address = (String) params.get(1);
             }
         } catch (Exception e) {
             return RpcResult.paramError("[address] is inValid");
         }
-        List<DepositGroupBySymbolSumDTO> list = depositService.getDepositSumList(chainId,address);
+        List<DepositGroupBySymbolSumDTO> list = depositService.getDepositSumList(chainId, address);
         Map<String, BigInteger> symbolList = list.stream().map(d -> Map.of(d.getSymbol(), d.getAmount())).reduce(new HashMap<>(list.size()),
                 (d1, d2) -> {
                     d1.putAll(d2);
                     return d1;
                 });
-        Map<String,SymbolUsdPercentDTO> rateList = new HashMap<>(list.size());
-        if(list != null && !list.isEmpty()){
+        Map<String, SymbolUsdPercentDTO> rateList = new HashMap<>(list.size());
+        if (list != null && !list.isEmpty()) {
             SymbolUsdPercentDTO maxPer = null;
             BigDecimal totalPer = BigDecimal.ZERO;
-            for (DepositGroupBySymbolSumDTO depositInfo : list){
-                SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(depositInfo.getSymbol(),symbolList);
-                rateList.put(depositInfo.getSymbol(),dto);
-                if(maxPer == null){
+            for (DepositGroupBySymbolSumDTO depositInfo : list) {
+                SymbolUsdPercentDTO dto = symbolUsdtPriceProviderService.calcRate(depositInfo.getSymbol(), symbolList);
+                rateList.put(depositInfo.getSymbol(), dto);
+                if (maxPer == null) {
                     maxPer = dto;
-                }else if(maxPer.getPer().compareTo(dto.getPer()) < 0){
+                } else if (maxPer.getPer().compareTo(dto.getPer()) < 0) {
                     maxPer = dto;
                 }
                 totalPer = totalPer.add(dto.getPer());
             }
-            if(totalPer.compareTo(BigDecimal.ONE) < 0){
+            if (totalPer.compareTo(BigDecimal.ONE) < 0) {
                 maxPer.setPer(maxPer.getPer().add(BigDecimal.ONE.subtract(totalPer)));
             }
         }
@@ -1070,28 +1110,28 @@ public class PocConsensusController {
         } catch (Exception e) {
             return RpcResult.paramError("[timeType] is inValid : " + Arrays.toString(ReportDataTimeType.values()));
         }
-        Date[] date = reportDataTimeType.getTimeRangeForDay(new Date(),TimeZone.getTimeZone("UTC+0"));
+        Date[] date = reportDataTimeType.getTimeRangeForDay(new Date(), TimeZone.getTimeZone("UTC+0"));
         List<StackSnapshootInfo> list = stackSnapshootService.queryList(chainId, date[0].getTime(), date[1].getTime());
-        if(reportDataTimeType.equals(ReportDataTimeType.Year)){
-            Map<String,Map> monthData = new LinkedHashMap<>(12);
-            list.stream().forEach(d->{
-                String month = DateUtils.convertDate(new Date(d.getDay()),"YYYY-MM");
+        if (reportDataTimeType.equals(ReportDataTimeType.Year)) {
+            Map<String, Map> monthData = new LinkedHashMap<>(12);
+            list.stream().forEach(d -> {
+                String month = DateUtils.convertDate(new Date(d.getDay()), "YYYY-MM");
                 Map<String, Object> res = Map.of("time", d.getDay(), "total", d.getRewardTotal(), "interest", d.getBaseInterest());
-                monthData.put(month,res);
+                monthData.put(month, res);
             });
             return RpcResult.success(monthData.values());
-        }else{
+        } else {
             return RpcResult.success(list.stream().map(d -> {
-                        Map<String, Object> res = Map.of("time", d.getDay(), "total", d.getRewardTotal(), "interest", d.getBaseInterest());
-                        return res;
-                    }).collect(Collectors.toList()
-                    ));
+                Map<String, Object> res = Map.of("time", d.getDay(), "total", d.getRewardTotal(), "interest", d.getBaseInterest());
+                return res;
+            }).collect(Collectors.toList()
+            ));
         }
 
     }
 
     @RpcMethod("getStackingRate")
-    public RpcResult getStackingRate(List<Object> params){
+    public RpcResult getStackingRate(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
         try {
@@ -1103,28 +1143,28 @@ public class PocConsensusController {
         try {
             res = (Map) RpcCall.request(ModuleE.CS.abbr, "cs_getRateAddition", Map.of());
         } catch (Exception e) {
-            Log.error("调用rpc :cs_getRateAddition 异常",e);
+            Log.error("调用rpc :cs_getRateAddition 异常", e);
             return RpcResult.failed(RpcErrorCode.SYS_UNKNOWN_EXCEPTION);
         }
         List list = (List) res.get("list");
-        return RpcResult.success(list.stream().map(d->{
-            Map<String,Object> item = (Map<String, Object>) d;
+        return RpcResult.success(list.stream().map(d -> {
+            Map<String, Object> item = (Map<String, Object>) d;
             String symbol = (String) item.get("symbol");
             List<Map> detail = (List<Map>) item.get("detailList");
-            detail = detail.stream().map(de->{
+            detail = detail.stream().map(de -> {
                 int depositInfoType = (int) de.get("depositType");
                 BigDecimal rate;
-                if(depositInfoType == 0){
+                if (depositInfoType == 0) {
                     //活期
-                    rate = stackingService.getAssetStackingRate(symbol,DepositFixedType.NONE);
-                }else{
+                    rate = stackingService.getAssetStackingRate(symbol, DepositFixedType.NONE);
+                } else {
                     byte timeType = ((Integer) de.get("timeType")).byteValue();
                     DepositFixedType depositFixedType = DepositFixedType.getValue(timeType);
-                    rate = stackingService.getAssetStackingRate(symbol,depositFixedType);
+                    rate = stackingService.getAssetStackingRate(symbol, depositFixedType);
                 }
-                return Map.of("timeType",de.get("timeType"),"totalAddition",rate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_DOWN),"depositType",depositInfoType);
+                return Map.of("timeType", de.get("timeType"), "totalAddition", rate.setScale(ApiConstant.RATE_DECIMAL, RoundingMode.HALF_DOWN), "depositType", depositInfoType);
             }).collect(Collectors.toList());
-            return Map.of("symbol",symbol,"detailList",detail);
+            return Map.of("symbol", symbol, "detailList", detail);
         }).collect(Collectors.toList()));
     }
 
@@ -1139,8 +1179,8 @@ public class PocConsensusController {
 
     @RpcMethod("getReduceNonceList")
     public RpcResult getReduceNonceList(List<Object> params) {
-        int chainId,quitAll;
-        String agentHash,reduceAmount;
+        int chainId, quitAll;
+        String agentHash, reduceAmount;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -1160,28 +1200,28 @@ public class PocConsensusController {
             return RpcResult.paramError("[reduceAmount] is inValid");
         }
         try {
-            if(params.size() < 4){
+            if (params.size() < 4) {
                 quitAll = 0;
-            }else{
-                quitAll = (int)params.get(3);
+            } else {
+                quitAll = (int) params.get(3);
             }
         } catch (Exception e) {
             return RpcResult.paramError("[reduceAmount] is inValid");
         }
-        GetReduceNonceReq req = new GetReduceNonceReq(agentHash,quitAll,reduceAmount);
+        GetReduceNonceReq req = new GetReduceNonceReq(agentHash, quitAll, reduceAmount);
         req.setChainId(chainId);
         ConsensusProvider consensusProvider = ServiceManager.get(ConsensusProvider.class);
         io.nuls.base.api.provider.Result<ReduceNonceInfo> result = consensusProvider.getReduceNonceList(req);
         if (result.isSuccess()) {
             return RpcResult.success(result.getList());
-        }else {
-            return RpcResult.failed(CommonCodeConstanst.FAILED,result.getMessage());
+        } else {
+            return RpcResult.failed(CommonCodeConstanst.FAILED, result.getMessage());
         }
     }
 
 
     @RpcMethod("pageStackRecordByAddress")
-    public RpcResult pageStackRecordByAddress(List<Object> params){
+    public RpcResult pageStackRecordByAddress(List<Object> params) {
         VerifyUtils.verifyParams(params, 4);
         String address;
         int chainId, pageNumber, pageSize;
@@ -1210,29 +1250,29 @@ public class PocConsensusController {
             return RpcResult.paramError("[address] is invalid");
         }
         PageInfo<DepositInfo> pageInfo = depositService
-                .getStackRecordByAddress(chainId,pageNumber,pageSize,address);
+                .getStackRecordByAddress(chainId, pageNumber, pageSize, address);
         return RpcResult.success(new PageInfo<>(pageInfo.getPageNumber(), pageSize, pageInfo.getTotalCount(),
-                pageInfo.getList().stream().map(d->{
+                pageInfo.getList().stream().map(d -> {
                     Map res = MapUtils.beanToLinkedMap(d);
                     DepositFixedType depositFixedType = DepositFixedType.valueOf(d.getFixedType());
-                    if(!depositFixedType.equals(DepositFixedType.NONE)){
-                        res.put("endTime",d.getCreateTime() + depositFixedType.getTime());
+                    if (!depositFixedType.equals(DepositFixedType.NONE)) {
+                        res.put("endTime", d.getCreateTime() + depositFixedType.getTime());
                     }
                     return res;
                 }).collect(Collectors.toList())));
     }
 
     @RpcMethod("pageFinishStackingListByAddress")
-    public RpcResult pageFinishStackingListByAddress(List<Object> params){
-        return pageStackingListByAddress(params,false);
+    public RpcResult pageFinishStackingListByAddress(List<Object> params) {
+        return pageStackingListByAddress(params, false);
     }
 
     @RpcMethod("pageStackingListByAddress")
-    public RpcResult getStackingListByAddress(List<Object> params){
-        return pageStackingListByAddress(params,true);
+    public RpcResult getStackingListByAddress(List<Object> params) {
+        return pageStackingListByAddress(params, true);
     }
 
-    public RpcResult pageStackingListByAddress(List<Object> params,boolean isActive){
+    public RpcResult pageStackingListByAddress(List<Object> params, boolean isActive) {
         VerifyUtils.verifyParams(params, 4);
         String address;
         int chainId, pageNumber, pageSize;
@@ -1261,14 +1301,14 @@ public class PocConsensusController {
             return RpcResult.paramError("[address] is invalid");
         }
         PageInfo<DepositInfo> pageInfo = depositService
-                .getStackingListByAddress(chainId,pageNumber,pageSize,address,isActive);
+                .getStackingListByAddress(chainId, pageNumber, pageSize, address, isActive);
         return RpcResult.success(new PageInfo<>(pageInfo.getPageNumber(), pageSize, pageInfo.getTotalCount(),
-                pageInfo.getList().stream().map(d->{
+                pageInfo.getList().stream().map(d -> {
                     Map res = MapUtils.beanToLinkedMap(d);
                     DepositFixedType depositFixedType = DepositFixedType.valueOf(d.getFixedType());
-                    res.put("interest",stackingService.getAssetStackingRate(d.getSymbol(),depositFixedType));
-                    if(!depositFixedType.equals(DepositFixedType.NONE)){
-                        res.put("endTime",d.getCreateTime() + depositFixedType.getTime());
+                    res.put("interest", stackingService.getAssetStackingRate(d.getSymbol(), depositFixedType));
+                    if (!depositFixedType.equals(DepositFixedType.NONE)) {
+                        res.put("endTime", d.getCreateTime() + depositFixedType.getTime());
                     }
                     return res;
                 }).collect(Collectors.toList())));
@@ -1276,7 +1316,7 @@ public class PocConsensusController {
 
 
     @RpcMethod("getCanStackingAssetList")
-    public RpcResult getCanStackingAssetList(List<Object> params){
+    public RpcResult getCanStackingAssetList(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
         try {
@@ -1286,26 +1326,152 @@ public class PocConsensusController {
         }
         io.nuls.base.api.provider.Result<AssetInfo> res = consensusProvider.getCanStackingAssetList(new GetCanStackingAssetListReq(chainId));
 
-        if(res.isSuccess()){
-            return RpcResult.success(res.getList().stream().map(d->{
-                Map<String,Object> map = MapUtils.beanToLinkedMap(d);
-                if(d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId){
-                    map.put("nvtPrice",BigDecimal.ONE);
-                }else{
+        if (res.isSuccess()) {
+            return RpcResult.success(res.getList().stream().map(d -> {
+                Map<String, Object> map = MapUtils.beanToLinkedMap(d);
+                if (d.getAssetChainId() == ApiContext.defaultChainId && d.getAssetId() == ApiContext.defaultAssetId) {
+                    map.put("nvtPrice", BigDecimal.ONE);
+                } else {
                     SymbolPrice symbolPrice = symbolQuotationPriceService.getFreshUsdtPrice(d.getSymbol());
-                    map.put("nvtPrice",getNvtPrice().transfer(symbolPrice,BigDecimal.ONE));
+                    map.put("nvtPrice", getNvtPrice().transfer(symbolPrice, BigDecimal.ONE));
                 }
-                map.put("rate",getStackingRate(d.getSymbol()));
+                map.put("rate", getStackingRate(d.getSymbol()));
                 return map;
             }).collect(Collectors.toList()));
-        }else{
-            return RpcResult.failed(CommonCodeConstanst.FAILED,res.getMessage());
+        } else {
+            return RpcResult.failed(CommonCodeConstanst.FAILED, res.getMessage());
         }
     }
 
-    private SymbolPrice getNvtPrice(){
-        StackSymbolPriceInfo nvtPrice = symbolQuotationPriceService.getFreshUsdtPrice(ApiContext.defaultChainId,ApiContext.defaultAssetId);
-        if(nvtPrice.getPrice().compareTo(BigDecimal.ZERO) == 0){
+    @RpcMethod("depositReport")
+    public RpcResult depositReport(List<Object> param) {
+        return RpcResult.success(Map.of(
+                "depositAddressCount", reportProvider.getDepositAddressCount(),
+                "depositGroupByAsset", reportProvider.getDepositGroupByAsset(),
+                "depositGroupByAssetAndType", reportProvider.getDepositGroupByAssetAndType(),
+                "depositGroupByType", reportProvider.getDepositGroupByType()
+        ));
+    }
+
+    @RpcMethod("depositHistoryForDayList")
+    public RpcResult getDepositHistoryForDayList(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId,limit;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            limit = (int) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[limit] is inValid");
+        }
+        List<StackSnapshootInfo> list = stackSnapshootService.queryListLimit(chainId,limit);
+        list.sort(Comparator.comparing(StackSnapshootInfo::getDay));
+        return RpcResult.success(list.stream().map(d->
+                Map.of(
+                "day" , d.getDay(),
+                "consensusLockTotal" , new BigDecimal(d.getConsensusLockTotal()).movePointLeft(ApiContext.defaultDecimals),
+                "stackTotal" , new BigDecimal(d.getStackTotal()).movePointLeft(ApiContext.defaultDecimals)
+        )).collect(Collectors.toList()));
+    }
+
+    @RpcMethod("getDepositInterestRate")
+    public RpcResult getDepositInterestRate(List<Object> params){
+        BigDecimal bankRate = stackingService.getInterestRate(ApiContext.localAssertBase,ApiContext.superAgentDepositBase);
+        BigDecimal normalAgentRate = stackingService.getInterestRate(ApiContext.localAssertBase,ApiContext.agentDepositBase);
+        BigDecimal reserveAgentRate = stackingService.getInterestRate(ApiContext.localAssertBase,ApiContext.reservegentDepositBase);
+        BigDecimal baseInterestRate = stackingService.getBaseInterest();
+        return RpcResult.success(Map.of(
+                "bankRate" , bankRate,
+                "normalAgentRate" , normalAgentRate,
+                "reserveAgentRate" , reserveAgentRate,
+                "baseInterestRate" , baseInterestRate
+        ));
+    }
+
+    @RpcMethod("calcInterestRateForWeight")
+    public RpcResult calcInterestRateForWeight(List<Object> params){
+        VerifyUtils.verifyParams(params, 1);
+        List<Double> weight = params.stream().map(d->Double.parseDouble(d.toString())).collect(Collectors.toList());
+        return RpcResult.success(stackingService.getInterestRate(weight.toArray(new Double[weight.size()])));
+    }
+
+    @RpcMethod("depositRankingBySymbol")
+    public RpcResult getDepositRankingBySymbol(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String symbol;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            symbol = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[symbol] is inValid");
+        }
+        Bson typeFilter = Filters.or(
+                Filters.eq("type", DepositInfoType.STACKING),
+                Filters.eq("type", DepositInfoType.APPEND_AGENT_DEPOSIT),
+                Filters.eq("type", DepositInfoType.CREATE_AGENT)
+        );
+        Bson[] bson = new Bson[]{
+                Filters.eq("deleteHeight", -1),
+                Filters.eq("symbol", symbol),
+                typeFilter
+        };
+        Optional<SymbolRegInfo> symbolRegInfoData = symbolRegService.getFirst(symbol);
+        if (symbolRegInfoData.isEmpty()) {
+            return RpcResult.paramError("[symbol] is inValid");
+        }
+        SymbolRegInfo symbolRegInfo = symbolRegInfoData.get();
+        List<DepositInfo> list = depositService.getDepositList(chainId, bson);
+        Map<String,DepositInfo> mergeList= new HashMap<>();
+        list.forEach(d->
+            mergeList.compute(d.getAddress(),(k,od)->{
+                if(od == null){
+                    return d;
+                }else{
+                    od.setAmount(od.getAmount().add(d.getAmount()));
+                    return od;
+                }
+            })
+        );
+        list = new ArrayList<>(mergeList.values());
+        BigInteger total = list.stream().map(d -> d.getAmount()).reduce(BigInteger::add).orElse(BigInteger.ZERO);
+        Map<String, BigInteger> tempData = new LinkedHashMap<>(100);
+        list.stream().sorted(Comparator.comparing(o -> o.getAmount().negate())).limit(100).forEach(d -> {
+            Log.info("{}",d.getAmount());
+            tempData.put(d.getAddress(), d.getAmount());
+        });
+        int i = 1;
+        List<Map<String, Object>> res = new ArrayList<>(100);
+        for (Map.Entry<String, BigInteger> entry : tempData.entrySet()) {
+            BigDecimal rate;
+            if(total.compareTo(BigInteger.ZERO) == 0){
+                rate = BigDecimal.ONE;
+            }else if (entry.getValue().compareTo(BigInteger.ZERO) == 0){
+                rate = BigDecimal.ZERO;
+            }else {
+                rate = new BigDecimal(entry.getValue()).divide(new BigDecimal(total),ApiConstant.RATE_DECIMAL, RoundingMode.HALF_DOWN);
+            }
+            res.add(Map.of(
+                    "address", entry.getKey(),
+                    "index", i++,
+                    "amount", new BigDecimal(entry.getValue()).movePointLeft(symbolRegInfo.getDecimals()),
+                    "rate" , rate
+                    ));
+        }
+        return RpcResult.success(res);
+    }
+
+
+    private SymbolPrice getNvtPrice() {
+        StackSymbolPriceInfo nvtPrice = symbolQuotationPriceService.getFreshUsdtPrice(ApiContext.defaultChainId, ApiContext.defaultAssetId);
+        if (nvtPrice.getPrice().compareTo(BigDecimal.ZERO) == 0) {
             SymbolPrice nulsPrice = symbolQuotationPriceService.getFreshUsdtPrice(ApiContext.mainSymbol);
             nvtPrice = new StackSymbolPriceInfo();
             nvtPrice.setPrice(nulsPrice.getPrice().divide(BigDecimal.TEN));
@@ -1315,16 +1481,16 @@ public class PocConsensusController {
     }
 
 
-    private Map<DepositFixedType,BigDecimal> getStackingRate(String symbol) {
-        Map<DepositFixedType,BigDecimal> res = new HashMap<>(DepositFixedType.values().length);
-        Arrays.stream(DepositFixedType.values()).forEach(d->{
-            BigDecimal rate = stackingService.getAssetStackingRate(symbol,d);
-            if(d.equals(DepositFixedType.NONE)){
-                res.put(d,rate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_UP));
-            }else{
+    private Map<DepositFixedType, BigDecimal> getStackingRate(String symbol) {
+        Map<DepositFixedType, BigDecimal> res = new HashMap<>(DepositFixedType.values().length);
+        Arrays.stream(DepositFixedType.values()).forEach(d -> {
+            BigDecimal rate = stackingService.getAssetStackingRate(symbol, d);
+            if (d.equals(DepositFixedType.NONE)) {
+                res.put(d, rate.setScale(ApiConstant.RATE_DECIMAL, RoundingMode.HALF_UP));
+            } else {
                 Long day = d.getTime() / 3600L / 24;
                 BigDecimal totalRate = rate.divide(BigDecimal.valueOf(365), MathContext.DECIMAL64).multiply(new BigDecimal(day));
-                res.put(d,totalRate.setScale(ApiConstant.RATE_DECIMAL,RoundingMode.HALF_UP));
+                res.put(d, totalRate.setScale(ApiConstant.RATE_DECIMAL, RoundingMode.HALF_UP));
             }
 
         });

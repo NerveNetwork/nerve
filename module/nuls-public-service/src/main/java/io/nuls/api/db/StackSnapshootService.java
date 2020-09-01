@@ -21,9 +21,9 @@ public interface StackSnapshootService {
     /**
      * id 字段
      */
-   String ID = "day";
+    String ID = "day";
 
-    void save(int chainId,StackSnapshootInfo stackSnapshootInfo);
+    void save(int chainId, StackSnapshootInfo stackSnapshootInfo);
 
     /**
      * 获取最新的快照数据
@@ -33,14 +33,16 @@ public interface StackSnapshootService {
 
     /**
      * 获取快照列表
+     *
      * @param start
      * @param end
      * @return
      */
-    List<StackSnapshootInfo> queryList(int chainId,long start,long end);
+    List<StackSnapshootInfo> queryList(int chainId, long start, long end);
 
     /**
      * 构造一个快照对象
+     *
      * @param chainId
      * @param blockHeaderInfo
      * @return
@@ -49,8 +51,17 @@ public interface StackSnapshootService {
 
     /**
      * 获取合计的收益发放数量
+     *
      * @return
      */
     BigInteger queryRewardTotal(int chainId);
+
+    /**
+     * 获取最近N调数据
+     * @param chainId
+     * @param limitSize
+     * @return
+     */
+    List<StackSnapshootInfo> queryListLimit(int chainId, int limitSize);
 
 }

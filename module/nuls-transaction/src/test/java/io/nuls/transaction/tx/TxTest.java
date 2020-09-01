@@ -31,6 +31,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.constant.TxType;
+import io.nuls.core.log.Log;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.info.NoUse;
@@ -59,20 +60,21 @@ import java.util.Map;
  */
 public class TxTest {
 
-    static String address20 = "tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG";
-    static String address21 = "tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD";
-    static String address22 = "tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24";
-    static String address23 = "tNULSeBaMu38g1vnJsSZUCwTDU9GsE5TVNUtpD";
-    static String address24 = "tNULSeBaMp9wC9PcWEcfesY7YmWrPfeQzkN1xL";
-    static String address25 = "tNULSeBaMshNPEnuqiDhMdSA4iNs6LMgjY6tcL";
-    static String address26 = "tNULSeBaMoodYW7AqyJrgYdWiJ6nfwfVHHHyXm";
-    static String address27 = "tNULSeBaMmTNYqywL5ZSHbyAQ662uE3wibrgD1";
-    static String address28 = "tNULSeBaMoNnKitV28JeuUdBaPSR6n1xHfKLj2";
-    static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
-    static String address31 = "tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp";
+    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+    static String address21 = "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz";
+    static String address22 = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";
+    static String address23 = "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv";
+    static String address24 = "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD";
+    static String address25 = "TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5";
+    static String address26 = "TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg";
+    static String address27 = "TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n";
+    static String address28 = "TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu";
+    static String address29 = "TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf";
+    static String address30 = "TNVTdTSPEn3kK94RqiMffiKkXTQ2anRwhN1J9";
+    static String address31 = "TNVTdTSPRyiWcpbS65NmT5qyGmuqPxuKv8SF4";
 
     private Chain chain;
-    static int chainId = 2;
+    static int chainId = 5;
     static int assetId = 1;
     static int heterogeneousChainId = 101;
     static int heterogeneousAssetId = 1;
@@ -92,19 +94,19 @@ public class TxTest {
 
     @Test
     public void createWrongTx() throws Exception {
-        Map map = CreateTx.createTransferTx(address20, address25, new BigInteger("200000000"));
+        Map map = CreateTx.createTransferTx(address21, address25, new BigInteger("1000000000"));
         Transaction tx = CreateTx.assemblyTransaction((List<CoinDTO>) map.get("inputs"), (List<CoinDTO>) map.get("outputs"), (String) map.get("remark"), null, 1591947442L, TxType.QUOTATION);
         sign(tx, address31, password);
+        Log.info("{}", tx.format());
         newTx(tx);
-        System.out.println(tx.format());
     }
     @Test
     public void createTx() throws Exception {
-        for (int i = 0; i < 2; i++) {
-            Map map = CreateTx.createTransferTx(address20, address25, new BigInteger("200000000"));
+        for (int i = 0; i < 1; i++) {
+            Map map = CreateTx.createTransferTx(address20, address25, new BigInteger("2200000000"));
             Transaction tx = CreateTx.assemblyTransaction((List<CoinDTO>) map.get("inputs"), (List<CoinDTO>) map.get("outputs"), (String) map.get("remark"), null, 1593070691L, TxType.TRANSFER);
+            Log.info("{}", tx.format());
             newTx(tx);
-            System.out.println(tx.format());
         }
     }
 

@@ -48,7 +48,7 @@ public class RoundController extends BasicObject {
      * 根据本地时间计算
      */
     public MeetingRound initRound() {
-        log.info("初始化轮次：");
+        log.debug("初始化轮次：");
         RoundInitData initData = calcNowInitData();
         MeetingRound round = calcRound(initData, true);
         this.switchRound(round, false);
@@ -346,7 +346,7 @@ public class RoundController extends BasicObject {
     }
 
     public void switchPackingIndex(long roundIndex, long roundStartTime, int nextPackingIndex, long nextPackingStartTime) {
-        log.info("run here");
+        log.debug("run here");
         MeetingRound round = this.getRound(roundIndex, roundStartTime);
         if (round.getStartTime() != roundStartTime) {
             round.setStartTime(roundStartTime);
@@ -367,7 +367,7 @@ public class RoundController extends BasicObject {
     }
 
     public MeetingRound getRoundByIndex(long roundIndex, long startTime) {
-        log.info("run here");
+        log.debug("run here");
         MeetingRound round = this.roundCache.getRoundByIndex(roundIndex);
         if (round == null) {
             return getRoundByIndex(roundIndex);

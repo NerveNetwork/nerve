@@ -504,7 +504,7 @@ public class TxPackageServiceImpl implements TxPackageService {
 
         //验证本地没有的交易
         List<Future<Boolean>> futures = new ArrayList<>();
-        verifyNonLocalTxs(chain, futures, keys, txList);
+        verifyNonLocalTxs(chain, futures, keys, txList, blockHeight);
         keys = null;
 
         //验证账本
@@ -605,7 +605,7 @@ public class TxPackageServiceImpl implements TxPackageService {
     /**
      * 开启多线程 对不在本地的未确认数据库中的交易, 进行基础验证
      */
-    private void verifyNonLocalTxs(Chain chain, List<Future<Boolean>> futures, List<byte[]> keys, List<TxVerifyWrapper> txList) {
+    private void verifyNonLocalTxs(Chain chain, List<Future<Boolean>> futures, List<byte[]> keys, List<TxVerifyWrapper> txList, long height) {
         //获取区块的交易中, 在未确认数据库中存在的交易
         List<String> unconfirmedList = unconfirmedTxStorageService.getExistKeysStr(chain.getChainId(), keys);
         Set<String> set = new HashSet<>();
@@ -626,7 +626,7 @@ public class TxPackageServiceImpl implements TxPackageService {
                             if (null == txRegister) {
                                 throw new NulsException(TxErrorCode.TX_TYPE_INVALID);
                             }
-                            txService.baseValidateTx(chain, tx, txRegister);
+                            txService.baseValidateTx(chain, tx, txRegister, height);
                         } catch (Exception e) {
                             chain.getLogger().error("batchVerify failed, single tx verify failed. hash:{}, -type:{}", tx.getHash().toHex(), tx.getType());
                             try {

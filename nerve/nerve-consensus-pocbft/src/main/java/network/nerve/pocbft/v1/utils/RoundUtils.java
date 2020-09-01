@@ -78,7 +78,7 @@ public class RoundUtils {
             chain.getLogger().error(e);
             return null;
         }
-        chain.getLogger().info("获取轮次间共识节点变更信息，lastRound:{},currentRound:{},registerList:{},cancelList{}", lastRoundIndex, currentRound.getIndex(), registerAgentList, cancelAgentList);
+        chain.getLogger().debug("获取轮次间共识节点变更信息，lastRound:{},currentRound:{},registerList:{},cancelList{}", lastRoundIndex, currentRound.getIndex(), registerAgentList, cancelAgentList);
         resultMap.put("registerAgentList", registerAgentList);
         resultMap.put("cancelAgentList", cancelAgentList);
         return resultMap;

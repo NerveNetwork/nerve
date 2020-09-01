@@ -25,7 +25,9 @@ import network.nerve.quotation.util.CommonUtil;
 import network.nerve.quotation.util.LoggerUtil;
 import network.nerve.quotation.util.TimeUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -244,5 +246,6 @@ public class ChainManager {
         ScheduledThreadPoolExecutor calculatorExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory(QuotationConstant.QU_CALCULATOR_THREAD));
         calculatorExecutor.scheduleWithFixedDelay(new CalculatorTask(chain),
                 QuotationConstant.QU_TASK_INITIALDELAY, QuotationConstant.QUTASK_PERIOD, TimeUnit.MINUTES);
+
     }
 }

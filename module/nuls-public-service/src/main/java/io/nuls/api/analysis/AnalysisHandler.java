@@ -9,6 +9,8 @@ import io.nuls.api.manager.CacheManager;
 import io.nuls.api.model.dto.LedgerAssetDTO;
 import io.nuls.api.model.entity.*;
 import io.nuls.api.model.po.*;
+import io.nuls.api.model.po.mini.BatchStakingMergeInfo;
+import io.nuls.api.model.po.mini.BatchWithdrawStackingInfo;
 import io.nuls.api.model.po.mini.CancelDepositInfo;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
@@ -139,10 +141,9 @@ public class AnalysisHandler {
             tx.setStatus(TxStatusEnum.CONFIRMED);
             TransactionInfo txInfo;
             try {
-                txInfo = toTransaction(chainId, tx);
-                txInfo.setCreateTime(blockHeader.getCreateTime());
-            }catch (UnableAssetException unableAssetException){
-                Log.error("解析交易失败:{}",unableAssetException.getCustomMessage());
+                txInfo = toTransaction(chainId, tx,blockHeader.getCreateTime());
+            } catch (UnableAssetException unableAssetException) {
+                Log.error("解析交易失败:{}", unableAssetException.getCustomMessage());
                 continue;
             }
             if (txInfo.getType() == TxType.RED_PUNISH) {
@@ -162,13 +163,17 @@ public class AnalysisHandler {
         return txs;
     }
 
-    public static TransactionInfo toTransaction(int chainId, Transaction tx) throws Exception {
+    public static TransactionInfo toTransaction(int chainId, Transaction tx) throws Exception{
+        return toTransaction(chainId,tx,tx.getTime());
+    }
+
+    public static TransactionInfo toTransaction(int chainId, Transaction tx,Long blockCreateTime) throws Exception {
         TransactionInfo info = new TransactionInfo();
         info.setHash(tx.getHash().toHex());
         info.setHeight(tx.getBlockHeight());
         info.setType(tx.getType());
         info.setSize(tx.getSize());
-        info.setCreateTime(tx.getTime());
+        info.setCreateTime(blockCreateTime);
         if (tx.getTxData() != null) {
             info.setTxDataHex(RPCUtil.encode(tx.getTxData()));
         }
@@ -187,8 +192,8 @@ public class AnalysisHandler {
             info.setCoinFroms(toCoinFromList(coinData));
             info.setCoinTos(toCoinToList(coinData));
         }
-        info.setTxData(toTxData(chainId, tx));
-        info.setTxDataList(toTxDataList(chainId, tx));
+        info.setTxData(toTxData(chainId, tx,blockCreateTime));
+        info.setTxDataList(toTxDataList(chainId, tx,blockCreateTime));
         info.calcValue();
         info.calcFee(chainId);
         return info;
@@ -208,10 +213,10 @@ public class AnalysisHandler {
             fromInfo.setLocked(from.getLocked());
             fromInfo.setAmount(from.getAmount());
             fromInfo.setNonce(HexUtil.encode(from.getNonce()));
-            SymbolRegInfo symbolRegInfo = symbolRegService.get(from.getAssetsChainId(),from.getAssetsId());
-            if(symbolRegInfo == null){
-                Log.error("数据异常，未找到对应资产注册信息:{}",from.getAssetsChainId() + "-" + from.getAssetsId());
-                throw new UnableAssetException(from.getAssetsChainId(),from.getAssetsId());
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(from.getAssetsChainId(), from.getAssetsId());
+            if (symbolRegInfo == null) {
+                Log.error("数据异常，未找到对应资产注册信息:{}", from.getAssetsChainId() + "-" + from.getAssetsId());
+                throw new UnableAssetException(from.getAssetsChainId(), from.getAssetsId());
             }
             fromInfo.setSymbol(symbolRegInfo.getSymbol());
             fromInfoList.add(fromInfo);
@@ -232,10 +237,10 @@ public class AnalysisHandler {
             coinToInfo.setChainId(to.getAssetsChainId());
             coinToInfo.setLockTime(to.getLockTime());
             coinToInfo.setAmount(to.getAmount());
-            SymbolRegInfo symbolRegInfo = symbolRegService.get(coinToInfo.getChainId(),coinToInfo.getAssetsId());
-            if(symbolRegInfo == null){
-                Log.error("数据异常，未找到对应资产注册信息:{}",coinToInfo.getChainId() + "-" + coinToInfo.getAssetsId());
-                throw new UnableAssetException(coinToInfo.getChainId(),coinToInfo.getAssetsId());
+            SymbolRegInfo symbolRegInfo = symbolRegService.get(coinToInfo.getChainId(), coinToInfo.getAssetsId());
+            if (symbolRegInfo == null) {
+                Log.error("数据异常，未找到对应资产注册信息:{}", coinToInfo.getChainId() + "-" + coinToInfo.getAssetsId());
+                throw new UnableAssetException(coinToInfo.getChainId(), coinToInfo.getAssetsId());
             }
             coinToInfo.setSymbol(symbolRegInfo.getSymbol());
             toInfoList.add(coinToInfo);
@@ -243,43 +248,47 @@ public class AnalysisHandler {
         return toInfoList;
     }
 
-    public static TxDataInfo toTxData(int chainId, Transaction tx) throws NulsException {
+    public static TxDataInfo toTxData(int chainId, Transaction tx, long blockCreateTime) throws NulsException {
 //        Log.info("接收到新交易，交易类型:{}",tx.getType());
         if (tx.getType() == TxType.ACCOUNT_ALIAS) {
             return toAlias(tx);
-        } else if (tx.getType() == TxType.REGISTER_AGENT ) {
-            return toAgent(tx);
+        } else if (tx.getType() == TxType.REGISTER_AGENT) {
+            return toAgent(tx,blockCreateTime);
         } else if (tx.getType() == TxType.DEPOSIT) {
-            return toDeposit(tx);
+            return toDeposit(tx,blockCreateTime);
         } else if (tx.getType() == TxType.CANCEL_DEPOSIT) {
-            return toCancelDeposit(tx);
+            return toCancelDeposit(tx,blockCreateTime);
         } else if (tx.getType() == TxType.STOP_AGENT) {
             return toStopAgent(tx);
         } else if (tx.getType() == TxType.RED_PUNISH) {
-            return toRedPublishLog(tx);
+            return toRedPublishLog(tx,blockCreateTime);
         } else if (tx.getType() == TxType.APPEND_AGENT_DEPOSIT || tx.getType() == TxType.REDUCE_AGENT_DEPOSIT) {
-            return toChangeAgentDepositData(tx);
+            return toChangeAgentDepositData(tx,blockCreateTime);
         } else if (tx.getType() == TxType.CONFIRM_WITHDRAWAL || tx.getType() == TxType.RECHARGE) {
-            return toConverterTxInfo(chainId,tx);
+            return toConverterTxInfo(chainId, tx,blockCreateTime);
         } else if (tx.getType() == TxType.LEDGER_ASSET_REG_TRANSFER) {
             return toLedgerAssetInfo(chainId, tx);
-        } else if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK ) {
+        } else if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
             return toChangeVirtualBank(tx);
+        } else if(tx.getType() == TxType.BATCH_WITHDRAW) {
+            return toBatchWithdraw(tx,blockCreateTime);
+        } else if(tx.getType() == TxType.BATCH_STAKING_MERGE) {
+            return toBatchStakingMergeInfo(tx,blockCreateTime);
         }
 //        Log.warn("未处理交易类型：{}",tx.getType());
         return null;
     }
 
-    private static List<TxDataInfo> toTxDataList(int chainId, Transaction tx) throws NulsException {
+    private static List<TxDataInfo> toTxDataList(int chainId, Transaction tx, long blockCreateTime) throws NulsException {
         switch (tx.getType()) {
             case TxType.YELLOW_PUNISH:
-                return toYellowPunish(tx);
+                return toYellowPunish(tx,blockCreateTime);
             case TxType.FINAL_QUOTATION:
-                return toSymbolPriceInfo(tx);
+                return toSymbolPriceInfo(tx,blockCreateTime);
             case TxType.QUOTATION:
-                return toSymbolQuotationRecordInfo(tx);
+                return toSymbolQuotationRecordInfo(tx,blockCreateTime);
             case TxType.CROSS_CHAIN:
-                return toNativePlatformCrossTxInfo(chainId,tx);
+                return toNativePlatformCrossTxInfo(chainId, tx,blockCreateTime);
             default:
                 return List.of();
         }
@@ -292,14 +301,14 @@ public class AnalysisHandler {
      * @return
      * @throws Exception
      */
-    public static List<TxDataInfo> toSymbolPriceInfo(Transaction tx) throws NulsException {
+    public static List<TxDataInfo> toSymbolPriceInfo(Transaction tx,long blockCreateTime) throws NulsException {
         Log.info("开始处理喂价最终确认交易:{}", tx.getBlockHeight());
         SymbolPrices symbolPrices = new SymbolPrices();
         symbolPrices.parse(new NulsByteBuffer(tx.getTxData()));
-        return toSymbolPriceInfo(symbolPrices, tx, StackSymbolPriceInfo.class);
+        return toSymbolPriceInfo(symbolPrices, tx, blockCreateTime,StackSymbolPriceInfo.class);
     }
 
-    public static List<TxDataInfo> toSymbolPriceInfo(SymbolPrices symbolPrices, Transaction tx, Class<? extends StackSymbolPriceInfo> clazs) throws NulsException {
+    public static List<TxDataInfo> toSymbolPriceInfo(SymbolPrices symbolPrices, Transaction tx,long blockCreateTime, Class<? extends StackSymbolPriceInfo> clazs) throws NulsException {
         return symbolPrices.getPrices().stream().map(p -> {
             StackSymbolPriceInfo spi = null;
             try {
@@ -309,7 +318,7 @@ public class AnalysisHandler {
                 System.exit(0);
             }
             spi.setBlockHeight(tx.getBlockHeight());
-            spi.setCreateTime(tx.getTime() * 1000L);
+            spi.setCreateTime(blockCreateTime * 1000L);
             spi.setCurrency(p.getCurrency());
             spi.setPrice(p.getPrice());
             spi.setSymbol(p.getSymbol());
@@ -325,11 +334,11 @@ public class AnalysisHandler {
      * @return
      * @throws NulsException
      */
-    public static List<TxDataInfo> toSymbolQuotationRecordInfo(Transaction tx) throws NulsException {
+    public static List<TxDataInfo> toSymbolQuotationRecordInfo(Transaction tx,long blockCreateTime) throws NulsException {
         Log.info("开始处理喂价提交交易:{}", tx.getBlockHeight());
         Quotation quotation = new Quotation();
         quotation.parse(new NulsByteBuffer(tx.getTxData()));
-        List<TxDataInfo> prices = toSymbolPriceInfo(quotation.getPrices(), tx, SymbolQuotationRecordInfo.class);
+        List<TxDataInfo> prices = toSymbolPriceInfo(quotation.getPrices(), tx,blockCreateTime, SymbolQuotationRecordInfo.class);
         return prices.stream().map(d -> {
             SymbolQuotationRecordInfo info = (SymbolQuotationRecordInfo) d;
             info.setAddress(AddressTool.getStringAddressByBytes(quotation.getAddress()));
@@ -349,7 +358,7 @@ public class AnalysisHandler {
         return info;
     }
 
-    public static AgentInfo toAgent(Transaction tx) throws NulsException {
+    public static AgentInfo toAgent(Transaction tx,long blockCreateTime) throws NulsException {
         Agent agent = new Agent();
         agent.parse(new NulsByteBuffer(tx.getTxData()));
         AgentInfo agentInfo = new AgentInfo();
@@ -358,14 +367,14 @@ public class AnalysisHandler {
         agentInfo.setPackingAddress(AddressTool.getStringAddressByBytes(agent.getPackingAddress()));
         agentInfo.setRewardAddress(AddressTool.getStringAddressByBytes(agent.getRewardAddress()));
         agentInfo.setDeposit(agent.getDeposit());
-        agentInfo.setCreateTime(tx.getTime());
+        agentInfo.setCreateTime(blockCreateTime);
         agentInfo.setTxHash(tx.getHash().toHex());
         agentInfo.setAgentId(agentInfo.getTxHash().substring(agentInfo.getTxHash().length() - 8));
         agentInfo.setBlockHeight(tx.getBlockHeight());
         return agentInfo;
     }
 
-    public static DepositInfo toChangeAgentDepositData(Transaction tx) throws NulsException {
+    public static DepositInfo toChangeAgentDepositData(Transaction tx,long blockCreateTime) throws NulsException {
         ChangeAgentDepositData changeAgentDepositData = new ChangeAgentDepositData();
         changeAgentDepositData.parse(new NulsByteBuffer(tx.getTxData()));
         DepositInfo depositInfo = new DepositInfo();
@@ -373,13 +382,13 @@ public class AnalysisHandler {
         depositInfo.setAmount(changeAgentDepositData.getAmount());
         depositInfo.setAgentHash(changeAgentDepositData.getAgentHash().toHex());
         depositInfo.setAddress(AddressTool.getStringAddressByBytes(changeAgentDepositData.getAddress()));
-        depositInfo.setCreateTime(tx.getTime());
+        depositInfo.setCreateTime(blockCreateTime);
         depositInfo.setBlockHeight(tx.getBlockHeight());
         depositInfo.setFee(tx.getFee());
         return depositInfo;
     }
 
-    public static DepositInfo toDeposit(Transaction tx) throws NulsException {
+    public static DepositInfo toDeposit(Transaction tx,long blockCreateTime) throws NulsException {
         Deposit deposit = new Deposit();
         deposit.parse(new NulsByteBuffer(tx.getTxData()));
         DepositInfo info = new DepositInfo();
@@ -387,7 +396,7 @@ public class AnalysisHandler {
         info.setAmount(deposit.getDeposit());
         info.setAddress(AddressTool.getStringAddressByBytes(deposit.getAddress()));
         info.setTxHash(tx.getHash().toHex());
-        info.setCreateTime(tx.getTime());
+        info.setCreateTime(blockCreateTime);
         info.setBlockHeight(tx.getBlockHeight());
         info.setFee(tx.getFee());
         info.setAssetChainId(deposit.getAssetChainId());
@@ -403,16 +412,60 @@ public class AnalysisHandler {
         return info;
     }
 
-    public static CancelDepositInfo toCancelDeposit(Transaction tx) throws NulsException {
+    public static CancelDepositInfo toCancelDeposit(Transaction tx,long blockCreateTime) throws NulsException {
         CancelDeposit cancelDeposit = new CancelDeposit();
         cancelDeposit.parse(new NulsByteBuffer(tx.getTxData()));
         CancelDepositInfo deposit = new CancelDepositInfo();
         deposit.setJoinTxHash(cancelDeposit.getJoinTxHash().toHex());
         deposit.setAddress(AddressTool.getStringAddressByBytes(cancelDeposit.getAddress()));
-        deposit.setCreateTime(tx.getTime());
+        deposit.setCreateTime(blockCreateTime);
         deposit.setBlockHeight(tx.getBlockHeight());
         deposit.setTxHash(tx.getHash().toHex());
         return deposit;
+    }
+
+    public static BatchWithdrawStackingInfo toBatchWithdraw(Transaction tx, long blockCreateTime) throws NulsException {
+        BatchWithdraw batchWithdraw = new BatchWithdraw();
+        batchWithdraw.parse(tx.getTxData(),0);
+        BatchWithdrawStackingInfo info = new BatchWithdrawStackingInfo();
+        info.setAddress(AddressTool.getStringAddressByBytes(batchWithdraw.getAddress()));
+        info.setJoinHashList(batchWithdraw.getJoinTxHashList().stream().map(d->d.toHex()).collect(Collectors.toList()));
+        info.setCreateTime(blockCreateTime);
+        info.setBlockHeight(tx.getBlockHeight());
+        info.setTxHash(tx.getHash().toHex());
+        return info;
+    }
+
+    public static BatchStakingMergeInfo toBatchStakingMergeInfo(Transaction tx, long blockCreateTime) throws NulsException {
+        BatchStakingMerge batchStakingMerge = new BatchStakingMerge();
+        batchStakingMerge.parse(tx.getTxData(),0);
+        BatchStakingMergeInfo info = new BatchStakingMergeInfo();
+        info.setAddress(AddressTool.getStringAddressByBytes(batchStakingMerge.getAddress()));
+        info.setJoinHashList(batchStakingMerge.getJoinTxHashList().stream().map(d->d.toHex()).collect(Collectors.toList()));
+        info.setCreateTime(blockCreateTime);
+        info.setBlockHeight(tx.getBlockHeight());
+        info.setTxHash(tx.getHash().toHex());
+
+        DepositInfo newDepositInfo = new DepositInfo();
+        newDepositInfo.setTxHash(tx.getHash().toHex());
+        newDepositInfo.setAmount(batchStakingMerge.getDeposit());
+        newDepositInfo.setAddress(info.getAddress());
+        newDepositInfo.setTxHash(info.getTxHash());
+        newDepositInfo.setCreateTime(blockCreateTime);
+        newDepositInfo.setBlockHeight(tx.getBlockHeight());
+        newDepositInfo.setFee(tx.getFee());
+        newDepositInfo.setAssetChainId(batchStakingMerge.getAssetChainId());
+        newDepositInfo.setAssetId(batchStakingMerge.getAssetId());
+        if (batchStakingMerge.getDepositType() == StacKType.REGULAR) {
+            DepositFixedType depositFixedType = DepositFixedType.getValue(batchStakingMerge.getTimeType());
+            if (depositFixedType == null) {
+                Log.warn("未知的定期时间类型:{}", batchStakingMerge.getTimeType());
+            } else {
+                newDepositInfo.setFixedType(depositFixedType.name());
+            }
+        }
+        info.setNewDepositInfo(newDepositInfo);
+        return info;
     }
 
     public static AgentInfo toStopAgent(Transaction tx) throws NulsException {
@@ -425,7 +478,8 @@ public class AnalysisHandler {
         return agentNode;
     }
 
-    public static List<TxDataInfo> toYellowPunish(Transaction tx) throws NulsException {
+
+    public static List<TxDataInfo> toYellowPunish(Transaction tx,long blockCreateTime) throws NulsException {
         YellowPunishData data = new YellowPunishData();
         data.parse(new NulsByteBuffer(tx.getTxData()));
         List<TxDataInfo> logList = new ArrayList<>();
@@ -434,7 +488,7 @@ public class AnalysisHandler {
             log.setTxHash(tx.getHash().toHex());
             log.setAddress(AddressTool.getStringAddressByBytes(address));
             log.setBlockHeight(tx.getBlockHeight());
-            log.setTime(tx.getTime());
+            log.setTime(blockCreateTime);
             log.setType(ApiConstant.PUBLISH_YELLOW);
             log.setReason("No packaged blocks");
             logList.add(log);
@@ -442,7 +496,7 @@ public class AnalysisHandler {
         return logList;
     }
 
-    public static PunishLogInfo toRedPublishLog(Transaction tx) throws NulsException {
+    public static PunishLogInfo toRedPublishLog(Transaction tx,long blockCreateTime) throws NulsException {
         RedPunishData data = new RedPunishData();
         data.parse(new NulsByteBuffer(tx.getTxData()));
 
@@ -456,7 +510,7 @@ public class AnalysisHandler {
             punishLog.setReason("too much yellow publish");
         }
         punishLog.setBlockHeight(tx.getBlockHeight());
-        punishLog.setTime(tx.getTime());
+        punishLog.setTime(blockCreateTime);
         return punishLog;
     }
 
@@ -464,17 +518,18 @@ public class AnalysisHandler {
         ChangeVirtualBankTxData changeVirtualBankTxData = new ChangeVirtualBankTxData();
         changeVirtualBankTxData.parse(new NulsByteBuffer(tx.getTxData()));
         ChangeVirtualBankInfo info = new ChangeVirtualBankInfo();
-        if(changeVirtualBankTxData.getInAgents() != null){
+        if (changeVirtualBankTxData.getInAgents() != null) {
             info.setInAgents(changeVirtualBankTxData.getInAgents().stream().map(AddressTool::getStringAddressByBytes).collect(Collectors.toList()));
-        }else{
+        } else {
             info.setInAgents(List.of());
         }
 
-        if(changeVirtualBankTxData.getOutAgents() != null){
+        if (changeVirtualBankTxData.getOutAgents() != null) {
             info.setOutAgents(changeVirtualBankTxData.getOutAgents().stream().map(AddressTool::getStringAddressByBytes).collect(Collectors.toList()));
-        }else{
+        } else {
             info.setOutAgents(List.of());
-        };
+        }
+        ;
         return info;
     }
 
@@ -537,7 +592,7 @@ public class AnalysisHandler {
 //        return assetInfo;
 //    }
 
-    private static ConverterTxInfo coinToConverterTxInfo(Coin coin, Transaction tx,ConverterTxType converterTxType){
+    private static ConverterTxInfo coinToConverterTxInfo(Coin coin, Transaction tx, ConverterTxType converterTxType, long blockCreateTime) {
         ConverterTxInfo info = new ConverterTxInfo();
         info.setBlockHeight(tx.getBlockHeight());
         info.setCreateTime(tx.getTime() * 1000L);
@@ -551,22 +606,22 @@ public class AnalysisHandler {
         return info;
     }
 
-    private static List<TxDataInfo> toNativePlatformCrossTxInfo(int chainId, Transaction tx) throws NulsException {
-        boolean isIn = tx.getCoinDataInstance().getFrom().stream().anyMatch(d->AddressTool.getChainIdByAddress(d.getAddress()) != ApiContext.defaultChainId);
+    private static List<TxDataInfo> toNativePlatformCrossTxInfo(int chainId, Transaction tx,long blockCreateTime) throws NulsException {
+        boolean isIn = tx.getCoinDataInstance().getFrom().stream().anyMatch(d -> AddressTool.getChainIdByAddress(d.getAddress()) != ApiContext.defaultChainId);
         ConverterTxType converterTxType = isIn ? ConverterTxType.IN : ConverterTxType.OUT;
-        return tx.getCoinDataInstance().getTo().stream().map(d-> coinToConverterTxInfo(d,tx,converterTxType)).collect(Collectors.toList());
+        return tx.getCoinDataInstance().getTo().stream().map(d -> coinToConverterTxInfo(d, tx, converterTxType,blockCreateTime)).collect(Collectors.toList());
     }
 
-    private static ConverterTxInfo toConverterTxInfo(int chainId, Transaction tx) throws NulsException {
+    private static ConverterTxInfo toConverterTxInfo(int chainId, Transaction tx,long blockCreateTime) throws NulsException {
         ConverterTxInfo info = new ConverterTxInfo();
         info.setBlockHeight(tx.getBlockHeight());
-        info.setCreateTime(tx.getTime() * 1000L);
+        info.setCreateTime(blockCreateTime * 1000L);
         info.setCrossChainType(CrossChainType.CrossPlatform.name());
-        if(tx.getType() == TxType.CONFIRM_WITHDRAWAL){
+        if (tx.getType() == TxType.CONFIRM_WITHDRAWAL) {
             ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
             txData.parse(new NulsByteBuffer(tx.getTxData()));
-            Result<TransactionInfo> transactionInfoResult = WalletRpcHandler.getTx(chainId,txData.getWithdrawalTxHash().toHex());
-            if(transactionInfoResult.isFailed()){
+            Result<TransactionInfo> transactionInfoResult = WalletRpcHandler.getTx(chainId, txData.getWithdrawalTxHash().toHex());
+            if (transactionInfoResult.isFailed()) {
                 Log.error("获取异构跨链提现交易失败");
                 throw new NulsException(CommonCodeConstanst.DATA_ERROR);
             }
@@ -579,7 +634,7 @@ public class AnalysisHandler {
             info.setAddress(coinTo.getAddress());
             info.setConverterType(ConverterTxType.OUT.name());
             info.setOuterTxHash(txData.getHeterogeneousTxHash());
-        }else{
+        } else {
             info.setTxHash(tx.getHash().toHex());
             CoinTo coinTo = tx.getCoinDataInstance().getTo().stream().filter(d -> d.getAssetsChainId() != ApiContext.defaultChainId || d.getAssetsId() != ApiContext.defaultAssetId).findFirst().get();
             info.setAmount(coinTo.getAmount());

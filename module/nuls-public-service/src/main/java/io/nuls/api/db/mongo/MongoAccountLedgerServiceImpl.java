@@ -13,8 +13,11 @@ import io.nuls.api.model.po.AccountLedgerInfo;
 import io.nuls.api.model.po.AssetInfo;
 import io.nuls.api.model.po.SymbolRegInfo;
 import io.nuls.api.utils.DocumentTransferTool;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsRuntimeException;
+import io.nuls.core.log.Log;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.checkerframework.checker.units.qual.A;
@@ -110,12 +113,14 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
         if (accountLedgerInfoMap.isEmpty()) {
             return;
         }
-
         BulkWriteOptions options = new BulkWriteOptions();
         options.ordered(false);
         List<WriteModel<Document>> modelList = new ArrayList<>();
         int i = 0;
         for (AccountLedgerInfo ledgerInfo : accountLedgerInfoMap.values()) {
+            if(ledgerInfo.getTotalBalance().compareTo(BigInteger.ZERO) < 0){
+                throw new NulsRuntimeException(CommonCodeConstanst.DATA_ERROR,"数据异常，资产不能为负: " + ledgerInfo.getKey());
+            }
             Document document = DocumentTransferTool.toDocument(ledgerInfo, "key");
             if (ledgerInfo.isNew()) {
                 modelList.add(new InsertOneModel(document));
@@ -185,8 +190,7 @@ public class MongoAccountLedgerServiceImpl implements AccountLedgerService {
 
     @Override
     public List<Document> getAllBalance(int chainId){
-        Document project = new Document().append("chainId","$chainId").append("assetId","$assetId").append("balance","$totalBalance");
-        return mongoDBService.aggReturnDoc(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId,new Document("$project",project));
+        return mongoDBService.query(DBTableConstant.ACCOUNT_LEDGER_TABLE + chainId);
     }
 
 }

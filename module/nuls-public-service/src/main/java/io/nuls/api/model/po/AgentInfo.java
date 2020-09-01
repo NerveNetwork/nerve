@@ -308,6 +308,7 @@ public class AgentInfo extends TxDataInfo {
         agentInfo.version = this.version;
         agentInfo.type = this.type;
         agentInfo.isBankNode = this.isBankNode;
+        agentInfo.isNew = this.isNew;
         return agentInfo;
     }
 

@@ -101,21 +101,17 @@ public class MongoRoundServiceImpl implements RoundService {
     }
 
     @Override
-    public void setRoundItemYellow(int chainId, long roundIndex, int orderIndex, String agentHash) {
+    public void setRoundItemYellow(int chainId, long roundIndex, int orderIndex, String agentHash,int count) {
         Bson bson = Filters.and(
                 Filters.eq("agentHash", agentHash),
                 Filters.eq("yellow", false),
-                Filters.or(
-                        Filters.lt("roundIndex", roundIndex),
-                        Filters.and(Filters.eq("roundIndex", roundIndex), Filters.lt("order", orderIndex))
-                ),
                 Filters.eq("blockHeight", 0));
-        List<Document> list = mongoDBService.query(ROUND_ITEM_TABLE + chainId, bson);
+        Bson sort = Sorts.descending("roundIndex");
+        List<Document> list = mongoDBService.pageQuery(ROUND_ITEM_TABLE + chainId, bson,sort,0,count);
         BulkWriteOptions options = new BulkWriteOptions();
         options.ordered(false);
         list.forEach(d -> {
             d.put("yellow", true);
-
             long modifyCount = mongoDBService.update(ROUND_ITEM_TABLE + chainId, Filters.eq("_id", d.get("_id")), d);
             if (modifyCount > 0) {
                 PocRound round = getRound(chainId, (Long) d.get("roundIndex"));
@@ -137,12 +133,9 @@ public class MongoRoundServiceImpl implements RoundService {
         Bson bson = Filters.and(
                 Filters.eq("agentHash", agentHash),
                 Filters.eq("yellow", false),
-                Filters.or(
-                        Filters.lt("roundIndex", roundIndex),
-                        Filters.and(Filters.eq("roundIndex", roundIndex), Filters.lt("order", orderIndex))
-                ),
                 Filters.eq("blockHeight", 0));
-        Optional<Document> item = mongoDBService.query(ROUND_ITEM_TABLE + chainId, bson,Sorts.descending("roundIndex")).stream().findFirst();
+        Bson sort = Sorts.descending("roundIndex");
+        Optional<Document> item = mongoDBService.query(ROUND_ITEM_TABLE + chainId, bson,sort).stream().findFirst();
         item.ifPresent(d -> {
             PocRound round = getRound(chainId, (Long) d.get("roundIndex"));
             int redCardCount = (round.getRedCardCount() + 1);

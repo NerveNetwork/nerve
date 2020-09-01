@@ -1,5 +1,8 @@
 package io.nuls.api.model.po.mini;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 /**
  * @Author: zhoulijun
  * @Time: 2020-05-27 19:00
@@ -20,6 +23,16 @@ public class MiniCrossChainTransactionInfo extends MiniTransactionInfo {
     private int decimals;
 
     private String icon;
+
+    private BigInteger usdValue;
+
+    public BigInteger getUsdValue() {
+        return usdValue;
+    }
+
+    public void setUsdValue(BigInteger usdValue) {
+        this.usdValue = usdValue;
+    }
 
     public int getDecimals() {
         return decimals;

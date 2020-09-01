@@ -528,7 +528,7 @@ public class RequestMessageProcessor {
         Response response = (Response) method.invoke(cmd, params);
         long use = System.currentTimeMillis() - start;
         if (use > 100) {
-            Log.info(invokeMethod + ": use -- {}ms ----{}", use, invokeClass);
+            Log.debug(invokeMethod + ": use -- {}ms ----{}", use, invokeClass);
         }
         return response;
     }

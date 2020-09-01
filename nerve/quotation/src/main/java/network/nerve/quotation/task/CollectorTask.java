@@ -46,6 +46,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static network.nerve.quotation.constant.QuotationConstant.*;
+import static network.nerve.quotation.constant.QuotationContext.usdtDaiUsdcPaxKeyHeight;
+
 /**
  * 获取第三方价格 发交易
  * Price Collect Process
@@ -78,7 +81,7 @@ public class CollectorTask implements Runnable {
             Map<String, Double> pricesMap = new HashMap<>();
             for (QuotationActuator qa : quteList) {
                 String anchorToken = qa.getAnchorToken();
-                if(QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)){
+                if (QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)) {
                     //当天已存在该key的已确认报价交易
                     continue;
                 }
@@ -96,8 +99,25 @@ public class CollectorTask implements Runnable {
                         quotationIntradayStorageService.delete(chain, anchorToken);
                     }
                 }
-                Collector collector = getCollector(qa.getCollector());
-                BigDecimal price = collector.enquiry(chain, anchorToken);
+                BigDecimal price = null;
+                long blockHeight = chain.getLatestBasicBlock().getHeight();
+                if (ANCHOR_TOKEN_USDT.equals(anchorToken)) {
+                    if (blockHeight >= usdtDaiUsdcPaxKeyHeight) {
+                        price = BigDecimal.ONE;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    if (ANCHOR_TOKEN_DAI.equals(anchorToken)
+                            || ANCHOR_TOKEN_USDC.equals(anchorToken)
+                            || ANCHOR_TOKEN_PAX.equals(anchorToken)) {
+                        if (blockHeight < usdtDaiUsdcPaxKeyHeight) {
+                            continue;
+                        }
+                    }
+                    Collector collector = getCollector(qa.getCollector());
+                    price = collector.enquiry(chain, anchorToken);
+                }
                 if (null == price || price.doubleValue() == 0) {
                     chain.getLogger().error("[CollectorTask] [{}]没有获取到第三方平均报价", anchorToken);
                     continue;
@@ -117,6 +137,8 @@ public class CollectorTask implements Runnable {
                 QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.put(key, txHash);
                 quotationIntradayStorageService.save(chain, key);
             });
+        } catch (Exception e) {
+            chain.getLogger().error("CollectorTask error", e);
         } catch (Throwable e) {
             chain.getLogger().error("CollectorTask error", e);
         }

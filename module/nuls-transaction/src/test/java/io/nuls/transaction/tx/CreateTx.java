@@ -54,8 +54,8 @@ import java.util.*;
 public class CreateTx {
 
     private static Chain chain = new Chain();
-    static int chainId = 2;
-    static int assetChainId = 2;
+    static int chainId = 5;
+    static int assetChainId = 5;
     static int assetId = 1;
     static String password = "nuls123456";//"nuls123456";
 
@@ -82,14 +82,15 @@ public class CreateTx {
         inputCoin1.setAmount(new BigInteger("100000").add(amount));
         inputs.add(inputCoin1);
 
-        CoinDTO outputCoin1 = new CoinDTO();
-        outputCoin1.setAddress(addressTo);
-        outputCoin1.setPassword(password);
-        outputCoin1.setAssetsChainId(chainId);
-        outputCoin1.setAssetsId(assetId);
-        outputCoin1.setAmount(amount);
-        outputs.add(outputCoin1);
-
+        if(StringUtils.isNotBlank(addressTo)) {
+            CoinDTO outputCoin1 = new CoinDTO();
+            outputCoin1.setAddress(addressTo);
+            outputCoin1.setPassword(password);
+            outputCoin1.setAssetsChainId(chainId);
+            outputCoin1.setAssetsId(assetId);
+            outputCoin1.setAmount(amount);
+            outputs.add(outputCoin1);
+        }
         transferMap.put("inputs", inputs);
         transferMap.put("outputs", outputs);
         return transferMap;
@@ -189,7 +190,7 @@ public class CreateTx {
         List<CoinFrom> coinFromList = assemblyCoinFrom( fromList, hash);
         List<CoinTo> coinToList = assemblyCoinTo(toList);
         //来源地址或转出地址为空
-        if (coinFromList.size() == 0 || coinToList.size() == 0) {
+        if (coinFromList.size() == 0) {
             return null;
         }
         //交易总大小=交易数据大小+签名数据大小
@@ -278,6 +279,9 @@ public class CreateTx {
      * @throws NulsException
      */
     private static List<CoinTo> assemblyCoinTo(List<CoinDTO> listTo) throws NulsException {
+        if(null == listTo){
+            return null;
+        }
         List<CoinTo> coinTos = new ArrayList<>();
         for (CoinDTO coinDto : listTo) {
             String address = coinDto.getAddress();

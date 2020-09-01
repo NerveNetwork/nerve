@@ -4,7 +4,43 @@ public class StackingAsset {
     private Integer chainId;
     private Integer assetId;
     private String oracleKey;
+    private boolean canBePeriodically;
+    private int decimal;
     private String simple;
+
+    public StackingAsset() {
+    }
+
+    public StackingAsset(Integer chainId,
+                          Integer assetId,
+                          String oracleKey,
+                          boolean canBePeriodically,
+                          int decimal,
+                          String simple
+    ) {
+        this.chainId = chainId;
+        this.assetId = assetId;
+        this.oracleKey = oracleKey;
+        this.canBePeriodically = canBePeriodically;
+        this.decimal = decimal;
+        this.simple = simple;
+    }
+
+    public boolean isCanBePeriodically() {
+        return canBePeriodically;
+    }
+
+    public void setCanBePeriodically(boolean canBePeriodically) {
+        this.canBePeriodically = canBePeriodically;
+    }
+
+    public int getDecimal() {
+        return decimal;
+    }
+
+    public void setDecimal(int decimal) {
+        this.decimal = decimal;
+    }
 
     public Integer getChainId() {
         return chainId;

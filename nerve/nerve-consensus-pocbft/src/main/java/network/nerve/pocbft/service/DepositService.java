@@ -44,4 +44,8 @@ public interface DepositService {
      * @return Result
      * */
     Result getCanStackingAssetList(Map<String,Object> params);
+
+    Result batchWithdraw(Map<String, Object> params);
+
+    Result batchStakingMerge(Map<String, Object> params);
 }

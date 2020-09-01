@@ -60,17 +60,15 @@ public class ConsensusAwardUtil {
      * 从喂价系统获取对应的数量的NVT
      *
      * @param amount       数量
-     * @param assetChainId 资产链ID
-     * @param assetId      资产ID
      * @param time         交易时间（毫秒）
      * @return 对应数量的NVT
      */
-    public static BigInteger getRealAmount(int chainId, BigInteger amount, int assetChainId, int assetId, long time) throws NulsException {
-        if (assetChainId == config.getChainId() && assetId == config.getAssetId()) {
+    public static BigInteger getRealAmount(int chainId, BigInteger amount, StackingAsset stackingAsset, long time) throws NulsException {
+        if (stackingAsset.getChainId() == config.getChainId() && stackingAsset.getAssetId() == config.getAssetId()) {
             return amount;
         }
         String dateStr = NulsDateUtils.timeStamp2DateStr(time, ConsensusConstant.DATE_FORMAT, Locale.UK);
-        BigDecimal nvtCount = getRealAmount(chainId, new BigDecimal(amount), assetChainId, assetId, dateStr);
+        BigDecimal nvtCount = getRealAmount(chainId, new BigDecimal(amount), stackingAsset, dateStr);
 //        BigDecimal nvtVal = DoubleUtils.mul(nvtCount, Math.pow(10, 8));
         return nvtCount.toBigInteger();
     }
@@ -80,24 +78,17 @@ public class ConsensusAwardUtil {
      * 从喂价系统获取对应的数量的NVT
      *
      * @param amount       数量
-     * @param assetChainId 资产链ID
-     * @param assetId      资产ID
      * @param date         时间
      * @return 对应数量的NVT
      */
-    public static BigDecimal getRealAmount(int chainId, BigDecimal amount, int assetChainId, int assetId, String date) throws NulsException {
-        if (assetChainId == config.getChainId() && assetId == config.getAssetId()) {
+    public static BigDecimal getRealAmount(int chainId, BigDecimal amount, StackingAsset stackingAsset, String date) throws NulsException {
+        if (stackingAsset.getChainId() == config.getChainId() && stackingAsset.getAssetId() == config.getAssetId()) {
             return amount;
         }
-        StackingAsset stackingAsset = chainManager.getAssetByAsset(assetChainId, assetId);
         double price = CallMethodUtils.getRealAmount(chainId, stackingAsset.getOracleKey(), date);
         double nervePrice = CallMethodUtils.getRealAmount(chainId, ConsensusConstant.DEFALT_KEY, date);
-        int precision = CallMethodUtils.getAssetPrecision(chainId, assetChainId, assetId);
-        if (precision < 0) {
-            Log.warn("这里不应该出现");
-            throw new NulsException(ConsensusErrorCode.DATA_ERROR);
-        }
-        BigDecimal realAmount = DoubleUtils.div(amount, Math.pow(10, precision));
+
+        BigDecimal realAmount = DoubleUtils.div(amount, Math.pow(10, stackingAsset.getDecimal()));
         BigDecimal nvtVal = DoubleUtils.div(DoubleUtils.mul(realAmount, price), new BigDecimal(nervePrice));
         return DoubleUtils.mul(nvtVal, Math.pow(10, 8));
     }
@@ -384,7 +375,7 @@ public class ConsensusAwardUtil {
         }
 
         //获取权重明细，根据明细计算各账户奖励明细
-        Map<String, BigDecimal> weightDetails = getWeightDetails(chain, endHeight, date);
+        Map<String, BigDecimal> weightDetails = getWeightDetails(chain, startHeight, endHeight, date);
         if (weightDetails.isEmpty()) {
             return awardDetails;
         }
@@ -457,15 +448,15 @@ public class ConsensusAwardUtil {
      * @param chain     链信息
      * @param endHeight 结束高度
      */
-    private static Map<String, BigDecimal> getWeightDetails(Chain chain, long endHeight, String date) throws NulsException {
+    private static Map<String, BigDecimal> getWeightDetails(Chain chain, long startHeight, long endHeight, String date) throws NulsException {
         Map<String, BigDecimal> weightDetails = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);
         BigDecimal totalDeposit = BigDecimal.ZERO;
         Map<String, BigDecimal> depositMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);
         //获取有效的节点保证金权重
-        totalDeposit = agentManager.getAgentDepositByHeight(chain, endHeight, depositMap, totalDeposit);
+        totalDeposit = agentManager.getAgentDepositByHeight(chain, startHeight,endHeight, depositMap, totalDeposit);
 
         //获取有效的委托金权重
-        totalDeposit = depositManager.getDepositByHeight(chain, endHeight, depositMap, totalDeposit, date);
+        totalDeposit = depositManager.getDepositByHeight(chain, startHeight,endHeight, depositMap, totalDeposit, date);
 
         if (totalDeposit.equals(BigDecimal.ZERO)) {
             return weightDetails;

@@ -3,19 +3,13 @@ package network.nerve.distribute;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.ServiceManager;
-import io.nuls.base.api.provider.ledger.LedgerProvider;
-import io.nuls.base.api.provider.ledger.facade.AccountBalanceInfo;
-import io.nuls.base.api.provider.ledger.facade.GetBalanceReq;
 import io.nuls.base.api.provider.transaction.TransferService;
 import io.nuls.base.api.provider.transaction.facade.TransferReq;
-import io.nuls.base.basic.AddressTool;
 import io.nuls.core.log.Log;
 import io.nuls.core.rpc.info.NoUse;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -133,36 +127,49 @@ public class SendNvt extends Base {
             index += toSize;
             send(temp,fromAddress);
             try {
-                TimeUnit.MILLISECONDS.sleep(2L);
+                TimeUnit.MILLISECONDS.sleep(10L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
     }
 
-
-
     public static void main(String[] args) throws Exception {
-
-        ServiceManager.init(CHAIN_ID, Provider.ProviderType.RPC);
-        NoUse.mockModule(7771);
-        LedgerProvider ledgerProvider = ServiceManager.get(LedgerProvider.class);
-        List<Item> list = read(NULS);
-        BigInteger total = list.stream().map(d->{
-            GetBalanceReq req = new GetBalanceReq(1,9,d.getAddress());
-            Result<AccountBalanceInfo> res = ledgerProvider.getBalance(req);
-            Log.info("{}",res.getData());
-            return res.getData().getTotal();
-        }).reduce(BigInteger::add).orElse(BigInteger.ZERO);
-        Log.info("total : {}",total);
+//        ServiceManager.init(CHAIN_ID, Provider.ProviderType.RPC);
+//        NoUse.mockModule(7771);
 //        //向NRC20持币地址转账
-//        sendNvtForNRC20();
-//        TimeUnit.SECONDS.sleep(20);
+////        sendNvtForNRC20();
+////        TimeUnit.SECONDS.sleep(20);
 //        //向NULS持币地址空投
 //        sendNvtForNuls();
 //        //向pocm委托地址空投
-////        sendNvtForPocm();
+//        sendNvtForPocm();
 //        System.exit(0);
+        BufferedWriter writer = new BufferedWriter(new FileWriter(new File(System.getProperty("user.dir") + File.separator + "total")));
+        List<Item> list = read(NULS).stream().map(d-> new Item(d.getAddress(),d.getAmount().divide(BigInteger.valueOf(10)))).collect(Collectors.toList());
+        writer.write("NULS持仓空投");
+        writer.newLine();
+        list.forEach(d->{
+            try {
+                writer.write(d.getAddress() + ":" + new BigDecimal(d.getAmount()).movePointLeft(8).setScale(8));
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        writer.write("POCM持仓空投");
+        writer.newLine();
+         list = read(POCM).stream().map(d-> new Item(d.getAddress(),d.getAmount().divide(BigInteger.valueOf(10)))).collect(Collectors.toList());
+        list.forEach(d->{
+            try {
+                writer.write(d.getAddress() + ":" + new BigDecimal(d.getAmount()).movePointLeft(8).setScale(8));
+                writer.newLine();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        writer.flush();
+        writer.close();
     }
 
 }

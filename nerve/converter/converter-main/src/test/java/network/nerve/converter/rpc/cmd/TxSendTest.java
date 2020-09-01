@@ -1,13 +1,9 @@
 package network.nerve.converter.rpc.cmd;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.Address;
-import io.nuls.core.constant.BaseConstant;
-import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
-import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.info.NoUse;
@@ -26,15 +22,12 @@ import network.nerve.converter.model.bo.NonceBalance;
 import network.nerve.converter.rpc.call.LedgerCall;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.utils.Numeric;
 
-import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -146,7 +139,7 @@ public class TxSendTest {
         chain = new Chain();
         chain.setConfig(new ConfigBean(chainId, assetId, "UTF-8"));
         // 设置共识节点地址和出块地址
-        packageHF();
+        packageZP();
     }
 
 
