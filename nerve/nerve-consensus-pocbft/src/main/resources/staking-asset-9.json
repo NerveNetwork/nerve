@@ -1,0 +1,52 @@
+[
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NVT"
+  },
+  {
+    "assetId": "1",
+    "chainId": "1",
+    "oracleKey": "NULS_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NULS"
+  },
+  {
+    "assetId": "2",
+    "oracleKey": "ETH_PRICE",
+    "canBePeriodically": true,
+    "decimal": 18,
+    "simple": "ETH"
+  },
+  {
+    "assetId": "3",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 6,
+    "simple": "USDT"
+  },
+  {
+    "assetId": "5",
+    "oracleKey": "USDC_PRICE",
+    "canBePeriodically": false,
+    "decimal": 6,
+    "simple": "USDC"
+  },
+  {
+    "assetId": "6",
+    "oracleKey": "DAI_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "DAI"
+  },
+  {
+    "assetId": "7",
+    "oracleKey": "PAX_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "PAX"
+  }
+]

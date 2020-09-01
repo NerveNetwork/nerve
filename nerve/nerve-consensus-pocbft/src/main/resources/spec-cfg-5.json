@@ -1,0 +1,30 @@
+{
+  "depositAwardChangeHeight": 1000000,
+  "depositVerifyHeight": 0,
+  "minRewardHeight": 0,
+  "maxCoinToOfCoinbase": 3000,
+  "v130Height": 160000,
+  "minStakingAmount": 100000000000,
+  "minAppendAndExitAmount": 200000000000,
+  "exitStakingLockHours": 168,
+  "limit": [
+    {
+      "key": "USDs",
+      "totalCount": 2000000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 6
+        },
+        {
+          "assetsChainId": 5,
+          "assetsId": 7
+        },
+        {
+          "assetsChainId": 5,
+          "assetsId": 8
+        }
+      ]
+    }
+  ]
+}

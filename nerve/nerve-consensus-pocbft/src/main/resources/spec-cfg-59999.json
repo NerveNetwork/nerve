@@ -1,0 +1,10 @@
+{
+  "depositAwardChangeHeight":0,
+  "depositVerifyHeight":0,
+  "minRewardHeight": 0,
+  "maxCoinToOfCoinbase": 3000,
+  "v130Height": 0,
+  "minStakingAmount": 100000000000,
+  "minAppendAndExitAmount": 200000000000,
+  "exitStakingLockHours": 1
+}

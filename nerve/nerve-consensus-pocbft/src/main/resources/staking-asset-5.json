@@ -1,0 +1,31 @@
+[
+  {
+    "assetId": "1",
+    "oracleKey": "NERVE_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NVT"
+  },
+  {
+    "assetId": "1",
+    "chainId": "2",
+    "oracleKey": "NULS_PRICE",
+    "canBePeriodically": true,
+    "decimal": 8,
+    "simple": "NULS"
+  },
+  {
+    "assetId": "2",
+    "oracleKey": "ETH_PRICE",
+    "canBePeriodically": true,
+    "decimal": 18,
+    "simple": "ETH"
+  },
+  {
+    "assetId": "6",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "USDX"
+  }
+]
