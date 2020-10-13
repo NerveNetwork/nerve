@@ -25,6 +25,7 @@
 package network.nerve.converter.storage;
 
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.po.ComponentCalledPO;
 
 /**
  * 异构链组件/提案执行
@@ -36,7 +37,7 @@ public interface AsyncProcessedTxStorageService {
 
     boolean saveProposalExe(Chain chain, String hash);
 
-    boolean saveComponentCall(Chain chain, String hash);
+    boolean saveComponentCall(Chain chain, ComponentCalledPO componentCalledPO, boolean currentOut);
 
     boolean removeComponentCall(Chain chain, String hash);
 
@@ -44,5 +45,8 @@ public interface AsyncProcessedTxStorageService {
 
     String getComponentCall(Chain chain, String hash);
 
+    String getCurrentOutHash(Chain chain, String hash);
+
+    ComponentCalledPO getComponentCalledPO(Chain chain, String hash);
 
 }

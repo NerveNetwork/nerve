@@ -193,7 +193,7 @@ public class BlockServiceImpl implements BlockService {
                 blockValidator.validate(chain, block, settleConsensusAward);
                 //chain.getLogger().debug("区块基础验证完成，开始验证区块交易，hash:{}", block.getHeader().getHash());
                 Response response = CallMethodUtils.verify(chainId, block.getTxs(), block.getHeader(), chain.getBestHeader(), chain.getLogger());
-                chain.getLogger().info("区块交易验证完成，hash:{}", block.getHeader().getHash());
+                chain.getLogger().info("区块交易验证完成，hash:{}", block.getHeader().getHash().toHex());
                 if (response != null && response.isSuccess()) {
                     //区块验证成功，则将本轮次投票信
                     if (dto.getDownload() == 1) {

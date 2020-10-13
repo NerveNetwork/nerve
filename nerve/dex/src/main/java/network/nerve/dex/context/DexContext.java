@@ -12,4 +12,6 @@ public class DexContext {
     public static BigInteger createTradingAmount;
 
     public static long skipHeight;
+
+    public static long priceSkipHeight;
 }

@@ -286,6 +286,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     exeProposalPO.setHeight(blockHeader.getHeight());
                     exeProposalPO.setTime(blockHeader.getTime());
                     exeProposalPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                    exeProposalPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                     if (null == exeProposalPOSet) {
                         exeProposalPOSet = new HashSet<>();
                     }

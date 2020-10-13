@@ -14,6 +14,10 @@ public class RechargeTxDTO {
      */
     String originalTxHash;
     /**
+     * 异构链from地址
+     */
+    String heterogeneousFromAddress;
+    /**
      * 充值到账NERVE地址
      */
     String toAddress;
@@ -32,6 +36,14 @@ public class RechargeTxDTO {
     BigInteger amount;
 
     long txtime;
+
+    public String getHeterogeneousFromAddress() {
+        return heterogeneousFromAddress;
+    }
+
+    public void setHeterogeneousFromAddress(String heterogeneousFromAddress) {
+        this.heterogeneousFromAddress = heterogeneousFromAddress;
+    }
 
     public String getOriginalTxHash() {
         return originalTxHash;

@@ -23,6 +23,7 @@ import network.nerve.converter.utils.ConverterUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,22 +147,58 @@ public class CvTest {
         System.out.println("ETH:" + balance.getAvailable());
         NonceBalance balance3 = LedgerCall.getBalanceNonce(chain, chainId, 3, address30);
         System.out.println("USDX:" + balance3.getAvailable());
-        NonceBalance balance4 = LedgerCall.getBalanceNonce(chain, chainId, 1, address30);
-        System.out.println("NVT:" + balance4.getAvailable());
+        NonceBalance balance4 = LedgerCall.getBalanceNonce(chain, chainId, 4, address30);
+        System.out.println("USDI:" + balance4.getAvailable());
+        NonceBalance balance5 = LedgerCall.getBalanceNonce(chain, chainId, 1, address30);
+        System.out.println("NVT:" + balance5.getAvailable());
     }
-
-
     @Test
-    public void withdrawalETH() throws Exception {
+    public void withdrawalNVT() throws Exception {
         //账户已存在则覆盖 If the account exists, it covers.
         for (int i = 1; i <= 1; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
 
+            // 提现金额ETH
+            String amount = "100000";
+            BigDecimal am = new BigDecimal(amount).movePointRight(8);
+            amount = am.toPlainString();
+            params.put("assetChainId", chainId);
+            params.put("assetId", 1);
+            params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
+            params.put("amount", amount);
+            params.put("remark", "提现");
+            params.put("address", address30);
+            params.put("password", password);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_withdrawal", params);
+            HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_withdrawal");
+            String hash = (String) result.get("value");
+            String txHex = (String) result.get("hex");
+            Log.debug("number:{}, hash:{}", i , hash);
+        }
+        /**
+         * cmd
+         * redeem 2 0xfa27c84eC062b2fF89EB297C24aaEd366079c684 0.3 tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ
+         */
+    }
+
+    @Test
+    public void withdrawalETH() throws Exception {
+        //账户已存在则覆盖 If the account exists, it covers.
+        for (int i = 1; i <= 10; i++) {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            // 提现金额ETH
+            String amount = "0.01";
+            BigDecimal am = new BigDecimal(amount).movePointRight(18);
+            amount = am.toPlainString();
+            params.put("assetChainId", chainId);
             params.put("assetId", 2);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
-            params.put("amount", "100000000000000000");
+            params.put("amount", amount);
             params.put("remark", "提现");
             params.put("address", address30);
             params.put("password", password);
@@ -179,15 +216,21 @@ public class CvTest {
 
     @Test
     public void withdrawalERC20() throws Exception {
-        for (int i = 1; i <= 2; i++) {
+        for (int i = 1; i <= 10; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
 
+            // 提现金额ERC20
+            String amount = "1";
+            int decimal = 6; //小数位
+            BigDecimal am = new BigDecimal(amount).movePointRight(decimal);
+            amount = am.toPlainString();
+
+            params.put("assetChainId", chainId);
             params.put("assetId", 3);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
-//            params.put("amount", (10 * i) + "000000");
-            params.put("amount", "10000000");
+            params.put("amount", amount);
             params.put("remark", "提现");
             params.put("address", address30);
             params.put("password", password);
@@ -251,12 +294,12 @@ public class CvTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
-        params.put("type", ProposalTypeEnum.REFUND.value());
+        params.put("type", ProposalTypeEnum.EXPELLED.value());
         params.put("content", "这是一个提案的内容...");
         params.put("heterogeneousChainId", heterogeneousChainId);
-        params.put("heterogeneousTxHash", "0x7488d23bf46af751194e1fc3f1794418d61326ab77bf151f68c6c6546c2e20b7");
-        params.put("businessAddress", address26);
-        params.put("hash", "954dcd9a6ae9a1cc9f341126c3c05c48feb95b47ba191d76f42d4bcf1b27448a");
+        params.put("heterogeneousTxHash", "0x2590e0d945580a4b763eca9ae18afe5970dd3341444f003bc269d1658cfb5f8f");
+        params.put("businessAddress", address28);
+        params.put("hash", "fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
         params.put("address", address20);
@@ -267,7 +310,9 @@ public class CvTest {
         String txHex = (String) result.get("hex");
         Log.debug("hash:{}", hash);
         Log.debug("txHex:{}", txHex);
-
+        // upgradeProposal <heterogeneousId> <newContractAddress> <address>
+        // upgradeProposal 101 0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2 TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5
+        // upgradeProposal 101 0xD02a06065596b48174A37087ea93fE9889E84636 TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5
     }
 
     @Test
@@ -276,10 +321,10 @@ public class CvTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "86a8640eac276aa00c5fb8d73ffb723a20c6c74619f1e1895149a85845578286");
+        params.put("proposalTxHash", "bb52945bb44029b050fd1e89b57b50ddd33cd39f6e77f05ab6b596e1f0666d95");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
-        params.put("address", "tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp");
+        params.put("address", "TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd");
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_voteProposal", params);
         HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_voteProposal");

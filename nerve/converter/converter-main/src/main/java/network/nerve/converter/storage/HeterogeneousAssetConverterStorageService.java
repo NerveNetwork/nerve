@@ -24,6 +24,7 @@
 package network.nerve.converter.storage;
 
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.NerveAssetInfo;
 
 /**
  * @date: 2020-05-29
@@ -32,12 +33,7 @@ public interface HeterogeneousAssetConverterStorageService {
     /**
      * 保存异构链资产信息
      */
-    int saveAssetInfo(int nerveAssetId, HeterogeneousAssetInfo info) throws Exception;
-
-    /**
-     * 移除异构链资产信息
-     */
-    int deleteAssetInfo(int nerveAssetId) throws Exception;
+    int saveAssetInfo(int nerveAssetChainId, int nerveAssetId, HeterogeneousAssetInfo info) throws Exception;
 
     /**
      * 移除异构链资产信息
@@ -47,11 +43,11 @@ public interface HeterogeneousAssetConverterStorageService {
     /**
      * 获取异构链资产信息
      */
-    HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetId);
+    HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId);
 
     /**
      * 获取Nerve资产ID
      */
-    int getNerveAssetId(int heterogeneousChainId, int heterogeneousAssetId);
+    NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId);
 
 }

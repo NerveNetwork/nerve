@@ -45,6 +45,7 @@ public class WithdrawalReq extends BaseReq {
      */
 //    private int heterogeneousAssetId;
 
+    private int assetChainId;
     private int assetId;
 
     /**
@@ -72,7 +73,8 @@ public class WithdrawalReq extends BaseReq {
      */
     private String password;
 
-    public WithdrawalReq(int assetId, String heterogeneousAddress, BigInteger amount, String address) {
+    public WithdrawalReq(int assetChainId, int assetId, String heterogeneousAddress, BigInteger amount, String address) {
+        this.assetChainId = assetChainId;
         this.assetId = assetId;
         this.heterogeneousAddress = heterogeneousAddress;
         this.amount = amount;
@@ -80,6 +82,14 @@ public class WithdrawalReq extends BaseReq {
     }
 
     public WithdrawalReq() {
+    }
+
+    public int getAssetChainId() {
+        return assetChainId;
+    }
+
+    public void setAssetChainId(int assetChainId) {
+        this.assetChainId = assetChainId;
     }
 
     public int getAssetId() {

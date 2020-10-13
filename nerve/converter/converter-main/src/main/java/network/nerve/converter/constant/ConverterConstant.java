@@ -73,4 +73,9 @@ public interface ConverterConstant {
 
     String CV_PROTOCOL_FILE = "cv-cfg-";
 
+    int HETEROGENEOUS_VERSION_1 = 1;
+    int HETEROGENEOUS_VERSION_2 = 2;
+
+    String SEED_PUBKEY_SEPARATOR = ",";
+
 }

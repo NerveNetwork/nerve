@@ -28,7 +28,7 @@ public class StakingLimitServiceImpl implements StakingLimitService {
         if (null == cfg) {
             return true;
         }
-        BigDecimal oldAmount = storageService.getAvailableAmount(cfg.getKey());
+        BigDecimal oldAmount = storageService.getStakingAmount(chain,cfg.getKey());
         BigDecimal realAmount = DoubleUtils.div(new BigDecimal(deposit), Math.pow(10, stackingAsset.getDecimal()));
         if (BigDecimal.valueOf(cfg.getTotalCount()).compareTo(oldAmount.add(realAmount)) < 0) {
             return false;
@@ -57,7 +57,7 @@ public class StakingLimitServiceImpl implements StakingLimitService {
             return true;
         }
         BigDecimal realAmount = DoubleUtils.div(new BigDecimal(deposit), Math.pow(10, stackingAsset.getDecimal()));
-        return this.storageService.addStaking(cfg.getKey(),realAmount);
+        return this.storageService.addStaking(chain,cfg.getKey(),realAmount);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class StakingLimitServiceImpl implements StakingLimitService {
             return true;
         }
         BigDecimal realAmount = DoubleUtils.div(new BigDecimal(deposit), Math.pow(10, stackingAsset.getDecimal()));
-        return this.storageService.exitStaking(cfg.getKey(),realAmount);
+        return this.storageService.exitStaking(chain,cfg.getKey(),realAmount);
     }
 
     public StakingLimitStorageService getStorageService() {

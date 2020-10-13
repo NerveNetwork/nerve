@@ -53,9 +53,14 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      * 按2秒一个块 大约1天的出块数量
      */
     private long executeChangeVirtualBankPeriodicHeight;
+
     /**
-     * 虚拟银行共识节点总数（非种子节点）
+     * 虚拟银行共识节点总数（包含种子节点成员）
      */
+    private int virtualBankAgentTotal;
+
+    // 版本2废弃 由于历史data有数据, 所以db取出反序列化需要该属性存在
+    @Deprecated
     private int virtualBankAgentCountWithoutSeed;
 
     /**
@@ -89,6 +94,15 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      * 是否异构链主网
      */
     private boolean heterogeneousMainNet;
+    /**
+     * 直接启用合约异构链新流程
+     */
+    private boolean newProcessorMode;
+
+    /**
+     * 异构链版本2开始初始化虚拟银行公钥
+     */
+    private String initVirtualBankPubKeyList;
 
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;
@@ -96,6 +110,14 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setHeterogeneousMainNet(boolean heterogeneousMainNet) {
         this.heterogeneousMainNet = heterogeneousMainNet;
+    }
+
+    public boolean isNewProcessorMode() {
+        return newProcessorMode;
+    }
+
+    public void setNewProcessorMode(boolean newProcessorMode) {
+        this.newProcessorMode = newProcessorMode;
     }
 
     public String getTxDataRoot() {
@@ -156,14 +178,6 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setInitVirtualBankHeight(long initVirtualBankHeight) {
         this.initVirtualBankHeight = initVirtualBankHeight;
-    }
-
-    public int getVirtualBankAgentCountWithoutSeed() {
-        return virtualBankAgentCountWithoutSeed;
-    }
-
-    public void setVirtualBankAgentCountWithoutSeed(int virtualBankAgentCountWithoutSeed) {
-        this.virtualBankAgentCountWithoutSeed = virtualBankAgentCountWithoutSeed;
     }
 
     public BigInteger getDistributionFee() {
@@ -228,5 +242,29 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setFeeEffectiveHeightSecond(long feeEffectiveHeightSecond) {
         this.feeEffectiveHeightSecond = feeEffectiveHeightSecond;
+    }
+
+    public String getInitVirtualBankPubKeyList() {
+        return initVirtualBankPubKeyList;
+    }
+
+    public void setInitVirtualBankPubKeyList(String initVirtualBankPubKeyList) {
+        this.initVirtualBankPubKeyList = initVirtualBankPubKeyList;
+    }
+
+    public int getVirtualBankAgentTotal() {
+        return virtualBankAgentTotal;
+    }
+
+    public void setVirtualBankAgentTotal(int virtualBankAgentTotal) {
+        this.virtualBankAgentTotal = virtualBankAgentTotal;
+    }
+
+    public int getVirtualBankAgentCountWithoutSeed() {
+        return virtualBankAgentCountWithoutSeed;
+    }
+
+    public void setVirtualBankAgentCountWithoutSeed(int virtualBankAgentCountWithoutSeed) {
+        this.virtualBankAgentCountWithoutSeed = virtualBankAgentCountWithoutSeed;
     }
 }

@@ -283,7 +283,7 @@ public class ConsensusManager {
         */
         for (Transaction tx : txList) {
             int txType = tx.getType();
-            if (txType != TxType.COIN_BASE && txType != TxType.YELLOW_PUNISH && txType != TxType.RED_PUNISH) {
+            if (txType != TxType.COIN_BASE && txType != TxType.YELLOW_PUNISH && txType != TxType.RED_PUNISH && txType != TxType.RECHARGE) {
                 ChargeResult chargeResult = getFee(tx, chain);
                 chargeResult.addOtherCharge(chargeResult.getMainCharge());
                 for (ChargeResultData resultData : chargeResult.getOtherCharge()) {

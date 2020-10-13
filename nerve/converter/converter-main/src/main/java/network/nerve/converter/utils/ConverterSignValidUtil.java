@@ -107,7 +107,7 @@ public class ConverterSignValidUtil {
 
 
     /**
-     * 验证由种子节点签名,以及正确性
+     * 验证由种子(虚拟银行)节点签名,以及正确性
      * @param chain
      * @param tx
      * @throws NulsException
@@ -120,7 +120,6 @@ public class ConverterSignValidUtil {
         }
         boolean hasSeedSigner = false;
         for (String address : addressSet) {
-            // 种子节点一定是虚拟银行成员
             VirtualBankDirector director = chain.getDirectorByAgent(address);
             if(null != director && director.getSeedNode()){
                 hasSeedSigner = true;

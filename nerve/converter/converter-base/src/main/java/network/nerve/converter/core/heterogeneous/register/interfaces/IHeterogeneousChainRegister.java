@@ -36,6 +36,7 @@ import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
  * @date: 2020-03-08
  */
 public interface IHeterogeneousChainRegister {
+
     /**
      * 1. Nerve核心将调用此函数获取异构链的chainId
      */
@@ -59,4 +60,8 @@ public interface IHeterogeneousChainRegister {
      * 5. Nerve核心调用此函数，返回注册信息给异构链
      */
     void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception;
+    /**
+     * CORE 执行异构链注册的顺序
+     */
+    int order();
 }

@@ -23,9 +23,14 @@
  */
 package network.nerve.converter.core.api.interfaces;
 
+import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Mimi
@@ -72,4 +77,26 @@ public interface IConverterCoreApi {
      */
     HeterogeneousWithdrawTxInfo getWithdrawTxInfo(String nerveTxHash) throws NulsException;
 
+    /**
+     * 获取指定异构链的虚拟银行列表
+     */
+    Map<String, Integer>  currentVirtualBanks(int hChainId);
+
+    /**
+     * 重新获取拜占庭签名
+     */
+    List<HeterogeneousSign> regainSignatures(int nerveChainId, String nerveTxHash, int hChainId);
+
+    /**
+     * 异构链资产是否为绑定已存在的NERVE资产
+     */
+    boolean isNerveAssetBind(int hChainId, int hAssetId);
+
+    /**
+     * 提现交易异构链是否确认(通过获取提现确认交易业务数据来判断)
+     * @param nerveChainId
+     * @param hash
+     * @return
+     */
+    boolean isWithdrawalComfired(String nerveTxHash);
 }

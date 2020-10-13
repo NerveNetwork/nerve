@@ -115,4 +115,11 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
 
     ErrorCode NODE_NOT_IN_RUNNING = ErrorCode.init(ModuleE.CV.getPrefix() + "_0090");
 
+    ErrorCode NO_LONGER_SUPPORTED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0091");
+    ErrorCode DUPLICATE_BIND = ErrorCode.init(ModuleE.CV.getPrefix() + "_0092");
+    ErrorCode ASSET_ID_NOT_EXIST = ErrorCode.init(ModuleE.CV.getPrefix() + "_0093");
+    ErrorCode HETEROGENEOUS_INFO_NOT_MATCH = ErrorCode.init(ModuleE.CV.getPrefix() + "_0094");
+    ErrorCode OVERRIDE_BIND_ASSET_NOT_FOUND = ErrorCode.init(ModuleE.CV.getPrefix() + "_0095");
+    ErrorCode HIGH_GAS_PRICE_OF_ETH = ErrorCode.init(ModuleE.CV.getPrefix() + "_0096");
+
 }

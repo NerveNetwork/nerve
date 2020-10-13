@@ -224,7 +224,8 @@ public class DexTxResource extends BaseCmd {
             @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对hash"),
             @Parameter(parameterName = "scaleQuoteDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "计价币种允许最小交易小数位"),
             @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种允许最小交易小数位"),
-            @Parameter(parameterName = "minTradingAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额")
+            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额"),
+            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "计价币种交易支持最小额")
     })
     public Response editCoinTradingTx(Map params) {
         try {
@@ -240,7 +241,7 @@ public class DexTxResource extends BaseCmd {
                 throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
             }
             Transaction tx = new Transaction();
-            tx.setType(232);
+            tx.setType(TxType.EDIT_COIN_TRADING);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
 
             CoinData coinData = new CoinData();

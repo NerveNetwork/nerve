@@ -66,6 +66,7 @@ public class WithdrawalProcessor implements CommandProcessor {
     public String getHelp() {
         CommandBuilder builder = new CommandBuilder();
         builder.newLine(getCommandDescription())
+                .newLine("\t<assetChainId> \t\tasset chain id - Required")
                 .newLine("\t<assetId> \t\tasset id - Required")
                 .newLine("\t<heterogeneousAddress> \t\theterogeneous receiving address - Required")
                 .newLine("\t<amount> \t\tWithdrawal amount - Required")
@@ -76,15 +77,16 @@ public class WithdrawalProcessor implements CommandProcessor {
 
     @Override
     public String getCommandDescription() {
-        return "redeem <assetId> <heterogeneousAddress> <amount> <redeemAddress> [remark] --redeem";
+        return "redeem <assetChainId> <assetId> <heterogeneousAddress> <amount> <redeemAddress> [remark] --redeem";
     }
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,4,5);
-        checkIsNumeric(args[1],"assetId");
-        checkIsAmount(args[3],"amount");
-        checkAddress(config.getChainId(),args[4]);
+        checkArgsNumber(args,5,6);
+        checkIsNumeric(args[1],"assetChainId");
+        checkIsNumeric(args[2],"assetId");
+        checkIsAmount(args[4],"amount");
+        checkAddress(config.getChainId(),args[5]);
         return true;
     }
 
@@ -102,12 +104,13 @@ public class WithdrawalProcessor implements CommandProcessor {
 
     private WithdrawalReq buildWithdrawalReq(String[] args) {
 
-        int chainId = config.getChainId();
-        int assetId = Integer.parseInt(args[1]);
-        String heterogeneousAddress = args[2];
-        BigInteger amount = toSimallUnit(chainId, assetId, new BigDecimal(args[3]));
-        String redeemAddress = args[4];
+        int chainId = Integer.parseInt(args[1]);
+        int assetId = Integer.parseInt(args[2]);
+        String heterogeneousAddress = args[3];
+        BigInteger amount = toSimallUnit(chainId, assetId, new BigDecimal(args[5]));
+        String redeemAddress = args[5];
         WithdrawalReq withdrawalReq = new WithdrawalReq(
+                chainId,
                 assetId,
                 heterogeneousAddress,
                 amount,

@@ -105,7 +105,7 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
                     log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
-                // 签名验证(种子)
+                // 签名验证(种子虚拟银行)
                 try {
                     ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
                 } catch (NulsException e) {
@@ -143,6 +143,7 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
                         pendingPO.setBlockHeader(blockHeader);
                         pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
                         pendingPO.setCurrentDirector(true);
+                        pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offerFirst(pendingPO);
                         chain.getLogger().info("[commit] 重置虚拟银行异构链(合约) hash:{}", tx.getHash().toHex());

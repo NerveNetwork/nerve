@@ -16,6 +16,7 @@ import network.nerve.dex.manager.DexManager;
 import network.nerve.dex.manager.TradingContainer;
 import network.nerve.dex.model.po.CoinTradingPo;
 import network.nerve.dex.model.txData.TradingOrder;
+import network.nerve.dex.storage.TradingOrderStorageService;
 import network.nerve.dex.util.LoggerUtil;
 
 import java.math.BigDecimal;
@@ -34,6 +35,8 @@ public class TradingOrderValidator {
     private DexManager dexManager;
     @Autowired
     private DexConfig config;
+    @Autowired
+    private TradingOrderStorageService tradingOrderStorageService;
 
     public Map<String, Object> validateTxs(List<Transaction> txs) {
 //        long time1, time2;
@@ -43,12 +46,13 @@ public class TradingOrderValidator {
         ErrorCode errorCode = null;
         TradingOrder order;
         Transaction tx;
+        long blockHeight = tradingOrderStorageService.getHeight();
         for (int i = 0; i < txs.size(); i++) {
             tx = txs.get(i);
             try {
                 order = new TradingOrder();
                 order.parse(new NulsByteBuffer(tx.getTxData()));
-                validate(order, tx.getCoinDataInstance(), tx.getBlockHeight());
+                validate(order, tx.getCoinDataInstance(), blockHeight);
             } catch (NulsException e) {
                 LoggerUtil.dexLog.error(e);
                 LoggerUtil.dexLog.error("txHash: " + tx.getHash().toHex());
@@ -121,8 +125,28 @@ public class TradingOrderValidator {
 
         //判断coinTo里的资产是否和order订单的数量匹配
         CoinTradingPo coinTrading = container.getCoinTrading();
-        if (order.getPrice().compareTo(coinTrading.getMinQuoteAmount()) < 0) {
-            throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+        if (blockHeight > DexContext.priceSkipHeight) {
+            BigDecimal one = BigDecimal.ONE;
+            one = one.movePointRight(coinTrading.getQuoteDecimal()).movePointLeft(coinTrading.getScaleQuoteDecimal());
+            if (order.getPrice().compareTo(one.toBigInteger()) < 0) {
+                throw new NulsException(DexErrorCode.DATA_ERROR, "price error");
+            }
+        } else {
+            if (order.getPrice().compareTo(coinTrading.getMinQuoteAmount()) < 0) {
+                throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+            }
+        }
+
+        //验证最小交易额
+        //价格 * 最小交易量 = 实际交易额
+        BigDecimal price = new BigDecimal(order.getPrice()).movePointLeft(coinTrading.getQuoteDecimal());
+        BigDecimal amount = new BigDecimal(order.getAmount()).movePointLeft(coinTrading.getBaseDecimal());
+        if (blockHeight > DexContext.priceSkipHeight) {
+            amount = amount.multiply(price).setScale(coinTrading.getQuoteDecimal(), RoundingMode.DOWN);
+            amount = amount.movePointRight(coinTrading.getQuoteDecimal());
+            if (amount.toBigInteger().compareTo(coinTrading.getMinQuoteAmount()) < 0) {
+                throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
+            }
         }
 
         if (order.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
@@ -131,8 +155,8 @@ public class TradingOrderValidator {
                     coinTo.getAssetsId() != coinTrading.getQuoteAssetId()) {
                 throw new NulsException(DexErrorCode.ORDER_COIN_NOT_EQUAL);
             }
-            //验证最小交易额，以及最小小数位数
-            if (blockHeight != -1 && blockHeight > DexContext.skipHeight) {
+            //验证最小交易量
+            if (blockHeight > DexContext.skipHeight) {
                 if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
                     throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
                 }
@@ -140,11 +164,9 @@ public class TradingOrderValidator {
 
             //计算可兑换交易币种数量
             //计价货币数量 / 价格 = 实际可兑换交易币种数量
-            BigDecimal price = new BigDecimal(order.getPrice()).movePointLeft(coinTrading.getQuoteDecimal());
-            BigDecimal amount = new BigDecimal(coinTo.getAmount()).movePointLeft(coinTrading.getQuoteDecimal());
+            amount = new BigDecimal(coinTo.getAmount()).movePointLeft(coinTrading.getQuoteDecimal());
             amount = amount.divide(price, coinTrading.getBaseDecimal(), RoundingMode.DOWN);
             amount = amount.movePointRight(coinTrading.getBaseDecimal());
-
             if (amount.toBigInteger().compareTo(order.getAmount()) < 0) {
                 throw new NulsException(DexErrorCode.DATA_ERROR, "coinTo amount error");
             }
@@ -153,7 +175,7 @@ public class TradingOrderValidator {
                     coinTo.getAssetsId() != coinTrading.getBaseAssetId()) {
                 throw new NulsException(DexErrorCode.ORDER_COIN_NOT_EQUAL);
             }
-            //验证最小交易额
+            //验证最小交易量
             if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
                 throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
             }

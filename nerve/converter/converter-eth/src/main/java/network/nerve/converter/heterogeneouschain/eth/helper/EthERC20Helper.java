@@ -160,6 +160,7 @@ public class EthERC20Helper {
             for (HeterogeneousAssetInfo info : assetInfos) {
                 EthERC20Po erc20Po = ethERC20StorageService.findByAddress(info.getContractAddress());
                 maxAssetId = Math.min(maxAssetId, erc20Po.getAssetId());
+                info.setAssetId(erc20Po.getAssetId());
                 ethERC20StorageService.deleteByAddress(erc20Po.getAddress());
                 successList.add(erc20Po);
             }

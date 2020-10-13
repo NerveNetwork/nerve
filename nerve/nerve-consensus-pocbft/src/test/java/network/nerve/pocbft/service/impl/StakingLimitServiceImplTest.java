@@ -30,18 +30,19 @@ public class StakingLimitServiceImplTest {
     public void init() {
         StakingLimitServiceImpl impl = new StakingLimitServiceImpl();
         impl.setStorageService(new StakingLimitStorageService() {
+
             @Override
-            public boolean addStaking(String key, BigDecimal Amount) {
+            public boolean addStaking(Chain chain, String key, BigDecimal Amount) {
                 return true;
             }
 
             @Override
-            public boolean exitStaking(String key, BigDecimal Amount) {
+            public boolean exitStaking(Chain chain, String key, BigDecimal Amount) {
                 return true;
             }
 
             @Override
-            public BigDecimal getAvailableAmount(String key) {
+            public BigDecimal getStakingAmount(Chain chain, String key) {
                 return new BigDecimal(10000);
             }
         });

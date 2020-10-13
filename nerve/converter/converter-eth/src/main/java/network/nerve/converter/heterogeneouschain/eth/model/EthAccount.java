@@ -41,6 +41,9 @@ public class EthAccount extends HeterogeneousAccount implements Serializable {
 
     private String compressedPublicKey;
 
+    private transient int mod;
+    private transient int bankSize;
+
     public EthAccount() {
     }
 
@@ -77,5 +80,21 @@ public class EthAccount extends HeterogeneousAccount implements Serializable {
 
     public boolean isEmpty() {
         return StringUtils.isBlank(getAddress());
+    }
+
+    public int getMod() {
+        return mod;
+    }
+
+    public void setMod(int mod) {
+        this.mod = mod;
+    }
+
+    public int getBankSize() {
+        return bankSize;
+    }
+
+    public void setBankSize(int bankSize) {
+        this.bankSize = bankSize;
     }
 }

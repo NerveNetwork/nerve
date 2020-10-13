@@ -18,7 +18,7 @@ public class VoteResultCache {
     public void cache(NulsHash blockHash, byte[] voteResult) {
         map.put(blockHash,voteResult);
         hashList.add(blockHash);
-        if(hashList.size()>50){
+        while (hashList.size()>50){
             NulsHash hash = hashList.remove(0);
             map.remove(hash);
         }

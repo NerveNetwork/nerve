@@ -30,6 +30,8 @@ import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManage
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthBlockAnalysisHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthCommonHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
@@ -55,9 +57,11 @@ public class EthBlockScheduled implements Runnable {
     @Autowired
     private ConverterConfig converterConfig;
     @Autowired
-    private EthBlockAnalysis ethBlockAnalysis;
+    private EthBlockAnalysisHelper ethBlockAnalysisHelper;
     @Autowired
     private EthAnalysisTxHelper ethAnalysisTxHelper;
+    @Autowired
+    private EthCommonHelper ethCommonHelper;
     @Autowired
     private EthCallBackManager ethCallBackManager;
 
@@ -102,7 +106,7 @@ public class EthBlockScheduled implements Runnable {
             EthContext.logger().error("同步ETH当前Price失败", e);
         }
         try {
-            ethAnalysisTxHelper.clearHash();
+            ethCommonHelper.clearHash();
         } catch (Exception e) {
             EthContext.logger().error("清理充值交易hash再次验证的集合失败", e);
         }
@@ -119,7 +123,7 @@ public class EthBlockScheduled implements Runnable {
                     EthContext.logger().info("获取不到ETH区块，等待下轮执行");
                     return;
                 }
-                ethBlockAnalysis.analysisEthBlock(block);
+                ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 firstSync = false;
                 return;
             }
@@ -132,7 +136,7 @@ public class EthBlockScheduled implements Runnable {
                     return;
                 }
                 ethLocalBlockHelper.deleteAllLocalBlockHeader();
-                ethBlockAnalysis.analysisEthBlock(block);
+                ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 firstSync = false;
                 return;
             }
@@ -160,7 +164,7 @@ public class EthBlockScheduled implements Runnable {
                         EthContext.logger().info("获取不到ETH区块，等待下轮执行");
                         break;
                     }
-                    ethBlockAnalysis.analysisEthBlock(block);
+                    ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 } catch (Exception e) {
                     EthContext.logger().error("syncHeight error ", e);
                     break;
@@ -198,7 +202,7 @@ public class EthBlockScheduled implements Runnable {
             long defaultStartHeight = EthContext.getConfig().getDefaultStartHeight();
             if (localMax == null) {
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(defaultStartHeight);
-                ethBlockAnalysis.analysisEthBlock(block);
+                ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 return;
             }
             Long localBlockHeight = localMax.getHeight();
@@ -206,7 +210,7 @@ public class EthBlockScheduled implements Runnable {
             if (localBlockHeight < defaultStartHeight) {
                 ethLocalBlockHelper.deleteAllLocalBlockHeader();
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(defaultStartHeight);
-                ethBlockAnalysis.analysisEthBlock(block);
+                ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 return;
             }
 
@@ -246,7 +250,7 @@ public class EthBlockScheduled implements Runnable {
                     } else {
                         block = ethWalletApi.getBlockByHeight(localBlockHeight);
                     }
-                    ethBlockAnalysis.analysisEthBlock(block);
+                    ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
                 } catch (Exception e) {
                     if (!switchBlockSync && block != null) {
                         EthContext.logger().error("syncHeight error height [{}]", block.getNumber().longValue());

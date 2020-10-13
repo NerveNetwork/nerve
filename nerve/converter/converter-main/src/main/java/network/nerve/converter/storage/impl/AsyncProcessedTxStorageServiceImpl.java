@@ -29,6 +29,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.po.ComponentCalledPO;
 import network.nerve.converter.storage.AsyncProcessedTxStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
 
@@ -41,10 +42,11 @@ public class AsyncProcessedTxStorageServiceImpl implements AsyncProcessedTxStora
 
     private static final String PROPOSAL_EXE_PREFIX = "PROPOSAL_EXE_PREFIX_";
     private static final String COMPONENT_CALL_PREFIX = "COMPONENT_CALL_PREFIX_";
+    private static final String CURRENT_OUT_PREFIX = "CURRENT_OUT_PREFIX_";
 
     @Override
     public boolean saveProposalExe(Chain chain, String hash) {
-        if(StringUtils.isBlank(hash)){
+        if (StringUtils.isBlank(hash)) {
             return false;
         }
         try {
@@ -57,23 +59,34 @@ public class AsyncProcessedTxStorageServiceImpl implements AsyncProcessedTxStora
     }
 
     @Override
-    public boolean saveComponentCall(Chain chain, String hash) {
-        if(StringUtils.isBlank(hash)){
+    public boolean saveComponentCall(Chain chain, ComponentCalledPO po, boolean currentOut) {
+        if (po == null || StringUtils.isBlank(po.getHash())) {
             return false;
         }
         try {
-            return RocksDBService.put(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
-                    ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash), ConverterDBUtil.stringToBytes(hash));
-
+            boolean b = ConverterDBUtil.putModel(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
+                    ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + po.getHash()),
+                    po);
+            if (currentOut) {
+                RocksDBService.put(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
+                        ConverterDBUtil.stringToBytes(CURRENT_OUT_PREFIX + po.getHash()), ConverterDBUtil.stringToBytes(po.getHash()));
+            }
+            return b;
         } catch (Exception e) {
             chain.getLogger().error(e);
             return false;
         }
     }
+    @Override
+    public String getCurrentOutHash(Chain chain, String hash) {
+        byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
+                ConverterDBUtil.stringToBytes(CURRENT_OUT_PREFIX + hash));
+        return null == bytes ? null : ConverterDBUtil.bytesToString(bytes);
+    }
 
     @Override
     public boolean removeComponentCall(Chain chain, String hash) {
-        if(StringUtils.isBlank(hash)){
+        if (StringUtils.isBlank(hash)) {
             return false;
         }
         try {
@@ -93,8 +106,18 @@ public class AsyncProcessedTxStorageServiceImpl implements AsyncProcessedTxStora
 
     @Override
     public String getComponentCall(Chain chain, String hash) {
-        byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(), ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash));
-        return null == bytes ? null : ConverterDBUtil.bytesToString(bytes);
+        ComponentCalledPO componentCalledPO = getComponentCalledPO(chain, hash);
+        if (null != componentCalledPO) {
+            return componentCalledPO.getHash();
+        }
+        return null;
+    }
+
+    @Override
+    public ComponentCalledPO getComponentCalledPO(Chain chain, String hash) {
+        ComponentCalledPO model = ConverterDBUtil.getModel(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(),
+                ConverterDBUtil.stringToBytes(COMPONENT_CALL_PREFIX + hash), ComponentCalledPO.class);
+        return model;
     }
 
 }

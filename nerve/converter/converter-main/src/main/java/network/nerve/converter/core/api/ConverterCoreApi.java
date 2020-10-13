@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.core.api;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.NulsHash;
@@ -32,18 +33,26 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
-import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
-import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
-import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.message.ComponentSignMessage;
+import network.nerve.converter.model.HeterogeneousSign;
+import network.nerve.converter.model.bo.*;
+import network.nerve.converter.model.po.ComponentSignByzantinePO;
+import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
+import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.rpc.call.TransactionCall;
+import network.nerve.converter.storage.ComponentSignStorageService;
+import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.utils.ConverterUtil;
+
+import java.util.*;
 
 /**
  * @author: Mimi
@@ -59,6 +68,14 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private ChainManager chainManager;
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    @Autowired
+    private ComponentSignStorageService componentSignStorageService;
+    @Autowired
+    private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
+
+
 
     private NulsLogger logger() {
         return nerveChain.getLogger();
@@ -87,7 +104,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isSeedVirtualBankByCurrentNode() {
         try {
             VirtualBankDirector currentDirector = virtualBankService.getCurrentDirector(nerveChain.getChainId());
-            if(null != currentDirector){
+            if (null != currentDirector) {
                 return currentDirector.getSeedNode();
             }
             return false;
@@ -101,7 +118,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public int getVirtualBankOrder() {
         try {
             VirtualBankDirector director = virtualBankService.getCurrentDirector(nerveChain.getChainId());
-            if(director == null) {
+            if (director == null) {
                 return 0;
             }
             return director.getOrder();
@@ -119,7 +136,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public Transaction getNerveTx(String hash) {
         try {
-            if(!ConverterUtil.isHexStr(hash)) {
+            if (!ConverterUtil.isHexStr(hash)) {
                 return null;
             }
             return TransactionCall.getConfirmedTx(nerveChain, NulsHash.fromHex(hash));
@@ -137,21 +154,21 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public HeterogeneousWithdrawTxInfo getWithdrawTxInfo(String nerveTxHash) throws NulsException {
         Transaction tx = TransactionCall.getConfirmedTx(nerveChain, NulsHash.fromHex(nerveTxHash));
         CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
+        HeterogeneousAssetInfo heterogeneousAssetInfo = null;
         CoinTo withdrawCoinTo = null;
+        byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, nerveChain.getChainId());
         for (CoinTo coinTo : coinData.getTo()) {
-            if (coinTo.getAssetsId() != nerveChain.getConfig().getAssetId()) {
-                withdrawCoinTo = coinTo;
-                break;
+            if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
+                heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                if (heterogeneousAssetInfo != null) {
+                    withdrawCoinTo = coinTo;
+                    break;
+                }
             }
         }
-        if(null == withdrawCoinTo){
+        if (null == heterogeneousAssetInfo) {
             nerveChain.getLogger().error("Withdraw transaction cointo data error, no withdrawCoinTo. hash:{}", nerveTxHash);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
-        }
-        HeterogeneousAssetInfo heterogeneousAssetInfo =
-                heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsId());
-        if(null == heterogeneousAssetInfo) {
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
         }
 
         WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
@@ -162,5 +179,76 @@ public class ConverterCoreApi implements IConverterCoreApi {
         info.setToAddress(txData.getHeterogeneousAddress());
         info.setValue(withdrawCoinTo.getAmount());
         return info;
+    }
+
+    /**
+     * 返回指定异构链下的当前虚拟银行列表和顺序
+     */
+    @Override
+    public Map<String, Integer> currentVirtualBanks(int hChainId) {
+        Map<String, Integer> resultMap = new HashMap<>();
+        Map<String, VirtualBankDirector> map = nerveChain.getMapVirtualBank();
+        map.entrySet().stream().forEach(e -> {
+            VirtualBankDirector director = e.getValue();
+            HeterogeneousAddress address = director.getHeterogeneousAddrMap().get(hChainId);
+            if (address != null) {
+                resultMap.put(address.getAddress(), director.getOrder());
+            }
+        });
+        return resultMap;
+    }
+
+
+    /**
+     * 重新索要拜占庭签名
+     */
+    @Override
+    public List<HeterogeneousSign> regainSignatures(int nerveChainId, String nerveTxHash, int hChainId) {
+        Chain chain = chainManager.getChain(nerveChainId);
+        List<HeterogeneousSign> list = new ArrayList<>();
+        ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, nerveTxHash);
+        if(null == compSignPO){
+            return list;
+        }
+        if (null == compSignPO.getListMsg() || compSignPO.getListMsg().isEmpty()) {
+            return list;
+        }
+        for (ComponentSignMessage msg : compSignPO.getListMsg()) {
+            for (HeterogeneousSign sign : msg.getListSign()) {
+                if(sign.getHeterogeneousAddress().getChainId() == hChainId){
+                    list.add(sign);
+                }
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public boolean isNerveAssetBind(int hChainId, int hAssetId) {
+        NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, hAssetId);
+        if (nerveAssetInfo == null) {
+            return false;
+        }
+        try {
+            Map<String, Object> asset = LedgerCall.getNerveAsset(nerveChain.getChainId(), nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
+            if (asset == null) {
+                return false;
+            }
+            Integer assetType = Integer.parseInt(asset.get("assetType").toString());
+            if (assetType > 4) {
+                return true;
+            }
+        } catch (NulsException e) {
+            nerveChain.getLogger().warn("query bind nerve asset error, msg: {}", e.format());
+            return false;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isWithdrawalComfired(String nerveTxHash) {
+        NulsHash hash = NulsHash.fromHex(nerveTxHash);
+        ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(nerveChain, hash);
+        return null != po;
     }
 }

@@ -24,12 +24,14 @@
 
 package network.nerve.converter.core.validator;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
@@ -50,6 +52,7 @@ import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -98,14 +101,14 @@ public class ConfirmWithdrawalVerifier {
         }
         CoinData withdrawalCoinData = ConverterUtil.getInstance(withdrawalTx.getCoinData(), CoinData.class);
         CoinTo withdrawalTo = null;
+        byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
         for (CoinTo coinTo : withdrawalCoinData.getTo()) {
-            // 链内手续费 提现资产
-            if (coinTo.getAssetsId()!= chain.getConfig().getAssetId()) {
+            if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
                 withdrawalTo = coinTo;
             }
         }
         // 根据提现交易 资产信息获取异构链交易信息(转换获取) 再验证
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTo.getAssetsId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
         if(null == heterogeneousAssetInfo){
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }

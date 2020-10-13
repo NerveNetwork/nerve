@@ -9,4 +9,5 @@ public class DexDBConstant {
     public static final String DB_NAME_TRADING_ORDER_CANCEL = "trading_order_cancel";
     public static final String DB_NAME_TRADING_DEAL = "trading_deal";
     public static final String DB_NAME_NONCE_ORDER = "nonce_order";
+    public static final String DB_NAME_HEIGHT = "dex_height";
 }

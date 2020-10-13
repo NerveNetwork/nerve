@@ -4,6 +4,8 @@ import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
+import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.dex.context.DexDBConstant;
@@ -99,5 +101,25 @@ public class TradingOrderStorageServiceImpl implements TradingOrderStorageServic
             }
         }
         return orderPoList;
+    }
+
+    @Override
+    public void saveHeight(long height){
+        try{
+            RocksDBService.put(DexDBConstant.DB_NAME_HEIGHT, DexDBConstant.DB_NAME_HEIGHT.getBytes(), SerializeUtils.uint64ToByteArray(height));
+        }catch (Exception e) {
+            LoggerUtil.dexLog.error(e);
+            throw new NulsRuntimeException(e);
+        }
+    }
+
+    @Override
+    public long getHeight() {
+        byte[] value = RocksDBService.get(DexDBConstant.DB_NAME_HEIGHT, DexDBConstant.DB_NAME_HEIGHT.getBytes());
+        if (value != null) {
+            long height = SerializeUtils.readUint64(value, 0);
+            return height;
+        }
+        return 0;
     }
 }

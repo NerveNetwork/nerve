@@ -25,7 +25,28 @@
     "assetId": "6",
     "oracleKey": "USDT_PRICE",
     "canBePeriodically": false,
+    "decimal": 6,
+    "simple": "USDT"
+  },
+  {
+    "assetId": "7",
+    "oracleKey": "USDC_PRICE",
+    "canBePeriodically": true,
+    "decimal": 6,
+    "simple": "USDC"
+  },
+  {
+    "assetId": "8",
+    "oracleKey": "PAX_PRICE",
+    "canBePeriodically": true,
     "decimal": 18,
-    "simple": "USDX"
+    "simple": "PAX"
+  },
+  {
+    "assetId": "9",
+    "oracleKey": "DAI_PRICE",
+    "canBePeriodically": true,
+    "decimal": 18,
+    "simple": "PAX"
   }
 ]

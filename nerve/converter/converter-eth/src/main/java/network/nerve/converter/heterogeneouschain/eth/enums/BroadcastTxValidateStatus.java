@@ -28,7 +28,6 @@ package network.nerve.converter.heterogeneouschain.eth.enums;
  * @date: 2020-02-21
  */
 public enum BroadcastTxValidateStatus {
-    FAILED,
     RE_VALIDATE,
     RE_SEND,
     SUCCESS;

@@ -40,7 +40,11 @@ public class WithdrawalTxDTO {
      */
 //    private int heterogeneousAssetId;
     /**
-     * 提现资产 链内资产id
+     * 提现资产 资产id
+     */
+    private int assetChainId;
+    /**
+     * 提现资产 资产id
      */
     private int assetId;
     /**
@@ -60,6 +64,14 @@ public class WithdrawalTxDTO {
      * 提现发起(签名)地址信息
      */
     private SignAccountDTO signAccount;
+
+    public int getAssetChainId() {
+        return assetChainId;
+    }
+
+    public void setAssetChainId(int assetChainId) {
+        this.assetChainId = assetChainId;
+    }
 
     public int getAssetId() {
         return assetId;

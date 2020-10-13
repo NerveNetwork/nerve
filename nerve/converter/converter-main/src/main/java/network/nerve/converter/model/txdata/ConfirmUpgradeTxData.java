@@ -70,9 +70,9 @@ public class ConfirmUpgradeTxData extends BaseNulsData {
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
         builder.append(String.format("\theterogeneousTxHash: %s", heterogeneousTxHash)).append(lineSeparator);
-        builder.append(String.format("\toldAddress: %s", HexUtil.encode(oldAddress))).append(lineSeparator);
-        builder.append(String.format("\taddress: %s", HexUtil.encode(address))).append(lineSeparator);
-        builder.append(String.format("\tnerveTxHash: %s", nerveTxHash.toHex())).append(lineSeparator);
+        builder.append(String.format("\toldAddress: %s", null == oldAddress ? "" : HexUtil.encode(oldAddress))).append(lineSeparator);
+        builder.append(String.format("\taddress: %s", null == address ? "" : HexUtil.encode(address))).append(lineSeparator);
+        builder.append(String.format("\tnerveTxHash: %s", null == nerveTxHash ? "" : nerveTxHash.toHex())).append(lineSeparator);
 
         if (listDistributionFee == null) {
             builder.append("\tlistDistributionFee: null").append(lineSeparator);

@@ -23,4 +23,8 @@ public interface TradingOrderStorageService {
     void deleteBackData(byte[] orderHash) throws Exception;
 
     List<TradingOrderPo> queryAll() throws NulsException;
+
+    void saveHeight(long height);
+
+    long getHeight();
 }

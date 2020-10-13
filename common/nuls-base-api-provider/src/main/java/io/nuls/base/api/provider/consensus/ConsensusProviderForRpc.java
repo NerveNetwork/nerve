@@ -174,6 +174,7 @@ public class ConsensusProviderForRpc extends BaseRpcService implements Consensus
                     assetInfo.setAssetChainId((Integer)data.get("chainId"));
                     assetInfo.setAssetId((Integer) data.get("assetId"));
                     assetInfo.setSymbol((String) data.get("simple"));
+                    assetInfo.setCanBePeriodically((Boolean) data.get("canBePeriodically"));
                     return assetInfo;
                 }).collect(Collectors.toList());
                 return success(list);

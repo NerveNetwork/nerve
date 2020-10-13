@@ -25,7 +25,10 @@ package network.nerve.converter.helper;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsException;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 
@@ -37,32 +40,63 @@ import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService
 public class LedgerAssetRegisterHelper {
 
     @Autowired
+    private ConverterConfig converterConfig;
+    @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
 
-    public Boolean crossChainAssetReg(int chainId, int assetChainId, int assetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+    public Boolean crossChainAssetReg(int chainId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
         Integer nerveAssetId = LedgerCall.crossChainAssetReg(chainId, assetName, decimalPlace, assetSymbol, assetAddress);
         HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
-        info.setChainId(assetChainId);
-        info.setAssetId(assetId);
+        info.setChainId(heterogeneousAssetChainId);
+        info.setAssetId(heterogeneousAssetId);
         info.setSymbol(assetSymbol);
         info.setDecimals(decimalPlace);
         info.setContractAddress(assetAddress);
-        heterogeneousAssetConverterStorageService.saveAssetInfo(nerveAssetId, info);
+        heterogeneousAssetConverterStorageService.saveAssetInfo(chainId, nerveAssetId, info);
         return true;
     }
 
-    public Boolean crossChainAssetDelete(int heterogeneousAssetChainId, int heterogeneousAssetId) throws Exception {
-        int nerveAssetId = heterogeneousAssetConverterStorageService.getNerveAssetId(heterogeneousAssetChainId, heterogeneousAssetId);
-        LedgerCall.crossChainAssetDelete(nerveAssetId);
+    public Boolean deleteCrossChainAsset(int heterogeneousAssetChainId, int heterogeneousAssetId) throws Exception {
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
+        LedgerCall.crossChainAssetDelete(nerveAssetInfo.getAssetId());
         heterogeneousAssetConverterStorageService.deleteAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
         return true;
     }
 
-    public HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetId) {
-        return heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(nerveAssetId);
+    public Boolean crossChainAssetRegByExistNerveAsset(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+        LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
+        HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
+        info.setChainId(heterogeneousAssetChainId);
+        info.setAssetId(heterogeneousAssetId);
+        info.setSymbol(assetSymbol);
+        info.setDecimals(decimalPlace);
+        info.setContractAddress(assetAddress);
+        heterogeneousAssetConverterStorageService.saveAssetInfo(nerveAssetChainId, nerveAssetId, info);
+        return true;
     }
 
-    public int getNerveAssetId(int heterogeneousChainId, int heterogeneousAssetId) {
-        return heterogeneousAssetConverterStorageService.getNerveAssetId(heterogeneousChainId, heterogeneousAssetId);
+    public Boolean deleteCrossChainAssetByExistNerveAsset(int heterogeneousAssetChainId, int heterogeneousAssetId) throws Exception {
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
+        LedgerCall.unbindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
+        heterogeneousAssetConverterStorageService.deleteAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
+        return true;
+    }
+
+    public HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId) {
+        return heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(nerveAssetChainId, nerveAssetId);
+    }
+
+    public void checkMainAssetBind() throws NulsException {
+        int chainId = converterConfig.getChainId();
+        int assetId = converterConfig.getAssetId();
+        HeterogeneousAssetInfo assetInfo = this.getHeterogeneousAssetInfo(chainId, assetId);
+        if (assetInfo != null) {
+            LedgerCall.bindHeterogeneousAssetReg(chainId, chainId, assetId);
+        }
+    }
+
+    public NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) {
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(heterogeneousChainId, heterogeneousAssetId);
+        return nerveAssetInfo;
     }
 }

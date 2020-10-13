@@ -31,6 +31,7 @@ import io.nuls.base.data.BaseNulsData;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
+import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 
@@ -83,9 +84,16 @@ public class ProposalTxData extends BaseNulsData {
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\ttype: %s", type)).append(lineSeparator);
         builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
-        builder.append(String.format("\theterogeneousTxHash: %s", heterogeneousTxHash)).append(lineSeparator);
-        builder.append(String.format("\taddress: %s", AddressTool.getStringAddressByBytes(address))).append(lineSeparator);
-        builder.append(String.format("\thash: %s", HexUtil.encode(hash))).append(lineSeparator);
+        builder.append(String.format("\theterogeneousTxHash: %s", null == heterogeneousTxHash ? "" : heterogeneousTxHash)).append(lineSeparator);
+        String addressStr = "";
+        if(null != address){
+            addressStr = AddressTool.getStringAddressByBytes(address);
+            if(null == addressStr) {
+                addressStr = Numeric.toHexString(address);
+            }
+        }
+        builder.append(String.format("\taddress: %s", addressStr)).append(lineSeparator);
+        builder.append(String.format("\thash: %s", null == hash ? "" : HexUtil.encode(hash))).append(lineSeparator);
         builder.append(String.format("\tvoteRangeType: %s", voteRangeType)).append(lineSeparator);
         builder.append(String.format("\tcontent: %s", content)).append(lineSeparator);
         return builder.toString();

@@ -11,24 +11,27 @@ import java.math.BigInteger;
 public interface StakingLimitStorageService {
     /**
      * 累加staking金额
+     *
      * @param key
      * @param Amount
      * @return
      */
-    boolean addStaking(String key, BigDecimal Amount);
+    boolean addStaking(Chain chain, String key, BigDecimal Amount);
 
     /**
      * 减少staking金额
+     *
      * @param key
      * @param Amount
      * @return
      */
-    boolean exitStaking(String key, BigDecimal Amount);
+    boolean exitStaking(Chain chain, String key, BigDecimal Amount);
 
     /**
      * 获取可以参与的数量
+     *
      * @param key
      * @return
      */
-    BigDecimal getAvailableAmount(String key);
+    BigDecimal getStakingAmount(Chain chain, String key);
 }

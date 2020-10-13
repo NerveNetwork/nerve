@@ -35,6 +35,9 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.core.heterogeneous.register.HeterogeneousChainRegister;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
+import network.nerve.converter.heterogeneouschain.eth.docking.EthDocking;
+import network.nerve.converter.heterogeneouschain.eth.register.EthRegister;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
@@ -100,6 +103,7 @@ public class HeterogeneousChainManager {
      * 更新异构链多签地址
      */
     public void updateMultySignAddress(int heterogeneousChainId, String multySignAddress) throws NulsException {
+        logger().info("持久化更新多签合约地址, new: {}", multySignAddress);
         HeterogeneousChainInfo info = heterogeneousChainInfoStorageService.getHeterogeneousChainInfo(heterogeneousChainId);
         if (info == null) {
             logger().error("error heterogeneousChainId: {}", heterogeneousChainId);
@@ -127,46 +131,63 @@ public class HeterogeneousChainManager {
             }
 
             Collection<Object> list = SpringLiteContext.getAllBeanList();
+            List<IHeterogeneousChainRegister> registerList = new ArrayList<>();
             for (Object object : list) {
                 if(object instanceof IHeterogeneousChainRegister) {
-                    IHeterogeneousChainRegister register = (IHeterogeneousChainRegister) object;
-                    int chainId = register.getChainId();
-                    // 执行异构链的初始化函数
-                    register.init(chain.getHeterogeneousCfg(chainId, 1), chain.getLogger());
-                    HeterogeneousChainInfo chainInfo = register.getChainInfo();
-                    // 保存异构链symbol和chainId的关系
-                    heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
-                    String multySignAddress = chainInfo.getMultySignAddress();
-                    // 持久化存储异构链基本信息
-                    if (StringUtils.isNotBlank(multySignAddress) && !heterogeneousChainMap.containsKey(chainId)) {
-                        try {
-                            heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
-                        } catch (Exception e) {
-                            throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
-                        }
-                        heterogeneousChainMap.put(chainId, chainInfo);
-                    }
-                    // 执行异构链注册
-                    HeterogeneousChainRegisterInfo registerInfo = heterogeneousChainRegister.register(converterConfig.getChainId(), chainId, register.getDockingImpl());
-                    // 向异构链组件返回注册信息
-                    register.registerCallBack(registerInfo);
+                    registerList.add((IHeterogeneousChainRegister) object);
                 }
+            }
+            // 按指定顺序执行异构链注册
+            registerList.sort(new Comparator<IHeterogeneousChainRegister>() {
+                @Override
+                public int compare(IHeterogeneousChainRegister o1, IHeterogeneousChainRegister o2) {
+                    if (o1.order() > o2.order()) {
+                        return 1;
+                    } else if (o1.order() < o2.order()) {
+                        return -1;
+                    }
+                    return 0;
+                }
+            });
+            for (IHeterogeneousChainRegister register : registerList) {
+                int chainId = register.getChainId();
+                // 执行异构链的初始化函数
+                register.init(chain.getHeterogeneousCfg(chainId, 1), chain.getLogger());
+                HeterogeneousChainInfo chainInfo = register.getChainInfo();
+                // 保存异构链symbol和chainId的关系
+                heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
+                String multySignAddress = chainInfo.getMultySignAddress();
+                // 持久化存储异构链基本信息
+                if (StringUtils.isNotBlank(multySignAddress) && !heterogeneousChainMap.containsKey(chainId)) {
+                    try {
+                        heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
+                    } catch (Exception e) {
+                        throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
+                    }
+                    heterogeneousChainMap.put(chainId, chainInfo);
+                }
+                // 执行异构链注册
+                HeterogeneousChainRegisterInfo registerInfo = heterogeneousChainRegister.register(converterConfig.getChainId(), chainId, register.getDockingImpl());
+                // 向异构链组件返回注册信息
+                register.registerCallBack(registerInfo);
             }
         }
 
     }
 
     public void init2LedgerAsset() {
-        if(heterogeneousChainInfoStorageService.hadInit2LedgerAsset()) {
-            logger().info("[重复执行] 已完成初始化异构链主资产到账本，不再执行");
-            return;
-        }
-        int chainId = converterConfig.getChainId();
-        List<HeterogeneousAssetInfo> allAssetList = new ArrayList<>();
-        heterogeneousDockingManager.getAllHeterogeneousDocking().stream().forEach(docking -> {
-            allAssetList.add(docking.getMainAsset());
-        });
         try {
+            // 检查主资产是否绑定异构链合约资产
+            ledgerAssetRegisterHelper.checkMainAssetBind();
+            if(heterogeneousChainInfoStorageService.hadInit2LedgerAsset()) {
+                logger().info("[重复执行] 已完成初始化异构链主资产到账本，不再执行");
+                return;
+            }
+            int chainId = converterConfig.getChainId();
+            List<HeterogeneousAssetInfo> allAssetList = new ArrayList<>();
+            heterogeneousDockingManager.getAllHeterogeneousDocking().stream().forEach(docking -> {
+                allAssetList.add(docking.getMainAsset());
+            });
             for(HeterogeneousAssetInfo assetInfo : allAssetList) {
                 ledgerAssetRegisterHelper.crossChainAssetReg(chainId, assetInfo.getChainId(), assetInfo.getAssetId(),
                         assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());

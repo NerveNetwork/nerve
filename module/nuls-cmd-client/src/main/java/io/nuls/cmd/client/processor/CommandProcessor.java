@@ -77,6 +77,13 @@ public interface CommandProcessor {
         }
     }
 
+    default void checkIsDouble(String arg, String name) {
+        Matcher matcher = IS_AMOUNT.matcher(arg);
+        if(!matcher.find()){
+            ParameterException.throwParameterException(name + " must be a numeric");
+        }
+    }
+
     default void checkIsAmount(String arg,String name) {
         Matcher matcher = IS_AMOUNT.matcher(arg);
         if(!matcher.find()){

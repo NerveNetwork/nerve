@@ -64,6 +64,9 @@ import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.util.*;
 
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_1;
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_2;
+
 /**
  * @author: Loki
  * @date: 2020-02-28
@@ -126,7 +129,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
             List<AgentBasic> listAgent;
-            if(null != blockHeader){
+            if (null != blockHeader) {
                 listAgent = ConsensusCall.getAgentList(chain, blockHeader.getHeight());
             } else {
                 listAgent = ConsensusCall.getAgentList(chain);
@@ -140,7 +143,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             outer:
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
-                if(coinData != null && coinData.length > 0){
+                if (coinData != null && coinData.length > 0) {
                     // coindata存在数据(coinData应该没有数据)
                     throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
                 }
@@ -155,9 +158,9 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 }
                 ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
                 // 地址重复检查
-                if(null != txData.getInAgents()){
-                    for(byte[] addressBytes : txData.getInAgents()){
-                        if(addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))){
+                if (null != txData.getInAgents()) {
+                    for (byte[] addressBytes : txData.getInAgents()) {
+                        if (addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))) {
                             // 区块内业务重复交易
                             failsList.add(tx);
                             errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
@@ -166,9 +169,9 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         }
                     }
                 }
-                if(null != txData.getOutAgents()){
-                    for(byte[] addressBytes : txData.getOutAgents()){
-                        if(addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))){
+                if (null != txData.getOutAgents()) {
+                    for (byte[] addressBytes : txData.getOutAgents()) {
+                        if (addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))) {
                             // 区块内业务重复交易
                             failsList.add(tx);
                             errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
@@ -192,18 +195,19 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                             // 当前不是虚拟银行节点, 不存在退出的情况
                             errorCode = ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK.getMsg());
+                            chain.getLogger().error("该节点本身不是虚拟银行成员, 不存在退出的情况, agentAddress:{}", agentAddress);
                             continue outer;
                         }
                         // 判断不是种子节点
                         VirtualBankDirector director = chain.getDirectorByAgent(agentAddress);
-                        if(director.getSeedNode()){
+                        if (director.getSeedNode()) {
                             failsList.add(tx);
                             // 种子节点不能退出虚拟银行
                             errorCode = ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getCode();
                             chain.getLogger().error("种子节点不能退出虚拟银行, agentAddress:{}", agentAddress);
                             continue outer;
                         }
-                        if(StringUtils.isNotBlank(disqualificationStorageService.find(chain, addressBytes))){
+                        if (StringUtils.isNotBlank(disqualificationStorageService.find(chain, addressBytes))) {
                             // 撤销银行资格列表里面存在该地址, 验证通过直接撤销.
                             continue;
                         }
@@ -266,13 +270,13 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     continue outer;
                 }
                 // 将所有地址 放入重复检查集合
-                if(null != txData.getInAgents()){
-                    for(byte[] addressBytes : txData.getInAgents()){
+                if (null != txData.getInAgents()) {
+                    for (byte[] addressBytes : txData.getInAgents()) {
                         addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
                     }
                 }
-                if(null != txData.getOutAgents()){
-                    for(byte[] addressBytes : txData.getOutAgents()){
+                if (null != txData.getOutAgents()) {
+                    for (byte[] addressBytes : txData.getOutAgents()) {
                         addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
                     }
                 }
@@ -319,7 +323,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
         for (int i = 0; i < listNewestVirtualBank.size(); i++) {
             AgentBasic agentBasic = listNewestVirtualBank.get(i);
-            if(agentAddress.equals(agentBasic.getAgentAddress())){
+            if (agentAddress.equals(agentBasic.getAgentAddress())) {
                 return true;
             }
         }
@@ -357,8 +361,8 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
         }
         for (int i = 0; i < listNewestVirtualBank.size(); i++) {
             AgentBasic agentBasic = listNewestVirtualBank.get(i);
-            if(agentAddress.equals(agentBasic.getAgentAddress())){
-                chain.getLogger().error("当前仍有虚拟银行资格,不能退出虚拟银行, 保证金:{}, 排行:{}", agentBasic.getDeposit(), ConverterContext.INITIAL_VIRTUAL_BANK_COUNT + i + 1);
+            if (agentAddress.equals(agentBasic.getAgentAddress())) {
+                chain.getLogger().error("当前仍有虚拟银行资格,不能退出虚拟银行, 保证金:{}, 排行:{}", agentBasic.getDeposit(), ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT + i + 1);
                 return false;
             }
         }
@@ -500,14 +504,18 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         processSaveVirtualBank(chain, listInAgents, listAgent);
 
                 boolean currentJoin = false;
-                // 当前节点是虚拟银行成员
+                boolean currentQuit = false;
+                // 当前节点是虚拟银行成员标识
                 boolean currentDirector = VirtualBankUtil.isCurrentDirector(chain);
+                VirtualBankDirector currentQuitDirector = null;
                 if (currentDirector) {
-                    // 如果当前节点是虚拟银行, 则判断当前节点是否是退出虚拟银行节点
+                    // 如果标识当前节点是虚拟银行, 则判断当前节点是否是退出虚拟银行节点
                     for (VirtualBankDirector director : listOutDirector) {
                         if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
                             // 当前节点退出成虚拟银行成员
                             currentDirector = false;
+                            currentQuit = true;
+                            currentQuitDirector = director;
                             chain.getCurrentIsDirector().set(false);
                             chain.getLogger().info("[虚拟银行] 当前节点退出虚拟银行,标识变更为: false");
                             break;
@@ -542,23 +550,46 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 // 添加异构链地址信息
                 createNewHeterogeneousAddress(chain, hInterfaces);
 
-                // 同步模式不需要执行虚拟银行多签/合约成员变更
-                if (SyncStatusEnum.getEnum(syncStatus).equals(SyncStatusEnum.RUNNING) && currentDirector && !currentJoin) {
-                    // 放入异构链处理机制
-                    TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
-                    pendingPO.setTx(tx);
-                    pendingPO.setListInDirector(listInDirector);
-                    pendingPO.setListOutDirector(listOutDirector);
-                    pendingPO.setBlockHeader(blockHeader);
-                    pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
-                    pendingPO.setCurrentJoin(currentJoin);
-                    pendingPO.setCurrentDirector(currentDirector);
-                    txSubsequentProcessStorageService.save(chain, pendingPO);
-                    chain.getPendingTxQueue().offer(pendingPO);
+                // 记录当前交易 异构链拜占庭总数 (不算当前加入, 要算当前退出)
+                int inTotal = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
+                int outTotal = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
+                int currenVirtualBankTotal = chain.getMapVirtualBank().size() - inTotal + outTotal;
+                if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
+                    // 同步模式不需要执行虚拟银行多签/合约成员变更, 只有当前是管理员并且不是当前交易加入的
+                    if (SyncStatusEnum.getEnum(syncStatus).equals(SyncStatusEnum.RUNNING) && currentDirector && !currentJoin) {
+                        // 放入异构链处理机制
+                        TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                        pendingPO.setTx(tx);
+                        pendingPO.setListInDirector(listInDirector);
+                        pendingPO.setListOutDirector(listOutDirector);
+                        pendingPO.setBlockHeader(blockHeader);
+                        pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                        pendingPO.setCurrentJoin(currentJoin);
+                        pendingPO.setCurrentDirector(currentDirector);
+                        pendingPO.setCurrenVirtualBankTotal(currenVirtualBankTotal);
+                        txSubsequentProcessStorageService.save(chain, pendingPO);
+                        chain.getPendingTxQueue().offer(pendingPO);
+                    }
+                } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                    // 同步模式不需要执行虚拟银行多签/合约成员变更, 当前是管理员(可以是当前加入的) 或者当前退出的
+                    if (SyncStatusEnum.getEnum(syncStatus).equals(SyncStatusEnum.RUNNING) && (currentDirector || currentQuit)) {
+                        // 放入异构链处理机制
+                        TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                        pendingPO.setTx(tx);
+                        pendingPO.setListInDirector(listInDirector);
+                        pendingPO.setListOutDirector(listOutDirector);
+                        pendingPO.setBlockHeader(blockHeader);
+                        pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                        pendingPO.setCurrentJoin(currentJoin);
+                        pendingPO.setCurrentQuit(currentQuit);
+                        pendingPO.setCurrentQuitDirector(currentQuitDirector);
+                        pendingPO.setCurrentDirector(currentDirector);
+                        pendingPO.setCurrenVirtualBankTotal(currenVirtualBankTotal);
+                        txSubsequentProcessStorageService.save(chain, pendingPO);
+                        chain.getPendingTxQueue().offer(pendingPO);
+                    }
                 }
-
                 ConsensusCall.sendVirtualBank(chain, height);
-
                 chain.getLogger().info("[commit]虚拟银行变更交易 hash:{}", tx.getHash().toHex());
             }
             return true;
@@ -587,7 +618,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             for (Transaction tx : txs) {
                 ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
                 long requestHeight = txData.getOutHeight() - 1;
-                if(requestHeight < 0L){
+                if (requestHeight < 0L) {
                     requestHeight = 0L;
                 }
                 List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, requestHeight);

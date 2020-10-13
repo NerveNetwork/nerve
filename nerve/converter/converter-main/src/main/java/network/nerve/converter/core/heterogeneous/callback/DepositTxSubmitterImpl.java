@@ -83,6 +83,7 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         // 组装Nerve充值交易
         RechargeTxDTO dto = new RechargeTxDTO();
         dto.setOriginalTxHash(txHash);
+        dto.setHeterogeneousFromAddress(from);
         dto.setToAddress(nerveAddress);
         dto.setAmount(value);
         dto.setHeterogeneousChainId(hChainId);
@@ -105,6 +106,7 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
             }
             RechargeTxDTO dto = new RechargeTxDTO();
             dto.setOriginalTxHash(hTxHash);
+            dto.setHeterogeneousFromAddress(depositTx.getFrom());
             dto.setToAddress(depositTx.getNerveAddress());
             dto.setAmount(depositTx.getValue());
             dto.setHeterogeneousChainId(hChainId);

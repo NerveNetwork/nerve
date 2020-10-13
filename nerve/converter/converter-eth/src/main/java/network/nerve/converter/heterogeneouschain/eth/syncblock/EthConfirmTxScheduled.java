@@ -30,11 +30,13 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
+import network.nerve.converter.heterogeneouschain.eth.docking.EthDocking;
 import network.nerve.converter.heterogeneouschain.eth.enums.BroadcastTxValidateStatus;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
@@ -380,10 +382,6 @@ public class EthConfirmTxScheduled implements Runnable {
                     //再次验证交易
                     BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInEthNet(po);
                     switch (validate) {
-                        case FAILED:
-                            // 验证失败，从DB和队列中移除当前交易
-                            this.clearDB(ethTxHash);
-                            return !isReOfferQueue;
                         case RE_VALIDATE:
                             // 放回队列，再次验证
                             return isReOfferQueue;
@@ -420,7 +418,7 @@ public class EthConfirmTxScheduled implements Runnable {
                         if (txPo.getNerveTxHash().startsWith(EthConstant.ETH_RECOVERY_I)) {
                             // 第一步恢复设置为已完成
                             if (!EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
-                                ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
+                                ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                             }
                             // 第一步恢复执行完成后，种子虚拟银行执行第二步
                             if (EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
@@ -428,13 +426,13 @@ public class EthConfirmTxScheduled implements Runnable {
                                 EthRecoveryDto recoveryDto = ethTxStorageService.findRecoveryByNerveTxKey(nerveTxHash);
                                 if (recoveryDto == null) {
                                     logger().info("第二步恢复交易已提前发出");
-                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                                     break;
                                 }
                                 String secondHash = ethRegister.getDockingImpl().forceRecovery(EthConstant.ETH_RECOVERY_II + realNerveTxHash, recoveryDto.getSeedManagers(), recoveryDto.getAllManagers());
                                 if (StringUtils.isNotBlank(secondHash)) {
                                     logger().info("第二步恢复交易已发出，hash: {}", secondHash);
-                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve());
+                                    ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                                 }
                             }
                             break;
@@ -606,11 +604,12 @@ public class EthConfirmTxScheduled implements Runnable {
                 HeterogeneousWithdrawTxInfo withdrawTxInfo = EthContext.getConverterCoreApi().getWithdrawTxInfo(nerveTxHash);
                 if (withdrawTxInfo != null && withdrawTxInfo.getHeterogeneousChainId() == EthContext.getConfig().getChainId()) {
                     logger().info("检测到当前虚拟银行节点未发出此[提现]交易，验证无误后将发起[提现]交易, 提现数据: {}", withdrawTxInfo.toString());
-                    ethRegister.getDockingImpl().createOrSignWithdrawTx(
+                    EthDocking docking = (EthDocking) ethRegister.getDockingImpl();
+                    docking.createOrSignWithdrawTx(
                             nerveTxHash,
                             withdrawTxInfo.getToAddress(),
                             withdrawTxInfo.getValue(),
-                            withdrawTxInfo.getAssetId());
+                            withdrawTxInfo.getAssetId(), false);
                 }
             }
         } catch (Exception e) {
@@ -648,9 +647,10 @@ public class EthConfirmTxScheduled implements Runnable {
         boolean success;
         try {
             logger().info("[{}]交易[{}]重发, 详情: {}", po.getTxType(), po.getTxHash(), po.toString());
+            EthDocking docking = (EthDocking) ethRegister.getDockingImpl();
             switch (po.getTxType()) {
                 case WITHDRAW:
-                    String ethWithdrawHash = ethRegister.getDockingImpl().createOrSignWithdrawTx(po.getNerveTxHash(), po.getTo(), po.getValue(), po.getAssetId());
+                    String ethWithdrawHash = docking.createOrSignWithdrawTx(po.getNerveTxHash(), po.getTo(), po.getValue(), po.getAssetId(), false);
                     if(StringUtils.isBlank(ethWithdrawHash)) {
                         logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());
@@ -658,14 +658,14 @@ public class EthConfirmTxScheduled implements Runnable {
                     break;
                 //case RECOVERY:
                 case CHANGE:
-                    String ethChangesHash = ethRegister.getDockingImpl().createOrSignManagerChangesTx(po.getNerveTxHash(), po.getAddAddresses(), po.getRemoveAddresses(), po.getOrginTxCount());
+                    String ethChangesHash = docking.createOrSignManagerChangesTx(po.getNerveTxHash(), po.getAddAddresses(), po.getRemoveAddresses(), po.getOrginTxCount());
                     if(StringUtils.isBlank(ethChangesHash)) {
                         logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());
                     }
                     break;
                 case UPGRADE:
-                    String ethUpgradeHash = ethRegister.getDockingImpl().createOrSignUpgradeTx(po.getNerveTxHash());
+                    String ethUpgradeHash = docking.createOrSignUpgradeTx(po.getNerveTxHash());
                     if(StringUtils.isBlank(ethUpgradeHash)) {
                         logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());

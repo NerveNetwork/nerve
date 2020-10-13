@@ -26,8 +26,10 @@ package network.nerve.converter.core.heterogeneous.callback.management;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import network.nerve.converter.core.heterogeneous.callback.DepositTxSubmitterImpl;
+import network.nerve.converter.core.heterogeneous.callback.HeterogeneousUpgradeImpl;
 import network.nerve.converter.core.heterogeneous.callback.TxConfirmedProcessorImpl;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IHeterogeneousUpgrade;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 import network.nerve.converter.manager.ChainManager;
 
@@ -57,6 +59,10 @@ public class HeterogeneousCallBackManager {
      * 管理每个异构链组件的异构链交易确认回调器
      */
     private Map<Integer, ITxConfirmedProcessor> txConfirmedProcessorMap = new ConcurrentHashMap<>();
+    /**
+     * 管理每个异构链组件的升级回调器
+     */
+    private Map<Integer, IHeterogeneousUpgrade> heterogeneousUpgradeMap = new ConcurrentHashMap<>();
 
     public IDepositTxSubmitter createOrGetDepositTxSubmitter(int nerveChainId, int heterogeneousChainId) {
         return depositTxSubmitterMap.computeIfAbsent(heterogeneousChainId, hChainId -> new DepositTxSubmitterImpl(chainManager.getChain(nerveChainId), hChainId, callBackBeanManager));
@@ -66,12 +72,20 @@ public class HeterogeneousCallBackManager {
         return txConfirmedProcessorMap.computeIfAbsent(heterogeneousChainId, hChainId -> new TxConfirmedProcessorImpl(chainManager.getChain(nerveChainId), hChainId, callBackBeanManager));
     }
 
+    public IHeterogeneousUpgrade createOrGetHeterogeneousUpgrade(int nerveChainId, int heterogeneousChainId) {
+        return heterogeneousUpgradeMap.computeIfAbsent(heterogeneousChainId, hChainId -> new HeterogeneousUpgradeImpl(chainManager.getChain(nerveChainId), hChainId, callBackBeanManager));
+    }
+
     public Collection<IDepositTxSubmitter> getAllDepositTxSubmitter() {
         return depositTxSubmitterMap.values();
     }
 
     public Collection<ITxConfirmedProcessor> getAllTxConfirmedProcessor() {
         return txConfirmedProcessorMap.values();
+    }
+
+    public Collection<IHeterogeneousUpgrade> getAllHeterogeneousUpgrade() {
+        return heterogeneousUpgradeMap.values();
     }
 
 

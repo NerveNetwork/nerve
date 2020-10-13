@@ -94,7 +94,7 @@ public class ByzantineTransactionHelper {
 
     private boolean proposal(Chain nerveChain, String byzantineTxhash, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
         if (nerveChain.getLogger().isDebugEnabled()) {
-            nerveChain.getLogger().warn("生成确认提案交易: {}, nerveTxHash: {}, hashList: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
+            nerveChain.getLogger().debug("生成确认提案交易: {}, nerveTxHash: {}, hashList: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
         }
         NulsHash proposalHash = NulsHash.fromHex(nerveTxHash);
         ProposalPO proposalPO = proposalStorageService.find(nerveChain, proposalHash);
@@ -183,6 +183,7 @@ public class ByzantineTransactionHelper {
         HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
         RechargeTxDTO dto = new RechargeTxDTO();
         dto.setOriginalTxHash(hTxHash);
+        dto.setHeterogeneousFromAddress(depositTx.getFrom());
         dto.setToAddress(depositTx.getNerveAddress());
         dto.setAmount(depositTx.getValue());
         dto.setHeterogeneousChainId(hChainId);

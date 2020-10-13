@@ -41,6 +41,13 @@ public interface ConverterService {
     Result<String> withdrawal(WithdrawalReq req);
 
     /**
+     * 升级合约提案
+     * @param req
+     * @return
+     */
+    Result<String> UpgradeContract(UpgradeContractReq req);
+
+    /**
      * 提案投票
      * @param req
      * @return
@@ -62,6 +69,12 @@ public interface ConverterService {
     Result<Boolean> checkRetryParse(CheckRetryParseReq req);
 
     Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
+
+    Result<String> bind(BindReq req);
+
+    Result<String> bindOverride(BindOverrideReq req);
+
+    Result<String> retryWithdrawal(RetryWithdrawalReq req);
 
     Result<Boolean> validateRegisterHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 

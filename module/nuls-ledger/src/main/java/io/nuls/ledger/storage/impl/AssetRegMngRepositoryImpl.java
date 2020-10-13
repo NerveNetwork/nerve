@@ -84,11 +84,11 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
     @Override
     public void saveLedgerAssetReg(int chainId, LedgerAsset ledgerAsset) throws Exception {
         String assetRegTable = getLedgerAssetRegMngTableName(chainId);
-        String assetContractAddrTable = getLedgerAssetRegContractAddrIndexTableName(chainId);
         if (LedgerConstant.CONTRACT_ASSET_TYPE == ledgerAsset.getAssetType()) {
+            String assetContractAddrTable = getLedgerAssetRegContractAddrIndexTableName(chainId);
             DB_CONTRACT_ASSETS_IDS_MAP.put(chainId + LedgerConstant.DOWN_LINE + ledgerAsset.getAssetId(), 1);
+            RocksDBService.put(assetContractAddrTable, ledgerAsset.getAssetOwnerAddress(), ByteUtils.intToBytes(ledgerAsset.getAssetId()));
         }
-        RocksDBService.put(assetContractAddrTable, ledgerAsset.getAssetOwnerAddress(), ByteUtils.intToBytes(ledgerAsset.getAssetId()));
         RocksDBService.put(assetRegTable, ByteUtils.intToBytes(ledgerAsset.getAssetId()), ledgerAsset.serialize());
 
     }

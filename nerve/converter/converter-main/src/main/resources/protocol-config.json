@@ -136,6 +136,11 @@
         "name": "network.nerve.converter.message.CheckRetryParseMessage",
         "protocolCmd": "checkRetry",
         "handlers": "CheckRetryParseHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.ComponentSignMessage",
+        "protocolCmd": "compSign",
+        "handlers": "ComponentSignHandlerV1"
       }
     ],
     "invalidTxs": "",

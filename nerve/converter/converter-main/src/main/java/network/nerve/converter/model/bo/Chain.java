@@ -1,9 +1,7 @@
 package network.nerve.converter.model.bo;
 
 import io.nuls.base.data.NulsHash;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
-import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.po.ExeProposalPO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
@@ -81,6 +79,11 @@ public class Chain {
      */
     private Map<NulsHash, List<UntreatedMessage>> futureMessageMap = new ConcurrentHashMap<>();
 
+    /**
+     * 异构链签过名但未进行拜占庭处理的签名消息
+     */
+//    private Map<NulsHash, List<ComponentSignMessage>> heterogeneousFutureMessageMap = new ConcurrentHashMap<>();
+
 
     /**
      * 未处理的收到的交易签名消息 -2
@@ -106,6 +109,19 @@ public class Chain {
      * 是否正在重置异构链(合约)
      */
     private AtomicBoolean resetVirtualBank = new AtomicBoolean(false);
+
+    /**
+     * 当前异构链组件运行的版本
+     */
+    private int currentHeterogeneousVersion = 1;
+
+    public int getCurrentHeterogeneousVersion() {
+        return currentHeterogeneousVersion;
+    }
+
+    public void setCurrentHeterogeneousVersion(int currentHeterogeneousVersion) {
+        this.currentHeterogeneousVersion = currentHeterogeneousVersion;
+    }
 
     public AtomicBoolean getResetVirtualBank() {
         return resetVirtualBank;
@@ -260,19 +276,18 @@ public class Chain {
      * @param heterogeneousChainId
      * @return
      */
-    public String getDirectorHeterogeneousAddrByAgentAddr(String agentAddress, int heterogeneousChainId) throws NulsException {
+    public String getDirectorHeterogeneousAddrByAgentAddr(String agentAddress, int heterogeneousChainId) {
+        String address = null;
         for (VirtualBankDirector director : mapVirtualBank.values()) {
             if (director.getAgentAddress().equals(agentAddress)) {
                 HeterogeneousAddress heterogeneousAddress =
                         director.getHeterogeneousAddrMap().get(heterogeneousChainId);
-                return heterogeneousAddress.getAddress();
+                if(null != heterogeneousAddress){
+                    address = heterogeneousAddress.getAddress();
+                }
             }
         }
-        logger.error("没有获取到虚拟银行节点的异构链地址 " +
-                        "can not get heterogeneous address by agent address and heterogeneousChainId. " +
-                        "- HeterogeneousChainId:{} agentAddress:{}",
-                heterogeneousChainId, agentAddress);
-        throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+        return address;
     }
 
     /**
@@ -316,6 +331,10 @@ public class Chain {
     public void setFutureMessageMap(Map<NulsHash, List<UntreatedMessage>> futureMessageMap) {
         this.futureMessageMap = futureMessageMap;
     }
+
+//    public Map<NulsHash, List<ComponentSignMessage>> getHeterogeneousFutureMessageMap() {
+//        return heterogeneousFutureMessageMap;
+//    }
 
     public LinkedBlockingQueue<UntreatedMessage> getSignMessageByzantineQueue() {
         return signMessageByzantineQueue;

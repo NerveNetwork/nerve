@@ -27,14 +27,17 @@ package network.nerve.converter.utils;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.ConsensusCall;
+import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.storage.VirtualBankStorageService;
 
 import java.math.BigInteger;
@@ -47,6 +50,31 @@ import java.util.stream.Collectors;
  */
 public class VirtualBankUtil {
 
+    /**
+     * 根据异构链chainId 获取当前节点(虚拟银行) 对应的异构链地址
+     *
+     * @param chain
+     * @param heterogeneousChainId
+     * @return
+     * @throws NulsException
+     */
+    public static String getCurrentDirectorHaddress(Chain chain, int heterogeneousChainId) throws NulsException {
+        SignAccountDTO signInfo = ConsensusCall.getPackerInfo(chain);
+        if (null == signInfo) {
+            return null;
+        }
+        VirtualBankAllHistoryStorageService sevice = SpringLiteContext.getBean(VirtualBankAllHistoryStorageService.class);
+        VirtualBankDirector director = sevice.findBySignAddress(chain, signInfo.getAddress());
+        if (null == director) {
+            return null;
+        }
+        HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(heterogeneousChainId);
+        if (null == heterogeneousAddress) {
+            return null;
+        }
+        return heterogeneousAddress.getAddress();
+    }
+
 
     /**
      * 判断当前节点是否是虚拟银行节点
@@ -56,7 +84,7 @@ public class VirtualBankUtil {
      * @return
      * @throws NulsException
      */
-    public static SignAccountDTO getCurrentDirectorSignInfo(Chain chain) throws NulsException {
+    public static SignAccountDTO getCurrentDirectorSignInfo(Chain chain) {
         if (!isCurrentDirector(chain)) {
             return null;
         }
@@ -79,7 +107,11 @@ public class VirtualBankUtil {
      * 根据寻你银行成员数, 获取当前签名拜占庭数量
      */
     public static int getByzantineCount(Chain chain) {
-        int directorCount = chain.getMapVirtualBank().size();
+        return getByzantineCount(chain, null);
+    }
+
+    public static int getByzantineCount(Chain chain, Integer virtualBankTotal) {
+        int directorCount = null == virtualBankTotal ? chain.getMapVirtualBank().size() : virtualBankTotal;
         int ByzantineRateCount = directorCount * ConverterContext.BYZANTINERATIO;
         int minPassCount = ByzantineRateCount / ConverterConstant.MAGIC_NUM_100;
         if (ByzantineRateCount % ConverterConstant.MAGIC_NUM_100 > 0) {
@@ -91,6 +123,7 @@ public class VirtualBankUtil {
 
     /**
      * 从签名列表中去除不匹配的签名, 并返回不匹配的签名列表
+     *
      * @param chain
      * @param transactionSignature
      * @param addressSet           虚拟银行成员签名的列表
@@ -119,6 +152,7 @@ public class VirtualBankUtil {
 
     /**
      * 获取签名数(去重复,并且只统计虚拟银行成员的签名)
+     *
      * @param chain
      * @param transactionSignature
      * @param addressSet           虚拟银行成员签名的列表
@@ -131,7 +165,7 @@ public class VirtualBankUtil {
         while (iterator.hasNext()) {
             P2PHKSignature signature = iterator.next();
             String signAddress = AddressTool.getStringAddressByBytes(AddressTool.getAddress(signature.getPublicKey(), chain.getChainId()));
-            if(addressSet.contains(signAddress)){
+            if (addressSet.contains(signAddress)) {
                 count++;
             }
         }
@@ -154,32 +188,32 @@ public class VirtualBankUtil {
     }
 
     public static void virtualBankAdd(Chain chain, Map<String, VirtualBankDirector> virtualBankMap, List<VirtualBankDirector> directorList, VirtualBankStorageService virtualBankStorageService) {
-        if(directorList == null || directorList.isEmpty()) {
+        if (directorList == null || directorList.isEmpty()) {
             return;
         }
         int size = virtualBankMap.size();
-        if(size > 0) {
+        if (size > 0) {
             List<VirtualBankDirector> list = new ArrayList<>(virtualBankMap.values());
             Collections.sort(list, VirtualBankDirectorSort.getInstance());
             VirtualBankDirector lastDirector = list.get(list.size() - 1);
             VirtualBankDirector lastDirectorFromDB = virtualBankStorageService.findBySignAddress(chain, lastDirector.getSignAddress());
             int lastOrderFromDB = lastDirectorFromDB.getOrder();
-            for(VirtualBankDirector director : directorList) {
+            for (VirtualBankDirector director : directorList) {
                 director.setOrder(++lastOrderFromDB);
                 virtualBankStorageService.save(chain, director);
             }
         }
-        for(VirtualBankDirector director : directorList) {
+        for (VirtualBankDirector director : directorList) {
             director.setOrder(++size);
             virtualBankMap.put(director.getSignAddress(), director);
         }
     }
 
     public static void virtualBankRemove(Chain chain, Map<String, VirtualBankDirector> virtualBankMap, List<VirtualBankDirector> directorList, VirtualBankStorageService virtualBankStorageService) {
-        if(directorList == null || directorList.isEmpty()) {
+        if (directorList == null || directorList.isEmpty()) {
             return;
         }
-        for(VirtualBankDirector director : directorList) {
+        for (VirtualBankDirector director : directorList) {
             virtualBankMap.remove(director.getSignAddress());
             virtualBankStorageService.deleteBySignAddress(chain, director.getSignAddress());
         }
@@ -190,13 +224,14 @@ public class VirtualBankUtil {
         List<VirtualBankDirector> list = new ArrayList<>(virtualBankMap.values());
         Collections.sort(list, VirtualBankDirectorSort.getInstance());
         int i = 1;
-        for(VirtualBankDirector director : list) {
+        for (VirtualBankDirector director : list) {
             virtualBankMap.get(director.getSignAddress()).setOrder(i++);
         }
     }
 
     /**
      * 根据高度获取协议异构手续费(补贴)
+     *
      * @param chain
      * @param height
      * @param isProposal
@@ -204,11 +239,11 @@ public class VirtualBankUtil {
      */
     public static BigInteger calculateFee(Chain chain, Long height, boolean isProposal) {
         BigInteger fee;
-        if(null == height){
+        if (null == height) {
             height = chain.getLatestBasicBlock().getHeight();
         }
         if (!isProposal) {
-            if(height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND){
+            if (height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND) {
                 fee = ConverterContext.DISTRIBUTION_FEE;
             } else if (height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST) {
                 fee = ConverterConstant.DISTRIBUTION_FEE_100;
@@ -224,7 +259,6 @@ public class VirtualBankUtil {
     public static BigInteger calculateFee(Chain chain, boolean isProposal) {
         return calculateFee(chain, null, isProposal);
     }
-
 
 
 }

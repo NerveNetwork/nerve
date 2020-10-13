@@ -43,6 +43,7 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 @Component
 public class VirtualBankAllHistoryStorageServiceImpl implements VirtualBankAllHistoryStorageService {
 
+    private static final String AGENT_ADDRESS_PREFIX = "AGENT_ADDRESS_PREFIX_";
     @Override
     public boolean save(Chain chain, VirtualBankDirector po) {
         if(null == po){
@@ -51,6 +52,11 @@ public class VirtualBankAllHistoryStorageServiceImpl implements VirtualBankAllHi
         try {
             byte[] signAddress = stringToBytes(po.getSignAddress());
             boolean rs = ConverterDBUtil.putModel(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + chain.getChainId(), signAddress, po);
+            if(!rs){
+                return false;
+            }
+            byte[] key = stringToBytes(AGENT_ADDRESS_PREFIX + po.getAgentAddress());
+            rs = RocksDBService.put(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + chain.getChainId(), key, signAddress);
             if(!rs){
                 return false;
             }
@@ -65,6 +71,15 @@ public class VirtualBankAllHistoryStorageServiceImpl implements VirtualBankAllHi
             chain.getLogger().error(e);
             return false;
         }
+    }
+
+    @Override
+    public String findSignAddressByAgentAddress(Chain chain, String address) {
+        byte[] bytes = RocksDBService.get(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + chain.getChainId(), stringToBytes(AGENT_ADDRESS_PREFIX + address));
+        if(null != bytes && bytes.length > 0){
+            return bytesToString(bytes);
+        }
+        return null;
     }
 
     @Override

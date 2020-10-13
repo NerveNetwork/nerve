@@ -30,6 +30,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 
+import static io.protostuff.ByteString.EMPTY_STRING;
+
 /**
  * @author: Mimi
  * @date: 2020-02-17
@@ -49,7 +51,11 @@ public interface IHeterogeneousChainDocking {
      */
     String getChainSymbol();
     /**
-     * 当前多签地址
+     * 当前签名地址
+     */
+    String getCurrentSignAddress();
+    /**
+     * 当前多签合约地址
      */
     String getCurrentMultySignAddress();
 
@@ -122,7 +128,7 @@ public interface IHeterogeneousChainDocking {
     /**
      * 确认异构链的交易状态
      */
-    void txConfirmedCompleted(String txHash, Long blockHeight) throws Exception;
+    void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash) throws Exception;
 
     /**
      * 回滚`确认异构链的交易状态`
@@ -218,4 +224,83 @@ public interface IHeterogeneousChainDocking {
      * 重新解析充值交易（当前节点遗漏了异构链交易解析）
      */
     Boolean reAnalysisDepositTx(String ethTxHash) throws Exception;
+
+    /**
+     * 创建或签名提现交易
+     *
+     * @return 异构链交易hash
+     */
+    default String createOrSignWithdrawTxII(String txHash, String toAddress, BigInteger value, Integer assetId, String signatureData) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 创建或签名管理员变更交易
+     *
+     * @return 异构链交易hash
+     */
+    default String createOrSignManagerChangesTxII(String txHash, String[] addAddresses,
+                                          String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 创建或签名合约升级授权交易
+     *
+     * @return 异构链交易hash
+     */
+    default String createOrSignUpgradeTxII(String txHash, String upgradeContract, String signatureData) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 签名提现
+     */
+    default String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 签名管理员变更
+     */
+    default String signManagerChangesII(String txHash, String[] addAddresses,
+                                          String[] removeAddresses, int orginTxCount) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 签名合约升级授权
+     */
+    default String signUpgradeII(String txHash, String upgradeContract) throws NulsException {
+        return EMPTY_STRING;
+    }
+
+    /**
+     * 验证签名提现
+     */
+    default Boolean verifySignWithdrawII(String signAddress, String txHash, String toAddress, BigInteger value, Integer assetId, String signed) throws NulsException {
+        return false;
+    }
+
+    /**
+     * 验证签名管理员变更
+     */
+    default Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses,
+                                          String[] removeAddresses, int orginTxCount, String signed) throws NulsException {
+        return false;
+    }
+
+    /**
+     * 验证签名合约升级授权
+     */
+    default Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
+        return false;
+    }
+
+    /**
+     * 当前流程处理接口的版本
+     */
+    default int version() {
+        return 0;
+    }
 }

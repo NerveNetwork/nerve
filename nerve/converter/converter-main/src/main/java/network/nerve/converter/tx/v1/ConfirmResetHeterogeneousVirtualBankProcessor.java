@@ -163,7 +163,7 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     if(StringUtils.isNotBlank(txData.getHeterogeneousTxHash())) {
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
-                        docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight());
+                        docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getResetTxHash().toHex());
                     }
                 }
                 heterogeneousService.saveResetVirtualBankStatus(chain, false);

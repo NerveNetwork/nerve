@@ -57,6 +57,19 @@ public class ETHWalletApiTest extends Base {
     }
 
     @Test
+    public void getBlockHeaderByHeight() throws Exception {
+        Long height = Long.valueOf(8570437);
+        EthBlock.Block block = ethWalletApi.getBlockHeaderByHeight(height);
+        //Block block1 = ethWalletApi.getBlock(height);
+        System.out.println();
+    }
+
+    @Test
+    public void getBlockHeight() throws Exception {
+        System.out.println(ethWalletApi.getBlockHeight());
+    }
+
+    @Test
     public void getBlockWithoutTransaction() throws IOException {
         Long height = 7370853L;
         EthBlock.Block block = ethWalletApi.getWeb3j().ethGetBlockByNumber(DefaultBlockParameter.valueOf(BigInteger.valueOf(height)), false).send().getBlock();
@@ -98,15 +111,16 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void getTxAndPublicKeyTest() throws Exception {
         setMain();
-        String txHash = "0x855d092b64df8a6346e691a33071fb8fac197e45ee4ac8769386b4121e80da6d";
+        String txHash = "0x90531b6669bb7794cb16e01e04ab9dad8dece63c0d78e6b72a74c8337a77e924";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         converPublicKey(tx);
     }
 
     @Test
     public void covertNerveAddressByEthTxTest() throws Exception {
-        EthContext.NERVE_CHAINID = 2;
-        String txHash = "0x3c39e32ffafdee0705687e2c348aab226dcd08c1226e13053ee563de077c4b69";
+        setMain();
+        EthContext.NERVE_CHAINID = 9;
+        String txHash = "0x90531b6669bb7794cb16e01e04ab9dad8dece63c0d78e6b72a74c8337a77e924";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         System.out.println(EthUtil.covertNerveAddressByEthTx(tx));
     }
@@ -188,9 +202,10 @@ public class ETHWalletApiTest extends Base {
             if (recover != null) {
                 exist = true;
                 String address = "0x" + Keys.getAddress(recover);
+                System.out.println(String.format("公钥: %s", Numeric.toHexStringWithPrefix(recover)));
                 if (tx.getFrom().toLowerCase().equals(address.toLowerCase())) {
                     success = true;
-                    System.out.println("成功: " + i + ": " + address + String.format("tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+                    System.out.println("成功: " + i + ": " + address + String.format(", tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
                     break;
                 } else {
                     errorList.add(address);
@@ -654,7 +669,7 @@ public class ETHWalletApiTest extends Base {
     public void getCurrentGasPrice() throws IOException {
         // default ropsten
         //setRinkeby();
-        setMain();
+        //setMain();
         //setLocalRpc();
         BigInteger gasPrice = ethWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
@@ -810,15 +825,16 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void balanceOfContractManagerSet() throws Exception {
         //localdev();
+        localdevII();
         //testnet();
-        mainnet();
-        BigInteger gasPrice = BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9));
+        //mainnet();
+        BigInteger gasPrice = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
         String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
         String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(contractAddress);
         System.out.println(String.format("size : %s", all.size()));
-        String sendAmount = "0.1";
+        String sendAmount = "0.2";
         for (String address : all) {
             BigDecimal balance = ethWalletApi.getBalance(address).movePointLeft(18);
             System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
@@ -957,7 +973,7 @@ public class ETHWalletApiTest extends Base {
         list.add("0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17");
 
         // 本地开发合约重置
-        localdev();
+        localdevII();
 
         // 测试网合约重置
         //testnet();
@@ -980,6 +996,7 @@ public class ETHWalletApiTest extends Base {
             return;
         }
         String key = "add-" + System.currentTimeMillis();
+        //String key = "433886adc2162b3069f12cfa9d837713f152b65221d197772cf5559fe898720e";
         System.out.println(String.format("交易Key: %s", key));
         System.out.println(String.format("添加的管理员: %s", Arrays.toString(list.toArray())));
         List<Address> addressList = list.stream().map(a -> new Address(a)).collect(Collectors.toList());
@@ -1026,15 +1043,14 @@ public class ETHWalletApiTest extends Base {
 
     }
 
+    /**
+     * 合约升级
+     */
     @Test
     public void upgradeContract() throws Exception {
         // 数据准备
         EthContext.setEthGasPrice(BigInteger.valueOf(30L).multiply(BigInteger.TEN.pow(9)));
-        String superAdmin = "";
-        String superAdminPrivatekey = "";
         String oldContract = "";
-        String newContract = "";
-        String USDX = "0xB058887cb5990509a3D0DD2833B2054E4a7E4a55";
 
         // 种子管理员地址
         String[] seeds = new String[prikeyOfSeeds.length];
@@ -1081,6 +1097,71 @@ public class ETHWalletApiTest extends Base {
                 break;
             }
         }
+    }
+
+    protected String oldContract;
+    protected String newContract;
+    protected List<String[]> erc20List;
+
+    private void setDevUpgradeData() {
+        oldContract = "0x4A05428eC53195e4657739e7622E04594F8c4020";
+        newContract = "0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2";
+        String USDX = "0xB058887cb5990509a3D0DD2833B2054E4a7E4a55";
+        String USDI = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
+        erc20List = new ArrayList<>();
+        erc20List.add(new String[]{USDX, "USDX"});
+        erc20List.add(new String[]{USDI, "USDI"});
+    }
+
+    private void setBetaUpgradeData() {
+        oldContract = "0x44f4eA5028992D160Dc0dc9A3cB93a2e4C913611";
+        newContract = "0x7D759A3330ceC9B766Aa4c889715535eeD3c0484";
+        String ENVT = "0x53be0d78b686f68643c38dfcc4f141a0c2785a08";
+        String USDX = "0xb058887cb5990509a3d0dd2833b2054e4a7e4a55";
+        erc20List = new ArrayList<>();
+        erc20List.add(new String[]{ENVT, "ENVT"});
+        erc20List.add(new String[]{USDX, "USDX"});
+    }
+
+    private void setMainUpgradeData() {
+        oldContract = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        newContract = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
+        String USDT = "0xdac17f958d2ee523a2206206994597c13d831ec7";
+        String USDC = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48";
+        String ENVT = "0x8CD6e29d3686d24d3C2018CEe54621eA0f89313B";
+        String DAI = "0x6b175474e89094c44da98b954eedeac495271d0f";
+        String UNI = "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984";
+        String MXT = "0x6251E725CD45Fb1AF99354035a414A2C0890B929";
+        String PAX = "0x8e870d67f660d95d5be530380d0ec0bd388289e1";
+        String LOON = "0x7C5d5100B339Fe7D995a893AF6CB496B9474373c";
+        String XMPT = "0xbf1D65af601DcFf5b804e02A75833fF51E3869B2";
+        erc20List = new ArrayList<>();
+        erc20List.add(new String[]{USDT, "USDT"});
+        erc20List.add(new String[]{USDC, "USDC"});
+        erc20List.add(new String[]{ENVT, "ENVT"});
+        erc20List.add(new String[]{DAI, "DAI"});
+        erc20List.add(new String[]{UNI, "UNI"});
+        erc20List.add(new String[]{MXT, "MXT"});
+        erc20List.add(new String[]{PAX, "PAX"});
+        erc20List.add(new String[]{LOON, "LOON"});
+        erc20List.add(new String[]{XMPT, "XMPT"});
+        setMain();
+    }
+
+    /**
+     * 合约升级后的资产转移
+     */
+    @Test
+    public void transferAssetAfterUpgrade() throws Exception {
+        // 正式网环境数据
+        setMainUpgradeData();
+        // GasPrice准备
+        long gasPriceGwei = 100L;
+        EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        // 超级账户
+        String superAdmin = "";
+        String superAdminPrivatekey = "";
+
         System.out.println("-=-=-=-=-=-[开始执行资产转移]=-=-=-=-=-=-=");
         // upgradeContractS1 upgradeContractS2
         BigDecimal ethBalance = ethWalletApi.getBalance(oldContract);
@@ -1096,31 +1177,35 @@ public class ETHWalletApiTest extends Base {
             TimeUnit.SECONDS.sleep(8);
         }
         System.out.println(String.format("[ETH资产]转移第一步完成"));
-        String txHash2 = ethWalletApi.sendETH(superAdmin, superAdminPrivatekey, newContract, ethBalance, BigInteger.valueOf(800000L), EthContext.getEthGasPrice());
+        String txHash2 = ethWalletApi.sendETH(superAdmin, superAdminPrivatekey, newContract, ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger()), BigInteger.valueOf(800000L), EthContext.getEthGasPrice());
         System.out.println(String.format("[ETH资产]转移第二步hash: %s", txHash2));
-        while (ethWalletApi.getTxReceipt(po1.getTxHash()) == null) {
+        while (ethWalletApi.getTxReceipt(txHash2) == null) {
             System.out.println("等待8秒查询[ETH资产]转移第二步结果");
             TimeUnit.SECONDS.sleep(8);
         }
         System.out.println(String.format("[ETH资产]转移完成，转移数额: %s", ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger()).toPlainString()));
-        //ethWalletApi.sendETH()
-        BigInteger USDXBalance = ethWalletApi.getERC20Balance(oldContract, USDX);
-        List<Type> input2 = List.of(
-                new Address(USDX),
-                new Address(newContract),
-                new Uint256(USDXBalance)
-        );
-        Function upgradeFunction2 = new Function(
-                "upgradeContractS2",
-                input2,
-                List.of(new TypeReference<Type>() {}));
-        EthSendTransactionPo po2 = ethWalletApi.callContract(superAdmin, superAdminPrivatekey, oldContract, BigInteger.valueOf(800000L), upgradeFunction2);
-        System.out.println(String.format("[USDX资产]转移hash: %s", po2.getTxHash()));
-        while (ethWalletApi.getTxReceipt(po2.getTxHash()) == null) {
-            System.out.println("等待8秒查询[USDX资产]转移结果");
-            TimeUnit.SECONDS.sleep(8);
+
+        for(String[] erc20Info : erc20List) {
+            String erc20Address = erc20Info[0];
+            String erc20Name = erc20Info[1];
+            BigInteger USDXBalance = ethWalletApi.getERC20Balance(oldContract, erc20Address);
+            List<Type> input2 = List.of(
+                    new Address(erc20Address),
+                    new Address(newContract),
+                    new Uint256(USDXBalance)
+            );
+            Function upgradeFunction2 = new Function(
+                    "upgradeContractS2",
+                    input2,
+                    List.of(new TypeReference<Type>() {}));
+            EthSendTransactionPo po2 = ethWalletApi.callContract(superAdmin, superAdminPrivatekey, oldContract, BigInteger.valueOf(800000L), upgradeFunction2);
+            System.out.println(String.format("[%s资产]转移hash: %s", erc20Name, po2.getTxHash()));
+            while (ethWalletApi.getTxReceipt(po2.getTxHash()) == null) {
+                System.out.println(String.format("等待8秒查询[%s资产]转移结果", erc20Name));
+                TimeUnit.SECONDS.sleep(8);
+            }
+            System.out.println(String.format("[%s资产]转移完成", erc20Name));
         }
-        System.out.println(String.format("[USDX资产]转移完成"));
     }
 
     private boolean isUpgrade(String contract) throws Exception {
@@ -1194,18 +1279,21 @@ public class ETHWalletApiTest extends Base {
     public void test() {
         String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
-        long price = 123L;
+        long price = 100L;
         System.out.println("1200000 gas cost " + new BigDecimal("1200000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("800000 gas cost " + new BigDecimal("800000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("520000 gas cost " + new BigDecimal("520000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("400000 gas cost " + new BigDecimal("400000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("380000 gas cost " + new BigDecimal("380000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("350000 gas cost " + new BigDecimal("350000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("300000 gas cost " + new BigDecimal("300000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("150000 gas cost " + new BigDecimal("150000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println("100000 gas cost " + new BigDecimal("100000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("60000 gas cost " + new BigDecimal("60000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
+        System.out.println("21000 gas cost " + new BigDecimal("21000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
-
     }
+
     @Test
     public void maintestSendEth() throws Exception {
         setMain();

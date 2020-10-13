@@ -37,6 +37,8 @@ public interface VirtualBankAllHistoryStorageService {
 
     VirtualBankDirector findBySignAddress(Chain chain, String address);
 
+    String findSignAddressByAgentAddress(Chain chain, String address);
+
     /**
      * find signAddress
      * @param chain

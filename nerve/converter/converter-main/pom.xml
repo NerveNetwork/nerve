@@ -32,7 +32,7 @@
 
         <dependency>
             <groupId>network.nerve</groupId>
-            <artifactId>converter-eth</artifactId>
+            <artifactId>converter-ethII</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
 

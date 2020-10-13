@@ -33,6 +33,7 @@ import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.heterogeneouschain.eth.base.Base;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import org.bitcoinj.crypto.*;
@@ -48,7 +49,6 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -185,9 +185,9 @@ public class EthAccountTest extends Base {
 
     @Test
     public void NULSAddressByPubkey() {
-        String pubkey = "0301b0500627fc23a145317cb3cbcf2fc88c766f086a5cd97086f5d9b169fff98d";
+        String pubkey = "02a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e4";
         AddressTool.addPrefix(18, "BBAI");
-        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 18)));
+        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
 
     }
 
@@ -196,13 +196,13 @@ public class EthAccountTest extends Base {
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x32a6d6b1e968f996757cb49fd4f0b08692f9d7f6
-        String pubkey = "02d09924d493ab1e7a2fc7438f48abcd078ff0bf0b82563f1c4917de8879a075c4";
+        String pubkey = "02a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e4";
         System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
     }
 
     @Test
     public void ETHAddressByPubkeySet() {
-        String pubkeySet = "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0,020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5";
+        String pubkeySet = "020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -220,7 +220,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0x9f14432b86db285c76589d995aab7e7f88b709df, 0x42868061f6659e84414e0c52fb7c32c084ce2051, 0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af, 0x9dc0ec60c89be3e5530ddbd9cf73430e21237565, 0x6392c7ed994f7458d60528ed49c2f525dab69c9a, 0xfa27c84ec062b2ff89eb297c24aaed366079c684, 0xc11d9943805e56b630a401d4bd9a29550353efa1, 0x3091e329908da52496cc72f5d5bbfba985bccb1f, 0x49467643f1b6459caf316866ecef9213edc4fdf2, 0x5e57d62ab168cd69e0808a73813fbf64622b3dfd";
+        String pubkeySet = "0x4caa0869a4e0a4a860143b366f336fcc5d11d4d8, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x196c4b2b6e947b57b366967a1822f3fb7d9be1a8, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0xbb5ba69105a330218e4a433f5e2a273bf0075e64, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -285,8 +285,7 @@ public class EthAccountTest extends Base {
     @Test
     public void ethAddress() {
         // ["0xdd7cbedde731e78e8b8e4b2c212bc42fa7c09d03","0xd16634629c638efd8ed90bb096c216e7aec01a91","0x16534991E80117Ca16c724C991aad9EAbd1D7ebe"]
-        System.out.println(EthUtil.genEthAddressByCompressedPublickey("037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863"));
-        System.out.println(EthUtil.genEthAddressByCompressedPublickey("036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b"));
+        System.out.println(EthUtil.genEthAddressByCompressedPublickey("a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e46a29338b80c7c69ee5400267cf64f7f0ced48d18e30b8d76fa3bced37a3a677c"));
     }
 
     @Test
@@ -306,100 +305,13 @@ public class EthAccountTest extends Base {
 
     @Test
     public void publicKeyTest() {
-        String pub = "9f636dab852fc3f68e7e5a24904ba41d0ffbb4dcd8dd18e07d37010311e729824d5a99960e8fa196f6ed7f8b2a7cbb39210a895b44e2b284908d2f82573620c";
+        EthContext.NERVE_CHAINID = 9;
+        String pub = "a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e46a29338b80c7c69ee5400267cf64f7f0ced48d18e30b8d76fa3bced37a3a677c";
         pub = leftPadding(pub, "0", 128);
         String pubkeyFromEth = PUBLIC_KEY_UNCOMPRESSED_PREFIX + pub;
+        //String pubkeyFromEth = "06" + pub;
         io.nuls.core.crypto.ECKey ecKey = io.nuls.core.crypto.ECKey.fromPublicOnly(HexUtil.decode(pubkeyFromEth));
-        System.out.println(AddressTool.getAddressString(ecKey.getPubKeyPoint().getEncoded(true), 4));
-    }
-
-
-
-    @Test
-    public void encoderWithdrawTest() {
-        String txKey = "ggg";
-        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        BigInteger value = BigInteger.valueOf(30000000L);
-        Boolean isContractAsset = true;
-        String erc20 = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        StringBuilder sb = new StringBuilder();
-        sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
-        sb.append(Numeric.cleanHexPrefix(toAddress));
-        sb.append(leftPadding(value.toString(16), "0", 64));
-        sb.append(isContractAsset ? "01" : "00");
-        sb.append(Numeric.cleanHexPrefix(erc20));
-        byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
-        System.out.println(String.format("data: %s", sb.toString()));
-        System.out.println(String.format("hash: %s", Numeric.toHexString(hash)));
-    }
-
-    @Test
-    public void encoderChangeTest() {
-        String txKey = "ccc";
-        String[] adds = new String[]{"0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
-        int count = 1;
-        String[] removes = new String[]{"0x7dc432b48d813b2579a118e5a0d2fee744ac8e02"};
-        StringBuilder sb = new StringBuilder();
-        sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
-        for (String add : adds) {
-            sb.append(leftPadding(Numeric.cleanHexPrefix(add), "0", 64));
-        }
-        sb.append(leftPadding(Integer.toHexString(count), "0", 2));
-        for (String remove : removes) {
-            sb.append(leftPadding(Numeric.cleanHexPrefix(remove), "0", 64));
-        }
-        byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
-        System.out.println(String.format("data: %s", sb.toString()));
-        System.out.println(String.format("hash: %s", Numeric.toHexString(hash)));
-    }
-
-    @Test
-    public void ethSign() {
-        String result = "";
-        List<String> addressList = new ArrayList<>();
-        System.out.println(result);
-        List<String> list = new ArrayList<>();
-        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 0xbe7fbb51979e0b0b70c48284e895e228290d9f73
-        list.add("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75");// 0xcb1fa0c0b7b4d57848bddaa4276ce0776a3215d2
-        list.add("8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78");// 0x54103606d9fcdb40539d06344c8f8c6367ffc9b8
-        list.add("4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530");// 0x847772e7773061c93d0967c56f2e4b83145c8cb2
-        list.add("bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7");// 0x4273e90fbfe5fca32704c02987d938714947a937
-
-        list.add("ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200");// 0x9f14432b86db285c76589d995aab7e7f88b709df
-        list.add("4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a");// 0x42868061f6659e84414e0c52fb7c32c084ce2051
-        list.add("3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1");// 0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af
-        list.add("27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e");// 0x9dc0ec60c89be3e5530ddbd9cf73430e21237565
-        list.add("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b");// 0x6392c7ed994f7458d60528ed49c2f525dab69c9a
-        list.add("B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF");// 0xfa27c84ec062b2ff89eb297c24aaed366079c684
-        list.add("4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39");// 0xc11d9943805e56b630a401d4bd9a29550353efa1
-        list.add("e70ea2ebe146d900bf84bc7a96a02f4802546869da44a23c29f599c7e42001da");// 0x3091e329908da52496cc72f5d5bbfba985bccb1f
-        list.add("4c6b4c5d9b07e364d6b306d1afe0f2c37e15c64ac5151a395a4c570f00ce867d");// 0x49467643f1b6459caf316866ecef9213edc4fdf2
-        list.add("2fea28f438a104062e4dcd79427282573053a6b762e68b942055221462c46f02");// 0x5e57d62ab168cd69e0808a73813fbf64622b3dfd
-
-        //list.add("08407198c196c950afffd326a00321a5ea563b3beaf640d462f3a274319b753d");// 0x7dc432b48d813b2579a118e5a0d2fee744ac8e02 16
-
-        System.out.println(String.format("list size: %s", list.size()));
-        String hashStr = "0x36b1a58cd020bb14de1d71cb56f5a2c7b7eecff66c1b9687b7b1d06ffeaedc9e";
-        byte[] hash = Numeric.hexStringToByteArray(hashStr);
-        for (String prikey : list) {
-            Credentials credentials = Credentials.create(prikey);
-            String address = credentials.getAddress();
-            Sign.SignatureData signMessage = Sign.signMessage(hash, credentials.getEcKeyPair(), false);
-            byte[] signed = new byte[65];
-            System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
-            System.arraycopy(signMessage.getS(), 0, signed, 32, 32);
-            System.arraycopy(signMessage.getV(), 0, signed, 64, 1);
-            String signedHex = Numeric.toHexStringNoPrefix(signed);
-            //System.out.println();
-            System.out.println(String.format("address: %s", address));
-            //System.out.println(String.format("keccak256 hash: %s", Numeric.toHexString(hash)));
-            //System.out.println(String.format("signed: 0x%s", signedHex));
-            result += signedHex;
-            addressList.add(address);
-        }
-        System.out.println();
-        System.out.println(Arrays.toString(addressList.toArray()));
-        System.out.println(String.format("signatures: 0x%s", result));
+        System.out.println(AddressTool.getAddressString(ecKey.getPubKeyPoint().getEncoded(true), EthContext.NERVE_CHAINID));
     }
 
     /**

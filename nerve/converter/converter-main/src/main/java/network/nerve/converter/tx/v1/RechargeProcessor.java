@@ -161,12 +161,12 @@ public class RechargeProcessor implements TransactionProcessor {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 CoinTo coinTo = coinData.getTo().get(0);
-                HeterogeneousAssetInfo info = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(coinTo.getAssetsId());
+                HeterogeneousAssetInfo info = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(info.getChainId());
-
-                boolean rs = rechargeStorageService.save(chain, txData.getOriginalTxHash(), tx.getHash());
+                NulsHash hash = tx.getHash();
+                boolean rs = rechargeStorageService.save(chain, txData.getOriginalTxHash(), hash);
                 if (!rs) {
-                    chain.getLogger().error("[commit] Save recharge failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
+                    chain.getLogger().error("[commit] Save recharge failed. hash:{}, type:{}", hash.toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
                 ProposalPO proposalPO = null;
@@ -177,14 +177,14 @@ public class RechargeProcessor implements TransactionProcessor {
 
                 // 节点正常运行状态下 并且不是提案执行的充值交易，才执行异构链交易确认函数
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector && null == proposalPO) {
-                    docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight());
+                    docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex());
                 }
                 if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     // 如果是执行提案 需要发布提案确认交易
-                    publishProposalConfirmed(chain, tx.getHash(), proposalPO, blockHeader.getTime());
+                    publishProposalConfirmed(chain, hash, proposalPO, blockHeader.getTime());
                 }
 
-                chain.getLogger().info("[commit]Recharge 充值交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit]Recharge 充值交易 hash:{}", hash.toHex());
             }
             return true;
         } catch (Exception e) {
@@ -235,9 +235,13 @@ public class RechargeProcessor implements TransactionProcessor {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 CoinTo coinTo = coinData.getTo().get(0);
-                HeterogeneousAssetInfo info = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(coinTo.getAssetsId());
+                HeterogeneousAssetInfo info = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(info.getChainId());
-                ProposalPO proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
+                ProposalPO proposalPO = null;
+                if(!Numeric.containsHexPrefix(txData.getOriginalTxHash())) {
+                    // 表明不是异构链交易hash 可能为提案
+                    proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
+                }
                 // 不是提案执行的充值交易，才执行异构链交易确认回滚
                 if (null == proposalPO) {
                     docking.txConfirmedRollback(txData.getOriginalTxHash());

@@ -100,6 +100,13 @@ public class ConverterUtil {
         return error.contains("Invalid response received: 602") || error.contains("nerve expired");
     }
 
+    public static boolean isInsufficientSignature(NulsException e) {
+        if (e == null || StringUtils.isBlank(e.getCustomMessage())) {
+            return false;
+        }
+        return e.getCustomMessage().contains("Valid signatures fail");
+    }
+
     public static <T> T getInstance(byte[] bytes, Class<? extends BaseNulsData> clazz) throws NulsException {
         if (null == bytes || bytes.length == 0) {
             throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);

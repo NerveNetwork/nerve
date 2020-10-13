@@ -57,6 +57,8 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static network.nerve.converter.config.ConverterContext.*;
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_1;
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_2;
 
 /**
  * @author: Loki
@@ -203,13 +205,12 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 chain.getLogger().error(e);
             }
         }
-
         /**
-         * 如果没有开启虚拟银行变更服务就检查是否达到开启条件
-         * 达到条件则开启服务
+         * 节点数超过阈值, 有虚拟银行在运行
          */
         if (!ENABLED_VIRTUAL_BANK_CHANGES_SERVICE) {
-            if (ConverterContext.INITIAL_VIRTUAL_BANK_COUNT <= listAgent.size() && bankNumber > 0) {
+//            if (ConverterContext.INITIAL_VIRTUAL_BANK_COUNT <= listAgent.size() && bankNumber > 0) {
+            if (ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT <= chain.getMapVirtualBank().size()) {
                 ENABLED_VIRTUAL_BANK_CHANGES_SERVICE = true;
             }
         }
@@ -260,13 +261,13 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         }
         // 根据最新共识列表,计算出最新的有虚拟银行资格的成员(非当前实际生效的虚拟应银行成员)
         List<AgentBasic> listVirtualBank = calcNewestVirtualBank(chain, listAgent);
-        //当前已生效的
+        // 当前已生效的
         Map<String, VirtualBankDirector> mapCurrentVirtualBank = chain.getMapVirtualBank();
         // 记录周期内模块本地银行变化情况
         VirtualBankTemporaryChangePO virtualBankTemporaryChange = new VirtualBankTemporaryChangePO();
         boolean isImmediateEffect = false;
 
-        //统计退出的节点 (只要不在最新计算的虚拟银行列表中, 则表示退出立即执行(包括保证金排名和直接停止共识节点))
+        // 统计退出的节点 (只要不在最新计算的虚拟银行列表中, 则表示退出立即执行(包括保证金排名和直接停止共识节点))
         for (VirtualBankDirector director : mapCurrentVirtualBank.values()) {
             if (director.getSeedNode()) {
                 continue;
@@ -346,8 +347,6 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         for (IHeterogeneousChainDocking hInterface : hInterfaces) {
             String pubKey = agentBasic.getPubKey();
             if (StringUtils.isBlank(pubKey)) {
-//                chain.getLogger().debug("[]The agent packing address public key not exist, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
-//                        agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
                 return false;
             }
             String hAddress = hInterface.generateAddressByCompressedPublicKey(agentBasic.getPubKey());
@@ -386,8 +385,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             // 排除已被撤销虚拟银行资格的节点地址
             String disqualificationAddress = disqualificationStorageService.find(chain, AddressTool.getAddress(agentBasic.getAgentAddress()));
 
-            // 排除节点出块地址对应的异构地址余额不满足初始值的节点
-//            boolean join = checkHeterogeneousAddressBalance(chain, agentBasic);
+            /* // 排除节点出块地址对应的异构地址余额不满足初始值的节点
+            boolean join = checkHeterogeneousAddressBalance(chain, agentBasic);*/
             boolean packaged = StringUtils.isNotBlank(agentBasic.getPubKey());
             if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress) && packaged) {
                 listVirtualBank.add(agentBasic);
@@ -423,7 +422,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 VirtualBankDirector director = mapCurrentVirtualBank.get(agentBasic.getPackingAddress());
                 if (null == director) {
                     // 如果不是虚拟银行成员则index为银行总数+当前索引 保证当前顺序, 但排名在当前虚拟银行节点之后
-                    agentBasic.setIndex(VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED + INITIAL_VIRTUAL_BANK_COUNT + i + 1);
+                    agentBasic.setIndex(VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED + INITIAL_VIRTUAL_BANK_SEED_COUNT + i + 1);
                 } else {
                     // 如果是虚拟银行则 用虚拟银行的排序值
                     agentBasic.setIndex(director.getOrder());
@@ -442,18 +441,51 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
-     * 初始化所有种子节点为虚拟银行
-     *
+     * 添加所有种子节点为虚拟银行成员
      * @param chain
      * @param listAgent
      */
-    private void initVirtualBank(Chain chain, List<AgentBasic> listAgent, long height) throws NulsException {
-        // 如果虚拟银行为空 将种子节点初始化为 虚拟银行节成员
-        if (chain.getMapVirtualBank().isEmpty()) {
-            SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
-            List<VirtualBankDirector> listInDirector = new ArrayList<>();
-            for (AgentBasic agentBasic : listAgent) {
-                if (agentBasic.getSeedNode()) {
+    private void addBankDirector(Chain chain, List<AgentBasic> listAgent){
+        SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
+        List<VirtualBankDirector> listInDirector = new ArrayList<>();
+        for (AgentBasic agentBasic : listAgent) {
+            if (agentBasic.getSeedNode()) {
+                VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
+                // 种子节点打包地址,节点地址 奖励地址 设为一致
+                virtualBankDirector.setAgentHash(agentBasic.getAgentHash());
+                virtualBankDirector.setAgentAddress(agentBasic.getPackingAddress());
+                virtualBankDirector.setSignAddress(agentBasic.getPackingAddress());
+                virtualBankDirector.setRewardAddress(agentBasic.getPackingAddress());
+                virtualBankDirector.setSignAddrPubKey(agentBasic.getPubKey());
+                virtualBankDirector.setSeedNode(agentBasic.getSeedNode());
+                virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
+                listInDirector.add(virtualBankDirector);
+                // 如果当前是共识节点, 判断当前是否是虚拟银行成员
+                if (null != signAccountDTO && agentBasic.getPackingAddress().equals(signAccountDTO.getAddress())) {
+                    chain.getCurrentIsDirector().set(true);
+                    chain.getLogger().info("[虚拟银行] 当前节点介入虚拟银行,标识变更为: true");
+                }
+            }
+        }
+        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
+        // end code by Mimi
+    }
+
+    /**
+     * 添加配置的种子节点为虚拟银行成员
+     * @param chain
+     * @param listAgent
+     */
+    private void addBankDirectorBySetting(Chain chain, List<AgentBasic> listAgent){
+        SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
+        List<VirtualBankDirector> listInDirector = new ArrayList<>();
+        for (AgentBasic agentBasic : listAgent) {
+            if (!agentBasic.getSeedNode()) {
+                continue;
+            }
+            for(String pubkey : INIT_VIRTUAL_BANK_PUBKEY_LIST){
+                if(pubkey.equals(agentBasic.getPubKey())){
                     VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
                     // 种子节点打包地址,节点地址 奖励地址 设为一致
                     virtualBankDirector.setAgentHash(agentBasic.getAgentHash());
@@ -471,9 +503,27 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                     }
                 }
             }
-            // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
-            VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
-            // end code by Mimi
+        }
+        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
+        // end code by Mimi
+    }
+
+    /**
+     * 初始化所有种子节点为虚拟银行
+     *
+     * @param chain
+     * @param listAgent
+     */
+    private void initVirtualBank(Chain chain, List<AgentBasic> listAgent, long height) throws NulsException {
+
+        // 如果虚拟银行为空 将种子节点初始化为 虚拟银行节成员
+        if (chain.getMapVirtualBank().isEmpty()) {
+            if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
+                addBankDirector(chain,  listAgent);
+            } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                addBankDirectorBySetting( chain, listAgent);
+            }
         }
         // 如果虚拟银行成员 初始化异构链地址
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());

@@ -32,6 +32,20 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
+     * 重新将异构链提现交易放入task, 重发消息
+     */
+    public Result retryWithdrawalMsg(int chainId, String hash) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("hash", hash);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_retry_withdrawal", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
      * 虚拟银行成员信息
      * @param chainId
      * @return

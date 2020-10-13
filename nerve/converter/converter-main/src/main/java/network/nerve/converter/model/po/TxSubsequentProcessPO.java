@@ -72,15 +72,35 @@ public class TxSubsequentProcessPO implements Serializable {
     private SyncStatusEnum syncStatusEnum;
 
     /**
+     * 当前节点是不是虚拟银行成员
+     */
+    private boolean currentDirector;
+
+    /**
      * 当前节点是不是在本交易中加入的虚拟银行
      */
     private boolean currentJoin;
 
     /**
-     * 当前节点是不是虚拟银行成员
+     * 当前节点是不是在本交易中退出的虚拟银行
      */
-    private boolean currentDirector;
+    private boolean currentQuit;
 
+    /**
+     * 如果当前管理员在该交易退出的虚拟银行, 需要暂存数据(签名时使用)
+     */
+    private VirtualBankDirector currentQuitDirector;
+
+    /**
+     * 当前区块的虚拟银行成员总数
+     * (不算当前加入, 要算当前退出)
+     */
+    private int currenVirtualBankTotal;
+
+    /**
+     * 重试机制(消息重发)
+     */
+    private boolean retry;
 
     public TxSubsequentProcessPO() {
     }
@@ -151,5 +171,37 @@ public class TxSubsequentProcessPO implements Serializable {
 
     public void setCurrentDirector(boolean currentDirector) {
         this.currentDirector = currentDirector;
+    }
+
+    public boolean getCurrentQuit() {
+        return currentQuit;
+    }
+
+    public void setCurrentQuit(boolean currentQuit) {
+        this.currentQuit = currentQuit;
+    }
+
+    public VirtualBankDirector getCurrentQuitDirector() {
+        return currentQuitDirector;
+    }
+
+    public void setCurrentQuitDirector(VirtualBankDirector currentQuitDirector) {
+        this.currentQuitDirector = currentQuitDirector;
+    }
+
+    public int getCurrenVirtualBankTotal() {
+        return currenVirtualBankTotal;
+    }
+
+    public void setCurrenVirtualBankTotal(int currenVirtualBankTotal) {
+        this.currenVirtualBankTotal = currenVirtualBankTotal;
+    }
+
+    public boolean getRetry() {
+        return retry;
+    }
+
+    public void setRetry(boolean retry) {
+        this.retry = retry;
     }
 }

@@ -52,6 +52,8 @@ public class CallBackBeanManager {
     private CfmChangeBankStorageService cfmChangeBankStorageService;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private VirtualBankStorageService virtualBankStorageService;
 
     public AssembleTxService getAssembleTxService() {
         return assembleTxService;
@@ -83,5 +85,9 @@ public class CallBackBeanManager {
 
     public LedgerAssetRegisterHelper getLedgerAssetRegisterHelper() {
         return ledgerAssetRegisterHelper;
+    }
+
+    public VirtualBankStorageService getVirtualBankStorageService() {
+        return virtualBankStorageService;
     }
 }

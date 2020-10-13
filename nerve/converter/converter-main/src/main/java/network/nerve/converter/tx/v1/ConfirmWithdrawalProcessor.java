@@ -161,7 +161,7 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                 // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
-                    docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight());
+                    docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getWithdrawalTxHash().toHex());
                     //放入后续处理队列, 可能发起手续费补贴交易
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);

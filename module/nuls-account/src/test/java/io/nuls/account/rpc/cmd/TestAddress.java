@@ -44,7 +44,7 @@ import java.util.List;
  * @date 2018/12/14
  **/
 public class TestAddress {
-    private int chainId = 2;
+    private int chainId = 5;
 
     @Test
     public void test1(){
@@ -63,7 +63,8 @@ public class TestAddress {
 
     @Test
     public void createAccount() throws NulsException {
-        int start = 5, count = 30;
+        AddressTool.addPrefix(5, "TNVT");
+        int start = 32, count = 20;
         List<Account> list = new ArrayList<>();
         for(int i=0;i<count;i++) {
             list.add(createAccount(chainId));
@@ -75,9 +76,9 @@ public class TestAddress {
         }
         System.out.println();
         System.out.println();
-        start = 5;
+        start = 32;
         for(Account account : list) {
-            System.out.println("protected String toAddress"+(start++)+" = \""+account.getAddress().toString()+"\";");
+            System.out.println("protected String address"+(start++)+" = \""+account.getAddress().toString()+"\";");
         }
         System.out.println();
         System.out.println();

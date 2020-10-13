@@ -42,9 +42,7 @@ import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.docking.EthDocking;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.*;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.EthERC20Po;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
@@ -100,8 +98,18 @@ public class EthRegister implements IHeterogeneousChainRegister {
     private EthParseTxHelper ethParseTxHelper;
     @Autowired
     private EthAnalysisTxHelper ethAnalysisTxHelper;
-
+    @Autowired
+    private EthCommonHelper ethCommonHelper;
+    @Autowired
+    private EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
+    private ScheduledThreadPoolExecutor blockSyncExecutor;
+    private ScheduledThreadPoolExecutor confirmTxExecutor;
     private boolean isInitial = false;
+
+    @Override
+    public int order() {
+        return 1;
+    }
 
     @Override
     public int getChainId() {
@@ -123,9 +131,8 @@ public class EthRegister implements IHeterogeneousChainRegister {
             // 存放nerveChainId
             EthContext.NERVE_CHAINID = converterConfig.getChainId();
             RocksDBService.createTable(EthDBConstant.DB_ETH);
-            //initERC20();
+            // 初始化待确认任务队列
             initUnconfirmedTxQueue();
-            initScheduled();
         }
     }
 
@@ -134,7 +141,6 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     private void initEthWalletRPC() {
-        //EthContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(EthContext.getConfig().getMainRpcAddress()));
         String orderRpcAddresses = EthContext.getConfig().getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
@@ -183,6 +189,8 @@ public class EthRegister implements IHeterogeneousChainRegister {
         ethDocking.setEthParseTxHelper(ethParseTxHelper);
         ethDocking.setEthCallBackManager(ethCallBackManager);
         ethDocking.setEthAnalysisTxHelper(ethAnalysisTxHelper);
+        ethDocking.setEthCommonHelper(ethCommonHelper);
+        ethDocking.setEthUpgradeContractSwitchHelper(ethUpgradeContractSwitchHelper);
         return ethDocking;
     }
 
@@ -194,21 +202,35 @@ public class EthRegister implements IHeterogeneousChainRegister {
         // 管理回调函数实例
         ethCallBackManager.setDepositTxSubmitter(registerInfo.getDepositTxSubmitter());
         ethCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
+        ethCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
         // 存放CORE查询API实例
         EthContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
         // 更新多签地址
         EthContext.MULTY_SIGN_ADDRESS = multiSigAddress;
         // 保存当前多签地址到多签地址历史列表中
         ethMultiSignAddressHistoryStorageService.save(multiSigAddress);
-        //EthContext.MULTY_SIGN_ADDRESS_HISTORY_SET = ethMultiSignAddressHistoryStorageService.findAll();
+        // 合约未升级时，使用当前的任务处理流程
+        if (!isUpgradeContract()) {
+            // 初始化任务工作池
+            initScheduled();
+        }
         logger().info("ETH注册完成.");
     }
 
+    /**
+     * 当配置的合约地址与当前有效的合约地址不同时，则说明合约已升级
+     */
+    private boolean isUpgradeContract() {
+        String multySignAddressOfSetting = EthContext.getConfig().getMultySignAddress().toLowerCase();
+        String currentMultySignAddress = EthContext.MULTY_SIGN_ADDRESS;
+        return !multySignAddressOfSetting.equals(currentMultySignAddress);
+    }
+
     private void initScheduled() {
-        ScheduledThreadPoolExecutor blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("eth-block-sync"));
+        blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("eth-block-sync"));
         blockSyncExecutor.scheduleWithFixedDelay(ethBlockScheduled, 60, 20, TimeUnit.SECONDS);
 
-        ScheduledThreadPoolExecutor confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("eth-confirm-tx"));
+        confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("eth-confirm-tx"));
         confirmTxExecutor.scheduleWithFixedDelay(ethConfirmTxScheduled, 60, 20, TimeUnit.SECONDS);
     }
 
@@ -250,5 +272,17 @@ public class EthRegister implements IHeterogeneousChainRegister {
         }
         ethERC20StorageService.saveMaxAssetId(maxAssetId);
         ethERC20StorageService.initDBCompleted(maxAssetId);
+    }
+
+    /**
+     * 停止当前区块解析任务与待确认交易任务
+     */
+    public void shutDownScheduled() {
+        if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {
+            blockSyncExecutor.shutdown();
+        }
+        if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
+            confirmTxExecutor.shutdown();
+        }
     }
 }

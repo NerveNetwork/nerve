@@ -126,6 +126,7 @@ public class DexBootstrap extends RpcModule {
         DexUtil.createTable(DexDBConstant.DB_NAME_TRADING_DEAL);
         DexUtil.createTable(DexDBConstant.DB_NAME_COIN_TRADING_EDIT_INFO);
         DexUtil.createTable(DexDBConstant.DB_NAME_NONCE_ORDER);
+        DexUtil.createTable(DexDBConstant.DB_NAME_HEIGHT);
     }
 
 
@@ -133,9 +134,12 @@ public class DexBootstrap extends RpcModule {
         try {
             Map map = JSONUtils.json2map(IoUtils.read(DexConstant.DEX_CONFIG_FILE + dexConfig.getChainId() + ".json"));
             long skipHeight = Long.parseLong(map.get("skipHeight").toString());
+            long priceSkipHeight = Long.parseLong(map.get("priceSkipHeight").toString());
             DexContext.skipHeight = skipHeight;
+            DexContext.priceSkipHeight = priceSkipHeight;
         } catch (Exception e) {
             DexContext.skipHeight = 0;
+            DexContext.priceSkipHeight = 0;
         }
     }
 

@@ -32,6 +32,7 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IHeterogeneousUpgrade;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 import network.nerve.converter.core.heterogeneous.callback.management.HeterogeneousCallBackManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
@@ -87,9 +88,11 @@ public class HeterogeneousChainRegister {
         String multySignAddress = chainInfo.getMultySignAddress();
         IDepositTxSubmitter depositTxSubmitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(nerveChainId, heterogeneousChainId);
         ITxConfirmedProcessor txConfirmedProcessor = heterogeneousCallBackManager.createOrGetTxConfirmedProcessor(nerveChainId, heterogeneousChainId);
+        IHeterogeneousUpgrade heterogeneousUpgrade = heterogeneousCallBackManager.createOrGetHeterogeneousUpgrade(nerveChainId, heterogeneousChainId);
         info.setMultiSigAddress(multySignAddress);
         info.setDepositTxSubmitter(depositTxSubmitter);
         info.setTxConfirmedProcessor(txConfirmedProcessor);
+        info.setHeterogeneousUpgrade(heterogeneousUpgrade);
         info.setConverterCoreApi(converterCoreApi);
         return info;
     }

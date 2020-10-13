@@ -33,14 +33,21 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.ledger.config.LedgerConfig;
 import io.nuls.ledger.constant.CmdConstant;
 import io.nuls.ledger.constant.LedgerConstant;
+import io.nuls.ledger.constant.LedgerErrorCode;
+import io.nuls.ledger.manager.LedgerChainManager;
 import io.nuls.ledger.model.po.LedgerAsset;
 import io.nuls.ledger.service.AssetRegMngService;
+import io.nuls.ledger.storage.AssetRegMngRepository;
+import io.nuls.ledger.storage.CrossChainAssetRegMngRepository;
 import io.nuls.ledger.utils.LoggerUtil;
 
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static io.nuls.ledger.constant.LedgerConstant.CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE;
+import static io.nuls.ledger.constant.LedgerConstant.CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS;
 
 /**
  * 资产登记与管理接口
@@ -50,10 +57,17 @@ import java.util.Map;
  */
 @Component
 public class AssetsRegCmd extends BaseLedgerCmd {
+
     @Autowired
     LedgerConfig ledgerConfig;
     @Autowired
     AssetRegMngService assetRegMngService;
+    @Autowired
+    LedgerChainManager ledgerChainManager;
+    @Autowired
+    CrossChainAssetRegMngRepository crossChainAssetRegMngRepository;
+    @Autowired
+    AssetRegMngRepository assetRegMngRepository;
 
 
     /**
@@ -116,6 +130,126 @@ public class AssetsRegCmd extends BaseLedgerCmd {
         try {
             assetRegMngService.rollBackHeterogeneousAsset(ledgerConfig.getChainId(), Integer.parseInt(params.get("assetId").toString()));
             rtMap.put("value", true);
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.error(e);
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = CmdConstant.CMD_BIND_HETEROGENEOUS_ASSET_REG, version = 1.0,
+            description = "NERVE资产绑定异构链资产")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回绑定后的资产类型", description = "返回一个Map对象",
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
+            })
+    )
+    public Response bindHeterogeneousAssetReg(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(4);
+        try {
+            int chainId = Integer.parseInt(params.get("chainId").toString());
+            int assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            int assetId = Integer.parseInt(params.get("assetId").toString());
+            short assetType = 0;
+            LedgerAsset ledgerAsset = null;
+            // 获取注册的链内资产
+            if(chainId == assetChainId) {
+                if(assetId == ledgerConfig.getAssetId()) {
+                    Map<String, Object> defaultAsset = ledgerChainManager.getLocalChainDefaultAsset();
+                    Short _assetType = CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.get(defaultAsset.get("assetType"));
+                    if (_assetType != null) {
+                        defaultAsset.put("assetType", _assetType);
+                        assetType = _assetType;
+                        rtMap.put("assetType", assetType);
+                        return success(rtMap);
+                    }
+                } else {
+                    ledgerAsset = assetRegMngRepository.getLedgerAssetByAssetId(assetChainId, assetId);
+                }
+            } else {
+                // 获取登记的跨链资产
+                ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
+            }
+            if (ledgerAsset == null) {
+                return failed(LedgerErrorCode.DATA_NOT_FOUND);
+            }
+            Short _assetType = CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.get(ledgerAsset.getAssetType());
+            if (_assetType != null) {
+                ledgerAsset.setAssetType(_assetType);
+                assetType = _assetType;
+            }
+            if(chainId == assetChainId) {
+                assetRegMngRepository.saveLedgerAssetReg(chainId, ledgerAsset);
+            } else {
+                crossChainAssetRegMngRepository.saveCrossChainAsset(chainId, ledgerAsset);
+            }
+            rtMap.put("assetType", assetType);
+            LoggerUtil.COMMON_LOG.debug("return={}", JSONUtils.obj2json(rtMap));
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.error(e);
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = CmdConstant.CMD_UNBIND_HETEROGENEOUS_ASSET_REG, version = 1.0,
+            description = "NERVE资产解绑异构链资产")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回解绑后的资产类型", description = "返回一个Map对象",
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 3-平行链资产]"),
+            })
+    )
+    public Response unbindHeterogeneousAssetReg(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(4);
+        try {
+            int chainId = Integer.parseInt(params.get("chainId").toString());
+            int assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            int assetId = Integer.parseInt(params.get("assetId").toString());
+            short assetType = 0;
+            LedgerAsset ledgerAsset = null;
+            // 获取注册的链内资产
+            if(chainId == assetChainId) {
+                if(assetId == ledgerConfig.getAssetId()) {
+                    Map<String, Object> defaultAsset = ledgerChainManager.getLocalChainDefaultAsset();
+                    Short _assetType = CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.get(defaultAsset.get("assetType"));
+                    if (_assetType != null) {
+                        defaultAsset.put("assetType", _assetType);
+                        assetType = _assetType;
+                        rtMap.put("assetType", assetType);
+                        return success(rtMap);
+                    }
+                } else {
+                    ledgerAsset = assetRegMngRepository.getLedgerAssetByAssetId(assetChainId, assetId);
+                }
+            } else {
+                // 获取登记的跨链资产
+                ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
+            }
+            if (ledgerAsset == null) {
+                return failed(LedgerErrorCode.DATA_NOT_FOUND);
+            }
+            Short _assetType = CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.get(ledgerAsset.getAssetType());
+            if (_assetType != null) {
+                ledgerAsset.setAssetType(_assetType);
+                assetType = _assetType;
+            }
+            if(chainId == assetChainId) {
+                assetRegMngRepository.saveLedgerAssetReg(chainId, ledgerAsset);
+            } else {
+                crossChainAssetRegMngRepository.saveCrossChainAsset(chainId, ledgerAsset);
+            }
+            rtMap.put("assetType", assetType);
+            LoggerUtil.COMMON_LOG.debug("return={}", JSONUtils.obj2json(rtMap));
         } catch (Exception e) {
             LoggerUtil.COMMON_LOG.error(e);
             return failed(e.getMessage());

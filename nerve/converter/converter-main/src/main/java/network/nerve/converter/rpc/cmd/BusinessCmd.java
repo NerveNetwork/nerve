@@ -26,6 +26,7 @@ package network.nerve.converter.rpc.cmd;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.nuls.base.RPCUtil;
+import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.SyncStatusEnum;
@@ -49,7 +50,11 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.*;
+import network.nerve.converter.model.po.TxSubsequentProcessPO;
+import network.nerve.converter.model.txdata.ProposalTxData;
+import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.DisqualificationStorageService;
+import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -78,10 +83,13 @@ public class BusinessCmd extends BaseCmd {
     private DisqualificationStorageService disqualificationStorageService;
     @Autowired
     private HeterogeneousService heterogeneousService;
+    @Autowired
+    private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "提现资产链id"),
             @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "提现资产id"),
             @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现到账地址"),
             @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "提现到账金额"),
@@ -97,6 +105,7 @@ public class BusinessCmd extends BaseCmd {
         Chain chain = null;
         try {
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("assetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("assetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("heterogeneousAddress"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("amount"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
@@ -259,6 +268,21 @@ public class BusinessCmd extends BaseCmd {
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             map.put("value", tx.getHash().toHex());
             map.put("hex", RPCUtil.encode(tx.serialize()));
+            try {
+                chain.getLogger().info("提案tx hex: {}", RPCUtil.encode(tx.serialize()));
+            } catch (Exception e) {
+                chain.getLogger().warn("日志调用失败[0]: {}", e.getMessage());
+            }
+            try {
+                chain.getLogger().info("提案tx format: {}", tx.format(ProposalTxData.class));
+            } catch (Exception e) {
+                chain.getLogger().warn("日志调用失败[1]: {}", e.getMessage());
+            }
+            try {
+                chain.getLogger().info("提案参数: {}", JSONUtils.obj2PrettyJson(proposalTxDTO));
+            } catch (Exception e) {
+                chain.getLogger().warn("日志调用失败[2]: {}", e.getMessage());
+            }
             return success(map);
         } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);
@@ -301,7 +325,9 @@ public class BusinessCmd extends BaseCmd {
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
             signAccountDTO.setPassword((String) params.get("password"));
-
+            if (!chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
             Transaction tx = assembleTxService.createResetVirtualBankTx(chain, heterogeneousChainId, signAccountDTO);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             map.put("value", tx.getHash().toHex());
@@ -453,6 +479,57 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_WITHDRAWAL, version = 1.0, description = "重新将异构链提现交易放入task, 重发消息")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "链内提现交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public Response retryWithdrawalMsg(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("hash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("当前非虚拟银行成员节点, 不处理retryWithdrawalMsg");
+                map.put("value", false);
+            } else {
+                String txHash = params.get("hash").toString();
+                Transaction tx = TransactionCall.getConfirmedTx(chain, txHash);
+                if(null == tx) {
+                    throw new NulsRuntimeException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+                }
+                TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                pendingPO.setRetry(true);
+                pendingPO.setTx(tx);
+                pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
+                BlockHeader header = new BlockHeader();
+                header.setHeight(chain.getLatestBasicBlock().getHeight());
+                pendingPO.setBlockHeader(header);
+                txSubsequentProcessStorageService.save(chain, pendingPO);
+                map.put("value", chain.getPendingTxQueue().offer(pendingPO));
+            }
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
 
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {

@@ -51,6 +51,12 @@ public class ExeProposalPO implements Serializable {
      */
     private SyncStatusEnum syncStatusEnum;
 
+    /**
+     * 当前区块的虚拟银行成员总数
+     * (不算当前加入, 要算当前退出)
+     */
+    private int currenVirtualBankTotal;
+
     public NulsHash getProposalTxHash() {
         return proposalTxHash;
     }
@@ -89,6 +95,14 @@ public class ExeProposalPO implements Serializable {
 
     public void setSyncStatusEnum(SyncStatusEnum syncStatusEnum) {
         this.syncStatusEnum = syncStatusEnum;
+    }
+
+    public int getCurrenVirtualBankTotal() {
+        return currenVirtualBankTotal;
+    }
+
+    public void setCurrenVirtualBankTotal(int currenVirtualBankTotal) {
+        this.currenVirtualBankTotal = currenVirtualBankTotal;
     }
 
     @Override

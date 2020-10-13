@@ -17,6 +17,16 @@ public class AssetInfo {
 
     int assetType;
 
+    boolean canBePeriodically;
+
+    public boolean isCanBePeriodically() {
+        return canBePeriodically;
+    }
+
+    public void setCanBePeriodically(boolean canBePeriodically) {
+        this.canBePeriodically = canBePeriodically;
+    }
+
     public int getAssetChainId() {
         return assetChainId;
     }

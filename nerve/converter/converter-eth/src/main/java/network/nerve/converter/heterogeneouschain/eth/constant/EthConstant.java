@@ -40,6 +40,8 @@ import java.util.List;
  */
 public interface EthConstant {
 
+    byte VERSION = 1;
+
     String ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
     String PUBLIC_KEY_UNCOMPRESSED_PREFIX = "04";
     String HEX_PREFIX = "0x";
@@ -49,6 +51,7 @@ public interface EthConstant {
     int ETH_DECIMALS = 18;
     int RESEND_TIME = 30;
     int DEFAULT_INTERVAL_WAITTING = 5;
+    int MAX_MANAGERS = 15;
     String ETH_RECOVERY_I = "recovery1";
     String ETH_RECOVERY_II = "recovery2";
     String ETH_ERC20_STANDARD_FILE = "ethTokens.json";
@@ -128,7 +131,7 @@ public interface EthConstant {
                     //new TypeReference<Uint>(false) {}
             ));
 
-    byte[] EMPTY_BYTE = new byte[]{0};
+    byte[] EMPTY_BYTE = new byte[]{1};
     BigInteger ETH_GAS_LIMIT_OF_ETH = BigInteger.valueOf(21000L);
     BigInteger ETH_GAS_LIMIT_OF_USDT = BigInteger.valueOf(60000L);
     BigInteger ETH_GAS_LIMIT_OF_MULTY_SIGN = BigInteger.valueOf(400000L);
@@ -154,4 +157,7 @@ public interface EthConstant {
     long SECOND_10 = 10 * 1000L;
     BigInteger GWEI_2 = BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_3 = BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
+    BigInteger HIGH_GAS_PRICE = GWEI_200;
 }

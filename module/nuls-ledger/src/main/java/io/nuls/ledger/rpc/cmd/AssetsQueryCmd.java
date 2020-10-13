@@ -32,6 +32,7 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.ledger.config.LedgerConfig;
 import io.nuls.ledger.constant.CmdConstant;
 import io.nuls.ledger.constant.LedgerConstant;
+import io.nuls.ledger.manager.LedgerChainManager;
 import io.nuls.ledger.model.po.LedgerAsset;
 import io.nuls.ledger.storage.AssetRegMngRepository;
 import io.nuls.ledger.storage.CrossChainAssetRegMngRepository;
@@ -57,7 +58,9 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
     CrossChainAssetRegMngRepository crossChainAssetRegMngRepository;
     @Autowired
     AssetRegMngRepository assetRegMngRepository;
-    Map<String, Object> localChainDefaultAsset = new HashMap<>(16);
+    @Autowired
+    LedgerChainManager ledgerChainManager;
+
 
     @CmdAnnotation(cmd = CmdConstant.CMD_GET_ASSET, version = 1.0,
             description = "资产查询")
@@ -70,7 +73,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
                     @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
                     @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
                     @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
                     @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
                     @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
@@ -88,7 +91,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             // 获取注册的链内资产
             if(chainId == assetChainId) {
                 if(assetId == ledgerConfig.getAssetId()) {
-                    rtMap = getLocalChainDefaultAsset();
+                    rtMap = ledgerChainManager.getLocalChainDefaultAsset();
                     return success(rtMap);
                 }
                 asset = assetRegMngRepository.getLedgerAssetByAssetId(chainId, assetId);
@@ -119,7 +122,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
                     @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
                     @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
                     @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
                     @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
                     @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
@@ -134,7 +137,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             // 获取所有注册的链内资产
             List<LedgerAsset> localAssetList = assetRegMngRepository.getAllRegLedgerAssets(chainId);
             List<Map<String, Object>> localAssets = localAssetList.stream().map(asset -> asset.toMap()).collect(Collectors.toList());
-            localAssets.add(getLocalChainDefaultAsset());
+            localAssets.add(ledgerChainManager.getLocalChainDefaultAsset());
             // 获取所有登记的跨链资产
             List<LedgerAsset> ledgerAssetList = crossChainAssetRegMngRepository.getAllCrossChainAssets(chainId);
             List<Map<String, Object>> assets = ledgerAssetList.stream().map(asset -> asset.toMap()).collect(Collectors.toList());
@@ -148,18 +151,5 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
         return success(rtMap);
     }
 
-    private Map<String, Object> getLocalChainDefaultAsset() {
-        if (localChainDefaultAsset.size() > 0) {
-            return localChainDefaultAsset;
-        }
-        localChainDefaultAsset.put("assetChainId", ledgerConfig.getChainId());
-        localChainDefaultAsset.put("assetId", ledgerConfig.getAssetId());
-        localChainDefaultAsset.put("initNumber", 0);
-        localChainDefaultAsset.put("decimalPlace", ledgerConfig.getDecimals());
-        localChainDefaultAsset.put("assetName", ledgerConfig.getSymbol());
-        localChainDefaultAsset.put("assetSymbol", ledgerConfig.getSymbol());
-        localChainDefaultAsset.put("assetType", LedgerConstant.COMMON_ASSET_TYPE);
-        localChainDefaultAsset.put("assetAddress", "");
-        return localChainDefaultAsset;
-    }
+
 }

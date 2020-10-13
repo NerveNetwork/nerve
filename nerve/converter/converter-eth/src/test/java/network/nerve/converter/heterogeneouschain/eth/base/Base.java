@@ -46,7 +46,8 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        //String ethRpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        String ethRpcAddress = "https://ropsten.infura.io/v3/7e086d9f3bdc48e4996a3997b33b032f";
         ethWalletApi = new ETHWalletApi();
         EthContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));

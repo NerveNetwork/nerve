@@ -25,6 +25,7 @@
 package network.nerve.converter.tx.v1;
 
 import io.nuls.base.data.BlockHeader;
+import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.core.constant.SyncStatusEnum;
@@ -37,6 +38,7 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.core.context.HeterogeneousChainManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
@@ -75,6 +77,8 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
     private ChainManager chainManager;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
+    @Autowired
+    private HeterogeneousChainManager heterogeneousChainManager;
     @Autowired
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
     @Autowired
@@ -164,16 +168,23 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                 int heterogeneousChainId = -1;
                 String heterogeneousTxHash = null;
                 IHeterogeneousChainDocking docking = null;
+                NulsHash proposalHash = null;
                 if (txData.getType() == ProposalTypeEnum.UPGRADE.value()) {
                     ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
                     heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
                     heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
+                    proposalHash = upgradeTxData.getNerveTxHash();
+                    String newMultySignAddress = Numeric.toHexString(upgradeTxData.getAddress());
                     docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-                    docking.updateMultySignAddress(Numeric.toHexString(upgradeTxData.getAddress()));
+                    // 通知异构链更新多签合约
+                    docking.updateMultySignAddress(newMultySignAddress);
+                    // 持久化更新多签合约
+                    heterogeneousChainManager.updateMultySignAddress(heterogeneousChainId, newMultySignAddress);
                 }else{
                     ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
                     heterogeneousChainId = businessData.getHeterogeneousChainId();
                     heterogeneousTxHash = businessData.getHeterogeneousTxHash();
+                    proposalHash = businessData.getProposalTxHash();
                     ProposalPO po = this.proposalStorageService.find(chain, businessData.getProposalTxHash());
                     if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
                         // 重置执行撤银行节点提案标志
@@ -188,7 +199,7 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         if (null == docking) {
                             docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                         }
-                        docking.txConfirmedCompleted(heterogeneousTxHash, blockHeader.getHeight());
+                        docking.txConfirmedCompleted(heterogeneousTxHash, blockHeader.getHeight(), proposalHash.toHex());
 
                         // 补贴手续费
                         if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
@@ -237,8 +248,10 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                     ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
                     heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
                     heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
+                    String oldMultySignAddress = Numeric.toHexString(upgradeTxData.getOldAddress());
                     docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-                    docking.updateMultySignAddress(Numeric.toHexString(upgradeTxData.getOldAddress()));
+                    docking.updateMultySignAddress(oldMultySignAddress);
+                    heterogeneousChainManager.updateMultySignAddress(heterogeneousChainId, oldMultySignAddress);
                 }else {
                     ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
                     ProposalPO po = this.proposalStorageService.find(chain, businessData.getProposalTxHash());

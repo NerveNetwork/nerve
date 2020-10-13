@@ -43,7 +43,7 @@ import java.util.List;
  * @author: Loki
  * @date: 2020-02-27
  */
-public class BroadcastHashSignMessage  extends BaseBusinessMessage {
+public class BroadcastHashSignMessage extends BaseBusinessMessage {
 
     private NulsHash hash;
 

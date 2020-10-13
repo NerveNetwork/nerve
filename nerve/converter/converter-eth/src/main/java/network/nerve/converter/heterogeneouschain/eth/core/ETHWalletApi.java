@@ -705,14 +705,6 @@ public class ETHWalletApi implements WalletApi {
         return typeList;
     }
 
-    public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, String methodName,
-                               List<Type> inputParameters, List<TypeReference<?>> outputParameters) throws Exception {
-        inputParameters = inputParameters == null ? List.of() : inputParameters;
-        outputParameters = outputParameters == null ? List.of() : outputParameters;
-        Function function = new Function(methodName, inputParameters, outputParameters);
-        return this.callContract(from, privateKey, contractAddress, gasLimit, function);
-    }
-
     public EthSendTransactionPo callContractRaw(String privateKey, EthSendTransactionPo resendTxPo) throws Exception {
         EthSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(privateKey, resendTxPo), args -> {
             String _privateKey = args.get(0).toString();
@@ -724,11 +716,14 @@ public class ETHWalletApi implements WalletApi {
             Credentials credentials = Credentials.create(_privateKey);
             BigInteger nonce = _currentTxPo.getNonce();
             BigInteger gasPrice = _currentTxPo.getGasPrice();
+            BigInteger value = _currentTxPo.getValue();
+            value = value == null ? BigInteger.ZERO : value;
             RawTransaction rawTransaction = RawTransaction.createTransaction(
                     nonce,
                     gasPrice,
                     gasLimit,
                     contractAddress,
+                    value,
                     encodedFunction
             );
             //签名Transaction，这里要对交易做签名
@@ -748,15 +743,21 @@ public class ETHWalletApi implements WalletApi {
     }
 
     public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function) throws Exception {
+        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null);
+    }
+
+    public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value) throws Exception {
+        value = value == null ? BigInteger.ZERO : value;
         String encodedFunction = FunctionEncoder.encode(function);
 
-        EthSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction), args -> {
+        EthSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction, value), args -> {
             int i =0;
             String _from = args.get(i++).toString();
             String _privateKey = args.get(i++).toString();
             String _contractAddress = args.get(i++).toString();
             BigInteger _gasLimit = (BigInteger) args.get(i++);
             String _encodedFunction = args.get(i++).toString();
+            BigInteger _value = (BigInteger) args.get(i++);
             Credentials credentials = Credentials.create(_privateKey);
             BigInteger nonce = this.getNonce(_from);
             BigInteger gasPrice = EthContext.getEthGasPrice();
@@ -764,7 +765,9 @@ public class ETHWalletApi implements WalletApi {
                     nonce,
                     gasPrice,
                     _gasLimit,
-                    _contractAddress, _encodedFunction
+                    _contractAddress,
+                    _value,
+                    _encodedFunction
             );
             //签名Transaction，这里要对交易做签名
             byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
@@ -784,14 +787,25 @@ public class ETHWalletApi implements WalletApi {
 
     public EthCall validateContractCall(String from, String contractAddress, Function function) throws Exception {
         String encodedFunction = FunctionEncoder.encode(function);
-        return this.validateContractCall(from, contractAddress, encodedFunction);
+        return this.validateContractCall(from, contractAddress, encodedFunction, null);
+    }
+
+    public EthCall validateContractCall(String from, String contractAddress, Function function, BigInteger value) throws Exception {
+        String encodedFunction = FunctionEncoder.encode(function);
+        return this.validateContractCall(from, contractAddress, encodedFunction, value);
     }
 
     public EthCall validateContractCall(String from, String contractAddress, String encodedFunction) throws Exception {
-        EthCall ethCall = this.timeOutWrapperFunction("validateContractCall", List.of(from, contractAddress, encodedFunction), args -> {
+        return this.validateContractCall(from, contractAddress, encodedFunction, null);
+    }
+
+    public EthCall validateContractCall(String from, String contractAddress, String encodedFunction, BigInteger value) throws Exception {
+        value = value == null ? BigInteger.ZERO : value;
+        EthCall ethCall = this.timeOutWrapperFunction("validateContractCall", List.of(from, contractAddress, encodedFunction, value), args -> {
             String _from = args.get(0).toString();
             String _contractAddress = args.get(1).toString();
             String _encodedFunction = (String) args.get(2);
+            BigInteger _value = (BigInteger) args.get(3);
 
             org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
                     _from,
@@ -799,7 +813,7 @@ public class ETHWalletApi implements WalletApi {
                     BigInteger.ONE,
                     EthConstant.ETH_ESTIMATE_GAS,
                     _contractAddress,
-                    null,
+                    _value,
                     _encodedFunction
             );
 
@@ -811,14 +825,21 @@ public class ETHWalletApi implements WalletApi {
 
     public BigInteger ethEstimateGas(String from, String contractAddress, Function function) throws Exception {
         String encodedFunction = FunctionEncoder.encode(function);
-        return this.ethEstimateGas(from, contractAddress, encodedFunction);
+        return this.ethEstimateGas(from, contractAddress, encodedFunction, null);
     }
 
-    public BigInteger ethEstimateGas(String from, String contractAddress, String encodedFunction) throws Exception {
-        BigInteger gas = this.timeOutWrapperFunction("ethEstimateGas", List.of(from, contractAddress, encodedFunction), args -> {
+    public BigInteger ethEstimateGas(String from, String contractAddress, Function function, BigInteger value) throws Exception {
+        String encodedFunction = FunctionEncoder.encode(function);
+        return this.ethEstimateGas(from, contractAddress, encodedFunction, value);
+    }
+
+    public BigInteger ethEstimateGas(String from, String contractAddress, String encodedFunction, BigInteger value) throws Exception {
+        value = value == null ? BigInteger.ZERO : value;
+        BigInteger gas = this.timeOutWrapperFunction("ethEstimateGas", List.of(from, contractAddress, encodedFunction, value), args -> {
             String _from = args.get(0).toString();
             String _contractAddress = args.get(1).toString();
             String _encodedFunction = (String) args.get(2);
+            BigInteger _value = (BigInteger) args.get(3);
 
             org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
                     _from,
@@ -826,7 +847,7 @@ public class ETHWalletApi implements WalletApi {
                     BigInteger.ONE,
                     EthConstant.ETH_ESTIMATE_GAS,
                     _contractAddress,
-                    null,
+                    _value,
                     _encodedFunction
             );
             EthEstimateGas estimateGas = web3j.ethEstimateGas(tx).send();

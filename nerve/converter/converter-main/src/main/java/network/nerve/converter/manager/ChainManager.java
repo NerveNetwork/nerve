@@ -154,6 +154,8 @@ public class ChainManager {
             RocksDBService.createTable(ConverterDBConstant.DB_EXE_PROPOSAL_PENDING_PREFIX + chainId);
             // 重置虚拟银行异构链
             RocksDBService.createTable(ConverterDBConstant.DB_RESET_BANK_PREFIX + chainId);
+            // 异构链地址签名消息存储表
+            RocksDBService.createTable(ConverterDBConstant.DB_COMPONENT_SIGN + chainId);
 
         } catch (Exception e) {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {

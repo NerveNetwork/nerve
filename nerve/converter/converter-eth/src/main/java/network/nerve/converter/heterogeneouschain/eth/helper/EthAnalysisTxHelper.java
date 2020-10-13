@@ -31,6 +31,7 @@ import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.enums.MultiSignatureStatus;
+import network.nerve.converter.heterogeneouschain.eth.helper.interfaces.IEthAnalysisTx;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.EthInput;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
@@ -43,17 +44,14 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author: Mimi
  * @date: 2020-03-20
  */
 @Component
-public class EthAnalysisTxHelper {
+public class EthAnalysisTxHelper implements IEthAnalysisTx {
 
-    private Set<String> analysisTxHashSet = ConcurrentHashMap.newKeySet();
     @Autowired
     private EthUnconfirmedTxStorageService ethUnconfirmedTxStorageService;
     @Autowired
@@ -69,6 +67,7 @@ public class EthAnalysisTxHelper {
     @Autowired
     private EthResendHelper ethResendHelper;
 
+    @Override
     public void analysisTx(org.web3j.protocol.core.methods.response.Transaction tx, long txTime, long blockHeight) throws Exception {
         boolean isDepositTx = false;
         boolean isBroadcastTx = false;
@@ -174,22 +173,6 @@ public class EthAnalysisTxHelper {
             ethUnconfirmedTxStorageService.save(po);
             EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
         }
-    }
-
-    public boolean constainHash(String hash) {
-        return analysisTxHashSet.contains(hash);
-    }
-
-    public boolean removeHash(String hash) {
-        return analysisTxHashSet.remove(hash);
-    }
-
-    public boolean addHash(String hash) {
-        return analysisTxHashSet.add(hash);
-    }
-
-    public void clearHash() {
-        analysisTxHashSet.clear();
     }
 
     private void dealBroadcastTx(String nerveTxHash, HeterogeneousChainTxType txType, Transaction tx, long blockHeight, long txTime, EthUnconfirmedTxPo txPoFromDB) throws Exception {

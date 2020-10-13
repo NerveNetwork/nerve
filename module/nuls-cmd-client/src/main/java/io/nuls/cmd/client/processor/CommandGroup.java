@@ -20,7 +20,8 @@ public enum CommandGroup {
     Smart_Contract,
     Cross_Chain,
     System,
-    Converter;
+    Converter,
+    Dex;
 
     final String title;
 

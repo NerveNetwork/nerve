@@ -37,10 +37,7 @@ import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManage
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthResendHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.*;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.*;
 import network.nerve.converter.heterogeneouschain.eth.storage.*;
@@ -80,23 +77,25 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     private static HeterogeneousAssetInfo ethereum;
     private static final EthDocking DOCKING = new EthDocking();
-    private ETHWalletApi ethWalletApi;
-    private EthListener ethListener;
-    private EthERC20Helper ethERC20Helper;
-    private ConverterConfig converterConfig;
-    private EthTxRelationStorageService ethTxRelationStorageService;
-    private EthUnconfirmedTxStorageService ethUnconfirmedTxStorageService;
-    private EthMultiSignAddressHistoryStorageService ethMultiSignAddressHistoryStorageService;
-    private EthTxStorageService ethTxStorageService;
-    private EthAccountStorageService ethAccountStorageService;
-    private EthParseTxHelper ethParseTxHelper;
-    private EthCallBackManager ethCallBackManager;
-    private EthAnalysisTxHelper ethAnalysisTxHelper;
+    protected ETHWalletApi ethWalletApi;
+    protected EthListener ethListener;
+    protected EthERC20Helper ethERC20Helper;
+    protected ConverterConfig converterConfig;
+    protected EthTxRelationStorageService ethTxRelationStorageService;
+    protected EthUnconfirmedTxStorageService ethUnconfirmedTxStorageService;
+    protected EthMultiSignAddressHistoryStorageService ethMultiSignAddressHistoryStorageService;
+    protected EthTxStorageService ethTxStorageService;
+    protected EthAccountStorageService ethAccountStorageService;
+    protected EthParseTxHelper ethParseTxHelper;
+    protected EthCallBackManager ethCallBackManager;
+    protected EthAnalysisTxHelper ethAnalysisTxHelper;
+    protected EthCommonHelper ethCommonHelper;
+    protected EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
+    protected ReentrantLock reAnalysisLock = new ReentrantLock();
     private String keystorePath;
-    private ReentrantLock reAnalysisLock = new ReentrantLock();
 
 
-    private EthDocking() {
+    protected EthDocking() {
     }
 
     private NulsLogger logger() {
@@ -105,6 +104,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     public static EthDocking getInstance() {
         return DOCKING;
+    }
+
+    @Override
+    public int version() {
+        return EthConstant.VERSION;
     }
 
     @Override
@@ -120,6 +124,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
     @Override
     public String getChainSymbol() {
         return EthContext.getConfig().getSymbol();
+    }
+
+    @Override
+    public String getCurrentSignAddress() {
+        return EthContext.ADMIN_ADDRESS;
     }
 
     @Override
@@ -263,16 +272,15 @@ public class EthDocking implements IHeterogeneousChainDocking {
         EthContext.MULTY_SIGN_ADDRESS = multySignAddress;
         // 保存当前多签地址到多签地址历史列表中
         ethMultiSignAddressHistoryStorageService.save(multySignAddress);
-        //EthContext.MULTY_SIGN_ADDRESS_HISTORY_SET.add(multySignAddress);
+        // 合约升级后的流程切换操作
+        ethUpgradeContractSwitchHelper.switchProcessor(multySignAddress);
     }
 
-    @Override
-    public void txConfirmedCompleted(String ethTxHash, Long blockHeight) throws Exception {
+    protected void txConfirmedCompleted(String ethTxHash, Long blockHeight) throws Exception {
         if (StringUtils.isBlank(ethTxHash)) {
             logger().warn("Empty ethTxHash warning");
             return;
         }
-        ethAnalysisTxHelper.removeHash(ethTxHash);
         // 更新db中po的状态，改为delete，在队列任务中确认`ROLLBACK_NUMER`个块之后再移除，便于状态回滚
         EthUnconfirmedTxPo txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         if (txPo == null) {
@@ -288,6 +296,12 @@ public class EthDocking implements IHeterogeneousChainDocking {
             update.setDelete(delete);
             update.setDeletedHeight(deletedHeight);
         });
+    }
+
+    @Override
+    public void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash) throws Exception {
+        logger().info("Nerve网络确认ETH交易 Nerver hash: {}", nerveTxHash);
+        this.txConfirmedCompleted(ethTxHash, blockHeight);
     }
 
     @Override
@@ -417,7 +431,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
     public HeterogeneousTransactionInfo getDepositTransaction(String txHash) throws Exception {
         // 从DB中获取数据，若获取不到，再到ETH网络中获取
         HeterogeneousTransactionInfo txInfo = ethTxStorageService.findByTxHash(txHash);
-        if (txInfo != null) {
+        if (txInfo != null && StringUtils.isNotBlank(txInfo.getFrom())) {
             txInfo.setTxType(HeterogeneousChainTxType.DEPOSIT);
         } else {
             txInfo = ethParseTxHelper.parseDepositTransaction(txHash);
@@ -475,7 +489,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
             }
             blockHeight = tx.getBlockNumber().longValue();
         }
-        if(signers == null) {
+        if(signers == null || signers.isEmpty()) {
             TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(txHash);
             signers = ethParseTxHelper.parseSigners(txReceipt);
         }
@@ -501,10 +515,20 @@ public class EthDocking implements IHeterogeneousChainDocking {
         return pendingInfo;
     }
 
-    @Override
-    public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        logger().info("准备发送提现的ETH交易，nerveTxHash: {}", nerveTxHash);
+
+    public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, boolean checkGas) throws NulsException {
         try {
+            logger().info("准备发送提现的ETH交易，nerveTxHash: {}", nerveTxHash);
+            if (checkGas) {
+                if (EthContext.getEthGasPrice().compareTo(EthConstant.HIGH_GAS_PRICE) > 0) {
+                    if (EthContext.getConverterCoreApi().isWithdrawalComfired(nerveTxHash)) {
+                        logger().info("[提现]交易[{}]已完成", nerveTxHash);
+                        return EMPTY_STRING;
+                    }
+                    logger().warn("Ethereum 网络 Gas Price 高于 {} wei，暂停提现", EthConstant.HIGH_GAS_PRICE);
+                    throw new NulsException(ConverterErrorCode.HIGH_GAS_PRICE_OF_ETH);
+                }
+            }
             // 交易准备
             EthAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW);
             if (account.isEmpty()) {
@@ -550,6 +574,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
             }
             throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
         }
+    }
+
+    @Override
+    public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
+        return this.createOrSignWithdrawTx(nerveTxHash, toAddress, value, assetId, true);
     }
 
     @Override
@@ -727,13 +756,13 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     @Override
     public Boolean reAnalysisDepositTx(String ethTxHash) throws Exception {
-        if (ethAnalysisTxHelper.constainHash(ethTxHash)) {
+        if (ethCommonHelper.constainHash(ethTxHash)) {
             logger().info("重复收集充值交易hash: {}，不再重复解析[0]", ethTxHash);
             return true;
         }
         reAnalysisLock.lock();
         try {
-            if (ethAnalysisTxHelper.constainHash(ethTxHash)) {
+            if (ethCommonHelper.constainHash(ethTxHash)) {
                 logger().info("重复收集充值交易hash: {}，不再重复解析[1]", ethTxHash);
                 return true;
             }
@@ -753,7 +782,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
             }
             Long txTime = block.getTimestamp().longValue();
             ethAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
-            ethAnalysisTxHelper.addHash(ethTxHash);
+            ethCommonHelper.addHash(ethTxHash);
             return true;
         } catch (Exception e) {
             throw e;
@@ -1161,5 +1190,13 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     public void setEthAnalysisTxHelper(EthAnalysisTxHelper ethAnalysisTxHelper) {
         this.ethAnalysisTxHelper = ethAnalysisTxHelper;
+    }
+
+    public void setEthUpgradeContractSwitchHelper(EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper) {
+        this.ethUpgradeContractSwitchHelper = ethUpgradeContractSwitchHelper;
+    }
+
+    public void setEthCommonHelper(EthCommonHelper ethCommonHelper) {
+        this.ethCommonHelper = ethCommonHelper;
     }
 }

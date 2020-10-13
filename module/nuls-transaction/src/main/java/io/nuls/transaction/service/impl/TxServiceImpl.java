@@ -623,6 +623,15 @@ public class TxServiceImpl implements TxService {
         } else {
             targetFee = TransactionFeeCalculator.getNormalTxFee(tx.getSize());
         }
+        try {
+            if (type == 45) {
+                chain.getLogger().info("提案tx format: {}", tx.format());
+                chain.getLogger().info("feeAssetChainId: {}, feeAssetId: {}, fee: {}, targetFee: {}, txSize: {}",
+                        feeAssetChainId, feeAssetId, fee.toString(), targetFee.toString(), tx.getSize());
+            }
+        } catch (Exception e) {
+            chain.getLogger().warn("日志调用失败[4]: {}", e.getMessage());
+        }
         if (BigIntegerUtils.isLessThan(fee, targetFee)) {
             throw new NulsException(TxErrorCode.INSUFFICIENT_FEE);
         }

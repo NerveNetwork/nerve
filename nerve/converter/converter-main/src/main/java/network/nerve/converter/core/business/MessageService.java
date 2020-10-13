@@ -24,10 +24,7 @@
 
 package network.nerve.converter.core.business;
 
-import network.nerve.converter.message.BroadcastHashSignMessage;
-import network.nerve.converter.message.CheckRetryParseMessage;
-import network.nerve.converter.message.GetTxMessage;
-import network.nerve.converter.message.NewTxMessage;
+import network.nerve.converter.message.*;
 import network.nerve.converter.model.bo.Chain;
 
 /**
@@ -68,5 +65,13 @@ public interface MessageService {
      * @param message
      */
     void checkRetryParse(Chain chain, String nodeId, CheckRetryParseMessage message);
+
+    /**
+     * 收到异构链签名消息
+     * @param chain
+     * @param nodeId
+     * @param message
+     */
+    void componentSign(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate);
 
 }

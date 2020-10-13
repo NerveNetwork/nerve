@@ -10,7 +10,8 @@
     "defaultStartHeight": 0,
     "txBlockConfirmations": 30,
     "intervalWaittingSendTransaction": 8,
-    "initialBalance": 0.1
+    "initialBalance": 0.1,
+    "filterAddresses": "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15,0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"
   },
   {
     "chainId": 101,

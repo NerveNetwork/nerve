@@ -561,4 +561,8 @@ public class TxUtil {
         }
         return true;
     }
+
+    public static void setConfig(NulsCrossChainConfig config) {
+        TxUtil.config = config;
+    }
 }

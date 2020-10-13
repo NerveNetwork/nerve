@@ -27,13 +27,17 @@ package network.nerve.converter.core.thread.task;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
+import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -42,10 +46,12 @@ import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.message.ComponentSignMessage;
+import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
-import network.nerve.converter.model.po.MergedComponentCallPO;
-import network.nerve.converter.model.po.TxSubsequentProcessPO;
+import network.nerve.converter.model.po.*;
 import network.nerve.converter.model.txdata.*;
+import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
@@ -53,6 +59,9 @@ import network.nerve.converter.utils.ConverterUtil;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
+
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_1;
+import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_2;
 
 /**
  * 交易确认后续处理定时任务
@@ -79,6 +88,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     private HeterogeneousService heterogeneousService = SpringLiteContext.getBean(HeterogeneousService.class);
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService =
             SpringLiteContext.getBean(HeterogeneousAssetConverterStorageService.class);
+    private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
 
     @Override
     public void run() {
@@ -89,23 +99,23 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 // 只取出,不移除头部元素
                 TxSubsequentProcessPO pendingPO = pendingTxQueue.peekFirst();
                 Transaction tx = pendingPO.getTx();
-                if (null != asyncProcessedTxStorageService.getComponentCall(chain, tx.getHash().toHex())) {
+                if (!pendingPO.getRetry() && null != asyncProcessedTxStorageService.getComponentCall(chain, tx.getHash().toHex())) {
                     // 判断已执行过, 从队列中移除, 并从持久库中移除
-                    // 执行成功移除队列头部元素
-                    pendingTxQueue.remove();
                     chain.getLogger().info("[异构链待处理队列] 已执行过,移除交易, hash:{}", tx.getHash().toHex());
                     // 并且从持久化库中移除
                     txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
+                    // 执行成功移除队列头部元素
+                    pendingTxQueue.remove();
                     continue;
                 }
                 // 判断是否已确认
                 if (null == TransactionCall.getConfirmedTx(chain, tx.getHash())) {
                     if (pendingPO.getIsConfirmedVerifyCount() > ConverterConstant.CONFIRMED_VERIFY_COUNT) {
-                        // 移除
-                        pendingTxQueue.remove();
                         chain.getLogger().error("[异构链待处理队列] 交易未确认(移除处理), hash:{}", tx.getHash().toHex());
                         // 并且从持久化库中移除
                         txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
+                        // 移除
+                        pendingTxQueue.remove();
                         continue;
                     }
                     pendingPO.setIsConfirmedVerifyCount(pendingPO.getIsConfirmedVerifyCount() + 1);
@@ -115,14 +125,21 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 switch (tx.getType()) {
                     case TxType.CHANGE_VIRTUAL_BANK:
                         // 处理银行变更
-                        if (chain.getHeterogeneousChangeBankExecuting().get()) {
-                            // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
-                            chain.getLogger().info("[Task-CHANGE_VIRTUAL_BANK] pause new change 正在执行虚拟银行变更异构链交易, 暂停新的银行变更异构处理!");
-                            break out;
+                        if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
+                            if (chain.getHeterogeneousChangeBankExecuting().get()) {
+                                // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
+                                chain.getLogger().info("[Task-CHANGE_VIRTUAL_BANK] pause new change 正在执行虚拟银行变更异构链交易, 暂停新的银行变更异构处理!");
+                                break out;
+                            }
+                            changeVirtualBankProcessor();
+                            // 后续已批量处理完成
+                            continue;
+                        } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                            if (!changeVirtualBankByzantineProcessor(pendingPO)) {
+                                break out;
+                            }
                         }
-                        changeVirtualBankProcessor();
-                        // 后续已批量处理完成
-                        continue;
+                        break;
                     case TxType.WITHDRAWAL:
                         // 处理提现
                         if (chain.getHeterogeneousChangeBankExecuting().get()) {
@@ -130,8 +147,15 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                             chain.getLogger().info("[Task-change_virtual_bank] pause withdrawal 正在执行虚拟银行变更异构链交易, 暂停新的提现异构处理!");
                             break out;
                         }
-
-                        withdrawalProcessor(pendingPO);
+                        if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
+                            withdrawalProcessor(pendingPO);
+                        } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                            if (!withdrawalByzantineProcessor(pendingPO)) {
+                                TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
+                                chain.getPendingTxQueue().addLast(po);
+                                continue;
+                            }
+                        }
                         break;
                     case TxType.CONFIRM_WITHDRAWAL:
                         // 确认提现交易 处理补贴手续费交易
@@ -157,44 +181,314 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 if (chain.getCurrentIsDirector().get()) {
                     // 存储已执行成功的交易hash, 执行过的不再执行 (当前节点处于同步区块模式时,也要存该hash, 表示已执行过)
-                    asyncProcessedTxStorageService.saveComponentCall(chain, tx.getHash().toHex());
+                    ComponentCalledPO callPO = new ComponentCalledPO(
+                            tx.getHash().toHex(),
+                            pendingPO.getBlockHeader().getHeight(),
+                            false);
+                    asyncProcessedTxStorageService.saveComponentCall(chain, callPO, pendingPO.getCurrentQuit());
                 }
-                // 执行成功移除队列头部元素
-                pendingTxQueue.remove();
+
                 chain.getLogger().info("[异构链待处理队列] 执行成功移除交易, hash:{}", tx.getHash().toHex());
                 // 并且从持久化库中移除
                 txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
+                // 执行成功移除队列头部元素
+                pendingTxQueue.remove();
             }
-        } catch (NulsException e) {
-            chain.getLogger().error(e);
         } catch (Exception e) {
             chain.getLogger().error(e);
+            /**
+             * 如果队首交易可以变换位置, 则放入队尾,
+             * 否则按顺序遍历,扫描一个可以变位置的元素, 放入队首
+             */
+            // 只取出,不移除头部元素
+            TxSubsequentProcessPO pendingPO = chain.getPendingTxQueue().peekFirst();
+            if (null == pendingPO) {
+                return;
+            }
+            if (TxType.CHANGE_VIRTUAL_BANK != pendingPO.getTx().getType()) {
+                TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
+                chain.getPendingTxQueue().addLast(po);
+            } else {
+                Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
+                TxSubsequentProcessPO toFirstPO = null;
+                while (it.hasNext()) {
+                    TxSubsequentProcessPO po = it.next();
+                    if (TxType.CHANGE_VIRTUAL_BANK != po.getTx().getType()) {
+                        toFirstPO = po;
+                        it.remove();
+                        break;
+                    }
+                }
+                chain.getPendingTxQueue().addFirst(toFirstPO);
+            }
         }
     }
 
     /**
-     * 返回 从队列中取出虚拟银行变更交易来进行合并的 交易列表
+     * 处理虚拟银行变更业务
+     * 通过异构链地址对交易hash签名, 并广播签名
+     * 判断并发送异构链交易
      *
-     * @param count 最多从队列中取几个交易来进行合并, 为null则不限制(满足条件全部取出)
-     * @return
-     * @throws NulsException
+     * @param pendingPO
+     * @return true:需要删除队列的元素(已调用异构链, 或无需, 无权限执行等) false: 放队尾
+     * @throws Exception
      */
-    private List<TxSubsequentProcessPO> getChangeVirtualBankTxs(Integer count) {
-        List<TxSubsequentProcessPO> mergeList = new ArrayList<>();
-        Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
-        int current = 0;
-        while (it.hasNext()) {
-            TxSubsequentProcessPO po = it.next();
-            Transaction tx = po.getTx();
-            if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
-                mergeList.add(po);
-                if (null != count && count == ++current) {
-                    break;
+    private boolean changeVirtualBankByzantineProcessor(TxSubsequentProcessPO pendingPO) throws Exception {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
+        List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
+        if (null == hInterfaces || hInterfaces.isEmpty()) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
+        }
+        if (pendingPO.getCurrentJoin()) {
+            chain.getLogger().info("虚拟银行变更, 执行签名[当前节点加入虚拟银行(不签名), 关闭新异构链变更执行(关门)]");
+            heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
+            return true;
+        }
+        Transaction tx = pendingPO.getTx();
+        NulsHash hash = tx.getHash();
+        String txHash = hash.toHex();
+        // 判断是否收到过该消息, 并签了名
+        ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, pendingPO.getTx().getHash().toHex());
+        boolean sign = false;
+        if (null != compSignPO) {
+            if (!compSignPO.getCurrentSigned()) {
+                sign = true;
+            }
+        } else {
+            sign = true;
+        }
+        if (sign) {
+            ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
+            int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
+            int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
+            List<HeterogeneousSign> currentSignList = new ArrayList<>();
+            for (IHeterogeneousChainDocking hInterface : hInterfaces) {
+                int hChainId = hInterface.getChainId();
+                // 组装加入参数
+                String[] inAddress = new String[inSize];
+                if (null != txData.getInAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents(), pendingPO);
+                }
+                String[] outAddress = new String[outSize];
+                if (null != txData.getOutAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents(), pendingPO);
+                }
+                // 验证消息签名
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hInterface.getChainId());
+                String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
+                String currentHaddress = docking.getCurrentSignAddress();
+                if (StringUtils.isBlank(currentHaddress)) {
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+                }
+                HeterogeneousSign currentSign = new HeterogeneousSign(
+                        new HeterogeneousAddress(hChainId, currentHaddress),
+                        HexUtil.decode(signStrData));
+                currentSignList.add(currentSign);
+            }
+            ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
+                    hash, currentSignList);
+            // 初始化存储签名的对象
+            if (null == compSignPO) {
+                compSignPO = new ComponentSignByzantinePO(hash, new ArrayList<>(), false, false);
+            } else if (null == compSignPO.getListMsg()) {
+                compSignPO.setListMsg(new ArrayList<>());
+            }
+            compSignPO.getListMsg().add(currentMessage);
+            compSignPO.setCurrentSigned(true);
+            // 广播当前节点签名消息
+            NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
+
+        }
+
+        boolean rs = false;
+        if (compSignPO.getByzantinePass() && !chain.getHeterogeneousChangeBankExecuting().get()) {
+            if (!compSignPO.getCompleted()) {
+                // 执行调用异构链
+                List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
+                if (null == callParmsList) {
+                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    return false;
+                }
+                outer:
+                for (IHeterogeneousChainDocking docking : hInterfaces) {
+                    for (ComponentCallParm callParm : callParmsList) {
+                        if (docking.getChainId() == callParm.getHeterogeneousId()) {
+                            String ethTxHash = docking.createOrSignManagerChangesTxII(
+                                    callParm.getTxHash(),
+                                    callParm.getInAddress(),
+                                    callParm.getOutAddress(),
+                                    callParm.getOrginTxCount(),
+                                    callParm.getSigned());
+                            chain.getLogger().info("[异构链地址签名消息-拜占庭通过-changeVirtualBank] 调用异构链组件执行虚拟银行变更. hash:{}, ethHash:{}", txHash, ethTxHash);
+                            break outer;
+                        }
+                    }
                 }
             }
+            /**
+             * 调异构链成功
+             * 开启正在处理银行变更异构链交易模式
+             */
+            heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
+            chain.getLogger().info("[开始执行虚拟银行异构链交易, 关闭新异构链变更执行(关门)] hash:{}", txHash);
+            // 保留合并机制的存储模式, 等到确认交易时匹配开门
+            List<String> hashList = new ArrayList<>();
+            hashList.add(txHash);
+            mergeComponentStorageService.saveMergeComponentCall(chain, txHash, new MergedComponentCallPO(hashList));
+            compSignPO.setCompleted(true);
+            rs = true;
         }
-        return mergeList;
+        // 存储更新后的 compSignPO
+        componentSignStorageService.save(chain, compSignPO);
+        return rs;
     }
+
+    /**
+     * 根据节点地址列表 和异构链Id, 获取异构链地址
+     * 特殊处理, 如果是当前退出的, 则从pendingPO中获取退出者的异构链信息
+     *
+     * @param chain
+     * @param heterogeneousChainId
+     * @param address
+     * @param list
+     * @param pendingPO
+     * @throws NulsException
+     */
+    private void getHeterogeneousAddress(Chain chain, int heterogeneousChainId, String[] address, List<byte[]> list, TxSubsequentProcessPO pendingPO) throws NulsException {
+        for (int i = 0; i < list.size(); i++) {
+            byte[] bytes = list.get(i);
+            String agentAddress = AddressTool.getStringAddressByBytes(bytes);
+            String hAddress = null;
+            // 如果是当前退出的, 则从pendingPO中获取退出者的异构链信息
+            if (pendingPO.getCurrentQuit() && agentAddress.equals(pendingPO.getCurrentQuitDirector().getAgentAddress())) {
+                HeterogeneousAddress heterogeneousAddress =
+                        pendingPO.getCurrentQuitDirector().getHeterogeneousAddrMap().get(heterogeneousChainId);
+                hAddress = heterogeneousAddress.getAddress();
+            } else {
+                String signAddress = virtualBankAllHistoryStorageService.findSignAddressByAgentAddress(chain, agentAddress);
+                if (StringUtils.isNotBlank(signAddress)) {
+                    VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
+                    HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(heterogeneousChainId);
+                    hAddress = heterogeneousAddress.getAddress();
+                }
+            }
+            if (StringUtils.isBlank(hAddress)) {
+                chain.getLogger().error("异构链地址签名消息[changeVirtualBank] 没有获取到异构链地址, agentAddress:{}", agentAddress);
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+            }
+            address[i] = hAddress;
+        }
+    }
+
+
+    /**
+     * 处理异构链提现
+     * 通过异构链地址对交易hash签名, 并广播签名
+     * 判断并发送异构链交易
+     *
+     * @param pendingPO
+     * @return true:需要删除队列的元素(已调用异构链, 或无需, 无权限执行等) false: 放队尾
+     * @throws NulsException
+     */
+    private boolean withdrawalByzantineProcessor(TxSubsequentProcessPO pendingPO) throws NulsException {
+        SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
+        if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
+            throw new NulsException(ConverterErrorCode.NODE_NOT_IN_RUNNING);
+        }
+        if (!chain.getCurrentIsDirector().get()) {
+            return true;
+        }
+        Transaction tx = pendingPO.getTx();
+        NulsHash hash = tx.getHash();
+        String txHash = hash.toHex();
+        // 判断是否收到过该消息, 并签了名
+        ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, pendingPO.getTx().getHash().toHex());
+        boolean sign = false;
+        if (null != compSignPO) {
+            if (!compSignPO.getCurrentSigned()) {
+                sign = true;
+            }
+        } else {
+            sign = true;
+        }
+        if (sign) {
+            WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+            CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
+            HeterogeneousAssetInfo assetInfo = null;
+            CoinTo withdrawCoinTo = null;
+            byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
+            for (CoinTo coinTo : coinData.getTo()) {
+                if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
+                    assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    if (assetInfo != null) {
+                        withdrawCoinTo = coinTo;
+                        break;
+                    }
+                }
+            }
+            if (null == assetInfo) {
+                chain.getLogger().error("[异构链地址签名消息-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            int heterogeneousChainId = assetInfo.getChainId();
+            BigInteger amount = withdrawCoinTo.getAmount();
+            String toAddress = txData.getHeterogeneousAddress();
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+            String signStrData = docking.signWithdrawII(txHash, toAddress, amount, assetInfo.getAssetId());
+            String currentHaddress = docking.getCurrentSignAddress();
+            if (StringUtils.isBlank(currentHaddress)) {
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+            }
+            HeterogeneousAddress heterogeneousAddress = new HeterogeneousAddress(heterogeneousChainId, currentHaddress);
+            HeterogeneousSign currentSign = new HeterogeneousSign(heterogeneousAddress, HexUtil.decode(signStrData));
+            List<HeterogeneousSign> listSign = new ArrayList<>();
+            listSign.add(currentSign);
+            ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
+                    hash, listSign);
+            // 初始化存储签名的对象
+            if (null == compSignPO) {
+                compSignPO = new ComponentSignByzantinePO(hash, new ArrayList<>(), false, false);
+            } else if (null == compSignPO.getListMsg()) {
+                compSignPO.setListMsg(new ArrayList<>());
+            }
+            compSignPO.getListMsg().add(currentMessage);
+            compSignPO.setCurrentSigned(true);
+            // 广播当前节点签名消息
+            NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
+            chain.getLogger().info("[withdraw] 调用异构链组件执行签名, 发送签名消息. hash:{}", txHash);
+        }
+
+        boolean rs = false;
+        if (compSignPO.getByzantinePass()) {
+            if (!compSignPO.getCompleted()) {
+                // 执行调用异构链
+                List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
+                if (null == callParmsList) {
+                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    return false;
+                }
+                ComponentCallParm callParm = callParmsList.get(0);
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
+                String ethTxHash = docking.createOrSignWithdrawTxII(
+                        callParm.getTxHash(),
+                        callParm.getToAddress(),
+                        callParm.getValue(),
+                        callParm.getAssetId(),
+                        callParm.getSigned());
+                compSignPO.setCompleted(true);
+                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-withdraw] 调用异构链组件执行提现. hash:{}, ethHash:{}", txHash, ethTxHash);
+            }
+            rs = true;
+        }
+        // 存储更新后的 compSignPO
+        componentSignStorageService.save(chain, compSignPO);
+        return rs;
+    }
+
 
     /**
      * 处理虚拟银行变更异构链部分的业务
@@ -268,12 +562,41 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             String hash = po.getTx().getHash().toHex();
             if (chain.getCurrentIsDirector().get()) {
                 // 存储已执行成功的交易hash, 执行过的不再执行.
-                asyncProcessedTxStorageService.saveComponentCall(chain, hash);
+                ComponentCalledPO callPO = new ComponentCalledPO(
+                        hash,
+                        po.getBlockHeader().getHeight(),
+                        false);
+                asyncProcessedTxStorageService.saveComponentCall(chain, callPO, po.getCurrentQuit());
+
             }
             chain.getLogger().debug("[异构链待处理队列] 执行成功移除交易, hash:{}", hash);
             // 并且从持久化库中移除
             txSubsequentProcessStorageService.delete(chain, hash);
         }
+    }
+
+    /**
+     * 返回 从队列中取出虚拟银行变更交易来进行合并的 交易列表
+     *
+     * @param count 最多从队列中取几个交易来进行合并, 为null则不限制(满足条件全部取出)
+     * @return
+     * @throws NulsException
+     */
+    private List<TxSubsequentProcessPO> getChangeVirtualBankTxs(Integer count) {
+        List<TxSubsequentProcessPO> mergeList = new ArrayList<>();
+        Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
+        int current = 0;
+        while (it.hasNext()) {
+            TxSubsequentProcessPO po = it.next();
+            Transaction tx = po.getTx();
+            if (tx.getType() == TxType.CHANGE_VIRTUAL_BANK) {
+                mergeList.add(po);
+                if (null != count && count == ++current) {
+                    break;
+                }
+            }
+        }
+        return mergeList;
     }
 
     /**
@@ -434,13 +757,13 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
     }
 
-
     /**
      * 处理提现的交易
      *
      * @param pendingPO
      * @throws NulsException
      */
+
     private void withdrawalProcessor(TxSubsequentProcessPO pendingPO) throws NulsException {
         SyncStatusEnum syncStatus = chain.getLatestBasicBlock().getSyncStatusEnum();
         if (null == syncStatus || !syncStatus.equals(SyncStatusEnum.RUNNING)) {
@@ -464,7 +787,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
         int assetId = withdrawCoinTo.getAssetsId();
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(assetId);
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsChainId(), assetId);
         BigInteger amount = withdrawCoinTo.getAmount();
         String heterogeneousAddress = txData.getHeterogeneousAddress();
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
@@ -557,6 +880,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
     }
 
+
     /**
      * 重置虚拟银行异构链
      *
@@ -578,7 +902,11 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         for (TxSubsequentProcessPO po : changeVirtualBankTxs) {
             String hash = po.getTx().getHash().toHex();
             // 存储已执行成功的交易hash, 执行过的不再执行 (当前节点处于同步区块模式时,也要存该hash, 表示已执行过)
-            asyncProcessedTxStorageService.saveComponentCall(chain, hash);
+            ComponentCalledPO callPO = new ComponentCalledPO(
+                    hash,
+                    po.getBlockHeader().getHeight(),
+                    false);
+            asyncProcessedTxStorageService.saveComponentCall(chain, callPO, po.getCurrentQuit());
             chain.getLogger().debug("[异构链待处理队列] 重置虚拟银行异构链 - 执行成功移除交易, hash:{}", hash);
             // 并且从持久化库中移除
             txSubsequentProcessStorageService.delete(chain, hash);

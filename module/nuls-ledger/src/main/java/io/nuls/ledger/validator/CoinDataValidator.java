@@ -1102,7 +1102,7 @@ public class CoinDataValidator {
      * @return
      */
     public boolean validateTxAmount(CoinData coinData, int txType) {
-        if (txType == TxType.CONTRACT_TOKEN_CROSS_TRANSFER || txType == TxType.COIN_BASE) {
+        if (txType == TxType.CONTRACT_TOKEN_CROSS_TRANSFER || txType == TxType.COIN_BASE || txType == TxType.RECHARGE) {
             return true;
         }
         Map<String, BigInteger> assetMap = new HashMap<>();
@@ -1141,8 +1141,14 @@ public class CoinDataValidator {
         for (String assetKey : assetKeys) {
             assetKeyFrom = assetMap.get(assetKey + "from");
             assetKeyTo = assetMap.get(assetKey + "to");
-            if (null == assetKeyFrom || null == assetKeyTo) {
+            if (null == assetKeyFrom && null == assetKeyTo) {
                 continue;
+            }
+            if (null == assetKeyFrom) {
+                assetKeyFrom = BigInteger.ZERO;
+            }
+            if (null == assetKeyTo) {
+                assetKeyTo = BigInteger.ZERO;
             }
             if (BigIntegerUtils.isLessThan(assetKeyFrom, assetKeyTo)) {
                 LoggerUtil.COMMON_LOG.error("fromAmount is less than to amount");

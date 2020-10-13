@@ -1,10 +1,13 @@
 package network.nerve;
 
+import io.nuls.base.api.provider.Provider;
+import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.log.Log;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.info.HostInfo;
@@ -49,6 +52,10 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
     private ChainManager chainManager;
 
     public static void main(String[] args) {
+        ConfigurationLoader configurationLoader = new ConfigurationLoader();
+        configurationLoader.load();
+        int defaultChainId = Integer.parseInt(configurationLoader.getValue("chainId"));
+        ServiceManager.init(defaultChainId, Provider.ProviderType.RPC);
         NulsRpcModuleBootstrap.run(CONTEXT_PATH, args);
     }
 

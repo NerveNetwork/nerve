@@ -66,6 +66,7 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -210,13 +211,13 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createRechargeTxWithoutSign(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException {
         RechargeTxData txData = new RechargeTxData(rechargeTxDTO.getOriginalTxHash());
         byte[] toAddress = AddressTool.getAddress(rechargeTxDTO.getToAddress());
-        int nerveAssetId = heterogeneousAssetConverterStorageService.getNerveAssetId(
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(
                 rechargeTxDTO.getHeterogeneousChainId(),
                 rechargeTxDTO.getHeterogeneousAssetId());
         CoinTo coinTo = new CoinTo(
                 toAddress,
-                chain.getChainId(),
-                nerveAssetId,
+                nerveAssetInfo.getAssetChainId(),
+                nerveAssetInfo.getAssetId(),
                 rechargeTxDTO.getAmount());
         List<CoinTo> tos = new ArrayList<>();
         tos.add(coinTo);
@@ -232,6 +233,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.RECHARGE, txDataBytes, rechargeTxDTO.getTxtime());
         tx.setCoinData(coinDataBytes);
+        if (StringUtils.isNotBlank(rechargeTxDTO.getHeterogeneousFromAddress())) {
+            tx.setRemark(rechargeTxDTO.getHeterogeneousFromAddress().getBytes(StandardCharsets.UTF_8));
+        }
         return tx;
     }
 
@@ -257,7 +261,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException {
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTxDTO.getAssetId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTxDTO.getAssetChainId(), withdrawalTxDTO.getAssetId());
 
         String heterogeneousAddress = withdrawalTxDTO.getHeterogeneousAddress().toLowerCase();
         if (null == heterogeneousAssetInfo ||
@@ -614,6 +618,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      */
     private byte[] assembleWithdrawalCoinData(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException {
         int withdrawalAssetId = withdrawalTxDTO.getAssetId();
+        int withdrawalAssetChainId = withdrawalTxDTO.getAssetChainId();
 
 
         int chainId = chain.getConfig().getChainId();
@@ -621,20 +626,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         BigInteger amount = withdrawalTxDTO.getAmount();
         String address = withdrawalTxDTO.getSignAccount().getAddress();
         //提现资产from
-        CoinFrom withdrawalCoinFrom = getWithdrawalCoinFrom(chain, address, amount, chainId, withdrawalAssetId);
-
-        CoinFrom withdrawalFeeCoinFrom = null;
-        //手续费from 包含异构链补贴手续费
-        withdrawalFeeCoinFrom = getWithdrawalFeeCoinFrom(chain, address, ConverterContext.DISTRIBUTION_FEE);
+        CoinFrom withdrawalCoinFrom = getWithdrawalCoinFrom(chain, address, amount, withdrawalAssetChainId, withdrawalAssetId);
         List<CoinFrom> listFrom = new ArrayList<>();
         listFrom.add(withdrawalCoinFrom);
-        listFrom.add(withdrawalFeeCoinFrom);
+        if(withdrawalAssetChainId != chainId || assetId != withdrawalAssetId) {
+            // 只要不是当前链主资产 都要组装额外的coinFrom
+            CoinFrom withdrawalFeeCoinFrom = null;
+            //手续费from 包含异构链补贴手续费
+            withdrawalFeeCoinFrom = getWithdrawalFeeCoinFrom(chain, address, ConverterContext.DISTRIBUTION_FEE);
 
+            listFrom.add(withdrawalFeeCoinFrom);
+        }
         //组装to
         List<CoinTo> listTo = new ArrayList<>();
         CoinTo withdrawalCoinTo = new CoinTo(
                 AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId()),
-                chainId,
+                withdrawalAssetChainId,
                 withdrawalAssetId,
                 amount);
 
@@ -661,7 +668,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      * @param chain
      * @param address
      * @param amount
-     * @param heterogeneousAssetId
+     * @param withdrawalAssetChainId
+     * @param withdrawalAssetId
      * @return
      * @throws NulsException
      */
@@ -669,8 +677,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             Chain chain,
             String address,
             BigInteger amount,
-            int heterogeneousChainId,
-            int heterogeneousAssetId) throws NulsException {
+            int withdrawalAssetChainId,
+            int withdrawalAssetId) throws NulsException {
         //提现资产
         if (BigIntegerUtils.isEqualOrLessThan(amount, BigInteger.ZERO)) {
             chain.getLogger().error("提现金额不能小于0, amount:{}", amount);
@@ -678,22 +686,33 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         NonceBalance withdrawalNonceBalance = LedgerCall.getBalanceNonce(
                 chain,
-                heterogeneousChainId,
-                heterogeneousAssetId,
+                withdrawalAssetChainId,
+                withdrawalAssetId,
                 address);
 
         BigInteger withdrawalAssetBalance = withdrawalNonceBalance.getAvailable();
 
         if (BigIntegerUtils.isLessThan(withdrawalAssetBalance, amount)) {
             chain.getLogger().error("提现资产余额不足 chainId:{}, assetId:{}, withdrawal amount:{}, available balance:{} ",
-                    heterogeneousChainId, heterogeneousAssetId, amount, withdrawalAssetBalance);
+                    withdrawalAssetChainId, withdrawalAssetId, amount, withdrawalAssetBalance);
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
+        }
+
+        if(withdrawalAssetChainId == chain.getConfig().getChainId() && chain.getConfig().getAssetId() == withdrawalAssetId) {
+            // 异构转出链内主资产, 直接合并到一个coinFrom
+            // 总手续费 = 链内打包手续费 + 异构链转账(或签名)手续费[都以链内主资产结算]
+            BigInteger totalFee = TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES.add(ConverterContext.DISTRIBUTION_FEE);
+            amount = totalFee.add(amount);
+            if (BigIntegerUtils.isLessThan(withdrawalAssetBalance, amount)) {
+                chain.getLogger().error("Insufficient balance of withdrawal fee. amount to be paid:{}, available balance:{} ", amount, withdrawalAssetBalance);
+                throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
+            }
         }
 
         return new CoinFrom(
                 AddressTool.getAddress(address),
-                heterogeneousChainId,
-                heterogeneousAssetId,
+                withdrawalAssetChainId,
+                withdrawalAssetId,
                 amount,
                 withdrawalNonceBalance.getNonce(),
                 (byte) 0);

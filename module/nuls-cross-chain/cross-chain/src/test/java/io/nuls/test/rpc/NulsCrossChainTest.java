@@ -1,17 +1,28 @@
 package io.nuls.test.rpc;
-import io.nuls.core.parse.JSONUtils;
+
+import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.Transaction;
+import io.nuls.core.constant.TxType;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
+import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.rpc.info.Constants;
-import io.nuls.crosschain.base.model.dto.input.CoinDTO;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
-import io.nuls.core.log.Log;
-import org.junit.Assert;
+import io.nuls.crosschain.base.model.dto.input.CoinDTO;
+import network.nerve.constant.NulsCrossChainConfig;
+import network.nerve.model.bo.Chain;
+import network.nerve.model.bo.config.ConfigBean;
+import network.nerve.utils.LoggerUtil;
+import network.nerve.utils.TxUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,4 +116,26 @@ public class NulsCrossChainTest {
             return null;
         }
     }
+
+    public static void main(String[] args) throws NulsException, IOException {
+        String txHex = "0a00f8f9675f0000d20217090001048d27d1429853880559bf6ab7343161269684910100010080dd04b53d000000000000000000000000000000000000000000000000000000089c28b917af00bc250017090001048d27d1429853880559bf6ab7343161269684910900010080c3c9010000000000000000000000000000000000000000000000000000000008b5777b1f7fa6a979000117010001048d27d1429853880559bf6ab73431612696849101000100001a3bb33d000000000000000000000000000000000000000000000000000000000000000000000069210216fd40c36a036c0899c454ce14c34ec8ff790befe6c31e3346f46af2a591951d46304402207a2b5d7022154d0c742bdfb2ad4b4b43ebd04a7a6d02aa24b0c319cfd18344910220575ac62f88eaa9524a1a8ebc11ca6265899538a48554a86043e0e13e8001b87e";
+        Transaction transaction = new Transaction();
+        transaction.parse(HexUtil.decode(txHex),0);
+        Chain chain = new Chain();
+        ConfigBean configBean = new ConfigBean();
+        configBean.setChainId(9);
+
+        NulsLogger nulsLogger = LoggerUtil.commonLog;
+        chain.setConfig(configBean);
+        chain.setLogger(nulsLogger);
+
+        NulsCrossChainConfig crossChainConfig = new NulsCrossChainConfig();
+        crossChainConfig.setMainAssetId(1);
+        crossChainConfig.setMainChainId(1);
+        TxUtil.setConfig(crossChainConfig);
+//        chain.setch
+        NulsHash convertHash = TxUtil.friendConvertToMain(chain, transaction, TxType.CROSS_CHAIN).getHash();
+        nulsLogger.info("{}",convertHash.toHex());
+    }
+
 }

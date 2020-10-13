@@ -24,13 +24,18 @@
 package network.nerve.converter.storage.impl;
 
 
+import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
+import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
+
+import java.util.Arrays;
 
 import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
@@ -43,26 +48,37 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 @Component
 public class HeterogeneousAssetConverterStorageServiceImpl implements HeterogeneousAssetConverterStorageService {
 
+    @Autowired
+    private ConverterConfig converterConfig;
+
     private final String baseArea = ConverterDBConstant.DB_HETEROGENEOUS_CHAIN_INFO;
     private final String KEY_PREFIX_NERVE = "HETEROGENEOUS_ASSET_NERVE-";
     private final String KEY_PREFIX_H = "HETEROGENEOUS_ASSET_H-";
     private final String CONTACT_LINE = "-";
 
     @Override
-    public int saveAssetInfo(int nerveAssetId, HeterogeneousAssetInfo info) throws Exception {
+    public int saveAssetInfo(int nerveAssetChainId, int nerveAssetId, HeterogeneousAssetInfo info) throws Exception {
         if (info == null) {
             return 0;
         }
-        ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId), info);
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_H + info.getChainId() + CONTACT_LINE + info.getAssetId()), ByteUtils.intToBytes(nerveAssetId));
+        if (converterConfig.getChainId() == nerveAssetChainId) {
+            ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId), info);
+            RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_H + info.getChainId() + CONTACT_LINE + info.getAssetId()), ByteUtils.intToBytes(nerveAssetId));
+        } else {
+            ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetChainId + CONTACT_LINE + nerveAssetId), info);
+            ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_H + info.getChainId() + CONTACT_LINE + info.getAssetId()), new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
+        }
         return 1;
     }
 
-    @Override
-    public int deleteAssetInfo(int nerveAssetId) throws Exception {
-        HeterogeneousAssetInfo info = this.getHeterogeneousAssetInfo(nerveAssetId);
+    public int deleteAssetInfoByNerveAssetId(int nerveAssetChainId, int nerveAssetId) throws Exception {
+        HeterogeneousAssetInfo info = this.getHeterogeneousAssetInfo(nerveAssetChainId, nerveAssetId);
         if (info != null) {
-            RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId));
+            if (converterConfig.getChainId() == nerveAssetChainId) {
+                RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId));
+            } else {
+                RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetChainId + CONTACT_LINE + nerveAssetId));
+            }
             RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_H + info.getChainId() + CONTACT_LINE + info.getAssetId()));
             return 1;
         }
@@ -71,25 +87,41 @@ public class HeterogeneousAssetConverterStorageServiceImpl implements Heterogene
 
     @Override
     public int deleteAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
-        int nerveAssetId = this.getNerveAssetId(heterogeneousChainId, heterogeneousAssetId);
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId));
+        NerveAssetInfo info = this.getNerveAssetInfo(heterogeneousChainId, heterogeneousAssetId);
+        if (converterConfig.getChainId() == info.getAssetChainId()) {
+            RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + info.getAssetId()));
+        } else {
+            RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE + info.getAssetChainId() + CONTACT_LINE + info.getAssetId()));
+        }
         RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_H + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
         return 1;
     }
 
     @Override
-    public HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetId) {
-        HeterogeneousAssetInfo info = ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId), HeterogeneousAssetInfo.class);
+    public HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId) {
+        HeterogeneousAssetInfo info;
+        if (converterConfig.getChainId() == nerveAssetChainId) {
+            info = ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetId), HeterogeneousAssetInfo.class);
+        } else {
+            info = ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveAssetChainId + CONTACT_LINE + nerveAssetId), HeterogeneousAssetInfo.class);
+        }
         return info;
     }
 
     @Override
-    public int getNerveAssetId(int heterogeneousChainId, int heterogeneousAssetId) {
+    public NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) {
         byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_H + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
         if (bytes == null) {
-            return 0;
+            return NerveAssetInfo.emptyInstance();
         }
-        return ByteUtils.bytesToInt(bytes);
+        NerveAssetInfo info;
+        if (bytes.length > 4) {
+            info = ConverterDBUtil.getModel(bytes, NerveAssetInfo.class);
+        } else {
+            int assetId = ByteUtils.bytesToInt(bytes);
+            info = new NerveAssetInfo(converterConfig.getChainId(), assetId);
+        }
+        return info;
     }
 
 }

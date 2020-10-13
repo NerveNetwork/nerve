@@ -25,6 +25,7 @@ package network.nerve.converter.model.bo;
 
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IHeterogeneousUpgrade;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 
 /**
@@ -51,6 +52,10 @@ public class HeterogeneousChainRegisterInfo {
      * 核心模块向异构链组件提供的查询api
      */
     private IConverterCoreApi converterCoreApi;
+    /**
+     * 合约多签类型的异构链，合约升级后，异构链组件发送新的流程处理接口给Nerve核心组件
+     */
+    private IHeterogeneousUpgrade heterogeneousUpgrade;
 
     public String getMultiSigAddress() {
         return multiSigAddress;
@@ -82,5 +87,13 @@ public class HeterogeneousChainRegisterInfo {
 
     public void setConverterCoreApi(IConverterCoreApi converterCoreApi) {
         this.converterCoreApi = converterCoreApi;
+    }
+
+    public IHeterogeneousUpgrade getHeterogeneousUpgrade() {
+        return heterogeneousUpgrade;
+    }
+
+    public void setHeterogeneousUpgrade(IHeterogeneousUpgrade heterogeneousUpgrade) {
+        this.heterogeneousUpgrade = heterogeneousUpgrade;
     }
 }

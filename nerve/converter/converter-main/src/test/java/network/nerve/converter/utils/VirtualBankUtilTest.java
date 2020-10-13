@@ -1,8 +1,14 @@
 package network.nerve.converter.utils;
 
+import io.nuls.core.parse.JSONUtils;
+import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.model.po.TxSubsequentProcessKeyListPO;
+import network.nerve.converter.model.po.TxSubsequentProcessPO;
+import network.nerve.converter.model.txdata.WithdrawalTxData;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,5 +41,21 @@ public class VirtualBankUtilTest {
     @Test
     public void sleepTest() throws InterruptedException {
         TimeUnit.SECONDS.sleep(1);
+    }
+
+    @Test
+    public void testCV_DATA() throws Exception {
+        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/logs/cv_data03/");
+        TxSubsequentProcessKeyListPO listPO = ConverterDBUtil.getModel("cv_pending_9", "PENDING_TX_ALL".getBytes(StandardCharsets.UTF_8), TxSubsequentProcessKeyListPO.class);
+        List<TxSubsequentProcessPO> list = new ArrayList<>();
+        if(null == listPO || null == listPO.getListTxHash()){
+            return;
+        }
+        for (String txHash : listPO.getListTxHash()) {
+            list.add(ConverterDBUtil.getModel("cv_pending_9", txHash.getBytes(StandardCharsets.UTF_8), TxSubsequentProcessPO.class));
+        }
+        for (TxSubsequentProcessPO po : list) {
+            System.out.println(po.getTx().format(WithdrawalTxData.class));
+        }
     }
 }

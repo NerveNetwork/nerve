@@ -5,12 +5,14 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
+import io.nuls.core.rpc.model.message.Response;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.NonceBalance;
 import network.nerve.converter.utils.LoggerUtil;
 
+import javax.xml.stream.FactoryConfigurationError;
 import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -92,6 +94,46 @@ public class LedgerCall extends BaseCall {
         }
     }
 
+    /**
+     * NERVE资产绑定异构跨链合约资产
+     */
+    public static Integer bindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_bind_heterogeneous_asset_reg", params);
+            Object value = result.get("assetType");
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_bind_heterogeneous_asset_reg");
+            LoggerUtil.LOG.error(msg, e);
+            throw e;
+        }
+    }
+
+    /**
+     * NERVE资产解绑异构跨链合约资产
+     */
+    public static Integer unbindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_unbind_heterogeneous_asset_reg", params);
+            Object value = result.get("assetType");
+            return Integer.parseInt(value.toString());
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_unbind_heterogeneous_asset_reg");
+            LoggerUtil.LOG.error(msg, e);
+            throw e;
+        }
+    }
+
 
     /**
      * 移除异构跨链资产
@@ -108,6 +150,46 @@ public class LedgerCall extends BaseCall {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_chain_asset_heterogeneous_rollback");
             LoggerUtil.LOG.error(msg, e);
             throw e;
+        }
+    }
+
+    public static boolean existNerveAsset(int chainId, int assetChainId, int assetId) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_get_asset", params);
+            if (result == null || result.get("assetSymbol") == null) {
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_get_asset");
+            LoggerUtil.LOG.error(msg, e);
+            return false;
+        }
+    }
+
+    public static Map<String, Object> getNerveAsset(int chainId, int assetChainId, int assetId) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_get_asset", params);
+            if (result == null || result.get("assetSymbol") == null) {
+                return null;
+            }
+            return result;
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_get_asset");
+            LoggerUtil.LOG.error(msg, e);
+            return null;
         }
     }
 

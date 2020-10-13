@@ -60,6 +60,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<String> UpgradeContract(UpgradeContractReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_proposal", req, fun);
+    }
+
+    @Override
     public Result<String> vote(VoteReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
@@ -93,6 +102,33 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
             return success(data);
         };
         return callRpc(ModuleE.CV.abbr, "cv_create_heterogeneous_contract_asset_reg_pending_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> bind(BindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> bindOverride(BindOverrideReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_override_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> retryWithdrawal(RetryWithdrawalReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_retry_withdrawal", req, fun);
     }
 
     @Override

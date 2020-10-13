@@ -78,6 +78,11 @@ public class HeterogeneousCfg {
      */
     private BigDecimal initialBalance;
 
+    /**
+     * 过滤掉的充值地址
+     */
+    private String filterAddresses;
+
     public int getChainId() {
         return chainId;
     }
@@ -172,5 +177,13 @@ public class HeterogeneousCfg {
 
     public void setInitialBalance(BigDecimal initialBalance) {
         this.initialBalance = initialBalance;
+    }
+
+    public String getFilterAddresses() {
+        return filterAddresses;
+    }
+
+    public void setFilterAddresses(String filterAddresses) {
+        this.filterAddresses = filterAddresses;
     }
 }

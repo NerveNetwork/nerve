@@ -91,7 +91,7 @@ public class RechargeVerifier {
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
         }
         // 通过链内资产id 获取异构链信息
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
 
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 heterogeneousAssetInfo.getChainId(),

@@ -16,6 +16,7 @@
         <module>converter-eth</module>
         <module>converter-base</module>
         <module>converter-main</module>
+        <module>converter-ethII</module>
     </modules>
 
 </project>

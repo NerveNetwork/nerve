@@ -215,8 +215,6 @@ public class HeterogeneousTransactionBaseInfo {
                 .append(assetId);
         sb.append(",\"nerveAddress\":")
                 .append('\"').append(nerveAddress).append('\"');
-        sb.append(",\"signers\":")
-                .append(signers == null ? null : Arrays.toString(signers.toArray()));
         sb.append('}');
         return sb.toString();
     }

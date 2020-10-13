@@ -30,10 +30,8 @@ import io.nuls.base.api.provider.converter.ConverterService;
 import io.nuls.base.api.provider.converter.facade.CheckRetryParseReq;
 import io.nuls.cmd.client.CommandBuilder;
 import io.nuls.cmd.client.CommandResult;
-import io.nuls.cmd.client.config.Config;
 import io.nuls.cmd.client.processor.CommandGroup;
 import io.nuls.cmd.client.processor.CommandProcessor;
-import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 
 /**
@@ -42,11 +40,8 @@ import io.nuls.core.core.annotation.Component;
  */
 @Component
 public class CheckRetryParseProcess implements CommandProcessor {
-    @Autowired
-    Config config;
 
     ConverterService converterService = ServiceManager.get(ConverterService.class);
-
 
     @Override
     public String getCommand() {

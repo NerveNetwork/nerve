@@ -25,6 +25,9 @@
  */
 package io.nuls.ledger.constant;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by ljs on 2018/11/19.
  *
@@ -38,6 +41,8 @@ public class LedgerConstant {
     public static final short CONTRACT_ASSET_TYPE = 2;
     public static final short CROSS_CHAIN_ASSET_TYPE = 3;
     public static final short HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE = 4;
+    public static final short BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET = 5;
+    public static final short BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET = 6;
 
     /**
      * 资产小数分割位
@@ -102,4 +107,17 @@ public class LedgerConstant {
     public static final String DOWN_LINE = "_";
 
     public static final String HEX_PREFIX = "0x";
+
+    public static final Map<Short, Short> CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS = new HashMap<>();
+    public static final Map<Short, Short> CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE = new HashMap<>();
+    static {
+        // 1-链内普通资产 ==> 5-链内普通资产绑定异构链资产
+        CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(COMMON_ASSET_TYPE, BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
+        // 3-平行链资产 ==> 6-平行链资产绑定异构链资产
+        CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(CROSS_CHAIN_ASSET_TYPE, BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
+        // 5-链内普通资产绑定异构链资产 ==> 1-链内普通资产
+        CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, COMMON_ASSET_TYPE);
+        // 6-平行链资产绑定异构链资产 ==> 3-平行链资产
+        CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, CROSS_CHAIN_ASSET_TYPE);
+    };
 }

@@ -34,7 +34,7 @@ public class ConverterController {
             @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "共识节点打包地址")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousAddress", description = "异构链地址"),
+            @Key(name = "heterogeneousAddress", description = "异构链地址")
     })
     )
     public RpcResult getEthAddress(List<Object> params) {
@@ -99,6 +99,40 @@ public class ConverterController {
             return RpcResult.paramError("[chainId] is inValid");
         }
         Result<String> result = converterTools.getDisqualification(chainId);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("retryWithdrawalMsg")
+    @ApiOperation(description = "重新将异构链提现交易放入task, 重发消息", order = 604)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "链内提现交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public RpcResult retryWithdrawalMsg(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String hash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            hash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[packingAddress] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(hash)) {
+            return RpcResult.paramError("[packingAddress] is incorrect");
+        }
+        Result<Map<String, Object>> result = converterTools.retryWithdrawalMsg(chainId, hash);
         return ResultUtil.getJsonRpcResult(result);
     }
 }

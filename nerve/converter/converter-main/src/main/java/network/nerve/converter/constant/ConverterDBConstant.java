@@ -135,4 +135,9 @@ public interface ConverterDBConstant {
      */
     String DB_PROPOSAL_EXE = "cv_proposal_exe_";
 
+    /**
+     * 异构链地址签名消息存储表
+     */
+    String DB_COMPONENT_SIGN = "cv_component_sign_";
+
 }

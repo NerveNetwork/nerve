@@ -35,6 +35,9 @@ import io.nuls.cmd.client.processor.consensus.*;
 import io.nuls.cmd.client.processor.converter.*;
 import io.nuls.cmd.client.processor.crosschain.CreateCrossTxProcessor;
 import io.nuls.cmd.client.processor.crosschain.GetCrossTxStateProcessor;
+import io.nuls.cmd.client.processor.dex.CreateTradingProcess;
+import io.nuls.cmd.client.processor.dex.EditTradingProcess;
+import io.nuls.cmd.client.processor.dex.QueryTradingProcess;
 import io.nuls.cmd.client.processor.ledger.GetBalanceProcessor;
 import io.nuls.cmd.client.processor.ledger.GetLocalCrossAssetProcessor;
 import io.nuls.cmd.client.processor.network.GetNetworkProcessor;
@@ -140,6 +143,10 @@ public class CommandHandler implements InitializingBean {
         register(getBean(RegisterHeterogeneousAssetProcessor.class));
         register(getBean(ResetBankProcess.class));
         register(getBean(CheckRetryParseProcess.class));
+        register(getBean(UpgradeContractProposalProcess.class));
+        register(getBean(BindProcess.class));
+        register(getBean(BindOverrideProcess.class));
+        register(getBean(RetryWithdrawalProcess.class));
         /**
          * consensus
          */
@@ -212,6 +219,12 @@ public class CommandHandler implements InitializingBean {
 //        register(getBean(GetCrossChainRegisterInfoProcessor.class));
 //        register(getBean(GetCrossAssetInfoProcessor.class));
         register(getBean(GetCrossTxStateProcessor.class));
+
+
+        register(getBean(CreateTradingProcess.class));
+        register(getBean(EditTradingProcess.class));
+        register(getBean(QueryTradingProcess.class));
+
 
         JSONUtils.getInstance().configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
 

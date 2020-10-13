@@ -44,6 +44,7 @@ public class EthUnconfirmedTxPo extends HeterogeneousTransactionInfo implements 
     private Long deletedHeight;
     private int blockHeightTimes;
     private int skipTimes;
+    private transient int checkFailedTimes;
     private int resendTimes;
     private long createDate;
     private int dbVersion;
@@ -53,6 +54,15 @@ public class EthUnconfirmedTxPo extends HeterogeneousTransactionInfo implements 
         status = MultiSignatureStatus.INITIAL;
         createDate = System.currentTimeMillis();
         dbVersion = 0;
+    }
+
+    public boolean checkFailedTimeOut() {
+        if (this.checkFailedTimes >= 3) {
+            this.checkFailedTimes = 0;
+            return true;
+        }
+        this.checkFailedTimes++;
+        return false;
     }
 
     public EthRecoveryDto getRecoveryDto() {

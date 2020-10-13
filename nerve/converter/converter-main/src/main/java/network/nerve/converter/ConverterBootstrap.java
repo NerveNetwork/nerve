@@ -58,6 +58,7 @@ import network.nerve.converter.rpc.call.ConsensusCall;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -119,9 +120,6 @@ public class ConverterBootstrap extends RpcModule {
     public void onDependenciesReady(Module module) {
         Log.info("dependencies [{}] ready", module.getName());
         if (module.getName().equals(ModuleE.TX.abbr)) {
-            /*
-             * 注册交易到交易管理模块
-             */
             Map<Integer, Chain> chainMap = chainManager.getChainMap();
             for (Chain chain : chainMap.values()) {
                 int chainId = chain.getChainId();
@@ -148,11 +146,23 @@ public class ConverterBootstrap extends RpcModule {
 
         if (ModuleE.CS.abbr.equals(module.getName())) {
             // 获取种子节点个数
-            Result<Map> result = ConsensusCall.getConsensusConfig(converterConfig.getChainId());
-            if(result.isSuccess()){
-                Map<String, Object> configMap = result.getData();
-                ConverterContext.INITIAL_VIRTUAL_BANK_COUNT = (int)configMap.get("seed_count");
+            // 根据协议来
+            Chain chain = chainManager.getChainMap().get(converterConfig.getChainId());
+            if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
+                Result<Map> result = ConsensusCall.getConsensusConfig(converterConfig.getChainId());
+                if(result.isSuccess()){
+                    Map<String, Object> configMap = result.getData();
+                    ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT = (int)configMap.get("seed_count");
+                }
+            } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT = ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.size();
             }
+            ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED =
+                    ConverterContext.VIRTUAL_BANK_AGENT_TOTAL - ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT;
+            chain.getLogger().debug("初始化: 虚拟银行总席位:{}, 虚拟银行种子成员数:{}, 虚拟银行非种子成员数:{}",
+                    ConverterContext.VIRTUAL_BANK_AGENT_TOTAL,
+                    ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT,
+                    ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED);
         }
     }
 
@@ -249,17 +259,12 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.INIT_VIRTUAL_BANK_HEIGHT = converterConfig.getInitVirtualBankHeight();
         // 手续费汇集分发公钥
         ConverterContext.FEE_PUBKEY = HexUtil.decode(converterConfig.getFeePubkey());
-        Log.debug("FEE_PUBKEY - chainId2 地址:{}",
-                AddressTool.getStringAddressByBytes(AddressTool.getAddress(ConverterContext.FEE_PUBKEY, 2)));
         // 触发执行虚拟银行变更交易的高度周期
         ConverterContext.EXECUTE_CHANGE_VIRTUAL_BANK_PERIODIC_HEIGHT = converterConfig.getExecuteChangeVirtualBankPeriodicHeight();
         // 提现黑洞公钥
         ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY = HexUtil.decode(converterConfig.getBlackHolePublicKey());
-        Log.debug("WITHDRAWAL_BLACKHOLE_PUBKEY - chainId2 地址:{}",
-                AddressTool.getStringAddressByBytes(AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, 2)));
-
-        // 虚拟银行共识节点总数（非种子节点）
-        ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED = converterConfig.getVirtualBankAgentCountWithoutSeed();
+        // 虚拟银行共识节点总数（包含种子节点成员）
+        ConverterContext.VIRTUAL_BANK_AGENT_TOTAL = converterConfig.getVirtualBankAgentTotal();
         // 提案花费
         ConverterContext.PROPOSAL_PRICE = converterConfig.getProposalPrice();
         // 签名拜占庭比例
@@ -270,7 +275,11 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST = converterConfig.getFeeEffectiveHeightFirst();
         // 第二次协议升级高度 异构链交易手续费补贴
         ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND = converterConfig.getFeeEffectiveHeightSecond();
+
+        // 初始化虚拟银行公钥(异构链版本2开始)
+        List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));
+        for(String pubKey : seedPubKeyList) {
+            ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.add(pubKey.toLowerCase());
+        }
     }
-
-
 }

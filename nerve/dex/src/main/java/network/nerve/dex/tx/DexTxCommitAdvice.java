@@ -69,6 +69,7 @@ public class DexTxCommitAdvice implements CommonAdvice {
                 orderCancelConfirmProcessor.txCommit(tx);
             }
         }
+        tradingOrderStorageService.saveHeight(blockHeader.getHeight());
 //        time2 = System.currentTimeMillis();
 //        if (time2 - time1 > 100) {
 //            LoggerUtil.dexLog.info("----dex commit---- block height:{}, txCount:{}, use:{} ", blockHeader.getHeight(), txList.size(), (time2 - time1));

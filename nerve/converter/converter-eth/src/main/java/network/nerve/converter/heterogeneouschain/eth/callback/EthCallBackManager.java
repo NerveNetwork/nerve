@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.eth.callback;
 
 import io.nuls.core.core.annotation.Component;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
+import network.nerve.converter.core.heterogeneous.callback.interfaces.IHeterogeneousUpgrade;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 
 /**
@@ -36,6 +37,7 @@ public class EthCallBackManager {
 
     private IDepositTxSubmitter depositTxSubmitter;
     private ITxConfirmedProcessor txConfirmedProcessor;
+    private IHeterogeneousUpgrade heterogeneousUpgrade;
 
     public IDepositTxSubmitter getDepositTxSubmitter() {
         return depositTxSubmitter;
@@ -51,5 +53,13 @@ public class EthCallBackManager {
 
     public void setTxConfirmedProcessor(ITxConfirmedProcessor txConfirmedProcessor) {
         this.txConfirmedProcessor = txConfirmedProcessor;
+    }
+
+    public IHeterogeneousUpgrade getHeterogeneousUpgrade() {
+        return heterogeneousUpgrade;
+    }
+
+    public void setHeterogeneousUpgrade(IHeterogeneousUpgrade heterogeneousUpgrade) {
+        this.heterogeneousUpgrade = heterogeneousUpgrade;
     }
 }

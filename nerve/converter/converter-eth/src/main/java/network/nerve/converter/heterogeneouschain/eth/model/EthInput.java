@@ -32,6 +32,7 @@ import network.nerve.converter.enums.HeterogeneousChainTxType;
 public class EthInput {
     private static final EthInput EMPTY = new EthInput(false, null, null);
     private boolean isBroadcastTx;
+    private boolean isDepositTx;
     private HeterogeneousChainTxType txType;
     private String nerveTxHash;
 
@@ -39,6 +40,11 @@ public class EthInput {
         this.isBroadcastTx = isBroadcastTx;
         this.txType = txType;
         this.nerveTxHash = nerveTxHash;
+    }
+
+    public EthInput(boolean isDepositTx, HeterogeneousChainTxType txType) {
+        this.isDepositTx = isDepositTx;
+        this.txType = txType;
     }
 
     public static EthInput empty() {
@@ -51,6 +57,14 @@ public class EthInput {
 
     public void setBroadcastTx(boolean broadcastTx) {
         isBroadcastTx = broadcastTx;
+    }
+
+    public boolean isDepositTx() {
+        return isDepositTx;
+    }
+
+    public void setDepositTx(boolean depositTx) {
+        isDepositTx = depositTx;
     }
 
     public HeterogeneousChainTxType getTxType() {

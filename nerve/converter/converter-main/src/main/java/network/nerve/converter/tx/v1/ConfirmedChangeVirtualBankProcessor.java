@@ -45,6 +45,7 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.SignAccountDTO;
+import network.nerve.converter.model.po.ComponentCalledPO;
 import network.nerve.converter.model.po.ConfirmedChangeVirtualBankPO;
 import network.nerve.converter.model.po.MergedComponentCallPO;
 import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
@@ -168,11 +169,12 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
         try {
             boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
             for (Transaction tx : txs) {
+                NulsHash hash = tx.getHash();
                 ConfirmedChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmedChangeVirtualBankTxData.class);
                 boolean rs = cfmChangeBankStorageService.save(chain,
-                        new ConfirmedChangeVirtualBankPO(txData.getChangeVirtualBankTxHash(), tx.getHash()));
+                        new ConfirmedChangeVirtualBankPO(txData.getChangeVirtualBankTxHash(), hash));
                 if (!rs) {
-                    chain.getLogger().error("[commit] Save confirmed change virtual bank tx failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
+                    chain.getLogger().error("[commit] Save confirmed change virtual bank tx failed. hash:{}, type:{}", hash.toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
                 /**
@@ -184,17 +186,25 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                  * 记录已调用过异构链的交易(防止task 合并变更交易数据不一致)
                  * 一定放在设置 HeterogeneousChangeBankExecuting 状态之前进行保存,
                  * 异构task线程的执行会对该状态产生致命影响.
+                 *
+                 * 由于其他节点可能更快的执行该交易,导致当前节点(虚拟银行成员),
+                 * 先收到该交易的确认, 但是预备调用异构链的队列中还存在该交易, 还没有执行,
+                 * 需要先存储以防止队列重复执行该交易.
                  */
-                asyncProcessedTxStorageService.saveComponentCall(chain, changeVirtualBankTxHash.toHex());
+                ComponentCalledPO callPO = new ComponentCalledPO(
+                        changeVirtualBankTxHash.toHex(),
+                        -1,
+                        true);
+                asyncProcessedTxStorageService.saveComponentCall(chain, callPO, false);
 
                 if (isCurrentDirector && syncStatus == SyncStatusEnum.RUNNING.value()) {
                     // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
                     List<HeterogeneousConfirmedVirtualBank> listConfirmed = txData.getListConfirmed();
                     for (HeterogeneousConfirmedVirtualBank bank : listConfirmed) {
-                        heterogeneousDockingManager.getHeterogeneousDocking(bank.getHeterogeneousChainId()).txConfirmedCompleted(bank.getHeterogeneousTxHash(), blockHeader.getHeight());
+                        heterogeneousDockingManager.getHeterogeneousDocking(bank.getHeterogeneousChainId()).txConfirmedCompleted(bank.getHeterogeneousTxHash(), blockHeader.getHeight(), changeVirtualBankTxHash.toHex());
                     }
                     // 移除收集的异构链确认信息 // add by Mimi at 2020-03-12
-                    heterogeneousConfirmedChangeVBStorageService.deleteByTxHash(tx.getHash().toHex());
+                    heterogeneousConfirmedChangeVBStorageService.deleteByTxHash(hash.toHex());
                 }
 
                 MergedComponentCallPO mergedTxPO = mergeComponentStorageService.findMergedTx(chain, changeVirtualBankTxHash.toHex());
@@ -204,6 +214,7 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                      * 所以在多个确认交易中(确认交易是独立的 不会合并) 要找到那个key来重置状态.
                       */
                     heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, false);
+                    chain.getLogger().info("[ChangeVirtualBank] 虚拟银行变更完整,重置异构链调用状态(开门):{}", chain.getHeterogeneousChangeBankExecuting().get());
                 } else if (null != signAccountDTO) {
                     // 如果当前节点 在原始变更交易in(加入)里, 则需要复原状态
                     Transaction originalTx = TransactionCall.getConfirmedTx(chain, changeVirtualBankTxHash);
@@ -214,14 +225,14 @@ public class ConfirmedChangeVirtualBankProcessor implements TransactionProcessor
                             VirtualBankDirector director = chain.getDirectorByAgent(AddressTool.getStringAddressByBytes(agentAddress));
                             if (null != director && director.getSignAddress().equals(signAccountDTO.getAddress())) {
                                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, false);
-                                chain.getLogger().info("[ChangeVirtualBank] 当前节点加入虚拟银行变更交易已确认, 复原异构链调用状态:{}", chain.getHeterogeneousChangeBankExecuting().get());
+                                chain.getLogger().info("[ChangeVirtualBank] 当前节点加入虚拟银行变更交易已确认, 复原异构链调用状态(开门):{}", chain.getHeterogeneousChangeBankExecuting().get());
                                 break;
                             }
                         }
                     }
                 }
 
-                chain.getLogger().info("[commit] 确认虚拟银行变更交易 hash:{}, 原始变更交易hash:{}", tx.getHash().toHex(), txData.getChangeVirtualBankTxHash().toHex());
+                chain.getLogger().info("[commit] 确认虚拟银行变更交易 hash:{}, 原始变更交易hash:{}", hash.toHex(), txData.getChangeVirtualBankTxHash().toHex());
             }
             return true;
         } catch (Exception e) {

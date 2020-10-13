@@ -82,10 +82,19 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
         Map<String, Object> rtMap = new HashMap<>(3);
         try {
             int chainId = Integer.parseInt(params.get("chainId").toString());
+            int assetChainId = Integer.parseInt(params.get("assetChainId").toString());
             LoggerUtil.COMMON_LOG.debug("[register] cross chain asset params={}", JSONUtils.obj2json(params));
-            params.put("chainId", params.get("assetChainId"));
+            params.put("chainId", assetChainId);
             LedgerAsset asset = new LedgerAsset();
             asset.map2pojo(params, Short.parseShort(params.get("assetType").toString()));
+            // 检查账本是否已登记此资产
+            if (asset.getAssetId() != 0) {
+                LedgerAsset checkAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, asset.getAssetId());
+                // 当存在时，保证资产类型不被覆盖
+                if (checkAsset != null) {
+                    asset.setAssetType(checkAsset.getAssetType());
+                }
+            }
             crossChainAssetRegMngRepository.saveCrossChainAsset(chainId, asset);
             rtMap.put("value", true);
         } catch (Exception e) {
@@ -143,6 +152,14 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
                     LedgerAsset asset = new LedgerAsset();
                     assetMap.put("chainId", assetMap.get("assetChainId"));
                     asset.map2pojo(assetMap, assetType);
+                    // 检查账本是否已登记此资产
+                    if (asset.getAssetId() != 0) {
+                        LedgerAsset checkAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, asset.getAssetId());
+                        // 当存在时，保证资产类型不被覆盖
+                        if (checkAsset != null) {
+                            asset.setAssetType(checkAsset.getAssetType());
+                        }
+                    }
                     saveAssetList.add(asset);
                 } else {
                     deleteAssetKeyList.add(assetMap.get("assetChainId").toString() + LedgerConstant.DOWN_LINE + assetMap.get("assetId").toString());

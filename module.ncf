@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=D:\\gitlabspace\\nerve-network\\Logs
+logPath=Logs
 logLevel=INFO
-dataPath=D:\\gitlabspace\\nerve-network\\data
+dataPath=data
 #默认本链ID
 chainId=9
 #地址前缀
@@ -31,7 +31,6 @@ port=7001
 crossPort=7002
 #魔法参数
 packetMagic=2020071001
-reverseCheck=0
 #种子节点
 selfSeedIps=seeda.nerve.network:7001,seedb.nerve.network:7001,seedh.nerve.network:7001,seedg.nerve.network:7001,seedc.nerve.network:7001,seede.nerve.network:7001
 #主网的跨链种子连接节点
@@ -116,7 +115,7 @@ connectTimeOut=30000
 mongoUser=nuls
 mongoPwd=nuls123456
 nulsApiUrl=https://api.nuls.io/jsonrpc
-lockedAddress=NERVEepb6GNpWGx6Jn43Upr1BxKZrhfKf8nMSS,NULSd6HgjNHAs4W6RL6wy9XRaLtNNd3SyJ7Er,NULSd6HgYYmifVKWPjjiMUU7zgYJbmcCXv5wi,NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6Chtj1NEaxu8VC5LqojAoxknX4RExF,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb6AHhD8hBtVnUbf4Ynxf5Kgek6du4KC,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6DYgJrFnLQVf7U9dNny6RzMDGhPQ1P,NERVEepb64Fc8yoW786NTdqaEDGbw7LvK2twRX,NERVEepb642YtQrJ8y8C9KxqY7Yzvc2FQxcZyT,NERVEepb65oPwX3XKDMSEmmYgLTVMv6MKJhjJY,NERVEepb6BKFc2usbP1mUfmvNyZGELaFRm1L5G
+lockedAddress=NERVEepb65ZK45NuikTgFDAwtNfDnvotQhQL92,NERVEepb6GNpWGx6Jn43Upr1BxKZrhfKf8nMSS,NULSd6HgjNHAs4W6RL6wy9XRaLtNNd3SyJ7Er,NULSd6HgYYmifVKWPjjiMUU7zgYJbmcCXv5wi,NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6Chtj1NEaxu8VC5LqojAoxknX4RExF,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb6AHhD8hBtVnUbf4Ynxf5Kgek6du4KC,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6DYgJrFnLQVf7U9dNny6RzMDGhPQ1P,NERVEepb64Fc8yoW786NTdqaEDGbw7LvK2twRX,NERVEepb642YtQrJ8y8C9KxqY7Yzvc2FQxcZyT,NERVEepb65oPwX3XKDMSEmmYgLTVMv6MKJhjJY,NERVEepb6BKFc2usbP1mUfmvNyZGELaFRm1L5G
 
 [cross-chain]
 #跨链节点链接的最小值
@@ -163,9 +162,8 @@ sysFeeScale=2
 createTradingAmount=200000000000
 
 [dex-api]
-oneMinuteBlockCount=30
-usdiChainId=5
-usdiAssetId=3
+usdChainId=9
+usdAssetId=3
 btcChainId=5
 btcAssetId=4
 walletPSUrl=https://public.nerve.network/
@@ -176,10 +174,13 @@ feeAddress=NERVEepb6BiuhyRh4Q9mcwyQd44pfz4AofM2h5
 feeScale=6
 #同步区块的起始高度
 startSyncHeight=1450000
+priceUrl=https://api.binance.com/api/v3/ticker/price?symbol=
 
 [dex-public-service]
 dexUrl=https://nervedex.com/
+psUrl=https://public.nerve.network/jsonrpc
 nulsApi=https://api.nerve.network/
+priceUrl=https://api.binance.com/api/v3/ticker/price?symbol=
 mongoUser=nuls
 mongoPwd=nuls123456
 
@@ -192,10 +193,12 @@ quoteEndHm=00:10
 executeChangeVirtualBankPeriodicHeight=1000
 feePubkey=111111111111111111111111111111111111111111111111111111111111111111
 initVirtualBankHeight=10
-virtualBankAgentCountWithoutSeed=10
+virtualBankAgentTotal=15
 proposalPrice=1000000000
 proposalVotingDays=10
 distributionFee=1000000000
 byzantineRatio=66
 multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5
 heterogeneousMainNet=true
+initVirtualBankPubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
+newProcessorMode=false

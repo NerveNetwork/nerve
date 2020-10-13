@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class CmdAssetRegTest {
     @Before
     public void before() throws Exception {
-        NoUse.mockModule();
+        NoUse.mockModule(8771);
     }
 
     @Test
@@ -34,12 +34,12 @@ public class CmdAssetRegTest {
     public void chainAssetTxRegTest() throws Exception {
         // Build params map
         Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","ETH");
-        params.put("assetName","ETH");
+        params.put("assetSymbol","DAI");
+        params.put("assetName","DAI");
         params.put("initNumber",100000000);
-        params.put("decimalPlace",6);
-        params.put("txCreatorAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
-        params.put("assetOwnerAddress","TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA");
+        params.put("decimalPlace",18);
+        params.put("txCreatorAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+        params.put("assetOwnerAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
         params.put("password","nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
         Log.debug("response {}", JSONUtils.obj2json(response));
