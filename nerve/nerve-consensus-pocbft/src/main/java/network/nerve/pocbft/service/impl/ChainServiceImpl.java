@@ -499,7 +499,7 @@ public class ChainServiceImpl implements ChainService {
             if ((height - initEndHeight) % chain.getConfig().getDeflationHeightInterval() != 0) {
                 differentCount++;
             }
-            double ratio = DoubleUtils.div(chain.getConfig().getDeflationRatio(), NulsEconomicConstant.VALUE_OF_100, 4);
+            double ratio = 1 - chain.getConfig().getDeflationRatio();
             BigInteger inflationAmount = DoubleUtils.mul(new BigDecimal(chain.getConfig().getInflationAmount()), BigDecimal.valueOf(Math.pow(ratio, differentCount))).toBigInteger();
             award = DoubleUtils.div(new BigDecimal(inflationAmount), chain.getConfig().getDeflationHeightInterval()).toBigInteger();
         } else {

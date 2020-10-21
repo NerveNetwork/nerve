@@ -59,8 +59,8 @@ public class ConsensusAwardUtil {
     /**
      * 从喂价系统获取对应的数量的NVT
      *
-     * @param amount       数量
-     * @param time         交易时间（毫秒）
+     * @param amount 数量
+     * @param time   交易时间（毫秒）
      * @return 对应数量的NVT
      */
     public static BigInteger getRealAmount(int chainId, BigInteger amount, StackingAsset stackingAsset, long time) throws NulsException {
@@ -77,8 +77,8 @@ public class ConsensusAwardUtil {
     /**
      * 从喂价系统获取对应的数量的NVT
      *
-     * @param amount       数量
-     * @param date         时间
+     * @param amount 数量
+     * @param date   时间
      * @return 对应数量的NVT
      */
     public static BigDecimal getRealAmount(int chainId, BigDecimal amount, StackingAsset stackingAsset, String date) throws NulsException {
@@ -453,10 +453,10 @@ public class ConsensusAwardUtil {
         BigDecimal totalDeposit = BigDecimal.ZERO;
         Map<String, BigDecimal> depositMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);
         //获取有效的节点保证金权重
-        totalDeposit = agentManager.getAgentDepositByHeight(chain, startHeight,endHeight, depositMap, totalDeposit);
+        totalDeposit = agentManager.getAgentDepositByHeight(chain, startHeight, endHeight, depositMap, totalDeposit);
 
         //获取有效的委托金权重
-        totalDeposit = depositManager.getDepositByHeight(chain, startHeight,endHeight, depositMap, totalDeposit, date);
+        totalDeposit = depositManager.getDepositByHeight(chain, startHeight, endHeight, depositMap, totalDeposit, date);
 
         if (totalDeposit.equals(BigDecimal.ZERO)) {
             return weightDetails;
@@ -483,7 +483,12 @@ public class ConsensusAwardUtil {
             return BigDecimal.ZERO;
         }
         long blockCount = endHeight - startHeight;
-        InflationInfo inflationInfo = getInflationInfo(chain, startHeight);
+        InflationInfo inflationInfo = null;
+        if (endHeight <= 4337812) {
+            inflationInfo = getInflationInfo(chain, startHeight);
+        } else {
+            inflationInfo = getInflationInfoNew(chain, startHeight);
+        }
         if (endHeight <= inflationInfo.getEndHeight()) {
             return DoubleUtils.mul(new BigDecimal(blockCount), inflationInfo.getAwardUnit());
         }
@@ -494,7 +499,11 @@ public class ConsensusAwardUtil {
             totalAll = totalAll.add(DoubleUtils.mul(new BigDecimal(currentCount), inflationInfo.getAwardUnit()));
             chain.getLogger().info("本阶段共识奖励为{}的数量为{}", inflationInfo.getAwardUnit(), currentCount);
             startHeight += currentCount;
-            inflationInfo = getInflationInfo(chain, startHeight);
+            if (endHeight <= 4337812) {
+                inflationInfo = getInflationInfo(chain, startHeight);
+            } else {
+                inflationInfo = getInflationInfoNew(chain, startHeight);
+            }
         }
         currentCount = endHeight - startHeight + 1;
         chain.getLogger().info("本阶段奖励为{}的数量为{}", inflationInfo.getAwardUnit(), currentCount);
@@ -538,6 +547,44 @@ public class ConsensusAwardUtil {
             inflationInfo.setStartHeight(initHeight + differentHeight);
             inflationInfo.setEndHeight(initEndHeight + differentHeight);
             double ratio = DoubleUtils.div(chain.getConfig().getDeflationRatio(), NulsEconomicConstant.VALUE_OF_100, 4);
+            BigInteger inflationAmount = DoubleUtils.mul(new BigDecimal(chain.getConfig().getInflationAmount()), BigDecimal.valueOf(Math.pow(ratio, differentCount))).toBigInteger();
+            inflationInfo.setInflationAmount(inflationAmount);
+            inflationInfo.setAwardUnit(DoubleUtils.div(new BigDecimal(inflationAmount), chain.getConfig().getDeflationHeightInterval()).setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
+        }
+        currentInflationInfo = inflationInfo;
+        Log.info("通胀发生改变，当前通胀通胀开始高度{}：，当前阶段通胀结束高度：{},当前阶段通胀总数：{}，当前阶段出块单位奖励：{}", inflationInfo.getStartHeight(), inflationInfo.getEndHeight(), inflationInfo.getInflationAmount(), inflationInfo.getAwardUnit());
+        return inflationInfo;
+    }
+
+    private static InflationInfo getInflationInfoNew(Chain chain, long height) {
+        InflationInfo inflationInfo = new InflationInfo();
+
+        long initHeight = chain.getConfig().getInitHeight();
+        long initEndHeight = initHeight + chain.getConfig().getDeflationHeightInterval();
+
+        if (height < initHeight) {
+            chain.getLogger().info("当前区块高度小于通缩开始高度");
+        }
+
+        if (currentInflationInfo != null && height >= currentInflationInfo.getStartHeight() && height <= currentInflationInfo.getEndHeight()) {
+            return currentInflationInfo;
+        }
+
+        if (height <= initEndHeight) {
+            inflationInfo.setStartHeight(initHeight);
+            inflationInfo.setEndHeight(initEndHeight);
+            inflationInfo.setInflationAmount(chain.getConfig().getInflationAmount());
+            inflationInfo.setAwardUnit(DoubleUtils.div(new BigDecimal(inflationInfo.getInflationAmount()), chain.getConfig().getDeflationHeightInterval()).setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
+        } else {
+            long differentCount = (height - initEndHeight) / chain.getConfig().getDeflationHeightInterval();
+            if ((height - initEndHeight) % chain.getConfig().getDeflationHeightInterval() != 0) {
+                differentCount++;
+            }
+            long differentHeight = differentCount * chain.getConfig().getDeflationHeightInterval();
+            inflationInfo.setStartHeight(initHeight + differentHeight);
+            inflationInfo.setEndHeight(initEndHeight + differentHeight);
+            double ratio = 1 - chain.getConfig().getDeflationRatio();
+
             BigInteger inflationAmount = DoubleUtils.mul(new BigDecimal(chain.getConfig().getInflationAmount()), BigDecimal.valueOf(Math.pow(ratio, differentCount))).toBigInteger();
             inflationInfo.setInflationAmount(inflationAmount);
             inflationInfo.setAwardUnit(DoubleUtils.div(new BigDecimal(inflationAmount), chain.getConfig().getDeflationHeightInterval()).setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
