@@ -263,7 +263,7 @@ public class ConsensusAwardUtil {
             if (lastestSettleResult.isSettled()) {
                 return;
             }
-            String dateStr = getDateStr(NulsDateUtils.getCurrentTimeSeconds(), -1);
+            String dateStr = getDateStr(chain.getBestHeader().getTime(), -1);
             if (dateStr.compareTo(lastestSettleResult.getDate()) < 0) {
                 chain.getLogger().warn("当前共识奖励结算日期小于待结算日期，budgetDate:{},lastestSettleDate:{}", dateStr, lastestSettleResult.getDate());
                 return;
@@ -297,7 +297,7 @@ public class ConsensusAwardUtil {
                 return;
             }
 
-            String dateStr = getDateStr(NulsDateUtils.getCurrentTimeSeconds(), -1);
+            String dateStr = getDateStr(chain.getBestHeader().getTime(), -1);
             if (dateStr.compareTo(lastestSettleResult.getDate()) < 0) {
                 chain.getLogger().warn("当前共识奖励结算日期小于待结算日期，budgetDate:{},lastestSettleDate:{}", dateStr, lastestSettleResult.getDate());
                 return;

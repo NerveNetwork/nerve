@@ -136,7 +136,7 @@ public class BlockResource extends BaseCmd {
         }
         String firstHash = String.valueOf(map.get("firstHash"));
         boolean bifurcate = Boolean.valueOf(map.get("bifurcate").toString());
-        logger.debug("=======putBZTFlag BEGIN，firstHash={},bifurcate={}", firstHash, bifurcate);
+//        logger.debug("=======putBZTFlag BEGIN，firstHash={},bifurcate={}", firstHash, bifurcate);
         if (bifurcate) {
             String secondHash = String.valueOf(map.get("secondHash"));
             service.handleEvidence(chainId, firstHash, secondHash);

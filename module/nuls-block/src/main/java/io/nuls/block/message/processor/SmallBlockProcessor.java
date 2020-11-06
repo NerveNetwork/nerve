@@ -125,7 +125,7 @@ public class SmallBlockProcessor implements Runnable {
             MessageInfo messageInfo = new MessageInfo(chainId, nodeId, blockHash, header, smallBlock);
             List<MessageInfo> messageInfoList = SmallBlockCacher.pendMessageMap.computeIfAbsent(blockHash, k -> new ArrayList<>());
             messageInfoList.add(messageInfo);
-            logger.debug("Chunk in process,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
+//            logger.debug("Chunk in process,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             return;
         }
         handleMessage(chainId, blockHash, nodeId, header, smallBlock, voteResult);
@@ -136,7 +136,7 @@ public class SmallBlockProcessor implements Runnable {
         ChainContext context = ContextManager.getContext(chainId);
         NulsLogger logger = context.getLogger();
         BlockForwardEnum status = SmallBlockCacher.getStatus(chainId, blockHash);
-        logger.debug("status:{}, context status:{}", status, context.getStatus());
+//        logger.debug("status:{}, context status:{}", status, context.getStatus());
         //1.已收到完整区块,丢弃
         if (COMPLETE.equals(status) || ERROR.equals(status)) {
             logger.debug("已收到完整区块,丢弃,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
@@ -227,7 +227,7 @@ public class SmallBlockProcessor implements Runnable {
             TxGroupRequestor.removeTask(chainId, blockHash);
             Block block = BlockUtil.assemblyBlock(header, txMap, txHashList);
             block.setNodeId(nodeId);
-            logger.debug("record recv block, block create time-" + DateUtils.timeStamp2DateStr(block.getHeader().getTime() * 1000) + ", hash-" + block.getHeader().getHash());
+//            logger.debug("record recv block, block create time-" + DateUtils.timeStamp2DateStr(block.getHeader().getTime() * 1000) + ", hash-" + block.getHeader().getHash());
             boolean b = blockService.saveBlock(chainId, block, 1, true, false, true, cachedSmallBlock.getNodeId());
             if (!b) {
                 SmallBlockCacher.setStatus(chainId, blockHash, ERROR);

@@ -342,7 +342,7 @@ public class BlockServiceImpl implements BlockService {
 
     private synchronized void putTempBlock(int chainId, NulsHash hash, Block block, byte bztAndBaseVerify) {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
-        logger.debug("put varify flag:{}-{}", hash.toHex(), bztAndBaseVerify);
+//        logger.debug("put varify flag:{}-{}", hash.toHex(), bztAndBaseVerify);
         Map<NulsHash, BlockSaveTemp> mapBasicVerify = ContextManager.getContext(chainId).getBlockVerifyResult();
         BlockSaveTemp blockSaveTemp = mapBasicVerify.get(hash);
         if (null == blockSaveTemp) {
@@ -450,7 +450,7 @@ public class BlockServiceImpl implements BlockService {
                     return false;
                 } else {
                     //成功进行基础校验置位
-                    logger.debug("=======verifyBlock success hash={} basicVerify={} ", hash, needBasicVerify);
+//                    logger.debug("=======verifyBlock success hash={} basicVerify={} ", hash, needBasicVerify);
                     if (needBasicVerify) {
                         putTempBlock(chainId, hash, block, (byte) BLOCK_FLAG);
                     }
@@ -460,7 +460,7 @@ public class BlockServiceImpl implements BlockService {
                             didBZTFlag = true;
                             //把拜占庭结果放集合里
                             putTempBlock(chainId, hash, null, (byte) BZT_FLAG);
-                            logger.debug("验证的同时，得到了拜占庭结果");
+//                            logger.debug("验证的同时，得到了拜占庭结果");
                         }
                     }
                 }

@@ -49,7 +49,7 @@ public class GetSmallBlockProcessor implements Runnable {
         String nodeId = message.getNodeId();
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
         NulsHash blockHash = message.getRequestHash();
-        logger.debug("recieve sm-hash" + message + " from node-" + nodeId + ", hash:" + blockHash);
+//        logger.debug("recieve sm-hash" + message + " from node-" + nodeId + ", hash:" + blockHash);
         CachedSmallBlock cachedSmallBlock = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
         if (cachedSmallBlock == null) {
             return;
