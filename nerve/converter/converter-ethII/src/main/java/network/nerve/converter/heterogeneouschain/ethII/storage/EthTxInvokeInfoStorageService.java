@@ -24,7 +24,6 @@
 
 package network.nerve.converter.heterogeneouschain.ethII.storage;
 
-import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
 
 import java.util.List;

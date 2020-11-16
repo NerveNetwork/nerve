@@ -9,6 +9,7 @@
     "standbyRpcAddresses": "https://ropsten.infura.io/v3/f87510d4ea1843babe467dc652d22531,https://ropsten.infura.io/v3/e81110266e064ad6a21990561a18a6eb,https://ropsten.infura.io/v3/24eeffba17f946ecb4f53edbe64b7888,https://ropsten.infura.io/v3/be85064ef1314396a01a17ef0c321c52,https://ropsten.infura.io/v3/70bd96cf422d4e7d9c6e5d26148ad97a,https://ropsten.infura.io/v3/5405e218bf9549ae8022e71e88e5fb3a,https://ropsten.infura.io/v3/4f7e4ca5fcaf461497a3442ad9a3363b,https://ropsten.infura.io/v3/83463b68332f4cfba7b925d1cefd7753,https://ropsten.infura.io/v3/b40b1579c99943f9a43833db0bea16eb,https://ropsten.infura.io/v3/547c581bb80343e683ac2344ae044d27,https://ropsten.infura.io/v3/cd2a4a839c3c49b48ce1338d6a86c304,https://ropsten.infura.io/v3/a747f6348e0244248c44032c78361d00,https://ropsten.infura.io/v3/ee8a4cc5c84c43d39c8b27c5dd3b209e,https://ropsten.infura.io/v3/31631d8c37e343a9b7b1d621c5e87886,https://ropsten.infura.io/v3/56d0d72ab1f345bf8ec97e02c477f5fd",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 5,
+    "txBlockConfirmationsOfWithdraw": 2,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
     "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012,0x4A05428eC53195e4657739e7622E04594F8c4020"
@@ -17,5 +18,20 @@
     "chainId": 101,
     "type": 2,
     "symbol": "ERC20"
+  },
+  {
+    "chainId": 102,
+    "type": 1,
+    "symbol": "BNB",
+    "commonRpcAddress": "https://data-seed-prebsc-2-s3.binance.org:8545/",
+    "mainRpcAddress": "http://data-seed-prebsc-1-s2.binance.org:8545/",
+    "orderRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s1.binance.org:8545/",
+    "standbyRpcAddresses": "https://data-seed-prebsc-1-s3.binance.org:8545/,https://data-seed-prebsc-2-s3.binance.org:8545/",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 5,
+    "txBlockConfirmationsOfWithdraw": 2,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012"
   }
 ]

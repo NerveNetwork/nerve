@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 
 import static network.nerve.quotation.constant.QuotationConstant.*;
-import static network.nerve.quotation.constant.QuotationContext.usdtDaiUsdcPaxKeyHeight;
+import static network.nerve.quotation.constant.QuotationContext.*;
 
 /**
  * 获取第三方价格 发交易
@@ -112,6 +112,17 @@ public class CollectorTask implements Runnable {
                             || ANCHOR_TOKEN_USDC.equals(anchorToken)
                             || ANCHOR_TOKEN_PAX.equals(anchorToken)) {
                         if (blockHeight < usdtDaiUsdcPaxKeyHeight) {
+                            continue;
+                        }
+                    }
+                    if(ANCHOR_TOKEN_BNB.equals(anchorToken)){
+                        if (blockHeight < bnbKeyHeight) {
+                            continue;
+                        }
+                    }
+                    if(ANCHOR_TOKEN_HT.equals(anchorToken)
+                        || ANCHOR_TOKEN_OKB.equals(anchorToken)){
+                        if (blockHeight < htOkbKeyHeight) {
                             continue;
                         }
                     }

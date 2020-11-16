@@ -34,12 +34,26 @@ public class CmdAssetRegTest {
     public void chainAssetTxRegTest() throws Exception {
         // Build params map
         Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","DAI");
-        params.put("assetName","DAI");
-        params.put("initNumber",100000000);
+        params.put("assetSymbol","NVT_05");
+        params.put("assetName","NVT_05");
+        params.put("initNumber",1000000);
+        params.put("decimalPlace",8);
+        params.put("txCreatorAddress","NERVEepb65rhpGjxAnC3sxBia5mYMvT4kqvrKa");
+        params.put("assetOwnerAddress","NERVEepb65rhpGjxAnC3sxBia5mYMvT4kqvrKa");
+        params.put("password","nuls123456");
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
+        Log.debug("response {}", JSONUtils.obj2json(response));
+    }
+    @Test
+    public void chainAssetTxRegTestBeta() throws Exception {
+        // Build params map
+        Map<String,Object> params = new HashMap<>();
+        params.put("assetSymbol","OKB");
+        params.put("assetName","OKB");
+        params.put("initNumber",1000000);
         params.put("decimalPlace",18);
-        params.put("txCreatorAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
-        params.put("assetOwnerAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+        params.put("txCreatorAddress","TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
+        params.put("assetOwnerAddress","TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
         params.put("password","nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
         Log.debug("response {}", JSONUtils.obj2json(response));

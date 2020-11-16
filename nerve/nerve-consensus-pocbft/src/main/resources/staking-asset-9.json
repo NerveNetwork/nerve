@@ -48,5 +48,26 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "PAX"
+  },
+  {
+    "assetId": "25",
+    "oracleKey": "BNB_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "BNB"
+  },
+  {
+    "assetId": "8",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT"
+  },
+  {
+    "assetId": "9",
+    "oracleKey": "OKB_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKB"
   }
 ]

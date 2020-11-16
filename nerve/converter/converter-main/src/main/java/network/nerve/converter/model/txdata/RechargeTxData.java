@@ -32,8 +32,12 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
 
+import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
+import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
+
 /**
  * 链内充值交易txdata
+ *
  * @author: Loki
  * @date: 2020-02-17
  */
@@ -44,6 +48,8 @@ public class RechargeTxData extends BaseNulsData {
      */
     private String originalTxHash;
 
+    private int heterogeneousChainId;
+
     public RechargeTxData() {
     }
 
@@ -51,19 +57,35 @@ public class RechargeTxData extends BaseNulsData {
         this.originalTxHash = originalTxHash;
     }
 
+    public RechargeTxData(String originalTxHash, int heterogeneousChainId) {
+        this.originalTxHash = originalTxHash;
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
+
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
-        stream.writeString(originalTxHash);
+        stream.writeString(this.originalTxHash);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            stream.writeUint16(this.heterogeneousChainId);
+        }
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
         this.originalTxHash = byteBuffer.readString();
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            this.heterogeneousChainId = byteBuffer.readUint16();
+        }
     }
 
     @Override
     public int size() {
-        return SerializeUtils.sizeOfString(this.originalTxHash);
+        int size = 0;
+        size += SerializeUtils.sizeOfString(this.originalTxHash);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            size += SerializeUtils.sizeOfUint16();
+        }
+        return size;
     }
 
     public String getOriginalTxHash() {
@@ -74,11 +96,22 @@ public class RechargeTxData extends BaseNulsData {
         this.originalTxHash = originalTxHash;
     }
 
+    public int getHeterogeneousChainId() {
+        return heterogeneousChainId;
+    }
+
+    public void setHeterogeneousChainId(int heterogeneousChainId) {
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\toriginalTxHash: %s", originalTxHash)).append(lineSeparator);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
+        }
         return builder.toString();
     }
 }

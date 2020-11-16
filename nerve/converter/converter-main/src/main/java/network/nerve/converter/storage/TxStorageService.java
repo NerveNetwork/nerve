@@ -27,6 +27,7 @@ package network.nerve.converter.storage;
 import io.nuls.base.data.NulsHash;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.TransactionPO;
+import network.nerve.converter.model.po.WithdrawalAdditionalFeePO;
 
 /**
  * 交易持久层
@@ -90,4 +91,15 @@ public interface TxStorageService {
      * @return
      */
     String getHeterogeneousHash(Chain chain, String heterogeneousHash);
+
+    /**
+     * 存储追加手续费交易业务数据
+     * @param chain
+     * @param withdrawalAdditionalFeePO
+     * @return
+     */
+    boolean saveWithdrawalAdditionalFee(Chain chain, WithdrawalAdditionalFeePO withdrawalAdditionalFeePO);
+
+    WithdrawalAdditionalFeePO getWithdrawalAdditionalFeePO(Chain chain, String withdrawalTxHash);
+
 }

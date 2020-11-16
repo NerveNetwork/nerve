@@ -9,6 +9,7 @@
     "standbyRpcAddresses": "https://mainnet.infura.io/v3/6214eb6580bf49d485ed94417272640f,https://mainnet.infura.io/v3/3a0236e62e3948a9b234f5602c9e03ac,https://mainnet.infura.io/v3/3a97eb63ed614a8387b71e2bcab064c1,https://mainnet.infura.io/v3/188e85dbdca345d29721f493859b006b,https://mainnet.infura.io/v3/ce84ef348cab4faa9f4e7c854f608555,https://mainnet.infura.io/v3/ac42f1c8b94e47da954c6550a7b582a6,https://mainnet.infura.io/v3/7a122e147c034cd49a4975ae8878655b,https://mainnet.infura.io/v3/475381ae3f0445ceb2233f949d500aec,https://mainnet.infura.io/v3/fd5e7ae90b3a4bf5968fb909257fff40,https://mainnet.infura.io/v3/bd736617d5d04e708cf6d20b466b995b,https://mainnet.infura.io/v3/e4e8303c8f8c41c687cddf4373f64f01,https://mainnet.infura.io/v3/208c93f945a3495ebb9f42516bf63ad0,https://mainnet.infura.io/v3/b18237b9dac64c22a0ded9817774f4cb,https://mainnet.infura.io/v3/56b202e6834a4f5ab47eb163551cc991,https://mainnet.infura.io/v3/aae42c0e49f84fe7b90fdcdd0986acb8",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 30,
+    "txBlockConfirmationsOfWithdraw": 3,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
     "filterAddresses": "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15,0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"
@@ -17,5 +18,20 @@
     "chainId": 101,
     "type": 2,
     "symbol": "ERC20"
+  },
+  {
+    "chainId": 102,
+    "type": 1,
+    "symbol": "BNB",
+    "commonRpcAddress": "https://bsc-dataseed2.defibit.io/",
+    "mainRpcAddress": "http://bsc.nerve.network",
+    "orderRpcAddresses": "https://bsc-dataseed.binance.org/,https://bsc-dataseed1.binance.org/,https://bsc-dataseed2.binance.org/,https://bsc-dataseed3.binance.org/",
+    "standbyRpcAddresses": "https://bsc-dataseed1.defibit.io/,https://bsc-dataseed4.defibit.io/,https://bsc-dataseed3.ninicoin.io/,https://bsc-dataseed4.ninicoin.io/",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 30,
+    "txBlockConfirmationsOfWithdraw": 3,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "filterAddresses": "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15,0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"
   }
 ]

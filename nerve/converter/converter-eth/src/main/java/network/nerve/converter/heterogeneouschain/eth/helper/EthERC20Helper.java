@@ -126,6 +126,9 @@ public class EthERC20Helper {
 
     public void saveHeterogeneousAssetInfos(List<HeterogeneousAssetInfo> assetInfos) throws Exception {
         int maxAssetId = this.getLatestMaxAssetId();
+        while(ethERC20StorageService.isExistsByAssetId(maxAssetId + 1)) {
+            maxAssetId++;
+        }
         List<EthERC20Po> successList = new ArrayList<>();
         try {
             for (HeterogeneousAssetInfo info : assetInfos) {
@@ -154,12 +157,10 @@ public class EthERC20Helper {
     }
 
     public void rollbackHeterogeneousAssetInfos(List<HeterogeneousAssetInfo> assetInfos) throws Exception {
-        int maxAssetId = Integer.MAX_VALUE;
         List<EthERC20Po> successList = new ArrayList<>();
         try {
             for (HeterogeneousAssetInfo info : assetInfos) {
                 EthERC20Po erc20Po = ethERC20StorageService.findByAddress(info.getContractAddress());
-                maxAssetId = Math.min(maxAssetId, erc20Po.getAssetId());
                 info.setAssetId(erc20Po.getAssetId());
                 ethERC20StorageService.deleteByAddress(erc20Po.getAddress());
                 successList.add(erc20Po);
@@ -176,7 +177,6 @@ public class EthERC20Helper {
             }
             throw new Exception(e);
         }
-        ethERC20StorageService.saveMaxAssetId(maxAssetId - 1);
     }
 
     public List<EthERC20Po> getAllInitializedERC20() throws Exception {

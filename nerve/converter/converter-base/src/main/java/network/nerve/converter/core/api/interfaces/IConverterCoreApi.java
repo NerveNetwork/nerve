@@ -26,9 +26,11 @@ package network.nerve.converter.core.api.interfaces;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -90,7 +92,7 @@ public interface IConverterCoreApi {
     /**
      * 异构链资产是否为绑定已存在的NERVE资产
      */
-    boolean isNerveAssetBind(int hChainId, int hAssetId);
+    boolean isBoundHeterogeneousAsset(int hChainId, int hAssetId);
 
     /**
      * 提现交易异构链是否确认(通过获取提现确认交易业务数据来判断)
@@ -99,4 +101,19 @@ public interface IConverterCoreApi {
      * @return
      */
     boolean isWithdrawalComfired(String nerveTxHash);
+
+    /**
+     * 获取提现交易提供的NVT手续费，包含用户追加的手续费
+     */
+    BigDecimal getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException;
+
+    /**
+     * 获取指定资产的USDT价格
+     */
+    BigDecimal getUsdtPriceByAsset(AssetName assetName);
+
+    /**
+     * 是否支持新的提现手续费机制
+     */
+    boolean isSupportNewMechanismOfWithdrawalFee();
 }

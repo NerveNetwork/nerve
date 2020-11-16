@@ -45,10 +45,7 @@ import network.nerve.converter.heterogeneouschain.eth.storage.*;
 import network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant;
 import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
 import network.nerve.converter.heterogeneouschain.ethII.docking.EthIIDocking;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIAnalysisTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIInvokeTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIParseTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIResendHelper;
+import network.nerve.converter.heterogeneouschain.ethII.helper.*;
 import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.ethII.schedules.EthIIBlockScheduled;
 import network.nerve.converter.heterogeneouschain.ethII.schedules.EthIIConfirmTxScheduled;
@@ -112,6 +109,8 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     private EthIIConfirmTxScheduled ethIIConfirmTxScheduled;
     @Autowired
     private EthIIWaitingTxInvokeDataScheduled ethIIWaitingTxInvokeDataScheduled;
+    @Autowired
+    private EthIIPendingTxHelper ethIIPendingTxHelper;
     @Autowired
     private EthTxInvokeInfoStorageService ethTxInvokeInfoStorageService;
     @Autowired
@@ -215,6 +214,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
         docking.setEthIIParseTxHelper(ethIIParseTxHelper);
         docking.setEthIIAnalysisTxHelper(ethIIAnalysisTxHelper);
         docking.setEthIIResendHelper(ethIIResendHelper);
+        docking.setEthIIPendingTxHelper(ethIIPendingTxHelper);
         // 合约未升级，返回旧的实例
         if (!isUpgradeContract()) {
             return EthDocking.getInstance();

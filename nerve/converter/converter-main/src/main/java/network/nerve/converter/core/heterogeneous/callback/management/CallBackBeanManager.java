@@ -25,6 +25,7 @@ package network.nerve.converter.core.heterogeneous.callback.management;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
@@ -54,6 +55,8 @@ public class CallBackBeanManager {
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
     @Autowired
     private VirtualBankStorageService virtualBankStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     public AssembleTxService getAssembleTxService() {
         return assembleTxService;
@@ -89,5 +92,9 @@ public class CallBackBeanManager {
 
     public VirtualBankStorageService getVirtualBankStorageService() {
         return virtualBankStorageService;
+    }
+
+    public ConverterCoreApi getConverterCoreApi() {
+        return converterCoreApi;
     }
 }

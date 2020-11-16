@@ -53,9 +53,6 @@ public class EthTxInvokeInfoStorageServiceImpl implements EthTxInvokeInfoStorage
     private final String KEY_PREFIX_ETH_PO = "TXINVOKE-P-";
     private final byte[] WAITING_TX_ALL_KEY = stringToBytes("TXINVOKE-P-ALL");
 
-    /**
-     * //TODO mimi 思考几个save的线程会不会交叉执行，是则需要乐观锁
-     */
     @Override
     public int save(String nerveTxHash, EthWaitingTxPo po) throws Exception {
         boolean result = ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + nerveTxHash), po);

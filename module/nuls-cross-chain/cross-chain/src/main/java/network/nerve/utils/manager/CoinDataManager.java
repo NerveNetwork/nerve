@@ -3,21 +3,22 @@ package network.nerve.utils.manager;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.TransactionFeeCalculator;
-import io.nuls.base.data.Coin;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.CoinTo;
+import io.nuls.base.data.*;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.BigIntegerUtils;
+import io.nuls.crosschain.base.model.bo.AssetInfo;
 import io.nuls.crosschain.base.model.bo.ChainInfo;
+import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainMessage;
 import io.nuls.crosschain.base.model.dto.input.CoinDTO;
 import network.nerve.constant.NulsCrossChainConfig;
 import network.nerve.constant.NulsCrossChainConstant;
 import network.nerve.model.bo.Chain;
 import network.nerve.rpc.call.LedgerCall;
+import network.nerve.srorage.RegisteredCrossChainService;
 import network.nerve.utils.CommonUtil;
 import network.nerve.constant.NulsCrossChainErrorCode;
 
@@ -35,6 +36,9 @@ public class CoinDataManager {
     private NulsCrossChainConfig config;
     @Autowired
     private ChainManager chainManager;
+
+    @Autowired
+    RegisteredCrossChainService registeredCrossChainService;
 
     /**
      * assembly coinFrom
@@ -470,4 +474,45 @@ public class CoinDataManager {
         size += signAddress.size() * P2PHKSignature.SERIALIZE_LENGTH;
         return size;
     }
+
+    /**
+     * 检查coinData to中的资产是否可以参与跨链交易
+     *
+     * @param chain
+     * @param tx
+     * @return
+     */
+    public boolean verifyCtxAsset(Chain chain, Transaction tx) throws NulsException {
+        BlockHeader lastBlockHeader = chainManager.getChainHeaderMap().get(chain.getChainId());
+        if(lastBlockHeader == null){
+            Log.error("数据异常，未获取到当前高度");
+            return true;
+        }
+        //版本1.6.0之前不进行此验证
+        if(lastBlockHeader.getHeight() < config.getVersion1_6_0_height()){
+            return true;
+        }
+        RegisteredChainMessage registeredChainMessage = registeredCrossChainService.get();
+        CoinData coinData = tx.getCoinDataInstance();
+        if(coinData == null){
+            return true;
+        }
+        List<CoinTo> toList = coinData.getTo();
+        for (CoinTo to : toList){
+            //获取资产所在的链，如果没有，表示链没有注册，不能进行跨链转账
+            Optional<ChainInfo> chainInfo = registeredChainMessage.getChainInfoList().stream().filter(d->d.getChainId()==to.getAssetsChainId()).findFirst();
+            if(chainInfo.isEmpty()){
+                return false;
+            }
+            //获取链注册的资产列表
+            List<AssetInfo> assetInfoList = chainInfo.get().getAssetInfoList();
+            //如果当前需要跨链的资产不在资产列表里，也不能进行跨链转账
+            Optional<AssetInfo> assetInfo = assetInfoList.stream().filter(d->d.getAssetId()==to.getAssetsId()).findFirst();
+            if(assetInfo.isEmpty()){
+                return false;
+            }
+        }
+        return true;
+    }
+
 }

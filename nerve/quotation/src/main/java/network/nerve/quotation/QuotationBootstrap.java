@@ -158,6 +158,11 @@ public class QuotationBootstrap extends RpcModule {
             Map map = JSONUtils.json2map(IoUtils.read(QU_PROTOCOL_FILE + quConfig.getChainId() + ".json"));
             long usdtDaiUsdcPaxKeyHeight = Long.parseLong(map.get("usdtDaiUsdcPaxKeyHeight").toString());
             quConfig.setUsdtDaiUsdcPaxKeyHeight(usdtDaiUsdcPaxKeyHeight);
+
+            long bnbKeyHeight = Long.parseLong(map.get("bnbKeyHeight").toString());
+            quConfig.setBnbKeyHeight(bnbKeyHeight);
+            long htOkbKeyHeight = Long.parseLong(map.get("htOkbKeyHeight").toString());
+            quConfig.setHtOkbKeyHeight(htOkbKeyHeight);
         } catch (Exception e) {
             Log.error(e);
         }
@@ -188,6 +193,8 @@ public class QuotationBootstrap extends RpcModule {
         }
         QuotationContext.effectiveQuotation = quConfig.getEffectiveQuotation();
         QuotationContext.usdtDaiUsdcPaxKeyHeight = quConfig.getUsdtDaiUsdcPaxKeyHeight();
+        QuotationContext.bnbKeyHeight = quConfig.getBnbKeyHeight();
+        QuotationContext.htOkbKeyHeight = quConfig.getHtOkbKeyHeight();
 
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

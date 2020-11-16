@@ -23,13 +23,13 @@
  */
 package network.nerve.converter.heterogeneouschain.ethII.schedules;
 
-import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
@@ -49,8 +49,10 @@ import network.nerve.converter.heterogeneouschain.eth.storage.EthTxRelationStora
 import network.nerve.converter.heterogeneouschain.eth.storage.EthTxStorageService;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIInvokeTxHelper;
+import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIPendingTxHelper;
 import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIResendHelper;
 import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
+import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
@@ -65,8 +67,10 @@ import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.*;
 import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
 import static network.nerve.converter.heterogeneouschain.eth.enums.BroadcastTxValidateStatus.SUCCESS;
+import static network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant.RESEND_TIME;
 
 /**
  * @author: Mimi
@@ -75,9 +79,6 @@ import static network.nerve.converter.heterogeneouschain.eth.enums.BroadcastTxVa
 @Component("ethIIConfirmTxScheduled")
 public class EthIIConfirmTxScheduled implements Runnable {
 
-    private ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
-    private ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");
-    private ErrorCode TX_ALREADY_EXISTS_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0048");
     @Autowired
     private ETHWalletApi ethWalletApi;
     @Autowired
@@ -106,6 +107,8 @@ public class EthIIConfirmTxScheduled implements Runnable {
     private EthIIInvokeTxHelper ethIIInvokeTxHelper;
     @Autowired
     private EthIIResendHelper ethIIResendHelper;
+    @Autowired
+    private EthIIPendingTxHelper ethIIPendingTxHelper;
 
     public void run() {
         if (!EthContext.getConverterCoreApi().isRunning()) {
@@ -184,9 +187,13 @@ public class EthIIConfirmTxScheduled implements Runnable {
                     continue;
                 }
                 // 未达到确认高度，放回队列中，下次继续检查
-                if (ethNewestHeight - po.getBlockHeight() < EthContext.getConfig().getTxBlockConfirmations()) {
+                int confirmation = EthContext.getConfig().getTxBlockConfirmations();
+                if (po.getTxType() == HeterogeneousChainTxType.WITHDRAW) {
+                    confirmation = EthContext.getConfig().getTxBlockConfirmationsOfWithdraw();
+                }
+                if (ethNewestHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("交易[{}]确认高度等待: {}", po.getTxHash(), EthContext.getConfig().getTxBlockConfirmations() - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("交易[{}]确认高度等待: {}", po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -339,7 +346,7 @@ public class EthIIConfirmTxScheduled implements Runnable {
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(ethTxHash);
                 isReOfferQueue = false;
-                ethResendHelper.clear(nerveTxHash);
+                ethIIResendHelper.clear(nerveTxHash);
                 logger().info("[{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), EthConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
             // 补充po内存数据，po打印日志，方便查看数据
@@ -352,6 +359,11 @@ public class EthIIConfirmTxScheduled implements Runnable {
             case INITIAL:
                 break;
             case FAILED:
+                if (!ethIIResendHelper.canResend(nerveTxHash)) {
+                    logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, RESEND_TIME);
+                    ethIIResendHelper.clear(nerveTxHash);
+                    return !isReOfferQueue;
+                }
                 logger().info("失败的ETH交易[{}]，检查当前节点是否可发交易", ethTxHash);
                 // 检查自己的顺序是否可发交易
                 EthWaitingTxPo waitingTxPo = ethIIInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
@@ -426,6 +438,9 @@ public class EthIIConfirmTxScheduled implements Runnable {
         return isReOfferQueue;
     }
 
+    /**
+     * 若eth交易失败，则检查当前节点是否为下一顺位发交易，是则重发交易
+     */
     private boolean checkIfSendByOwn(EthWaitingTxPo waitingTxPo, String txFrom) throws Exception {
         String nerveTxHash = waitingTxPo.getNerveTxHash();
         Map<String, Integer> virtualBanks = waitingTxPo.getCurrentVirtualBanks();
@@ -481,18 +496,30 @@ public class EthIIConfirmTxScheduled implements Runnable {
             nonce = ethWalletApi.getNonce(currentFrom);
         }
         txInfo.setNonce(nonce);
-        // 提高交易的price，获取当前ETH网络price，和旧的price取较大值，再+2，即 price = price + 2，最大当前price的1.1倍
-        BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
-        BigInteger maxCurrentGasPrice = new BigDecimal(currentGasPrice).multiply(EthConstant.NUMBER_1_DOT_1).toBigInteger();
+
+        IConverterCoreApi coreApi = EthContext.getConverterCoreApi();
         BigInteger oldGasPrice = txInfo.getGasPrice();
-        if (maxCurrentGasPrice.compareTo(oldGasPrice) <= 0) {
-            logger().info("当前交易的gasPrice已达到加速最大值，不再继续加速，等待ETH网络打包交易");
+        BigInteger newGasPrice;
+        boolean isWithdrawTx = HeterogeneousChainTxType.WITHDRAW == txType;
+        if (isWithdrawTx && coreApi.isSupportNewMechanismOfWithdrawalFee()) {
+            // 计算GasPrice
+            BigDecimal gasPrice = EthIIUtil.calGasPriceOfWithdraw(coreApi.getUsdtPriceByAsset(AssetName.NVT), coreApi.getFeeOfWithdrawTransaction(nerveTxHash), coreApi.getUsdtPriceByAsset(AssetName.ETH), unconfirmedTxPo.getAssetId());
+            if (gasPrice == null || gasPrice.toBigInteger().compareTo(oldGasPrice) < 0) {
+                logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前已发出交易[{}]的GasPrice: {}", nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
+                return false;
+            }
+            gasPrice = EthIIUtil.calNiceGasPriceOfWithdraw(new BigDecimal(EthContext.getEthGasPrice()), gasPrice);
+            newGasPrice = gasPrice.toBigInteger();
+            if (newGasPrice.compareTo(EthContext.getEthGasPrice()) < 0) {
+                logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前Ethereum网络的GasPrice: {}", nerveTxHash, newGasPrice, EthContext.getEthGasPrice());
+                return false;
+            }
+        } else {
+            newGasPrice = calSpeedUpGasPriceByOrdinaryWay(oldGasPrice);
+        }
+        if (newGasPrice == null) {
             return false;
         }
-        BigInteger newGasPrice = oldGasPrice.compareTo(currentGasPrice) > 0 ? oldGasPrice : currentGasPrice;
-        newGasPrice = newGasPrice.add(EthConstant.GWEI_2);
-        newGasPrice = newGasPrice.compareTo(maxCurrentGasPrice) > 0 ? maxCurrentGasPrice : newGasPrice;
-
         txInfo.setGasPrice(newGasPrice);
         // 获取账户信息
         HeterogeneousAccount account = ethRegister.getDockingImpl().getAccount(currentFrom);
@@ -533,11 +560,29 @@ public class EthIIConfirmTxScheduled implements Runnable {
         EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
         // 监听此交易的打包状态
         ethListener.addListeningTx(ethTxHash);
+        if (isWithdrawTx && StringUtils.isNotBlank(ethTxHash)) {
+            // 记录提现交易已向ETH网络发出
+            ethIIPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, ethTxHash);
+        }
         logger().info("加速重发ETH网络交易成功, 类型: {}, 详情: {}", txType, po.superString());
         if (logger().isDebugEnabled()) {
             logger().debug("加速后: {}", newTxPo.toString());
         }
         return true;
+    }
+
+    private BigInteger calSpeedUpGasPriceByOrdinaryWay(BigInteger oldGasPrice) throws Exception {
+        // 提高交易的price，获取当前ETH网络price，和旧的price取较大值，再+2，即 price = price + 2，最大当前price的1.1倍
+        BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
+        BigInteger maxCurrentGasPrice = new BigDecimal(currentGasPrice).multiply(EthConstant.NUMBER_1_DOT_1).toBigInteger();
+        if (maxCurrentGasPrice.compareTo(oldGasPrice) <= 0) {
+            logger().info("当前交易的gasPrice已达到加速最大值，不再继续加速，等待ETH网络打包交易");
+            return null;
+        }
+        BigInteger newGasPrice = oldGasPrice.compareTo(currentGasPrice) > 0 ? oldGasPrice : currentGasPrice;
+        newGasPrice = newGasPrice.add(EthConstant.GWEI_2);
+        newGasPrice = newGasPrice.compareTo(maxCurrentGasPrice) > 0 ? maxCurrentGasPrice : newGasPrice;
+        return newGasPrice;
     }
 
     private String sendOverrideTransferTx(String from, BigInteger gasPrice, BigInteger nonce) {

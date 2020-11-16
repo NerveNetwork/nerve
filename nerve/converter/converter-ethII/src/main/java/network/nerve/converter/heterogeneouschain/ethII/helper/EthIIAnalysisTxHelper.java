@@ -25,7 +25,6 @@ package network.nerve.converter.heterogeneouschain.ethII.helper;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
@@ -40,7 +39,6 @@ import network.nerve.converter.heterogeneouschain.eth.model.EthInput;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
-import network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant;
 import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.springframework.beans.BeanUtils;
@@ -71,6 +69,8 @@ public class EthIIAnalysisTxHelper implements IEthAnalysisTx {
     private EthStorageHelper ethStorageHelper;
     @Autowired
     private EthResendHelper ethResendHelper;
+    @Autowired
+    private EthIIPendingTxHelper ethIIPendingTxHelper;
 
     @Override
     public void analysisTx(Transaction tx, long txTime, long blockHeight) throws Exception {
@@ -147,7 +147,7 @@ public class EthIIAnalysisTxHelper implements IEthAnalysisTx {
                 TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
                 if (ethERC20Helper.hasERC20WithListeningAddress(txReceipt, po, toAddress -> ethListener.isListeningAddress(toAddress))) {
                     // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
-                    if (EthContext.getConverterCoreApi().isNerveAssetBind(EthConstant.ETH_CHAIN_ID, po.getAssetId())
+                    if (EthContext.getConverterCoreApi().isBoundHeterogeneousAsset(EthConstant.ETH_CHAIN_ID, po.getAssetId())
                             && !ethIIParseTxHelper.isMinterERC20(po.getContractAddress())) {
                         EthContext.logger().warn("[{}]不合法的Ethereum网络的充值交易[5], ERC20[{}]已绑定NERVE资产，但合约内未注册", ethTxHash, po.getContractAddress());
                         break;
@@ -193,6 +193,8 @@ public class EthIIAnalysisTxHelper implements IEthAnalysisTx {
             ethStorageHelper.saveTxInfo(po);
             ethUnconfirmedTxStorageService.save(po);
             EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
+            // 向NERVE网络发出充值待确认交易
+            ethIIPendingTxHelper.commitNervePendingDepositTx(po);
         }
     }
 
@@ -209,7 +211,7 @@ public class EthIIAnalysisTxHelper implements IEthAnalysisTx {
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
         } else {
             // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
-            if (EthContext.getConverterCoreApi().isNerveAssetBind(EthConstant.ETH_CHAIN_ID, po.getAssetId())
+            if (EthContext.getConverterCoreApi().isBoundHeterogeneousAsset(EthConstant.ETH_CHAIN_ID, po.getAssetId())
                     && !ethIIParseTxHelper.isMinterERC20(po.getContractAddress())) {
                 EthContext.logger().warn("[{}]不合法的Ethereum网络的充值交易[4], ERC20[{}]已绑定NERVE资产，但合约内未注册", ethTxHash, po.getContractAddress());
                 return false;
@@ -290,6 +292,5 @@ public class EthIIAnalysisTxHelper implements IEthAnalysisTx {
         // 移除监听
         ethListener.removeListeningTx(ethTxHash);
     }
-
 
 }

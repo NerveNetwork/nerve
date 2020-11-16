@@ -21,24 +21,21 @@
     "name": "Dex",
     "baseurl": "http://api.nervedex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
-    "weight": "0.10"
+    "weight": "0.70"
   },
   {
-
     "name": "AEX",
     "baseurl": "https://api.aex.zone/v3/ticker.php",
     "collector": "network.nerve.quotation.rpc.querier.impl.AexQuerier",
     "weight": "0.10"
   },
   {
-
     "name": "MXC",
     "baseurl": "https://www.mxc.io",
     "collector": "network.nerve.quotation.rpc.querier.impl.MxcQuerier",
     "weight": "0.10"
   },
   {
-
     "name": "Bitz",
     "baseurl": "https://api.bitzspeed.com/",
     "collector": "network.nerve.quotation.rpc.querier.impl.BitzQuerier",

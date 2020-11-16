@@ -57,7 +57,6 @@ import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.DistributionFeeStorageService;
 import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.utils.ConverterUtil;
-import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -171,7 +170,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
     private String validWithdrawalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
         // 获取提现确认交易中的 分发手续费地址
         ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basisTx.getHash());
-        return validDistributionFeeAddress(chain, tx, po.getListDistributionFee(), blockHeader, false);
+        return validDistributionFeeAddress(chain, tx, basisTx, po.getListDistributionFee(), blockHeader, false);
     }
 
     /**
@@ -179,10 +178,11 @@ public class DistributionFeeProcessor implements TransactionProcessor {
      *
      * @param chain
      * @param tx
+     * @param basisTx
      * @param listDistributionFee
      * @return
      */
-    private String validDistributionFeeAddress(Chain chain, Transaction tx, List<HeterogeneousAddress> listDistributionFee, BlockHeader blockHeader, boolean isProposal) {
+    private String validDistributionFeeAddress(Chain chain, Transaction tx, Transaction basisTx, List<HeterogeneousAddress> listDistributionFee, BlockHeader blockHeader, boolean isProposal) {
         if (null == listDistributionFee || listDistributionFee.isEmpty()) {
             chain.getLogger().error(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getMsg());
             return ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getCode();
@@ -215,7 +215,12 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         if (null != blockHeader) {
             height = blockHeader.getHeight();
         }
-        BigInteger distributionFee = VirtualBankUtil.calculateFee(chain, height, isProposal);
+        BigInteger distributionFee = null;
+        try {
+            distributionFee = assembleTxService.calculateFee(chain, height, basisTx, isProposal);
+        } catch (NulsException e) {
+            return e.getErrorCode().getCode();
+        }
 
         BigInteger amount = distributionFee.divide(count);
         // 通过原始数据(确认交易中的列表),计算组装cointo的数据
@@ -272,13 +277,13 @@ public class DistributionFeeProcessor implements TransactionProcessor {
 
         // 验证提案类型
         if (txData.getType() != ProposalTypeEnum.UPGRADE.value() &&
-                txData.getType() != ProposalTypeEnum.EXPELLED.value() &&
-                txData.getType() == ProposalTypeEnum.REFUND.value()) {
+                txData.getType() == ProposalTypeEnum.EXPELLED.value() &&
+                txData.getType() != ProposalTypeEnum.REFUND.value()) {
             chain.getLogger().error("提案类型的执行不需要补贴手续费. ProposalTxHash:{}, type:{}",
                     businessData.getProposalTxHash().toHex(), txData.getType());
             return ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
         }
-        return validDistributionFeeAddress(chain, tx, businessData.getListDistributionFee(), blockHeader, true);
+        return validDistributionFeeAddress(chain, tx, basisTx, businessData.getListDistributionFee(), blockHeader, true);
     }
 
 

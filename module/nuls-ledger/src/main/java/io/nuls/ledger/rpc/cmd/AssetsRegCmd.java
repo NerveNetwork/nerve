@@ -146,7 +146,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     })
     @ResponseData(name = "返回绑定后的资产类型", description = "返回一个Map对象",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产 7-链内普通资产绑定多异构链资产 8-平行链资产绑定多异构链资产 9-异构链资产绑定多异构链资产]"),
             })
     )
     public Response bindHeterogeneousAssetReg(Map params) {
@@ -206,7 +206,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     })
     @ResponseData(name = "返回解绑后的资产类型", description = "返回一个Map对象",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 3-平行链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 3-平行链资产 4-异构链资产]"),
             })
     )
     public Response unbindHeterogeneousAssetReg(Map params) {

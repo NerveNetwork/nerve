@@ -24,7 +24,6 @@
 package network.nerve.converter.heterogeneouschain.ethII.context;
 
 import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
-import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 
 import java.util.HashSet;
 import java.util.Set;

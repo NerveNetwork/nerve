@@ -49,6 +49,21 @@ public interface IDepositTxSubmitter {
      */
     String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
+    /**
+     * @param txHash          交易hash
+     * @param blockHeight     交易确认高度
+     * @param from            转出地址
+     * @param to              转入地址
+     * @param value           转账金额
+     * @param txTime          交易时间
+     * @param decimals        资产小数位数
+     * @param ifContractAsset 是否为合约资产
+     * @param contractAddress 合约地址
+     * @param assetId         资产ID
+     * @param nerveAddress    Nerve充值地址
+     */
+    String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
+                  Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
 
     /**
      * 验证是否充值交易

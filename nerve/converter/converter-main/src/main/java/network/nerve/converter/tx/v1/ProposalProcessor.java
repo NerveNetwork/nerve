@@ -141,7 +141,7 @@ public class ProposalProcessor implements TransactionProcessor {
                     log.error("[commit] Save proposal failed. hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
-                chain.getLogger().debug("[commit] 提案交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit] 提案交易 hash:{}", tx.getHash().toHex());
             }
         } catch (Exception e) {
             if (failRollback) {

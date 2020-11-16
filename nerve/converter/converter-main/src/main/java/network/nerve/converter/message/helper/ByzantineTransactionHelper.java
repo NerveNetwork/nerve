@@ -43,6 +43,7 @@ import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.*;
 import network.nerve.converter.rpc.call.TransactionCall;
+import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -70,6 +71,9 @@ public class ByzantineTransactionHelper {
     @Autowired
     private ProposalStorageService proposalStorageService;
 
+    @Autowired
+    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+
     public boolean genByzantineTransaction(Chain nerveChain, String byzantineTxhash, int txType, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
         boolean validation = false;
         HeterogeneousHash hash;
@@ -88,9 +92,15 @@ public class ByzantineTransactionHelper {
             case TxType.CONFIRM_PROPOSAL:
                 validation = proposal(nerveChain, byzantineTxhash, nerveTxHash, hashList);
                 break;
+            case TxType.RECHARGE_UNCONFIRMED:
+                hash = hashList.get(0);
+                validation = rechargeUnconfirmed(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                break;
         }
         return validation;
     }
+
+
 
     private boolean proposal(Chain nerveChain, String byzantineTxhash, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
         if (nerveChain.getLogger().isDebugEnabled()) {
@@ -195,6 +205,30 @@ public class ByzantineTransactionHelper {
             return false;
         }
         assembleTxService.createRechargeTx(nerveChain, dto);
+        return true;
+    }
+
+    private boolean rechargeUnconfirmed(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        nerveChain.getLogger().info("创建[充值待确认]拜占庭交易[{}]消息, 异构链交易hash: {}", byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
+        RechargeUnconfirmedTxData dto = new RechargeUnconfirmedTxData();
+        dto.setHeterogeneousHeight(depositTx.getBlockHeight());
+        dto.setOriginalTxHash(new HeterogeneousHash(hChainId, hTxHash));
+        dto.setHeterogeneousFromAddress(depositTx.getFrom());
+        dto.setNerveToAddress(AddressTool.getAddress(depositTx.getNerveAddress()));
+        dto.setAmount(depositTx.getValue());
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(
+                hChainId,
+                depositTx.getAssetId());
+        dto.setAssetChainId(nerveAssetInfo.getAssetChainId());
+        dto.setAssetId(nerveAssetInfo.getAssetId());
+        Transaction tx = assembleTxService.rechargeUnconfirmedTxWithoutSign(nerveChain, dto, depositTx.getTxTime());
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));
+            return false;
+        }
+        assembleTxService.rechargeUnconfirmedTx(nerveChain, dto, depositTx.getTxTime());
         return true;
     }
 

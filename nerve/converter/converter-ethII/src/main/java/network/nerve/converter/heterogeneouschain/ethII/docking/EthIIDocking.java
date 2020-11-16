@@ -24,9 +24,12 @@
 package network.nerve.converter.heterogeneouschain.ethII.docking;
 
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
@@ -35,10 +38,7 @@ import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIAnalysisTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIInvokeTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIParseTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIResendHelper;
+import network.nerve.converter.heterogeneouschain.ethII.helper.*;
 import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
@@ -53,12 +53,12 @@ import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.ZERO_ADDRESS;
-import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
 import static network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant.VERSION;
 
 
@@ -73,6 +73,7 @@ public class EthIIDocking extends EthDocking {
     protected EthIIParseTxHelper ethIIParseTxHelper;
     protected EthIIAnalysisTxHelper ethIIAnalysisTxHelper;
     protected EthIIResendHelper ethIIResendHelper;
+    protected EthIIPendingTxHelper ethIIPendingTxHelper;
 
     private EthIIDocking() {
     }
@@ -209,6 +210,71 @@ public class EthIIDocking extends EthDocking {
     @Override
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData) throws NulsException {
         return this.createOrSignWithdrawTxII(nerveTxHash, toAddress, value, assetId, signatureData, true);
+    }
+
+    @Override
+    public boolean validateManagerChangesTxII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+        logger().info("验证Ethereum网络虚拟银行变更交易，nerveTxHash: {}, signatureData: {}", nerveTxHash, signatureData);
+        try {
+            // 业务验证
+            if (addAddresses == null) {
+                addAddresses = new String[0];
+            }
+            if (removeAddresses == null) {
+                removeAddresses = new String[0];
+            }
+            // 向ETH网络请求验证
+            boolean isCompleted = ethParseTxHelper.isCompletedTransaction(nerveTxHash);
+            if (isCompleted) {
+                logger().info("[{}]交易[{}]已完成", HeterogeneousChainTxType.CHANGE, nerveTxHash);
+                return true;
+            }
+            Set<String> addSet = new HashSet<>();
+            List<Address> addList = new ArrayList<>();
+            for (int a = 0, addSize = addAddresses.length; a < addSize; a++) {
+                String add = addAddresses[a];
+                add = add.toLowerCase();
+                addAddresses[a] = add;
+                if (!addSet.add(add)) {
+                    logger().error("重复的待加入地址列表");
+                    return false;
+                }
+                addList.add(new Address(add));
+            }
+            Set<String> removeSet = new HashSet<>();
+            List<Address> removeList = new ArrayList<>();
+            for (int r = 0, removeSize = removeAddresses.length; r < removeSize; r++) {
+                String remove = removeAddresses[r];
+                remove = remove.toLowerCase();
+                removeAddresses[r] = remove;
+                if (!removeSet.add(remove)) {
+                    logger().error("重复的待退出地址列表");
+                    return false;
+                }
+                removeList.add(new Address(remove));
+            }
+            // 若没有加入和退出，则直接发确认交易
+            if (addAddresses.length == 0 && removeAddresses.length == 0) {
+                return true;
+            }
+            // 获取管理员账户
+            String fromAddress = EthContext.ADMIN_ADDRESS;
+            if (removeSet.contains(fromAddress)) {
+                logger().error("退出的管理员不能参与管理员变更交易");
+                return false;
+            }
+            Function txFunction = EthIIUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, orginTxCount, signatureData);
+            // 验证合约交易合法性
+            EthCall ethCall = ethWalletApi.validateContractCall(fromAddress, EthContext.MULTY_SIGN_ADDRESS, txFunction);
+            if (ethCall.isReverted()) {
+                logger().error("[{}]交易验证失败，原因: {}", HeterogeneousChainTxType.CHANGE, ethCall.getRevertReason());
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            logger().error(String.format("adds: %s, removes: %s", addAddresses != null ? Arrays.toString(addAddresses) : "[]", removeAddresses != null ? Arrays.toString(removeAddresses) : "[]"), e);
+            return false;
+        }
     }
 
     @Override
@@ -402,19 +468,36 @@ public class EthIIDocking extends EthDocking {
         return EthIIUtil.verifySign(signAddress, vHash, signed);
     }
 
+    @Override
+    public boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+        IConverterCoreApi coreApi = EthContext.getConverterCoreApi();
+        BigDecimal nvtUSD = coreApi.getUsdtPriceByAsset(AssetName.NVT);
+        BigDecimal ethUSD = coreApi.getUsdtPriceByAsset(AssetName.ETH);
+        if(null == nvtUSD || null == ethUSD){
+            logger().error("[withdraw] 提现手续费计算,没有获取到完整的报价. nvtUSD:{}, ethUSD:{}", nvtUSD, ethUSD);
+            throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
+        }
+        BigDecimal gasPrice = EthIIUtil.calGasPriceOfWithdraw(nvtUSD, nvtAmount, ethUSD, hAssetId);
+        if (gasPrice.toBigInteger().compareTo(EthContext.getEthGasPrice()) >= 0) {
+            logger().info("手续费足够，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei",
+                    new BigDecimal(EthContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                    gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString());
+            return true;
+        }
+        BigDecimal nvtAmountCalc = EthIIUtil.calNVTOfWithdraw(nvtUSD, new BigDecimal(EthContext.getEthGasPrice()), ethUSD, hAssetId);
+        logger().warn("手续费不足，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei, 总共需要的NVT: {}, 用户提供的NVT: {}, 需要追加的NVT: {}",
+                new BigDecimal(EthContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                nvtAmountCalc.movePointLeft(8).toPlainString(),
+                nvtAmount.movePointLeft(8).toPlainString(),
+                nvtAmountCalc.subtract(nvtAmount).movePointLeft(8).toPlainString()
+                );
+        return false;
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             logger().info("准备发送提现的ETH交易，nerveTxHash: {}, signatureData: {}", nerveTxHash, signatureData);
-            if (checkOrder) {
-                if (EthContext.getEthGasPrice().compareTo(EthConstant.HIGH_GAS_PRICE) > 0) {
-                    if (EthContext.getConverterCoreApi().isWithdrawalComfired(nerveTxHash)) {
-                        logger().info("[提现]交易[{}]已完成", nerveTxHash);
-                        return EMPTY_STRING;
-                    }
-                    logger().warn("Ethereum 网络 Gas Price 高于 {} wei，暂停提现", EthConstant.HIGH_GAS_PRICE);
-                    throw new NulsException(ConverterErrorCode.HIGH_GAS_PRICE_OF_ETH);
-                }
-            }
             // 交易准备
             EthWaitingTxPo waitingPo = new EthWaitingTxPo();
             EthAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
@@ -444,6 +527,12 @@ public class EthIIDocking extends EthDocking {
                 po.setDecimals(EthConstant.ETH_DECIMALS);
                 po.setAssetId(EthConstant.ETH_ASSET_ID);
             }
+            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则提现异常
+            if (EthContext.getConverterCoreApi().isBoundHeterogeneousAsset(EthConstant.ETH_CHAIN_ID, po.getAssetId())
+                    && !ethIIParseTxHelper.isMinterERC20(po.getContractAddress())) {
+                logger().warn("[{}]不合法的Ethereum网络的提现交易, ERC20[{}]已绑定NERVE资产，但合约内未注册", nerveTxHash, po.getContractAddress());
+                throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
             // 把地址转换成小写
             toAddress = toAddress.toLowerCase();
             po.setTo(toAddress);
@@ -453,13 +542,42 @@ public class EthIIDocking extends EthDocking {
                 po.setContractAddress(contractAddressERC20);
             }
             Function createOrSignWithdrawFunction = EthIIUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
+            // 计算GasPrice
+            IConverterCoreApi coreApi = EthContext.getConverterCoreApi();
+            BigDecimal gasPrice = new BigDecimal(EthContext.getEthGasPrice());
+            // 达到指定高度才检查新机制的提现手续费
+            if (coreApi.isSupportNewMechanismOfWithdrawalFee()) {
+                BigDecimal nvtUSD = coreApi.getUsdtPriceByAsset(AssetName.NVT);
+                BigDecimal nvtAmount = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
+                BigDecimal ethUSD = coreApi.getUsdtPriceByAsset(AssetName.ETH);
+                gasPrice = EthIIUtil.calGasPriceOfWithdraw(nvtUSD, nvtAmount, ethUSD, po.getAssetId());
+                if (gasPrice == null || gasPrice.toBigInteger().compareTo(EthContext.getEthGasPrice()) < 0) {
+                    BigDecimal nvtAmountCalc = EthIIUtil.calNVTOfWithdraw(nvtUSD, new BigDecimal(EthContext.getEthGasPrice()), ethUSD, po.getAssetId());
+                    gasPrice = gasPrice == null ? BigDecimal.ZERO : gasPrice;
+                    logger().error("[提现]交易[{}]手续费不足，当前Ethereum网络的GasPrice: {} Gwei, 实际提供的GasPrice: {} Gwei, 总共需要的NVT: {}, 用户提供的NVT: {}, 需要追加的NVT: {}",
+                            nerveTxHash,
+                            new BigDecimal(EthContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                            gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                            nvtAmountCalc.movePointLeft(8).toPlainString(),
+                            nvtAmount.movePointLeft(8).toPlainString(),
+                            nvtAmountCalc.subtract(nvtAmount).movePointLeft(8).toPlainString()
+                    );
+                    throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+                }
+                gasPrice = EthIIUtil.calNiceGasPriceOfWithdraw(new BigDecimal(EthContext.getEthGasPrice()), gasPrice);
+            }
             // 验证合约后发出交易
-            return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW);
+            String ethTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW, gasPrice.toBigInteger());
+            if (StringUtils.isNotBlank(ethTxHash)) {
+                // 记录提现交易已向ETH网络发出
+                ethIIPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, ethTxHash);
+            }
+            return ethTxHash;
         } catch (Exception e) {
-            logger().error(e);
             if (e instanceof NulsException) {
                 throw (NulsException) e;
             }
+            logger().error(e);
             throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
         }
     }
@@ -667,6 +785,9 @@ public class EthIIDocking extends EthDocking {
 
 
     private String createTxComplete(String nerveTxHash, EthUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
+        return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, txFunction, txType, null);
+    }
+    private String createTxComplete(String nerveTxHash, EthUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger gasPrice) throws Exception {
         // 验证合约交易合法性
         EthCall ethCall = ethWalletApi.validateContractCall(fromAddress, EthContext.MULTY_SIGN_ADDRESS, txFunction);
         if (ethCall.isReverted()) {
@@ -682,8 +803,8 @@ public class EthIIDocking extends EthDocking {
             logger().error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
         }
-        BigInteger gasLimit = estimateGas;
-        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, EthContext.MULTY_SIGN_ADDRESS, gasLimit, txFunction);
+        BigInteger gasLimit = estimateGas.add(EthConstant.BASE_GAS_LIMIT);
+        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, EthContext.MULTY_SIGN_ADDRESS, gasLimit, txFunction, BigInteger.ZERO, gasPrice);
         String ethTxHash = ethSendTransactionPo.getTxHash();
         // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
         ethTxRelationStorageService.save(ethTxHash, nerveTxHash, ethSendTransactionPo);
@@ -728,5 +849,9 @@ public class EthIIDocking extends EthDocking {
 
     public void setEthIIResendHelper(EthIIResendHelper ethIIResendHelper) {
         this.ethIIResendHelper = ethIIResendHelper;
+    }
+
+    public void setEthIIPendingTxHelper(EthIIPendingTxHelper ethIIPendingTxHelper) {
+        this.ethIIPendingTxHelper = ethIIPendingTxHelper;
     }
 }

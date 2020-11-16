@@ -100,8 +100,7 @@ public class HeterogeneousContractAssetRegPendingTxData extends BaseNulsData {
         this.contractAddress = contractAddress;
     }
 
-    @Override
-    public String toString() {
+    public String toString1() {
         StringBuilder builder = new StringBuilder();
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\tchainId: %s", chainId)).append(lineSeparator);
@@ -109,5 +108,20 @@ public class HeterogeneousContractAssetRegPendingTxData extends BaseNulsData {
         builder.append(String.format("\tsymbol: %s", symbol)).append(lineSeparator);
         builder.append(String.format("\tcontractAddress: %s",contractAddress)).append(lineSeparator);
         return builder.toString();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"chainId\":")
+                .append(chainId);
+        sb.append(",\"decimals\":")
+                .append(decimals);
+        sb.append(",\"symbol\":")
+                .append('\"').append(symbol).append('\"');
+        sb.append(",\"contractAddress\":")
+                .append('\"').append(contractAddress).append('\"');
+        sb.append('}');
+        return sb.toString();
     }
 }

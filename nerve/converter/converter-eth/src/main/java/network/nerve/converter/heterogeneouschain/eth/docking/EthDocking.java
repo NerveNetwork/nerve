@@ -263,7 +263,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
 
     @Override
     public void updateMultySignAddress(String multySignAddress) throws Exception {
-        logger().info("更新多签合约地址, old: {}, new: {}", EthContext.MULTY_SIGN_ADDRESS, multySignAddress);
+        logger().info("ETH更新多签合约地址, old: {}, new: {}", EthContext.MULTY_SIGN_ADDRESS, multySignAddress);
         multySignAddress = multySignAddress.toLowerCase();
         // 监听多签地址交易
         ethListener.removeListeningAddress(EthContext.MULTY_SIGN_ADDRESS);

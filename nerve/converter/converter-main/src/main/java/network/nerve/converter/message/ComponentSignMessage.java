@@ -52,7 +52,7 @@ public class ComponentSignMessage extends BaseBusinessMessage {
             } else if (o1.getHeterogeneousAddress().getChainId() < o2.getHeterogeneousAddress().getChainId()) {
                 return -1;
             }
-            return 0;
+            return o1.getHeterogeneousAddress().getAddress().compareTo(o2.getHeterogeneousAddress().getAddress());
         }
     };
     /**
@@ -67,8 +67,8 @@ public class ComponentSignMessage extends BaseBusinessMessage {
     private NulsHash hash;
 
     /**
-     * 异构链签名地址
-     * 每个异构链一个签名
+     * 每个节点, 签多个异构链
+     * 每个异构链地址一个签名
      */
     private List<HeterogeneousSign> listSign;
 
@@ -169,6 +169,7 @@ public class ComponentSignMessage extends BaseBusinessMessage {
     @Override
     public int hashCode() {
         int result = hash.hashCode();
+        listSign.sort(listSignSort);
         for (HeterogeneousSign sign : listSign) {
             result = 31 * result + sign.hashCode();
         }

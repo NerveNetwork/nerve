@@ -32,6 +32,7 @@ import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.TransactionPO;
+import network.nerve.converter.model.po.WithdrawalAdditionalFeePO;
 import network.nerve.converter.storage.TxStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
 import network.nerve.converter.utils.ConverterUtil;
@@ -47,6 +48,7 @@ public class TxStorageServiceImpl implements TxStorageService  {
      * 异构链 交易key前缀
      */
     private static final String HETEROGENEOUS_TX_PREFIX = "HETEROGENEOUS_TX_PREFIX_";
+    private static final String WITHDRAWAL_ADDITIONAL_FEE_PREFIX = "WITHDRAWAL_ADDITIONAL_FEE_PREFIX_";
 
     @Override
     public boolean saveHeterogeneousHash(Chain chain, String heterogeneousHash) {
@@ -144,4 +146,27 @@ public class TxStorageServiceImpl implements TxStorageService  {
         return result;
     }
 
+
+    @Override
+    public boolean saveWithdrawalAdditionalFee(Chain chain, WithdrawalAdditionalFeePO po) {
+        if (null == po) {
+            return false;
+        }
+        try {
+            byte[] key = ConverterDBUtil.stringToBytes(HETEROGENEOUS_TX_PREFIX + po.getBasicTxHash());
+            return ConverterDBUtil.putModel(ConverterDBConstant.DB_TX_PREFIX + chain.getChainId(), key, po);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
+        }
+    }
+
+    @Override
+    public WithdrawalAdditionalFeePO getWithdrawalAdditionalFeePO(Chain chain, String withdrawalTxHash) {
+        if(StringUtils.isBlank(withdrawalTxHash)){
+            return null;
+        }
+        byte[] key = ConverterDBUtil.stringToBytes(HETEROGENEOUS_TX_PREFIX + withdrawalTxHash);
+        return ConverterDBUtil.getModel(ConverterDBConstant.DB_TX_PREFIX + chain.getChainId(), key, WithdrawalAdditionalFeePO.class);
+    }
 }

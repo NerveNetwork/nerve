@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils.manager;
 
+import network.nerve.pocbft.constant.PocbftConstant;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.consensus.Evidence;
 import network.nerve.pocbft.model.bo.round.MeetingMember;
@@ -241,7 +242,7 @@ public class PunishManager {
             Iterator<Evidence> iterator = list.iterator();
             while (iterator.hasNext()) {
                 Evidence e = iterator.next();
-                if (e.getRoundIndex() <= currentRoundIndex - ConsensusConstant.CREDIT_MAGIC_NUM) {
+                if (e.getRoundIndex() <= currentRoundIndex - PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain)) {
                     iterator.remove();
                 }
             }

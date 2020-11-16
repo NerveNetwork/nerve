@@ -1,8 +1,20 @@
 package network.nerve.converter.rpc.cmd;
 
+import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.basic.TransactionFeeCalculator;
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinFrom;
+import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.Transaction;
+import io.nuls.base.signture.P2PHKSignature;
+import io.nuls.base.signture.TransactionSignature;
+import io.nuls.core.constant.TxType;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.HostInfo;
@@ -10,22 +22,33 @@ import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.converter.constant.ConverterCmdConstant;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteChoiceEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.ConfigBean;
 import network.nerve.converter.model.bo.NonceBalance;
+import network.nerve.converter.model.dto.SignAccountDTO;
+import network.nerve.converter.model.dto.WithdrawalTxDTO;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
+import network.nerve.converter.rpc.call.BaseCall;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.utils.ConverterUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static network.nerve.converter.constant.ConverterConstant.DISTRIBUTION_FEE_10;
 
 public class CvTest {
     /*
@@ -58,11 +81,11 @@ public class CvTest {
     static String address31 = "TNVTdTSPRyiWcpbS65NmT5qyGmuqPxuKv8SF4";
 
 
-
     private Chain chain;
     static int chainId = 5;
     static int assetId = 1;
     static int heterogeneousChainId = 101;
+    static int bnbChainId = 102;
     static int heterogeneousAssetId = 1;
 
     static String version = "1.0";
@@ -146,12 +169,19 @@ public class CvTest {
         NonceBalance balance = LedgerCall.getBalanceNonce(chain, chainId, 2, address30);
         System.out.println("ETH:" + balance.getAvailable());
         NonceBalance balance3 = LedgerCall.getBalanceNonce(chain, chainId, 3, address30);
-        System.out.println("USDX:" + balance3.getAvailable());
+        System.out.println("BNB:" + balance3.getAvailable());
+//        NonceBalance balance0 = LedgerCall.getBalanceNonce(chain, chainId, 3, address25);
+//        System.out.println(address25 + " USDX:" + balance0.getAvailable());
         NonceBalance balance4 = LedgerCall.getBalanceNonce(chain, chainId, 4, address30);
-        System.out.println("USDI:" + balance4.getAvailable());
+        System.out.println("USDX:" + balance4.getAvailable());
         NonceBalance balance5 = LedgerCall.getBalanceNonce(chain, chainId, 1, address30);
         System.out.println("NVT:" + balance5.getAvailable());
+        NonceBalance balance6 = LedgerCall.getBalanceNonce(chain, chainId, 5, address30);
+        System.out.println("USDI:" + balance6.getAvailable());
+        NonceBalance balance7 = LedgerCall.getBalanceNonce(chain, chainId, 6, address30);
+        System.out.println("ENVT:" + balance7.getAvailable());
     }
+
     @Test
     public void withdrawalNVT() throws Exception {
         //账户已存在则覆盖 If the account exists, it covers.
@@ -167,6 +197,7 @@ public class CvTest {
             params.put("assetChainId", chainId);
             params.put("assetId", 1);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
+            params.put("distributionFee", new BigInteger("1000000000"));
             params.put("amount", amount);
             params.put("remark", "提现");
             params.put("address", address30);
@@ -175,7 +206,7 @@ public class CvTest {
             HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_withdrawal");
             String hash = (String) result.get("value");
             String txHex = (String) result.get("hex");
-            Log.debug("number:{}, hash:{}", i , hash);
+            Log.debug("number:{}, hash:{}", i, hash);
         }
         /**
          * cmd
@@ -192,12 +223,13 @@ public class CvTest {
             params.put(Constants.CHAIN_ID, chainId);
 
             // 提现金额ETH
-            String amount = "0.01";
+            String amount = "0.2";
             BigDecimal am = new BigDecimal(amount).movePointRight(18);
             amount = am.toPlainString();
             params.put("assetChainId", chainId);
             params.put("assetId", 2);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
+            params.put("distributionFee", new BigInteger("1000000000"));
             params.put("amount", amount);
             params.put("remark", "提现");
             params.put("address", address30);
@@ -206,7 +238,7 @@ public class CvTest {
             HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_withdrawal");
             String hash = (String) result.get("value");
             String txHex = (String) result.get("hex");
-            Log.debug("number:{}, hash:{}", i , hash);
+            Log.debug("number:{}, hash:{}", i, hash);
         }
         /**
          * cmd
@@ -216,20 +248,21 @@ public class CvTest {
 
     @Test
     public void withdrawalERC20() throws Exception {
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= 1; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
 
             // 提现金额ERC20
-            String amount = "1";
+            String amount = "10";
             int decimal = 6; //小数位
             BigDecimal am = new BigDecimal(amount).movePointRight(decimal);
             amount = am.toPlainString();
 
             params.put("assetChainId", chainId);
-            params.put("assetId", 3);
+            params.put("assetId", 5);
             params.put("heterogeneousAddress", "0xfa27c84eC062b2fF89EB297C24aaEd366079c684");
+            params.put("distributionFee", new BigInteger("100000000"));
             params.put("amount", amount);
             params.put("remark", "提现");
             params.put("address", address30);
@@ -238,13 +271,40 @@ public class CvTest {
             HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_withdrawal");
             String hash = (String) result.get("value");
             String txHex = (String) result.get("hex");
-            Log.debug("number:{}, hash:{}", i , hash);
+            Log.debug("number:{}, hash:{}", i, hash);
         }
         /**
          * cmd
          * redeem 3 0xfa27c84eC062b2fF89EB297C24aaEd366079c684 100 tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ
          */
     }
+
+
+    @Test
+    public void withdrawalAdditionalFee() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        // 追加nvt手续费
+        // 提现金额ETH
+        String amount = "100";
+        BigDecimal am = new BigDecimal(amount).movePointRight(8);
+        amount = am.toPlainString();
+
+        params.put("txHash", "5515d3af62b402560040f46b96e4caf5b84a6cd96da6f5a34f13e487d78e6dce");
+        params.put("amount", amount);
+        params.put("remark", "追加手续费");
+        params.put("address", address30);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_withdrawal_additional_fee", params);
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_withdrawal_additional_fee");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("txHex:{}", txHex);
+        Log.debug("hash:{}", hash);
+    }
+
 
     @Test
     public void createAgent() throws Exception {
@@ -262,15 +322,15 @@ public class CvTest {
 
     /**
      * 追加保证金
-     * */
+     */
     @Test
-    public void appendAgentDeposit()throws Exception{
-        Map<String,Object>params = new HashMap<>();
-        params.put(Constants.CHAIN_ID,chainId);
-        params.put("address",address29);
+    public void appendAgentDeposit() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("address", address29);
         params.put("password", password);
-        params.put("amount","10000000000000");// 10W
-        params.put("agentHash","daa0902b5f1528805d00c65dabc3c381dbbb2470d1fe1b7980479e3db9a17426");
+        params.put("amount", "10000000000000");// 10W
+        params.put("agentHash", "daa0902b5f1528805d00c65dabc3c381dbbb2470d1fe1b7980479e3db9a17426");
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_appendAgentDeposit", params);
         System.out.println(cmdResp.getResponseData());
         //5f03675051ad879731627a1a6a10cf82bea52e0baa527b55d776416847adaa4f
@@ -294,11 +354,11 @@ public class CvTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
-        params.put("type", ProposalTypeEnum.EXPELLED.value());
+        params.put("type", ProposalTypeEnum.TRANSFER.value());
         params.put("content", "这是一个提案的内容...");
-        params.put("heterogeneousChainId", heterogeneousChainId);
-        params.put("heterogeneousTxHash", "0x2590e0d945580a4b763eca9ae18afe5970dd3341444f003bc269d1658cfb5f8f");
-        params.put("businessAddress", address28);
+        params.put("heterogeneousChainId", bnbChainId);
+        params.put("heterogeneousTxHash", "0x178373fc06f888487790b9d7fa256f4a166451c5f3facf17a65fb250a7cd2ea1");
+        params.put("businessAddress", address30);
         params.put("hash", "fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
@@ -321,7 +381,7 @@ public class CvTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "bb52945bb44029b050fd1e89b57b50ddd33cd39f6e77f05ab6b596e1f0666d95");
+        params.put("proposalTxHash", "b4ae0561ebf1a196706960cc20c90f34400b2ee7f440ef4675cf7e84a1b0d485");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", "TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd");
@@ -339,11 +399,232 @@ public class CvTest {
 
     @Test
     public void TxInstance() throws Exception {
+//        AddressTool.addPrefix(5, "NERVE");
+//        String str ="2d002b4a6c5f06e68f90e6a1889c071ee8bf99e698afe4b880e4b8aae68f90e6a188e79a84e58685e5aeb92e2e2e65004230783235393065306439343535383061346237363365636139616531386166653539373064643333343134343466303033626332363964313635386366623566386614dcb777e7491f03d69cd10c1fee335c9d560eb5a220fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0018c0117050001f7ec6473df12e751d64cf20a8baa7edd50810f810500010040d79d3b000000000000000000000000000000000000000000000000000000000800000000000000000001170500018ec4cf3ee160b054e0abb6f5c8177b9ee56fa51e0500010000ca9a3b000000000000000000000000000000000000000000000000000000000000000000000000692103958b790c331954ed367d37bac901de5c2f06ac8368b37d7bd6cd5ae143c1d7e3463044022075b8265017dce68982308b7af691c440dbcaafd3aeb85b3694d3c2bcc15190c202202f68676f6ff217373dc54e8cb9782a9b5461116e48d2939d73d89d81693b2024";
+//        Transaction tx = ConverterUtil.getInstance(str, Transaction.class);
+//        System.out.println(tx.getHash().toHex());
+//        System.out.println(tx.format(ProposalTxData.class));
+        //06889e8ac40c14d3f4e83a58f78986b29522c742f8c483d1fe088fec2501d3e0
+/*
+        AddressTool.addPrefix(9, "NERVE");
+        String str = "210369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c54630440220268f58cd001602bc291e4a207461b50091a3661c86b4e72f8e47cbac90beaa7f0220758c55209bf489613f3b9e7269e139e546a848084c1e00aaaa7ee119d3261e9e21035fe7599a7b39ad69fbd243aac7cfb93055f8f0827c6b08057874877cb890b80346304402200dc97ae858097570b43d85d4afe8b02a97f4f6a5e8704ee6e7461305b83384ab02205d2738a060b8279df6fce64c8a9067420c4e2f8a9e5cf112a2877cf6fbef8ef62102ac31c213b1dc1d2fd55d7751326b4f07b4a5b4ecb2ce3f214cafb7832fd211b946304402202e6be474267c601457858ef4253b218c1ccb918e74ec4a9fdbf801bc6a22121702205f8dc844cda548aa560680b3e38f784b391408366a37f6a3444f60af620070ab210351a8fc85a6c475b102f3fe5bd2479c1d08e58237463f6c6ccf84e95ad396b783463044022055c2eac0081d300a8c851630b1283a0cca0f2a800d84034848cc947803d891b902204b9ce06d1858d25ed48c2d3723e8f62b35a0b147c53f97a7ffbe80f6d47952982103c363f44196aa1a57ef7e14c19845acad721c9eefd837dacdf3fe3af1ba08ee2147304502210088be74db21ddcace414e466d722b4d7bd98d996c234a482b4e84c855be9dc84a022057d45015158f9eb2e34c0bde2eaafe9a299df06a35618706584f5bea23a4f9c22103ac396ab4bc360610058d04940c879e0da57ea1b4a541b75df6989a6c3d5081c946304402206382c9cd84b5918e9b4029b81eb1eea8f888c5b74242d68fef023763fc9360e802204dff1389f05a29d4266b0a0c062eaee88a868a0b8b33fbb80c1ac1b58bffd0f32102dda7bf54b7843aef842222f5c79405ca91313ac8c59296cf7b38203c09b40ba846304402206b2324f9d44a015a45a43aa513c531c2857cd3ecb3ec65f2329997e284ef154c022042a9cde9459aeb04ca3623ec120049c3257872c8d605a000ec60d4b1c45703c721020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528473045022100bd8204aaa79c5f1cf59e321899cceafc646c55936b5d2a266dcf46526ec33a0802203c08aa0f33728eb5f1310464b0c3d76a2cb3ea6256abcde85cc76488861b2667210308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b473045022100f0fa5aebcf61c75a23359ddf193d50729c71b2cb0c4a8efa99580cd1c4b956bf02202e943b76f993267d3e0ea16f7a12211b0196162b445428d1d0f0fe4dbbfcd2982102c8ab66541215350c4e82073c825d0d96dfe21aed1acfca3bdd91ac4d48cb3499473045022100b70c9e1749073f3ded48e34e7d5a3bb71fd76aac184d4af7c6a0904f04ddbf26022061e1a7b32acca7d663530b33276145769aec547f689d02bac5c511798451c1f5";
+        TransactionSignature instance = ConverterUtil.getInstance(str, TransactionSignature.class);
+
+        for (P2PHKSignature signature : instance.getP2PHKSignatures()) {
+            byte[] address = AddressTool.getAddress(signature.getPublicKey(), 9);
+            String addr = AddressTool.getStringAddressByBytes(address);
+            System.out.println(addr);
+        }*/
+
+//
+//        String signStr = "21037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a086346304402201c2a12016971ba7045c83e164648705c7e073813b90d3b56fe77db549604b7920220236f13bcb01cac09d4fedad70c740805bc22325b05fa0695225b8e37178af276";
+//        P2PHKSignature sign = ConverterUtil.getInstance(signStr, P2PHKSignature.class);
+//        byte[] address = AddressTool.getAddress(sign.getPublicKey(), 5);
+//        String addr = AddressTool.getStringAddressByBytes(address);
+//        System.out.println(addr);
+
+        String str1="2d002b4a6c5f06e68f90e6a1889c071ee8bf99e698afe4b880e4b8aae68f90e6a188e79a84e58685e5aeb92e2e2e65004230783235393065306439343535383061346237363365636139616531386166653539373064643333343134343466303033626332363964313635386366623566386614dcb777e7491f03d69cd10c1fee335c9d560eb5a220fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0018c0117050001f7ec6473df12e751d64cf20a8baa7edd50810f810500010040d79d3b000000000000000000000000000000000000000000000000000000000800000000000000000001170500018ec4cf3ee160b054e0abb6f5c8177b9ee56fa51e0500010000ca9a3b000000000000000000000000000000000000000000000000000000000000000000000000692103958b790c331954ed367d37bac901de5c2f06ac8368b37d7bd6cd5ae143c1d7e3463044022075b8265017dce68982308b7af691c440dbcaafd3aeb85b3694d3c2bcc15190c202202f68676f6ff217373dc54e8cb9782a9b5461116e48d2939d73d89d81693b2024";
+        String str2="2d002b4a6c5f06e68f90e6a1889c071ee8bf99e698afe4b880e4b8aae68f90e6a188e79a84e58685e5aeb92e2e2e65004230783235393065306439343535383061346237363365636139616531386166653539373064643333343134343466303033626332363964313635386366623566386614dcb777e7491f03d69cd10c1fee335c9d560eb5a220fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0018c0117050001f7ec6473df12e751d64cf20a8baa7edd50810f810500010040d79d3b000000000000000000000000000000000000000000000000000000000800000000000000000001170500018ec4cf3ee160b054e0abb6f5c8177b9ee56fa51e0500010000ca9a3b000000000000000000000000000000000000000000000000000000000000000000000000692103958b790c331954ed367d37bac901de5c2f06ac8368b37d7bd6cd5ae143c1d7e3463044022075b8265017dce68982308b7af691c440dbcaafd3aeb85b3694d3c2bcc15190c202202f68676f6ff217373dc54e8cb9782a9b5461116e48d2939d73d89d81693b2024";
+        String str3="2d002b4a6c5f06e68f90e6a1889c071ee8bf99e698afe4b880e4b8aae68f90e6a188e79a84e58685e5aeb92e2e2e65004230783235393065306439343535383061346237363365636139616531386166653539373064643333343134343466303033626332363964313635386366623566386614dcb777e7491f03d69cd10c1fee335c9d560eb5a220fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0018c0117050001f7ec6473df12e751d64cf20a8baa7edd50810f810500010040d79d3b000000000000000000000000000000000000000000000000000000000800000000000000000001170500018ec4cf3ee160b054e0abb6f5c8177b9ee56fa51e0500010000ca9a3b000000000000000000000000000000000000000000000000000000000000000000000000692103958b790c331954ed367d37bac901de5c2f06ac8368b37d7bd6cd5ae143c1d7e3463044022075b8265017dce68982308b7af691c440dbcaafd3aeb85b3694d3c2bcc15190c202202f68676f6ff217373dc54e8cb9782a9b5461116e48d2939d73d89d81693b2024";
+
+        System.out.println(str1.equals(str2));
+        System.out.println(str1.equals(str3));
+
+
         AddressTool.addPrefix(5, "NERVE");
-        String str ="2b0027a7e15e2074657374266e6273703b7769746864726177616c266e6273703b4554482e2e2e2b2a307863313144393934333830356535366236333041343031443462643941323935353033353345466131fd16010217050001b9978dbea4abebb613b6be2d0d66b4179d2511cb050002000000c16ff28623000000000000000000000000000000000000000000000000000800000000000000000017050001b9978dbea4abebb613b6be2d0d66b4179d2511cb05000100a06a0d540200000000000000000000000000000000000000000000000000000008000000000000000000021705000129cfc6376255a78451eeb4b129ed8eacffa2feef050002000000c16ff28623000000000000000000000000000000000000000000000000000000000000000000170500018ec4cf3ee160b054e0abb6f5c8177b9ee56fa51e050001006400000000000000000000000000000000000000000000000000000000000000000000000000000069210369b20002bc58c74cb6fd5ef564f603834393f53bed20c3314b4b7aba8286a7e0463044022039da405be1d3c149d96719472aaea4aa9c7fe28390cd41960581dc513d58bc8a02203e0eab8dc4cae721e3acc208d55ce9784290b8535b1c1000968017c0f241ad86";
-        Transaction tx = ConverterUtil.getInstance(str, Transaction.class);
-        System.out.println(tx.format(WithdrawalTxData.class));
+        Transaction tx1 = ConverterUtil.getInstance(str1, Transaction.class);
+        System.out.println(tx1.getHash().toHex());
+        Transaction tx2 = ConverterUtil.getInstance(str2, Transaction.class);
+        System.out.println(tx2.getHash().toHex());
+        Transaction tx3 = ConverterUtil.getInstance(str3, Transaction.class);
+        System.out.println(tx3.getHash().toHex());
+//        System.out.println(tx.format(ProposalTxData.class));
+
+
     }
 
     // resetbank 101 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
+
+
+    @Test
+    public void createWithdrawal() throws Exception {
+        Transaction tx = new Transaction(TxType.WITHDRAWAL);
+        tx.setTxData(new WithdrawalTxData("0xfa27c84eC062b2fF89EB297C24aaEd366079c684").serialize());
+        WithdrawalTxDTO txDTO = new WithdrawalTxDTO();
+        txDTO.setAmount(new BigInteger("1000000"));
+        txDTO.setAssetChainId(5);
+        txDTO.setAssetId(3);
+        txDTO.setSignAccount(new SignAccountDTO(address30, password));
+        tx.setCoinData(assembleWithdrawalCoinData(chain,  txDTO));
+        tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
+        sign(tx, txDTO.getSignAccount().getAddress(), txDTO.getSignAccount().getPassword());
+        newTx(tx);
+    }
+    private void newTx(Transaction tx) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("tx", RPCUtil.encode(tx.serialize()));
+        HashMap result = (HashMap) BaseCall.requestAndResponse(ModuleE.TX.abbr, "tx_newTx", params);
+        System.out.println(result.get("hash"));
+    }
+
+
+    /**
+     * 对交易hash签名(在线)
+     * @param tx
+     * @param address
+     * @param password
+     */
+    public void sign(Transaction tx, String address, String password) throws Exception {
+        TransactionSignature transactionSignature = new TransactionSignature();
+        List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("address", address);
+        params.put("password", password);
+        params.put("data", RPCUtil.encode(tx.getHash().getBytes()));
+        HashMap result = (HashMap) BaseCall.requestAndResponse(ModuleE.AC.abbr, "ac_signDigest", params);
+        String signatureStr = (String) result.get("signature");
+        P2PHKSignature signature = new P2PHKSignature();
+        signature.parse(new NulsByteBuffer(RPCUtil.decode(signatureStr)));
+        p2PHKSignatures.add(signature);
+        //交易签名
+        transactionSignature.setP2PHKSignatures(p2PHKSignatures);
+        tx.setTransactionSignature(transactionSignature.serialize());
+    }
+
+
+    private byte[] assembleWithdrawalCoinData(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException {
+        int withdrawalAssetId = withdrawalTxDTO.getAssetId();
+        int withdrawalAssetChainId = withdrawalTxDTO.getAssetChainId();
+
+
+        int chainId = chain.getConfig().getChainId();
+        int assetId = chain.getConfig().getAssetId();
+        BigInteger amount = withdrawalTxDTO.getAmount();
+        String address = withdrawalTxDTO.getSignAccount().getAddress();
+        //提现资产from
+        CoinFrom withdrawalCoinFrom = getWithdrawalCoinFrom(chain, address, amount, withdrawalAssetChainId, withdrawalAssetId);
+        List<CoinFrom> listFrom = new ArrayList<>();
+        listFrom.add(withdrawalCoinFrom);
+        if(withdrawalAssetChainId != chainId || assetId != withdrawalAssetId) {
+            // 只要不是当前链主资产 都要组装额外的coinFrom
+            CoinFrom withdrawalFeeCoinFrom = null;
+            //手续费from 包含异构链补贴手续费
+            withdrawalFeeCoinFrom = getWithdrawalFeeCoinFrom(chain, address, DISTRIBUTION_FEE_10);
+
+            listFrom.add(withdrawalFeeCoinFrom);
+        }
+        //------------------------------------------------------------------
+//        BigInteger amount2 = new BigInteger("1000000000000000000");
+//        CoinFrom withdrawalCoinFrom2 = getWithdrawalCoinFrom(chain, address, amount2, withdrawalAssetChainId, 5);
+//        listFrom.add(withdrawalCoinFrom2);
+        //------------------------------------------------------------------
+
+        String fee = "111111111111111111111111111111111111111111111111111111111111111111";
+        String black = "000000000000000000000000000000000000000000000000000000000000000000";
+        //组装to
+
+        List<CoinTo> listTo = new ArrayList<>();
+        //==============
+        CoinTo withdrawalCoinTo3 = new CoinTo(
+                AddressTool.getAddress(HexUtil.decode(black), chain.getChainId()),
+                withdrawalAssetChainId,
+                5,
+                new BigInteger("1000000000000000000"));
+        listTo.add(withdrawalCoinTo3);
+        //==============
+
+        CoinTo withdrawalCoinTo = new CoinTo(
+                AddressTool.getAddress(HexUtil.decode(black), chain.getChainId()),
+                withdrawalAssetChainId,
+                withdrawalAssetId,
+                amount);
+
+        listTo.add(withdrawalCoinTo);
+        // 判断组装异构链补贴手续费暂存to
+        CoinTo withdrawalFeeCoinTo = new CoinTo(
+                AddressTool.getAddress(HexUtil.decode(fee), chain.getChainId()),
+                chainId,
+                assetId,
+                DISTRIBUTION_FEE_10);
+        listTo.add(withdrawalFeeCoinTo);
+        CoinData coinData = new CoinData(listFrom, listTo);
+        try {
+            return coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+    }
+
+
+    private CoinFrom getWithdrawalCoinFrom(
+            Chain chain,
+            String address,
+            BigInteger amount,
+            int withdrawalAssetChainId,
+            int withdrawalAssetId) throws NulsException {
+        //提现资产
+        if (BigIntegerUtils.isEqualOrLessThan(amount, BigInteger.ZERO)) {
+            chain.getLogger().error("提现金额不能小于0, amount:{}", amount);
+            throw new NulsException(ConverterErrorCode.PARAMETER_ERROR);
+        }
+        NonceBalance withdrawalNonceBalance = LedgerCall.getBalanceNonce(
+                chain,
+                withdrawalAssetChainId,
+                withdrawalAssetId,
+                address);
+
+        BigInteger withdrawalAssetBalance = withdrawalNonceBalance.getAvailable();
+
+        if (BigIntegerUtils.isLessThan(withdrawalAssetBalance, amount)) {
+            chain.getLogger().error("提现资产余额不足 chainId:{}, assetId:{}, withdrawal amount:{}, available balance:{} ",
+                    withdrawalAssetChainId, withdrawalAssetId, amount, withdrawalAssetBalance);
+            throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
+        }
+
+        if(withdrawalAssetChainId == chain.getConfig().getChainId() && chain.getConfig().getAssetId() == withdrawalAssetId) {
+            // 异构转出链内主资产, 直接合并到一个coinFrom
+            // 总手续费 = 链内打包手续费 + 异构链转账(或签名)手续费[都以链内主资产结算]
+            BigInteger totalFee = TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES.add(DISTRIBUTION_FEE_10);
+            amount = totalFee.add(amount);
+            if (BigIntegerUtils.isLessThan(withdrawalAssetBalance, amount)) {
+                chain.getLogger().error("Insufficient balance of withdrawal fee. amount to be paid:{}, available balance:{} ", amount, withdrawalAssetBalance);
+                throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
+            }
+        }
+
+        return new CoinFrom(
+                AddressTool.getAddress(address),
+                withdrawalAssetChainId,
+                withdrawalAssetId,
+                amount,
+                withdrawalNonceBalance.getNonce(),
+                (byte) 0);
+    }
+
+    private CoinFrom getWithdrawalFeeCoinFrom(Chain chain, String address, BigInteger withdrawalSignFeeNvt) throws NulsException {
+        int chainId = chain.getConfig().getChainId();
+        int assetId = chain.getConfig().getAssetId();
+        NonceBalance currentChainNonceBalance = LedgerCall.getBalanceNonce(
+                chain,
+                chainId,
+                assetId,
+                address);
+        // 本链资产余额
+        BigInteger balance = currentChainNonceBalance.getAvailable();
+
+        // 总手续费 = 链内打包手续费 + 异构链转账(或签名)手续费[都以链内主资产结算]
+        BigInteger totalFee = TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES.add(withdrawalSignFeeNvt);
+        if (BigIntegerUtils.isLessThan(balance, totalFee)) {
+            chain.getLogger().error("Insufficient balance of withdrawal fee. amount to be paid:{}, available balance:{} ", totalFee, balance);
+            throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
+        }
+        // 查询账本获取nonce值
+        byte[] nonce = currentChainNonceBalance.getNonce();
+
+        return new CoinFrom(AddressTool.getAddress(address), chainId, assetId, totalFee, nonce, (byte) 0);
+    }
 }

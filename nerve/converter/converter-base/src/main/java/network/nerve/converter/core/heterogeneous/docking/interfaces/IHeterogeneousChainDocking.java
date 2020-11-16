@@ -235,6 +235,14 @@ public interface IHeterogeneousChainDocking {
     }
 
     /**
+     * 验证管理员变更交易
+     */
+    default boolean validateManagerChangesTxII(String txHash, String[] addAddresses,
+                                          String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
+        return false;
+    }
+
+    /**
      * 创建或签名管理员变更交易
      *
      * @return 异构链交易hash
@@ -302,5 +310,9 @@ public interface IHeterogeneousChainDocking {
      */
     default int version() {
         return 0;
+    }
+
+    default boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+        return false;
     }
 }

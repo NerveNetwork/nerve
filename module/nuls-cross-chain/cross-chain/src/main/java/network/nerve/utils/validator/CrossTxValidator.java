@@ -25,6 +25,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
 import network.nerve.utils.manager.ChainManager;
+import network.nerve.utils.manager.CoinDataManager;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -50,6 +51,9 @@ public class CrossTxValidator {
 
     @Autowired
     private ChainManager chainManager;
+
+    @Autowired
+    CoinDataManager coinDataManager;
 
     /**
      * 验证交易
@@ -116,7 +120,7 @@ public class CrossTxValidator {
                     throw new NulsException(NulsCrossChainErrorCode.SIGNATURE_ERROR);
                 }
                 //todo ? 此处乘以5的目的是什么
-                txSize += P2PHKSignature.SERIALIZE_LENGTH * (chain.getVerifierList().size() * 5);
+                txSize += P2PHKSignature.SERIALIZE_LENGTH * (chain.getVerifierList().size());
             }
         } else {
             Transaction realCtx = tx;
@@ -168,6 +172,11 @@ public class CrossTxValidator {
         if (config.isMainNet()) {
             if (!ChainManagerCall.verifyCtxAsset(fromChainId, tx)) {
                 chain.getLogger().info("跨链资产验证失败！");
+                throw new NulsException(NulsCrossChainErrorCode.CROSS_ASSERT_VALID_ERROR);
+            }
+        }else {
+            if(!coinDataManager.verifyCtxAsset(chain,tx)){
+                chain.getLogger().info("跨链资产验证失败!资产未注册。");
                 throw new NulsException(NulsCrossChainErrorCode.CROSS_ASSERT_VALID_ERROR);
             }
         }

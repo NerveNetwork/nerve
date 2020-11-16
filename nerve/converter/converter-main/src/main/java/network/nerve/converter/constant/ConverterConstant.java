@@ -67,7 +67,8 @@ public interface ConverterConstant {
 
     int MAX_CHECK_TIMES = 10;
 
-//    BigInteger DISTRIBUTION_FEE_OLD = new BigInteger("1000000000");//10
+    BigInteger DISTRIBUTION_FEE_10 = new BigInteger("1000000000");//10
+
     BigInteger DISTRIBUTION_FEE_100 = new BigInteger("10000000000");//100
 
 
@@ -78,4 +79,13 @@ public interface ConverterConstant {
 
     String SEED_PUBKEY_SEPARATOR = ",";
 
+    /**
+     * 通过喂价模块获取价格
+     */
+    String ORACLE_KEY_ETH_PRICE = "ETH_PRICE";
+    String ORACLE_KEY_NVT_PRICE = "NERVE_PRICE";
+    String ORACLE_KEY_BNB_PRICE = "BNB_PRICE";
+
+    int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
+    byte[] ZERO_BYTES = new byte[]{0};
 }

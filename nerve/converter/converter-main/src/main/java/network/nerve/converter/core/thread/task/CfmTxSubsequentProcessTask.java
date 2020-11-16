@@ -46,6 +46,7 @@ import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
@@ -56,10 +57,12 @@ import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static network.nerve.converter.config.ConverterContext.FEE_ADDITIONAL_HEIGHT;
 import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_1;
 import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_2;
 
@@ -86,8 +89,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService = SpringLiteContext.getBean(VirtualBankAllHistoryStorageService.class);
     private VirtualBankService virtualBankService = SpringLiteContext.getBean(VirtualBankService.class);
     private HeterogeneousService heterogeneousService = SpringLiteContext.getBean(HeterogeneousService.class);
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService =
-            SpringLiteContext.getBean(HeterogeneousAssetConverterStorageService.class);
+    private HeterogeneousAssetHelper heterogeneousAssetHelper =
+            SpringLiteContext.getBean(HeterogeneousAssetHelper.class);
     private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
 
     @Override
@@ -195,32 +198,47 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 pendingTxQueue.remove();
             }
         } catch (Exception e) {
-            chain.getLogger().error(e);
+
             /**
              * 如果队首交易可以变换位置, 则放入队尾,
              * 否则按顺序遍历,扫描一个可以变位置的元素, 放入队首
              */
-            // 只取出,不移除头部元素
-            TxSubsequentProcessPO pendingPO = chain.getPendingTxQueue().peekFirst();
-            if (null == pendingPO) {
-                return;
-            }
-            if (TxType.CHANGE_VIRTUAL_BANK != pendingPO.getTx().getType()) {
-                TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
-                chain.getPendingTxQueue().addLast(po);
-            } else {
-                Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
-                TxSubsequentProcessPO toFirstPO = null;
-                while (it.hasNext()) {
-                    TxSubsequentProcessPO po = it.next();
-                    if (TxType.CHANGE_VIRTUAL_BANK != po.getTx().getType()) {
-                        toFirstPO = po;
-                        it.remove();
-                        break;
+            try {
+                TxSubsequentProcessPO pendingPO = chain.getPendingTxQueue().peekFirst();
+                if (null == pendingPO) {
+                    return;
+                }
+                if (TxType.CHANGE_VIRTUAL_BANK != pendingPO.getTx().getType()) {
+                    TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
+                    chain.getPendingTxQueue().addLast(po);
+                } else {
+                    /**
+                     * 当前处理的是虚拟银行变更(已抛异常), 就从后面去一个不是虚拟银行变更的交易放到队首
+                     */
+                    Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
+                    TxSubsequentProcessPO toFirstPO = null;
+                    while (it.hasNext()) {
+                        TxSubsequentProcessPO po = it.next();
+                        if (TxType.CHANGE_VIRTUAL_BANK != po.getTx().getType()) {
+                            toFirstPO = po;
+                            it.remove();
+                            break;
+                        }
+                    }
+                    if (null != toFirstPO) {
+                        chain.getPendingTxQueue().addFirst(toFirstPO);
                     }
                 }
-                chain.getPendingTxQueue().addFirst(toFirstPO);
+            } catch (Exception ex) {
+                chain.getLogger().error(ex);
             }
+
+            if (e instanceof NulsException) {
+                if (ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
+                    return;
+                }
+            }
+            chain.getLogger().error(e);
         }
     }
 
@@ -298,6 +316,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             }
             compSignPO.getListMsg().add(currentMessage);
             compSignPO.setCurrentSigned(true);
+
             // 广播当前节点签名消息
             NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
 
@@ -312,7 +331,23 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
                     return false;
                 }
-                outer:
+                for (IHeterogeneousChainDocking docking : hInterfaces) {
+                    for (ComponentCallParm callParm : callParmsList) {
+                        if (docking.getChainId() == callParm.getHeterogeneousId()) {
+                            boolean vaildPass = docking.validateManagerChangesTxII(
+                                    callParm.getTxHash(),
+                                    callParm.getInAddress(),
+                                    callParm.getOutAddress(),
+                                    callParm.getOrginTxCount(),
+                                    callParm.getSigned());
+                            if (!vaildPass) {
+                                chain.getLogger().error("[异构链地址签名消息-异构链验证未通过-changeVirtualBank] 调用异构链组件验证未通过. hash:{}, ethHash:{}", txHash);
+                                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
+                            }
+                            break;
+                        }
+                    }
+                }
                 for (IHeterogeneousChainDocking docking : hInterfaces) {
                     for (ComponentCallParm callParm : callParmsList) {
                         if (docking.getChainId() == callParm.getHeterogeneousId()) {
@@ -323,7 +358,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                                     callParm.getOrginTxCount(),
                                     callParm.getSigned());
                             chain.getLogger().info("[异构链地址签名消息-拜占庭通过-changeVirtualBank] 调用异构链组件执行虚拟银行变更. hash:{}, ethHash:{}", txHash, ethTxHash);
-                            break outer;
+                            break;
                         }
                     }
                 }
@@ -422,7 +457,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
             for (CoinTo coinTo : coinData.getTo()) {
                 if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                    assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     if (assetInfo != null) {
                         withdrawCoinTo = coinTo;
                         break;
@@ -468,11 +503,20 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 // 执行调用异构链
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
                 if (null == callParmsList) {
-                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    chain.getLogger().info("[withdraw] 调用异构链参数为空");
                     return false;
                 }
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
+                if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
+                    BigInteger totalFee = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
+                    boolean enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    if (!enoughFeeOfWithdraw) {
+                        chain.getLogger().error("[withdraw] 提现手续费计算, 手续费不足以支付提现费用. hash:{}, amount:{}",
+                                txHash, callParm.getValue());
+                        throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+                    }
+                }
                 String ethTxHash = docking.createOrSignWithdrawTxII(
                         callParm.getTxHash(),
                         callParm.getToAddress(),
@@ -787,7 +831,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
         int assetId = withdrawCoinTo.getAssetsId();
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsChainId(), assetId);
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), withdrawCoinTo.getAssetsChainId(), assetId);
         BigInteger amount = withdrawCoinTo.getAmount();
         String heterogeneousAddress = txData.getHeterogeneousAddress();
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());

@@ -23,7 +23,6 @@
  */
 package network.nerve.converter.heterogeneouschain.ethII.utils;
 
-import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
@@ -32,7 +31,9 @@ import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.*;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -171,4 +172,65 @@ public class EthIIUtil {
         }
         return false;
     }
+
+    static BigDecimal MAXIMUM = new BigDecimal("1.5");
+    static BigDecimal MEDIAN = new BigDecimal("1.25");
+    static BigDecimal SMALL = new BigDecimal("1.1");
+    /**
+     * 在网络平均价格和用户提供的价格之间，取一个合适的值
+     */
+    public static BigDecimal calNiceGasPriceOfWithdraw(BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
+        BigDecimal maximumPrice, medianPrice, smallPrice;
+        if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
+            return maximumPrice;
+        } else if ((medianPrice = gasPriceNetwork.multiply(MEDIAN)).compareTo(gasPriceSupport) <= 0) {
+            return medianPrice;
+        } else if ((smallPrice = gasPriceNetwork.multiply(SMALL)).compareTo(gasPriceSupport) <= 0) {
+            return smallPrice;
+        } else {
+            return gasPriceSupport;
+        }
+    }
+
+    public static BigDecimal calGasPriceOfWithdraw(BigDecimal nvtUSD, BigDecimal nvtAmount, BigDecimal ethUSD, int hAssetId) {
+        if (hAssetId == 0) {
+            return null;
+        }
+        BigDecimal gasLimit;
+        if (hAssetId > 1) {
+            gasLimit = BigDecimal.valueOf(210000L);
+        } else {
+            gasLimit = BigDecimal.valueOf(190000L);
+        }
+        BigDecimal nvtNumber = nvtAmount.movePointLeft(8);
+        BigDecimal gasPrice = calGasPriceByNVT(nvtUSD, nvtNumber, ethUSD, gasLimit);
+        return gasPrice;
+    }
+
+
+    public static BigDecimal calGasPriceByNVT(BigDecimal nvtUSD, BigDecimal nvtNumber, BigDecimal ethUSD, BigDecimal gasLimit) {
+        BigDecimal gasPrice = nvtUSD.multiply(nvtNumber).divide(ethUSD.multiply(gasLimit), 18, RoundingMode.DOWN).multiply(BigDecimal.TEN.pow(18));
+        return gasPrice;
+    }
+
+    public static BigDecimal calNVTOfWithdraw(BigDecimal nvtUSD, BigDecimal gasPrice, BigDecimal ethUSD, int hAssetId) {
+        if (hAssetId == 0) {
+            return null;
+        }
+        BigDecimal gasLimit;
+        if (hAssetId > 1) {
+            gasLimit = BigDecimal.valueOf(210000L);
+        } else {
+            gasLimit = BigDecimal.valueOf(190000L);
+        }
+        BigDecimal nvtAmount = calNVTByGasPrice(nvtUSD, gasPrice, ethUSD, gasLimit);
+        nvtAmount = nvtAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
+        return nvtAmount;
+    }
+
+    public static BigDecimal calNVTByGasPrice(BigDecimal nvtUSD, BigDecimal gasPrice, BigDecimal ethUSD, BigDecimal gasLimit) {
+        BigDecimal nvtAmount = ethUSD.multiply(gasPrice).multiply(gasLimit).divide(nvtUSD.multiply(BigDecimal.TEN.pow(10)), 0, RoundingMode.UP);
+        return nvtAmount;
+    }
+
 }

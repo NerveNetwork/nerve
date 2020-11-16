@@ -33,6 +33,7 @@ import io.nuls.core.log.Log;
 import io.nuls.core.parse.MapUtils;
 import io.nuls.core.rpc.model.ModuleE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -105,6 +106,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<String> registerHeterogeneousMainAsset(RegisterHeterogeneousMainAssetReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_create_heterogeneous_main_asset_reg_tx", req, fun);
+    }
+
+    @Override
     public Result<String> bind(BindReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
@@ -120,6 +130,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
             return success(data);
         };
         return callRpc(ModuleE.CV.abbr, "cv_override_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> unbind(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_unbind_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
     }
 
     @Override
@@ -142,11 +161,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
 
     @Override
     public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req) {
-        return call("cv_get_heterogeneous_chain_asset_info", req, (Function<Map, Result>) res -> {
+        return call("cv_get_heterogeneous_chain_asset_info_list", req, (Function<List<Map>, Result>) res -> {
             try {
-                HeterogeneousAssetInfo heterogeneousAssetInfo = MapUtils.mapToBean(res, new HeterogeneousAssetInfo());
-                heterogeneousAssetInfo.setToken((Boolean) res.get("isToken"));
-                return success(heterogeneousAssetInfo);
+                List<HeterogeneousAssetInfo> list = new ArrayList<>();
+                res.forEach(map->{
+                    HeterogeneousAssetInfo heterogeneousAssetInfo = MapUtils.mapToBean(map, new HeterogeneousAssetInfo());
+                    heterogeneousAssetInfo.setToken((Boolean) map.get("isToken"));
+                    list.add(heterogeneousAssetInfo);
+                });
+                return success(list);
             } catch (Exception e) {
                 Log.error("cv_get_heterogeneous_chain_asset_info fail", e);
                 return fail(CommonCodeConstanst.FAILED);

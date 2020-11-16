@@ -85,7 +85,6 @@ public class TransactionMsgProcessor {
             String signHex = HexUtil.encode(p2PHKSignature.getBytes());
             // 判断之前是否有收到过该签名(交易里面是否已含有该签名)
             TransactionSignature signature = new TransactionSignature();
-            // 如果nodeId为空表示是自己节点创建的交易
             if (tx.getTransactionSignature() != null) {
                 signature.parse(tx.getTransactionSignature(), 0);
                 for (P2PHKSignature sign : signature.getP2PHKSignatures()) {
@@ -107,10 +106,12 @@ public class TransactionMsgProcessor {
                 chain.getLogger().error(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT.getMsg());
                 return;
             }
-
             //验证签名本身正确性
             if (!ECKey.verify(tx.getHash().getBytes(), p2PHKSignature.getSignData().getSignBytes(), p2PHKSignature.getPublicKey())) {
-                LoggerUtil.LOG.error("[非法签名] 签名验证不通过!. hash:{}, 签名hex:{}\n\n", signHex);
+                LoggerUtil.LOG.error("[非法签名] 签名验证不通过!. hash:{}, 签名地址:{}, 签名hex:{}\n\n",
+                        tx.getHash().toHex(),
+                        AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId())),
+                        signHex);
                 return;
             }
             // 把当前签名加入签名列表

@@ -49,6 +49,7 @@ import network.nerve.converter.core.validator.ProposalVerifier;
 import network.nerve.converter.enums.ByzantineStateEnum;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.message.*;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
@@ -62,7 +63,10 @@ import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.NetWorkCall;
 import network.nerve.converter.rpc.call.TransactionCall;
-import network.nerve.converter.storage.*;
+import network.nerve.converter.storage.ComponentSignStorageService;
+import network.nerve.converter.storage.ProposalStorageService;
+import network.nerve.converter.storage.TxStorageService;
+import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.utils.*;
 import org.web3j.utils.Numeric;
 
@@ -94,7 +98,7 @@ public class MessageServiceImpl implements MessageService {
     private ComponentSignStorageService componentSignStorageService;
 
     @Autowired
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
 
     @Autowired
     private ProposalStorageService proposalStorageService;
@@ -371,6 +375,15 @@ public class MessageServiceImpl implements MessageService {
                 currentSignList = new ArrayList<>();
             }
             ComponentSignMessage currentMessage = null;
+
+            /**
+             * (签名针对变更交易,为多组件统一业务)
+             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             */
+            boolean signed = false;
+            boolean completed = false;
+            boolean bztPass = false;
+            boolean addedMsg = false;
             for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                 for (HeterogeneousSign sign : message.getListSign()) {
                     if (hInterface.getChainId() == sign.getHeterogeneousAddress().getChainId()) {
@@ -402,6 +415,11 @@ public class MessageServiceImpl implements MessageService {
                         }
                         // 验证通过, 转发消息
                         NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
+                        if (!addedMsg) {
+                            //先添加本次收到的消息
+                            compSignPO.getListMsg().add(message);
+                            addedMsg = true;
+                        }
                         if (!compSignPO.getCurrentSigned()) {
                             SignAccountDTO packerInfo = ConsensusCall.getPackerInfo(chain);
                             VirtualBankDirector director = chain.getMapVirtualBank().get(packerInfo.getAddress());
@@ -437,16 +455,21 @@ public class MessageServiceImpl implements MessageService {
                                             hash, currentSignList);
                                     compSignPO.getListMsg().add(currentMessage);
                                 }
+                                signed = true;
                             }
                         }
                         // 处理消息并拜占庭验证, 更新compSignPO等
-                        boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
+                        boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
                         if (byzantinePass && !compSignPO.getByzantinePass()) {
                             if (isCreate) {
                                 // 创建异构链交易
                                 StringBuilder signatureDataBuilder = new StringBuilder();
                                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
-                                    signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature()));
+                                    for (HeterogeneousSign sig : msg.getListSign()) {
+                                        if (sig.getHeterogeneousAddress().getChainId() == hChainId) {
+                                            signatureDataBuilder.append(HexUtil.encode(sig.getSignature()));
+                                        }
+                                    }
                                 }
                                 ComponentCallParm callParm = new ComponentCallParm(
                                         docking.getChainId(),
@@ -461,18 +484,20 @@ public class MessageServiceImpl implements MessageService {
                                     callParmsList = new ArrayList<>();
                                 }
                                 callParmsList.add(callParm);
+                                chain.getLogger().info("[test] callParm chainId:{}, address", callParm.getHeterogeneousId(), callParm.getSignAddress());
                                 compSignPO.setCallParms(callParmsList);
-                                compSignPO.setByzantinePass(byzantinePass);
+                                bztPass = true;
                                 chain.getLogger().info("[异构链地址签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}", txHash);
                             } else {
-                                // 当非虚拟银行节点处理消息时 不需要执行异构链的调用 直接设为完成.
-                                compSignPO.setCompleted(true);
+                                completed = true;
                             }
                         }
-
                     }
                 }
             }
+            compSignPO.setByzantinePass(bztPass);
+            compSignPO.setCompleted(completed);
+            compSignPO.setCurrentSigned(signed);
             if (null != currentSignList && !currentSignList.isEmpty()) {
                 compSignPO.setCurrentSigned(true);
                 // 广播当前节点签名消息
@@ -505,7 +530,6 @@ public class MessageServiceImpl implements MessageService {
             address[i] = heterogeneousAddress.getAddress();
         }
     }
-
 
     /**
      * 处理提现交易的消息
@@ -541,7 +565,7 @@ public class MessageServiceImpl implements MessageService {
             byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
             for (CoinTo coinTo : coinData.getTo()) {
                 if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                    assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     if (assetInfo != null) {
                         withdrawCoinTo = coinTo;
                         break;
@@ -807,9 +831,15 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO) {
+        return processComponentSignMsgByzantine(chain, message, compSignPO, true);
+    }
+
+    private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO, boolean addMsg) {
         // 添加当前签名消息
         List<ComponentSignMessage> list = compSignPO.getListMsg();
-        list.add(message);
+        if (addMsg) {
+            list.add(message);
+        }
         // 拜占庭验证
         int byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
         if (list.size() >= byzantineMinPassCount) {
@@ -817,7 +847,7 @@ public class MessageServiceImpl implements MessageService {
             String signAddress = "";
             for (ComponentSignMessage msg : list) {
                 for (HeterogeneousSign sign : msg.getListSign()) {
-                    signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
+                    signAddress += sign.getHeterogeneousAddress().getChainId() + ":" + sign.getHeterogeneousAddress().getAddress() + " ";
                 }
             }
             LoggerUtil.LOG.debug("[异构链地址签名消息 拜占庭通过] 当前签名数:{}, 签名地址:{}", list.size(), signAddress);

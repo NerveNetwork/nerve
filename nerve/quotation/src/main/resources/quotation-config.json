@@ -59,6 +59,27 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "PAX-USDT",
           "desc": "PAX相对USDT价格"
+        },
+        {
+          "key": "BNB_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "BNB-USDT",
+          "desc": "BNB相对USDT价格"
+        },
+        {
+          "key": "HT_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "HT-USDT",
+          "desc": "HT相对USDT价格"
+        },
+        {
+          "key": "OKB_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "OKB-USDT",
+          "desc": "OKB相对USDT价格"
         }
       ]
     }

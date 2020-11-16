@@ -31,13 +31,11 @@ import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.core.heterogeneous.register.HeterogeneousChainRegister;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
-import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
-import network.nerve.converter.heterogeneouschain.eth.docking.EthDocking;
-import network.nerve.converter.heterogeneouschain.eth.register.EthRegister;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
@@ -47,6 +45,8 @@ import network.nerve.converter.storage.HeterogeneousChainInfoStorageService;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static network.nerve.converter.constant.ConverterConstant.FIRST_HETEROGENEOUS_ASSET_CHAIN_ID;
 
 /**
  * @author: Mimi
@@ -103,7 +103,7 @@ public class HeterogeneousChainManager {
      * 更新异构链多签地址
      */
     public void updateMultySignAddress(int heterogeneousChainId, String multySignAddress) throws NulsException {
-        logger().info("持久化更新多签合约地址, new: {}", multySignAddress);
+        logger().info("持久化更新多签合约地址, heterogeneousChainId: {}, new: {}", heterogeneousChainId, multySignAddress);
         HeterogeneousChainInfo info = heterogeneousChainInfoStorageService.getHeterogeneousChainInfo(heterogeneousChainId);
         if (info == null) {
             logger().error("error heterogeneousChainId: {}", heterogeneousChainId);
@@ -178,20 +178,18 @@ public class HeterogeneousChainManager {
     public void init2LedgerAsset() {
         try {
             // 检查主资产是否绑定异构链合约资产
+            // 由于账本内的主资产记录在内存中，重启应用后，账本内的主资产的类型被还原，
+            // 所以，需要检查converter模块是否已绑定异构链合约资产，是则更新账本内记录的类型
             ledgerAssetRegisterHelper.checkMainAssetBind();
             if(heterogeneousChainInfoStorageService.hadInit2LedgerAsset()) {
                 logger().info("[重复执行] 已完成初始化异构链主资产到账本，不再执行");
                 return;
             }
             int chainId = converterConfig.getChainId();
-            List<HeterogeneousAssetInfo> allAssetList = new ArrayList<>();
-            heterogeneousDockingManager.getAllHeterogeneousDocking().stream().forEach(docking -> {
-                allAssetList.add(docking.getMainAsset());
-            });
-            for(HeterogeneousAssetInfo assetInfo : allAssetList) {
-                ledgerAssetRegisterHelper.crossChainAssetReg(chainId, assetInfo.getChainId(), assetInfo.getAssetId(),
-                        assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());
-            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(FIRST_HETEROGENEOUS_ASSET_CHAIN_ID);
+            HeterogeneousAssetInfo assetInfo = docking.getMainAsset();
+            ledgerAssetRegisterHelper.crossChainAssetReg(chainId, assetInfo.getChainId(), assetInfo.getAssetId(),
+                    assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());
             heterogeneousChainInfoStorageService.init2LedgerAssetCompleted();
         } catch (Exception e) {
             throw new RuntimeException(e);

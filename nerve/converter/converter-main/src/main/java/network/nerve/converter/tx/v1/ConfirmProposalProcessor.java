@@ -51,6 +51,7 @@ import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ConfirmUpgradeTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
+import network.nerve.converter.storage.ProposalExeStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
@@ -89,6 +90,8 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
     private ProposalStorageService proposalStorageService;
     @Autowired
     private HeterogeneousService heterogeneousService;
+    @Autowired
+    private ProposalExeStorageService proposalExeStorageService;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -214,7 +217,12 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         }
                     }
                 }
-                chain.getLogger().info("[commit] 确认提案执行交易 hash:{} type:{}",
+                boolean rs = proposalExeStorageService.save(chain, proposalHash.toHex(), tx.getHash().toHex());
+                if (!rs) {
+                    chain.getLogger().error("[commit] 确认提案执行交易 保存失败 hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
+                    throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
+                }
+                chain.getLogger().info("[commit] 确认提案执行交易 hash:{} proposalType:{}",
                         tx.getHash().toHex(), ProposalTypeEnum.getEnum(txData.getType()));
             }
             return true;
@@ -244,16 +252,19 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                 IHeterogeneousChainDocking docking = null;
                 int heterogeneousChainId = -1;
                 String heterogeneousTxHash = null;
+                NulsHash proposalHash = null;
                 if (txData.getType() == ProposalTypeEnum.UPGRADE.value()) {
                     ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
                     heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
                     heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
+                    proposalHash = upgradeTxData.getNerveTxHash();
                     String oldMultySignAddress = Numeric.toHexString(upgradeTxData.getOldAddress());
                     docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                     docking.updateMultySignAddress(oldMultySignAddress);
                     heterogeneousChainManager.updateMultySignAddress(heterogeneousChainId, oldMultySignAddress);
                 }else {
                     ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
+                    proposalHash = businessData.getProposalTxHash();
                     ProposalPO po = this.proposalStorageService.find(chain, businessData.getProposalTxHash());
                     if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
                         // 重置执行撤银行节点提案标志
@@ -270,6 +281,11 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                     }
                     docking.txConfirmedRollback(heterogeneousTxHash);
+                }
+                boolean rs = proposalExeStorageService.delete(chain, proposalHash.toHex());
+                if (!rs) {
+                    chain.getLogger().error("[commit] 确认提案执行交易 保存失败 hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
+                    throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
                 chain.getLogger().info("[rollback] 确认提案交易 hash:{}", tx.getHash().toHex());
             }

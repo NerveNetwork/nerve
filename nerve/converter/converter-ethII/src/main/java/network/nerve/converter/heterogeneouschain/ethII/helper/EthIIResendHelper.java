@@ -35,9 +35,12 @@ import network.nerve.converter.heterogeneouschain.ethII.model.EthWaitingTxPo;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.utils.ConverterUtil;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant.RESEND_TIME;
 import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
 
 /**
@@ -49,6 +52,31 @@ public class EthIIResendHelper {
 
     @Autowired
     private EthIIInvokeTxHelper ethIIInvokeTxHelper;
+    private Map<String, Integer> resendMap = new HashMap<>();
+    private Map<String, Object> lockedMap = new HashMap<>();
+
+    private void increase(String nerveTxHash) {
+        synchronized (getLock(nerveTxHash)) {
+            Integer time = resendMap.get(nerveTxHash);
+            if(time == null) {
+                time = 1;
+            } else {
+                time++;
+            }
+            resendMap.put(nerveTxHash, time);
+        }
+    }
+
+    public boolean canResend(String nerveTxHash) {
+        return getResendTimes(nerveTxHash) < RESEND_TIME;
+    }
+
+    public void clear(String nerveTxHash) {
+        if(StringUtils.isNotBlank(nerveTxHash)) {
+            resendMap.remove(nerveTxHash);
+            lockedMap.remove(nerveTxHash);
+        }
+    }
 
     /**
      * 交易重发
@@ -60,6 +88,11 @@ public class EthIIResendHelper {
     public String reSend(EthWaitingTxPo po, int times) throws Exception {
         boolean checkOrder = false;
         String nerveTxHash = po.getNerveTxHash();
+        if (!this.canResend(nerveTxHash)) {
+            logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, RESEND_TIME);
+            return EMPTY_STRING;
+        }
+        this.increase(nerveTxHash);
         try {
             EthIIDocking docking = EthIIDocking.getInstance();
             logger().info("[{}]交易[{}]准备重发, 详情: {}", po.getTxType(), nerveTxHash, po.toString());
@@ -124,6 +157,18 @@ public class EthIIResendHelper {
             logger().error("重新获取拜占庭签名失败", e);
             return false;
         }
+    }
+
+    private int getResendTimes(String nerveTxHash) {
+        Integer time = resendMap.get(nerveTxHash);
+        if(time == null) {
+            time = 1;
+        }
+        return time.intValue();
+    }
+
+    private Object getLock(String nerveTxHash) {
+        return lockedMap.computeIfAbsent(nerveTxHash, key -> new Object());
     }
 
 }

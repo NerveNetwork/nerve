@@ -49,6 +49,7 @@ public class DexQuerier implements Querier {
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
         String symbol = anchorToken.toUpperCase();
+        symbol = symbol.replace("USDT", "eUSDT");
         String url = baseurl + CMD + symbol;
         try {
             Map<String, Object> data = HttpRequestUtil.httpRequest(chain, url);

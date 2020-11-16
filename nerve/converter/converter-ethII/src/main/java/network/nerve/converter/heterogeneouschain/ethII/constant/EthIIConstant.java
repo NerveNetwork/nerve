@@ -39,6 +39,7 @@ import java.util.List;
 public interface EthIIConstant {
 
     byte VERSION = 2;
+    int RESEND_TIME = 50;
 
     String METHOD_HASH_CREATEORSIGNWITHDRAW = "0xab6c2b10";
     String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0x00719226";

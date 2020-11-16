@@ -40,17 +40,22 @@ public interface ConverterCmdConstant {
     String COMPONENT_SIGN = "compSign";
 
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO = "cv_get_heterogeneous_chain_asset_info";
+    String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_LIST = "cv_get_heterogeneous_chain_asset_info_list";
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS = "cv_get_heterogeneous_chain_asset_info_by_address";
+    String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ID = "cv_get_heterogeneous_chain_asset_info_by_id";
     String GET_HETEROGENEOUS_ADDRESS = "cv_get_heterogeneous_address";
     String GET_ALL_HETEROGENEOUS_CHAIN_ASSET_LIST = "cv_get_all_heterogeneous_chain_asset_list";
     String CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_create_heterogeneous_contract_asset_reg_pending_tx";
     String VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_validate_heterogeneous_contract_asset_reg_pending_tx";
+    String CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX = "cv_create_heterogeneous_main_asset_reg_tx";
 
     String VALIDATE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_validate_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String OVERRIDE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_override_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
+    String UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_unbind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     /** 提现 */
     String WITHDRAWAL = "cv_withdrawal";
+    String WITHDRAWAL_ADDITIONAL_FEE = "cv_withdrawal_additional_fee";
     String VIRTUAL_BANK_INFO = "cv_virtualBankInfo";
     String PROPOSAL = "cv_proposal";
     String BROADCAST_PROPOSAL = "cv_broadcast_proposal";

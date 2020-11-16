@@ -39,6 +39,7 @@ import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.protocol.core.methods.response.Log;
@@ -48,6 +49,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: Mimi
@@ -58,6 +60,8 @@ public class EthIIParseTxHelper {
 
     @Autowired
     private EthERC20Helper ethERC20Helper;
+    @Autowired
+    private EthIIParseTxHelper ethIIParseTxHelper;
     @Autowired
     private EthTxStorageService ethTxStorageService;
     @Autowired
@@ -172,6 +176,12 @@ public class EthIIParseTxHelper {
             // ERC20充值交易
             if (ethERC20Helper.isERC20(tx.getTo(), txInfo)) {
                 if (ethERC20Helper.hasERC20WithListeningAddress(txReceipt, txInfo, address -> ethListener.isListeningAddress(address))) {
+                    // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+                    if (EthContext.getConverterCoreApi().isBoundHeterogeneousAsset(EthConstant.ETH_CHAIN_ID, txInfo.getAssetId())
+                            && !ethIIParseTxHelper.isMinterERC20(txInfo.getContractAddress())) {
+                        EthContext.logger().warn("[{}]不合法的Ethereum网络的充值交易[6], ERC20[{}]已绑定NERVE资产，但合约内未注册", txHash, txInfo.getContractAddress());
+                        break;
+                    }
                     isDeposit = true;
                     break;
                 }
@@ -426,6 +436,15 @@ public class EthIIParseTxHelper {
             methodHash = input.substring(0, 10);
             if (methodHash.equals(EthIIConstant.METHOD_HASH_CREATEORSIGNMANAGERCHANGE)) {
                 isChange = true;
+                List<Object> inputData = EthUtil.parseInput(input, EthIIConstant.INPUT_CHANGE);
+                List<Address> adds = (List<Address>) inputData.get(1);
+                List<Address> quits = (List<Address>) inputData.get(2);
+                if (!adds.isEmpty()) {
+                    txInfo.setAddAddresses(EthUtil.list2array(adds.stream().map(a -> a.getValue()).collect(Collectors.toList())));
+                }
+                if (!quits.isEmpty()) {
+                    txInfo.setRemoveAddresses(EthUtil.list2array(quits.stream().map(q -> q.getValue()).collect(Collectors.toList())));
+                }
             }
         }
         if (!isChange) {

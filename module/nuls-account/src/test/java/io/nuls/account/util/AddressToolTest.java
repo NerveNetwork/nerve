@@ -35,9 +35,9 @@ public class AddressToolTest {
         prilist.add("ad19eaaa4ccbc6829416e15ff82a485ca13c88ba08dfa46e400a579549650a95");
         prilist.add("22e76a5ca4cb9d00742ffbb587267b58cbc5befc93fdec121eff4d2256e543be");
         List<String> list = new ArrayList<>();
-        for(String pri:prilist){
+        for (String pri : prilist) {
             ECKey ecKey = ECKey.fromPrivate(HexUtil.decode(pri));
-            String val = AddressTool.getAddressString(ecKey.getPubKey(),5);
+            String val = AddressTool.getAddressString(ecKey.getPubKey(), 5);
             list.add(val);
         }
         List<String> result = new ArrayList<>();
@@ -63,14 +63,23 @@ public class AddressToolTest {
     }
 
     @Test
+    public void testGetBytesAddress() {
+        for (int i = 0; i < 10; i++) {
+            String address = AddressTool.getAddressString(new ECKey().getPubKey(), 5);
+            byte[] real = AddressTool.getAddress(address);
+            System.out.println("args{\"" + address + "\"},\"" + HexUtil.encode(real) + "\"");
+        }
+    }
+
+    @Test
     public void createNerveAddr() {
         ECKey ecKey = new ECKey();
-        System.out.println(ecKey.getPrivateKeyAsHex());
-        System.out.println(ecKey.getPublicKeyAsHex());
+        System.out.println("私钥:" + ecKey.getPrivateKeyAsHex());
+        System.out.println("公钥:" + ecKey.getPublicKeyAsHex());
 //        f07d26a6cc0e931602f638fdf5b7dfa94ac8e1a0f9b5885feb78db17a4a7400a
 //        034e7ebe781dc25d5603c78616c939beabb1bd89ef5a2a182d292535146828c509
 //        TNVTdTSPG3sAwUkrGBqoVVzDjHYqvQKMX1khf
-        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(), 5));
+        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(), 9));
 //        a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca
 //        02401b78e28d293ad840f9298c2c7e522c68776e3badf092c2dbf457af1b8ed43e
 //                TNERVEfTSPQvEngihwxqwCNPq3keQL1PwrcLbtj

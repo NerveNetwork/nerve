@@ -248,7 +248,6 @@ public class TxType {
      * 异构链合约资产注册等待
      */
     public static final int HETEROGENEOUS_CONTRACT_ASSET_REG_PENDING = 49;
-
     /**
      * 异构链合约资产注册完成
      */
@@ -265,6 +264,22 @@ public class TxType {
      * 确认重置异构链(合约)虚拟银行
      */
     public static final int CONFIRM_HETEROGENEOUS_RESET_VIRTUAL_BANK = 53;
+    /**
+     * 异构链充值待确认交易
+     */
+    public static final int RECHARGE_UNCONFIRMED = 54;
+    /**
+     * 异构链提现已发布到异构链网络
+     */
+    public static final int WITHDRAWAL_HETEROGENEOUS_SEND = 55;
+    /**
+     * 追加提现手续费
+     */
+    public static final int WITHDRAWAL_ADDITIONAL_FEE = 56;
+    /**
+     * 异构链主资产注册
+     */
+    public static final int HETEROGENEOUS_MAIN_ASSET_REG = 57;
     /**
      * 已注册跨链的链信息变更
      */

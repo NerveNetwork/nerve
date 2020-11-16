@@ -201,6 +201,7 @@ public class ChainConfig extends BaseNulsData {
     private long depositAwardChangeHeight;
     private long depositVerifyHeight;
     private Long v1_3_0Height;
+    private Long v1_6_0Height;
     private BigInteger minStakingAmount;
     private BigInteger minAppendAndExitAmount;
     private Integer exitStakingLockHours;
@@ -621,6 +622,15 @@ public class ChainConfig extends BaseNulsData {
 
     public Long getV130Height() {
         return v1_3_0Height;
+    }
+
+
+    public Long getV1_6_0Height() {
+        return v1_6_0Height;
+    }
+
+    public void setV1_6_0Height(Long v1_6_0Height) {
+        this.v1_6_0Height = v1_6_0Height;
     }
 
     public void setMinStakingAmount(BigInteger minStakingAmount) {

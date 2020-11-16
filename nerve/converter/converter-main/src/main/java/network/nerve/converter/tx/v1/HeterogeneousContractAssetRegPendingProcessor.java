@@ -27,34 +27,25 @@ package network.nerve.converter.tx.v1;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
-import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
-import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
-import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.enums.BindHeterogeneousContractMode;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.HeterogeneousContractAssetRegPendingTxData;
-import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author: Mimi
@@ -84,131 +75,33 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
             return null;
         }
         Chain chain = chainManager.getChain(chainId);
-        NulsLogger logger = chain.getLogger();
         Map<String, Object> result = null;
         try {
             String errorCode = ConverterErrorCode.DATA_ERROR.getCode();
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
 
+            Set<String> contractAssetRegSet = new HashSet<>();
+            Set<String> bindNewSet = new HashSet<>();
+            Set<String> bindRemoveSet = new HashSet<>();
+            Set<String> bindOverrideSet = new HashSet<>();
             for (Transaction tx : txs) {
                 // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
                 HeterogeneousContractAssetRegPendingTxData txData = new HeterogeneousContractAssetRegPendingTxData();
                 txData.parse(tx.getTxData(), 0);
                 String contractAddress = txData.getContractAddress().toLowerCase();
-                ErrorCode bindError = null;
-                boolean isBindNew = false, isBingOverride = false;
+                // 签名验证(种子虚拟银行)
                 try {
-                    do {
-                        byte[] remark = tx.getRemark();
-                        if (remark == null) {
-                            break;
-                        }
-                        String strRemark = new String(remark, StandardCharsets.UTF_8);
-                        if (!strRemark.contains(":")) {
-                            break;
-                        }
-                        String[] modeSplit = strRemark.split(":");
-                        String mode = modeSplit[0];
-                        String assetContactInfo = modeSplit[1];
-                        if (!assetContactInfo.contains("-")) {
-                            break;
-                        }
-                        String[] asset = assetContactInfo.split("-");
-                        int assetChainId = Integer.parseInt(asset[0]);
-                        int assetId = Integer.parseInt(asset[1]);
-                        Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
-                        boolean existNerveAsset = nerveAsset != null;
-                        if (!existNerveAsset) {
-                            bindError = ConverterErrorCode.ASSET_ID_NOT_EXIST;
-                            break;
-                        }
-                        int nerveAssetDecimals = 0;
-                        if (nerveAsset.get("decimalPlace") != null) {
-                            nerveAssetDecimals = Integer.parseInt(nerveAsset.get("decimalPlace").toString());
-                        }
-
-                        HeterogeneousAssetInfo hAssetInfo = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(assetChainId, assetId);
-                        if (hAssetInfo != null) {
-                            bindError = ConverterErrorCode.DUPLICATE_BIND;
-                            break;
-                        }
-                        if (BindHeterogeneousContractMode.NEW.toString().equals(mode)) {
-                            if (nerveAssetDecimals != txData.getDecimals()) {
-                                bindError = ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY;
-                                break;
-                            }
-                            isBindNew = true;
-                        } else if (BindHeterogeneousContractMode.OVERRIDE.toString().equals(mode)) {
-                            if (modeSplit.length != 3) {
-                                break;
-                            }
-                            String oldAssetContactInfo = modeSplit[2];
-                            if (!oldAssetContactInfo.contains("-")) {
-                                break;
-                            }
-                            String[] oldAsset = oldAssetContactInfo.split("-");
-                            int oldAssetChainId = Integer.parseInt(oldAsset[0]);
-                            int oldAssetId = Integer.parseInt(oldAsset[1]);
-                            HeterogeneousAssetInfo _hAssetInfo = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(oldAssetChainId, oldAssetId);
-                            if (_hAssetInfo == null) {
-                                bindError = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
-                                break;
-                            }
-                            if (!contractAddress.equals(_hAssetInfo.getContractAddress())) {
-                                bindError = ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH;
-                                break;
-                            }
-                            if (nerveAssetDecimals != _hAssetInfo.getDecimals()) {
-                                bindError = ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY;
-                                break;
-                            }
-                            isBingOverride = true;
-                        }
-
-                        // 签名验证(种子虚拟银行)
-                        try {
-                            ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
-                        } catch (NulsException e) {
-                            bindError = e.getErrorCode();
-                            break;
-                        }
-                    } while (false);
-                } catch (Exception e) {
-                    logger.warn("检查绑定信息异常, msg: {}", e.getMessage());
-                    bindError = ConverterErrorCode.DATA_ERROR;
-                }
-                if (bindError != null) {
-                    errorCode = bindError.getCode();
-                    logger.error(bindError.getMsg());
+                    ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
+                } catch (NulsException e) {
+                    errorCode = e.getErrorCode().getCode();
                     failsList.add(tx);
                     continue;
                 }
-
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getChainId());
-                HeterogeneousAssetInfo assetInfo = docking.getAssetByContractAddress(contractAddress);
-                // 绑定覆盖资产时，合约资产必须存在
-                if (isBingOverride) {
-                    if (assetInfo == null) {
-                        logger.error("合约资产不存在");
-                        ErrorCode error = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
-                        errorCode = error.getCode();
-                        logger.error(error.getMsg());
-                        failsList.add(tx);
-                        continue;
-                    }
-                    continue;
-                }
-                // 新注册、新绑定，合约资产不能存在
-                if(assetInfo != null) {
-                    logger.error("合约资产已存在");
-                    ErrorCode error = ConverterErrorCode.ASSET_EXIST;
-                    errorCode = error.getCode();
-                    logger.error(error.getMsg());
+                errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, false);
+                if (StringUtils.isNotBlank(errorCode)) {
                     failsList.add(tx);
-                    continue;
                 }
-
             }
             result.put("txList", failsList);
             result.put("errorCode", errorCode);

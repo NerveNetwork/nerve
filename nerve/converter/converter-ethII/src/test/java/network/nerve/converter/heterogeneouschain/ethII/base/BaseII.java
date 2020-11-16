@@ -136,7 +136,7 @@ public class BaseII {
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas;
-        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value);
+        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
         String ethTxHash = ethSendTransactionPo.getTxHash();
         return ethTxHash;
     }

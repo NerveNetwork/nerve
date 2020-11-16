@@ -141,11 +141,13 @@ public class CommandHandler implements InitializingBean {
         register(getBean(WithdrawalProcessor.class));
         register(getBean(VoteProposalProcess.class));
         register(getBean(RegisterHeterogeneousAssetProcessor.class));
+        register(getBean(RegisterHeterogeneousMainAssetProcessor.class));
         register(getBean(ResetBankProcess.class));
         register(getBean(CheckRetryParseProcess.class));
         register(getBean(UpgradeContractProposalProcess.class));
         register(getBean(BindProcess.class));
         register(getBean(BindOverrideProcess.class));
+        register(getBean(UnbindProcess.class));
         register(getBean(RetryWithdrawalProcess.class));
         /**
          * consensus

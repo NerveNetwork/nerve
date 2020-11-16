@@ -36,13 +36,13 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.RechargeTxData;
-import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterUtil;
@@ -69,7 +69,7 @@ public class RechargeVerifier {
     @Autowired
     private ProposalStorageService proposalStorageService;
     @Autowired
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
     @Autowired
     private RechargeStorageService rechargeStorageService;
 
@@ -91,7 +91,7 @@ public class RechargeVerifier {
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
         }
         // 通过链内资产id 获取异构链信息
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
 
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 heterogeneousAssetInfo.getChainId(),

@@ -40,6 +40,9 @@ public class ComponentSignByzantinePO implements Serializable {
      */
     private NulsHash hash;
 
+    /**
+     * 每个节点一个签名消息
+     */
     private List<ComponentSignMessage> listMsg;
 
     private boolean currentSigned;

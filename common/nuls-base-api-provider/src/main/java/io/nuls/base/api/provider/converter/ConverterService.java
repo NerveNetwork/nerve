@@ -27,6 +27,8 @@ package io.nuls.base.api.provider.converter;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.converter.facade.*;
 
+import java.util.List;
+
 /**
  * @author: Charlie
  * @date: 2020/4/28
@@ -70,9 +72,13 @@ public interface ConverterService {
 
     Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 
+    Result<String> registerHeterogeneousMainAsset(RegisterHeterogeneousMainAssetReq req);
+
     Result<String> bind(BindReq req);
 
     Result<String> bindOverride(BindOverrideReq req);
+
+    Result<String> unbind(UnbindReq req);
 
     Result<String> retryWithdrawal(RetryWithdrawalReq req);
 

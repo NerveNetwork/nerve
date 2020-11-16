@@ -29,13 +29,8 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
-import network.nerve.converter.model.dto.ProposalTxDTO;
-import network.nerve.converter.model.dto.RechargeTxDTO;
-import network.nerve.converter.model.dto.SignAccountDTO;
-import network.nerve.converter.model.dto.WithdrawalTxDTO;
-import network.nerve.converter.model.txdata.ConfirmProposalTxData;
-import network.nerve.converter.model.txdata.ConfirmResetVirtualBankTxData;
-import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.model.dto.*;
+import network.nerve.converter.model.txdata.*;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -130,6 +125,16 @@ public interface AssembleTxService {
     Transaction createRechargeTxWithoutSign(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException;
 
     /**
+     * 异构链充值待确认交易
+     * @param chain
+     * @param rechargeUnconfirmedTxData
+     * @return
+     * @throws NulsException
+     */
+    Transaction rechargeUnconfirmedTx(Chain chain, RechargeUnconfirmedTxData rechargeUnconfirmedTxData, long heterogeneousTxTime) throws NulsException;
+    Transaction rechargeUnconfirmedTxWithoutSign(Chain chain, RechargeUnconfirmedTxData rechargeUnconfirmedTxData, long heterogeneousTxTime) throws NulsException;
+
+    /**
      * 提现交易
      *
      * @param chain           链信息
@@ -138,6 +143,25 @@ public interface AssembleTxService {
      * @throws NulsException
      */
     Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException;
+
+    /**
+     * 追加提现手续费交易
+     * @param chain
+     * @param withdrawalAdditionalFeeTxDTO
+     * @return
+     * @throws NulsException
+     */
+    Transaction withdrawalAdditionalFeeTx(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException;
+
+    /**
+     *
+     * @param chain
+     * @param txData
+     * @param heterogeneousTxTime
+     * @return
+     * @throws NulsException
+     */
+    Transaction withdrawalHeterogeneousSendTx(Chain chain, WithdrawalHeterogeneousSendTxData txData, long heterogeneousTxTime) throws NulsException;
 
     /**
      * 确认提现交易
@@ -210,7 +234,7 @@ public interface AssembleTxService {
      * 组装并发布 补贴手续费交易
      *
      * @param chain
-     * @param basisTxHash
+     * @param basisTxHash 如果是提案 补贴手续费, 那该交易为[确认提案交易]
      * @param listRewardAddress
      * @param txTime
      * @return
@@ -243,6 +267,21 @@ public interface AssembleTxService {
                                                              int decimals,
                                                              String symbol,
                                                              String contractAddress, String remark) throws NulsException;
+    /**
+     * 组装并发布注册异构链主资产交易
+     *
+     * @param chain
+     * @param from
+     * @param password
+     * @param heterogeneousChainId
+     * @param remark
+     * @return
+     * @throws NulsException
+     */
+    Transaction createHeterogeneousMainAssetRegTx(Chain chain,
+                                                             String from,
+                                                             String password,
+                                                             int heterogeneousChainId, String remark) throws NulsException;
 
     /**
      * 组装并发布完成注册异构链合约资产交易
@@ -283,4 +322,34 @@ public interface AssembleTxService {
      */
     Transaction createConfirmResetVirtualBankTx(Chain chain, ConfirmResetVirtualBankTxData txData, long txTime) throws NulsException;
 
+    /**
+     * 计算应补贴的手续费的总额
+     * @param chain
+     * @param height
+     * @param basisTxHash 原始交易hash
+     * @param isProposal
+     * @return
+     */
+     BigInteger calculateFee(Chain chain, Long height, Transaction basisTxHash, boolean isProposal) throws NulsException;
+
+     BigInteger calculateFee(Chain chain, Transaction basisTxHash, boolean isProposal) throws NulsException;
+
+    /**
+     * 获取原路退回提案交易支付的异构链手续费总额(不包含链内交易打包手续费)
+     * 提案交易中的固定手续费 + 对该交易追加的手续费(如果有)
+     * @param chain
+     * @param hash
+     * @return
+     */
+     BigInteger calculateRefundTotalFee(Chain chain, String hash);
+
+    /**
+     * 获取提现交易支付的异构链手续费总额(不包含链内交易打包手续费)
+     * 提现交易中的手续费 + 对该交易追加的手续费(如果有)
+     * @param chain
+     * @param withdrawalTx
+     * @return
+     * @throws NulsException
+     */
+     BigInteger calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException;
 }

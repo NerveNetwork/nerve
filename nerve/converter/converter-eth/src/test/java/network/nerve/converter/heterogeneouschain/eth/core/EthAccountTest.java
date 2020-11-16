@@ -79,7 +79,10 @@ public class EthAccountTest extends Base {
         //String prikey = "53b02c91605451ea35175df894b4c47b7d1effbd05d6b269b3e7c785f3f6dc18";
         //String prikey = "b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5";
         //String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
-        String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
+        // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
+        // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
+        // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
+        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -185,9 +188,9 @@ public class EthAccountTest extends Base {
 
     @Test
     public void NULSAddressByPubkey() {
-        String pubkey = "02a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e4";
+        String pubkey = "03558fc5406d4457ea99ec212f65f7d6318611be9a90d9f723606f4eff552a165f";
         AddressTool.addPrefix(18, "BBAI");
-        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
+        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
 
     }
 
@@ -196,7 +199,7 @@ public class EthAccountTest extends Base {
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x32a6d6b1e968f996757cb49fd4f0b08692f9d7f6
-        String pubkey = "02a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e4";
+        String pubkey = "03e5ce2adaac4168c7c1f6ddc7dbe5cd296fb1bbbb54a9f069fa7f407b32143fc0";
         System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
     }
 

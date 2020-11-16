@@ -59,4 +59,8 @@ public class NerveAssetInfo {
     public static NerveAssetInfo emptyInstance() {
         return EMPTY;
     }
+
+    public boolean isEmpty() {
+        return assetChainId == 0 && assetId == 0;
+    }
 }

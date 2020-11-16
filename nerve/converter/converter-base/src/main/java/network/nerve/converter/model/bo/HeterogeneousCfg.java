@@ -61,6 +61,10 @@ public class HeterogeneousCfg {
      */
     private int txBlockConfirmations;
     /**
+     *  提现交易确认高度数
+     */
+    private int txBlockConfirmationsOfWithdraw;
+    /**
      *  每个虚拟银行节点发送异构链交易的间隔时间（单位：秒）
      */
     private String intervalWaittingSendTransaction;
@@ -161,6 +165,14 @@ public class HeterogeneousCfg {
 
     public void setTxBlockConfirmations(int txBlockConfirmations) {
         this.txBlockConfirmations = txBlockConfirmations;
+    }
+
+    public int getTxBlockConfirmationsOfWithdraw() {
+        return txBlockConfirmationsOfWithdraw;
+    }
+
+    public void setTxBlockConfirmationsOfWithdraw(int txBlockConfirmationsOfWithdraw) {
+        this.txBlockConfirmationsOfWithdraw = txBlockConfirmationsOfWithdraw;
     }
 
     public String getStandbyRpcAddresses() {

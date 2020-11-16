@@ -1,16 +1,24 @@
 package io.nuls.test.rpc;
 
+import io.nuls.base.basic.AddressTool;
+import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.ECKey;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import network.nerve.pocbft.model.bo.tx.txdata.Agent;
+import network.nerve.pocbft.model.bo.tx.txdata.StopAgent;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 节点相关操作测试
@@ -21,9 +29,22 @@ import java.util.Map;
  * */
 public class AgentTest {
     protected  String success = "1";
-    @BeforeClass
+//    @BeforeClass
     public static void start() throws Exception {
         NoUse.mockModule();
+    }
+
+    @Test
+    public void test() throws IOException {
+        int[] arr = new int[]{1, 2, 5, 9};
+        for (int i = 0; i < 100; i++) {
+            Agent agent = new Agent();
+            agent.setDeposit(BigInteger.valueOf(200000*i));
+            agent.setAgentAddress(AddressTool.getAddress(new ECKey().getPubKey(), arr[i % 4]));
+            agent.setPackingAddress(AddressTool.getAddress(new ECKey().getPubKey(), arr[i % 4]));
+            agent.setRewardAddress(AddressTool.getAddress(new ECKey().getPubKey(), arr[i % 4]));
+            System.out.println(HexUtil.encode(agent.serialize()));
+        }
     }
 
     @Test

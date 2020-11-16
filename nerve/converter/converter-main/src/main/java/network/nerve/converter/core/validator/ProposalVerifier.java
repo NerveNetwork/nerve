@@ -118,6 +118,7 @@ public class ProposalVerifier {
             case REFUND:
                 validBankVoteRange(chain, rangeType);
                 validHeterogeneousTx(chain, txData);
+                validRefund(chain, txData);
                 break;
             case TRANSFER:
                 validBankVoteRange(chain, rangeType);
@@ -147,6 +148,14 @@ public class ProposalVerifier {
                 break;
             default:
                 break;
+        }
+    }
+
+    private void validRefund(Chain chain, ProposalTxData txData) throws NulsException {
+        String heterogeneousTxHash = txData.getHeterogeneousTxHash();
+        if(null != rechargeStorageService.find(chain, heterogeneousTxHash)){
+            chain.getLogger().error("[提案原路退回] 提案中该异构链交易已正常执行完整, 不能进行原路退回. heterogeneousTxHash:{}", heterogeneousTxHash);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }
 

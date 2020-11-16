@@ -36,16 +36,12 @@ import java.math.BigInteger;
 public class WithdrawalReq extends BaseReq {
 
     /**
-     * 提现异构资产链id
+     * 提现异构链id
      */
-//    private int heterogeneousChainId;
-
-    /**
-     * 提现异构资产id
-     */
-//    private int heterogeneousAssetId;
+    private int heterogeneousChainId;
 
     private int assetChainId;
+
     private int assetId;
 
     /**
@@ -54,9 +50,15 @@ public class WithdrawalReq extends BaseReq {
     private String heterogeneousAddress;
 
     /**
+     * 自定义提现手续费
+     */
+    private BigInteger distributionFee;
+
+    /**
      * 提现金额
      */
     private BigInteger amount;
+
 
     /**
      * 提现备注
@@ -73,10 +75,12 @@ public class WithdrawalReq extends BaseReq {
      */
     private String password;
 
-    public WithdrawalReq(int assetChainId, int assetId, String heterogeneousAddress, BigInteger amount, String address) {
+    public WithdrawalReq(int assetChainId, int assetId, int heterogeneousChainId, String heterogeneousAddress, BigInteger distributionFee, BigInteger amount, String address) {
         this.assetChainId = assetChainId;
         this.assetId = assetId;
+        this.heterogeneousChainId = heterogeneousChainId;
         this.heterogeneousAddress = heterogeneousAddress;
+        this.distributionFee = distributionFee;
         this.amount = amount;
         this.address = address;
     }
@@ -138,5 +142,21 @@ public class WithdrawalReq extends BaseReq {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public int getHeterogeneousChainId() {
+        return heterogeneousChainId;
+    }
+
+    public void setHeterogeneousChainId(int heterogeneousChainId) {
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
+
+    public BigInteger getDistributionFee() {
+        return distributionFee;
+    }
+
+    public void setDistributionFee(BigInteger distributionFee) {
+        this.distributionFee = distributionFee;
     }
 }

@@ -46,4 +46,10 @@ public interface ITxConfirmedProcessor {
      */
     void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash,
                      String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception;
+
+    /**
+     * @param nerveTxHash         本链交易hash
+     * @param heterogeneousTxHash 异构链交易hash
+     */
+    void pendingTxOfWithdraw(String nerveTxHash, String heterogeneousTxHash) throws Exception;
 }

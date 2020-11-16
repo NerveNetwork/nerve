@@ -303,8 +303,11 @@ public class VoteProposalProcessor implements TransactionProcessor {
                         }
                         chain.getLogger().info("[commit] 撤销银行资格提案投票通过, 银行节点地址加入[撤销银行资格列表] address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                     }
+                    // 从投票中的提案移除
+                    chain.getVotingProposalMap().remove(po.getHash());
+                    proposalVotingStorageService.delete(chain, po.getHash());
                 }
-                chain.getLogger().debug("[commit] 提案投票成功 hash:{}, 提案hash:{}, 投票地址:{}",
+                chain.getLogger().info("[commit] 提案投票成功 hash:{}, 提案hash:{}, 投票地址:{}",
                         tx.getHash().toHex(), txData.getProposalTxHash().toHex(), AddressTool.getStringAddressByBytes(address));
             }
             if (null != exeProposalPOSet) {

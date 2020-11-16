@@ -9,6 +9,7 @@ import network.nerve.converter.model.bo.Chain;
 
 import java.util.HashMap;
 
+import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 import static network.nerve.converter.utils.LoggerUtil.LOG;
 
 /**
@@ -52,9 +53,11 @@ public class NewBlockHeightInvoke extends BaseInvoke {
 
 
         LOG.debug("[订阅事件]最新区块高度:{} blockTime:{} syncStatus:{}", height, time, syncStatusEnum.name());
+        LATEST_BLOCK_HEIGHT = height;
         chain.getLatestBasicBlock().setHeight(height);
         chain.getLatestBasicBlock().setTime(time);
         chain.getLatestBasicBlock().setSyncStatusEnum(syncStatusEnum);
+
         if(height == 0){
             return;
         }

@@ -121,5 +121,11 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode HETEROGENEOUS_INFO_NOT_MATCH = ErrorCode.init(ModuleE.CV.getPrefix() + "_0094");
     ErrorCode OVERRIDE_BIND_ASSET_NOT_FOUND = ErrorCode.init(ModuleE.CV.getPrefix() + "_0095");
     ErrorCode HIGH_GAS_PRICE_OF_ETH = ErrorCode.init(ModuleE.CV.getPrefix() + "_0096");
+    ErrorCode NOT_BIND_ASSET = ErrorCode.init(ModuleE.CV.getPrefix() + "_0097");
+    ErrorCode INSUFFICIENT_FEE_OF_WITHDRAW = ErrorCode.init(ModuleE.CV.getPrefix() + "_0098");
+
+    ErrorCode WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0099");
+    ErrorCode DUPLICATE_REGISTER = ErrorCode.init(ModuleE.CV.getPrefix() + "_0100");
+    ErrorCode PROPOSAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0101");
 
 }

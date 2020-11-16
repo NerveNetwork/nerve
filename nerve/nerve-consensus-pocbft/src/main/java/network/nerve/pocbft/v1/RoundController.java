@@ -9,6 +9,7 @@ import io.nuls.core.log.Log;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.pocbft.constant.ConsensusConstant;
+import network.nerve.pocbft.constant.PocbftConstant;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.round.MeetingMember;
 import network.nerve.pocbft.model.bo.round.MeetingRound;
@@ -258,7 +259,7 @@ public class RoundController extends BasicObject {
      */
     private double calcCreditVal(Chain chain, MeetingMember member, BlockHeader blockHeader) throws NulsException {
         BlockExtendsData roundData = blockHeader.getExtendsData();
-        long roundStart = roundData.getRoundIndex() - ConsensusConstant.RANGE_OF_CAPACITY_COEFFICIENT;
+        long roundStart = roundData.getRoundIndex() - PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain);
         if (roundStart < 0) {
             roundStart = 0;
         }
@@ -268,8 +269,8 @@ public class RoundController extends BasicObject {
         */
         long blockCount = getBlockCountByAddress(chain, member.getAgent().getPackingAddress(), roundStart, roundData.getRoundIndex() - 1);
         long sumRoundVal = getPunishCountByAddress(chain, member.getAgent().getAgentAddress(), roundStart, roundData.getRoundIndex() - 1, PunishType.YELLOW.getCode());
-        double ability = DoubleUtils.div(blockCount, ConsensusConstant.RANGE_OF_CAPACITY_COEFFICIENT);
-        double penalty = DoubleUtils.div(sumRoundVal, ConsensusConstant.RANGE_OF_CAPACITY_COEFFICIENT);
+        double ability = DoubleUtils.div(blockCount, PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain));
+        double penalty = DoubleUtils.div(sumRoundVal, PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain));
 
         return DoubleUtils.round(DoubleUtils.sub(ability, penalty), 4);
     }
@@ -321,7 +322,7 @@ public class RoundController extends BasicObject {
             punishList = chain.getRedPunishList();
         }
         for (int i = punishList.size() - 1; i >= 0; i--) {
-            if (count >= ConsensusConstant.CREDIT_MAGIC_NUM) {
+            if (count >= PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain)) {
                 break;
             }
             PunishLogPo punish = punishList.get(i);
@@ -339,8 +340,8 @@ public class RoundController extends BasicObject {
         /**
          * 每一轮的惩罚都有可能包含上一轮次的惩罚记录，即计算从a到a+99轮的惩罚记录时，a轮的惩罚中可能是惩罚某个地址在a-1轮未出块，导致100轮最多可能有101个惩罚记录，在这里处理下
          */
-        if (count > ConsensusConstant.CREDIT_MAGIC_NUM) {
-            return ConsensusConstant.CREDIT_MAGIC_NUM;
+        if (count > PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain)) {
+            return PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain);
         }
         return count;
     }

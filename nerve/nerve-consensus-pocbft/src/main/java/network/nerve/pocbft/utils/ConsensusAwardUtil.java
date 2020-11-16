@@ -566,7 +566,7 @@ public class ConsensusAwardUtil {
             chain.getLogger().info("当前区块高度小于通缩开始高度");
         }
 
-        if (currentInflationInfo != null && height >= currentInflationInfo.getStartHeight() && height <= currentInflationInfo.getEndHeight()) {
+        if (currentInflationInfo != null && height >= currentInflationInfo.getStartHeight() && height <= currentInflationInfo.getEndHeight()&&(currentInflationInfo.getStartHeight()!=4320001||currentInflationInfo.getAwardUnit()>20000)) {
             return currentInflationInfo;
         }
 

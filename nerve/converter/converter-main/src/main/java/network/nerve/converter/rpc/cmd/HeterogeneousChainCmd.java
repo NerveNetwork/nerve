@@ -44,6 +44,7 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
@@ -51,6 +52,7 @@ import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.utils.LoggerUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +76,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
     private ChainManager chainManager;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
     @Autowired
     private ConverterConfig converterConfig;
     @Autowired
@@ -99,10 +103,11 @@ public class HeterogeneousChainCmd extends BaseCmd {
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
-            HeterogeneousAssetInfo assetInfo = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(chainId, assetId);
-            if (assetInfo == null) {
+            List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
+            if (assetInfos == null || assetInfos.isEmpty()) {
                 return failed(ConverterErrorCode.DATA_NOT_FOUND);
             }
+            HeterogeneousAssetInfo assetInfo = assetInfos.get(0);
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
@@ -118,6 +123,51 @@ public class HeterogeneousChainCmd extends BaseCmd {
             return failed(e.getMessage());
         }
         return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_LIST, version = 1.0, description = "异构链资产信息列表查询")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
+            @Key(name = "symbol", description = "资产symbol"),
+            @Key(name = "decimals", valueType = int.class, description = "资产小数位数"),
+            @Key(name = "contractAddress", description = "资产对应合约地址(若有)"),
+            @Key(name = "isToken", description = "资产是否为TOKEN资产"),
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
+            @Key(name = "heterogeneousChainSymbol", description = "异构链Symbol"),
+            @Key(name = "heterogeneousChainMultySignAddress", description = "异构链多签地址")
+    })
+    )
+    public Response getAssetInfoListById(Map params) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
+        try {
+            Integer chainId = Integer.parseInt(params.get("chainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
+            if (assetInfos == null || assetInfos.isEmpty()) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            for (HeterogeneousAssetInfo assetInfo : assetInfos) {
+                Map<String, Object> rtMap = new HashMap<>(16);
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+                if (docking == null) {
+                    return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
+                }
+                rtMap.put("symbol", assetInfo.getSymbol());
+                rtMap.put("decimals", assetInfo.getDecimals());
+                rtMap.put("contractAddress", assetInfo.getContractAddress());
+                rtMap.put("isToken", StringUtils.isNotBlank(assetInfo.getContractAddress()));
+                rtMap.put("heterogeneousChainId", docking.getChainId());
+                rtMap.put("heterogeneousChainSymbol", docking.getChainSymbol());
+                rtMap.put("heterogeneousChainMultySignAddress", docking.getCurrentMultySignAddress());
+                resultList.add(rtMap);
+            }
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(resultList);
     }
 
     @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS, version = 1.0, description = "异构链资产信息查询")
@@ -145,6 +195,39 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetInfo == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid contractAddress");
             }
+            NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(assetInfo.getChainId(), assetInfo.getAssetId());
+            rtMap.put("chainId", nerveAssetInfo.getAssetChainId());
+            rtMap.put("assetId", nerveAssetInfo.getAssetId());
+            rtMap.put("symbol", assetInfo.getSymbol());
+            rtMap.put("decimals", assetInfo.getDecimals());
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ID, version = 1.0, description = "异构链资产信息查询")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链ID"),
+            @Parameter(parameterName = "heterogeneousAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链资产ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", valueType = int.class, description = "资产链ID"),
+            @Key(name = "assetId", valueType = int.class, description = "资产ID"),
+            @Key(name = "symbol", description = "资产symbol"),
+            @Key(name = "decimals", valueType = int.class, description = "资产小数位数")
+    })
+    )
+    public Response getAssetInfoByHeterogeneousAssetId(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            Integer heterogeneousAssetId = Integer.parseInt(params.get("heterogeneousAssetId").toString());
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
+            }
+            HeterogeneousAssetInfo assetInfo = docking.getAssetByAssetId(heterogeneousAssetId);
             NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(assetInfo.getChainId(), assetInfo.getAssetId());
             rtMap.put("chainId", nerveAssetInfo.getAssetChainId());
             rtMap.put("assetId", nerveAssetInfo.getAssetId());
@@ -369,11 +452,13 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
             }
 
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("nerveAssetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("nerveAssetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
 
             // parse params
             Integer chainId = (Integer) params.get("chainId");
+            Integer heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
             Integer nerveAssetChainId = (Integer) params.get("nerveAssetChainId");
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             Integer decimals = (Integer) params.get("decimals");
@@ -389,8 +474,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (nerveAssetDecimals != decimals) {
                 throw new NulsRuntimeException(ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY);
             }
-            HeterogeneousAssetInfo assetInfo = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(nerveAssetChainId, nerveAssetId);
-            if (assetInfo != null) {
+            HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(heterogeneousChainId, nerveAssetChainId, nerveAssetId);
+            if (assetInfo != null && assetInfo.getChainId() == heterogeneousChainId) {
                 throw new NulsRuntimeException(ConverterErrorCode.DUPLICATE_BIND);
             }
 
@@ -556,7 +641,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (nerveAsset.get("decimalPlace") != null) {
                 nerveAssetDecimals = Integer.parseInt(nerveAsset.get("decimalPlace").toString());
             }
-            HeterogeneousAssetInfo assetInfo = ledgerAssetRegisterHelper.getHeterogeneousAssetInfo(nerveAssetChainId, nerveAssetId);
+            HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(heterogeneousChainId, nerveAssetChainId, nerveAssetId);
             if (assetInfo != null) {
                 throw new NulsRuntimeException(ConverterErrorCode.DUPLICATE_BIND);
             }
@@ -578,6 +663,143 @@ public class HeterogeneousChainCmd extends BaseCmd {
                     EMPTY_STRING,
                     contractAddress,
                     String.valueOf(String.format("%s:%s-%s:%s-%s", BindHeterogeneousContractMode.OVERRIDE, nerveAssetChainId, nerveAssetId, overrideNerveAssetInfo.getAssetChainId(), overrideNerveAssetInfo.getAssetId())));
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "Nerve资产取消绑定异构链合约资产[取消绑定]")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    })
+    )
+    public Response unbindHeterogeneousContractTokenToNerveAssetRegPendingTx(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nerveAssetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            Integer heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            Integer nerveAssetChainId = (Integer) params.get("nerveAssetChainId");
+            Integer nerveAssetId = (Integer) params.get("nerveAssetId");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
+            boolean existNerveAsset = nerveAsset != null;
+            if (!existNerveAsset) {
+                throw new NulsRuntimeException(ConverterErrorCode.ASSET_ID_NOT_EXIST);
+            }
+            HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(heterogeneousChainId, nerveAssetChainId, nerveAssetId);
+            if (assetInfo == null) {
+                throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+            }
+            Integer assetType = Integer.parseInt(nerveAsset.get("assetType").toString());
+            if (assetType <= 4) {
+                throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
+            Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,
+                    heterogeneousChainId,
+                    assetInfo.getDecimals(),
+                    assetInfo.getSymbol(),
+                    assetInfo.getContractAddress(),
+                    String.valueOf(String.format("%s:%s-%s", BindHeterogeneousContractMode.REMOVE, nerveAssetChainId, nerveAssetId)));
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX, version = 1.0, description = "创建异构链主资产注册交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    })
+    )
+    public Response createHeterogeneousMainAssetRegTx(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            Integer heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            String remark = (String) params.get("remark");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            Transaction tx = assembleTxService.createHeterogeneousMainAssetRegTx(chain, address, password, heterogeneousChainId, remark);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             map.put("value", tx.getHash().toHex());
             return success(map);

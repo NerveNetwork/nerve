@@ -24,27 +24,31 @@
 
 package network.nerve.converter.storage;
 
-import io.nuls.base.data.NulsHash;
 import network.nerve.converter.model.bo.Chain;
 
 /**
- * 执行提案的交易hash 和 提案的对应关系
- * (目前只包含撤销银行节点交易hash)
+ * 提案交易与确认提案交易业务关系
  * @author: Loki
  * @date: 2020/5/25
  */
 public interface ProposalExeStorageService {
 
     /**
-     *
+     * 确认提案交易commit时存储
      * @param chain
-     * @param exeTxHash 执行提案的hash
-     * @param txHash 提案hash
+     * @param proposalHash
+     * @param confirmProposalHash
      * @return
      */
-    boolean save(Chain chain, String exeTxHash, NulsHash txHash);
+    boolean save(Chain chain, String proposalHash, String confirmProposalHash);
 
-    NulsHash find(Chain chain, String exeTxHash);
+    /**
+     * 根据提案交易获取确认提案交易hash
+     * @param chain
+     * @param proposalHash
+     * @return
+     */
+    String find(Chain chain, String proposalHash);
 
-    boolean delete(Chain chain, String exeTxHash);
+    boolean delete(Chain chain, String proposalHash);
 }

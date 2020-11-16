@@ -60,15 +60,20 @@ public class ComponentSignStorageServiceImpl implements ComponentSignStorageServ
                 return ConverterDBUtil.putModel(ConverterDBConstant.DB_COMPONENT_SIGN + chain.getChainId(),
                         stringToBytes(po.getHash().toHex()), po);
             }
-
             Set<ComponentSignMessage> msgAll = new HashSet<>(saved.getListMsg());
             msgAll.addAll(po.getListMsg());
             saved.setListMsg(new ArrayList<>(msgAll));
 
-            saved.setCompleted(po.getCompleted());
-            saved.setByzantinePass(po.getByzantinePass());
-            saved.setCurrentSigned(po.getCurrentSigned());
-            if(null != po.getCallParms()){
+            if (!saved.getCompleted()) {
+                saved.setCompleted(po.getCompleted());
+            }
+            if (!saved.getByzantinePass()) {
+                saved.setByzantinePass(po.getByzantinePass());
+            }
+            if (!saved.getCurrentSigned()) {
+                saved.setCurrentSigned(po.getCurrentSigned());
+            }
+            if (null != po.getCallParms()) {
                 saved.setCallParms(po.getCallParms());
             }
             return ConverterDBUtil.putModel(ConverterDBConstant.DB_COMPONENT_SIGN + chain.getChainId(),

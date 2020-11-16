@@ -41,6 +41,16 @@ public class NulsCrossChainConfig extends ConfigBean implements ModuleConfig {
     /**默认链接到的跨链节点*/
     private String crossSeedIps;
 
+    private Long version1_6_0_height;
+
+    public Long getVersion1_6_0_height() {
+        return version1_6_0_height;
+    }
+
+    public void setVersion1_6_0_height(Long version1_6_0_height) {
+        this.version1_6_0_height = version1_6_0_height;
+    }
+
     public String getDataPath() {
         return dataPath;
     }

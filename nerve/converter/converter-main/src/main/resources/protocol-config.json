@@ -114,6 +114,38 @@
         "verifySignature": false,
         "verifyFee": false,
         "handler": "ConfirmResetHeterogeneousVirtualBankV1"
+      },
+      {
+        "type": "54",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "RechargeUnconfirmedV1"
+      },
+      {
+        "type": "55",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "WithdrawalHeterogeneousSendV1"
+      },
+      {
+        "type": "56",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "WithdrawalAdditionalFeeV1"
+      },
+      {
+        "type": "57",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "HeterogeneousMainAssetRegV1"
       }
     ],
     "validMsgs": [

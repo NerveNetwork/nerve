@@ -123,4 +123,20 @@ public class HeterogeneousContractAssetRegCompleteTxData extends BaseNulsData {
         builder.append(String.format("\tcontractAddress: %s",contractAddress)).append(lineSeparator);
         return builder.toString();
     }
+
+    public String toString1() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"pendingHash\":")
+                .append('\"').append(pendingHash.toHex()).append('\"');
+        sb.append(",\"chainId\":")
+                .append(chainId);
+        sb.append(",\"decimals\":")
+                .append(decimals);
+        sb.append(",\"symbol\":")
+                .append('\"').append(symbol).append('\"');
+        sb.append(",\"contractAddress\":")
+                .append('\"').append(contractAddress).append('\"');
+        sb.append('}');
+        return sb.toString();
+    }
 }

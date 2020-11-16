@@ -32,6 +32,9 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
 
+import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
+import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
+
 /**
  * 提现交易txdata
  * @author: Loki
@@ -44,6 +47,8 @@ public class WithdrawalTxData extends BaseNulsData {
      */
     private String heterogeneousAddress;
 
+    private int heterogeneousChainId;
+
     public WithdrawalTxData() {
     }
 
@@ -51,20 +56,34 @@ public class WithdrawalTxData extends BaseNulsData {
         this.heterogeneousAddress = heterogeneousAddress;
     }
 
+    public WithdrawalTxData(String heterogeneousAddress, int heterogeneousChainId) {
+        this.heterogeneousAddress = heterogeneousAddress;
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
+
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
-        stream.writeString(heterogeneousAddress);
+        stream.writeString(this.heterogeneousAddress);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            stream.writeUint16(this.heterogeneousChainId);
+        }
     }
 
     @Override
     public void parse(NulsByteBuffer byteBuffer) throws NulsException {
         this.heterogeneousAddress = byteBuffer.readString();
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            this.heterogeneousChainId = byteBuffer.readUint16();
+        }
     }
 
     @Override
     public int size() {
         int size = 0;
         size += SerializeUtils.sizeOfString(heterogeneousAddress);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            size += SerializeUtils.sizeOfUint16();
+        }
         return size;
     }
 
@@ -76,11 +95,22 @@ public class WithdrawalTxData extends BaseNulsData {
         this.heterogeneousAddress = heterogeneousAddress;
     }
 
+    public int getHeterogeneousChainId() {
+        return heterogeneousChainId;
+    }
+
+    public void setHeterogeneousChainId(int heterogeneousChainId) {
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         String lineSeparator = System.lineSeparator();
         builder.append(String.format("\theterogeneousAddress: %s", heterogeneousAddress)).append(lineSeparator);
+        if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+            builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
+        }
         return builder.toString();
     }
 }

@@ -36,11 +36,11 @@ import java.io.Serializable;
 public class DistributionFeePO implements Serializable {
 
     /**
-     * 原始依据jiaoyihash
+     * 原始依据交易hash
      */
     private NulsHash basisTxHash;
     /**
-     * 当前手续费不补贴交易hash
+     * 当前手续费补贴交易hash
      */
     private NulsHash DistributionFeeTxHash;
 

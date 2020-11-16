@@ -23,6 +23,8 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.constant;
 
+import io.nuls.core.constant.ErrorCode;
+import io.nuls.core.rpc.model.ModuleE;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.Utils;
 import org.web3j.abi.datatypes.*;
@@ -142,6 +144,7 @@ public interface EthConstant {
     BigInteger ETH_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     BigDecimal NUMBER_1_DOT_1 = new BigDecimal("1.1");
     BigDecimal NUMBER_1_DOT_2 = new BigDecimal("1.2");
+    BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
 
     Long ROLLBACK_NUMER = 100L;
 
@@ -160,4 +163,8 @@ public interface EthConstant {
     BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
     BigInteger HIGH_GAS_PRICE = GWEI_200;
+
+    ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
+    ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");
+    ErrorCode TX_ALREADY_EXISTS_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0048");
 }

@@ -31,14 +31,7 @@ import java.math.BigInteger;
  * @date: 2020-03-02
  */
 public class WithdrawalTxDTO {
-    /**
-     * 提现异构链id
-     */
-//    private int heterogeneousChainId;
-    /**
-     * 提现资产id
-     */
-//    private int heterogeneousAssetId;
+
     /**
      * 提现资产 资产id
      */
@@ -47,6 +40,10 @@ public class WithdrawalTxDTO {
      * 提现资产 资产id
      */
     private int assetId;
+    /**
+     * 提现异构链id
+     */
+    private int heterogeneousChainId;
     /**
      * 提现异构链地址
      */
@@ -65,6 +62,11 @@ public class WithdrawalTxDTO {
      */
     private SignAccountDTO signAccount;
 
+    /**
+     * 用于支付异构链交易的手续费
+     */
+    private BigInteger distributionFee;
+
     public int getAssetChainId() {
         return assetChainId;
     }
@@ -81,13 +83,13 @@ public class WithdrawalTxDTO {
         this.assetId = assetId;
     }
 
-    //    public int getHeterogeneousChainId() {
-//        return heterogeneousChainId;
-//    }
-//
-//    public void setHeterogeneousChainId(int heterogeneousChainId) {
-//        this.heterogeneousChainId = heterogeneousChainId;
-//    }
+    public int getHeterogeneousChainId() {
+        return heterogeneousChainId;
+    }
+
+    public void setHeterogeneousChainId(int heterogeneousChainId) {
+        this.heterogeneousChainId = heterogeneousChainId;
+    }
 
     public String getHeterogeneousAddress() {
         return heterogeneousAddress;
@@ -96,14 +98,6 @@ public class WithdrawalTxDTO {
     public void setHeterogeneousAddress(String heterogeneousAddress) {
         this.heterogeneousAddress = heterogeneousAddress;
     }
-
-//    public int getHeterogeneousAssetId() {
-//        return heterogeneousAssetId;
-//    }
-//
-//    public void setHeterogeneousAssetId(int heterogeneousAssetId) {
-//        this.heterogeneousAssetId = heterogeneousAssetId;
-//    }
 
     public BigInteger getAmount() {
         return amount;
@@ -127,5 +121,13 @@ public class WithdrawalTxDTO {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public BigInteger getDistributionFee() {
+        return distributionFee;
+    }
+
+    public void setDistributionFee(BigInteger distributionFee) {
+        this.distributionFee = distributionFee;
     }
 }

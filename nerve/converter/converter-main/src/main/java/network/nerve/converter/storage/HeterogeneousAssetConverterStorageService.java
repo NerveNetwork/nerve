@@ -26,6 +26,8 @@ package network.nerve.converter.storage;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.NerveAssetInfo;
 
+import java.util.List;
+
 /**
  * @date: 2020-05-29
  */
@@ -41,13 +43,35 @@ public interface HeterogeneousAssetConverterStorageService {
     int deleteAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
 
     /**
+     * 保存绑定类型的异构链资产信息
+     */
+    int saveBindAssetInfo(int nerveAssetChainId, int nerveAssetId, HeterogeneousAssetInfo info) throws Exception;
+
+    /**
+     * 移除绑定类型的异构链资产信息
+     */
+    int deleteBindAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+
+    /**
+     * 是否绑定类型的异构链资产
+     */
+    boolean isBoundHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+
+    /**
+     * 获取异构链资产信息集合
+     */
+    List<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId);
+
+    /**
      * 获取异构链资产信息
      */
-    HeterogeneousAssetInfo getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId);
+    HeterogeneousAssetInfo getHeterogeneousAssetInfo(int heterogeneousChainId, int nerveAssetChainId, int nerveAssetId);
 
     /**
      * 获取Nerve资产ID
      */
     NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId);
+
+
 
 }

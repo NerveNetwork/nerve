@@ -1,17 +1,23 @@
 package io.nuls.test.rpc;
 
 import io.nuls.base.RPCUtil;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.base.data.BlockHeader;
+import io.nuls.core.crypto.ECKey;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
+import network.nerve.pocbft.model.bo.tx.txdata.Deposit;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 /**
@@ -26,8 +32,24 @@ public class DepositTest {
 
     @BeforeClass
     public static void start() throws Exception {
-        NoUse.mockModule();
+//        NoUse.mockModule();
     }
+    @Test
+    public void test() throws IOException {
+        int[] arr = new int[]{1, 2, 5, 9};
+        for (int i = 0; i < 100; i++) {
+            byte[] address = AddressTool.getAddress(new ECKey().getPubKey(), arr[i % 4]);
+            Deposit deposit = new Deposit();
+            deposit.setAddress(address);
+            deposit.setDeposit(BigInteger.valueOf(2000*i));
+            deposit.setAssetChainId(9);
+            deposit.setAssetId(1);
+            deposit.setTimeType((byte) 1);
+            deposit.setDepositType((byte) 1);
+            System.out.println(HexUtil.encode(deposit.serialize()));
+        }
+    }
+
 
     @Test
     public void getAssetBySymbol()throws Exception{

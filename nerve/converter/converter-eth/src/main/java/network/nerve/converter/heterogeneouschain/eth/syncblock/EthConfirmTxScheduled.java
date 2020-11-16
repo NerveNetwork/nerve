@@ -23,14 +23,11 @@
  */
 package network.nerve.converter.heterogeneouschain.eth.syncblock;
 
-import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.converter.config.ConverterConfig;
-import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManager;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
@@ -64,8 +61,8 @@ import org.web3j.utils.Numeric;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
+import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.*;
 import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
 import static network.nerve.converter.heterogeneouschain.eth.enums.BroadcastTxValidateStatus.SUCCESS;
 
@@ -76,9 +73,6 @@ import static network.nerve.converter.heterogeneouschain.eth.enums.BroadcastTxVa
 @Component("ethConfirmTxScheduled")
 public class EthConfirmTxScheduled implements Runnable {
 
-    private ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
-    private ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");
-    private ErrorCode TX_ALREADY_EXISTS_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0048");
     @Autowired
     private ETHWalletApi ethWalletApi;
     @Autowired

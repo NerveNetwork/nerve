@@ -73,7 +73,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
                     @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
                     @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产 7-链内普通资产绑定多异构链资产 8-平行链资产绑定多异构链资产 9-异构链资产绑定多异构链资产]"),
                     @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
                     @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
                     @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
@@ -122,7 +122,7 @@ public class AssetsQueryCmd extends BaseLedgerCmd {
             responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
                     @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
                     @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 2-链内合约资产 3-平行链资产 4-异构链资产 5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产 7-链内普通资产绑定多异构链资产 8-平行链资产绑定多异构链资产 9-异构链资产绑定多异构链资产]"),
                     @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
                     @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
                     @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),

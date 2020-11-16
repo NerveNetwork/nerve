@@ -39,6 +39,7 @@ import network.nerve.converter.utils.LoggerUtil;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
+import static network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant.RESEND_TIME;
 
 /**
  * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
@@ -107,6 +108,12 @@ public class EthIIWaitingTxInvokeDataScheduled implements Runnable {
                 }
                 po.setValidateHeight(validateHeight);
 
+                if (!ethIIResendHelper.canResend(nerveTxHash)) {
+                    logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, RESEND_TIME);
+                    ethIIResendHelper.clear(nerveTxHash);
+                    this.clearDB(nerveTxHash);
+                    continue;
+                }
                 // nerve交易未完成，[非首位节点] 检查等待时间是否结束，结束后，检查是否已发起交易，否则发起交易
                 long waitingEndTime = po.getWaitingEndTime();
                 if (System.currentTimeMillis() >= waitingEndTime && po.getCurrentNodeSendOrder() != 1 && !ethIIInvokeTxHelper.currentNodeSentEthTx(nerveTxHash)) {

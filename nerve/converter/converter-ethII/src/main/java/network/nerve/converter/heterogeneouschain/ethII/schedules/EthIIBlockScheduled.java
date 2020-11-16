@@ -38,6 +38,7 @@ import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIAnalysisTxHe
 import network.nerve.converter.utils.LoggerUtil;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
@@ -97,6 +98,7 @@ public class EthIIBlockScheduled implements Runnable {
             ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
             BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
             if (currentGasPrice != null) {
+                EthContext.logger().debug("当前Price: {} Gwei.", new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
                 EthContext.setEthGasPrice(currentGasPrice);
             }
         } catch (Exception e) {

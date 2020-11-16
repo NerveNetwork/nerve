@@ -30,7 +30,7 @@ import network.nerve.converter.model.po.ExeProposalPO;
 import java.util.List;
 
 /**
- * 提案确认后, 执行提案流程前暂存的数据
+ * 提案确认后, 执行提案流程前暂存的数据(队列持久化)
  * @author: Loki
  * @date: 2020/5/15
  */

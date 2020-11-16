@@ -40,6 +40,7 @@ import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogene
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.Chain;
@@ -60,12 +61,14 @@ import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static network.nerve.converter.config.ConverterContext.FEE_ADDITIONAL_HEIGHT;
 import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_1;
 import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_VERSION_2;
 
@@ -86,9 +89,11 @@ public class ExeProposalProcessTask implements Runnable {
     private ProposalStorageService proposalStorageService = SpringLiteContext.getBean(ProposalStorageService.class);
     private AssembleTxService assembleTxService = SpringLiteContext.getBean(AssembleTxService.class);
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService = SpringLiteContext.getBean(ConfirmWithdrawalStorageService.class);
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService = SpringLiteContext.getBean(HeterogeneousAssetConverterStorageService.class);
+    private HeterogeneousAssetHelper heterogeneousAssetHelper = SpringLiteContext.getBean(HeterogeneousAssetHelper.class);
     private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService = SpringLiteContext.getBean(TxSubsequentProcessStorageService.class);
+    private RechargeStorageService rechargeStorageService = SpringLiteContext.getBean(RechargeStorageService.class);
+
 
     @Override
     public void run() {
@@ -201,9 +206,15 @@ public class ExeProposalProcessTask implements Runnable {
                 exeProposalQueue.remove();
             }
         } catch (Exception e) {
-            chain.getLogger().error(e);
             ExeProposalPO po = chain.getExeProposalQueue().poll();
             chain.getExeProposalQueue().addLast(po);
+
+            if(e instanceof NulsException){
+                if(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())){
+                    return;
+                }
+            }
+            chain.getLogger().error(e);
         }
     }
 
@@ -255,7 +266,7 @@ public class ExeProposalProcessTask implements Runnable {
             byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
             for (CoinTo coinTo : coinData.getTo()) {
                 if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                    assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     if (assetInfo != null) {
                         withdrawCoinTo = coinTo;
                         break;
@@ -363,12 +374,13 @@ public class ExeProposalProcessTask implements Runnable {
             chain.getLogger().error("[ExeProposal-withdraw] Withdraw transaction cointo data error, no withdrawCoinTo. hash:{}", withdrawTx.getHash().toHex());
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
+        WithdrawalTxData withdrawTxData = ConverterUtil.getInstance(withdrawTx.getTxData(), WithdrawalTxData.class);
         HeterogeneousAssetInfo assetInfo =
-                heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawCoinTo.getAssetsChainId(), withdrawCoinTo.getAssetsId());
+                heterogeneousAssetHelper.getHeterogeneousAssetInfo(withdrawTxData.getHeterogeneousChainId(), withdrawCoinTo.getAssetsChainId(), withdrawCoinTo.getAssetsId());
         if (null == assetInfo) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
         }
-        WithdrawalTxData withdrawTxData = ConverterUtil.getInstance(withdrawTx.getTxData(), WithdrawalTxData.class);
+
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
         docking.createOrSignWithdrawTx(
                 withdrawTx.getHash().toHex(),
@@ -511,8 +523,12 @@ public class ExeProposalProcessTask implements Runnable {
      * @return
      */
     private boolean replyAttack(String hash, String heterogeneousTxHash) {
+        if(null != rechargeStorageService.find(chain, heterogeneousTxHash)){
+            chain.getLogger().error("[replyAttack!! 提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
+            return false;
+        }
         if (null != asyncProcessedTxStorageService.getProposalExe(chain, heterogeneousTxHash)) {
-            chain.getLogger().error("[提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
+            chain.getLogger().error("[replyAttack!! 提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
             return false;
         }
         return true;
@@ -614,7 +630,6 @@ public class ExeProposalProcessTask implements Runnable {
             compSignPO.setCurrentSigned(true);
             // 广播当前节点签名消息
             NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
-            this.proposalStorageService.saveExeBusiness(chain, proposalHash, proposalTxHash);
             chain.getLogger().info("[执行提案-{}] 调用异构链组件执行签名, 发送签名消息, 提案hash:{}", ProposalTypeEnum.REFUND, proposalHash);
         }
 
@@ -629,6 +644,14 @@ public class ExeProposalProcessTask implements Runnable {
                 }
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
+                if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
+                    BigInteger totalFee = assembleTxService.calculateRefundTotalFee(chain, proposalHash);
+                    boolean enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    if (!enoughFeeOfWithdraw) {
+                        chain.getLogger().error("[withdraw] 提现手续费计算, 手续费不足以支付提现费用. amount:{}", callParm.getValue());
+                        throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+                    }
+                }
                 String ethTxHash = docking.createOrSignWithdrawTxII(
                         callParm.getTxHash(),
                         callParm.getToAddress(),
@@ -636,6 +659,7 @@ public class ExeProposalProcessTask implements Runnable {
                         callParm.getAssetId(),
                         callParm.getSigned());
                 compSignPO.setCompleted(true);
+                this.proposalStorageService.saveExeBusiness(chain, proposalHash, proposalTxHash);
                 chain.getLogger().info("[异构链地址签名消息-拜占庭通过-refund] 调用异构链组件执行原路退回. hash:{}, ethHash:{}", callParm.getTxHash(), ethTxHash);
             }
             rs = true;

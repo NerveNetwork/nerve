@@ -170,7 +170,8 @@ public class LedgerAsset extends BaseNulsData {
         if (StringUtils.isBlank(address)) {
             return;
         }
-        if (assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE && address.startsWith(LedgerConstant.HEX_PREFIX)) {
+        if ((assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE || assetType == LedgerConstant.BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET)
+                && address.startsWith(LedgerConstant.HEX_PREFIX)) {
             this.setAssetOwnerAddress(HexUtil.decode(address.substring(2)));
         }
 
@@ -194,11 +195,11 @@ public class LedgerAsset extends BaseNulsData {
         if (address == null) {
             return result;
         }
-        String assetAddress = null;
-        if (assetType == LedgerConstant.COMMON_ASSET_TYPE || assetType == LedgerConstant.CONTRACT_ASSET_TYPE) {
-            assetAddress = AddressTool.getStringAddressByBytes(address);
-        } else if (assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE) {
+        String assetAddress;
+        if (assetType == LedgerConstant.HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE || assetType == LedgerConstant.BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET) {
             assetAddress = LedgerConstant.HEX_PREFIX + HexUtil.encode(address);
+        } else {
+            assetAddress = AddressTool.getStringAddressByBytes(address);
         }
         result.put("assetAddress", assetAddress);
         return result;

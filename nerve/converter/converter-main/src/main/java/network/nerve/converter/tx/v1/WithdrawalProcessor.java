@@ -41,18 +41,23 @@ import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
-import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigInteger;
 import java.util.*;
+
+import static io.nuls.base.basic.TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES;
+import static network.nerve.converter.config.ConverterContext.FEE_ADDITIONAL_HEIGHT;
+import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
+import static network.nerve.converter.constant.ConverterConstant.DISTRIBUTION_FEE_10;
 
 /**
  * @author: Loki
@@ -78,7 +83,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
     @Autowired
     private VirtualBankService virtualBankService;
     @Autowired
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
 
@@ -117,6 +122,20 @@ public class WithdrawalProcessor implements TransactionProcessor {
                     log.error(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getMsg());
                     continue;
                 }
+                long height = chain.getLatestBasicBlock().getHeight();
+                if(null != blockHeader) {
+                    height = blockHeader.getHeight();
+                }
+                if(height >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
+                    if (txData.getHeterogeneousChainId() <= 0) {
+                        failsList.add(tx);
+                        // 异构链id不能为空
+                        errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
+                        log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
+                        continue;
+                    }
+                }
+
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
@@ -170,7 +189,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                     continue;
                 }
 
-                if (coinData.getTo().size() != COIN_SIZE_2) {
+                if(coinData.getTo().size() != COIN_SIZE_2){
                     failsList.add(tx);
                     // 提现coin from size 组装错误
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
@@ -180,11 +199,11 @@ public class WithdrawalProcessor implements TransactionProcessor {
 
                 BigInteger feeTo = BigInteger.ZERO;
                 String withdrawalToInfo = null;
+                // 补贴手续费收集分发地址
+                byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+                // 销毁转出的链内资产黑洞
+                byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                 for (CoinTo coinTo : coinData.getTo()) {
-                    // 补贴手续费收集分发地址
-                    byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-                    // 销毁转出的链内资产黑洞
-                    byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                     // 该to是当前链的主资产
                     boolean currentChainAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                             && coinTo.getAssetsId() == chain.getConfig().getAssetId();
@@ -195,7 +214,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         // 提现资产的coinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         HeterogeneousAssetInfo heterogeneousAssetInfo =
-                                heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                                heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                         if (null == heterogeneousAssetInfo) {
                             failsList.add(tx);
                             // 异构链资产不存在
@@ -222,14 +241,27 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         continue;
                     }
                 }
-                if (BigIntegerUtils.isLessThan(feeTo, ConverterContext.DISTRIBUTION_FEE)) {
-                    failsList.add(tx);
-                    // 提现补贴手续费不足
-                    errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
-                    log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
-                    log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee:{}, coinTo_amount:",
-                            hash, ConverterContext.DISTRIBUTION_FEE, feeTo);
-                    continue;
+
+                if(height < FEE_ADDITIONAL_HEIGHT){
+                    if (BigIntegerUtils.isLessThan(feeTo, DISTRIBUTION_FEE_10)) {
+                        failsList.add(tx);
+                        // 提现补贴手续费不足
+                        errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
+                        log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
+                        log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee:{}, coinTo_amount:{}",
+                                hash, DISTRIBUTION_FEE_10, feeTo);
+                        continue;
+                    }
+                } else {
+                    if (BigIntegerUtils.isLessThan(feeTo, NORMAL_PRICE_PRE_1024_BYTES)) {
+                        failsList.add(tx);
+                        // 提现补贴手续费不足
+                        errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
+                        log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
+                        log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee_min:{}, coinTo_amount:",
+                                hash, NORMAL_PRICE_PRE_1024_BYTES, feeTo);
+                        continue;
+                    }
                 }
 
                 if (StringUtils.isBlank(withdrawalFromInfo) || (txFromSize == COIN_SIZE_2 && !withdrawalFromInfo.equals(withdrawalToInfo))) {

@@ -4,6 +4,7 @@
   "minRewardHeight": 0,
   "maxCoinToOfCoinbase": 3000,
   "v130Height": 0,
+  "v160Height": 2442000,
   "minStakingAmount": 100000000000,
   "minAppendAndExitAmount": 200000000000,
   "exitStakingLockHours": 168,
@@ -27,6 +28,33 @@
         {
           "assetsChainId": 5,
           "assetsId": 9
+        }
+      ]
+    }, {
+      "key": "BNB",
+      "totalCount": 500000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 23
+        }
+      ]
+    }, {
+      "key": "HT",
+      "totalCount": 600000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 24
+        }
+      ]
+    }, {
+      "key": "OKB",
+      "totalCount": 600000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 25
         }
       ]
     }

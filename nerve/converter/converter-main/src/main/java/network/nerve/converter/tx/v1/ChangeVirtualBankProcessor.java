@@ -145,7 +145,10 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 byte[] coinData = tx.getCoinData();
                 if (coinData != null && coinData.length > 0) {
                     // coindata存在数据(coinData应该没有数据)
-                    throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.COINDATA_CANNOT_EXIST.getCode();
+                    log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
+                    continue;
                 }
                 // 判断区块内重复
                 String txDataHex = HexUtil.encode(tx.getTxData());

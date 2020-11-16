@@ -68,7 +68,9 @@ public class WithdrawalProcessor implements CommandProcessor {
         builder.newLine(getCommandDescription())
                 .newLine("\t<assetChainId> \t\tasset chain id - Required")
                 .newLine("\t<assetId> \t\tasset id - Required")
+                .newLine("\t<heterogeneousChainId> \t\theterogeneous receiving id - Required")
                 .newLine("\t<heterogeneousAddress> \t\theterogeneous receiving address - Required")
+                .newLine("\t<distributionFee> \t\tWithdrawal fee Not less than 0.001 - Required")
                 .newLine("\t<amount> \t\tWithdrawal amount - Required")
                 .newLine("\t<redeemAddress> \t\tRedeem address - Required")
                 .newLine("\t[remark] \t\tremark - ");
@@ -77,16 +79,18 @@ public class WithdrawalProcessor implements CommandProcessor {
 
     @Override
     public String getCommandDescription() {
-        return "redeem <assetChainId> <assetId> <heterogeneousAddress> <amount> <redeemAddress> [remark] --redeem";
+        return "redeem <assetChainId> <assetId> <heterogeneousChainId> <heterogeneousAddress> <distributionFee> <amount> <redeemAddress> [remark] --redeem";
     }
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,5,6);
+        checkArgsNumber(args,7, 8);
         checkIsNumeric(args[1],"assetChainId");
         checkIsNumeric(args[2],"assetId");
-        checkIsAmount(args[4],"amount");
-        checkAddress(config.getChainId(),args[5]);
+        checkIsNumeric(args[3],"heterogeneousChainId");
+        checkIsAmount(args[5],"distributionFee");
+        checkIsAmount(args[6],"amount");
+        checkAddress(config.getChainId(), args[7]);
         return true;
     }
 
@@ -106,17 +110,21 @@ public class WithdrawalProcessor implements CommandProcessor {
 
         int chainId = Integer.parseInt(args[1]);
         int assetId = Integer.parseInt(args[2]);
-        String heterogeneousAddress = args[3];
-        BigInteger amount = toSimallUnit(chainId, assetId, new BigDecimal(args[5]));
-        String redeemAddress = args[5];
+        int heterogeneousChainId = Integer.parseInt(args[3]);
+        String heterogeneousAddress = args[4];
+        BigInteger distributionFee = toSimallUnit(config.getChainId(), config.getAssetsId(), new BigDecimal(args[5]));
+        BigInteger amount = toSimallUnit(chainId, assetId, new BigDecimal(args[6]));
+        String redeemAddress = args[7];
         WithdrawalReq withdrawalReq = new WithdrawalReq(
                 chainId,
                 assetId,
+                heterogeneousChainId,
                 heterogeneousAddress,
+                distributionFee,
                 amount,
                 redeemAddress);
-        if(args.length == 6){
-            withdrawalReq.setRemark(args[5]);
+        if(args.length == 9){
+            withdrawalReq.setRemark(args[8]);
         }
         withdrawalReq.setPassword(getPwd("\nEnter your account password:"));
 

@@ -192,11 +192,14 @@ public class QuotationCmdTest {
 //        });
 
         // 最终报价txdata
-        String txDataStr = "08084e56542d55534454dfb48dfd3487c43f084254432d55534454d32357fbf539c640094e554c532d55534454b51b1aa24cdbdb3f09555344542d55534454000000000000f03f09555344432d55534454de87ac035af9ef3f084441492d555344540b60a9b2182af03f084554482d555344542552a23e0c707b40085041582d55534454dbcd00d547f9ef3f";
+        String txDataStr = "08084e56542d555344540bef7211df89c53f084254432d55534454f853e3a508e8c340094e554c532d55534454b8dd57275f77d33f09555344542d55534454000000000000f03f09555344432d555344543515b91247ffef3f084441492d555344542b689c7e374af03f084554482d55534454fca9f1d28db07540085041582d555344541c25afce3100f03f";
         Prices price = CommonUtil.getInstance(txDataStr, Prices.class);
         price.getPrices().forEach(d -> {
             Log.info("{}:{}", d.getKey(), d.getValue());
         });
+        /** 喂价*/
+//        Quotation quotation = CommonUtil.getInstance(txDataStr, Quotation.class);
+//        Log.info("{}", quotation.toString());
     }
 
 

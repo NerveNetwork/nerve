@@ -28,6 +28,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
@@ -74,6 +75,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     private ProposalStorageService proposalStorageService;
     private MergeComponentStorageService mergeComponentStorageService;
     private CfmChangeBankStorageService cfmChangeBankStorageService;
+    private ConverterCoreApi converterCoreApi;
 
     public TxConfirmedProcessorImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
@@ -84,6 +86,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         this.proposalStorageService = callBackBeanManager.getProposalStorageService();
         this.mergeComponentStorageService = callBackBeanManager.getMergeComponentStorageService();
         this.cfmChangeBankStorageService = callBackBeanManager.getCfmChangeBankStorageService();
+        this.converterCoreApi = callBackBeanManager.getConverterCoreApi();
     }
 
     private NulsLogger logger() {
@@ -111,7 +114,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         ProposalTypeEnum proposalType = null;
         if (nerveProposalHash != null) {
             proposalPO = proposalStorageService.find(nerveChain, nerveProposalHash);
-            proposalType = ProposalTypeEnum.getEnum(proposalPO.getType());
+            proposalType = proposalPO != null ? ProposalTypeEnum.getEnum(proposalPO.getType()) : null;
         }
         boolean isProposal = proposalPO != null;
         switch (txType) {
@@ -166,6 +169,20 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 }
                 break;
         }
+    }
+
+    @Override
+    public void pendingTxOfWithdraw(String nerveTxHash, String heterogeneousTxHash) throws Exception {
+        if (!converterCoreApi.isSupportNewMechanismOfWithdrawalFee()) {
+            return;
+        }
+        // 提现待确认交易组装并发出
+        WithdrawalHeterogeneousSendTxData txData = new WithdrawalHeterogeneousSendTxData();
+        txData.setNerveTxHash(nerveTxHash);
+        txData.setHeterogeneousTxHash(heterogeneousTxHash);
+        txData.setHeterogeneousChainId(hChainId);
+        Transaction nerveTx = converterCoreApi.getNerveTx(nerveTxHash);
+        assembleTxService.withdrawalHeterogeneousSendTx(nerveChain, txData, nerveTx.getTime());
     }
 
     private void checkProposal(String nerveTxHash, String txHash, Long txTime, List<HeterogeneousAddress> signers) throws NulsException {

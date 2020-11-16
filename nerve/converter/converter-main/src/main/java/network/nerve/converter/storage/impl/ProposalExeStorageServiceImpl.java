@@ -24,7 +24,6 @@
 
 package network.nerve.converter.storage.impl;
 
-import io.nuls.base.data.NulsHash;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -32,6 +31,7 @@ import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.storage.ProposalExeStorageService;
 
+import static network.nerve.converter.utils.ConverterDBUtil.bytesToString;
 import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
 /**
@@ -42,12 +42,12 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 public class ProposalExeStorageServiceImpl implements ProposalExeStorageService {
 
     @Override
-    public boolean save(Chain chain, String exeTxHash, NulsHash txHash) {
-        if(StringUtils.isBlank(exeTxHash)){
+    public boolean save(Chain chain, String proposalHash, String confirmProposalHash) {
+        if(StringUtils.isBlank(proposalHash)){
             return false;
         }
         try {
-            return RocksDBService.put(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(exeTxHash), txHash.getBytes());
+            return RocksDBService.put(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(proposalHash), stringToBytes(confirmProposalHash));
         } catch (Exception e) {
             chain.getLogger().error(e);
         }
@@ -55,21 +55,21 @@ public class ProposalExeStorageServiceImpl implements ProposalExeStorageService 
     }
 
     @Override
-    public NulsHash find(Chain chain, String exeTxHash) {
-        if(StringUtils.isBlank(exeTxHash)){
+    public String find(Chain chain, String proposalHash) {
+        if(StringUtils.isBlank(proposalHash)){
             return null;
         }
-        byte[] txHash = RocksDBService.get(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(exeTxHash));
+        byte[] txHash = RocksDBService.get(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(proposalHash));
         if (null == txHash || txHash.length == 0) {
             return null;
         }
-        return new NulsHash(txHash);
+        return bytesToString(txHash);
     }
 
     @Override
-    public boolean delete(Chain chain, String exeTxHash) {
+    public boolean delete(Chain chain, String proposalHash) {
         try {
-            return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(exeTxHash));
+            return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_EXE + chain.getChainId(), stringToBytes(proposalHash));
         } catch (Exception e) {
             chain.getLogger().error(e);
         }

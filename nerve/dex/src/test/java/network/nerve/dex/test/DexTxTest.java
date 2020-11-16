@@ -99,16 +99,16 @@ public class DexTxTest {
     public void sendCreateCoinTradingTx() {
         try {
             Map params = new HashMap();
-            params.put("address", "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+            params.put("address", "TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
             params.put("password", password);
-            params.put("quoteAssetChainId", 2);
-            params.put("quoteAssetId", 1);
+            params.put("quoteAssetChainId", 5);
+            params.put("quoteAssetId", 6);
             params.put("scaleQuoteDecimal", 4);
             params.put("baseAssetChainId", 5);
-            params.put("baseAssetId", 1);
+            params.put("baseAssetId", 21);
             params.put("scaleBaseDecimal", 4);
-            params.put("minBaseAmount", new BigInteger("10000"));
-            params.put("minQuoteAmount", new BigInteger("10000"));
+            params.put("minBaseAmount", new BigInteger("100000000"));
+            params.put("minQuoteAmount", new BigInteger("2500000"));
 
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createCoinTradingTx", params);
 

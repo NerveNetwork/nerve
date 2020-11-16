@@ -50,6 +50,10 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private String quoteEndHm;
     /** USDT DAI USDC PAX 协议升级配置的高度*/
     private long usdtDaiUsdcPaxKeyHeight;
+    /** BNB 协议升级配置高度 */
+    private long bnbKeyHeight;
+    /** HT OKB 协议升级配置高度 */
+    private long htOkbKeyHeight;
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
@@ -117,5 +121,21 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setUsdtDaiUsdcPaxKeyHeight(long usdtDaiUsdcPaxKeyHeight) {
         this.usdtDaiUsdcPaxKeyHeight = usdtDaiUsdcPaxKeyHeight;
+    }
+
+    public long getBnbKeyHeight() {
+        return bnbKeyHeight;
+    }
+
+    public void setBnbKeyHeight(long bnbKeyHeight) {
+        this.bnbKeyHeight = bnbKeyHeight;
+    }
+
+    public long getHtOkbKeyHeight() {
+        return htOkbKeyHeight;
+    }
+
+    public void setHtOkbKeyHeight(long htOkbKeyHeight) {
+        this.htOkbKeyHeight = htOkbKeyHeight;
     }
 }

@@ -168,6 +168,10 @@ public class TradingOrderValidator {
             amount = amount.divide(price, coinTrading.getBaseDecimal(), RoundingMode.DOWN);
             amount = amount.movePointRight(coinTrading.getBaseDecimal());
             if (amount.toBigInteger().compareTo(order.getAmount()) < 0) {
+                LoggerUtil.dexLog.error("-------TradingOrder validate error!");
+                LoggerUtil.dexLog.error("-------TradingHash:" + coinTrading.getHash().toHex());
+                LoggerUtil.dexLog.error("----------order.type:{},order.price:{}, order.amount:{}, calc amount:{}", order.getType(), order.getPrice(), order.getAmount(), amount);
+
                 throw new NulsException(DexErrorCode.DATA_ERROR, "coinTo amount error");
             }
         } else {
@@ -177,6 +181,9 @@ public class TradingOrderValidator {
             }
             //验证最小交易量
             if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
+                LoggerUtil.dexLog.error("-------TradingOrder validate error!");
+                LoggerUtil.dexLog.error("-------TradingHash:" + coinTrading.getHash().toHex());
+                LoggerUtil.dexLog.error("----------order.type:{},order.price:{}, order.amount:{}, calc amount:{}", order.getType(), order.getPrice(), order.getAmount(), amount);
                 throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
             }
             if (coinTo.getAmount().compareTo(order.getAmount()) != 0) {

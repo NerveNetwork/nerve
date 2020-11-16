@@ -101,5 +101,9 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_USDC = "USDC-USDT";
     String ANCHOR_TOKEN_PAX = "PAX-USDT";
 
+    String ANCHOR_TOKEN_BNB = "BNB-USDT";
+    String ANCHOR_TOKEN_HT = "HT-USDT";
+    String ANCHOR_TOKEN_OKB = "OKB-USDT";
+
     String QU_PROTOCOL_FILE = "qu-cfg-";
 }

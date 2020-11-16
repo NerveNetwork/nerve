@@ -34,8 +34,9 @@ import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
-import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -92,7 +93,7 @@ public class ConverterBootstrap extends RpcModule {
             //增加地址工具类初始化
             AddressTool.init(addressPrefixDatas);
             initDB();
-            initModuleProtocolCfg();
+            initProtocolUpdate();
             initConverterContext();
             chainManager.initChain();
             initHeterogeneousChainInfo();
@@ -100,6 +101,17 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.error("Converter init error!", e);
             throw new RuntimeException(e);
+        }
+    }
+
+    private void initProtocolUpdate() {
+        try {
+            ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+            long heightVersion160 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_6_0"));
+            converterConfig.setFeeAdditionalHeight(heightVersion160);
+            converterConfig.setWithdrawalRechargeChainHeight(heightVersion160);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_6_0", e);
         }
     }
 
@@ -188,7 +200,8 @@ public class ConverterBootstrap extends RpcModule {
                 Module.build(ModuleE.BL),
                 Module.build(ModuleE.AC),
                 new Module(ModuleE.PU.abbr, ROLE),
-                new Module(ModuleE.CC.abbr, ROLE)
+                new Module(ModuleE.CC.abbr, ROLE),
+                new Module(ModuleE.QU.abbr, ROLE)
         };
     }
 
@@ -218,21 +231,6 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.error(e);
             throw e;
-        }
-    }
-
-    /**
-     * 根据chainId 加载特殊的协议配置
-     */
-    private void initModuleProtocolCfg() {
-        try {
-            Map map = JSONUtils.json2map(IoUtils.read(CV_PROTOCOL_FILE + converterConfig.getChainId() + ".json"));
-            long feeEffectiveHeightFirst = Long.parseLong(map.get("feeEffectiveHeightFirst").toString());
-            converterConfig.setFeeEffectiveHeightFirst(feeEffectiveHeightFirst);
-            long feeEffectiveHeightSecond = Long.parseLong(map.get("feeEffectiveHeightSecond").toString());
-            converterConfig.setFeeEffectiveHeightSecond(feeEffectiveHeightSecond);
-        } catch (Exception e) {
-            Log.error(e);
         }
     }
 
@@ -275,6 +273,10 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST = converterConfig.getFeeEffectiveHeightFirst();
         // 第二次协议升级高度 异构链交易手续费补贴
         ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND = converterConfig.getFeeEffectiveHeightSecond();
+        // 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+        ConverterContext.FEE_ADDITIONAL_HEIGHT = converterConfig.getFeeAdditionalHeight();
+        // 协议升级高度 修改提现和充值交易协议,增加异构链id
+        ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = converterConfig.getWithdrawalRechargeChainHeight();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

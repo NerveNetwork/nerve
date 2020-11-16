@@ -15,8 +15,10 @@ import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.utils.LoggerUtil;
 import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
@@ -50,9 +52,19 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void getBlock() throws Exception {
-        Long height = 7370853L;
+        Long height = 9003162L;
         EthBlock.Block block = ethWalletApi.getBlockByHeight(height);
         //Block block1 = ethWalletApi.getBlock(height);
+        List<EthBlock.TransactionResult> ethTransactionResults = block.getTransactions();
+        long blockHeight = block.getNumber().longValue();
+        int size;
+        if (ethTransactionResults != null && (size = ethTransactionResults.size()) > 0) {
+            long txTime = block.getTimestamp().longValue();
+            for (int i = 0; i < size; i++) {
+                org.web3j.protocol.core.methods.response.Transaction tx = (org.web3j.protocol.core.methods.response.Transaction) ethTransactionResults.get(i).get();
+                System.out.println(JSONUtils.obj2json(tx));
+            }
+        }
         System.out.println();
     }
 
@@ -89,11 +101,14 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void getTxJson() throws Exception {
-        String txHash = "0x93be98e9cb6d920a453bdc9113513585a225960dc3ad3a1efdac9839e9c0069b";
+        String txHash = "0x8dd3d40706651c9e9bec7df224362aa14ecad13dd1ee29ddb724f8bd2902a858";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
+        EthBlock.Block header = ethWalletApi.getBlockHeaderByHeight(tx.getBlockNumber().longValue());
+        System.out.println(header.getTimestamp());
         System.out.println(JSONUtils.obj2json(tx));
         HeterogeneousTransactionInfo info = EthUtil.newTransactionInfo(tx);
     }
+
 
     @Test
     public void withdrawTest() throws Exception {
@@ -583,7 +598,7 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void txInputWithdrawDecoderTest() throws JsonProcessingException {
         // 46b4c37e
-        String input = "0x46b4c37e00000000000000000000000000000000000000000000000000000000000000a000000000000000000000000020a495b1f92b135373cd080a60bd58f7dd073d3300000000000000000000000000000000000000000000000002c68af0bb14000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004034346131336137393261373133316439393630326162393833363433303762643861336363343335623465326436383739636434613330633236623139323339";
+        String input = "0x46b4c37e00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000c916d8ad8e6f0584f2354c68cd5de467c4a638c000000000000000000000000000000000000000000000000016345785d8a000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004062323436366264643435623835633636396630303734653538623064643165636434306366633335613631633538393366363635303335353638336531393264";
         List<Object> typeList = EthUtil.parseInput(input, EthConstant.INPUT_WITHDRAW);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
@@ -669,7 +684,7 @@ public class ETHWalletApiTest extends Base {
     public void getCurrentGasPrice() throws IOException {
         // default ropsten
         //setRinkeby();
-        //setMain();
+        setMain();
         //setLocalRpc();
         BigInteger gasPrice = ethWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
@@ -772,12 +787,32 @@ public class ETHWalletApiTest extends Base {
         apiURL = "http://seeda.nuls.io:17004/api/converter/bank";
     }
 
+    private void testnetII() {
+        newMode = true;
+        prikeyOfSeeds = new String[]{
+                "978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09",
+                "6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492",
+                "d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf"
+        };
+        contractAddress = "0x7D759A3330ceC9B766Aa4c889715535eeD3c0484";
+        apiURL = "http://seeda.nuls.io:17004/api/converter/bank";
+    }
+
     private void mainnet() {
         setMain();
         mainnet = true;
         newMode = true;
         prikeyOfSeeds = new String[]{};
         contractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        apiURL = "https://api.nerve.network/api/converter/bank";
+    }
+
+    private void mainnetII() {
+        setMain();
+        mainnet = true;
+        newMode = true;
+        prikeyOfSeeds = new String[]{};
+        contractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
         apiURL = "https://api.nerve.network/api/converter/bank";
     }
 
@@ -825,9 +860,10 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void balanceOfContractManagerSet() throws Exception {
         //localdev();
-        localdevII();
-        //testnet();
-        //mainnet();
+        //localdevII();
+        testnetII();
+        mainnet = true;
+        //mainnetII();
         BigInteger gasPrice = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
         String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
         String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
@@ -852,8 +888,8 @@ public class ETHWalletApiTest extends Base {
     public void compareManagersBetweenNerveAndContract() throws Exception {
         //localdev();
         // 测试网环境合约
-        //testnet();
-        mainnet();
+        //testnetII();
+        mainnetII();
 
         Set<String> managerFromNerve = new HashSet<>();
         SDKContext.wallet_url = "";
@@ -1279,19 +1315,31 @@ public class ETHWalletApiTest extends Base {
     public void test() {
         String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
-        long price = 100L;
-        System.out.println("1200000 gas cost " + new BigDecimal("1200000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("800000 gas cost " + new BigDecimal("800000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("520000 gas cost " + new BigDecimal("520000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("400000 gas cost " + new BigDecimal("400000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("380000 gas cost " + new BigDecimal("380000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("350000 gas cost " + new BigDecimal("350000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("300000 gas cost " + new BigDecimal("300000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("150000 gas cost " + new BigDecimal("150000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("100000 gas cost " + new BigDecimal("100000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("60000 gas cost " + new BigDecimal("60000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
-        System.out.println("21000 gas cost " + new BigDecimal("21000").multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18)));
         System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
+        // eth的usdt价格
+        ethUsdt = new BigDecimal("341.69");
+        // gas Gwei
+        price = 100L;
+        System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
+        gasCost(1200000);
+        gasCost(800000);
+        gasCost(520000);
+        gasCost(400000);
+        gasCost(380000);
+        gasCost(350000);
+        gasCost(300000);
+        gasCost(220000);
+        gasCost(200000);
+        gasCost(150000);
+        gasCost(100000);
+        gasCost(60000);
+        gasCost(21000);
+    }
+    protected BigDecimal ethUsdt;
+    protected long price;
+    protected void gasCost(long cost) {
+        BigDecimal eth = new BigDecimal(cost).multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18));
+        System.out.println(String.format("%s\t gas cost %s eth, \tequals %s USDT.", cost, eth, eth.multiply(ethUsdt).toPlainString()));
     }
 
     @Test

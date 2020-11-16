@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Map;
 
 import static network.nerve.quotation.constant.QuotationConstant.*;
-import static network.nerve.quotation.constant.QuotationContext.usdtDaiUsdcPaxKeyHeight;
+import static network.nerve.quotation.constant.QuotationContext.*;
 
 /**
  * @author: Loki
@@ -199,11 +199,24 @@ public class FinalQuotationProcessor implements TransactionProcessor {
         }
         if (cfgKey) {
             // 协议升级特殊处理
-            if (key.equals(QuotationConstant.ANCHOR_TOKEN_USDT)
+            if (key.equals(ANCHOR_TOKEN_USDT)
                     || key.equals(ANCHOR_TOKEN_DAI)
                     || key.equals(ANCHOR_TOKEN_USDC)
                     || key.equals(ANCHOR_TOKEN_PAX)) {
                 if (height < usdtDaiUsdcPaxKeyHeight) {
+                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    return false;
+                }
+            }
+            if (key.equals(ANCHOR_TOKEN_BNB)) {
+                if (height < bnbKeyHeight) {
+                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    return false;
+                }
+            }
+            if(key.equals(ANCHOR_TOKEN_HT)
+                || key.equals(ANCHOR_TOKEN_OKB)) {
+                if (height < htOkbKeyHeight) {
                     chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
                     return false;
                 }

@@ -36,6 +36,8 @@ import java.util.List;
  * @date: 2020-03-02
  */
 public class ConverterContext {
+
+    public static long LATEST_BLOCK_HEIGHT = 0L;
     /**
      * 触发执行虚拟银行变更交易的高度周期 配置
      * 按2秒一个块 大约1天的出块数量
@@ -88,10 +90,6 @@ public class ConverterContext {
      */
     public static long PROPOSAL_VOTE_TIME_BLOCKS = ConverterConstant.DAY_BLOCKS * 10L;
 
-    /**
-     * 交易补贴手续费
-     */
-    public static BigInteger DISTRIBUTION_FEE = new BigInteger("1000000000");
 
     /**
      * 签名拜占庭比例
@@ -106,6 +104,15 @@ public class ConverterContext {
      * 第二次协议升级高度 提现手续费10
      */
     public static long FEE_EFFECTIVE_HEIGHT_SECOND = 0L;
+
+    /**
+     * 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+     */
+    public static long FEE_ADDITIONAL_HEIGHT = 0L;
+    /**
+     * 协议升级高度 修改提现和充值交易协议,增加异构链id
+     */
+    public static long WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = 0L;
 
     /**
      * 初始化虚拟银行公钥

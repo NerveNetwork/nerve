@@ -136,6 +136,7 @@ maxSignatureCount=100
 [protocol-update]
 #每隔多少个区块统计一次协议占比
 interval=1000
+height_1_6_0=5600000
 
 [nuls-api]
 #httpServer的启动ip
@@ -159,7 +160,7 @@ sysFeeAddress=NERVEepb6Em8hfKMNNnk3Xag8kN3Sf2tya5UDj
 #系统收取手续费比例（2，表示2/10000）
 sysFeeScale=2
 #创建交易对费用
-createTradingAmount=200000000000
+createTradingAmount=20000000000
 
 [dex-api]
 usdChainId=9
@@ -199,7 +200,9 @@ proposalPrice=1000000000
 proposalVotingDays=10
 distributionFee=1000000000
 byzantineRatio=66
-multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5
+multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,102:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5
 heterogeneousMainNet=true
 initVirtualBankPubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
 newProcessorMode=false
+feeEffectiveHeightFirst=1700000
+feeEffectiveHeightSecond=2260000

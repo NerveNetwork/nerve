@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.net.ConnectException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -577,6 +578,16 @@ public class ETHWalletApi implements WalletApi {
         return nonce;
     }
 
+    // test+
+    /*private Web3j mainWeb3j;
+    public Web3j getMainWeb3j() {
+        if (mainWeb3j == null) {
+            String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+            mainWeb3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        }
+        return mainWeb3j;
+    }*/
+    // test-
 
     /**
      * 获取eth网络当前gasPrice
@@ -584,6 +595,9 @@ public class ETHWalletApi implements WalletApi {
     public BigInteger getCurrentGasPrice() throws Exception {
         BigInteger nonce = this.timeOutWrapperFunction("getCurrentGasPrice", null, args -> {
             EthGasPrice send = web3j.ethGasPrice().send();
+            // test+
+            //EthGasPrice send = getMainWeb3j().ethGasPrice().send();
+            // test-
             if (send == null) {
                 return null;
             }
@@ -743,14 +757,15 @@ public class ETHWalletApi implements WalletApi {
     }
 
     public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function) throws Exception {
-        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null);
+        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null, null);
     }
 
-    public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value) throws Exception {
+    public EthSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value, BigInteger gasPrice) throws Exception {
         value = value == null ? BigInteger.ZERO : value;
+        gasPrice = gasPrice == null || gasPrice.compareTo(BigInteger.ZERO) == 0 ? EthContext.getEthGasPrice() : gasPrice;
         String encodedFunction = FunctionEncoder.encode(function);
 
-        EthSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction, value), args -> {
+        EthSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction, value, gasPrice), args -> {
             int i =0;
             String _from = args.get(i++).toString();
             String _privateKey = args.get(i++).toString();
@@ -758,12 +773,12 @@ public class ETHWalletApi implements WalletApi {
             BigInteger _gasLimit = (BigInteger) args.get(i++);
             String _encodedFunction = args.get(i++).toString();
             BigInteger _value = (BigInteger) args.get(i++);
+            BigInteger _gasPrice = (BigInteger) args.get(i++);
             Credentials credentials = Credentials.create(_privateKey);
             BigInteger nonce = this.getNonce(_from);
-            BigInteger gasPrice = EthContext.getEthGasPrice();
             RawTransaction rawTransaction = RawTransaction.createTransaction(
                     nonce,
-                    gasPrice,
+                    _gasPrice,
                     _gasLimit,
                     _contractAddress,
                     _value,
@@ -892,10 +907,26 @@ public class ETHWalletApi implements WalletApi {
                 switchStandbyAPI(this.ethRpcAddress);
                 throw e;
             }
+            // 若遭遇网络连接异常
+            if (e instanceof ConnectException) {
+                // 应急API重置，切换到普通API
+                if (EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
+                    getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    requestExceededMap.clear();
+                    clearTimeOfRequestExceededMap = 0L;
+                    switchStandbyAPI(this.ethRpcAddress);
+                    throw e;
+                }
+                // 普通API记录异常次数
+                Integer count = requestExceededMap.computeIfAbsent(this.ethRpcAddress, r -> 0);
+                requestExceededMap.put(this.ethRpcAddress, count + 1);
+                switchStandbyAPI(this.ethRpcAddress);
+                throw e;
+            }
             String message = e.getMessage();
             boolean isTimeOut = ConverterUtil.isTimeOutError(message);
             if (isTimeOut) {
-                getLog().error("eth function [{}] time out", functionName);
+                getLog().error("{}: eth function [{}] time out", e.getClass().getName(), functionName);
                 try {
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException ex) {

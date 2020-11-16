@@ -58,6 +58,8 @@ public class QuotationContext {
     public static final Set<String> NODE_QUOTED_TX_TOKENS_CONFIRMED = new HashSet<>();
 
     public static long usdtDaiUsdcPaxKeyHeight = 0L;
+    public static long bnbKeyHeight = 0L;
+    public static long htOkbKeyHeight = 0L;
 
 
 }

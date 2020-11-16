@@ -87,6 +87,16 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     private long feeEffectiveHeightSecond;
 
     /**
+     * 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+     */
+    private long feeAdditionalHeight;
+
+    /**
+     * 协议升级高度 修改提现和充值交易协议,增加异构链id
+     */
+    private long withdrawalRechargeChainHeight;
+
+    /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
      */
     private String multySignAddressSet;
@@ -266,5 +276,21 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setVirtualBankAgentCountWithoutSeed(int virtualBankAgentCountWithoutSeed) {
         this.virtualBankAgentCountWithoutSeed = virtualBankAgentCountWithoutSeed;
+    }
+
+    public long getFeeAdditionalHeight() {
+        return feeAdditionalHeight;
+    }
+
+    public void setFeeAdditionalHeight(long feeAdditionalHeight) {
+        this.feeAdditionalHeight = feeAdditionalHeight;
+    }
+
+    public long getWithdrawalRechargeChainHeight() {
+        return withdrawalRechargeChainHeight;
+    }
+
+    public void setWithdrawalRechargeChainHeight(long withdrawalRechargeChainHeight) {
+        this.withdrawalRechargeChainHeight = withdrawalRechargeChainHeight;
     }
 }

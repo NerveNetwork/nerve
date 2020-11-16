@@ -61,7 +61,7 @@ public class EthERC20StorageServiceImpl implements EthERC20StorageService {
             return 0;
         }
         if (isExistsByAssetId(po.getAssetId())) {
-            EthContext.logger().error("资产ID已存在[{}].", po.getAssetId());
+            EthContext.logger().error("资产ID已存在[{}], 存在的资产详情: {}", po.getAssetId(), this.findByAssetId(po.getAssetId()));
             throw new NulsException(ConverterErrorCode.ASSET_ID_EXIST);
         }
         Map<byte[], byte[]> values = new HashMap<>(8);

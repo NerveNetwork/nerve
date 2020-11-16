@@ -23,18 +23,24 @@
  */
 package network.nerve.converter.core.heterogeneous.callback;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.bo.HeterogeneousHash;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.model.txdata.RechargeUnconfirmedTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 
 import java.math.BigInteger;
@@ -52,6 +58,8 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     private int hChainId;
     private AssembleTxService assembleTxService;
     private IHeterogeneousChainDocking docking;
+    private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    private ConverterCoreApi converterCoreApi;
 
     public DepositTxSubmitterImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
@@ -62,6 +70,8 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         } catch (NulsException e) {
             throw new NulsRuntimeException(e);
         }
+        this.ledgerAssetRegisterHelper = callBackBeanManager.getLedgerAssetRegisterHelper();
+        this.converterCoreApi = callBackBeanManager.getConverterCoreApi();
     }
 
     /**
@@ -90,6 +100,28 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         dto.setHeterogeneousAssetId(assetId);
         dto.setTxtime(txTime);
         Transaction tx = assembleTxService.createRechargeTx(nerveChain, dto);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime, Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
+        if (!converterCoreApi.isSupportNewMechanismOfWithdrawalFee()) {
+            return null;
+        }
+        // 充值待确认交易组装并发出
+        RechargeUnconfirmedTxData txData = new RechargeUnconfirmedTxData();
+        txData.setOriginalTxHash(new HeterogeneousHash(hChainId, txHash));
+        txData.setHeterogeneousHeight(blockHeight);
+        txData.setHeterogeneousFromAddress(from);
+        txData.setNerveToAddress(AddressTool.getAddress(nerveAddress));
+        NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, assetId);
+        txData.setAssetChainId(nerveAssetInfo.getAssetChainId());
+        txData.setAssetId(nerveAssetInfo.getAssetId());
+        txData.setAmount(value);
+        Transaction tx = assembleTxService.rechargeUnconfirmedTx(nerveChain, txData, txTime);
         if(tx == null) {
             return null;
         }

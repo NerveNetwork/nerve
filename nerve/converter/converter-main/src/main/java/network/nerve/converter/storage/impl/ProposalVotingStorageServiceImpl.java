@@ -39,8 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
-
 /**
  * @author: Loki
  * @date: 2020/5/13
@@ -87,7 +85,7 @@ public class ProposalVotingStorageServiceImpl implements ProposalVotingStorageSe
             return false;
         }
         try {
-            return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_VOTING_PREFIX + chain.getChainId(), stringToBytes(hash.toHex()));
+            return RocksDBService.delete(ConverterDBConstant.DB_PROPOSAL_VOTING_PREFIX + chain.getChainId(), hash.getBytes());
         } catch (Exception e) {
             chain.getLogger().error(e);
             return false;

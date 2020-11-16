@@ -57,18 +57,6 @@ public interface ConsensusConstant {
     String SYS_FILE_ENCODING = "file.encoding";
 
     /**
-     * unit:round of consensus
-     * 用于计算信誉值（表示只用最近这么多轮的轮次信息来计算信誉值）
-     */
-    int RANGE_OF_CAPACITY_COEFFICIENT = 1000;
-
-    /**
-     * 尝试分叉会被红牌，但只计算一下数字轮次内的情况
-     * Penalty coefficient,greater than 4.
-     */
-    int CREDIT_MAGIC_NUM = 1000;
-
-    /**
      * Load the block header of the last specified number of rounds during initialization
      * 初始化时加载最近指定轮数的惩罚信息
      */
@@ -78,7 +66,7 @@ public interface ConsensusConstant {
      * 系统启动时缓存指定轮次的区块头
      * Buffer a specified number of blocks at system startup
      */
-    int INIT_BLOCK_HEADER_COUNT = 1100;
+    int INIT_BLOCK_HEADER_COUNT = 2100;
 
     /**
      * 同一个出块地址1000轮内存在3轮发出两个相同高度，但不同hash的block，节点将会被红牌惩罚

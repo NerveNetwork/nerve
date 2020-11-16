@@ -8,7 +8,9 @@ import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
@@ -77,6 +79,13 @@ public class CrossChainBootStrap extends BaseCrossChainBootStrap {
              * */
             registerRpcPath(RPC_PATH);
             chainManager.initChain();
+            ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+            String version160Height = configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE,"height_1_6_0");
+            if(StringUtils.isNotBlank(version160Height)){
+                nulsCrossChainConfig.setVersion1_6_0_height(Long.parseLong(version160Height));
+            }else{
+                nulsCrossChainConfig.setVersion1_6_0_height(0L);
+            }
         } catch (Exception e) {
             Log.error(e);
         }

@@ -36,6 +36,7 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
+import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
@@ -46,7 +47,6 @@ import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
-import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
@@ -76,7 +76,7 @@ public class ConfirmWithdrawalVerifier {
     @Autowired
     private VirtualBankService virtualBankService;
     @Autowired
-    private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
+    private HeterogeneousAssetHelper heterogeneousAssetHelper;
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
         byte[] coinData = tx.getCoinData();
@@ -107,8 +107,9 @@ public class ConfirmWithdrawalVerifier {
                 withdrawalTo = coinTo;
             }
         }
+        WithdrawalTxData withdrawalTxData = ConverterUtil.getInstance(withdrawalTx.getTxData(), WithdrawalTxData.class);
         // 根据提现交易 资产信息获取异构链交易信息(转换获取) 再验证
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(withdrawalTxData.getHeterogeneousChainId(), withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
         if(null == heterogeneousAssetInfo){
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
@@ -135,7 +136,6 @@ public class ConfirmWithdrawalVerifier {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
         }
 
-        WithdrawalTxData withdrawalTxData = ConverterUtil.getInstance(withdrawalTx.getTxData(), WithdrawalTxData.class);
         if (!withdrawalTxData.getHeterogeneousAddress().toLowerCase().equals(info.getTo().toLowerCase())) {
             // 提现交易确认交易中到账地址与异构确认交易到账地址数据不匹配
             throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_ARRIVE_ADDRESS_MISMATCH);

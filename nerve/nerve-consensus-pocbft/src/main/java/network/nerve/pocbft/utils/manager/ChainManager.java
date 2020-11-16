@@ -72,9 +72,9 @@ public class ChainManager {
      */
     public void initChain() throws Exception {
         //加载可参与抵押的资产信息
-        String stackAssetConfigFilePath = ConsensusConstant.STACKING_CONFIG_FILE+"-"+config.getChainId()+".json";
+        String stackAssetConfigFilePath = ConsensusConstant.STACKING_CONFIG_FILE + "-" + config.getChainId() + ".json";
         URL url = ChainManager.class.getClassLoader().getResource(stackAssetConfigFilePath);
-        if(url != null){
+        if (url != null) {
             stackingAssetList = JSONUtils.json2list(IoUtils.read(stackAssetConfigFilePath), StackingAsset.class);
             stackingAssetList.forEach(stackingAsset -> {
                 //如果没有配置chainId 则默认为本链资产
@@ -196,6 +196,7 @@ public class ChainManager {
 //                    "exitStakingLockHours":168
 
             Long v1_3_0Height = Long.parseLong("" + specConfigMap.get("v130Height"));
+            Long v1_6_0Height = Long.parseLong("" + specConfigMap.get("v160Height"));
             BigInteger minStakingAmount = new BigInteger("" + specConfigMap.get("minStakingAmount"));
             BigInteger minAppendAndExitAmount = new BigInteger("" + specConfigMap.get("minAppendAndExitAmount"));
             Integer exitStakingLockHours = Integer.parseInt("" + specConfigMap.get("exitStakingLockHours"));
@@ -206,6 +207,7 @@ public class ChainManager {
             config.setMaxCoinToOfCoinbase(maxCoinToOfCoinbase.intValue());
 
             config.setV130Height(v1_3_0Height);
+            config.setV1_6_0Height(v1_6_0Height);
             config.setMinStakingAmount(minStakingAmount);
             config.setMinAppendAndExitAmount(minAppendAndExitAmount);
             config.setExitStakingLockHours(exitStakingLockHours);
