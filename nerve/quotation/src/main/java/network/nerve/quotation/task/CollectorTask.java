@@ -30,8 +30,11 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.constant.QuotationErrorCode;
+import network.nerve.quotation.heterogeneouschain.BNBWalletApi;
+import network.nerve.quotation.heterogeneouschain.ETHWalletApi;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.QuotationActuator;
+import network.nerve.quotation.model.bo.QuotationContractCfg;
 import network.nerve.quotation.model.dto.QuoteDTO;
 import network.nerve.quotation.model.txdata.Quotation;
 import network.nerve.quotation.processor.Collector;
@@ -42,12 +45,16 @@ import network.nerve.quotation.util.CommonUtil;
 import network.nerve.quotation.util.TimeUtil;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static network.nerve.quotation.constant.QuotationConstant.*;
 import static network.nerve.quotation.constant.QuotationContext.*;
+import static network.nerve.quotation.heterogeneouschain.constant.BnbConstant.BSC_CHAIN;
+import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ETH_CHAIN;
 
 /**
  * 获取第三方价格 发交易
@@ -62,6 +69,8 @@ public class CollectorTask implements Runnable {
 
     private QuotationService quotationService = SpringLiteContext.getBean(QuotationService.class);
     private QuotationIntradayStorageService quotationIntradayStorageService = SpringLiteContext.getBean(QuotationIntradayStorageService.class);
+    private ETHWalletApi ethWalletApi = SpringLiteContext.getBean(ETHWalletApi.class);
+    private BNBWalletApi bnbWalletApi = SpringLiteContext.getBean(BNBWalletApi.class);
 
     public CollectorTask(Chain chain) {
         this.chain = chain;
@@ -79,6 +88,7 @@ public class CollectorTask implements Runnable {
             QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.clear();
             List<QuotationActuator> quteList = chain.getQuote();
             Map<String, Double> pricesMap = new HashMap<>();
+            long blockHeight = chain.getLatestBasicBlock().getHeight();
             for (QuotationActuator qa : quteList) {
                 String anchorToken = qa.getAnchorToken();
                 if (QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)) {
@@ -100,7 +110,7 @@ public class CollectorTask implements Runnable {
                     }
                 }
                 BigDecimal price = null;
-                long blockHeight = chain.getLatestBasicBlock().getHeight();
+
                 if (ANCHOR_TOKEN_USDT.equals(anchorToken)) {
                     if (blockHeight >= usdtDaiUsdcPaxKeyHeight) {
                         price = BigDecimal.ONE;
@@ -115,13 +125,13 @@ public class CollectorTask implements Runnable {
                             continue;
                         }
                     }
-                    if(ANCHOR_TOKEN_BNB.equals(anchorToken)){
+                    if (ANCHOR_TOKEN_BNB.equals(anchorToken)) {
                         if (blockHeight < bnbKeyHeight) {
                             continue;
                         }
                     }
-                    if(ANCHOR_TOKEN_HT.equals(anchorToken)
-                        || ANCHOR_TOKEN_OKB.equals(anchorToken)){
+                    if (ANCHOR_TOKEN_HT.equals(anchorToken)
+                            || ANCHOR_TOKEN_OKB.equals(anchorToken)) {
                         if (blockHeight < htOkbKeyHeight) {
                             continue;
                         }
@@ -136,6 +146,57 @@ public class CollectorTask implements Runnable {
                 chain.getLogger().info("[CollectorTask] [{}]第三方平均报价为：{} \n\n", anchorToken, price.doubleValue());
                 pricesMap.put(anchorToken, price.doubleValue());
             }
+
+            // swap合约报价
+            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
+                if(blockHeight < quContractCfg.getEffectiveHeight()){
+                    continue;
+                }
+                String anchorToken = quContractCfg.getAnchorToken();
+                if (QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)) {
+                    //当天已存在该key的已确认报价交易
+                    continue;
+                }
+                if (QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.containsKey(anchorToken)) {
+                    //如果未确认的报价交易缓存中已存在该key, 则需要从交易模块获取该笔交易是否已确认
+                    String txHash = QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.get(anchorToken);
+                    boolean confirmed = QuotationCall.isConfirmed(chain, txHash);
+                    chain.getLogger().info("[CollectorTask] 获取交易是否已确认：{}, hash:{}", confirmed, txHash);
+                    if (confirmed) {
+                        chain.getLogger().info("[CollectorTask] {}已报价", anchorToken);
+                        //加入已报价确认
+                        QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
+                        continue;
+                    } else {
+                        quotationIntradayStorageService.delete(chain, anchorToken);
+                    }
+                }
+                String baseAnchorToken = quContractCfg.getBaseAnchorToken();
+                Double unitPrice = pricesMap.get(baseAnchorToken);
+                if (null == unitPrice) {
+                    chain.getLogger().error("[CollectorTask] {}不能进行合约SWAP报价, [{}]没有获取到第三方报价", quContractCfg.getKey(), baseAnchorToken);
+                    continue;
+                }
+                Double resultPrice = null;
+                switch (quContractCfg.getChain()) {
+                    case ETH_CHAIN:
+                        resultPrice = ethContractQuote(quContractCfg.getSwapTokenContractAddress(),
+                                quContractCfg.getBaseTokenContractAddress(),
+                                unitPrice.toString());
+                        break;
+                    case BSC_CHAIN:
+                        resultPrice = bscContractQuote(quContractCfg.getSwapTokenContractAddress(),
+                                quContractCfg.getBaseTokenContractAddress(),
+                                unitPrice.toString());
+                        break;
+                    default:
+                }
+                if (null != resultPrice) {
+                    chain.getLogger().info("[CollectorTask] 合约SWAP报价, [{}]：{} \n\n", anchorToken, resultPrice);
+                    pricesMap.put(anchorToken, resultPrice);
+                }
+            }
+
             Transaction tx = null;
             if (pricesMap.isEmpty() || null == (tx = createAndSendTx(chain, pricesMap))) {
                 return;
@@ -185,5 +246,75 @@ public class CollectorTask implements Runnable {
     public Collector getCollector(String clazz) throws Exception {
         Class<?> clasz = Class.forName(clazz);
         return (Collector) SpringLiteContext.getBean(clasz);
+    }
+
+
+    /**
+     * ETH网络 计算 UNI-V2 token价格
+     *
+     * @param swapTokenContractAddress swap UNI-V2合约地址
+     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
+     * @param baseTokenUnitPrice       基准token的单价
+     * @throws Exception
+     */
+    public double ethContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
+        // 池子里ETH的数量
+        chain.getLogger().debug("ETH,  V2-LP:{}, WETH:{}", swapTokenContractAddress, baseTokenContractAddress);
+        BigInteger wethBalance = ethWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+        chain.getLogger().debug("wethBalance:" + wethBalance);
+        int wethDecimals = ethWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+        chain.getLogger().debug("wethDecimals:" + wethDecimals);
+        BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
+        chain.getLogger().debug("wethTwice:" + wethTwice);
+        BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
+        chain.getLogger().debug("wethCount:{}, baseTokenUnitPrice:{}",  wethCount, baseTokenUnitPrice);
+        BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
+        chain.getLogger().debug("wethPrice:" + wethPrice);
+        chain.getLogger().debug("");
+        BigInteger totalSupplyV2 = ethWalletApi.totalSupply(swapTokenContractAddress);
+        chain.getLogger().debug("totalSupplyV2:" + totalSupplyV2);
+        int v2Decimals = ethWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+        chain.getLogger().debug("V2Decimals:" + v2Decimals);
+        BigDecimal v2Count = new BigDecimal(totalSupplyV2).movePointLeft(v2Decimals);
+        chain.getLogger().debug("V2Count:" + v2Count);
+        BigDecimal uniV2Price = wethPrice.divide(v2Count, 6, RoundingMode.DOWN);
+        chain.getLogger().debug("uniV2Price:" + uniV2Price);
+        return uniV2Price.doubleValue();
+    }
+
+
+    /**
+     * BSC网络 计算 Cake_LP token价格
+     *
+     * @param swapTokenContractAddress swap UNI-V2合约地址
+     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
+     * @param baseTokenUnitPrice       基准token的单价
+     * @return
+     * @throws Exception
+     */
+    public double bscContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
+        // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+        chain.getLogger().debug("BSC,  Cake-LP:{}, WBNB:{}", swapTokenContractAddress, baseTokenContractAddress);
+        // 池子里ETH的数量
+        BigInteger wethBalance = bnbWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+        chain.getLogger().debug("wethBalance:" + wethBalance);
+        int wethDecimals = bnbWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+        chain.getLogger().debug("wethDecimals:" + wethDecimals);
+        BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
+        chain.getLogger().debug("wethTwice:" + wethTwice);
+        BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
+        chain.getLogger().debug("wethCount:" + wethCount);
+        BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
+        chain.getLogger().debug("wethPrice:" + wethPrice);
+        chain.getLogger().debug("");
+        BigInteger totalSupplyCakeLp = bnbWalletApi.totalSupply(swapTokenContractAddress);
+        chain.getLogger().debug("totalSupplyCakeLp:" + totalSupplyCakeLp);
+        int cakeLpDecimals = bnbWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+        chain.getLogger().debug("cakeLpDecimals:" + cakeLpDecimals);
+        BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
+        chain.getLogger().debug("cakeLpCount:" + cakeLpCount);
+        BigDecimal cakeLpPrice = wethPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
+        chain.getLogger().debug("cakeLpPrice:" + cakeLpPrice);
+        return cakeLpPrice.doubleValue();
     }
 }

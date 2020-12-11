@@ -1,0 +1,11 @@
+
+ssh root@172.21.42.125 'bash -s ' < ./remote-import-address f0e34067b61319543f892c2b5f29c766c442bc6af4974225119e16bd38121437
+ssh root@172.21.42.121 'bash -s ' < ./remote-import-address 78e7a6608563e133d26e9f6ddfff40d3cd074c922b2a71a67b1160eb4028cddf
+ssh root@172.21.42.124 'bash -s ' < ./remote-import-address a6f778a4983cc34c84dd4fa637454e2a1da1dd51e39ee2591688462477aff85e
+ssh root@172.21.42.138 'bash -s ' < ./remote-import-address d99410e5724f28c8acebe2e76eba958267152aba928c82eb06dc56b3aeee5d6a
+ssh root@172.21.42.123 'bash -s ' < ./remote-import-address b25734d7a6ed0a9225fd11c3300b5814e658ff562b00be753511b98bfad705f7
+ssh root@172.21.42.150 'bash -s ' < ./remote-import-address 87fa46afe1fb22910ca4b5c460eda4ecca7d3d1eaca7829ac5750b9e66f3bae0
+ssh root@172.21.42.147 'bash -s ' < ./remote-import-address c96444dde6e8e7094192199a5b9b38be27cad6e3c3dea0d025c74d3384c4c6ce
+ssh root@172.21.42.140 'bash -s ' < ./remote-import-address dd0f9ac295cf25ac79be3f60f35ad9b07464c32293c2f74d3ad9e888c927acdd
+ssh root@172.21.42.130 'bash -s ' < ./remote-import-address 4ce490856bcafa1feabfd3ae488e5fa8128bcf3995318ffa6a694b2ed562eb87
+ssh root@172.21.42.149 'bash -s ' < ./remote-import-address a290400fec42b2a251fb8eb8e55fb7a89edd9ee1f43fcd8e47bda5c992e94bb1

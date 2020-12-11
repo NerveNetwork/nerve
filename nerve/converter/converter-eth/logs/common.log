@@ -1,0 +1,3 @@
+2020-08-11 13:23:33,585 INFO [main] - ---currentTime:2020-08-11 13:23:33.576--,java.lang.StackTraceElement.initClass(Base.java:44):init
+2020-08-11 13:24:46,657 INFO [main] - ---currentTime:2020-08-11 13:24:46.648--,java.lang.StackTraceElement.initClass(Base.java:44):init
+2020-08-11 13:26:42,424 INFO [main] - ---currentTime:2020-08-11 13:26:42.413--,java.lang.StackTraceElement.initClass(Base.java:44):init

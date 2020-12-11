@@ -67,18 +67,4 @@ public class StakingLimitServiceImplTest {
         config.setLimitCfgList(limitCfgs);
     }
 
-    @Test
-    public void testValidate() {
-        Object[][] args = new Object[][]{
-                new Object[]{"测试非硬顶资产", new StackingAsset(5, 1, "", true, 8, "NVT"), BigInteger.valueOf(100000), true},
-                new Object[]{"测试超过的情况", new StackingAsset(5, 2, "", true, 18, "NVT"), new BigInteger("100000000000000000000000"), false},
-                new Object[]{"测试超过的情况-不同小数位数", new StackingAsset(5, 3, "", true, 8, "NVT"), new BigInteger("10000000000000"), false},
-                new Object[]{"合法的情况", new StackingAsset(5, 3, "", true, 18, "NVT"), new BigInteger("1000000000000000000000"), true},
-        };
-        for (Object[] item : args) {
-            boolean result = this.service.validate(chain, (StackingAsset) item[1], (BigInteger) item[2]);
-            assertEquals(result, item[3]);
-        }
-
-    }
 }

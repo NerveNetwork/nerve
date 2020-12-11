@@ -104,4 +104,10 @@ public interface ConfirmedTxStorageService {
      */
     List<byte[]> getExistTxs(int chainId, List<byte[]> hashList);
 
+    /**
+     * 获取所有交易（数据量巨大）
+     * @param chainId
+     * @return
+     */
+    List<TransactionConfirmedPO> getAllTxs(int chainId);
 }

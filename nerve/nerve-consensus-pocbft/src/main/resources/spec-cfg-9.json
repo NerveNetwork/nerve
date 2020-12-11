@@ -5,6 +5,7 @@
   "maxCoinToOfCoinbase": 3000,
   "v130Height": 2260000,
   "v160Height": 5600000,
+  "v170Height": 6650000,
   "minStakingAmount": 100000000000,
   "minAppendAndExitAmount":200000000000,
   "exitStakingLockHours":168,

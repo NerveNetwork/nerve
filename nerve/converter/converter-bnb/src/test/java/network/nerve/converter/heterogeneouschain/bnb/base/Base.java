@@ -90,8 +90,8 @@ public class Base {
         if(bnbWalletApi.getWeb3j() != null) {
             bnbWalletApi.getWeb3j().shutdown();
         }
-        //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-        String mainEthRpcAddress = "http://bsc.nerve.network";
+        String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
+        //String mainEthRpcAddress = "http://bsc.nerve.network";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         bnbWalletApi.setWeb3j(web3j);
         bnbWalletApi.setEthRpcAddress(mainEthRpcAddress);

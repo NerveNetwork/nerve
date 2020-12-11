@@ -24,7 +24,6 @@
 
 package network.nerve.quotation.rpc.cmd;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.core.annotation.Autowired;
@@ -45,6 +44,7 @@ import network.nerve.quotation.constant.QuotationErrorCode;
 import network.nerve.quotation.manager.ChainManager;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.QuotationActuator;
+import network.nerve.quotation.model.bo.QuotationContractCfg;
 import network.nerve.quotation.model.dto.QuoteDTO;
 import network.nerve.quotation.model.po.ConfirmFinalQuotationPO;
 import network.nerve.quotation.service.QuotationService;
@@ -135,6 +135,20 @@ public class QuotationCmd extends BaseCmd {
                     break;
                 }
             }
+            // swap合约报价key
+            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
+                if (key.equals(quContractCfg.getKey())) {
+                    keyExist = true;
+                    String anchorToken = quContractCfg.getAnchorToken();
+                    String dbKey = CommonUtil.assembleKey(date, anchorToken);
+                    confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey);
+                    if (null == confirmFinalQuotationPO) {
+                        // 带日期的查不到就查最近一次的(不带日期key)
+                        confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalLastTimeQuotation(chain, anchorToken);
+                    }
+                    break;
+                }
+            }
 
             if (null == confirmFinalQuotationPO) {
                 if (!keyExist) {
@@ -145,7 +159,7 @@ public class QuotationCmd extends BaseCmd {
                     chain.getLogger().warn("暂无任何最终报价. key:{}", key);
                 }
             }
-            chain.getLogger().debug("取: " + JSON.toJSONString(confirmFinalQuotationPO));
+            chain.getLogger().debug("取: " + JSONUtils.obj2json(confirmFinalQuotationPO));
             return success(confirmFinalQuotationPO);
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -179,7 +193,7 @@ public class QuotationCmd extends BaseCmd {
             finalQuotation.setPrice(price);
             finalQuotation.setDate(date);
             confirmFinalQuotationStorageService.saveCfrFinalQuotation(chain, key, finalQuotation);
-            System.out.println("test: " + JSON.toJSONString(finalQuotation));
+            System.out.println("test: " + JSONUtils.obj2json(finalQuotation));
             return success(finalQuotation);
 
         } catch (NulsException e) {

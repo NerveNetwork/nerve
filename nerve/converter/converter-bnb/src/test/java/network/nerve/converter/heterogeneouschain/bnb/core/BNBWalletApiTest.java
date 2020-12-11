@@ -148,14 +148,6 @@ public class BNBWalletApiTest extends Base {
         this.multySignContractAddress = "0xf7915d4de86b856F3e51b894134816680bf09EEE";
         init();
     }
-    protected void setBnbMainTest() {
-        list = new ArrayList<>();
-        list.add("");//
-        list.add("");//
-        list.add("");//
-        this.multySignContractAddress = "0xcb76C205866A58f6cEE4F3d4035CEE160D65F05D";
-        init();
-    }
 
     public void init() {
         BnbContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
@@ -360,19 +352,17 @@ public class BNBWalletApiTest extends Base {
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setUpgradeMain() {
-        setMain();
+    protected void setBnbMainTest() {
+        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
+        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
+        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        //TODO ncf配置文件里，前三个种子节点的出块地址的私钥
-        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
-        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
-        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
-        list.add("");// ???
-        list.add("");// ???
-        this.multySignContractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
+        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         init();
     }
-
     /**
      * 添加 N 个管理员
      */
@@ -382,14 +372,14 @@ public class BNBWalletApiTest extends Base {
         //setUpgradeMain();
         //setLocalTest();
         setBeta();
+        //setBnbMainTest();
+        //setMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
         BnbContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa2000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{
-                "0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc"
-                };
-        String[] removes = new String[]{};
+        String txKey = "aaa2100000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{"0xa31057905a24cfd077d78e349d2d6da715ab5327"};
+        String[] removes = new String[]{"0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc"};
         int txCount = 1;
         int signCount = 4;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
@@ -410,14 +400,31 @@ public class BNBWalletApiTest extends Base {
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
 
+    protected void setUpgradeMain() {
+        setMain();
+        list = new ArrayList<>();
+        // 把CC的私钥放在首位
+        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
+        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
+        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
+        list.add("");// ???
+        list.add("");// ???
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        init();
+    }
+
     /**
      * 顶替一个管理员，10个签名
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
-        String txKey = "bbb0000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0x7dc432b48d813b2579a118e5a0d2fee744ac8e02"};
-        String[] removes = new String[]{"0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
+        setUpgradeMain();
+        // GasPrice准备
+        long gasPriceGwei = 20L;
+        BnbContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
+        String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
+        String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
         int txCount = 1;
         int signCount = 10;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);

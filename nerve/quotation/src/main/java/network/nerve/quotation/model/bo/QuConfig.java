@@ -46,6 +46,11 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     /** 主链主资产ID*/
     private int mainAssetId;
     private int effectiveQuotation;
+    /**
+     * 去掉最高和最低 数据的数量
+     * 如果为1 则去掉1个最高和1个最低，共计2条价格数据
+     * */
+    private int removeMaxMinCount;
     private String quoteStartHm;
     private String quoteEndHm;
     /** USDT DAI USDC PAX 协议升级配置的高度*/
@@ -137,5 +142,13 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setHtOkbKeyHeight(long htOkbKeyHeight) {
         this.htOkbKeyHeight = htOkbKeyHeight;
+    }
+
+    public int getRemoveMaxMinCount() {
+        return removeMaxMinCount;
+    }
+
+    public void setRemoveMaxMinCount(int removeMaxMinCount) {
+        this.removeMaxMinCount = removeMaxMinCount;
     }
 }

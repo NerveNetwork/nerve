@@ -137,7 +137,10 @@ public class CalculatorProcessor implements Calculator {
      * 去掉[两个]最大值和两个最小值的数据
      */
     private List<NodeQuotationPO> removeMinMax(Chain chain, List<NodeQuotationPO> list) {
-        if (list.size() <= 4) {
+        if (QuotationContext.removeMaxMinCount <= 0){
+            return list;
+        }
+        if (list.size() <= QuotationContext.removeMaxMinCount * 2) {
             list.clear();
             return list;
         }
@@ -156,7 +159,7 @@ public class CalculatorProcessor implements Calculator {
         });
         List<NodeQuotationPO> rsList = new ArrayList<>();
         //去掉头尾各两个元素
-        for (int i = 2; i < list.size() - 2; i++) {
+        for (int i = QuotationContext.removeMaxMinCount; i < list.size() - QuotationContext.removeMaxMinCount; i++) {
             rsList.add(list.get(i));
         }
         return rsList;

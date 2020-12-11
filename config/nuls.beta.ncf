@@ -166,11 +166,6 @@ sysFeeScale=2
 createTradingAmount=20000000000
 
 [dex-api]
-oneMinuteBlockCount=30
-usdChainId=5
-usdAssetId=6
-btcChainId=5
-btcAssetId=4
 walletPSUrl=http://beta.public.nerve.network/
 walletApiUrl=http://beta.api.nerve.network/
 autoOrderAddress=TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg,TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg
@@ -189,6 +184,7 @@ mongoPwd=nuls123456
 
 [quotation]
 effectiveQuotation=1
+removeMaxMinCount=2
 quoteStartHm=04:00
 quoteEndHm=04:10
 nerveBasedNuls=1

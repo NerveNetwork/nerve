@@ -1,5 +1,6 @@
 package network.nerve.quotation.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.ProtocolLoader;
 import io.nuls.base.protocol.RegisterHelper;
@@ -7,6 +8,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.constant.DBErrorCode;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -14,6 +16,10 @@ import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.quotation.constant.QuotationConstant;
 import network.nerve.quotation.constant.QuotationContext;
+import network.nerve.quotation.heterogeneouschain.BNBWalletApi;
+import network.nerve.quotation.heterogeneouschain.ETHWalletApi;
+import network.nerve.quotation.heterogeneouschain.context.BnbContext;
+import network.nerve.quotation.heterogeneouschain.context.EthContext;
 import network.nerve.quotation.model.bo.*;
 import network.nerve.quotation.storage.ConfigStorageService;
 import network.nerve.quotation.storage.ConfirmFinalQuotationStorageService;
@@ -32,6 +38,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static network.nerve.quotation.heterogeneouschain.constant.BnbConstant.BSC_CHAIN;
+import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ETH_CHAIN;
 import static network.nerve.quotation.util.LoggerUtil.LOG;
 
 @Component
@@ -51,6 +59,11 @@ public class ChainManager {
 
     @Autowired
     private QuConfig quConfig;
+
+    @Autowired
+    private ETHWalletApi ethWalletApi;
+    @Autowired
+    private BNBWalletApi bnbWalletApi;
 
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
@@ -73,25 +86,45 @@ public class ChainManager {
             chain.getLogger().debug("Chain:{} init success..", chainId);
             ProtocolLoader.load(chainId);
             loadQuoteCfgJson(chain);
+            loadQuoteContractCfgJson(chain);
             loadCollectorCfgJson(chain);
             loadIntradayQuotedToken(chain);
+
+            //初始化异构链信息
         }
     }
 
     /**
      * 加载当天已完成最终报价的交易对, 以防二次报价
+     *
      * @param chain
      */
-    private void loadIntradayQuotedToken(Chain chain){
+    private void loadIntradayQuotedToken(Chain chain) {
         List<QuotationActuator> quteList = chain.getQuote();
         for (QuotationActuator qa : quteList) {
             String date = TimeUtil.nowUTCDate();
             String anchorToken = qa.getAnchorToken();
             String dbKey = CommonUtil.assembleKey(date, anchorToken);
-            if(null != confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey)) {
+            if (null != confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey)) {
                 QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.add(anchorToken);
                 QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
             }
+        }
+        // swap合约报价
+        for (QuotationContractCfg qa : chain.getContractQuote()) {
+            String date = TimeUtil.nowUTCDate();
+            String anchorToken = qa.getAnchorToken();
+            String dbKey = CommonUtil.assembleKey(date, anchorToken);
+            if (null != confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey)) {
+                QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.add(anchorToken);
+                QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
+            }
+        }
+        try {
+            chain.getLogger().info("{}", JSONUtils.obj2json(QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS));
+            chain.getLogger().info("{}", JSONUtils.obj2json(QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
         }
         // 当天已执行报价的token(不一定完成了最终报价)
         List<String> allTokens = quotationIntradayStorageService.getAll(chain);
@@ -147,7 +180,7 @@ public class ChainManager {
                 ConfigBean configBean = quConfig;
 
                 boolean saveSuccess = configService.save(configBean, configBean.getChainId());
-                if(saveSuccess){
+                if (saveSuccess) {
                     configMap.put(configBean.getChainId(), configBean);
                 }
             }
@@ -160,6 +193,7 @@ public class ChainManager {
 
     /**
      * 加载喂价配置
+     *
      * @param chain
      * @throws Exception
      */
@@ -186,7 +220,40 @@ public class ChainManager {
     }
 
     /**
+     * 加载合约(swap)喂价配置
+     *
+     * @param chain
+     * @throws Exception
+     */
+    private void loadQuoteContractCfgJson(Chain chain) throws Exception {
+        String quotationConfigJson = IoUtils.read(QuotationConstant.QU_CONTRACT_CONFIG_FILE);
+        List<QuotationContractCfg> quotationContractCfg = JSONUtils.json2list(quotationConfigJson, QuotationContractCfg.class);
+
+        for (QuotationContractCfg quContractCfg : quotationContractCfg) {
+            String rpcAddress = quContractCfg.getRpcAddress();
+            switch (quContractCfg.getChain()) {
+                case ETH_CHAIN:
+                    if (StringUtils.isNotBlank(rpcAddress)) {
+                        EthContext.rpcAddress = rpcAddress;
+                    }
+                    ethWalletApi.init();
+                    break;
+                case BSC_CHAIN:
+                    if (StringUtils.isNotBlank(rpcAddress)) {
+                        BnbContext.rpcAddress = rpcAddress;
+                    }
+                    bnbWalletApi.init();
+                    break;
+                default:
+            }
+        }
+        chain.setContractQuote(quotationContractCfg);
+        chain.getLogger().info("quotation-contract-config : {}", quotationConfigJson);
+    }
+
+    /**
      * 采集价格第三方api配置
+     *
      * @param chain
      * @throws Exception
      */

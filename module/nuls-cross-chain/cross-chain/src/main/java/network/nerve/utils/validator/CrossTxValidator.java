@@ -119,7 +119,6 @@ public class CrossTxValidator {
                 if (!verifyResult) {
                     throw new NulsException(NulsCrossChainErrorCode.SIGNATURE_ERROR);
                 }
-                //todo ? 此处乘以5的目的是什么
                 txSize += P2PHKSignature.SERIALIZE_LENGTH * (chain.getVerifierList().size());
             }
         } else {

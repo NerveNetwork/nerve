@@ -223,7 +223,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 return 0;
             }
             logger().info("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-            return 2;
+            //return 2;
         }
         // 收集完成，组装广播交易
         if (vbSet.size() == hChainSize) {

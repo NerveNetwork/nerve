@@ -19,15 +19,18 @@ public class RateAdditionDTO {
     private String symbol;
     @ApiModelProperty(description = "委托基础利率")
     private double basicRate;
+    @ApiModelProperty(description = "是否支持定期")
+    private boolean canBePeriodically;
     @ApiModelProperty(description = "委托类型利率加成明细")
     private List<RateAdditionDetailDTO> detailList;
 
-    public RateAdditionDTO(StackingAsset stackingAsset, double basicRate){
+    public RateAdditionDTO(StackingAsset stackingAsset, double basicRate,boolean canBePeriodically){
         this.assetChainId = stackingAsset.getChainId();
         this.assetId = stackingAsset.getAssetId();
         this.oracleKey = stackingAsset.getOracleKey();
         this.symbol = stackingAsset.getSimple();
         this.basicRate = basicRate;
+        this.canBePeriodically = canBePeriodically;
         detailList = new ArrayList<>();
     }
 
@@ -69,6 +72,14 @@ public class RateAdditionDTO {
 
     public void setBasicRate(double basicRate) {
         this.basicRate = basicRate;
+    }
+
+    public boolean isCanBePeriodically() {
+        return canBePeriodically;
+    }
+
+    public void setCanBePeriodically(boolean canBePeriodically) {
+        this.canBePeriodically = canBePeriodically;
     }
 
     public List<RateAdditionDetailDTO> getDetailList() {

@@ -411,7 +411,7 @@ public class ChainServiceImpl implements ChainService {
         map.put(PARAM_AGENT_CHAIN_ID, chainConfig.getAgentChainId());
         map.put(PARAM_AWARD_ASSERT_ID, chainConfig.getAwardAssetId());
         map.put(PARAM_TOTALINFLATIONAMOUNT, chainConfig.getTotalInflationAmount());
-        map.put(PARAM_MAIN_ASSERT_BASE, chainConfig.getMainAssertBase());
+        map.put(PARAM_MAIN_ASSERT_BASE, chainConfig.getWeight(1, 1));
         map.put(PARAM_LOCAL_ASSERT_BASE, chainConfig.getLocalAssertBase());
         map.put(PARAM_COMMISSION_MIN, chainConfig.getPackDepositMin());
         map.put(PARAM_SEED_COUNT, chain.getSeedAddressList().size());
@@ -465,8 +465,14 @@ public class ChainServiceImpl implements ChainService {
             List<RateAdditionDTO> rateAdditionList = new ArrayList<>();
             double basicRate;
             for (StackingAsset stackingAsset : chainManager.getStackingAssetList()) {
-                basicRate = getBasicRate(stackingAsset.getChainId(), stackingAsset.getAssetId());
-                RateAdditionDTO rateAddition = new RateAdditionDTO(stackingAsset, basicRate);
+                basicRate = stackingAsset.getWeight();
+                if (basicRate == 25) {
+                    Chain chain = chainManager.getChainMap().get(stackingAsset.getChainId());
+                    if (null != chain && chain.getBestHeader().getHeight() < chain.getConfig().getV1_7_0Height() + 30 * 43200) {
+                        basicRate = basicRate * 36;
+                    }
+                }
+                RateAdditionDTO rateAddition = new RateAdditionDTO(stackingAsset, basicRate, stackingAsset.isCanBePeriodically());
                 rateAddition.setDetailList(getRateAdditionDetail(basicRate));
                 rateAdditionList.add(rateAddition);
             }
@@ -515,7 +521,7 @@ public class ChainServiceImpl implements ChainService {
             return consensusConfig.getLocalAssertBase();
         }
         if (assetChainId == consensusConfig.getMainChainId() && assetId == consensusConfig.getMainAssetId()) {
-            return consensusConfig.getMainAssertBase();
+            return consensusConfig.getWeight(assetChainId, assetId);
         }
         return 1;
     }

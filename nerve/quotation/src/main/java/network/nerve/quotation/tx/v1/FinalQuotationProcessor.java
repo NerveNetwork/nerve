@@ -38,6 +38,7 @@ import network.nerve.quotation.constant.QuotationErrorCode;
 import network.nerve.quotation.manager.ChainManager;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.QuotationActuator;
+import network.nerve.quotation.model.bo.QuotationContractCfg;
 import network.nerve.quotation.model.po.ConfirmFinalQuotationPO;
 import network.nerve.quotation.model.txdata.Price;
 import network.nerve.quotation.model.txdata.Prices;
@@ -223,7 +224,13 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             }
             return true;
         }
-        return false;
+        for(QuotationContractCfg quContractCfg : chain.getContractQuote()){
+            String anchorToken = quContractCfg.getAnchorToken();
+            if (key.equals(anchorToken) && height >= quContractCfg.getEffectiveHeight()) {
+                cfgKey = true;
+            }
+        }
+        return cfgKey;
     }
 
     /**

@@ -40,6 +40,7 @@ public interface QuotationConstant {
     String PARAM_ADDRESS = "address";
 
     String QU_CONFIG_FILE = "quotation-config.json";
+    String QU_CONTRACT_CONFIG_FILE = "quotation-contract-config.json";
     String COLLECTOR_CONFIG_FILE = "collector-config.json";
 
     int INIT_CAPACITY_8 = 8;

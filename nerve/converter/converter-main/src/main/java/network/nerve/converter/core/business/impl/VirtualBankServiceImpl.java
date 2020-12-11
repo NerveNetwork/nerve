@@ -194,10 +194,19 @@ public class VirtualBankServiceImpl implements VirtualBankService {
 
     private void initBank(Chain chain, List<AgentBasic> listAgent, long height) {
         int bankNumber = chain.getMapVirtualBank().size();
+        /* 2020/11/19 如果异构链数量与虚拟银行节点（种子）维护的异构链地址数不一致， 则需要初始化虚拟银行**/
+        int heterogeneousSize = 0;
+        for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
+            if (director.getSeedNode()) {
+                heterogeneousSize = director.getHeterogeneousAddrMap().size();
+                break;
+            }
+        }
+        int hSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
         /**
          * 判断需要进行初始化
          */
-        if (INIT_VIRTUAL_BANK_HEIGHT <= height && bankNumber == 0) {
+        if (heterogeneousSize != hSize || (INIT_VIRTUAL_BANK_HEIGHT <= height && bankNumber == 0)) {
             try {
                 //初始化种子节点为初始虚拟银行
                 initVirtualBank(chain, listAgent, height);
@@ -533,10 +542,11 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         }
         // 调异构链组件,进行初始化
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
-            if (!director.getSeedNode()) {
+           /* 2020/11/19
+           if (!director.getSeedNode()) {
                 // 非种子节点 没有初始化, 无法获取异构链地址
                 continue;
-            }
+            }*/
             for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                 if (!director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
                     // 为新成员创建新的异构链多签地址

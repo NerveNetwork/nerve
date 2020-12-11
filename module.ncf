@@ -29,9 +29,9 @@ packageVersion=%PACKAGE_VERSION%
 [network]
 port=7001
 crossPort=7002
+reverseCheck=0
 #魔法参数
 packetMagic=2020071001
-reverseCheck=0
 #种子节点
 selfSeedIps=seeda.nerve.network:7001,seedb.nerve.network:7001,seedh.nerve.network:7001,seedg.nerve.network:7001,seedc.nerve.network:7001,seede.nerve.network:7001
 #主网的跨链种子连接节点
@@ -164,10 +164,6 @@ sysFeeScale=2
 createTradingAmount=20000000000
 
 [dex-api]
-usdChainId=9
-usdAssetId=3
-btcChainId=5
-btcAssetId=4
 walletPSUrl=https://public.nerve.network/
 walletApiUrl=https://api.nerve.network/
 #运行节点设置手续费收取地址
@@ -189,6 +185,7 @@ mongoPwd=nuls123456
 
 [quotation]
 effectiveQuotation=1
+removeMaxMinCount=2
 quoteStartHm=00:00
 quoteEndHm=00:10
 

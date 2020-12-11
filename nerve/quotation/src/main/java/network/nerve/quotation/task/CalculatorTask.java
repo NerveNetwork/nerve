@@ -29,6 +29,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.QuotationActuator;
+import network.nerve.quotation.model.bo.QuotationContractCfg;
 import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.processor.Calculator;
 import network.nerve.quotation.rpc.call.QuotationCall;
@@ -67,7 +68,7 @@ public class CalculatorTask implements Runnable {
             if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
                 return;
             }
-            if(!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))){
+            if (!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))) {
                 return;
             }
             //清空当天的节点报价缓存
@@ -79,18 +80,31 @@ public class CalculatorTask implements Runnable {
             Map<String, Double> pricesMap = new HashMap<>();
             for (QuotationActuator qa : quteList) {
                 String anchorToken = qa.getAnchorToken();
-                if(QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)){
+                if (QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)) {
                     //如果已确认的报价交易缓存中已存在该key, 则不再执行.
                     continue;
                 }
                 Calculator calculator = getCalculator(qa.getCalculator());
                 Double price = calculator.calcFinal(chain, anchorToken, TimeUtil.nowUTCDate());
-                if(null != price && price > 0) {
+                if (null != price && price > 0) {
+                    pricesMap.put(anchorToken, price);
+                }
+            }
+            // swap合约报价key
+            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
+                String anchorToken = quContractCfg.getAnchorToken();
+                if (QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)) {
+                    //如果已确认的报价交易缓存中已存在该key, 则不再执行.
+                    continue;
+                }
+                Calculator calculator = getCalculator(quContractCfg.getCalculator());
+                Double price = calculator.calcFinal(chain, anchorToken, TimeUtil.nowUTCDate());
+                if (null != price && price > 0) {
                     pricesMap.put(anchorToken, price);
                 }
             }
             //开始组装交易发送到交易模块（交易模块有特殊的接口 不广播）
-            if(!pricesMap.isEmpty()){
+            if (!pricesMap.isEmpty()) {
                 Transaction tx = quotationService.createFinalQuotationTransaction(pricesMap);
                 chain.getLogger().info("{}", tx.format(Prices.class));
                 //发送到交易模块

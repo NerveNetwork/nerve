@@ -163,6 +163,7 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setBnbKeyHeight(bnbKeyHeight);
             long htOkbKeyHeight = Long.parseLong(map.get("htOkbKeyHeight").toString());
             quConfig.setHtOkbKeyHeight(htOkbKeyHeight);
+
         } catch (Exception e) {
             Log.error(e);
         }
@@ -192,6 +193,7 @@ public class QuotationBootstrap extends RpcModule {
             }
         }
         QuotationContext.effectiveQuotation = quConfig.getEffectiveQuotation();
+        QuotationContext.removeMaxMinCount = quConfig.getRemoveMaxMinCount();
         QuotationContext.usdtDaiUsdcPaxKeyHeight = quConfig.getUsdtDaiUsdcPaxKeyHeight();
         QuotationContext.bnbKeyHeight = quConfig.getBnbKeyHeight();
         QuotationContext.htOkbKeyHeight = quConfig.getHtOkbKeyHeight();

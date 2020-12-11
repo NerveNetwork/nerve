@@ -18,22 +18,22 @@ public class DexInfoTask implements Runnable {
 
     @Override
     public void run() {
-        try {
-            for (TradingContainer container : dexManager.getAllContainer().values()) {
-                CoinTradingPo tradingPo = container.getCoinTrading();
+//        try {
+//            for (TradingContainer container : dexManager.getAllContainer().values()) {
+//                CoinTradingPo tradingPo = container.getCoinTrading();
 
-                LoggerUtil.dexInfoLog.info(tradingPo.toString());
-                LoggerUtil.dexInfoLog.info("----------sellOrderList---------size:" + container.getSellOrderList().size());
+//                LoggerUtil.dexInfoLog.info(tradingPo.toString());
+//                LoggerUtil.dexInfoLog.info("----------sellOrderList---------size:" + container.getSellOrderList().size());
 //                for (int i = 0; i < container.getSellOrderList().size(); i++) {
 //                    LoggerUtil.dexInfoLog.info(container.getSellOrderList().get(i).toString());
 //                }
-                LoggerUtil.dexInfoLog.info("----------buyOrderList---------size:" + container.getBuyOrderList().size());
+//                LoggerUtil.dexInfoLog.info("----------buyOrderList---------size:" + container.getBuyOrderList().size());
 //                for (int i = 0; i < container.getBuyOrderList().size(); i++) {
 //                    LoggerUtil.dexInfoLog.info(container.getBuyOrderList().get(i).toString());
 //                }
-            }
-        } catch (Exception e) {
-            LoggerUtil.dexLog.error(e);
-        }
+//            }
+//        } catch (Exception e) {
+//            LoggerUtil.dexLog.error(e);
+//        }
     }
 }

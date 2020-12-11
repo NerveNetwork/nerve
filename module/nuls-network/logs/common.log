@@ -1,0 +1,6 @@
+2020-06-21 15:53:51,913 INFO [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:79):创建ws:ws://192.168.50.82:7771失败，第1重试
+2020-06-21 15:53:54,919 INFO [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:79):创建ws:ws://192.168.50.82:7771失败，第2重试
+2020-06-21 15:53:57,928 INFO [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:79):创建ws:ws://192.168.50.82:7771失败，第3重试
+2020-06-21 15:54:00,936 INFO [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:79):创建ws:ws://192.168.50.82:7771失败，第4重试
+2020-06-21 15:54:03,944 INFO [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:79):创建ws:ws://192.168.50.82:7771失败，第5重试
+2020-06-21 15:54:03,992 ERROR [main] - ---offSet:0---io.nuls.core.rpc.netty.bootstrap.NettyClient.createConnect(NettyClient.java:82):创建ws连接失败：ws://192.168.50.82:7771

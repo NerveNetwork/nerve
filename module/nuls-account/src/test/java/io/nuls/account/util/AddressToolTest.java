@@ -59,7 +59,8 @@ public class AddressToolTest {
 
 
     public static void main(String[] args) {
-        System.out.println(AddressTool.getAddressString(HexUtil.decode("03890847cf4c9a22179b217217b306228a80c6c96bcc77e71342e09e00bb0bda30"), 9));
+        byte[] bytes = AddressTool.getAddress("NULSd6Hh3JKDpBkXHmwdrjE2quCYCFte2R496");
+        System.out.println(bytes);
     }
 
     @Test

@@ -11,6 +11,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
+import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.transaction.constant.TxDBConstant;
 import io.nuls.transaction.constant.TxErrorCode;
@@ -19,7 +20,10 @@ import io.nuls.transaction.storage.ConfirmedTxStorageService;
 import io.nuls.transaction.utils.TxUtil;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
@@ -220,5 +224,29 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
         }
         //根据交易hash批量查询交易数据
         return RocksDBService.multiGetAsList(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId, hashList);
+    }
+
+    @Override
+    public List<TransactionConfirmedPO> getAllTxs(int chainId) {
+        List<TransactionConfirmedPO> list = new ArrayList<>();
+        List<Entry<byte[], byte[]>> listEntry = RocksDBService.entryList(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId);
+        if(null == listEntry){
+            return list;
+        }
+        for(Entry<byte[], byte[]> entry : listEntry){
+            byte[] txBytes = RocksDBService.get(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId, entry.getKey());
+            TransactionConfirmedPO tx = null;
+            if (null != txBytes) {
+                try {
+                    tx = TxUtil.getInstance(txBytes, TransactionConfirmedPO.class);
+                } catch (NulsException e) {
+                    LOG.error("交易反序列化失败 hash:{}", HexUtil.encode(entry.getKey()));
+                    LOG.error(e);
+                    continue;
+                }
+                list.add(tx);
+            }
+        }
+        return list;
     }
 }

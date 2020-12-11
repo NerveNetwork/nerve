@@ -92,23 +92,24 @@ public class CmdClientModule extends RpcModule {
         AddressTool.init(new AddressPrefixDatas());
         AssetsUtil.initRegisteredChainInfo(config.getChainId());
 
-        Arrays.stream(this.startArgs).forEach(d->{
-            Log.info("arg:{}",d);
+        Arrays.stream(this.startArgs).forEach(d -> {
+            Log.info("arg:{}", d);
         });
-        if(startArgs.length > 1){
+        if (startArgs.length > 1) {
             String evel = startArgs[1];
-            if(evel.equals(evalProcessor.getCommand())){
-                if(startArgs.length < 2){
+            if (evel.equals(evalProcessor.getCommand())) {
+                if (startArgs.length < 2) {
                     System.out.println("param is error");
                 }
-                    String[] cmdAry = startArgs[2].split(",");
-                    Arrays.stream(cmdAry).forEach(cmd->{
-                        try {
-                            commandHandler.processCommand(cmd);
-                        } catch (UnsupportedEncodingException e) {
-                            System.out.println(CommandConstant.EXCEPTION + ": " + e.getMessage());
-                        }
-                    });
+                String[] cmdAry = startArgs[2].split(",");
+                Arrays.stream(cmdAry).forEach(cmd -> {
+                    try {
+                        commandHandler.processCommand(cmd);
+                    } catch (UnsupportedEncodingException e) {
+                        System.out.println(CommandConstant.EXCEPTION + ": " + e.getMessage());
+                    }
+                });
+                Log.warn("system exit!");
                 System.exit(0);
             }
         }

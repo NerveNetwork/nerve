@@ -163,10 +163,6 @@ sysFeeScale=2
 createTradingAmount=20000000000
 
 [dex-api]
-usdChainId=9
-usdAssetId=3
-btcChainId=5
-btcAssetId=4
 walletPSUrl=https://public.nerve.network/
 walletApiUrl=https://api.nerve.network/
 #运行节点设置手续费收取地址
@@ -188,6 +184,7 @@ mongoPwd=nuls123456
 
 [quotation]
 effectiveQuotation=1
+removeMaxMinCount=2
 quoteStartHm=00:00
 quoteEndHm=00:10
 

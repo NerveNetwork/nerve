@@ -1,0 +1,24 @@
+[
+  {
+    "chain": "ETH",
+    "key": "NVT-ETH_UNI-V2-LP_PRICE",
+    "anchorToken": "NVTETHUNIV2LP-USDT",
+    "swapTokenContractAddress": "0x5a3de33ae548aae7abaa40cc25a4eddfe4222b3b",
+    "baseTokenContractAddress": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "baseAnchorToken": "ETH-USDT",
+    "rpcAddress": "http://geth.nerve.network",
+    "effectiveHeight": 6640000,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "BSC",
+    "key": "NVT-BNB_Cake-LP_PRICE",
+    "anchorToken": "NVTBNBCakeLP-USDT",
+    "swapTokenContractAddress": "0xee31a8bb1edb26d8de688e2a1ca086e5c11f5978",
+    "baseTokenContractAddress": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "baseAnchorToken": "BNB-USDT",
+    "rpcAddress": "https://bsc-dataseed.binance.org/",
+    "effectiveHeight": 6640000,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  }
+]

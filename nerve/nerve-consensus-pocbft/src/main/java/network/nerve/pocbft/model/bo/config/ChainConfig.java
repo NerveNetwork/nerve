@@ -11,7 +11,9 @@ import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 共识模块配置类
@@ -173,11 +175,6 @@ public class ChainConfig extends BaseNulsData {
     private int agentCountMax;
 
     /**
-     * Nuls和Nerve的权重基数
-     */
-    private double mainAssertBase;
-
-    /**
      * 本链主资产的权重基数
      */
     private double localAssertBase;
@@ -202,6 +199,7 @@ public class ChainConfig extends BaseNulsData {
     private long depositVerifyHeight;
     private Long v1_3_0Height;
     private Long v1_6_0Height;
+    private Long v1_7_0Height;
     private BigInteger minStakingAmount;
     private BigInteger minAppendAndExitAmount;
     private Integer exitStakingLockHours;
@@ -210,6 +208,20 @@ public class ChainConfig extends BaseNulsData {
 
     public List<AssetsStakingLimitCfg> getLimitCfgList() {
         return limitCfgList;
+    }
+
+    public Map<String, Integer> weightMap = new HashMap<>();
+
+    public void putWeight(int chainId, int assetId, int weight) {
+        weightMap.put(chainId + "-" + assetId, weight);
+    }
+
+    public int getWeight(int chainId, int assetId) {
+        Integer weight = weightMap.get(chainId + "-" + assetId);
+        if (null == weight) {
+            return 1;
+        }
+        return weight.intValue();
     }
 
     public void setLimitCfgList(List<AssetsStakingLimitCfg> limitCfgList) {
@@ -398,14 +410,6 @@ public class ChainConfig extends BaseNulsData {
         this.deflationHeightInterval = deflationHeightInterval;
     }
 
-    public double getMainAssertBase() {
-        return mainAssertBase;
-    }
-
-    public void setMainAssertBase(double mainAssertBase) {
-        this.mainAssertBase = mainAssertBase;
-    }
-
     public double getAgentDepositBase() {
         return agentDepositBase;
     }
@@ -532,7 +536,7 @@ public class ChainConfig extends BaseNulsData {
         stream.writeBigInteger(reduceAgentDepositMin);
         stream.writeUint16(byzantineRate);
         stream.writeUint16(agentCountMax);
-        stream.writeDouble(mainAssertBase);
+        stream.writeDouble(0);
         stream.writeDouble(localAssertBase);
         stream.writeDouble(agentDepositBase);
         stream.writeDouble(superAgentDepositBase);
@@ -570,7 +574,7 @@ public class ChainConfig extends BaseNulsData {
         this.reduceAgentDepositMin = byteBuffer.readBigInteger();
         this.byzantineRate = byteBuffer.readUint16();
         this.agentCountMax = byteBuffer.readUint16();
-        this.mainAssertBase = byteBuffer.readDouble();
+        byteBuffer.readDouble();
         this.localAssertBase = byteBuffer.readDouble();
         this.agentDepositBase = byteBuffer.readDouble();
         this.superAgentDepositBase = byteBuffer.readDouble();
@@ -594,7 +598,7 @@ public class ChainConfig extends BaseNulsData {
         size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfUint16();
         size += SerializeUtils.sizeOfDouble(localAssertBase);
-        size += SerializeUtils.sizeOfDouble(mainAssertBase);
+        size += SerializeUtils.sizeOfDouble(0.0);
         size += SerializeUtils.sizeOfDouble(agentDepositBase);
         size += SerializeUtils.sizeOfDouble(superAgentDepositBase);
         size += SerializeUtils.sizeOfDouble(reservegentDepositBase);
@@ -624,6 +628,13 @@ public class ChainConfig extends BaseNulsData {
         return v1_3_0Height;
     }
 
+    public Long getV1_7_0Height() {
+        return v1_7_0Height;
+    }
+
+    public void setV1_7_0Height(Long v1_7_0Height) {
+        this.v1_7_0Height = v1_7_0Height;
+    }
 
     public Long getV1_6_0Height() {
         return v1_6_0Height;

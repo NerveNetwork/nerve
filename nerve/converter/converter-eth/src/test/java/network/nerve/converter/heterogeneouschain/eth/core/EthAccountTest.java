@@ -188,9 +188,13 @@ public class EthAccountTest extends Base {
 
     @Test
     public void NULSAddressByPubkey() {
-        String pubkey = "03558fc5406d4457ea99ec212f65f7d6318611be9a90d9f723606f4eff552a165f";
+        // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        // 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        // 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        chainId = 9;
+        String pubkey = "02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0";
         AddressTool.addPrefix(18, "BBAI");
-        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
+        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, chainId)));
 
     }
 
@@ -223,7 +227,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0x4caa0869a4e0a4a860143b366f336fcc5d11d4d8, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x196c4b2b6e947b57b366967a1822f3fb7d9be1a8, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0xbb5ba69105a330218e4a433f5e2a273bf0075e64, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444";
+        String pubkeySet = "0x4caa0869a4e0a4a860143b366f336fcc5d11d4d8, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x196c4b2b6e947b57b366967a1822f3fb7d9be1a8, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0xbb5ba69105a330218e4a433f5e2a273bf0075e64, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42, 0x15cb37aa4d55d5a0090966bef534c89904841065";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -309,7 +313,7 @@ public class EthAccountTest extends Base {
     @Test
     public void publicKeyTest() {
         EthContext.NERVE_CHAINID = 9;
-        String pub = "a3557f3db11e0005e3c04aa6e8ee2170d7e2469d34243cbb2e7d8f47de3c01e46a29338b80c7c69ee5400267cf64f7f0ced48d18e30b8d76fa3bced37a3a677c";
+        String pub = "";
         pub = leftPadding(pub, "0", 128);
         String pubkeyFromEth = PUBLIC_KEY_UNCOMPRESSED_PREFIX + pub;
         //String pubkeyFromEth = "06" + pub;

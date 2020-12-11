@@ -37,7 +37,7 @@ public class QuotationCmdTest {
     static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
 
     private Chain chain;
-    static int chainId = 2;
+    static int chainId = 5;
     static int assetChainId = 2;
     static int assetId = 1;
     static String version = "1.0";
@@ -82,7 +82,7 @@ public class QuotationCmdTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("key", "NERVE_PRICE");
+        params.put("key", "NVT-BNB_Cake-LP_PRICE");
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.QU.abbr, "qu_final_quotation", params, 1000000L);
         HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("qu_final_quotation");
         System.out.println("qu_quote result:" + JSONUtils.obj2json(result));

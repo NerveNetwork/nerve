@@ -17,5 +17,4 @@ public class PocbftConstant {
         }
         return 1000;
     }
-
 }

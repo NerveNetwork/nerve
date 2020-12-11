@@ -24,14 +24,11 @@
 
 package network.nerve.quotation.model.po;
 
-import com.alibaba.fastjson.JSON;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
-import io.nuls.core.rpc.util.NulsDateUtils;
-import network.nerve.quotation.util.CommonUtil;
 
 import java.io.IOException;
 
@@ -113,16 +110,5 @@ public class FinalQuotationPO extends BaseNulsData {
     public void setQuotationTime(long quotationTime) {
         this.quotationTime = quotationTime;
     }
-
-
-    public static void main(String[] args) throws Exception {
-        FinalQuotationPO finalQuotation = new FinalQuotationPO();
-        finalQuotation.setToken("20191212-NULS");
-        finalQuotation.setPrice(0.27740000);
-        finalQuotation.setLaunchTime(NulsDateUtils.getCurrentTimeSeconds());
-        finalQuotation.setQuotationTime(NulsDateUtils.getCurrentTimeSeconds());
-        byte[] d = finalQuotation.serialize();
-        FinalQuotationPO f = CommonUtil.getInstance(d, FinalQuotationPO.class);
-        System.out.println(JSON.toJSONString(f));
-    }
+    
 }

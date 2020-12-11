@@ -33,7 +33,6 @@ public class NulsRpcModuleBootstrap {
     }
 
 
-
     public static void run(String scanPackage, String[] args) {
         printLogo("/logo");
         Log.info("RUN MODULE:{}", System.getProperty("app.name"));
@@ -41,7 +40,7 @@ public class NulsRpcModuleBootstrap {
         ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
         if (args == null || args.length == 0) {
             String serviceManagerPort = configurationLoader.getValue("serviceManagerPort");
-            if(serviceManagerPort == null){
+            if (serviceManagerPort == null) {
                 serviceManagerPort = "8771";
             }
             args = new String[]{"ws://" + HostInfo.getLocalIP() + ":" + serviceManagerPort};
@@ -91,7 +90,7 @@ public class NulsRpcModuleBootstrap {
 //                }
 //            });
 //        }
-        module.run(scanPackage, args[0],args);
+        module.run(scanPackage, args[0], args);
     }
 
     public static void printLogo(String logoFile) {
@@ -107,7 +106,7 @@ public class NulsRpcModuleBootstrap {
             System.out.println("Module:" + System.getProperty("app.name"));
             System.out.println();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            Log.error(e);
             System.exit(0);
         }
         printLogoed = true;

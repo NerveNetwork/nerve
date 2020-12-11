@@ -81,6 +81,7 @@ public class ChainManager {
                 if (stackingAsset.getChainId() == null) {
                     stackingAsset.setChainId(config.getChainId());
                 }
+                config.putWeight(stackingAsset.getChainId(), stackingAsset.getAssetId(), stackingAsset.getWeight());
             });
         }
         Map<Integer, ChainConfig> configMap = configChain();
@@ -197,6 +198,7 @@ public class ChainManager {
 
             Long v1_3_0Height = Long.parseLong("" + specConfigMap.get("v130Height"));
             Long v1_6_0Height = Long.parseLong("" + specConfigMap.get("v160Height"));
+            Long v1_7_0Height = Long.parseLong("" + specConfigMap.get("v170Height"));
             BigInteger minStakingAmount = new BigInteger("" + specConfigMap.get("minStakingAmount"));
             BigInteger minAppendAndExitAmount = new BigInteger("" + specConfigMap.get("minAppendAndExitAmount"));
             Integer exitStakingLockHours = Integer.parseInt("" + specConfigMap.get("exitStakingLockHours"));
@@ -208,6 +210,7 @@ public class ChainManager {
 
             config.setV130Height(v1_3_0Height);
             config.setV1_6_0Height(v1_6_0Height);
+            config.setV1_7_0Height(v1_7_0Height);
             config.setMinStakingAmount(minStakingAmount);
             config.setMinAppendAndExitAmount(minAppendAndExitAmount);
             config.setExitStakingLockHours(exitStakingLockHours);

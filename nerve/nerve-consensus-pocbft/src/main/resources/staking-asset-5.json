@@ -4,7 +4,8 @@
     "oracleKey": "NERVE_PRICE",
     "canBePeriodically": true,
     "decimal": 8,
-    "simple": "NVT"
+    "simple": "NVT",
+    "weight": 2
   },
   {
     "assetId": "1",
@@ -12,62 +13,47 @@
     "oracleKey": "NULS_PRICE",
     "canBePeriodically": true,
     "decimal": 8,
-    "simple": "NULS"
+    "simple": "NULS",
+    "weight": 2
   },
   {
     "assetId": "2",
     "oracleKey": "ETH_PRICE",
     "canBePeriodically": true,
     "decimal": 18,
-    "simple": "ETH"
+    "simple": "ETH",
+    "weight": 1
   },
   {
-    "assetId": "6",
+    "assetId": "4",
     "oracleKey": "USDT_PRICE",
     "canBePeriodically": false,
-    "decimal": 6,
-    "simple": "USDT"
+    "decimal": 8,
+    "simple": "USDT",
+    "weight": 1
   },
   {
-    "assetId": "7",
-    "oracleKey": "USDC_PRICE",
-    "canBePeriodically": true,
-    "decimal": 6,
-    "simple": "USDC"
-  },
-  {
-    "assetId": "8",
-    "oracleKey": "PAX_PRICE",
-    "canBePeriodically": true,
-    "decimal": 18,
-    "simple": "PAX"
-  },
-  {
-    "assetId": "9",
-    "oracleKey": "DAI_PRICE",
-    "canBePeriodically": true,
-    "decimal": 18,
-    "simple": "PAX"
-  },
-  {
-    "assetId": "23",
+    "assetId": "5",
     "oracleKey": "BNB_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "BNB"
+    "simple": "BNB",
+    "weight": 1
   },
   {
-    "assetId": "24",
-    "oracleKey": "HT_PRICE",
+    "assetId": "9",
+    "oracleKey": "NVT-BNB_Cake-LP_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "HT"
+    "simple": "Cake_LP",
+    "weight": 25
   },
   {
-    "assetId": "25",
-    "oracleKey": "OKB_PRICE",
+    "assetId": "10",
+    "oracleKey": "NVT-ETH_UNI-V2-LP_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "OKB"
+    "simple": "UNI_V2",
+    "weight": 25
   }
 ]

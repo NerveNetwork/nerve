@@ -4,7 +4,8 @@
     "oracleKey": "NERVE_PRICE",
     "canBePeriodically": true,
     "decimal": 8,
-    "simple": "NVT"
+    "simple": "NVT",
+    "weight": 2
   },
   {
     "assetId": "1",
@@ -12,62 +13,87 @@
     "oracleKey": "NULS_PRICE",
     "canBePeriodically": true,
     "decimal": 8,
-    "simple": "NULS"
+    "simple": "NULS",
+    "weight": 2
   },
   {
     "assetId": "2",
     "oracleKey": "ETH_PRICE",
     "canBePeriodically": true,
     "decimal": 18,
-    "simple": "ETH"
+    "simple": "ETH",
+    "weight": 1
   },
   {
     "assetId": "3",
     "oracleKey": "USDT_PRICE",
     "canBePeriodically": false,
     "decimal": 6,
-    "simple": "USDT"
+    "simple": "USDT",
+    "weight": 1
   },
   {
     "assetId": "5",
     "oracleKey": "USDC_PRICE",
     "canBePeriodically": false,
     "decimal": 6,
-    "simple": "USDC"
+    "simple": "USDC",
+    "weight": 1
   },
   {
     "assetId": "6",
     "oracleKey": "DAI_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "DAI"
+    "simple": "DAI",
+    "weight": 1
   },
   {
     "assetId": "7",
     "oracleKey": "PAX_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "PAX"
+    "simple": "PAX",
+    "weight": 1
   },
   {
     "assetId": "25",
     "oracleKey": "BNB_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "BNB"
+    "simple": "BNB",
+    "weight": 1
   },
   {
     "assetId": "8",
     "oracleKey": "HT_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "HT"
+    "simple": "HT",
+    "weight": 1
   },
   {
     "assetId": "9",
     "oracleKey": "OKB_PRICE",
     "canBePeriodically": false,
     "decimal": 18,
-    "simple": "OKB"
+    "simple": "OKB",
+    "weight": 1
+  },
+  {
+    "assetId": "32",
+    "oracleKey": "NVT-BNB_Cake-LP_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "Cake-LP",
+    "weight": 25
+  },
+  {
+    "assetId": "33",
+    "oracleKey": "NVT-ETH_UNI-V2-LP_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "UNI-V2",
+    "weight": 25
   }
 ]

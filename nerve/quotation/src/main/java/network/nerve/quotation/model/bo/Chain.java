@@ -42,6 +42,8 @@ public class Chain {
 
     private List<QuerierCfg> collectors;
 
+    private  List<QuotationContractCfg> contractQuote;
+
     private LatestBasicBlock latestBasicBlock = new LatestBasicBlock();
 
     public int getChainId(){
@@ -70,6 +72,14 @@ public class Chain {
 
     public void setQuote(List<QuotationActuator> quote) {
         this.quote = quote;
+    }
+
+    public List<QuotationContractCfg> getContractQuote() {
+        return contractQuote;
+    }
+
+    public void setContractQuote(List<QuotationContractCfg> contractQuote) {
+        this.contractQuote = contractQuote;
     }
 
     public List<QuerierCfg> getCollectors() {
