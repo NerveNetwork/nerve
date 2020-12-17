@@ -87,4 +87,38 @@ public class ConverterTools implements CallRpc {
         }
     }
 
+    /**
+     * 申请提案
+     * @param chainId
+     * @return
+     */
+    public Result<String> proposal(Map params) {
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_proposal", params, (Function<Map<String, Object>, Result<String>>) res -> {
+                if(res == null){
+                    return new Result();
+                }
+                return new Result(res);
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+    /**
+     * 追加手续费
+     * @return
+     */
+    public Result<String> withdrawalAdditionalFee(Map params) {
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_withdrawal_additional_fee", params, (Function<Map<String, Object>, Result<String>>) res -> {
+                if(res == null){
+                    return new Result();
+                }
+                return new Result(res);
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
 }
