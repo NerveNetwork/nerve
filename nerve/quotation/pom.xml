@@ -11,6 +11,13 @@
 
   <artifactId>quotation</artifactId>
 
+  <repositories>
+    <repository>
+      <id>eth</id>
+      <name>eth-rep</name>
+      <url>https://dl.bintray.com/ethereum/maven/</url>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>network.nerve</groupId>
