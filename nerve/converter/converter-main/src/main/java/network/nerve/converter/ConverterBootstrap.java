@@ -105,13 +105,19 @@ public class ConverterBootstrap extends RpcModule {
     }
 
     private void initProtocolUpdate() {
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
         try {
-            ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
             long heightVersion160 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_6_0"));
             converterConfig.setFeeAdditionalHeight(heightVersion160);
             converterConfig.setWithdrawalRechargeChainHeight(heightVersion160);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_6_0", e);
+        }
+        try {
+            long heightVersion180 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_8_0"));
+            converterConfig.setHuobiCrossChainHeight(heightVersion180);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_8_0", e);
         }
     }
 
@@ -277,6 +283,8 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.FEE_ADDITIONAL_HEIGHT = converterConfig.getFeeAdditionalHeight();
         // 协议升级高度 修改提现和充值交易协议,增加异构链id
         ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = converterConfig.getWithdrawalRechargeChainHeight();
+        // v1.8.0 协议升级高度 支持火币生态链跨链
+        ConverterContext.HUOBI_CROSS_CHAIN_HEIGHT = converterConfig.getHuobiCrossChainHeight();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

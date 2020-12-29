@@ -35,8 +35,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static network.nerve.converter.constant.ConverterConstant.*;
-
 /**
  * @author: Loki
  * @date: 2020/10/10
@@ -52,11 +50,13 @@ public class QuotationCall {
     public static BigDecimal getPriceByOracleKey(Chain chain, String oracleKey) {
         /********************* 测试用 ***************************/
         /*if(ORACLE_KEY_ETH_PRICE.equals(oracleKey)){
-            return new BigDecimal("405");
+            return new BigDecimal("615.96");
         } else if (ORACLE_KEY_NVT_PRICE.equals(oracleKey)){
-            return new BigDecimal("0.136");
+            return new BigDecimal("0.0974");
         } else if (ORACLE_KEY_BNB_PRICE.equals(oracleKey)){
-            return new BigDecimal("30.15");
+            return new BigDecimal("33.0098");
+        } else if (ORACLE_KEY_HT_PRICE.equals(oracleKey)){
+            return new BigDecimal("4.0531");
         }*/
         /************************************************/
         try {

@@ -84,6 +84,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     @Autowired
     private DisqualificationStorageService disqualificationStorageService;
 
+    private boolean huobiCrossChainAvailable = false;
+
     @Override
     public void recordVirtualBankChanges(Chain chain) {
         LatestBasicBlock latestBasicBlock = chain.getLatestBasicBlock();
@@ -243,6 +245,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             //记录当前检查高度
             chain.getLogger().info("达到周期性检查执行高度:{}", height);
         }
+        // 初始化
         if (INIT_VIRTUAL_BANK_HEIGHT <= height && !chain.getInitLocalSignPriKeyToHeterogeneous()) {
             try {
                 // 向异构链组件,注册地址签名信息
@@ -255,6 +258,8 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 chain.getLogger().error(e);
             }
         }
+        // 新加入的异构跨链组件，根据生效高度检查，是否向异构链组件,注册地址签名信息
+        heterogeneousDockingManager.checkAccountImportedInDocking(chain, signAccountDTO);
 
         if (!ENABLED_VIRTUAL_BANK_CHANGES_SERVICE) {
             // 没有达到开启条件 不能触发变更服务 直接返回

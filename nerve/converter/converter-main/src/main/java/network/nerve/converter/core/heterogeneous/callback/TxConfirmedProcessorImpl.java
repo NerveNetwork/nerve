@@ -160,6 +160,10 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 reset.setHeterogeneousChainId(hChainId);
                 reset.setResetTxHash(nerveHash);
                 reset.setHeterogeneousTxHash(txHash);
+                if (txTime == null) {
+                    Transaction realNerveTx = TransactionCall.getConfirmedTx(nerveChain, nerveHash);
+                    txTime = realNerveTx.getTime();
+                }
                 assembleTxService.createConfirmResetVirtualBankTx(nerveChain, reset, txTime);
                 break;
             case UPGRADE:

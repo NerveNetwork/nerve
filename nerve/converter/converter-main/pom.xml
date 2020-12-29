@@ -42,5 +42,11 @@
             <version>${nuls.v2.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-ht</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+
     </dependencies>
 </project>

@@ -85,6 +85,7 @@ public interface ConverterConstant {
     String ORACLE_KEY_ETH_PRICE = "ETH_PRICE";
     String ORACLE_KEY_NVT_PRICE = "NERVE_PRICE";
     String ORACLE_KEY_BNB_PRICE = "BNB_PRICE";
+    String ORACLE_KEY_HT_PRICE = "HT_PRICE";
 
     int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
     byte[] ZERO_BYTES = new byte[]{0};

@@ -27,10 +27,15 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.heterogeneouschain.ht.constant.HtConstant;
+import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.dto.SignAccountDTO;
+import network.nerve.converter.rpc.call.AccountCall;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static network.nerve.converter.config.ConverterContext.*;
 
 /**
  * @author: Mimi
@@ -44,11 +49,17 @@ public class HeterogeneousDockingManager {
      */
     private Map<Integer, IHeterogeneousChainDocking> heterogeneousDockingMap = new ConcurrentHashMap<>();
 
+    private boolean huobiCrossChainAvailable = false;
+
     public void registerHeterogeneousDocking(int heterogeneousChainId, IHeterogeneousChainDocking docking) {
         heterogeneousDockingMap.put(heterogeneousChainId, docking);
     }
 
     public IHeterogeneousChainDocking getHeterogeneousDocking(int heterogeneousChainId) throws NulsException {
+        // 增加HT跨链的生效高度
+        /*if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousChainId == HtConstant.HT_CHAIN_ID) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR, String.format("error heterogeneousChainId: %s", heterogeneousChainId));
+        }*/
         IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         if (docking == null) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR, String.format("error heterogeneousChainId: %s", heterogeneousChainId));
@@ -57,6 +68,34 @@ public class HeterogeneousDockingManager {
     }
 
     public Collection<IHeterogeneousChainDocking> getAllHeterogeneousDocking() {
+        // 增加HT跨链的生效高度
+        if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtConstant.HT_CHAIN_ID)) {
+            Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
+            result.putAll(heterogeneousDockingMap);
+            result.remove(HtConstant.HT_CHAIN_ID);
+            return result.values();
+        }
         return heterogeneousDockingMap.values();
+    }
+
+    public void checkAccountImportedInDocking(Chain chain, SignAccountDTO signAccountDTO) {
+        if (!huobiCrossChainAvailable && LATEST_BLOCK_HEIGHT >= HUOBI_CROSS_CHAIN_HEIGHT) {
+            // 向HT异构链组件,注册地址签名信息
+            try {
+                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
+                if (null != signAccountDTO) {
+                    String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
+                    // 向HT跨链组件导入账户
+                    IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(HtConstant.HT_CHAIN_ID);
+                    if (dock != null && dock.getCurrentSignAddress() == null) {
+                        dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
+                        chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件注册签名账户信息..");
+                    }
+                }
+                huobiCrossChainAvailable = true;
+            } catch (NulsException e) {
+                chain.getLogger().warn("向异构链组件注册地址签名信息异常, 错误: {}", e.format());
+            }
+        }
     }
 }

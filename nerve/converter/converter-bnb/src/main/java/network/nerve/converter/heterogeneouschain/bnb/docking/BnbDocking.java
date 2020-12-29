@@ -639,6 +639,26 @@ public class BnbDocking implements IHeterogeneousChainDocking {
 
     @Override
     public String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException {
+        try {
+            BnbUnconfirmedTxPo po = new BnbUnconfirmedTxPo();
+            po.setTxType(HeterogeneousChainTxType.RECOVERY);
+            po.setNerveTxHash(nerveTxHash);
+            BnbContext.UNCONFIRMED_TX_QUEUE.offer(po);
+            bnbCallBackManager.getTxConfirmedProcessor().txConfirmed(
+                    HeterogeneousChainTxType.RECOVERY,
+                    nerveTxHash,
+                    null, //ethTxHash,
+                    null, //ethTx blockHeight,
+                    null, //ethTx tx time,
+                    BnbContext.MULTY_SIGN_ADDRESS,
+                    null  //ethTx signers
+            );
+        } catch (Exception e) {
+            if (e instanceof NulsException) {
+                throw (NulsException) e;
+            }
+            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+        }
         return EMPTY_STRING;
     }
 

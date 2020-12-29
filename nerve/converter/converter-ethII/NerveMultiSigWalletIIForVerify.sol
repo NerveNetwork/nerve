@@ -889,6 +889,8 @@ contract NerveMultiSigWalletII {
     address public upgradeContractAddress = address(0);
     // 最大管理员数量
     uint public max_managers = 15;
+    // 最小管理员数量
+    uint public min_managers = 3;
     // 最小签名比例 66%
     uint public rate = 66;
     // 签名字节长度
@@ -910,6 +912,7 @@ contract NerveMultiSigWalletII {
 
     constructor(address[] memory _managers) public{
         require(_managers.length <= max_managers, "Exceeded the maximum number of managers");
+        require(_managers.length >= min_managers, "Not reaching the min number of managers");
         owner = msg.sender;
         managerArray = _managers;
         for (uint8 i = 0; i < managerArray.length; i++) {
@@ -1076,6 +1079,9 @@ contract NerveMultiSigWalletII {
             r := mload(add(sig, 32))
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
+        }
+        if(uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            return address(0);
         }
         // https://github.com/ethereum/go-ethereum/issues/2053
         if (v < 27) {

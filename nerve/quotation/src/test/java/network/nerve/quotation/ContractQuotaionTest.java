@@ -28,8 +28,6 @@ package network.nerve.quotation;
 
 import network.nerve.quotation.heterogeneouschain.BNBWalletApi;
 import network.nerve.quotation.heterogeneouschain.ETHWalletApi;
-import network.nerve.quotation.heterogeneouschain.context.BnbContext;
-import network.nerve.quotation.heterogeneouschain.context.EthContext;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -60,9 +58,9 @@ public class ContractQuotaionTest {
 
     @Before
     public void before() {
-        EthContext.rpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+//        EthContext.rpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
         ethWalletApi.init();
-        BnbContext.rpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+//        BnbContext.rpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
         bnbWalletApi.init();
     }
 

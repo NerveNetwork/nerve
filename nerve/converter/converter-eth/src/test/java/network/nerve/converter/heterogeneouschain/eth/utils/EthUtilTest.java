@@ -29,7 +29,7 @@ public class EthUtilTest extends Base {
         EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
         po.setNerveTxHash("nerveTxHash_xxxxxxxxx");
         po.setDeletedHeight(9999L);
-        po.setAddAddresses(new String[]{"a","b"});
+        po.setAddAddresses(new String[]{"a", "b"});
 
         po.setTxHash("txHash_asd");
         po.setBlockHeight(1L);
@@ -47,23 +47,43 @@ public class EthUtilTest extends Base {
     }
 
     @Test
-    public void parseERC20() throws Exception {
+    public void parseBEP20() throws Exception {
         setMain();
         List<TokenInfo> list = new ArrayList<>();
-        for(int i = 1; i <= 20; i++) {
-            String read = IoUtils.read(String.format("token/token_%s.txt", i));
+        for (int i = 1; i <= 2; i++) {
+            String file = String.format("bsc_token/token_%s.txt", i);
+            System.out.println();
+            System.out.println(String.format("open file: %s", file));
+            String read = IoUtils.read(file);
             int q = read.indexOf("<tbody>");
             int w = read.indexOf("</tbody>", q);
+            if (q == -1 || w == -1) {
+                continue;
+            }
             String topERC20 = read.substring(q, w);
-            int m, n;
-            while ((m = topERC20.indexOf("<a class='text-primary'")) != -1) {
+
+            int m, n, s, k, j;
+            while ((m = topERC20.indexOf("<img class='u-xs-avatar mr-2'")) != -1) {
+                n = topERC20.indexOf("'>", m);
+                String icon = topERC20.substring(m, n);
+                s = icon.indexOf("src=");
+                icon = icon.substring(s);
+                icon = "https://bscscan.com" + icon.substring(5);
+
+                m = topERC20.indexOf("</div></td><td class='text-nowrap'>");
+                n = topERC20.indexOf("<div", m);
+                String usdPrice = topERC20.substring(m, n);
+                s = usdPrice.indexOf("$");
+                usdPrice = usdPrice.substring(s + 1);
+
+                m = topERC20.indexOf("<a class='text-primary'");
                 n = topERC20.indexOf("</a>", m);
                 String tokenInfo = topERC20.substring(m, n);
-                int k = tokenInfo.indexOf("(");
-                int j = tokenInfo.indexOf(")");
+                k = tokenInfo.indexOf("(");
+                j = tokenInfo.indexOf(")");
                 String address, name, symbol;
-                address = tokenInfo.substring(37, 37+42);
-                if(k == -1) {
+                address = tokenInfo.substring(37, 37 + 42);
+                if (k == -1) {
                     name = tokenInfo.substring(81);
                     symbol = name;
                 } else {
@@ -73,16 +93,18 @@ public class EthUtilTest extends Base {
                 name = name.trim();
                 symbol = symbol.trim();
                 int decimals = decimals(address);
-                System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s", address, name, symbol, decimals));
+                System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s, price:%s, icon: %s,", address, name, symbol, decimals, usdPrice, icon));
+                n =  topERC20.indexOf("</tr>", m);
                 topERC20 = topERC20.substring(n);
-                list.add(new TokenInfo(address, name, symbol, decimals));
+                list.add(new TokenInfo(address, name, symbol, decimals, usdPrice, icon));
             }
+
         }
         String json = JSONUtils.obj2PrettyJson(list);
         //System.out.println(json);
         String path = new File(EthUtilTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
                 + String.format("%ssrc%stest%sresources%s", File.separator, File.separator, File.separator, File.separator);
-        IoUtils.writeString(new File(path + "tokens.json"), json);
+        IoUtils.writeString(new File(path + "bsc_tokens.json"), json);
     }
 
     @Test
@@ -115,17 +137,18 @@ public class EthUtilTest extends Base {
     }
 
     private int decimals(String contract) {
-        //if(StringUtils.isNotBlank(contract)) {
-        //    return 0;
-        //}
         try {
             Function decimalsFunction = new Function(
                     "decimals",
                     List.of(),
-                    List.of(new TypeReference<Uint8>() {})
+                    List.of(new TypeReference<Uint8>() {
+                    })
             );
             Function function = decimalsFunction;
             List<Type> list = ethWalletApi.callViewFunction(contract, function);
+            if (list == null || list.isEmpty()) {
+                return 18;
+            }
             return Integer.parseInt(list.get(0).getValue().toString());
         } catch (Exception e) {
             Log.error("contract[{}] error[{}]", contract, e.getMessage());
@@ -147,19 +170,19 @@ public class EthUtilTest extends Base {
         String nerveTxHash = "fe1ee1df4126798a47795c0ee763c89542a777a35dd4143be4dc111f23985cc0";
         int seed = new BigInteger(nerveTxHash.substring(0, 1), 16).intValue() + 1;
         int bankSize = 2;
-        if(bankSize > 16) {
+        if (bankSize > 16) {
             seed += new BigInteger(nerveTxHash.substring(1, 2), 16).intValue() + 1;
         }
         int mod = seed % bankSize + 1;
         // 按顺序等待固定时间后再发出ETH交易
         int bankOrder = 1;
-        if(bankOrder < mod) {
+        if (bankOrder < mod) {
             bankOrder += bankSize - (mod - 1);
         } else {
             bankOrder -= mod - 1;
         }
         int waitting = (bankOrder - 1) * EthConstant.DEFAULT_INTERVAL_WAITTING;
-        System.out.println(String.format("seed: %s, mod: %s, bankOrder: %s, waitting: %s",seed, mod, bankOrder, waitting));
+        System.out.println(String.format("seed: %s, mod: %s, bankOrder: %s, waitting: %s", seed, mod, bankOrder, waitting));
     }
 
     private static class TokenInfo {
@@ -167,15 +190,19 @@ public class EthUtilTest extends Base {
         private String name;
         private String symbol;
         private int decimals;
+        private String usdPrice;
+        private String icon;
 
         public TokenInfo() {
         }
 
-        public TokenInfo(String address, String name, String symbol, int decimals) {
+        public TokenInfo(String address, String name, String symbol, int decimals, String usdPrice, String icon) {
             this.address = address;
             this.name = name;
             this.symbol = symbol;
             this.decimals = decimals;
+            this.usdPrice = usdPrice;
+            this.icon = icon;
         }
 
         public String getAddress() {
@@ -208,6 +235,22 @@ public class EthUtilTest extends Base {
 
         public void setDecimals(int decimals) {
             this.decimals = decimals;
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public void setIcon(String icon) {
+            this.icon = icon;
+        }
+
+        public String getUsdPrice() {
+            return usdPrice;
+        }
+
+        public void setUsdPrice(String usdPrice) {
+            this.usdPrice = usdPrice;
         }
     }
 }

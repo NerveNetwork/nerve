@@ -33,5 +33,20 @@
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
     "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012"
+  },
+  {
+    "chainId": 103,
+    "type": 1,
+    "symbol": "HT",
+    "commonRpcAddress": "https://http-testnet.hecochain.com",
+    "mainRpcAddress": "http://testnet.ht.nerve.network",
+    "orderRpcAddresses": "https://http-testnet.hecochain.com",
+    "standbyRpcAddresses": "https://http-testnet.hecochain.com",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 5,
+    "txBlockConfirmationsOfWithdraw": 2,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012"
   }
 ]

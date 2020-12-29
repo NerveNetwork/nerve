@@ -23,7 +23,6 @@
  */
 package network.nerve.converter.core.api.interfaces;
 
-import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.enums.AssetName;

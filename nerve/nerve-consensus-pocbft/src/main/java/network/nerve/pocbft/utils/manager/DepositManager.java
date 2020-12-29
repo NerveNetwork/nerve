@@ -200,10 +200,19 @@ public class DepositManager {
         //如果委托资产为本链主资产则乘以相应的基数
         if (deposit.getAssetChainId() == chain.getChainId() && deposit.getAssetId() == chain.getAssetId()) {
             weightSqrt = chain.getConfig().getLocalAssertBase();
+//        } else if (deposit.getAssetChainId() == config.getMainChainId() && deposit.getAssetId() == config.getMainAssetId()) {
+//            StackingAsset stackingAsset = chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId());
+//            realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(), realDeposit, stackingAsset, date);
+//            weightSqrt = chain.getConfig().getMainAssertBase();
         } else {
             StackingAsset stackingAsset = chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId());
             realDeposit = ConsensusAwardUtil.getRealAmount(chain.getChainId(), realDeposit, stackingAsset, date);
             weightSqrt = chain.getConfig().getWeight(deposit.getAssetChainId(), deposit.getAssetId());
+            //流动性计划特殊处理代码
+//            if (deposit.getAssetChainId() == chain.getChainId() && (deposit.getAssetId() == 32 || deposit.getAssetId() == 33) && config.getV1_7_0Height() > endHeight && endHeight < config.getV1_7_0Height() + 30 * 43200) {
+            if (weightSqrt == 25 && config.getV1_7_0Height() > endHeight && endHeight < config.getV1_7_0Height() + 30 * 43200) {
+                weightSqrt = weightSqrt * 36;
+            }
         }
         //如果为定期委托，则根据定期时间乘以相应基数,定期委托到期之后按活期计算权重
         if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {

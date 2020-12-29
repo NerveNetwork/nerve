@@ -64,6 +64,7 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -135,6 +136,11 @@ public class EthIIConfirmTxScheduled implements Runnable {
                         logger().debug("移除空值PO");
                     }
                     continue;
+                }
+                // 清理无用的变更任务
+                if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
+                    clearUnusedChange();
+                    break;
                 }
                 EthUnconfirmedTxPo poFromDB = null;
                 if (po.getBlockHeight() == null) {
@@ -227,6 +233,16 @@ public class EthIIConfirmTxScheduled implements Runnable {
             logger().error("confirming error", e);
             if (po != null) {
                 queue.offer(po);
+            }
+        }
+    }
+
+    private void clearUnusedChange() {
+        Iterator<EthUnconfirmedTxPo> iterator = EthContext.UNCONFIRMED_TX_QUEUE.iterator();
+        while(iterator.hasNext()) {
+            EthUnconfirmedTxPo po = iterator.next();
+            if (po.getTxType() == HeterogeneousChainTxType.CHANGE) {
+                iterator.remove();
             }
         }
     }

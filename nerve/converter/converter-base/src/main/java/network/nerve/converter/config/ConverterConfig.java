@@ -97,6 +97,11 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     private long withdrawalRechargeChainHeight;
 
     /**
+     * v1.8.0 协议升级高度 支持火币生态链跨链
+     */
+    private long huobiCrossChainHeight;
+
+    /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
      */
     private String multySignAddressSet;
@@ -292,5 +297,13 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setWithdrawalRechargeChainHeight(long withdrawalRechargeChainHeight) {
         this.withdrawalRechargeChainHeight = withdrawalRechargeChainHeight;
+    }
+
+    public long getHuobiCrossChainHeight() {
+        return huobiCrossChainHeight;
+    }
+
+    public void setHuobiCrossChainHeight(long huobiCrossChainHeight) {
+        this.huobiCrossChainHeight = huobiCrossChainHeight;
     }
 }

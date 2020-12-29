@@ -113,6 +113,10 @@ public class ConverterContext {
      * 协议升级高度 修改提现和充值交易协议,增加异构链id
      */
     public static long WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = 0L;
+    /**
+     * v1.8.0 协议升级高度 支持火币生态链跨链
+     */
+    public static long HUOBI_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
      * 初始化虚拟银行公钥

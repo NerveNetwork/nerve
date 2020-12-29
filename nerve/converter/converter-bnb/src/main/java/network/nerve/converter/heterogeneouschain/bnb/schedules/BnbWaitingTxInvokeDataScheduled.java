@@ -70,7 +70,7 @@ public class BnbWaitingTxInvokeDataScheduled implements Runnable {
             LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
             return;
         }
-        LoggerUtil.LOG.debug("[BNB交易调用数据等待任务] - 每隔20秒执行一次。");
+        LoggerUtil.LOG.debug("[BNB交易调用数据等待任务] - 每隔10秒执行一次。");
         LinkedBlockingDeque<BnbWaitingTxPo> queue = BnbContext.WAITING_TX_QUEUE;
         BnbWaitingTxPo po = null;
         try {

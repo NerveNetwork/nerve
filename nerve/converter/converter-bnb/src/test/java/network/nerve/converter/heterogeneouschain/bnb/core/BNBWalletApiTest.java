@@ -246,12 +246,12 @@ public class BNBWalletApiTest extends Base {
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "0.009";
+        String sendAmount = "9";
         // 初始化 ERC20 地址信息
-        setErc20EthMinter();
+        //setErc20EthMinter();
         //setErc20UsdiMinter();
         //setErc20DXA();
-        //setErc20USDX();
+        setErc20USDX();
         //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址
@@ -370,18 +370,18 @@ public class BNBWalletApiTest extends Base {
     public void managerAdd() throws Exception {
         // 正式网环境数据
         //setUpgradeMain();
-        //setLocalTest();
-        setBeta();
+        setLocalTest();
+        //setBeta();
         //setBnbMainTest();
         //setMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
         BnbContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa2100000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0xa31057905a24cfd077d78e349d2d6da715ab5327"};
-        String[] removes = new String[]{"0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc"};
+        String txKey = "aaa2200000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{};
+        String[] removes = new String[]{"0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65"};
         int txCount = 1;
-        int signCount = 4;
+        int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }

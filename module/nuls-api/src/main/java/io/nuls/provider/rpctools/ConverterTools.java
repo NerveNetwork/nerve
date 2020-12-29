@@ -32,6 +32,20 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
+     * 查询异构链主资产信息
+     */
+    public Result getHeterogeneousMainAsset(int heterogeneousChainId) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("heterogeneousChainId", heterogeneousChainId);
+        params.put("heterogeneousAssetId", 1);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_get_heterogeneous_chain_asset_info_by_id", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
      * 重新将异构链提现交易放入task, 重发消息
      */
     public Result retryWithdrawalMsg(int chainId, String hash) {
@@ -104,6 +118,7 @@ public class ConverterTools implements CallRpc {
             return Result.fail(e.getCode(), e.getMessage());
         }
     }
+
     /**
      * 追加手续费
      * @return

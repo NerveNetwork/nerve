@@ -58,6 +58,7 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -109,7 +110,7 @@ public class BnbConfirmTxScheduled implements Runnable {
             LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
             return;
         }
-        LoggerUtil.LOG.debug("[BNB交易确认任务] - 每隔20秒执行一次。");
+        LoggerUtil.LOG.debug("[BNB交易确认任务] - 每隔10秒执行一次。");
         LinkedBlockingDeque<BnbUnconfirmedTxPo> queue = BnbContext.UNCONFIRMED_TX_QUEUE;
         BnbUnconfirmedTxPo po = null;
         try {
@@ -125,6 +126,11 @@ public class BnbConfirmTxScheduled implements Runnable {
                         logger().debug("移除空值PO");
                     }
                     continue;
+                }
+                // 清理无用的变更任务
+                if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
+                    clearUnusedChange();
+                    break;
                 }
                 BnbUnconfirmedTxPo poFromDB = null;
                 if (po.getBlockHeight() == null) {
@@ -217,6 +223,16 @@ public class BnbConfirmTxScheduled implements Runnable {
             logger().error("confirming error", e);
             if (po != null) {
                 queue.offer(po);
+            }
+        }
+    }
+
+    private void clearUnusedChange() {
+        Iterator<BnbUnconfirmedTxPo> iterator = BnbContext.UNCONFIRMED_TX_QUEUE.iterator();
+        while(iterator.hasNext()) {
+            BnbUnconfirmedTxPo po = iterator.next();
+            if (po.getTxType() == HeterogeneousChainTxType.CHANGE) {
+                iterator.remove();
             }
         }
     }

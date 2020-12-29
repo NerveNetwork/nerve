@@ -40,9 +40,11 @@ import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogene
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
+import network.nerve.converter.model.po.ComponentCalledPO;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.storage.AsyncProcessedTxStorageService;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
@@ -73,6 +75,8 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
     @Autowired
     private VirtualBankService virtualBankService;
+    @Autowired
+    private AsyncProcessedTxStorageService asyncProcessedTxStorageService;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -158,6 +162,12 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     chain.getLogger().error("[commit] Save confirm withdrawal tx failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
+                ComponentCalledPO callPO = new ComponentCalledPO(
+                        txData.getWithdrawalTxHash().toHex(),
+                        -1,
+                        true);
+                asyncProcessedTxStorageService.saveComponentCall(chain, callPO, false);
+
                 // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());

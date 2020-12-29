@@ -100,7 +100,6 @@ public class ConverterResource {
         return ResultUtil.getRpcClientResult(proposal);
     }
 
-
     @POST
     @Path("/fee")
     @Produces(MediaType.APPLICATION_JSON)
@@ -121,7 +120,27 @@ public class ConverterResource {
         return ResultUtil.getRpcClientResult(proposal);
     }
 
-
-
+    @GET
+    @Path("/heterogeneous/mainasset/{chainId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "返回异构链主资产在NERVE网络的资产信息", order = 606)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "异构链ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", valueType = int.class, description = "资产链ID"),
+            @Key(name = "assetId", valueType = int.class, description = "资产ID"),
+            @Key(name = "symbol", description = "资产symbol"),
+            @Key(name = "decimals", valueType = int.class, description = "资产小数位数")
+    })
+    )
+    public RpcClientResult getHeterogeneousMainAsset(@PathParam("chainId") Integer chainId) {
+        if (chainId == null) {
+            return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "chainId is empty"));
+        }
+        Result<Map<String, Object>> result = converterTools.getHeterogeneousMainAsset(chainId);
+        RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
+        return clientResult;
+    }
 
 }

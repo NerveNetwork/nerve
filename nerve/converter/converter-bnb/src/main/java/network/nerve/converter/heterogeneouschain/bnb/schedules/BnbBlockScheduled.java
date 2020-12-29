@@ -89,7 +89,7 @@ public class BnbBlockScheduled implements Runnable {
         }
         clearDB = false;
         if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("[BNB区块解析任务] - 每隔20秒执行一次。");
+            LoggerUtil.LOG.debug("[BNB区块解析任务] - 每隔5秒执行一次。");
         }
         try {
             bnbWalletApi.checkApi(BnbContext.getConverterCoreApi().getVirtualBankOrder());

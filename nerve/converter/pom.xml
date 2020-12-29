@@ -18,6 +18,7 @@
         <module>converter-main</module>
         <module>converter-ethII</module>
         <module>converter-bnb</module>
+        <module>converter-ht</module>
     </modules>
 
 </project>

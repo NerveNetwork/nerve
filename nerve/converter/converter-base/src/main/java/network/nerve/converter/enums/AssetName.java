@@ -30,5 +30,6 @@ package network.nerve.converter.enums;
 public enum AssetName {
     NVT,
     ETH,
-    BNB;
+    BNB,
+    HT;
 }

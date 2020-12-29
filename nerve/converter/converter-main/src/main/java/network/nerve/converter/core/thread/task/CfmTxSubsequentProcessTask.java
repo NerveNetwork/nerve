@@ -378,6 +378,23 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         }
         // 存储更新后的 compSignPO
         componentSignStorageService.save(chain, compSignPO);
+
+        // 2020/12/24 虚拟银行变更等待拜占庭过程中,把队列后面交易提到前面来执行,防止无限循环等待
+        if (!rs) {
+            Iterator<TxSubsequentProcessPO> it = chain.getPendingTxQueue().iterator();
+            TxSubsequentProcessPO toFirstPO = null;
+            while (it.hasNext()) {
+                TxSubsequentProcessPO po = it.next();
+                if (TxType.CHANGE_VIRTUAL_BANK != po.getTx().getType()) {
+                    toFirstPO = po;
+                    it.remove();
+                    break;
+                }
+            }
+            if (null != toFirstPO) {
+                chain.getPendingTxQueue().addFirst(toFirstPO);
+            }
+        }
         return rs;
     }
 

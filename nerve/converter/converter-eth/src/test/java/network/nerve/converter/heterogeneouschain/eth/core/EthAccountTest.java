@@ -191,10 +191,18 @@ public class EthAccountTest extends Base {
         // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         // 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         // 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        chainId = 9;
-        String pubkey = "02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0";
+        // 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,
+        // 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,
+        // 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
         AddressTool.addPrefix(18, "BBAI");
-        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, chainId)));
+        List<String> pubList = new ArrayList<>();
+        pubList.add("037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863");
+        pubList.add("036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b");
+        pubList.add("028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df");
+        chainId = 2;
+        for (String pubkey : pubList) {
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, chainId)));
+        }
 
     }
 
@@ -209,7 +217,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void ETHAddressByPubkeySet() {
-        String pubkeySet = "020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5";
+        String pubkeySet = "037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
