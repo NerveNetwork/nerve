@@ -1,0 +1,1211 @@
+
+<!doctype html>
+<html lang="en">
+<head><title>
+	Token Tracker | Etherscan
+</title><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" /><meta name="Description" content="The list of ERC-20 Tokens and their Prices, Market Capitalizations and the Number of Holders in the Ethereum Blockchain on Etherscan.
+" /><meta name="author" content="etherscan.io" /><meta name="keywords" content="ethereum, explorer, ether, search, blockchain, crypto, currency" /><meta name="format-detection" content="telephone=no" />
+<meta property="og:title" content="Token Tracker | Etherscan" /> <meta property="og:description" content="The list of ERC-20 Tokens and their Prices, Market Capitalizations and the Number of Holders in the Ethereum Blockchain on Etherscan.
+" /> <meta property="og:type" content="website" /> <meta property="og:site_name" content="Ethereum (ETH) Blockchain Explorer" /> <meta property="og:url" content="http://etherscan.io/tokens" /> <meta property="og:image" content="https://etherscan.io/images/brandassets/etherscan-logo-circle.png" /> <meta property="og:image:alt" content="Visit Etherscan.io" /> <meta name="twitter:card" content="summary" /> <meta name="twitter:title" content="Token Tracker | Etherscan" /> <meta property="twitter:description" content="The list of ERC-20 Tokens and their Prices, Market Capitalizations and the Number of Holders in the Ethereum Blockchain on Etherscan.
+" /> <meta name="twitter:site" content="@etherscan" /> <meta property="twitter:image" content="https://etherscan.io/images/brandassets/etherscan-logo-circle.png" />
+<style>
+        .card-header.sticky-card-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .dataTable > thead > tr > th[class*="remove-icon"]:before,
+        .dataTable > thead > tr > th[class*="remove-icon"]:after {
+            content: "" !important;
+        }
+
+        table.dataTable thead th.sorting:before,
+        table.dataTable thead th.sorting_asc:before,
+        table.dataTable thead th.sorting_desc:before,
+        table.dataTable thead th.sorting:after,
+        table.dataTable thead th.sorting_asc:after,
+        table.dataTable thead th.sorting_desc:after {
+            content: none;
+        }
+
+        .dataTables_processing {
+        z-index: 100;
+        }
+
+        .fadeout {
+            position: relative;
+            bottom: 4em;
+            height: 4em;
+            background: -webkit-linear-gradient( rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100% );
+            background-image: -moz-linear-gradient( rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100% );
+            background-image: -o-linear-gradient( rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100% );
+            background-image: linear-gradient( rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100% );
+            background-image: -ms-linear-gradient( rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 100% )
+        }
+    </style>
+<link rel="shortcut icon" href="/images/favicon3.ico" />
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-46998878-6"></script>
+<script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-46998878-6', { 'anonymize_ip': true });
+    </script>
+<script>
+        //Search box text ad
+        var availableAd = [];
+        var gotAd = [];
+
+        
+        // --- old ---
+        //availableAd = [ "Ads	<div class='ether-search media rounded p-2'><div class='media-body d-flex'><div class='max-width-40'><span class='small text-muted position-absolute right-0 pt-1 pr-2' style='top:-10px'>Sponsored</span><a class='d-block align-items-center text-wrap text-dark' target='_blank' href='https://goto.etherscan.com/rd/5FK3UZCRSKFYFNKM2XJAZ6QW8' rel='nofollow' title='Links to an External Advertiser site' ><img class='u-xs-avatar mr-2' src='/images/gen/cryptocom_20.png' alt='Crypto.com'><span class='font-size-base'>Crypto.com: Buy, Sell, Earn Crypto</span></a></div></div></div>				" ];
+        // --- 20201028 ---
+        //availableAd = ["<div class='ether-search media rounded p-2'><div class='media-body d-flex'><div class='max-width-40'><span class='small text-muted position-absolute right-0 pt-1 pr-3' style='top:1px'>Sponsored</span><a class='d-block align-items-center text-wrap text-dark' target='_blank' href='https://goto.etherscan.com/rd/5FK3UZCRSKFYFNKM2XJAZ6QW8' rel='nofollow' title='Links to an External Advertiser site' ><img class='u-xs-avatar mr-2' src='/images/gen/cryptocom_20.png' alt='Crypto.com'><span class='font-size-base'>Crypto.com: Buy, Sell, Earn Crypto</span></a></div></div></div>", "<div class='ether-search media rounded p-2'><div class='media-body d-flex'><div class='max-width-40'><span class='small text-muted position-absolute right-0 pt-1 pr-3' style='top:1px'>Sponsored</span><a class='d-block align-items-center text-wrap text-dark' target='_blank' href='https://goto.etherscan.com/rd/MNTG1R3NNI68G77RE34P8ITT8' rel='nofollow' title='Links to an External Advertiser site' ><img class='u-xs-avatar mr-2' src='/images/gen/aax.jpg' alt='AAX.com'><span class='font-size-base'>AAX.com - > 5% Interest Rate</span></a></div></div></div>"];
+        //availableAd = ["<a class='ether-search media rounded p-2' target='_blank' href='https://goto.etherscan.com/rd/CHIJXUYK6MWEGSUWTUMFPQ346' rel='nofollow' title='Links to an External Advertiser site'><div class='mr-2'><img class='u-xs-avatar mr-2' src='/images/gen/aax.jpg' alt='AAX.com'></div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'>AAX.com - 0.02% Futures Fees</div><span class='bg-white-content small text-secondary rounded-sm border px-1 ml-1'>Sponsored</span></h6></div></a>", "<a class='ether-search media rounded p-2' target='_blank' href='https://goto.etherscan.com/rd/Q1CXV3SHCPPWYTWR89S36GEPW' rel='nofollow' title='Links to an External Advertiser site'><div class='mr-2'><img class='u-xs-avatar mr-2' src='/images/gen/cryptocom_20.png' alt='Crypto.com'></div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'>Crypto.com: Earn 7.5% on ETH</div><span class='bg-white-content small text-secondary rounded-sm border px-1 ml-1'>Sponsored</span></h6></div></a>", "<a class='ether-search media rounded p-2' target='_blank' href='https://goto.etherscan.com/rd/WWWPKRR99KFCP76U7JT1CM5BQ' rel='nofollow' title='Links to an External Advertiser site'><div class='mr-2'><img class='u-xs-avatar mr-2' src='/images/gen/nexo.png' alt='Nexo.io'></div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'>Nexo.io : Earn 8% on ETH</div><span class='bg-white-content small text-secondary rounded-sm border px-1 ml-1'>Sponsored</span></h6></div></a>"];
+        availableAd = ["<a class='ether-search media rounded p-2' target='_blank' href='https://goto.etherscan.com/rd/CHIJXUYK6MWEGSUWTUMFPQ346' rel='nofollow' title='Links to an External Advertiser site'><div class='mr-2'><img class='u-xs-avatar mr-2' src='/images/gen/aax.jpg' alt='AAX.com'></div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'>AAX.com - 0.02% Futures Fees</div><span class='bg-white-content small text-secondary rounded-sm border px-1 ml-1'>Sponsored</span></h6></div></a>", "<a class='ether-search media rounded p-2' target='_blank' href='https://goto.etherscan.com/rd/Q1CXV3SHCPPWYTWR89S36GEPW' rel='nofollow' title='Links to an External Advertiser site'><div class='mr-2'><img class='u-xs-avatar mr-2' src='/images/gen/cryptocom_20.png' alt='Crypto.com'></div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'>Crypto.com: Earn 7.5% on ETH</div><span class='bg-white-content small text-secondary rounded-sm border px-1 ml-1'>Sponsored</span></h6></div></a>"];
+        gotAd = [ "ShowAds					" ];
+        
+    </script>
+<link rel="stylesheet" href="/assets/vendor/font-awesome/css/fontawesome-all.min.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/vendor/animate.css/animate.min.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/vendor/hs-megamenu/src/hs.megamenu.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/vendor/select2/dist/css/select2.min.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/css/theme.min.css?v=20.11.2.2">
+<link rel="stylesheet" href="/assets/css/custom.css?v=20.11.2.2">
+<script src="/assets/vendor/jquery/dist/jquery.min.js?v=20.11.2.2"></script>
+<script type="text/javascript" src="/jss/blockies.js?v=20.11.2.2"></script>
+<style>
+        .ui-autocomplete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: default
+        }
+        .ui-state-active {
+            border-color: #e7eaf3;
+            background: #f8fafd;
+        }
+        body.dark-mode .ui-state-active {
+          background-color: #132a47;
+          border-color: #18365b;
+        }
+    </style>
+<link href="/assets/vendor/hs-sticky-thead/src/hs.sticky-thead.css?v=20.11.2.2" rel="stylesheet" />
+<style>
+        .custwidth {
+            width: 295px !important;
+        }
+
+        @media all and (max-width: 576px) {
+            .freeze_column_wrapper th:first-child, .freeze_column_wrapper td:first-child,
+            .freeze_column_wrapper th:nth-child(2), .freeze_column_wrapper td:nth-child(2) {
+                position: -webkit-sticky;
+                position: sticky;
+                background-color: white;
+            }
+            .freeze_column_wrapper .sticky-thead-cloned-table th:first-child, .freeze_column_wrapper td:first-child {
+                left: 0;
+                width: 60px;
+                min-width: 60px;
+            }
+            .freeze_column_wrapper .sticky-thead-cloned-table th:first-child {
+                z-index: 4;
+                padding: .625rem 10px;
+                text-align: left;
+                width: 60px;
+                min-width: 60px;
+            }
+            .freeze_column_wrapper .sticky-thead-cloned-table th:nth-child(2) {
+                padding: .625rem 0;
+                left: 60px !important;
+                width: 130px;
+                min-width: 146px;
+            }
+            
+            .freeze_column_wrapper td:first-child {
+                border-bottom: 1.4px solid #E7EAF3;
+            }
+            .freeze_column_wrapper td:nth-child(2) {
+                padding: .625rem 0;
+                left: 50px !important;
+                width: 146px;
+                min-width: 146px;
+                border-bottom: 1.4px solid #E7EAF3;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .freeze_column_wrapper td:nth-child(3) {
+                left: 130px !important;
+            }
+            .freeze_column_wrapper td:nth-child(3) {
+                left: 130px !important;
+                width: 80px;
+                min-width: 80px;
+            }
+            .freeze_column_wrapper td:nth-child(4){
+                left: 80px !important;
+                width: 90px;
+                min-width: 90px;
+            }
+            .freeze_column_wrapper td:nth-child(5){
+                left: 90px !important;
+                width: 100px;
+                min-width: 100px;
+            }
+            .freeze_column_wrapper td:nth-child(6){
+                left: 100px !important;
+                width: 135px;
+                min-width: 135px;
+            }
+            .freeze_column_wrapper td:nth-child(7){
+                left: 135px !important;
+                width: 80px;
+                min-width: 80px;
+            }
+            .freeze_column_wrapper .table-text-normal td:first-child {
+                width: 50px;
+                min-width: 50px;
+                padding: .625rem 10px;
+                left: 0 !important;
+            }
+            .freeze_column_wrapper .sticky-thead-original-thead {
+                display: none;
+            }
+            .freeze_column_wrapper .sticky-thead-cloned-table thead {
+                border-bottom: 1px solid #E7EAF3;
+            }
+            .freeze_column_wrapper .sticky-thead-cloned-table thead  th {
+                border-bottom-width: 0;
+            }
+            .freeze_column_wrapper .table tr td {
+                border-top: 1px solid #E7EAF3;
+            }
+            .freeze_column_wrapper .table tr:nth-child(1) td{
+                border-top: 0;
+            }
+            .freeze_column_wrapper .table tr:last-child td{
+                border-bottom: 0;
+            }
+            .freeze_column_wrapper .token-sticky-header {
+                background-color: #F8FAFD !important;
+            }
+            .custom-control-label::before{
+                height:1.2rem;
+            }
+            .custom-switch .custom-control-label::after {
+                top: 8px;
+                width: 12px;
+                height: 12px;
+                left: -43px !important;
+            }
+            .custom-switch .custom-control-input:checked ~ .custom-control-label::after{
+                -webkit-transform: translateX(1.2rem);
+                transform: translateX(1.2rem);
+                top: 8px;
+                width: 12px;
+                height: 12px;
+            }
+            .custom-control-label::before {
+                height: 1.5rem;
+                border-radius: 40px !important;
+            }
+            #divSTContainer #stickyy th:nth-child(1), .sticky-header-cloned-table th:nth-child(1) {
+                z-index: 4;
+                padding: .625rem 10px;
+                text-align: left;
+                width: 60px !important;
+                min-width: 60px;
+                left:0;
+            } 
+            #divSTContainer #stickyy th:nth-child(2), .sticky-header-cloned-table th:nth-child(2) {
+                padding: .625rem 0;
+                left: 60px !important;
+                width: 135px !important;
+                min-width: 135px;
+            }
+            .table-text-normal td:nth-child(1) {
+                min-width: 50px;
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .table-text-normal td:nth-child(2) {
+                min-width: 146px;
+            }            
+        }  
+  
+    </style>
+<link rel="stylesheet" type="text/css" href="/assets/vendor/datatables/datatables.min.css?v=20.11.2.2" />
+<script type="text/javascript" src="/assets/vendor/datatables/datatables.min.js?v=20.11.2.2"></script>
+<script>
+        function showSignInPopUp(tableid) {
+            if ($('#signInPopUp').attr("style")) {
+                $('#signInPopUp').removeAttr("style");
+            }
+
+            if (!$(".add-paywall").hasClass("paywall-mask")) {
+                $('.add-paywall').addClass("paywall-mask");
+            }
+
+            return;
+        }
+
+        function hideSignInPopUp(tableid) {
+            if (!$('#signInPopUp').attr("style")) {
+                $('#signInPopUp').attr("style", "display:none;");
+            }
+
+            if ($('#paywall_mask_' + tableid).hasClass("paywall-mask")) {
+                $('#paywall_mask_' + tableid).removeClass("paywall-mask");
+            }
+
+            return;
+        }
+    </script>
+</head>
+<body id="body">
+<div class="wrapper">
+<header id="header" class="u-header">
+<div class="u-header__section ">
+<div id="logoAndNav" class="container">
+<nav class="js-mega-menu navbar navbar-expand-md u-header__navbar u-header__navbar--no-space">
+<div class="w-lg-auto">
+<a class="navbar-brand  pt-md-0" href="/" target="_parent" aria-label="Etherscan">
+<img id="logo-header" width="160" src="/images/logo-ether.png?v=0.0.2" alt="Etherscan Logo">
+</a>
+<div id="ethPrice">
+<div class="d-none d-md-inline-block u-label u-label--price rounded mt-1 ml-n1 text-nowrap">
+<span class="text-dark">Eth: $538.83</span><span data-toggle="tooltip" data-placement="top" data-title="Changes in the last 24 hours"><span class='text-danger'> (-3.49%)</span></span><span class='ml-1 mr-1' title='Average (Medium Speed) Gas Price'> | <a href='/gastracker' class="text-secondary"><i class="fad fa-gas-pump ml-1 "></i> 48 Gwei</a></span>
+</div>
+</div>
+</div>
+<div>
+<button type="button" class="navbar-toggler btn u-hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navBar" data-toggle="collapse" data-target="#navBar">
+<span id="hamburgerTrigger" class="u-hamburger__box">
+<span class="u-hamburger__inner"></span>
+</span>
+</button>
+</div>
+<div class="d-flex flex-column w-100">
+<div id="navBar" class="collapse navbar-collapse u-header__navbar-collapse order-md-2">
+<ul class="navbar-nav u-header__navbar-nav px-2 px-md-0">
+<li id="LI_default" class="nav-item u-header__nav-item" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut">
+<a class="nav-link u-header__nav-link" href="/" aria-haspopup="true" aria-expanded="false" aria-labelledby="pagesSubMenu">Home</a>
+</li>
+<li id="LI_blockchain" class="nav-item hs-has-sub-menu u-header__nav-item" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut">
+<a id="blockchainMegaMenu" class="nav-link u-header__nav-link u-header__nav-link-toggle" href="javascript:;" aria-haspopup="true" aria-expanded="false" aria-labelledby="pagesSubMenu">Blockchain</a>
+<ul id="blockchainSubMenu" class="hs-sub-menu u-header__sub-menu  u-header__sub-menu--spacer" aria-labelledby="blockchainMegaMenu" style="min-width: 230px;">
+<li id="LI12"><a href="/txs" class="nav-link u-header__sub-menu-nav-link">View Txns</a></li>
+<li id="LI16"><a href="/txsPending" class="nav-link u-header__sub-menu-nav-link">View Pending Txns</a></li>
+<li id="LI14"><a href="/txsInternal" class="nav-link u-header__sub-menu-nav-link">View Contract Internal Txns</a></li>
+<li class="dropdown-divider"></li>
+<li id="LI_blocks">
+<a id="navBlocks" class="nav-link u-header__sub-menu-nav-link" href="/blocks" aria-haspopup="true" aria-expanded="false" aria-controls="navSubBlocks">View Blocks</a></li>
+<li id="LI_blocks2">
+<a class="nav-link u-header__sub-menu-nav-link" href="/blocks_forked">Forked Blocks (Reorgs)</a>
+</li>
+<li id="LI8"><a class="nav-link u-header__sub-menu-nav-link" href="/uncles">View Uncles</a></li>
+ <li class="divider"></li>
+<li class="dropdown-divider"></li>
+<li id="LI_accountall"><a href="/accounts" class="nav-link u-header__sub-menu-nav-link">Top Accounts</a></li>
+<li id="LI_contract_verified"><a href="/contractsVerified" class="nav-link u-header__sub-menu-nav-link">Verified Contracts</a></li>
+</ul>
+</li>
+<li id="LI_tokens" class="nav-item hs-has-sub-menu u-header__nav-item active" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut">
+<a id="tokensMegaMenu" class="nav-link u-header__nav-link u-header__nav-link-toggle" href="javascript:;" aria-haspopup="true" aria-expanded="false" aria-labelledby="tokensSubMenu">Tokens</a>
+
+<ul id="tokensSubMenu" class="hs-sub-menu u-header__sub-menu u-header__sub-menu--spacer" aria-labelledby="tokensMegaMenu" style="min-width: 230px;">
+<li id="LI21" class=" active"><a class="nav-link u-header__sub-menu-nav-link" href="/tokens">ERC20 Top Tokens</a></li>
+<li id="LI1"><a class="nav-link u-header__sub-menu-nav-link" href="/tokentxns">View ERC20 Transfers</a></li>
+<li class="dropdown-divider"></li>
+<li id="LI42"><a class="nav-link u-header__sub-menu-nav-link" href="/tokens-nft">ERC721 Top Tokens</a></li>
+<li id="LI40"><a class="nav-link u-header__sub-menu-nav-link" href="/tokentxns-nft">View ERC721 Transfers</a></li>
+</ul>
+</li>
+<li id="LI_resources" class="nav-item hs-has-sub-menu u-header__nav-item" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut">
+<a id="resourcesMegaMenu" class="nav-link u-header__nav-link u-header__nav-link-toggle" href="javascript:;" aria-haspopup="true" aria-expanded="false" aria-labelledby="resourcesSubMenu">Resources</a>
+<ul id="resourcesSubMenu" class="hs-sub-menu u-header__sub-menu u-header__sub-menu--spacer" aria-labelledby="resourcesMegaMenu" style="min-width: 230px;">
+<li id="LI_charts2"><a class="nav-link u-header__sub-menu-nav-link" href="/charts">Charts &amp; Stats</a></li>
+<li id="LI_topstat"><a class="nav-link u-header__sub-menu-nav-link" href="/topstat">Top Statistics</a></li>
+<li class="dropdown-divider"></li>
+<li id="LI43"><a class="nav-link u-header__sub-menu-nav-link" href="/directory">Ethereum Directory</a></li>
+<li id="LI38"><a class="nav-link u-header__sub-menu-nav-link" href="/dapp">Explore dApps</a></li>
+<li id="LI13"><a class="nav-link u-header__sub-menu-nav-link" href="/yieldfarms">Yield Farms <sup><span class='badge badge-success ml-1'> New</span></sup></a></li>
+</ul>
+</li>
+<li id="LI_services2" class="nav-item hs-has-mega-menu u-header__nav-item" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut" data-position="left">
+<a id="moreMegaMenu" class="nav-link u-header__nav-link u-header__nav-link-toggle" href="javascript:;" aria-haspopup="true" aria-expanded="false">More</a>
+<div class="hs-mega-menu w-100 u-header__sub-menu" aria-labelledby="moreMegaMenu">
+<div class="row u-header__mega-menu-wrapper">
+<div class="col-sm-6 col-md-4 col-lg mb-4 mb-lg-0">
+<span class="u-header__sub-menu-title">Developers</span>
+<ul class="u-header__sub-menu-nav-group mb-3">
+<li id="LI6"><a class="nav-link u-header__sub-menu-nav-link" href="/apis"><i class="fa fa-angle-right small mr-1"></i>APIs</a></li>
+<li id="LI17"><a class="nav-link u-header__sub-menu-nav-link" href="/verifyContract"><i class="fa fa-angle-right small mr-1"></i>Verify Contract</a></li>
+<li id="LI24"><a class="nav-link u-header__sub-menu-nav-link" href="/opcode-tool"><i class="fa fa-angle-right small mr-1"></i>Byte to Opcode</a></li>
+<li id="LI10"><a class="nav-link u-header__sub-menu-nav-link" href="/pushTx"><i class="fa fa-angle-right small mr-1"></i>Broadcast TXN</a></li>
+<li id="LI27"><a class="nav-link u-header__sub-menu-nav-link" href="/vyper"><i class="fa fa-angle-right small mr-1"></i>Vyper Online Compiler</a></li>
+</ul>
+</div>
+<div class="col-sm-6 col-md-4 col-lg mb-4 mb-lg-0">
+<span class="u-header__sub-menu-title">DeFi Stuff</span>
+<ul class="u-header__sub-menu-nav-group mb-3">
+<li id="LI48"><a class="nav-link u-header__sub-menu-nav-link" href="/defi-leaderboard"><i class="fa fa-angle-right small mr-1"></i>DeFi Leaderboard</a></li>
+<li id="LI4"><a class="nav-link u-header__sub-menu-nav-link" href="/dextracker"><i class="fa fa-angle-right small mr-1"></i>DEX Tracker</a></li>
+</ul>
+</div>
+<div class="col-sm-6 col-md-4 col-lg mb-4 mb-lg-0">
+<span class="u-header__sub-menu-title">Explore</span>
+<ul class="u-header__sub-menu-nav-group mb-3">
+<li id="LI19"><a class="nav-link u-header__sub-menu-nav-link" href="/gastracker"><i class="fa fa-angle-right small mr-1"></i>Gas Tracker</a></li>
+<li id="LI46"><a class="nav-link u-header__sub-menu-nav-link" href="/nodetracker"><i class="fa fa-angle-right small mr-1"></i>Node Tracker</a></li>
+<li id="LI26"><a class="nav-link u-header__sub-menu-nav-link" href="/enslookup"><i class="fa fa-angle-right small mr-1"></i>Ethereum Name Lookup</a></li>
+<li id="LI25"><a class="nav-link u-header__sub-menu-nav-link" href="/connect"><i class="fa fa-angle-right small mr-1"></i>Etherscan Connect</a></li>
+<li id="LI22"><a class="nav-link u-header__sub-menu-nav-link" href="/txsBeaconDeposit"><i class="fa fa-angle-right small mr-1"></i>Eth2 Beacon Chain Deposits</a></li>
+</ul>
+</div>
+<div class="col-sm-6 col-md-4 col-lg mb-4 mb-lg-0">
+<span class="u-header__sub-menu-title">Tools</span>
+<ul class="u-header__sub-menu-nav-group mb-3">
+<li id="LI41"><a class="nav-link u-header__sub-menu-nav-link" href="/labelcloud"><i class="fa fa-angle-right small mr-1"></i>Label Word Cloud</a></li>
+<li id="LI5"><a class="nav-link u-header__sub-menu-nav-link" href="/ether-mining-calculator"><i class="fa fa-angle-right small mr-1"></i>Mining Calculator</a></li>
+<li id="LI29"><a class="nav-link u-header__sub-menu-nav-link" href="/verifiedSignatures"><i class="fa fa-angle-right small mr-1"></i>Verified Signature</a></li>
+<li id="LI30"><a class="nav-link u-header__sub-menu-nav-link" href="https://info.etherscan.com/ethprotect/" target="_blank"><i class="fa fa-angle-right small mr-1"></i>EthProtect <sup><span class='badge badge-secondary ml-1'> Beta</span></sup></a></li>
+</ul>
+</div>
+</div>
+</div>
+
+</li>
+<li class="u-header__nav-separator"></li>
+<li class="nav-item my-2 my-md-0">
+<a class="u-header__nav-link" href="/login">
+<i class="fa fa-user-circle mr-1"></i>Sign In
+</a>
+</li>
+<li class="u-header__nav-separator"></li>
+<li class="nav-item hs-has-sub-menu u-header__nav-item my-md-n1" data-event="hover" data-animation-in="slideInUp" data-animation-out="fadeOut">
+<a id="explorersWithDropdown" class="nav-link u-header__nav-link u-header__nav-link-toggle u-header__nav-link-toggle--mobile pr-0" href="javascript:;" aria-haspopup="true" aria-expanded="false" aria-labelledby="explorersDropdown">
+<span class="btn btn-sm btn-icon btn-soft-primary cursor-pointer d-none d-md-inline-block">
+<img class="u-xs-avatar btn-icon__inner" src="/images/ethereum-icon.png" alt="Ethereum Logo">
+</span>
+<span class="d-inline-block d-md-none">Explorers</span>
+</a>
+<ul id="explorersDropdown" class="hs-sub-menu u-header__sub-menu u-header__sub-menu--spacer dropdown-menu-md-right animated fadeOut" aria-labelledby="explorersWithDropdown" style="min-width: 200px; display: none;">
+<li id="LI_Mainnet" class=" active"><a class="nav-link u-header__sub-menu-nav-link" href="https://etherscan.io">Ethereum Mainnet</a></li>
+<li id="LI_Mainnet_CN"><a class="nav-link u-header__sub-menu-nav-link" href="https://cn.etherscan.com/?lang=zh-CN">Ethereum Mainnet <span class='badge badge-info ml-1'> CN</span></a></li>
+<li class="dropdown-divider mb-3"></li>
+<li id="LI28"><a class="nav-link u-header__sub-menu-nav-link" href="https://ropsten.etherscan.io" target="_blank">Ropsten Testnet</a></li>
+<li id="LI31"><a class="nav-link u-header__sub-menu-nav-link" href="https://kovan.etherscan.io" target="_blank">Kovan Testnet</a></li>
+<li id="LI32"><a class="nav-link u-header__sub-menu-nav-link" href="https://rinkeby.etherscan.io" target="_blank">Rinkeby Testnet</a></li>
+<li id="LI9"><a class="nav-link u-header__sub-menu-nav-link" href="https://goerli.etherscan.io" target="_blank">Goerli Testnet</a></li>
+
+<li class="dropdown-divider"></li>
+<li id="LI2"><a class="nav-link u-header__sub-menu-nav-link" title='Ethereum 2.0 Beacon Chain Testnet Explorer' href="https://beaconscan.com" target="_blank">BeaconScan <span class='badge badge-secondary ml-1'> Eth2</span></a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="form1">
+<form class="w-100 w-lg-60 order-md-1 ml-md-auto mt-2 mb-2 mb-md-0" action="/search" method="GET" autocomplete="off" spellcheck="false">
+<div class="input-group input-group-sm">
+<div class="input-group-prepend d-none d-md-block">
+
+<select name="f" class="custom-select custom-select-sm  custom-arrow-select input-group-text font-size-base filterby">
+<option selected value="0">All Filters</option>
+<option value="1">Addresses</option>
+<option value="2">Tokens</option>
+<option value="3">Name Tags</option>
+<option value="4">Labels</option>
+<option value="5">Websites</option>
+</select>
+
+</div>
+<input type="text" class="form-control searchautocomplete" autocomplete="off" spellcheck="false" id="txtSearchInput" name="q" placeholder="Search by Address / Txn Hash / Block / Token / Ens" aria-label="Search by Address / Txhash / Block / Token / Ens" aria-describedby="button-header-search" onkeyup="handleSearchText(this);" maxlength="68">
+<input type="hidden" value="" id="hdnSearchText" />
+ <input type="hidden" value="" id="hdnSearchLabel" />
+<div class="input-group-append">
+<button class="btn btn-primary" type="submit">
+<span class="fas fa-search"></span>
+</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+</nav>
+</div>
+</div>
+</header>
+<main id="content" role="main">
+<input type="hidden" name="hdnAgeText" id="hdnAgeText" value="Age" />
+<input type="hidden" name="hdnDateTimeText" id="hdnDateTimeText" value="Date Time (UTC)" />
+<input type="hidden" name="hdnAgeTitle" id="hdnAgeTitle" value="Click to show Age Format" />
+<input type="hidden" name="hdnDateTimeTitle" id="hdnDateTimeTitle" value="Click to show Datetime Format" />
+<input type="hidden" name="hdnTxnText" id="hdnTxnText" value="Txn Fee" />
+<input type="hidden" name="hdnGasPriceText" id="hdnGasPriceText" value="Gas Price" />
+<input type="hidden" name="hdnTxnFeeTitle" id="hdnTxnFeeTitle" value="(Gas Price * Gas Used by Txns) in Ether" />
+<input type="hidden" name="hdnGasPriceTitle" id="hdnGasPriceTitle" value="Gas Price in Gwei" />
+
+<div class="container">
+<div id="ContentPlaceHolder1_divTokensTitle" class="py-3">
+<div class="mb-1 mb-md-0">
+<h1 id="ContentPlaceHolder1_h1Tag" class="h4 d-flex align-items-center mb-0">Token Tracker<a class="u-label u-label--xs u-label--secondary rounded color-strong ml-2" href='https://eips.ethereum.org/EIPS/eip-20' target="_blank" rel="nofollow noreferrer" data-toggle="tooltip" title="External link to ERC-20 Information">ERC-20</a></h1>
+</div>
+</div>
+</div>
+
+
+<div class="container">
+<div class="border-top py-3">
+<div class="d-flex text-secondary" style="line-height: 2.2;">
+<span id="ContentPlaceHolder1_lblAdResult"><ins data-revive-zoneid='2' data-revive-id='94930f9d02164723d814eabe9168eb46'></ins><script Async src="//mct.etherscan.com/www/d/asyncjses.php?v=0.01"></script></span>&nbsp;
+</div>
+</div>
+</div>
+
+<div class="container space-bottom-2">
+
+<div class="card">
+
+<div id="ContentPlaceHolder1_searchBarDiv" class="card-header d-md-flex justify-content-between align-items-center">
+<div class="mb-1 mb-md-0">
+<h2 class="card-header-title">ERC-20 Tokens</h2>
+</div>
+<div class="d-flex ml-auto">
+<div class="position-relative order-1 order-md-2">
+<a id="searchFilterInvoker" class="btn btn-sm btn-icon btn-primary" href="javascript:;" role="button" aria-controls="searchFilter" aria-haspopup="true" aria-expanded="false" data-unfold-target="#searchFilter" data-unfold-type="css-animation" data-unfold-duration="300" data-unfold-delay="300" data-unfold-hide-on-scroll="false" data-unfold-animation-in="slideInUp" data-unfold-animation-out="fadeOut" data-toggle="tooltip" title="Search for Token Name or Address">
+<i class="fa fa-search btn-icon__inner"></i>
+</a>
+<div id="searchFilter" class="dropdown-menu dropdown-unfold dropdown-menu-sm-right p-2" aria-labelledby="searchFilterInvoker" style="width: 310px;">
+<form action="/tokens" method="get" autocomplete="off" spellcheck="false" class="js-focus-state input-group input-group-sm w-100">
+<input id="searchtoken" name="q" type="search" value="" class="form-control" placeholder="Search for Token Name or Address" onkeyup="handleTokenSearch(this);" />
+<div class="input-group-append">
+<button type="submit" class="btn btn-primary" data-toggle="tooltip">Find</button>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<div class="card-body">
+<div class="tab-content" id="myTabContent">
+<div class="tab-pane fade show active" id="transfers" role="tabpanel" aria-labelledby="tokens-tab">
+<div id="ContentPlaceHolder1_divpagingpanel" class="d-md-flex justify-content-between align-items-center mb-4">
+<p class="mb-2 mb-lg-0">
+<i id="spinwheel" class="fa fa-spin fa-spinner fa-1x fa-pulse" style="display: none; margin-top: 4px">&nbsp;</i>
+A total of 344,106 Token Contracts found
+</p>
+<nav class="mb-4 mb-md-0" aria-label="page navigation">
+<ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="tokens?p=1"><span aria-hidden="True">First</span> <span class="sr-only">First</span></a></li><li class="page-item" data-toggle='tooltip' title="Go to Previous"><a class="page-link" href="tokens?p=14" aria-label="Previous"><span aria-hidden="True"><i class="fa fa-chevron-left small"></i></span> <span class="sr-only">Previous</span></a></li><li Class="page-item disabled"><span Class="page-link text-nowrap">Page <strong class="font-weight-medium">15</strong> of <strong class="font-weight-medium">17</strong></span></li><li class="page-item" data-toggle='tooltip' title="Go to Next"><a class="page-link" href="tokens?p=16" aria-label="Next"><span aria-hidden="True"><i class="fa fa-chevron-right small"></i></span> <span class="sr-only">Next</span></a></li><li class="page-item"><a class="page-link" href="tokens?p=17"><span aria-hidden="True">Last</span> <span class="sr-only">Last</span></a></li>
+</nav>
+</div>
+<div class="js-sticky-header" id="divSTContainer">
+<div id="ContentPlaceHolder1_divresult" class="table-responsive mb-2 mb-md-0">
+<table class="table table-text-normal table-hover" id="tblResult">
+<thead class="thead-light">
+<tr>
+<th scope="col" width="1" class="token-sticky-header">#</th>
+<th scope="col" width="30" class="token-sticky-header">Token</th>
+<th scope="col" width="5" class="text-nowrap"><a href='/tokens?sort=price_usd&order=desc' data-toggle='tooltip' data-boundary='viewport' data-html='true' title='Click for descending sort'>Price</a></th>
+<th scope="col" width="5" class="text-nowrap"><a href='/tokens?sort=percent_change_24h&order=desc' data-toggle='tooltip' data-boundary='viewport' data-html='true' title='Click for descending sort'>Change (%)</a></th>
+<th scope="col" width="5" class="text-nowrap"><a href='/tokens?sort=24h_volume_usd&order=desc' data-toggle='tooltip' data-boundary='viewport' data-html='true' title='Click for descending sort'>Volume (24H)</a></th>
+<th scope="col" width="5" class="text-nowrap"><strong><i class='fa fa-angle-down'></i></strong>&nbsp;<a href='/tokens?sort=marketcap&order=asc' data-toggle='tooltip' data-boundary='viewport' data-html='true' title='Sorted in descending order,&#013;Click for ascending sort' style='text-decoration:underline;'>Market Cap</a> <i class="far fa-question-circle text-muted" data-placement="right" data-boundary="viewport" data-toggle="tooltip" data-html="true" data-title="<p class='text-white text-left mb-0'>Circulating Supply MarketCap - Calculated by multiplying the number of outstanding tokens with the current market price</p>" data-original-title="" title=""></i></th>
+<th scope="col" width="5" class="text-nowrap"><a href='/tokens?sort=holders&order=desc' data-toggle='tooltip' data-boundary='viewport' data-html='true' title='Click for descending sort'>Holders</a></th>
+</tr>
+</thead>
+<tbody>
+<tr><td>701</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/quinads_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x86e44543164d9b97b14ef7f6f3ab7ba670cab346'>QUINADS (QUIN)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Quinads is an advertisement platform with blockchain based and allows users to socially interact and rewarded by cryptocurrency.</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 22.36%</span></td><td>$227</td><td>$40,616&nbsp;&nbsp;&nbsp;</td><td>401</td></tr><tr><td>702</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/xmct_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x44449Fa4d607F807d1eD4a69ad942971728391C8'>XMED Chain Token (XMCT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Connecting global medical data and find your ideal cross-border medical solution</p></div></div></td><td class='text-nowrap'>$0.0004<div class='small text-secondary'>0.0000000348&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$40,253&nbsp;&nbsp;&nbsp;</td><td>7,861</td></tr><tr><td>703</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/digipulse2_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xf6cfe53d6febaeea051f400ff5fc14f0cbbdaca1'>DigiPulse (DGPT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Aim to ensure that all digital assets holders and crypto wallet users have ultimate control over who inherits their digital and crypto assets.</p></div></div></td><td class='text-nowrap'>$0.0173<div class='small text-secondary'>0.00000269&nbsp;Btc<span class='d-block'>0.000032&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$39,157&nbsp;&nbsp;&nbsp;</td><td>2,304</td></tr><tr><td>704</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/dowcoin_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x76974c7b79dc8a6a109fd71fd7ceb9e40eff5382'>DOW (dow)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Dowcoin is a share's of Dow blockchain technology.</p></div></div></td><td class='text-nowrap'>$0.0032<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000006&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$37,966&nbsp;&nbsp;&nbsp;</td><td>156</td></tr><tr><td>705</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/musiconomi28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x138a8752093f4f9a79aaedf48d4b9248fab93c9c'>Musiconomi (MCI)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>A global music economy that works for everyone.</p></div></div></td><td class='text-nowrap'>$0.0014<div class='small text-secondary'>0.0000003939&nbsp;Btc<span class='d-block'>0.000003&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$37,823&nbsp;&nbsp;&nbsp;</td><td>903</td></tr><tr><td>706</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/rebellioustoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x5f53f7a8075614b699baad0bc2c899f4bad8fbbf'>Rebellious (REBL)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Rebellious is a company based in the Netherlands. Using their unique approach, they aim to build a strong currency powered by an even stronger community that’s motivated by growth rather than greed.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0.0000000231&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$37,400&nbsp;&nbsp;&nbsp;</td><td>40,886</td></tr><tr><td>707</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/embers_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x386467f1f3ddbe832448650418311a479eecfc57'>Embers (EMB)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>A decentralized creative commerce platform.</p></div></div></td><td class='text-nowrap'>$0.0007<div class='small text-secondary'>0.0000002128&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$36,918&nbsp;&nbsp;&nbsp;</td><td>742</td></tr><tr><td>708</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/navi_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x588047365df5ba589f923604aac23d673555c623'>NaviToken (NAVI)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Naviaddress is a unified digital ID for any place and object.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0.0000000138&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 18.83%</span></td><td>$8,850</td><td>$36,869&nbsp;&nbsp;&nbsp;</td><td>108,814</td></tr><tr><td>709</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/sgpay_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x33c623a2baafeb8d15dfaf3ce44095efec83d72c'>SGPay (SGP)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>SGPay is the payments system built for the mobile platform. It aims to combine new digital tokens, next generation innovators and modern e-payment systems together.</p></div></div></td><td class='text-nowrap'>$0.0179<div class='small text-secondary'>0.0000048482&nbsp;Btc<span class='d-block'>0.000033&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$35,841&nbsp;&nbsp;&nbsp;</td><td>7,158</td></tr><tr><td>710</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/visionX_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x1563D521ba309e2Ad9f4aFfD6f4dE9759E8d4F21'>VisionX (VNX)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>VisionX bridges companies across industries for AI Solutions</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0.0000000012&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 1.71%</span></td><td>$4,284</td><td>$35,439&nbsp;&nbsp;&nbsp;</td><td>4,161</td></tr><tr><td>711</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/connectjob_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x3abdff32f76b42e7635bdb7e425f0231a5f3ab17'>ConnectJob (CJT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>ConnectJob, Decentralized App to offer users to pay services with crypto.</p></div></div></td><td class='text-nowrap'>$0.0003<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$35,110&nbsp;&nbsp;&nbsp;</td><td>4,186</td></tr><tr><td>712</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/earthtoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x900b4449236a7bb26b286601dd14d2bde7a6ac6c'>EARTH Token (EARTH)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>EARTH Token provides a unique opportunity to truly transform the Natural Capital Asset market, by creating a Natural Asset Marketplace allowing all stakeholders in the climate value chain to participate.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0.0000000206&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$34,962&nbsp;&nbsp;&nbsp;</td><td>8,232</td></tr><tr><td>713</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/olympuslab_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x263c618480dbe35c300d8d5ecda19bbb986acaed'>MOT (MOT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>To build a decentralized, privacy-preserving ecosystem of financial products, services, and applications with unrestricted access for all.</p></div></div></td><td class='text-nowrap'>$0.0009<div class='small text-secondary'>0.0000001074&nbsp;Btc<span class='d-block'>0.000002&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$34,641&nbsp;&nbsp;&nbsp;</td><td>40,591</td></tr><tr><td>714</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/tokia_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xdae1baf249964bc4b6ac98c3122f0e3e785fd279'>Tokia (TKA)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Mobile exchange & Digital currency wallet</p></div></div></td><td class='text-nowrap'>$0.0008<div class='small text-secondary'>0.0000001557&nbsp;Btc<span class='d-block'>0.000002&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$34,494&nbsp;&nbsp;&nbsp;</td><td>4,434</td></tr><tr><td>715</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/jury_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xdb455c71c1bc2de4e80ca451184041ef32054001'>Jury.Online (JOT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Unique platform for secure investment in responsible ICOs.</p></div></div></td><td class='text-nowrap'>$0.0024<div class='small text-secondary'>0.0000002598&nbsp;Btc<span class='d-block'>0.000004&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$32,855&nbsp;&nbsp;&nbsp;</td><td>82,635</td></tr><tr><td>716</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/incodium_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x4d8bfe7ea0f46486fd40fc4df60cf39f7568bee8'>Incodium (INCO)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>API-based Smart Contract Solution for Exchange Hacking</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0.0000000005&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$32,803&nbsp;&nbsp;&nbsp;</td><td>1,546</td></tr><tr><td>717</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/cybermusic_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x78c292d1445e6b9558bf42e8bc369271ded062ea'>CyberMusic (CYMT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Cyber Music will be the new point of reference for the music market and will be fully developed using the technologies that the blockchain has available.</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -0.25%</span></td><td>$215</td><td>$30,058&nbsp;&nbsp;&nbsp;</td><td>1,622</td></tr><tr><td>718</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/vauxtoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x83eEA00D838f92dEC4D1475697B9f4D3537b56E3'>VOISE (VOISE)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Block-Chain Powered Music Platform.</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$5</td><td>$29,970&nbsp;&nbsp;&nbsp;</td><td>3,823</td></tr><tr><td>719</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/rntb_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x1fe70be734e473e5721ea57c8b5b01e6caa52686'>RNTB Token (RNTB)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>BitRent is the blockchain platform meant to attract commercial and residential property investments at an early stage of construction in order to gain maximum profit by selling and renting out the acquired property</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 7.37%</span></td><td>$0</td><td>$29,105&nbsp;&nbsp;&nbsp;</td><td>25,444</td></tr><tr><td>720</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/dalecoin2.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x07d9e49ea402194bf48a8276dafb16e4ed633317'>DALECOIN (DALC)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>DaleCoin is an ERC20 token based on the Ethereum blockchain which shall serve as a payment token for goods and services to whoever wishes to accept it.</p></div></div></td><td class='text-nowrap'>$0.0301<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000056&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 0.01%</span></td><td>$1</td><td>$28,515&nbsp;&nbsp;&nbsp;</td><td>767</td></tr><tr><td>721</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/webcoin_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x840fe75abfadc0f2d54037829571b2782e919ce4'>Webcoin (WEB)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Webcoin pioneers the technological dawn of global marketing digitalization</p></div></div></td><td class='text-nowrap'>$0.0006<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -5.62%</span></td><td>$3,743</td><td>$27,855&nbsp;&nbsp;&nbsp;</td><td>3,927</td></tr><tr><td>722</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/origami_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xd2fa8f92ea72abb35dbd6deca57173d22db2ba49'>Origami Network (ORI)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>A protocol for building decentralized marketplaces using the Ethereum blockchain</p></div></div></td><td class='text-nowrap'>$0.0066<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000012&nbsp;Eth</span></div></td><td>--</td><td>$29</td><td>$27,710&nbsp;&nbsp;&nbsp;</td><td>763</td></tr><tr><td>723</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/coinchase_32.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x40adfc7c23c22cc06f94f199a4750d7196f46fbe'>Coinchase Token (CCH)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Coinchase is a community-based cryptocurrency financial services network. Services including: Blockchain crowdfunding, cryptocurrency savings, cryptocurrency lending, and cryptocurrency games.</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0.0000000016&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$86</td><td>$27,374&nbsp;&nbsp;&nbsp;</td><td>3,466</td></tr><tr><td>724</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/inve_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xdac4ae188ace3c8985765edc6c9b4739d4845ddc'>InterValue (INVE)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>InterValue is one of the first projects of the Blockchain 4.0 era. It supports the deployment of large-scale applications. InterValue’s double-layer DAG consensus uses sharding and gossip protocol to achieve high transaction concurrency.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$27,008&nbsp;&nbsp;&nbsp;</td><td>1,248</td></tr><tr><td>725</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/arbitraging_28.jpg'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xafbec4d65bc7b116d85107fd05d912491029bf46'>ARBITRAGE (ARB)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Arbitraging is an arbitrage trading company that specializes in creating sophisticated algorithms (bots) that operate by exploiting the market inefficiency, which, in financial world, is called ARBITRAGE.</p></div></div></td><td class='text-nowrap'>$0.0065<div class='small text-secondary'>0.0000009068&nbsp;Btc<span class='d-block'>0.000012&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$26,375&nbsp;&nbsp;&nbsp;</td><td>1,974</td></tr><tr><td>726</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/tokenstars_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x06147110022b768ba8f99a8f385df11a151a9cc8'>ACE (ACE)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>ACE is a utility token, that serves as a form of access to the TokenStars platform and its internal currency.
+TokenStars is the first talent management platform on the blockchain, that will connect talents & celebrities with fans and advertisers.</p></div></div></td><td class='text-nowrap'>$0.0044<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000008&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 24.94%</span></td><td>$204</td><td>$25,885&nbsp;&nbsp;&nbsp;</td><td>648</td></tr><tr><td>727</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/scanetchain_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xadf8b8050639b6236915f7516d69de714672f0bf'>Scanetchain (SWC)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>SCANETCHAIN is the commercial dApp built on the NEM platform Developed for Blockchain Commercialization. Using augmented reality & hybrid blockchain to ensure interoperability of on-offline advertising, shopping, SNS services.</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -63.66%</span></td><td>$34</td><td>$25,486&nbsp;&nbsp;&nbsp;</td><td>10,722</td></tr><tr><td>728</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/dragonglass_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x6aedbf8dff31437220df351950ba2a3362168d1b'>Dragonglass (DGS)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Dragonglass provides a seamless solution for cryptocurrency mining</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$7</td><td>$25,449&nbsp;&nbsp;&nbsp;</td><td>857</td></tr><tr><td>729</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/boutspro_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x139d9397274bb9e2c29a9aa8aa0b5874d30d62e3'>BoutsPro (BOUTS)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Professional Karate Sports Organization</p></div></div></td><td class='text-nowrap'>$0.0005<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -23.13%</span></td><td>$34,309</td><td>$23,289&nbsp;&nbsp;&nbsp;</td><td>4,566</td></tr><tr><td>730</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/001-NDC-NEVERDIE-Coin-Logo.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xa54ddc7b3cce7fc8b1e3fa0256d0db80d2c10970'>NEVERDIE (NDC)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>NEVERDIE Studios aims to use the value of the NEVERDIE Coin to make virtual reality fulfill its potential.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0.0000000355&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$22,510&nbsp;&nbsp;&nbsp;</td><td>13,451</td></tr><tr><td>731</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/sparta2_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x24aef3bf1a47561500f9430d74ed4097c47f51f2'>SPARTA (SPARTA)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>SPARTA token is to be used inside the 300 startups as a kind of credits if the application is a non blockchain application, or as a utility token/precursor to other tokens if it is a blockchain application.</p></div></div></td><td class='text-nowrap'>$0.0073<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000014&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$21,872&nbsp;&nbsp;&nbsp;</td><td>150</td></tr><tr><td>732</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/ethbet_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x7D5Edcd23dAa3fB94317D32aE253eE1Af08Ba14d'>Ethbet (EBET)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>The decentralized, peer-to-peer, and provably-fair Ethereum-based dicing game without a house edge.</p></div></div></td><td class='text-nowrap'>$0.0025<div class='small text-secondary'>0.0000004856&nbsp;Btc<span class='d-block'>0.000005&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$21,628&nbsp;&nbsp;&nbsp;</td><td>854</td></tr><tr><td>733</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/fitrova_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x48df4e0296f908ceab0428a5182d19b31fc037d6'>Fitrova (FRV)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Fitrova is Revolutionizing the Health & Fitness Industry by Harnessing Blockchain Technology</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0.0000000004&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$21,146&nbsp;&nbsp;&nbsp;</td><td>1,970</td></tr><tr><td>734</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/reftoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x89303500a7abfb178b274fd89f2469c264951e1f'>RefToken (REF)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Decentralized Affiliate platform</p></div></div></td><td class='text-nowrap'>$0.0204<div class='small text-secondary'>0.0000018594&nbsp;Btc<span class='d-block'>0.000038&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$20,519&nbsp;&nbsp;&nbsp;</td><td>7,685</td></tr><tr><td>735</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/cryptrusttoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x8606a8f28e1e2fd50b9074d65c01548b1f040b32'>Cryptrust (CTRT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Cryptrust is a Decentralized Trust-Based social platform for the cryptocurrency ecosystem.</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -1.48%</span></td><td>$216</td><td>$20,263&nbsp;&nbsp;&nbsp;</td><td>391</td></tr><tr><td>736</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/bionic2_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xef51c9377feb29856e61625caf9390bd0b67ea18'>Bionic (BNC)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Bionic is an ethereum token created to facilitate the transaction between electronic companies</p></div></div></td><td class='text-nowrap'>$0.0000<div class='small text-secondary'>0.0000000034&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 2.19%</span></td><td>$3,503</td><td>$20,194&nbsp;&nbsp;&nbsp;</td><td>2,290</td></tr><tr><td>737</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/boxx_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x780116d91e5592e58a3b3c76a351571b39abcec6'>Boxx (BOXX)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>An Event Ticketing Blockchain Protocol</p></div></div></td><td class='text-nowrap'>$0.0006<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 38.32%</span></td><td>$27</td><td>$19,974&nbsp;&nbsp;&nbsp;</td><td>3,548</td></tr><tr><td>738</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/sonder_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x47d1a59cbdd19aee060c859c0009277e245328ae'>Sonder (SNR)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Overcome the barriers to integration of blockchain-technologies into e-commerce market.</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0.0000000066&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-success text-nowrap'><i class='fa  fa-caret-up'></i> 3.06%</span></td><td>$0</td><td>$19,734&nbsp;&nbsp;&nbsp;</td><td>914</td></tr><tr><td>739</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/themis_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x60c68a87be1e8a84144b543aacfa77199cd3d024'>Themis (GET)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Themis is a trusted blockchain infrastructure based on group escrow service,
+the problmes of fair exchanges which using cryptocurrencies as the medium, and helping to build a new generation of trusted network.</p></div></div></td><td class='text-nowrap'>$0.0017<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000003&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -15.71%</span></td><td>$386,291</td><td>$19,698&nbsp;&nbsp;&nbsp;</td><td>5,217</td></tr><tr><td>740</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/networktoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x2233799ee2683d75dfefacbcd2a26c78d34b470d'>Network (NTWK)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Network Learning is an e-learning platform where users who are new to cryptocurrency can come visit to learn the basics.</p></div></div></td><td class='text-nowrap'>$0.0012<div class='small text-secondary'>0.00000022&nbsp;Btc<span class='d-block'>0.000002&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$19,418&nbsp;&nbsp;&nbsp;</td><td>6,569</td></tr><tr><td>741</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/sportyco_28b.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x85089389c14bd9c77fc2b8f0c3d1dc3363bf06ef'>SPF (SPF)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>SPF Tokens will also be used to purchase additional services that SportyCo will provide to athletes, sports clubs, investors, and other participants in the ecosystem.</p></div></div></td><td class='text-nowrap'>$0.0004<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -32.99%</span></td><td>$9</td><td>$18,859&nbsp;&nbsp;&nbsp;</td><td>1,966</td></tr><tr><td>742</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/4newtoken_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x241ba672574a78a3a604cdd0a94429a73a84a324'>4NEW (KWATT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>CLEAN GREEN ENERGY FOR CRYPTO MINING</p></div></div></td><td class='text-nowrap'>$0.0003<div class='small text-secondary'>0.0000000164&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -2.09%</span></td><td>$0</td><td>$17,961&nbsp;&nbsp;&nbsp;</td><td>7,692</td></tr><tr><td>743</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/ixtus_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x7a07e1a0c2514d51132183ecfea2a880ec3b7648'>IXE Token (IXE)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Educational project for children</p></div></div></td><td class='text-nowrap'>$0.0007<div class='small text-secondary'>0.0000002161&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$17,832&nbsp;&nbsp;&nbsp;</td><td>53,719</td></tr><tr><td>744</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/hbc_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x877c7deb5eb1fc5faad30c71e3a6e39dc8b1519f'>HeartBout (HB)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>HeartBout is a social network based on the blockchain technology with a decentralized system to encourage user activity.</p></div></div></td><td class='text-nowrap'>$0.0010<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000002&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -9.66%</span></td><td>$850</td><td>$17,454&nbsp;&nbsp;&nbsp;</td><td>736</td></tr><tr><td>745</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/datatxtoken_32.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x24dcc881e7dd730546834452f21872d5cb4b5293'>Data Transaction Token (XD)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>The digital asset, Data Transaction Token, is used to initiate private data transactions by users onto the public Ethereum Blockchain, rendering each transaction immutable.</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -24.25%</span></td><td>$4,028</td><td>$17,376&nbsp;&nbsp;&nbsp;</td><td>1,242</td></tr><tr><td>746</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/datarius_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0xc20464e0c373486d2b3335576e83a218b1618a5e'>Datarius Credit (DTRC)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Datarius cryptobank is a decentralized partially closed system.</p></div></div></td><td class='text-nowrap'>$0.0001<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$0</td><td>$17,076&nbsp;&nbsp;&nbsp;</td><td>5,628</td></tr><tr><td>747</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/connect_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x54a9ed327f2614316914c3f3a782a77d0aa47aee'>CONNECT (CNCT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Connect platform is a user-friendly crowdfunding service. Connecting investors with projects and projects with professional resources.</p></div></div></td><td class='text-nowrap'>$0.0002<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000000&nbsp;Eth</span></div></td><td>--</td><td>$53</td><td>$16,427&nbsp;&nbsp;&nbsp;</td><td>147</td></tr><tr><td>748</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/daneel_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x9b70740e708a083c6ff38df52297020f5dfaa5ee'>Daneel (DAN)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Blockchain news that is simple and reliable with the use of AI.</p></div></div></td><td class='text-nowrap'>$0.0007<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000001&nbsp;Eth</span></div></td><td>--</td><td>$426</td><td>$15,372&nbsp;&nbsp;&nbsp;</td><td>12,186</td></tr><tr><td>749</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/itt_token_28.jpg'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x0aef06dcccc531e581f0440059e6ffcc206039ee'>Intelligent Trading Foundation (ITT)</a></h3><p class='d-none d-md-block font-size-1 mb-0'>Applying artificial intelligence and technical analysis, our fleet of data bots follow real-time data sources and send you actionable alerts for success in cryptocurrency markets.</p></div></div></td><td class='text-nowrap'>$0.0014<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000003&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -2.46%</span></td><td>$14,447</td><td>$13,993&nbsp;&nbsp;&nbsp;</td><td>765</td></tr><tr><td>750</td><td><div class='media'><img class='u-xs-avatar mr-2' src='/token/images/goldreward_28.png'><div class='media-body'><h3 class='h6 mb-0'><a class='text-primary' href='/token/0x219218f117dc9348b358b8471c55a073e5e0da0b'>Gold Reward (GRX)</a></h3></div></div></td><td class='text-nowrap'>$0.0011<div class='small text-secondary'>0&nbsp;Btc<span class='d-block'>0.000002&nbsp;Eth</span></div></td><td><span class='text-danger text-nowrap'><i class='fa fa-caret-down'></i> -3.31%</span></td><td>$547</td><td>$13,940&nbsp;&nbsp;&nbsp;</td><td>11,077</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<form method="post" action="./tokens?p=15" id="ctl00">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="3/t3vfpnGpT7K/YJIUkpQaQE0cCVPmfBlpqgq0rwwvPKnni5RxDJWPydWq3TTEqzN2YRQOJqniaqYsK3VRbLg/msQ3KgjiZq201ktLsz2xs=" />
+<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="3C86B011" />
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="jtdP8ZAVIM32Ns/XIIQRsuFprZatzEH9d4iKsZNmjKRqA/1fwKVHcx8BW44XqQPLw6hGuBa6Yz32noGuDsk8dbbcSy7px7mWPyI7RkbyQCmIA29FM8GogTW4/jw02WcM/kCIpg9PhtSmj86R7K2EzmMyWrl2Pd2281A9Aojl5feciFoBBNPNVFWjS5csib/U" />
+<div id="ContentPlaceHolder1_divPagination" class="d-md-flex justify-content-between my-3">
+<div class="d-flex align-items-center text-secondary mb-2 mb-md-0">
+Show
+<select name="ctl00$ContentPlaceHolder1$ddlRecordsPerPage" id="ContentPlaceHolder1_ddlRecordsPerPage" class="custom-select custom-select-xs mx-2">
+<option value="10">10</option>
+<option value="25">25</option>
+<option selected="selected" value="50">50</option>
+<option value="100">100</option>
+</select>
+Records
+</div>
+<ul class="pagination pagination-sm mb-0"><li class="page-item"><a class="page-link" href="tokens?p=1"><span aria-hidden="True">First</span> <span class="sr-only">First</span></a></li><li class="page-item" data-toggle='tooltip' title="Go to Previous"><a class="page-link" href="tokens?p=14" aria-label="Previous"><span aria-hidden="True"><i class="fa fa-chevron-left small"></i></span> <span class="sr-only">Previous</span></a></li><li Class="page-item disabled"><span Class="page-link text-nowrap">Page <strong class="font-weight-medium">15</strong> of <strong class="font-weight-medium">17</strong></span></li><li class="page-item" data-toggle='tooltip' title="Go to Next"><a class="page-link" href="tokens?p=16" aria-label="Next"><span aria-hidden="True"><i class="fa fa-chevron-right small"></i></span> <span class="sr-only">Next</span></a></li><li class="page-item"><a class="page-link" href="tokens?p=17"><span aria-hidden="True">Last</span> <span class="sr-only">Last</span></a></li>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<div id="js-column_freeze_id" class="d-sm-none d-flex justify-content-between align-items-center mt-3">
+<p class="mb-0">Turn Column Freeze on/off:</p>
+<div id="js-column_freeze_id_inner">
+<div class="js-mainbtn custom-control custom-switch mt-n3">
+<input type="checkbox" class="custom-control-input" id="js-customSwitch1">
+<label class="custom-control-label" for="js-customSwitch1"></label>
+</div>
+</div>
+</div>
+</div>
+<script type="text/javascript">
+        var tokensFlag = false;
+        $(document).ready(function () {
+            if ($('#ContentPlaceHolder1_searchBarDiv').length) {
+                (function ($) {
+                    $.fn.customAutocomplete = function () {
+                        this.autocomplete({
+                            source: function (request, response) {
+                                var searchTerm = request.term;
+                                $.ajax({
+                                    dataType: "json",
+                                    type: 'Get',
+                                    url: '/searchHandler?t=t',
+                                    data: { term: searchTerm, filterby: '2' },
+                                    success: function (data) {
+                                        response($.map(data, function (item) {
+                                            return {
+                                                label: item.split('\t')[0],
+                                                value: item.split('\t')[1],
+                                                desc: item.split('\t')[2],
+                                                typeval: item.split('\t')[3],
+                                                checkMark: item.split('\t')[4],
+                                                logo: item.split('\t')[5]
+                                            }
+                                        }));
+                                    },
+                                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                                        console.log(textStatus);
+                                    }
+                                });
+                            },
+                            autoFocus: true,
+                            delay: 100,
+                            minLength: 1,
+                            select: function (event, ui) {
+                                event.preventDefault();
+                                var typeval = ui.item.typeval;
+                                if (typeval == "") {
+                                    typeval = 1;
+                                    ui.item.label = $("#hdnSearchText").val();
+                                }
+
+                                //$(this).val(ui.item.label);
+                                if (typeval == 1) {
+                                    event.preventDefault();
+                                    window.location.href = '/token/' + ui.item.label;
+                                } else if (typeval == 2) {
+                                    event.preventDefault();
+                                    window.location.href = '/token/' + ui.item.value;
+                                } else if (typeval == 4) {
+                                    event.preventDefault();
+                                    window.location.href = '/token/' + ui.item.label;
+                                }
+                            }
+                        }).focus(function (event) {
+                            $(".ui-helper-hidden-accessible").hide();
+                            event.preventDefault();
+                        }).addClass("list-unstyled py-3 mb-0").data("ui-autocomplete")._renderItem = function (ul, item) {
+
+                            if (!tokensFlag) {
+                                tokensFlag = true;
+                                ul.addClass("list-unstyled bg-white-content p-2 mb-0");
+                            }
+
+                            ul.addClass('custwidth');
+                            var tickMark = '';
+                            var imglogo = '';
+
+                            if (item.checkMark === '1') {
+                                tickMark = "<i class='fa fa-badge-check text-info ml-auto'></i>";
+                            }
+
+                            if (item.logo !== '') {
+                                imglogo = "<img class='u-xs-avatar' style='margin-top: 1px;' src='/token/images/" + item.logo + "'>";
+                            }
+                            else {
+                                imglogo = "<img class='u-xs-avatar' style='margin-top: 1px;' src='/images/main/empty-token.png'>";
+                            }
+                            //return $("<li>")
+                            //    .append("<div>" + imglogo + item.label.substring(0, 28) + tickMark + "<br><font size='1'>" + item.desc + "</font></div>")
+                            //    .appendTo(ul);
+                            if (item.desc == "" && item.typeval == "" && item.checkMark == "" && item.logo == "") {                                
+                                return $("<li class='mb-2 ether-search-heading'>").append("<h5 class='h6 font-weight-bold bg-light px-2 py-1 rounded mb-2'>" + item.label + "</h5>").appendTo(ul);
+                            } else {
+                                if (searchAddress == false) {
+                                    if (item.typeval == 1 || item.typeval == 4) {
+                                        $("#hdnSearchText").val(item.label);
+                                    } else {
+                                        $("#hdnSearchText").val(item.value);
+                                    }                
+                                    searchAddress = true;
+                                }
+
+                                var website = (item.desc.split('~')[1] != undefined ? "<div class='text-secondary font-size-1 text-truncate'>" + item.desc.split('~')[1] + "</div>" : "");
+                                var tokenType = item.desc.split('~')[2];
+                                var price = (tokenType != "2" ? (item.desc.split('~')[3] != undefined ? "<span class='badge bg-soft-secondary mr-2'>" + item.desc.split('~')[3] + "</span>" : "") : "");
+
+                                return $("<li class='mb-2'>")
+                                    .append("<a class='ether-search media rounded p-2' href='javascript:;'><div class='mr-2'>" + imglogo + "</div><div class='media-body text-truncate'><h6 class='d-flex align-items-center text-size-1 mb-0'><div class='text-truncate mr-2'>" + item.label + "</div>" + price + tickMark + "</h6><span class='text-secondary text-truncate font-size-1'>" + item.value + "</span>" + website + "</div></a>")
+                                    .appendTo(ul);
+                            }
+                        };
+                        return this;
+                    };
+                })(jQuery);
+                var urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('l') == false) {
+                    $("#searchtoken").customAutocomplete();
+                }
+            }          
+        });
+    </script>
+</main>
+<div id="push"></div>
+<div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" id="emailSubscribeModalBox" aria-hidden="true">
+<div class="modal-dialog modal-sm" role="document">
+<div class="modal-content">
+<div class="modal-body">
+<button type="button" class="close close-md" data-dismiss="modal" aria-label="Close">
+<span aria-hidden="true">&times;</span>
+</button>
+<div class="text-center py-5-alt px-4">
+<div id="emailSubscribeModalBoxText"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="bg-dark py-4" style="background-image: url(/images/svg/components/abstract-shapes-20.svg?v=1);">
+<div class="container">
+<div class="row justify-content-md-between font-size-1 py-2" style="background: url(/images/world-map-white.png) no-repeat 0 30%;">
+<div class="col-lg-3 mb-4 mb-lg-0">
+<div class="d-flex h-100 flex-column">
+<div class="d-flex align-items-center mb-4">
+<img width="20" src="/images/svg/brands/ethereum.svg?v=1.3" alt="Ethereum Logo">
+<span class="h4 text-white mb-0 ml-3">Powered by Ethereum</span>
+</div>
+<p class="text-white">Etherscan is a Block Explorer and Analytics Platform for Ethereum, a decentralized smart contracts platform.</p>
+
+<div class="d-flex align-items-center">
+<a class="btn btn-xss btn-soft-light mr-2" href="/settings">
+<i class="fa fa-cogs mr-1"></i>Preferences
+</a>
+<button id="darkModaBtn" type="button" data-toggle="tooltip" data-title="Day/Night Mode" class="btn btn-sm btn-icon btn-soft-light">
+<i id="darkModaBtnIcon" Class="fa fa-moon"></i></button>
+</div>
+
+</div>
+</div>
+<div class="col-6 col-md-4 col-lg-2 mb-4 mb-lg-0">
+<h4 class="h6 text-white heading-border">Company</h4>
+<ul class="list-group list-group-sm list-group-transparent list-group-white list-group-flush list-group-borderless mb-0">
+<li><a class="list-group-item" href="/aboutus">About Us</a></li>
+<li><a class="list-group-item" href="/contactusadvertise">Advertise</a></li>
+<li><a class="list-group-item" href="/contactus">Contact Us</a></li>
+<li><a class="list-group-item" href="/brandassets">Brand Assets</a></li>
+<li><a class="list-group-item" href="/terms">Terms of Service</a></li>
+</ul>
+</div>
+<div class="col-6 col-md-4 col-lg-2 mb-4 mb-lg-0">
+<h4 class="h6 text-white heading-border">Community</h4>
+<ul class="list-group list-group-sm list-group-transparent list-group-white list-group-flush list-group-borderless mb-0">
+<li><a class="list-group-item" href="/apis">Developer APIs</a></li>
+<li><a class="list-group-item" target="_blank" href="https://info.etherscan.com/">Knowledge Base</a></li>
+<li><a class="list-group-item" target="_blank" href="https://info.etherscan.com/etherscan-newsletters/">Newsletter</a></li>
+<li><a class="list-group-item" rel="nofollow noopener" target="_blank" href="https://etherscan-692.freshstatus.io/">Network Status</a></li>
+<li><a class="list-group-item" href="/comments">Disqus Comments</a></li>
+</ul>
+</div>
+<div class="col-6 col-md-4 col-lg-2 mb-4 mb-lg-0">
+<h4 class="h6 text-white heading-border">Products</h4>
+<ul class="list-group list-group-sm list-group-transparent list-group-white list-group-flush list-group-borderless mb-0">
+<li><a class="list-group-item" href="https://blockscan.com/" title="Decentralized Web (.ens,.crypto) Search Engine" target="_blank">Blockscan</a></li>
+<li><a class="list-group-item" href="https://libexplorer.com/" title="Blockchain Explorer for Libra" target="_blank">Libra Block Explorer</a></li>
+<li><a class="list-group-item" href="https://grin.blockscan.com/" title="Blockchain Explorer for Grin" target="_blank">Grin Explorer</a></li>
+<li><a class="list-group-item" href="https://info.etherscan.com/ethprotect/" target="_blank">ETHProtect</a></li>
+<li><a class="list-group-item" href="https://bscscan.com" title="Binance Smart Chain Explorer" target="_blank">Binance Smart Chain Explorer<sup><span class="badge badge-success ml-1">New</span></sup></a></li>
+</ul>
+</div>
+</div>
+<hr class="opacity-md">
+<div class="row justify-content-between align-items-center font-size-1">
+<div class="col-md-6 mb-2 mb-md-0">
+ <p class="mb-0 text-white">Etherscan © 2020 (C1)&nbsp; | &nbsp;<a class="text-white-70" href="/address/0x71c7656ec7ab88b098defb751b7401b5f6d8976f">Donate</a> <i class="fas fa-heart text-danger"></i></p>
+</div>
+<div class="col-md-6 text-md-right">
+<ul class="list-inline mb-0">
+<li class="list-inline-item">
+<a class="btn btn-sm btn-icon btn-soft-light btn-pill" href="https://twitter.com/etherscan" rel="nofollow noopener" target="_blank" data-toggle="tooltip" data-placement="top" title="Twitter">
+<i class="fab fa-twitter btn-icon__inner"></i>
+</a>
+</li>
+<li class="list-inline-item">
+<a class="btn btn-sm btn-icon btn-soft-light btn-pill" href="https://www.facebook.com/etherscan/" rel="nofollow noopener" target="_blank" data-toggle="tooltip" data-placement="top" title="Facebook">
+<i class="fab fa-facebook btn-icon__inner"></i>
+</a>
+</li>
+<li class="list-inline-item">
+<a class="btn btn-sm btn-icon btn-soft-light btn-pill" href="https://www.reddit.com/r/etherscan/" rel="nofollow noopener" target="_blank" data-toggle="tooltip" data-placement="top" title="Reddit">
+<i class="fab fa-reddit-alien btn-icon__inner"></i>
+</a>
+</li>
+<li class="list-inline-item">
+<a class="btn btn-sm btn-icon btn-soft-light btn-pill" href="https://medium.com/etherscan-blog" rel="nofollow noopener" target="_blank" data-toggle="tooltip" data-placement="top" title="Medium">
+<i class="fab fa-medium btn-icon__inner"></i>
+</a>
+</li>
+</ul>
+</div>
+</div>
+
+</div>
+</footer>
+<div id="divcookie" class="fixed-bottom mx-3" style="display: none;">
+<div class="alert alert-light border shadow-sm p-3" role="alert">
+<div class="d-flex justify-content-center align-items-center">
+<span>
+<p class="text-dark mr-3 mb-2 mb-md-0">
+<i class="far fa-cookie-bite text-secondary mr-1"></i>This website <a href='/terms#cookiestatement' target='_blank'>uses cookies to improve your experience</a> and has an updated <a href='/privacyPolicy' target='_blank'>Privacy Policy</a>.
+</p>
+</span>
+<div>
+<button id="btnCookie" class="btn btn-sm btn-primary text-nowrap py-1" data-dismiss="alert" aria-label="Close">Got It</button>
+</div>
+</div>
+</div>
+</div>
+<a class="js-go-to u-go-to" href="#" data-position='{"bottom": 20, "right": 15 }' data-type="fixed" data-offset-top="400" data-compensation="#header" data-show-effect="slideInUp" data-hide-effect="slideOutDown">
+<span class="fa fa-arrow-up u-go-to__inner"></span>
+</a>
+<script src="/assets/vendor/jquery-ui/jquery-ui.min.js?v=20.11.2.2"></script>
+<script src="/assets/vendor/jquery-migrate/dist/jquery-migrate.min.js?v=20.11.2.2"></script>
+<script src="/assets/vendor/popper.js/dist/umd/popper.min.js?v=20.11.2.2"></script>
+<script src="/assets/vendor/bootstrap/bootstrap.min.js?v=20.11.2.2"></script>
+
+<script src="/assets/vendor/hs-megamenu/src/hs.megamenu.js?v=20.11.2.2"></script>
+<script src="/assets/vendor/malihu-custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js?v=20.11.2.2"></script>
+<script src="/assets/vendor/cubeportfolio/js/jquery.cubeportfolio.min.js?v=20.11.2.2"></script>
+
+<script src="/assets/js/hs.core.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.header.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.unfold.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.malihu-scrollbar.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.focus-state.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.go-to.js?v=20.11.2.2"></script>
+<script src="/assets/js/components/hs.cubeportfolio.js?v=20.11.2.2"></script>
+<script src="/assets/js/custom/combine-js-bottom2.js?v=20.11.2.2"></script>
+
+<script>
+        $(window).on('load', function () {
+            // initialization of HSMegaMenu component
+            $('.js-mega-menu').HSMegaMenu({
+                event: 'hover',
+                pageContainer: $('.container'),
+                breakpoint: 767.98,
+                hideTimeOut: 0
+            });
+            myfn_subscribeNewsletter.startFn("#btnSubscribeNewsletter","#signupSrEmail")
+        });
+
+        $(document).on('ready', function () {
+            // initialization of header
+            $.HSCore.components.HSHeader.init($('#header'));
+
+            // initialization of unfold component
+            $.HSCore.components.HSUnfold.init($('[data-unfold-target]'), {
+                afterOpen: function () {
+                    $(this).find('input[type="search"]').focus();
+                }
+            });
+
+            // initialization of malihu scrollbar
+            $.HSCore.components.HSMalihuScrollBar.init($('.js-scrollbar'));
+      
+            // initialization of focus state
+            $.HSCore.components.HSFocusState.init();
+
+            // initialization of go to
+            $.HSCore.components.HSGoTo.init('.js-go-to');
+
+            // initialization of cubeportfolio
+            //$.HSCore.components.HSCubeportfolio.init('.cbp');
+        });
+    </script>
+<script type="text/javascript">
+        var sid = 'd05a24874a8a783aaa34aeccbe87231d';
+        var strGlobal = sessionStorage.getItem("ShowAs");
+        var strGlobalFee = sessionStorage.getItem("ShowFee");
+        var cookieconsent = getCookie("etherscan_cookieconsent");
+        if (cookieconsent !== "True") {
+            document.getElementById("divcookie").style.display = "block";
+        };
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) === ' ') {
+                    c = c.substring(1);
+                }
+                if (c.indexOf(name) === 0) {
+                    return c.substring(name.length, c.length);
+                }
+            }
+            return "";
+        }
+        $("#btnCookie").click(function () {
+            $("#divcookie").fadeOut("slow", function () {
+                var d = new Date();
+                d.setTime(d.getTime() + (1095 * 24 * 60 * 60 * 1000));
+                var expires = "expires=" + d.toUTCString();
+                document.cookie = "etherscan_cookieconsent=True" + ";" + expires + ";path=/";;
+            });
+        });
+        function handleSearchText(data) {
+            searchAddress = false;
+            if ($("txtSearchInput").val() == "") {
+                $("#hdnSearchText").val("");
+                $("#hdnSearchLabel").val("");
+            }
+        }
+    </script>
+<script src="/assets/vendor/hs-sticky-thead/src/hs.sticky-thead.js?v=20.11.2.2"></script>
+<script>
+        $(document).on('ready', function () {
+           
+            if ($("#tblResult").length > 0) {
+                // initialization of sticky header
+                $('.js-sticky-header').HSStickyHeader();
+            }
+
+            renderDataTable();
+            //$("[data-toggle-second='tooltip']").tooltip();
+
+            $('#js-column_freeze_id_inner').click(function () {
+                $("#divSTContainer").toggleClass("freeze_column_wrapper");
+                if ($("#divSTContainer").hasClass("freeze_column_wrapper")) {
+                    $('#js-customSwitch1').attr('checked');
+                    $(".js-mainbtn").replaceWith("<div class=\"js-mainbtn2 custom-control custom-switch  mt-n3\"><input type=\"checkbox\" checked class=\"custom-control-input\" id=\"customSwitch1\"><label class=\"custom-control-label\" for=\"customSwitch1\"></label></div>");
+                    sessionStorage.setItem("freezeToogle", true);
+                } else {
+                    $(".js-mainbtn2").replaceWith("<div class=\"js-mainbtn custom-control custom-switch  mt-n3\"><input type=\"checkbox\" class=\"custom-control-input\" id=\"customSwitch1\"><label class=\"custom-control-label\" for=\"customSwitch1\"></label></div>");
+                    $("#divSTContainer").removeClass("freeze_column_wrapper");
+                    sessionStorage.setItem("freezeToogle", false);
+                }
+            });
+        });
+
+        window.onload = function () {
+            $("#divSTContainer").toggleClass("freeze_column_wrapper");
+            if (sessionStorage.getItem("freezeToogle") === "true") {
+                $('#js-customSwitch1').attr('checked');
+                $(".js-mainbtn").replaceWith("<div class=\"js-mainbtn2 custom-control custom-switch  mt-n3\"><input type=\"checkbox\" checked class=\"custom-control-input\" id=\"customSwitch1\"><label class=\"custom-control-label\" for=\"customSwitch1\"></label></div>");
+            } else if (sessionStorage.getItem("freezeToogle") === "false" || sessionStorage.getItem("freezeToogle") === null) {
+                $(".js-mainbtn2").replaceWith("<div class=\"js-mainbtn custom-control custom-switch  mt-n3\"><input type=\"checkbox\" class=\"custom-control-input\" id=\"customSwitch1\"><label class=\"custom-control-label\" for=\"customSwitch1\"></label></div>");
+                $("#divSTContainer").removeClass("freeze_column_wrapper");
+            }
+        }
+
+        function handleTokenSearch(data) {
+            searchAddress = false;
+            if ($("searchtoken").val() == "") {
+                $("#hdnSearchText").val("");                    
+            }
+        }
+
+        function updateUrl(subCatId) {
+            var queryString = '';
+            queryString += 'subcatid=' + subCatId;
+
+            var length = queryStringDictionary["length_" + subCatId];
+            if (length) {
+                if (length < 0) {
+                    length = 7;
+                }
+                queryString += "&size=" + length;
+            }
+
+            var start = queryStringDictionary["start_" + subCatId];
+            if (start !== undefined) {
+                queryString += "&start=" + start;
+            }
+
+            var col = queryStringDictionary["col_" + subCatId];
+            if (col !== undefined) {
+                queryString += "&col=" + col;
+            }
+
+            var order = queryStringDictionary["order_" + subCatId];
+            if (order !== undefined) {
+                queryString += "&order=" + order;
+            }
+
+            var baseUrl = window.location.href.split('?')[0];
+            history.pushState("", document.title, baseUrl + "?" + queryString);
+        }
+
+        var resetSortAfterClickDictionary = {};
+        var resetSortDictionary = {};
+        var resetPageDictionary = {};
+        var visitedTabDictionary = {};
+        var queryStringDictionary = {};
+        var currentLengthDictionary = {}; 
+        var currentTab = 
+            
+            
+            
+
+            function selectTab(el) {
+                $(".nav-link.active").removeClass("active");
+                el.classList.add("active");
+
+                var id = $('.nav-link.active').attr('val');
+                $("#subcattab-" + currentTab).removeClass("show").removeClass("active");
+
+                $("#subcattab-" + id).addClass("show").addClass("active");
+
+                if (!visitedTabDictionary["subCat_" + id]) {
+                    visitedTabDictionary["subCat_" + id] = true;
+                    $('#table-subcatid-'+ id).DataTable().ajax.reload();
+                }
+
+                updateUrl(id);
+                currentTab = id;
+        }
+
+        function generateLabelModel() {
+            var id = $('#hdnId').val();
+            var label = $('#hdnLabelFilter').val();
+            var subCategoryId = $('.nav-link.active').attr('val');
+
+            return { id: id, label: label, subCategoryId: subCategoryId };
+        }
+
+        function renderDataTable() {
+            visitedTabDictionary["subCat_" + currentTab] = true;
+            resetSortAfterClickDictionary["table-subcatid-" + currentTab] = false;
+
+        var config =    {
+                dom: '<"top d-md-flex justify-content-between mb-3"<"text-secondary d-flex"i><"pagination-sm d-flex"p>>rt<"bottom d-md-flex justify-content-between"<"text-secondary d-flex"l><"pagination-sm d-flex"p>><"clear">',
+                language: {
+                    paginate: {
+                        next: '<i class="fa fa-chevron-right small"></i>',
+                        previous: '<i class="fa fa-chevron-left small"></i>'
+                    },
+                    lengthMenu: "Show _MENU_ Records",
+                    info: 'A total of \<strong\>_MAX_\</strong\> Token Contracts found'
+                },
+                columnDefs: [
+                    { orderable: true, targets: 2, orderSequence: ["asc", "desc", "reset"] },
+                    { orderable: true, targets: 3, orderSequence: ["desc", "asc"] },
+                    { orderable: true, targets: 4, orderSequence: ["desc", "asc", "reset"] },
+                    { orderable: false, targets: '_all' }
+                ],
+                columns: [
+                    { data: "number" },
+                    { data: "contractAddress" },
+                    { data: "tokenName" },
+                    { data: "marketCap" },
+                    { data: "holders" },
+                    { data: "website" }
+            ],
+                
+                searching: false,
+                pagingType: 'full',
+            drawCallback: function (settings) {
+                    //change sorting icon and position
+                    $("#" + this.attr('id')+" th.sorting_asc").not(".remove-icon").each(function () {
+                        var text = $(this).text();
+                        text = '<i class="fad fa-sort-up"></i> ' + text;
+                        $(this).html(text);
+                    });
+
+                $("#" + this.attr('id') +" th.sorting_desc").not(".remove-icon").each(function () {
+                        if (!$(this).hasClass('no-login')) {
+                            var text = $(this).text();
+                            text = '<i class="fad fa-sort-down"></i> ' + text;
+                            $(this).html(text);
+                        }
+                    });
+
+                $("#" + this.attr('id') +" th.sorting").not(".remove-icon").each(function () {
+                        var text = $(this).text();
+                        text = '<i class="fad fa-sort"></i> ' + text;
+                        $(this).html(text);
+                    });
+
+                    var api = this.api();
+                    var json = api.ajax.json();
+                if (!json) {
+                    var currentPageDisp = "1";
+
+                    //reload state if querystring is available
+                    var urlParams = new URLSearchParams(window.location.search);
+                    var existLength = urlParams.get('size');
+                    if (existLength) {
+                        api.page.len(existLength);
+                        currentLengthDictionary[this.attr('id')] = parseInt(existLength)
+
+                        var existStart = urlParams.get('start');
+
+                        if (!existStart) {
+                            existStart = 0
+                        }
+                            currentPage = Math.floor(existStart / existLength);
+                            api.page(currentPage);
+                            currentPageDisp = currentPage + 1;
+                    }
+
+                    var existCol = urlParams.get('col');
+                    var existOrder = urlParams.get('order');
+
+                    if (existCol && existOrder) {
+                        this.api().order([parseInt(existCol), existOrder]);
+                    }
+
+                    $('.custom-select.custom-select-sm.form-control.form-control-sm').removeAttr("class").addClass("custom-select custom-select-xs mx-2");
+                    var totalPage = 0;
+                    $('#' + this.attr('id') + '_wrapper .paginate_button.previous').after("<li class='page-item disabled'><span class='page-link'>Page <strong class='font-weight-medium'>" + currentPageDisp + "</strong> of <strong class='font-weight-medium'>" + totalPage + "</strong></span></li>");
+                    return;
+
+                } else {
+                    $('#' + this.attr('id') + '_wrapper .paginate_button.previous').after("<li class='page-item disabled'><span class='page-link'>Page <strong class='font-weight-medium'>" + json.currentPage + "</strong> of <strong class='font-weight-medium'>" + json.totalPage + "</strong></span></li>");
+
+                    if (refreshToDefaultDictionary[settings.nTable.getAttribute("id")]) {
+                        refreshToDefaultDictionary[settings.nTable.getAttribute("id")] = false;
+                        this.api().page.len(defaultLength);
+                        this.api().order([defaultSort["column"], defaultSort["dir"]]);
+                        $("#" + this.attr('id') + " .default-sort").not("no-login").removeClass("sorting").addClass("sorting_desc")
+                        $("#" + this.attr('id') + " .sorting_desc").not(".default-sort").removeClass("sorting_desc").addClass("sorting").removeAttr("aria-sort");
+                        $("#" + this.attr('id') + " .sorting_asc").not(".default-sort").removeClass("sorting_asc").addClass("sorting").removeAttr("aria-sort");
+                    }
+
+                    //bypass standard datatables sorting selection
+                    if (resetSortDictionary[this.attr('id')] || resetSortAfterClickDictionary[this.attr('id')]) {
+                        this.api().order([3, 'desc']); //the default sorting is column 3
+                        resetSortAfterClickDictionary[this.attr('id')] = false;
+                        $("#" + this.attr('id') + " .default-sort").not("no-login").removeClass("sorting").addClass("sorting_desc")
+                        $("#" + this.attr('id') + " .sorting_desc").not(".default-sort").removeClass("sorting_desc").addClass("sorting").removeAttr("aria-sort");
+                        $("#" + this.attr('id') + " .sorting_asc").not(".default-sort").removeClass("sorting_asc").addClass("sorting").removeAttr("aria-sort");
+                    }
+
+                    if (resetPageDictionary[this.attr('id')]) {
+                        this.api().page(0);
+                        resetPageDictionary[this.attr('id')] = false;
+                    }
+
+                    $("#" + this.attr('id') + " th.sorting_asc").not(".remove-icon").each(function () {
+                        var text = $(this).text();
+                        text = '<i class="fad fa-sort-up"></i> ' + text;
+                        $(this).html(text);
+                    });
+
+                    $("#" + this.attr('id') + " th.sorting_desc").not("").each(function () {
+                        if (!$(this).hasClass('no-login')) {
+                            var text = $(this).text();
+                            text = '<i class="fad fa-sort-down"></i> ' + text;
+                            $(this).html(text);
+                        }
+                    });
+
+                    $("#" + this.attr('id') + " th.sorting").not(".remove-icon").each(function () {
+                        var text = $(this).text();
+                        text = '<i class="fad fa-sort"></i> ' + text;
+                        $(this).html(text);
+                    });
+
+                    //maybe can be removed
+                    if (json.showPopUp) {
+                        showSignInPopUp(this.attr('id'));
+                    }
+                    else {
+                        hideSignInPopUp(this.attr('id'))
+                    }
+                //End - maybe can be removed
+                }
+
+                var subCatId = $('.nav-link.active').attr('val');
+
+                //get page info
+                var pageInfo = this.api().page.info();
+
+                if (pageInfo.length) {
+                    queryStringDictionary["length_" + subCatId] = pageInfo.length;
+                }
+
+                if (pageInfo.start !== undefined) {
+                    queryStringDictionary["start_" + subCatId] = pageInfo.start;
+                }
+
+                //get ordering info
+                var orderInfo = this.api().order();
+                queryStringDictionary["col_" + subCatId] = orderInfo[0][0];
+                queryStringDictionary["order_" + subCatId] = orderInfo[0][1];
+
+
+                updateUrl(subCatId);
+                $('[data-toggle="tooltip"]').tooltip()
+
+                },
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    type: "POST",
+                    contentType: "application/json",
+                    url: "/tokens.aspx/GetTokensBySubLabel",
+                    dataType: 'json',
+                    dataFilter: function (res) {
+                        var parsed = JSON.parse(res);
+                        var morp = parsed.d;
+                        return JSON.stringify(morp);
+                    },
+                    data: function (d,settings) {
+                        var labelModel = generateLabelModel();
+
+                        if (refreshToDefaultDictionary[settings.nTable.getAttribute("id")]) {
+                            d.length = defaultLength;
+                            d.order[0] = defaultSort;
+                        }
+
+                        if (currentLengthDictionary[settings.nTable.getAttribute("id")] != d.length) {
+                            if (currentLengthDictionary[settings.nTable.getAttribute("id")] != undefined) {
+                                d.start = 0;
+                                resetPageDictionary[settings.nTable.getAttribute("id")] = true;
+                            }
+                            currentLengthDictionary[settings.nTable.getAttribute("id")] = d.length;
+                        }
+
+                        if ((d.order[0] && d.order[0].dir === "reset") ||
+                            resetSortAfterClickDictionary[settings.nTable.getAttribute("id")]) {
+                            d.order[0] = { column: 3, dir: "desc" }
+                            resetSortDictionary[settings.nTable.getAttribute("id")] = true;
+                        }
+                        else {
+                            resetSortDictionary[settings.nTable.getAttribute("id")] = false;
+                        }
+                        return JSON.stringify({ dataTableModel: d, labelModel: labelModel });
+                    }
+            },
+                
+                
+                
+                
+                
+                };
+
+        
+        }
+    </script>
+</body>
+</html>

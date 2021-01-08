@@ -1,0 +1,435 @@
+[ {
+  "address" : "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+  "name" : "Binance-Peg Ethereum Token",
+  "symbol" : "ETH",
+  "decimals" : 18,
+  "usdPrice" : "611.0683",
+  "icon" : "https://bscscan.com/token/images/ethereum_32.png"
+}, {
+  "address" : "0x1d2f0da169ceb9fc7b3144628db156f3f6c60dbe",
+  "name" : "Binance-Peg XRP Token",
+  "symbol" : "XRP",
+  "decimals" : 18,
+  "usdPrice" : "0.4930",
+  "icon" : "https://bscscan.com/token/images/xrp_32.png"
+}, {
+  "address" : "0x55d398326f99059ff775485246999027b3197955",
+  "name" : "Binance-Peg BUSD-T",
+  "symbol" : "BUSD-T",
+  "decimals" : 18,
+  "usdPrice" : "1.0000",
+  "icon" : "https://bscscan.com/token/images/busdt_32.png"
+}, {
+  "address" : "0x4338665cbb7b2485a8855a139b75d5e34ab0db94",
+  "name" : "Binance-Peg Litecoin Token",
+  "symbol" : "LTC",
+  "decimals" : 18,
+  "usdPrice" : "105.4500",
+  "icon" : "https://bscscan.com/token/images/litecoin_32.png"
+}, {
+  "address" : "0x8ff795a6f4d97e7887c79bea79aba5cc76444adf",
+  "name" : "Binance-Peg Bitcoin Cash Token",
+  "symbol" : "BCH",
+  "decimals" : 18,
+  "usdPrice" : "313.4500",
+  "icon" : "https://bscscan.com/token/images/bitcoincash_32.png"
+}, {
+  "address" : "0xf8a0bf9cf54bb92f17374d9e9a321e6a111a51bd",
+  "name" : "Binance-Peg ChainLink Token",
+  "symbol" : "LINK",
+  "decimals" : 18,
+  "usdPrice" : "12.3500",
+  "icon" : "https://bscscan.com/token/images/chainlink_32.png"
+}, {
+  "address" : "0x3ee2200efb3400fabb9aacf31297cbdd1d435d47",
+  "name" : "Binance-Peg Cardano Token",
+  "symbol" : "ADA",
+  "decimals" : 18,
+  "usdPrice" : "0.1540",
+  "icon" : "https://bscscan.com/token/images/cardano_32.png"
+}, {
+  "address" : "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+  "name" : "Wrapped BNB",
+  "symbol" : "WBNB",
+  "decimals" : 18,
+  "usdPrice" : "32.2200",
+  "icon" : "https://bscscan.com/token/images/binance_32.png"
+}, {
+  "address" : "0x7083609fce4d1d8dc0c979aab8c869ea2c873402",
+  "name" : "Binance-Peg Polkadot Token",
+  "symbol" : "DOT",
+  "decimals" : 18,
+  "usdPrice" : "4.9600",
+  "icon" : "https://bscscan.com/token/images/polkadot_32.png"
+}, {
+  "address" : "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+  "name" : "Binance-Peg USD Coin",
+  "symbol" : "USDC",
+  "decimals" : 18,
+  "usdPrice" : "1.0000",
+  "icon" : "https://bscscan.com/token/images/centre-usdc_28.png"
+}, {
+  "address" : "0x56b6fb708fc5732dec1afc8d8556423a2edccbd6",
+  "name" : "Binance-Peg EOS Token",
+  "symbol" : "EOS",
+  "decimals" : 18,
+  "usdPrice" : "2.9300",
+  "icon" : "https://bscscan.com/token/images/eos_32.png"
+}, {
+  "address" : "0x0eb3a705fc54725037cc9e008bdede697f62f335",
+  "name" : "Binance-Peg Cosmos Token",
+  "symbol" : "ATOM",
+  "decimals" : 18,
+  "usdPrice" : "2.1900",
+  "icon" : "https://bscscan.com/token/images/cosmos_32.png"
+}, {
+  "address" : "0x16939ef78684453bfdfb47825f8a5f714f12623a",
+  "name" : "Binance-Peg Tezos Token",
+  "symbol" : "XTZ",
+  "decimals" : 18,
+  "usdPrice" : "2.1900",
+  "icon" : "https://bscscan.com/token/images/tezos_32.png"
+}, {
+  "address" : "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3",
+  "name" : "Binance-Peg Dai Token",
+  "symbol" : "DAI",
+  "decimals" : 18,
+  "usdPrice" : "1.0000",
+  "icon" : "https://bscscan.com/token/images/dai_32.png"
+}, {
+  "address" : "0x9ac983826058b8a9c7aa1c9171441191232e8404",
+  "name" : "Binance-Peg Synthetix Network Token",
+  "symbol" : "SNX",
+  "decimals" : 18,
+  "usdPrice" : "6.4900",
+  "icon" : "https://bscscan.com/token/images/snx_32.png"
+}, {
+  "address" : "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+  "name" : "Binance-Peg BUSD Token",
+  "symbol" : "BUSD",
+  "decimals" : 18,
+  "usdPrice" : "1.0000",
+  "icon" : "https://bscscan.com/token/images/busd_32.png"
+}, {
+  "address" : "0xbf5140a22578168fd562dccf235e5d43a02ce9b1",
+  "name" : "Binance-Peg Uniswap",
+  "symbol" : "UNI",
+  "decimals" : 18,
+  "usdPrice" : "3.5100",
+  "icon" : "https://bscscan.com/token/images/uniswap_32.png"
+}, {
+  "address" : "0x88f1a5ae2a3bf98aeaf342d26b30a79438c9142e",
+  "name" : "Binance-Peg yearn.finance",
+  "symbol" : "YFI",
+  "decimals" : 18,
+  "usdPrice" : "24,579.0000",
+  "icon" : "https://bscscan.com/token/images/yfi_32.png"
+}, {
+  "address" : "0x1ba42e5193dfa8b03d15dd1b86a3113bbbef8eeb",
+  "name" : "Binance-Peg Zcash Token",
+  "symbol" : "ZEC",
+  "decimals" : 18,
+  "usdPrice" : "67.4500",
+  "icon" : "https://bscscan.com/token/images/zcash_32.png"
+}, {
+  "address" : "0x3d6545b08693dae087e957cb1180ee38b9e3c25e",
+  "name" : "Binance-Peg Ethereum Classic",
+  "symbol" : "ETC",
+  "decimals" : 18,
+  "usdPrice" : "6.1700",
+  "icon" : "https://bscscan.com/token/images/ethclassic_32.png?v=1"
+}, {
+  "address" : "0x52ce071bd9b1c4b00a0b92d298c512478cad67e8",
+  "name" : "Binance-Peg Compound Coin",
+  "symbol" : "COMP",
+  "decimals" : 18,
+  "usdPrice" : "142.8600",
+  "icon" : "https://bscscan.com/token/images/compound_32.png?v1"
+}, {
+  "address" : "0x5f0da599bb2cccfcf6fdfd7d81743b6020864350",
+  "name" : "Binance-Peg Maker",
+  "symbol" : "MKR",
+  "decimals" : 18,
+  "usdPrice" : "530.1200",
+  "icon" : "https://bscscan.com/token/images/makerdao_32.png"
+}, {
+  "address" : "0xfd7b3a77848f1c2d67e05e54d78d174a0c850335",
+  "name" : "Binance-Peg Ontology Token",
+  "symbol" : "ONT",
+  "decimals" : 18,
+  "usdPrice" : "0.5216",
+  "icon" : "https://bscscan.com/token/images/ontology_32.png"
+}, {
+  "address" : "0xd475c9c934dcd6d5f1cac530585aa5ba14185b92",
+  "name" : "Binance-Peg Bitcoin Cash ABC",
+  "symbol" : "BCHA",
+  "decimals" : 18,
+  "usdPrice" : "18.2458",
+  "icon" : "https://bscscan.com/token/images/bch-abc_32.png"
+}, {
+  "address" : "0x101d82428437127bf1608f699cd651e6abf9766e",
+  "name" : "Binance-Peg Basic Attention Token",
+  "symbol" : "BAT",
+  "decimals" : 18,
+  "usdPrice" : "0.2243",
+  "icon" : "https://bscscan.com/token/images/bat_32.png"
+}, {
+  "address" : "0x1fa4a73a3f0133f0025378af00236f3abdee5d63",
+  "name" : "Binance-Peg NEAR Protocol",
+  "symbol" : "NEAR",
+  "decimals" : 18,
+  "usdPrice" : "1.1700",
+  "icon" : "https://bscscan.com/token/images/near_32.png"
+}, {
+  "address" : "0xb7f8cd00c5a06c0537e2abff0b58033d02e5e094",
+  "name" : "Binance-Peg Paxos Standard",
+  "symbol" : "PAX",
+  "decimals" : 18,
+  "usdPrice" : "1.0041",
+  "icon" : "https://bscscan.com/token/images/paxos_32.png"
+}, {
+  "address" : "0xad6caeb32cd2c308980a548bd0bc5aa4306c6c18",
+  "name" : "Binance-Peg Band Protocol Token",
+  "symbol" : "BAND",
+  "decimals" : 18,
+  "usdPrice" : "6.1700",
+  "icon" : "https://bscscan.com/token/images/bandtoken_32.png"
+}, {
+  "address" : "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+  "name" : "Binance-Peg BTCB Token",
+  "symbol" : "BTCB",
+  "decimals" : 18,
+  "usdPrice" : "22,213.9453",
+  "icon" : "https://bscscan.com/token/images/btcb_32.png"
+}, {
+  "address" : "0x7950865a9140cb519342433146ed5b40c6f210f7",
+  "name" : "Binance-Peg PAX Gold",
+  "symbol" : "PAXG",
+  "decimals" : 18,
+  "usdPrice" : "1,898.2600",
+  "icon" : "https://bscscan.com/token/images/paxosgold_32.png"
+}, {
+  "address" : "0xf307910a4c7bbc79691fd374889b36d8531b08e3",
+  "name" : "Ankr",
+  "symbol" : "ANKR",
+  "decimals" : 18,
+  "usdPrice" : "0.0109",
+  "icon" : "https://bscscan.com/token/images/ankr_32.png"
+}, {
+  "address" : "0x7f70642d88cf1c4a3a7abb072b53b929b653eda5",
+  "name" : "Binance-Peg YFII.finance Token",
+  "symbol" : "YFII",
+  "decimals" : 18,
+  "usdPrice" : "1,635.6700",
+  "icon" : "https://bscscan.com/token/images/dfimoney_32.png"
+}, {
+  "address" : "0x47bead2563dcbf3bf2c9407fea4dc236faba485a",
+  "name" : "Swipe",
+  "symbol" : "SXP",
+  "decimals" : 18,
+  "usdPrice" : "0.8390",
+  "icon" : "https://bscscan.com/token/images/swipe_32.png"
+}, {
+  "address" : "0xa3f020a5c92e15be13caf0ee5c95cf79585eecc9",
+  "name" : "Binance-Peg ELF Token",
+  "symbol" : "ELF",
+  "decimals" : 18,
+  "usdPrice" : "0.1116",
+  "icon" : "https://bscscan.com/token/images/aelf_32.png"
+}, {
+  "address" : "0x4b0f1812e5df2a09796481ff14017e6005508003",
+  "name" : "Trust Wallet",
+  "symbol" : "TWT",
+  "decimals" : 18,
+  "usdPrice" : "0.1733",
+  "icon" : "https://bscscan.com/token/images/trust_32.png?v=1"
+}, {
+  "address" : "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82",
+  "name" : "PancakeSwap Token",
+  "symbol" : "Cake",
+  "decimals" : 18,
+  "usdPrice" : "0.4711",
+  "icon" : "https://bscscan.com/token/images/pancake_32.png?=v1"
+}, {
+  "address" : "0xa1faa113cbe53436df28ff0aee54275c13b40975",
+  "name" : "AlphaToken",
+  "symbol" : "ALPHA",
+  "decimals" : 18,
+  "usdPrice" : "0.2080",
+  "icon" : "https://bscscan.com/token/images/alpha_32.png?=v2"
+}, {
+  "address" : "0xd4cb328a82bdf5f03eb737f37fa6b370aef3e888",
+  "name" : "Cream",
+  "symbol" : "CREAM",
+  "decimals" : 18,
+  "usdPrice" : "59.5600",
+  "icon" : "https://bscscan.com/token/images/creamfinance_32.png"
+}, {
+  "address" : "0xa8c2b8eec3d368c0253ad3dae65a5f2bbb89c929",
+  "name" : "CertiK Token",
+  "symbol" : "CTK",
+  "decimals" : 18,
+  "usdPrice" : "0.8972",
+  "icon" : "https://bscscan.com/token/images/certik_32.png"
+}, {
+  "address" : "0xaf53d56ff99f1322515e54fdde93ff8b3b7dafd5",
+  "name" : "Prometeus",
+  "symbol" : "PROM",
+  "decimals" : 18,
+  "usdPrice" : "2.5200",
+  "icon" : "https://bscscan.com/token/images/Prometeus_32.png"
+}, {
+  "address" : "0xcf6bb5389c92bdda8a3747ddb454cb7a64626c63",
+  "name" : "Venus",
+  "symbol" : "XVS",
+  "decimals" : 18,
+  "usdPrice" : "4.1300",
+  "icon" : "https://bscscan.com/token/images/venus_32.png"
+}, {
+  "address" : "0xca0a9df6a8cad800046c1ddc5755810718b65c44",
+  "name" : "Binance-Peg Token Club",
+  "symbol" : "TCT",
+  "decimals" : 18,
+  "usdPrice" : "0.0113",
+  "icon" : "https://bscscan.com/token/images/tokenclub_32.png"
+}, {
+  "address" : "0xe4ae305ebe1abe663f261bc00534067c80ad677c",
+  "name" : "SPARTAN PROTOCOL TOKEN",
+  "symbol" : "SPARTA",
+  "decimals" : 18,
+  "usdPrice" : "0.1066",
+  "icon" : "https://bscscan.com/token/images/spartan_32.png"
+}, {
+  "address" : "0x007ea5c0ea75a8df45d288a4debdd5bb633f9e56",
+  "name" : "CanYaCoin",
+  "symbol" : "CAN",
+  "decimals" : 18,
+  "usdPrice" : "0.0359",
+  "icon" : "https://bscscan.com/token/images/canya_32.png"
+}, {
+  "address" : "0xf68c9df95a18b2a5a5fa1124d79eeeffbad0b6fa",
+  "name" : "Anyswap-BEP20",
+  "symbol" : "ANY",
+  "decimals" : 18,
+  "usdPrice" : "0.1982",
+  "icon" : "https://bscscan.com/token/images/anyswap_32.png"
+}, {
+  "address" : "0xE02dF9e3e622DeBdD69fb838bB799E3F168902c5",
+  "name" : "BakeryToken",
+  "symbol" : "BAKE",
+  "decimals" : 18,
+  "usdPrice" : "0.0220",
+  "icon" : "https://bscscan.com/token/images/bakeryswap_32.png"
+}, {
+  "address" : "0xcd7c5025753a49f1881b31c48caa7c517bb46308",
+  "name" : "Raven Protocol",
+  "symbol" : "RAVEN",
+  "decimals" : 18,
+  "usdPrice" : "0.0004",
+  "icon" : "https://bscscan.com/token/images/raven_32.png"
+}, {
+  "address" : "0x90df11a8cce420675e73922419e3f4f3fe13cccb",
+  "name" : "Streamity",
+  "symbol" : "STM",
+  "decimals" : 18,
+  "usdPrice" : "0.0291",
+  "icon" : "https://bscscan.com/token/images/streamity_32.png"
+}, {
+  "address" : "0x12e34cdf6a031a10fe241864c32fb03a4fdad739",
+  "name" : "FREE coin BSC",
+  "symbol" : "FREE",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/freecoin_32.png"
+}, {
+  "address" : "0x0da6ed8b13214ff28e9ca979dd37439e8a88f6c4",
+  "name" : "StableX Token",
+  "symbol" : "STAX",
+  "decimals" : 18,
+  "usdPrice" : "0.0455",
+  "icon" : "https://bscscan.com/token/images/stablexswap_32.png"
+}, {
+  "address" : "0x393b312c01048b3ed2720bf1b090084c09e408a1",
+  "name" : "fry.world",
+  "symbol" : "FRIES",
+  "decimals" : 18,
+  "usdPrice" : "17.8700",
+  "icon" : "https://bscscan.com/token/images/fry_32.png"
+}, {
+  "address" : "0x34681c1035f97e1edcccec5f142e02ff81a3a230",
+  "name" : "Cubiex",
+  "symbol" : "CBIX",
+  "decimals" : 18,
+  "usdPrice" : "0.0018",
+  "icon" : "https://bscscan.com/token/images/cubiex_32.png"
+}, {
+  "address" : "0xae9269f27437f0fcbc232d39ec814844a51d6b8f",
+  "name" : "Burger Swap",
+  "symbol" : "BURGER",
+  "decimals" : 18,
+  "usdPrice" : "0.5459",
+  "icon" : "https://bscscan.com/token/images/burgerswap_32.png"
+}, {
+  "address" : "0x9b44df3318972be845d83f961735609137c4c23c",
+  "name" : "Propel",
+  "symbol" : "PROPEL",
+  "decimals" : 18,
+  "usdPrice" : "0.0001",
+  "icon" : "https://bscscan.com/token/images/payrue_32.png"
+}, {
+  "address" : "0x6fd7c98458a943f469e1cf4ea85b173f5cd342f4",
+  "name" : "Billion Happiness",
+  "symbol" : "BHC",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/billionhappiness_32.png?v=2"
+}, {
+  "address" : "0xe6df05ce8c8301223373cf5b969afcb1498c5528",
+  "name" : "BNB48 Club Token",
+  "symbol" : "KOGE",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/koge_32.png"
+}, {
+  "address" : "0x81c15d3e956e55e77e1f3f257f0a65bd2725fc55",
+  "name" : "Cream Cardano Token",
+  "symbol" : "crADA",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/crADA_32.png"
+}, {
+  "address" : "0xdc0f0a5719c39764b011edd02811bd228296887c",
+  "name" : "DOS Network Token BEP20",
+  "symbol" : "DOS",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/dosnetwork_32.png"
+}, {
+  "address" : "0x15B3d410fCd0d695E1bbe4F717F8E1B6D0Fb2D0C",
+  "name" : "fry.KetchupV2",
+  "symbol" : "KHP",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/fry-ketchup_32.png"
+}, {
+  "address" : "0xdf1f0026374d4bcc490be5e316963cf6df2fff19",
+  "name" : "InnovativeBioresearchCoin",
+  "symbol" : "INNBC",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/innbc_32-1.png"
+}, {
+  "address" : "0x8e9f5173e16ff93f81579d73a7f9723324d6b6af",
+  "name" : "Milk Protocol",
+  "symbol" : "MILK",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/milk_32.png?v=1"
+}, {
+  "address" : "0x658a109c5900bc6d2357c87549b651670e5b0539",
+  "name" : "The Force Token",
+  "symbol" : "FOR",
+  "decimals" : 18,
+  "usdPrice" : "0.0000",
+  "icon" : "https://bscscan.com/token/images/forceprotocol_32.png"
+} ]
