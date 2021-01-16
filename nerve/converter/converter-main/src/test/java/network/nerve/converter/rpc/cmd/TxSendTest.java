@@ -755,6 +755,16 @@ public class TxSendTest {
     }
 
     @Test
+    public void getVirtualBankInfo() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put("chainId", 5);
+        params.put("balance", true);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_virtualBankInfo", params, Constants.TIMEOUT_TIMEMILLIS * 10L);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+    }
+
+    @Test
     public void findAssetInfoByAssetId() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");

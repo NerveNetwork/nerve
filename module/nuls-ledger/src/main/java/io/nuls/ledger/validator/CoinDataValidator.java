@@ -240,7 +240,7 @@ public class CoinDataValidator {
                 LoggerUtil.logger(chainId).debug("[TEST] blocksValidate tx type: {}, hash: {}", tx.getType(), tx.getHash().toHex());
             }
             ValidateResult validateResult = blockTxsValidate(chainId, tx, batchValidateTxSet, accountValidateTxMap, accountStateMap, lockedCancelNonceMap,
-                    lockedTimeMap, lockedHeightMap, permanentTimeMap);
+                    lockedTimeMap, lockedHeightMap, permanentTimeMap, height);
             if (!validateResult.isSuccess()) {
                 if (validateResult.getValidateCode().getCode().equals(LedgerErrorCode.VALIDATE_FAIL.getCode())) {
                     Log.warn("=".repeat(100));
@@ -306,10 +306,10 @@ public class CoinDataValidator {
      * @param tx
      * @return ValidateResult
      */
-    public ValidateResult bathValidatePerTx(int chainId, Transaction tx) {
+    public ValidateResult bathValidatePerTx(int chainId, Transaction tx, long height) {
         Map<String, String> batchValidateTxMap = getBatchValidateTxMap(chainId);
         Map<String, List<TempAccountNonce>> accountBalanceValidateTxMap = getAccountBalanceValidateMap(chainId);
-        return confirmedTxValidate(chainId, tx, batchValidateTxMap, accountBalanceValidateTxMap);
+        return confirmedTxValidate(chainId, tx, batchValidateTxMap, accountBalanceValidateTxMap, height);
 
     }
 
@@ -342,7 +342,7 @@ public class CoinDataValidator {
      */
     private ValidateResult analysisFromCoinPerTx(int chainId, int txType, byte[] nonce8Bytes,
                                                  List<CoinFrom> coinFroms, Map<String, List<TempAccountNonce>> accountValidateTxMap,
-                                                 Map<String, AccountState> accountStateMap, Map<String, BigInteger> balanceValidateMap) {
+                                                 Map<String, AccountState> accountStateMap, Map<String, BigInteger> balanceValidateMap, long height) {
         for (int i = 0, length = coinFroms.size(); i < length; i++) {
             CoinFrom coinFrom = coinFroms.get(i);
             String address = LedgerUtil.getRealAddressStr(coinFrom.getAddress());
@@ -355,6 +355,9 @@ public class CoinDataValidator {
                 }
             }
             if (AddressTool.isBlackHoleAddress(LedgerConstant.blackHolePublicKey, chainId, coinFrom.getAddress())) {
+                return ValidateResult.getResult(LedgerErrorCode.VALIDATE_FAIL, new String[]{address, LedgerUtil.getNonceEncode(coinFrom.getNonce()), "address is blackHoleAddress Exception"});
+            }
+            if (LedgerUtil.isBlackHoleAddress(coinFrom.getAddress(), height)) {
                 return ValidateResult.getResult(LedgerErrorCode.VALIDATE_FAIL, new String[]{address, LedgerUtil.getNonceEncode(coinFrom.getNonce()), "address is blackHoleAddress Exception"});
             }
             String assetKey = LedgerUtil.getKeyStr(address, coinFrom.getAssetsChainId(), coinFrom.getAssetsId());
@@ -379,7 +382,7 @@ public class CoinDataValidator {
                     logger(chainId).error("fail tx type:" + txType);
                     return validateResult;
                 }
-                balanceValidateMap.computeIfPresent(assetKey, (k , v) -> v.subtract(coinFrom.getAmount()));
+                balanceValidateMap.computeIfPresent(assetKey, (k, v) -> v.subtract(coinFrom.getAmount()));
             } else {
                 //解锁交易，需要从from 里去获取需要的高度数据或时间数据，进行校验
                 //解锁交易只需要从已确认的数据中去获取数据进行校验
@@ -433,7 +436,7 @@ public class CoinDataValidator {
             //判断是否是解锁操作
             if (coinTo.getLockTime() == 0) {
                 // 可用余额增加计算
-                balanceValidateMap.computeIfPresent(assetKey, (k , v) -> v.add(coinTo.getAmount()));
+                balanceValidateMap.computeIfPresent(assetKey, (k, v) -> v.add(coinTo.getAmount()));
             }
         }
         return ValidateResult.getSuccess();
@@ -446,7 +449,7 @@ public class CoinDataValidator {
      * @return
      */
     public ValidateResult confirmedTxValidate(int chainId, Transaction tx, Map<String, String> batchValidateTxMap,
-                                              Map<String, List<TempAccountNonce>> accountValidateTxMap) {
+                                              Map<String, List<TempAccountNonce>> accountValidateTxMap, long height) {
         Map<String, AccountState> accountStateMap = getAccountValidateMap(chainId);
         Map<String, BigInteger> balanceValidateMap = new HashMap<>(64);
         //先校验，再逐笔放入缓存
@@ -486,7 +489,7 @@ public class CoinDataValidator {
         Map<String, List<FreezeHeightState>> heightStatesMap = getFreezeLockHeightValidateMap(chainId);
         Map<String, Map<String, FreezeLockTimeState>> permanentStatesMap = getFreezeLockPermanentValidateMap(chainId);
 
-        ValidateResult validateResult = analysisFromCoinPerTx(chainId, txType, nonce8Bytes, coinFroms, accountValidateTxMap,accountStateMap, balanceValidateMap);
+        ValidateResult validateResult = analysisFromCoinPerTx(chainId, txType, nonce8Bytes, coinFroms, accountValidateTxMap, accountStateMap, balanceValidateMap, height);
         if (!validateResult.isSuccess()) {
             return validateResult;
         }
@@ -676,7 +679,7 @@ public class CoinDataValidator {
                                                    Map<String, List<TempAccountNonce>> accountValidateTxMap, Map<String, AccountState> accountStateMap,
                                                    Map<String, Object> lockedCancelNonceMap,
                                                    Map<String, List<FreezeLockTimeState>> timeLockMap, Map<String, List<FreezeHeightState>> heightLockMap,
-                                                   Map<String, Map<String, FreezeLockTimeState>> permanentTimeMap, String txHash, Map<String, BigInteger> balanceValidateMap) {
+                                                   Map<String, Map<String, FreezeLockTimeState>> permanentTimeMap, String txHash, Map<String, BigInteger> balanceValidateMap, long height) {
         for (CoinFrom coinFrom : coinFroms) {
             String address = LedgerUtil.getRealAddressStr(coinFrom.getAddress());
             if (LedgerUtil.isNotLocalChainAccount(chainId, coinFrom.getAddress())) {
@@ -686,6 +689,13 @@ public class CoinDataValidator {
                 } else {
                     return ValidateResult.getResult(LedgerErrorCode.VALIDATE_FAIL, new String[]{address, "--", "address Not local chain Exception"});
                 }
+            }
+
+            if (AddressTool.isBlackHoleAddress(LedgerConstant.blackHolePublicKey, chainId, coinFrom.getAddress())) {
+                return ValidateResult.getResult(LedgerErrorCode.VALIDATE_FAIL, new String[]{address, LedgerUtil.getNonceEncode(coinFrom.getNonce()), "address is blackHoleAddress Exception"});
+            }
+            if (LedgerUtil.isBlackHoleAddress(coinFrom.getAddress(), height)) {
+                return ValidateResult.getResult(LedgerErrorCode.VALIDATE_FAIL, new String[]{address, LedgerUtil.getNonceEncode(coinFrom.getNonce()), "address is blackHoleAddress Exception"});
             }
             String assetKey = LedgerUtil.getKeyStr(address, coinFrom.getAssetsChainId(), coinFrom.getAssetsId());
             AccountState accountState = accountStateMap.get(assetKey);
@@ -730,7 +740,7 @@ public class CoinDataValidator {
                     }
                 }
                 // 可用余额扣减计算
-                balanceValidateMap.computeIfPresent(assetKey, (k , v) -> v.subtract(coinFrom.getAmount()));
+                balanceValidateMap.computeIfPresent(assetKey, (k, v) -> v.subtract(coinFrom.getAmount()));
             } else {
                 //解锁交易，需要从from 里去获取需要的高度数据或时间数据，进行校验
                 //解锁交易只需要从已确认的数据中去获取数据进行校验
@@ -750,7 +760,7 @@ public class CoinDataValidator {
 
     public ValidateResult blockTxsValidate(int chainId, Transaction tx, Set<String> batchValidateTxSet, Map<String, List<TempAccountNonce>> accountValidateTxMap,
                                            Map<String, AccountState> accountStateMap, Map<String, Object> lockedCancelNonceMap, Map<String, List<FreezeLockTimeState>> lockedTimeMap,
-                                           Map<String, List<FreezeHeightState>> lockedHeightMap, Map<String, Map<String, FreezeLockTimeState>> permanentTimeMap) {
+                                           Map<String, List<FreezeHeightState>> lockedHeightMap, Map<String, Map<String, FreezeLockTimeState>> permanentTimeMap, long height) {
         //先校验，再逐笔放入缓存
         //交易的 hash值如果已存在，返回false，交易的from coin nonce 如果不连续，则存在双花。
         String txHash = tx.getHash().toHex();
@@ -783,7 +793,7 @@ public class CoinDataValidator {
         List<CoinTo> coinTos = coinData.getTo();
         byte[] txNonce = LedgerUtil.getNonceByTx(tx);
         ValidateResult fromCoinsValidateResult = analysisFromCoinBlockTx(chainId, txType, txNonce, coinFroms, accountValidateTxMap,
-                accountStateMap, lockedCancelNonceMap, lockedTimeMap, lockedHeightMap, permanentTimeMap, txHash, balanceValidateMap);
+                accountStateMap, lockedCancelNonceMap, lockedTimeMap, lockedHeightMap, permanentTimeMap, txHash, balanceValidateMap, height);
         if (!fromCoinsValidateResult.isSuccess()) {
             logger(chainId).error("from coins error! txtype:{}", txType);
             return fromCoinsValidateResult;

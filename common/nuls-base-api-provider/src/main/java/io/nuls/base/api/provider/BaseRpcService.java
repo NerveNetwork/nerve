@@ -1,5 +1,6 @@
 package io.nuls.base.api.provider;
 
+import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import io.nuls.core.constant.ErrorCode;
@@ -32,9 +33,17 @@ public abstract class BaseRpcService extends BaseService {
     protected <T,R> Result<T> callRpc(String module,String method,Object req,Function<R,Result> callback) {
         Map<String, Object> params = MapUtils.beanToLinkedMap(req);
         Log.debug("call {} rpc , method : {},param : {}",module,method,params);
-        Response cmdResp = null;
+        Response cmdResp;
         try {
-            cmdResp = ResponseMessageProcessor.requestAndResponse(module, method, params);
+            Long timeOut = null;
+            if (req != null) {
+                BaseReq baseReq = (BaseReq) req;
+                timeOut = baseReq.getTimeOut();
+            }
+            if (timeOut == null) {
+                timeOut = Constants.TIMEOUT_TIMEMILLIS;
+            }
+            cmdResp = ResponseMessageProcessor.requestAndResponse(module, method, params, timeOut);
             Log.debug("result : {}",cmdResp);
         } catch (Exception e) {
             Log.warn("Calling remote interface failed. module:{} - interface:{} - message:{}", module, method, e.getMessage());

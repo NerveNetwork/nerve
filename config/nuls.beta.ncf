@@ -185,10 +185,9 @@ mongoPwd=nuls123456
 
 [quotation]
 effectiveQuotation=1
-removeMaxMinCount=2
-quoteStartHm=04:00
-quoteEndHm=04:10
-nerveBasedNuls=1
+removeMaxMinCount=0
+quoteStartHm=00:00
+quoteEndHm=00:10
 
 [converter]
 executeChangeVirtualBankPeriodicHeight=900

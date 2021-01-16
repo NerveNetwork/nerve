@@ -31,6 +31,7 @@ import io.nuls.base.api.provider.converter.facade.*;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.MapUtils;
+import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 
 import java.util.ArrayList;
@@ -179,6 +180,7 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
 
     @Override
     public Result<VirtualBankDirectorDTO> getVirtualBankInfo(GetVirtualBankInfoReq req) {
+        req.setTimeOut(Constants.TIMEOUT_TIMEMILLIS * 10L);
         return call("cv_virtualBankInfo", req, (Function<Map, Result>) res -> {
             try {
                 List<Map> list = (List<Map>) res.get("list");

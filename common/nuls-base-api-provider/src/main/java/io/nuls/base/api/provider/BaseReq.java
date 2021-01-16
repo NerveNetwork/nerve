@@ -7,7 +7,16 @@ package io.nuls.base.api.provider;
  */
 public class BaseReq {
 
+    private Long timeOut;
     private Integer chainId;
+
+    public Long getTimeOut() {
+        return timeOut;
+    }
+
+    public void setTimeOut(Long timeOut) {
+        this.timeOut = timeOut;
+    }
 
     public Integer getChainId() {
         return chainId;

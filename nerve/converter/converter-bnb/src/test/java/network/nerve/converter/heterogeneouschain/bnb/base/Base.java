@@ -91,7 +91,7 @@ public class Base {
             bnbWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-        //String mainEthRpcAddress = "http://bsc.nerve.network";
+        //String mainEthRpcAddress = "http://bsc.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         bnbWalletApi.setWeb3j(web3j);
         bnbWalletApi.setEthRpcAddress(mainEthRpcAddress);
@@ -105,7 +105,7 @@ public class Base {
         // 验证合约交易合法性
         EthCall ethCall = bnbWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
-            Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            Log.error("[{}]交易验证失败，fromAddress: {}, value: {}, 原因: {}", txType, fromAddress, value, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
@@ -116,7 +116,7 @@ public class Base {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
             //estimateGas = BigInteger.valueOf(100000L);
         }
-        BigInteger gasLimit = estimateGas;
+        BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         BnbSendTransactionPo bnbSendTransactionPo = bnbWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
         String ethTxHash = bnbSendTransactionPo.getTxHash();
         return ethTxHash;

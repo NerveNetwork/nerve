@@ -91,7 +91,8 @@ public class Base {
             htWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://http-mainnet.hecochain.com/";
-        //String mainEthRpcAddress = "http://bsc.nerve.network";
+        //String mainEthRpcAddress = "http://heco.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
+        //String mainEthRpcAddress = "http://heco.nerve.network";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htWalletApi.setWeb3j(web3j);
         htWalletApi.setEthRpcAddress(mainEthRpcAddress);

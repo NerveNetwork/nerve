@@ -24,11 +24,11 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -370,16 +370,16 @@ public class BNBWalletApiTest extends Base {
     public void managerAdd() throws Exception {
         // 正式网环境数据
         //setUpgradeMain();
-        setLocalTest();
+        //setLocalTest();
         //setBeta();
-        //setBnbMainTest();
-        //setMain();
+        setBnbMainTest();
+        setMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
         BnbContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa2200000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{};
-        String[] removes = new String[]{"0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65"};
+        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{"0x17e61e0176ad8a88cac5f786ca0779de87b3043b"};
+        String[] removes = new String[]{"0x78c30fa073f6cbe9e544f1997b91dd616d66c590"};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
@@ -734,6 +734,34 @@ public class BNBWalletApiTest extends Base {
         int assetId = 2;
         BigDecimal price = BnbUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println(price.movePointLeft(9).toPlainString());
+    }
+
+    @Test
+    public void getBlockHeaderByHeight() throws Exception {
+        Long height = Long.valueOf(70437);
+        EthBlock.Block block = bnbWalletApi.getBlockHeaderByHeight(height);
+        System.out.println(block.getHash());
+    }
+
+    @Test
+    public void getBlockHeight() throws Exception {
+        setMain();
+        System.out.println(bnbWalletApi.getBlockHeight());
+    }
+
+    @Test
+    public void getTestNetTxReceipt() throws Exception {
+        // 直接调用erc20合约
+        String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
+        TransactionReceipt txReceipt = bnbWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt);
+    }
+
+    @Test
+    public void getCurrentGasPrice() throws IOException {
+        BigInteger gasPrice = bnbWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
+        System.out.println(gasPrice);
+        System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
     }
 
     static class MockEthERC20Helper extends BnbERC20Helper {

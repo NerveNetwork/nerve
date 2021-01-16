@@ -52,9 +52,12 @@ public class AddressTool {
     private static final String[] LENGTHPREFIX = new String[]{"", "a", "b", "c", "d", "e","f","g","h"};
     private static final Map<Integer, byte[]> BLACK_HOLE_ADDRESS_MAP = new ConcurrentHashMap<>();
     public static Set<String> BLOCK_HOLE_ADDRESS_SET = new HashSet<>();
+    public static Set<String> BLOCK_HOLE_ADDRESS_SET1 = new HashSet<>();
 
     static {
         BLOCK_HOLE_ADDRESS_SET.add("NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L");
+        BLOCK_HOLE_ADDRESS_SET1.add("NERVEepb6F8oM9SQYJfbCnK11BuhYQ4LAxFcpy");
+        BLOCK_HOLE_ADDRESS_SET1.add("TNVTdTSPVtySemdyntG2UHCbTGWyHycn2aHET");
     }
 
     /**

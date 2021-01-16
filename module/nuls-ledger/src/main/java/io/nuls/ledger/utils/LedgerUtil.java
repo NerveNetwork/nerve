@@ -142,20 +142,25 @@ public class LedgerUtil {
     }
 
     public static int getVersion(int chainId) {
-        int  version = ProtocolGroupManager.getCurrentVersion(chainId);
+        int version = ProtocolGroupManager.getCurrentVersion(chainId);
         //LoggerUtil.logger(chainId).debug("verion={}",version);
         return version;
     }
 
-    public static boolean isBlackHoleAddress(byte[] address) {
-        if(address == null) {
+    public static boolean isBlackHoleAddress(byte[] address, long height) {
+        if (address == null) {
             return false;
         }
-        int chainIdByAddress = AddressTool.getChainIdByAddress(address);
-        if(chainIdByAddress != 1) {
-            return false;
+//        int chainIdByAddress = AddressTool.getChainIdByAddress(address);
+//        if (chainIdByAddress != 1) {
+//            return false;
+//        }
+        String addr = AddressTool.getStringAddressByBytes(address);
+        //todo 临时处理
+        if (height > 8050000 && AddressTool.BLOCK_HOLE_ADDRESS_SET1.contains(addr)) {
+            return true;
         }
-        return AddressTool.BLOCK_HOLE_ADDRESS_SET.contains(AddressTool.getStringAddressByBytes(address));
+        return AddressTool.BLOCK_HOLE_ADDRESS_SET.contains(addr);
     }
 
     public static TxLedgerAsset map2TxLedgerAsset(Map<String, Object> map) {

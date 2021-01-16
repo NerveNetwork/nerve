@@ -36,6 +36,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public class ETHIIWalletApiTest extends BaseII {
@@ -332,18 +333,40 @@ public class ETHIIWalletApiTest extends BaseII {
     public void managerAdd() throws Exception {
         // 正式网环境数据
         //setUpgradeMain();
-        setLocalTest();
-        //setBeta();
+        //setLocalTest();
+        setBeta();
         // GasPrice准备
         long gasPriceGwei = 26L;
         EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa4000000000000000000000000000000000000000000000000000000000000";
+        String txKey = "aaa5000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{};
-        String[] removes = new String[]{"0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65"};
+        String[] removes = new String[]{"0xd667b6a21ed34e82df0b18978dc2f5dd8cca9d82"};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+    }
+
+    @Test
+    public void send() throws Exception {
+        setMain();
+        long gasPriceGwei = 96L;
+        EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        this.multySignContractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
+
+        String fromAddress = "";
+        String priKey = "";
+
+        String txKey = "b9b8809fd5e2fd48c7a2f77500a614ee5d8207db10cf73efd46c03e696a15a4a";
+        String[] adds = {"0x78c30fa073f6cbe9e544f1997b91dd616d66c590"};
+        String[] removes = {"0x17e61e0176ad8a88cac5f786ca0779de87b3043b"};
+        int count = 1;
+        String signData = "d911709c21077ca10a42acf34af721498267afdd15e17535575c8876aab167fe1fbc2429781f9c9fe6c95d023ec548eafcc6df5989ee0e6fc8c3daa7392a21e71b4259a66f0283820e04594186ac3885fb8d69b13a08432be41f65be1cc4c6164b04b77bf1a36a65c2a0c61d29e38d4a8fb076baf5146de686b2859a0876ce19741b0bc3d8c5145fab640f676e611ab6f548fbd3f097be8523b65d710dafa62791d12eb0e287c16a0aa16263546e6ccc58c45c27d85bbb71837c27d77975cb8d4eed1b16a61369a2866e5f1b9268e36a029939f4884501223819303fc19c6be5ef53870c30a38020dd65e3f9acfe3508af587a41b60c8b50daf73c3dbeef5793b3c8111cff089679a891c085c32e77bbbb94be664c533a04e4c3e4c6cbc81952ee79362f622afd5e4178bdd5a9cfd7eda699ff8f0b6cd22be14653ea64faf1d1242c98141cff341c2dc5a7a5522ed729e74359ea7ce07f19259b3701c8a47a3ce89dccd67b1664b2619b987529bd04ce5469bd672c75997793c5cddd8088d7f88ad807966a1c4c637b98f6d3bd350f9a7de9d1c4b0ecf45e0828c4e9e2bdedfe971f593c4fae0b164d69b2cba2027b6ae152926f8722ce6da5545ede42aafc7085ebc8cf41ed1cd0731607440da2ed59f1817a54ca29f8bd54dcc5efbe6e5ec23e3e37770fcdea5af6174a648e087b2ff83676444575f46a41c3b4326adff07c04a9fd6a7c48411b01e8466251717196ce0bab84df6e4692e830fda095aea22b90e040e6a9f939ac104ef67fa2886ebdc3aa4ccd30af19036e476351b4ebbbcb0dff7edd480eb1a61b7ffa71c5a122daf40484c211addd8f8a46e5a3fab1f713863c48b8a5c33769b20bc3fed3a967084eec2678dacbc4726a2375ce5c99adf3e2f99542f454cbf58a1b";
+        List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
+        List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
+        Function function = EthIIUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        String hash = this.sendTx(fromAddress, priKey, function, HeterogeneousChainTxType.CHANGE);
+        System.out.println(String.format("hash: %s", hash));
     }
 
     /**

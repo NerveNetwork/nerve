@@ -135,7 +135,7 @@ public class BaseII {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
             //estimateGas = BigInteger.valueOf(100000L);
         }
-        BigInteger gasLimit = estimateGas;
+        BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
         String ethTxHash = ethSendTransactionPo.getTxHash();
         return ethTxHash;
