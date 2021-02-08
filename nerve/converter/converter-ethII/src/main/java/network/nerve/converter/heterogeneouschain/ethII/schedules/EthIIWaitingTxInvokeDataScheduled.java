@@ -100,7 +100,7 @@ public class EthIIWaitingTxInvokeDataScheduled implements Runnable {
                 }
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
-                    if (ethParseTxHelper.isCompletedTransaction(nerveTxHash)) {
+                    if (ethParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
                         logger().info("Nerve tx 在ETH网络已确认, 成功移除队列, nerveHash: {}", nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;

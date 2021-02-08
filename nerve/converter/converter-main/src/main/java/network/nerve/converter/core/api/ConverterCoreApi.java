@@ -33,6 +33,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -46,6 +47,8 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
+import network.nerve.converter.model.dto.HeterogeneousAddressDTO;
+import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
@@ -58,6 +61,8 @@ import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author: Mimi
@@ -188,20 +193,48 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return info;
     }
 
+    private BigDecimal minBalance = new BigDecimal("0.02");
     /**
      * 返回指定异构链下的当前虚拟银行列表和顺序
+     * 当异构链余额低于0.02时，顺序挪到末尾
      */
     @Override
     public Map<String, Integer> currentVirtualBanks(int hChainId) {
+        Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
         Map<String, Integer> resultMap = new HashMap<>();
         Map<String, VirtualBankDirector> map = nerveChain.getMapVirtualBank();
         map.entrySet().stream().forEach(e -> {
             VirtualBankDirector director = e.getValue();
             HeterogeneousAddress address = director.getHeterogeneousAddrMap().get(hChainId);
             if (address != null) {
-                resultMap.put(address.getAddress(), director.getOrder());
+                int order = director.getOrder();
+                VirtualBankDirectorDTO cacheDto = cacheMap.get(director.getSignAddress());
+                // 当异构链余额低于0.02时，顺序挪到末尾
+                if (cacheDto != null) {
+                    List<HeterogeneousAddressDTO> cacheBalanceList = cacheDto.getHeterogeneousAddresses();
+                    if (cacheBalanceList != null && !cacheBalanceList.isEmpty()) {
+                        HeterogeneousAddressDTO cacheAddressDTO = null;
+                        for (HeterogeneousAddressDTO addressDTO : cacheBalanceList) {
+                            if (addressDTO.getChainId() == address.getChainId()) {
+                                cacheAddressDTO = addressDTO;
+                                break;
+                            }
+                        }
+                        if (cacheAddressDTO != null) {
+                            String balance = cacheAddressDTO.getBalance();
+                            if (StringUtils.isNotBlank(balance)) {
+                                BigDecimal realBalance = new BigDecimal(balance);
+                                if (realBalance.compareTo(minBalance) < 0) {
+                                    order = order + ConverterContext.VIRTUAL_BANK_AGENT_TOTAL * 2;
+                                }
+                            }
+                        }
+                    }
+                }
+                resultMap.put(address.getAddress(), order);
             }
         });
+        nerveChain.getLogger().debug("当前银行顺序: {}", resultMap);
         return resultMap;
     }
 

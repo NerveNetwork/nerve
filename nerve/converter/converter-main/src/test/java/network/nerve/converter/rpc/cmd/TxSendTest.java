@@ -2,6 +2,7 @@ package network.nerve.converter.rpc.cmd;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Transaction;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
@@ -357,10 +358,11 @@ public class TxSendTest {
 
     @Test
     public void getNonceAndBalance() throws Exception {
-        NonceBalance b = LedgerCall.getBalanceNonce(chain, chainId, assetId, agentAddress);
+        NonceBalance b = LedgerCall.getBalanceNonce(chain, chainId, assetId, "TNVTdTSPyT1GGPrbahr9qo7S87dMBatx9NHtP");
         System.out.println(b.getAvailable());
-        BigInteger balance2 = LedgerCall.getBalance(chain, chainId, assetId, agentAddress);
-        System.out.println(balance2);
+        System.out.println(HexUtil.encode(b.getNonce()));
+        //BigInteger balance2 = LedgerCall.getBalance(chain, chainId, assetId, agentAddress);
+        //System.out.println(balance2);
     }
 
     protected Map<String, Object> getTxCfmClient(String hash) throws Exception {
@@ -1211,8 +1213,8 @@ public class TxSendTest {
 
         params.put("type", ProposalTypeEnum.REFUND.value());
         params.put("content", "这是提案的内容……");
-        params.put("heterogeneousChainId", htChainId);
-        params.put("heterogeneousTxHash", "0x80b3129e056623b130eb52fc7d187f23aecfd58fc8c4b82b064198a46a5c64fb");
+        params.put("heterogeneousChainId", bnbChainId);
+        params.put("heterogeneousTxHash", "0x4b65e4f94365081013c159ce80712d931e28d481be4e0b2859933e5969288e42");
         params.put("businessAddress", "");
         params.put("hash", "");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
@@ -1235,7 +1237,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "f627ec78542aab0eadf59b5c3e290d22da655b81d90491a2ce3bc1dcdb043664");
+        params.put("proposalTxHash", "dd1f44aece842147a001afb62e2fec6f73b443c539c84dabe9bf9f5e34fc494d");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", agentAddress);

@@ -39,11 +39,11 @@ import network.nerve.converter.heterogeneouschain.ht.callback.HtCallBackManager;
 import network.nerve.converter.heterogeneouschain.ht.constant.HtConstant;
 import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
 import network.nerve.converter.heterogeneouschain.ht.core.HtWalletApi;
-import network.nerve.converter.heterogeneouschain.ht.listener.HtListener;
-import network.nerve.converter.heterogeneouschain.ht.utils.HtUtil;
 import network.nerve.converter.heterogeneouschain.ht.helper.*;
+import network.nerve.converter.heterogeneouschain.ht.listener.HtListener;
 import network.nerve.converter.heterogeneouschain.ht.model.*;
 import network.nerve.converter.heterogeneouschain.ht.storage.*;
+import network.nerve.converter.heterogeneouschain.ht.utils.HtUtil;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.datatypes.Address;
@@ -1079,7 +1079,7 @@ public class HtDocking implements IHeterogeneousChainDocking {
             currentVirtualBanks.remove(remove);
         }
         List<Map.Entry<String, Integer>> list = new ArrayList(currentVirtualBanks.entrySet());
-        list.sort(changeSort);
+        list.sort(ConverterUtil.CHANGE_SORT);
         int i = 1;
         for (Map.Entry<String, Integer> entry : list) {
             currentVirtualBanks.put(entry.getKey(), i++);
@@ -1113,6 +1113,14 @@ public class HtDocking implements IHeterogeneousChainDocking {
             }
             e.setValue(bankOrder);
         });
+        logger().debug("加工中, 当前银行顺序: {}", currentVirtualBanks);
+        List<Map.Entry<String, Integer>> list = new ArrayList(currentVirtualBanks.entrySet());
+        list.sort(ConverterUtil.CHANGE_SORT);
+        int i = 1;
+        for (Map.Entry<String, Integer> entry : list) {
+            currentVirtualBanks.put(entry.getKey(), i++);
+        }
+        logger().debug("加工后, 当前银行顺序: {}", currentVirtualBanks);
         // 按顺序等待固定时间后再发出HT交易
         int bankOrder = currentVirtualBanks.get(HtContext.ADMIN_ADDRESS);
         if (logger().isDebugEnabled()) {
@@ -1172,18 +1180,6 @@ public class HtDocking implements IHeterogeneousChainDocking {
         logger().info("Nerve网络向HT网络发出[{}]交易, nerveTxHash: {}, 详情: {}", txType, nerveTxHash, po.toString());
         return htTxHash;
     }
-
-    private Comparator changeSort = new Comparator<Map.Entry<String, Integer>>() {
-        @Override
-        public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
-            if(o1.getValue() > o2.getValue()) {
-                return 1;
-            } else if(o1.getValue() < o2.getValue()) {
-                return -1;
-            }
-            return 0;
-        }
-    };
 
     private String getKeystorePath() {
         if (StringUtils.isBlank(keystorePath)) {

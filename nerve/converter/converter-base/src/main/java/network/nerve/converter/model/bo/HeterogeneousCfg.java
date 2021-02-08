@@ -39,6 +39,8 @@ public class HeterogeneousCfg {
 
     private String symbol;
 
+    private int decimals;
+
 //    private BigInteger withdrawalSignFeeNvt;
     /**
      *  多签地址
@@ -109,6 +111,14 @@ public class HeterogeneousCfg {
 
     public void setSymbol(String symbol) {
         this.symbol = symbol;
+    }
+
+    public int getDecimals() {
+        return decimals;
+    }
+
+    public void setDecimals(int decimals) {
+        this.decimals = decimals;
     }
 
     public String getIntervalWaittingSendTransaction() {

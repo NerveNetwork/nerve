@@ -4,8 +4,8 @@
   "minRewardHeight": 0,
   "maxCoinToOfCoinbase": 3000,
   "v130Height": 0,
-  "v160Height": 500000,
-  "v170Height": 500000,
+  "v160Height": 0,
+  "v170Height": 0,
   "minStakingAmount": 100000000000,
   "minAppendAndExitAmount": 200000000000,
   "exitStakingLockHours": 168,
@@ -26,6 +26,19 @@
         {
           "assetsChainId": 5,
           "assetsId": 5
+        }
+      ]
+    }, {
+      "key": "HT",
+      "totalCount": 50000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 9
+        },
+        {
+          "assetsChainId": 5,
+          "assetsId": 11
         }
       ]
     }

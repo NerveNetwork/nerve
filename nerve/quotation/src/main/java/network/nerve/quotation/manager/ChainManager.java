@@ -18,8 +18,10 @@ import network.nerve.quotation.constant.QuotationConstant;
 import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.heterogeneouschain.BNBWalletApi;
 import network.nerve.quotation.heterogeneouschain.ETHWalletApi;
+import network.nerve.quotation.heterogeneouschain.HECOWalletApi;
 import network.nerve.quotation.heterogeneouschain.context.BnbContext;
 import network.nerve.quotation.heterogeneouschain.context.EthContext;
+import network.nerve.quotation.heterogeneouschain.context.HtContext;
 import network.nerve.quotation.model.bo.*;
 import network.nerve.quotation.storage.ConfigStorageService;
 import network.nerve.quotation.storage.ConfirmFinalQuotationStorageService;
@@ -40,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static network.nerve.quotation.heterogeneouschain.constant.BnbConstant.BSC_CHAIN;
 import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ETH_CHAIN;
+import static network.nerve.quotation.heterogeneouschain.constant.HtConstant.HECO_CHAIN;
 import static network.nerve.quotation.util.LoggerUtil.LOG;
 
 @Component
@@ -64,7 +67,8 @@ public class ChainManager {
     private ETHWalletApi ethWalletApi;
     @Autowired
     private BNBWalletApi bnbWalletApi;
-
+    @Autowired
+    private HECOWalletApi hecoWalletApi;
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
@@ -243,6 +247,12 @@ public class ChainManager {
                         BnbContext.rpcAddress = rpcAddress;
                     }
                     bnbWalletApi.init();
+                    break;
+                case HECO_CHAIN:
+                    if (StringUtils.isNotBlank(rpcAddress)) {
+                        HtContext.rpcAddress = rpcAddress;
+                    }
+                    hecoWalletApi.init();
                     break;
                 default:
             }

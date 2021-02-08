@@ -31,6 +31,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,7 +101,7 @@ public class Prices extends BaseNulsData {
         StringBuilder builder = new StringBuilder();
         for (Price price : prices) {
             builder.append(String.format("\t\tkey: %s", price.getKey())).append(", ");
-            builder.append(String.format("value: %s", price.getValue())).append(lineSeparator);
+            builder.append(String.format("value: %s", (new BigDecimal(Double.toString(price.getValue()))).toPlainString())).append(lineSeparator);
         }
         return builder.toString();
     }

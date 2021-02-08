@@ -3,6 +3,7 @@
     "chainId": 101,
     "type": 1,
     "symbol": "ETH",
+    "decimals": 18,
     "commonRpcAddress": "https://ropsten.infura.io/v3/840832a822b14c3b9c99ef8c6aac9e35",
     "mainRpcAddress": "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5",
     "orderRpcAddresses": "https://ropsten.infura.io/v3/cf9ce39514724372bfeac13262e164af,https://ropsten.infura.io/v3/7e086d9f3bdc48e4996a3997b33b032f,https://ropsten.infura.io/v3/7d2be3a2cbf44481af20420875fdb6dd,https://ropsten.infura.io/v3/139c27ec86714c71a32e89f38475cde0,https://ropsten.infura.io/v3/5a49045f963c40f8a6313bfea814023f,https://ropsten.infura.io/v3/3dfe0fb0628249ed8d520f20821c6a72,https://ropsten.infura.io/v3/75e572ef8b3d4d71a2c79feb5c71ed32,https://ropsten.infura.io/v3/a0191215457f4eb2947398a113bd5f29,https://ropsten.infura.io/v3/cb0030d51dbd44bcaa895ead95dd82ef,https://ropsten.infura.io/v3/036a97713cf34083a2016860c0054550,https://ropsten.infura.io/v3/b553e73504ae4bbf94a07be1c29fd770,https://ropsten.infura.io/v3/e3a420a7fd224e9bbd83b236d0d968e4,https://ropsten.infura.io/v3/e5bebdd645e64ac0b86a9355b090976e,https://ropsten.infura.io/v3/3cf511bbaebe499f98f867238aaaadbb,https://ropsten.infura.io/v3/7c4a25d3893d49d288b2e4ada9937a1b",
@@ -15,14 +16,10 @@
     "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012,0x4A05428eC53195e4657739e7622E04594F8c4020"
   },
   {
-    "chainId": 101,
-    "type": 2,
-    "symbol": "ERC20"
-  },
-  {
     "chainId": 102,
     "type": 1,
     "symbol": "BNB",
+    "decimals": 18,
     "commonRpcAddress": "https://data-seed-prebsc-2-s3.binance.org:8545/",
     "mainRpcAddress": "http://data-seed-prebsc-1-s2.binance.org:8545/",
     "orderRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s1.binance.org:8545/",
@@ -38,6 +35,7 @@
     "chainId": 103,
     "type": 1,
     "symbol": "HT",
+    "decimals": 18,
     "commonRpcAddress": "https://http-testnet.hecochain.com",
     "mainRpcAddress": "http://testnet.ht.nerve.network",
     "orderRpcAddresses": "https://http-testnet.hecochain.com",

@@ -100,7 +100,7 @@ public class HtWaitingTxInvokeDataScheduled implements Runnable {
                 }
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
-                    if (htParseTxHelper.isCompletedTransaction(nerveTxHash)) {
+                    if (htParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
                         logger().info("Nerve tx 在HT网络已确认, 成功移除队列, nerveHash: {}", nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;

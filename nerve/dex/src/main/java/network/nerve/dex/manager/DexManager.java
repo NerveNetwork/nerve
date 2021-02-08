@@ -161,6 +161,9 @@ public class DexManager {
      * @throws NulsException
      */
     public void removeTradingOrder(TradingOrderPo orderPo) throws NulsException {
+        if (orderPo == null) {
+            return;
+        }
         TradingContainer container = tradingContainerMap.get(orderPo.getTradingHash().toHex());
         if (container == null) {
             throw new NulsException(DexErrorCode.DATA_NOT_FOUND, "CoinTrading not exist");

@@ -161,7 +161,7 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
-    public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req) {
+    public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfoList(GetHeterogeneousAssetInfoReq req) {
         return call("cv_get_heterogeneous_chain_asset_info_list", req, (Function<List<Map>, Result>) res -> {
             try {
                 List<HeterogeneousAssetInfo> list = new ArrayList<>();
@@ -177,6 +177,22 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
             }
         });
     }
+
+
+    @Override
+    public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req) {
+        return call("cv_get_heterogeneous_chain_asset_info", req, (Function<Map, Result>) res -> {
+            try {
+                HeterogeneousAssetInfo heterogeneousAssetInfo = MapUtils.mapToBean(res, new HeterogeneousAssetInfo());
+                heterogeneousAssetInfo.setToken((Boolean) res.get("isToken"));
+                return success(heterogeneousAssetInfo);
+            } catch (Exception e) {
+                Log.error("cv_get_heterogeneous_chain_asset_info fail", e);
+                return fail(CommonCodeConstanst.FAILED);
+            }
+        });
+    }
+
 
     @Override
     public Result<VirtualBankDirectorDTO> getVirtualBankInfo(GetVirtualBankInfoReq req) {

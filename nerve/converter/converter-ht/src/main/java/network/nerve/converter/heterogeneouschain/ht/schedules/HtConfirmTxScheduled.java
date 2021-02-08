@@ -131,6 +131,12 @@ public class HtConfirmTxScheduled implements Runnable {
                     clearUnusedChange();
                     break;
                 }
+                // 当充值确认任务异常超过重试次数后，丢弃这个任务
+                if (po.isDepositExceedErrorTime(RESEND_TIME)) {
+                    logger().error("充值确认任务异常超过重试次数，移除此交易，详情: {}", po.toString());
+                    this.clearDB(po.getTxHash());
+                    continue;
+                }
                 HtUnconfirmedTxPo poFromDB = null;
                 if (po.getBlockHeight() == null) {
                     poFromDB = htUnconfirmedTxStorageService.findByTxHash(po.getTxHash());
@@ -226,12 +232,13 @@ public class HtConfirmTxScheduled implements Runnable {
         }
     }
 
-    private void clearUnusedChange() {
+    private void clearUnusedChange() throws Exception {
         Iterator<HtUnconfirmedTxPo> iterator = HtContext.UNCONFIRMED_TX_QUEUE.iterator();
         while(iterator.hasNext()) {
             HtUnconfirmedTxPo po = iterator.next();
             if (po.getTxType() == HeterogeneousChainTxType.CHANGE) {
                 iterator.remove();
+                this.clearDB(po.getTxHash());
             }
         }
     }
@@ -328,6 +335,7 @@ public class HtConfirmTxScheduled implements Runnable {
                 logger().info("Nerve交易已存在，从队列中移除待确认的HT交易[{}]", htTxHash);
                 return !isReOfferQueue;
             }
+            po.increaseDepositErrorTime();
             throw e;
         }
         return isReOfferQueue;

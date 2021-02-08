@@ -49,7 +49,7 @@ public class CsController extends BasicObject {
             }
         }
 
-
+        log.info("here1111");
         MeetingRound round = roundController.getCurrentRound();
         log.debug(round.toString());
 
@@ -59,7 +59,7 @@ public class CsController extends BasicObject {
             if (chain.isConsonsusNode()) {
                 //实时监测
                 chain.setConsonsusNode(false);
-            }
+            }log.info("here1112");
             return;
         }
 
@@ -74,7 +74,7 @@ public class CsController extends BasicObject {
                 // 计算本轮是否有延迟，有的话计算出来设置进去
                 checkDelayedTime(newRound);
                 this.comfirmedResult(newRound, result);
-            }
+            }log.info("here1113");
             return;
         }
 
@@ -146,7 +146,7 @@ public class CsController extends BasicObject {
     }
 
     private boolean comfirmedResult(MeetingRound round, VoteStageResult result) {
-
+        log.info("here1114");
         //这里清理缓存的数据
         this.voteController.clearCache();
         round.setConfirmed(true);
@@ -185,6 +185,7 @@ public class CsController extends BasicObject {
         //先通知区块模块,保存区块时才切换打包人
         log.info("通知区块模块，拜占庭验证通过：" + result.getHeight() + "-" + result.getBlockHash().toHex());
         CallMethodUtils.noticeByzantineResult(chain, result.getHeight(), false, result.getBlockHash(), null);
+        log.info("通知区块模块，拜占庭验证通过完成");
         return true;
     }
 

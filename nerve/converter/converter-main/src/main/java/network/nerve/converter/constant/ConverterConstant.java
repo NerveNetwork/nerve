@@ -59,6 +59,12 @@ public interface ConverterConstant {
     String CV_CHECK_THREAD = "cv_check_thread";
     long CV_CHECK_TASK_INITIALDELAY = 120;
     long CV_CHECK_TASK_PERIOD = 3;
+    /**
+     * 查询异构链余额队列处理器
+     */
+    String CV_HTG_BALANCE_THREAD = "cv_htg_balance_thread";
+    long CV_HTG_BALANCE_TASK_INITIALDELAY = 120;
+    long CV_HTG_BALANCE_TASK_PERIOD = 20;
 
     /** 统一所有链的主资产id */
     int ALL_MAIN_ASSET_ID = 1;

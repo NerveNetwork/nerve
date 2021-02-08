@@ -91,6 +91,8 @@ public interface ConverterService {
      */
     Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(GetHeterogeneousAssetInfoReq req);
 
+    public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfoList(GetHeterogeneousAssetInfoReq req);
+
     /**
      * 获取虚拟银行信息
      * @param req

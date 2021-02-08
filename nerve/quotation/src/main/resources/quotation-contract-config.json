@@ -20,5 +20,16 @@
     "rpcAddress": "https://bsc-dataseed.binance.org/",
     "effectiveHeight": 6640000,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "HECO",
+    "key": "NVTHUSDHMDXLP",
+    "anchorToken": "NVTHUSDHMDXLP-USDT",
+    "swapTokenContractAddress": "0x57691c1effa1ca7bcb9de5eefd3d1b23d736148f",
+    "baseTokenContractAddress": "0x0298c2b32eae4da002a15f36fdf7615bea3da047",
+    "baseAnchorToken": "USDT-USDT",
+    "rpcAddress": "https://http-mainnet.hecochain.com",
+    "effectiveHeight": 9090000,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   }
 ]

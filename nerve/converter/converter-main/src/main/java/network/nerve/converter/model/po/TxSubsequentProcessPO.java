@@ -102,6 +102,33 @@ public class TxSubsequentProcessPO implements Serializable {
      */
     private boolean retry;
 
+    private transient int withdrawErrorTimes;
+    private transient int withdrawErrorTotalTimes;
+
+    public void increaseWithdrawErrorTime() {
+        this.withdrawErrorTimes++;
+        this.withdrawErrorTotalTimes++;
+    }
+
+    public boolean isWithdrawExceedErrorTime(int limit) {
+        int multiplier = (this.withdrawErrorTotalTimes + limit - 1) / limit;
+        multiplier = Math.min(multiplier, 5);
+        if (this.withdrawErrorTimes >= (limit * multiplier)) {
+            if (multiplier == 1 && this.withdrawErrorTimes >= (limit * 2)) {
+                this.withdrawErrorTimes = 0;
+                return false;
+            } else if (multiplier > 1) {
+                this.withdrawErrorTimes = 0;
+                return false;
+            }
+        }
+        boolean error = this.withdrawErrorTimes >= limit;
+        if (error) {
+            this.withdrawErrorTimes++;
+        }
+        return error;
+    }
+
     public TxSubsequentProcessPO() {
     }
 

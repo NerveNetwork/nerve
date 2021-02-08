@@ -25,18 +25,21 @@
 package network.nerve.converter.tx.v1;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.BlockHeader;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.base.protocol.TransactionProcessor;
+import io.nuls.base.signture.MultiSignTxSignature;
+import io.nuls.base.signture.P2PHKSignature;
+import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
+import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
@@ -56,6 +59,7 @@ import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: Loki
@@ -143,10 +147,20 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     continue;
                 }
 
-                TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
+                byte[] address;
+                if (tx.isMultiSignTx()) {
+                    MultiSignTxSignature mts = ConverterUtil.getInstance(tx.getTransactionSignature(), MultiSignTxSignature.class);
+                    List<String> pubKeys = mts.getPubKeyList().stream().map(p -> HexUtil.encode(p)).collect(Collectors.toList());
+                    Address addressObj = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE,
+                            SerializeUtils.sha256hash160(AddressTool.createMultiSigAccountOriginBytes(chainId, mts.getM(), pubKeys)));
+                    address = addressObj.getAddressBytes();
+                } else {
+                    TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
+                    //第一个签名为投票人签名
+                    address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
+                }
+
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
-                //第一个签名为投票人签名
-                byte[] address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
                 boolean addrMatched = false;
                 for (CoinFrom coinFrom : coinData.getFrom()) {
                     if (Arrays.equals(address, coinFrom.getAddress())
@@ -256,8 +270,20 @@ public class VoteProposalProcessor implements TransactionProcessor {
             for (Transaction tx : txs) {
                 VoteProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), VoteProposalTxData.class);
                 ProposalPO po = this.proposalStorageService.find(chain, txData.getProposalTxHash());
-                TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
-                byte[] address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
+
+                byte[] address;
+                if (tx.isMultiSignTx()) {
+                    MultiSignTxSignature mts = ConverterUtil.getInstance(tx.getTransactionSignature(), MultiSignTxSignature.class);
+                    List<String> pubKeys = mts.getPubKeyList().stream().map(p -> HexUtil.encode(p)).collect(Collectors.toList());
+                    Address addressObj = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE,
+                            SerializeUtils.sha256hash160(AddressTool.createMultiSigAccountOriginBytes(chainId, mts.getM(), pubKeys)));
+                    address = addressObj.getAddressBytes();
+                } else {
+                    TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
+                    //第一个签名为投票人签名
+                    address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
+                }
+
                 VoteProposalPO votePo = new VoteProposalPO();
                 votePo.setProposalTxHash(txData.getProposalTxHash());
                 votePo.setAddress(address);
@@ -320,7 +346,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
 
             return true;
 
-        } catch (NulsException e) {
+        } catch (Exception e) {
             chain.getLogger().error(e);
             if (failRollback) {
                 rollback(chainId, txs, blockHeader, false);
@@ -343,8 +369,20 @@ public class VoteProposalProcessor implements TransactionProcessor {
             chain = chainManager.getChain(chainId);
             for (Transaction tx : txs) {
                 VoteProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), VoteProposalTxData.class);
-                TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
-                byte[] address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
+
+                byte[] address;
+                if (tx.isMultiSignTx()) {
+                    MultiSignTxSignature mts = ConverterUtil.getInstance(tx.getTransactionSignature(), MultiSignTxSignature.class);
+                    List<String> pubKeys = mts.getPubKeyList().stream().map(p -> HexUtil.encode(p)).collect(Collectors.toList());
+                    Address addressObj = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE,
+                            SerializeUtils.sha256hash160(AddressTool.createMultiSigAccountOriginBytes(chainId, mts.getM(), pubKeys)));
+                    address = addressObj.getAddressBytes();
+                } else {
+                    TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
+                    //第一个签名为投票人签名
+                    address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
+                }
+
                 boolean res = this.voteProposalStorageService.delete(chain, txData.getProposalTxHash(), address);
                 if (!res) {
                     chain.getLogger().error("[rollback] remove vote failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
@@ -362,7 +400,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                 }
             }
             return true;
-        } catch (NulsException e) {
+        } catch (Exception e) {
             chain.getLogger().error(e);
             if (failCommit) {
                 commit(chainId, txs, blockHeader, 0, false);

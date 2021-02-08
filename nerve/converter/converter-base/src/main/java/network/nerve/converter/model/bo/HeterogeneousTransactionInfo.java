@@ -46,6 +46,15 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
     private String[] addAddresses;
     private String[] removeAddresses;
     private int orginTxCount;
+    private transient int depositErrorTimes;
+
+    public void increaseDepositErrorTime() {
+        this.depositErrorTimes++;
+    }
+
+    public boolean isDepositExceedErrorTime(int limit) {
+        return this.depositErrorTimes >= limit;
+    }
 
     public String getNerveTxHash() {
         return nerveTxHash;

@@ -1,6 +1,8 @@
 package io.nuls.base.api.provider.dex.facode;
 
-public class DexQueryReq {
+import io.nuls.base.api.provider.BaseReq;
+
+public class DexQueryReq extends BaseReq {
 
     private String tradingHash;
 

@@ -33,6 +33,22 @@
     "weight": 1
   },
   {
+    "assetId": "30",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "BUSD",
+    "weight": 1
+  },
+  {
+    "assetId": "70",
+    "oracleKey": "USDT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 8,
+    "simple": "HUSD",
+    "weight": 1
+  },
+  {
     "assetId": "5",
     "oracleKey": "USDC_PRICE",
     "canBePeriodically": false,
@@ -73,6 +89,14 @@
     "weight": 1
   },
   {
+    "assetId": "55",
+    "oracleKey": "HT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HT",
+    "weight": 1
+  },
+  {
     "assetId": "9",
     "oracleKey": "OKB_PRICE",
     "canBePeriodically": false,
@@ -94,6 +118,14 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "UNI-V2",
+    "weight": 25
+  },
+  {
+    "assetId": "73",
+    "oracleKey": "NVTHUSDHMDXLP",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "HMDX",
     "weight": 25
   }
 ]

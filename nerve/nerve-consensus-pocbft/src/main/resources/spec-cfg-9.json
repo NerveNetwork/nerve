@@ -29,6 +29,14 @@
         {
           "assetsChainId": 9,
           "assetsId": 7
+        },
+        {
+          "assetsChainId": 9,
+          "assetsId": 30
+        },
+        {
+          "assetsChainId": 9,
+          "assetsId": 70
         }
       ]
     },{
@@ -47,6 +55,10 @@
         {
           "assetsChainId": 9,
           "assetsId": 8
+        },
+        {
+          "assetsChainId": 9,
+          "assetsId": 55
         }
       ]
     }, {

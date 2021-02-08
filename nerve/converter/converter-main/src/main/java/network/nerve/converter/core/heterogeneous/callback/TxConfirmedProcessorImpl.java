@@ -53,10 +53,8 @@ import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author: Mimi
@@ -76,6 +74,8 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     private MergeComponentStorageService mergeComponentStorageService;
     private CfmChangeBankStorageService cfmChangeBankStorageService;
     private ConverterCoreApi converterCoreApi;
+    // 重复收集计时器
+    private Map<String, AtomicInteger> countHash = new HashMap<>();
 
     public TxConfirmedProcessorImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
@@ -204,6 +204,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     }
 
     private int confirmChangeTx(String nerveTxHash, HeterogeneousConfirmedVirtualBank bank, int mergeCount) throws Exception {
+        AtomicInteger count = countHash.getOrDefault(nerveTxHash, new AtomicInteger(0));
         logger().info("收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
         HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
         if (vbPo == null) {
@@ -224,10 +225,15 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 for (HeterogeneousConfirmedVirtualBank virtualBank : listConfirmed) {
                     heterogeneousDockingManager.getHeterogeneousDocking(virtualBank.getHeterogeneousChainId()).txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash);
                 }
+                // 清理计数器
+                countHash.remove(nerveTxHash);
                 return 0;
             }
             logger().info("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-            //return 2;
+            // 每重复收集10次，再检查是否收集完成
+            if (count.incrementAndGet() % 10 != 0) {
+                return 2;
+            }
         }
         // 收集完成，组装广播交易
         if (vbSet.size() == hChainSize) {
@@ -236,6 +242,8 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
             VirtualBankUtil.sortListByChainId(hList);
             assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
             heterogeneousConfirmedChangeVBStorageService.save(vbPo);
+            // 清理计数器
+            countHash.remove(nerveTxHash);
             return 1;
         } else {
             logger().info("当前已收集的异构链变更确认交易数量: {}, 所有异构链数量: {}, 变更合并交易数量: {}", vbSet.size(), hChainSize, mergeCount);

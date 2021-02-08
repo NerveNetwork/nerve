@@ -23,11 +23,10 @@ public class BlockSaver implements Runnable {
         while (true) {
             try {
                 Saver saver = queue.take();
-                Log.debug("BLOCK-SAVE:" + saver.getBlock().getHeader().getHeight());
+                Log.info("BLOCK-SAVE:" + saver.getBlock().getHeader().getHeight());
                 blockService.saveBlock(saver.getChainId(), saver.getBlock(), saver.getDownload(), saver.isNeedLock(),
                         saver.isBroadcast(), saver.isForward(), saver.getNodeId());
-
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 Log.error(e);
             }
         }

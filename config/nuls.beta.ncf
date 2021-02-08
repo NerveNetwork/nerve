@@ -140,7 +140,7 @@ maxSignatureCount=100
 #每隔多少个区块统计一次协议占比
 interval=1000
 height_1_6_0=0
-height_1_8_0=1185000
+height_1_8_0=0
 
 [nuls-api]
 #httpServer的启动ip

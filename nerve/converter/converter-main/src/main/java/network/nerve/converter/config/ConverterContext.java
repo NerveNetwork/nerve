@@ -25,6 +25,7 @@
 package network.nerve.converter.config;
 
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -122,5 +123,9 @@ public class ConverterContext {
      * 初始化虚拟银行公钥
      */
     public static List<String> INIT_VIRTUAL_BANK_PUBKEY_LIST = new ArrayList<>();
+    /**
+     * 虚拟银行管理员详情列表(包含各异构链对应余额)
+     */
+    public static List<VirtualBankDirectorDTO> VIRTUAL_BANK_DIRECTOR_LIST = new ArrayList<>();
 
 }

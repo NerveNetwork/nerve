@@ -80,7 +80,7 @@ public class CalculatorProcessor implements Calculator {
                 return getLastFinalConfiremdPrice(chain, token);
             }
             double finalPrice = avgCalc(list);
-            log.info("{}当前节基于{}个节点的报价，最终报价计算结果:{}", dbKey, list.size(),finalPrice);
+            log.info("{}当前节基于{}个节点的报价，最终报价计算结果:{}", dbKey, list.size(), (new BigDecimal(Double.toString(finalPrice))).toPlainString());
             return finalPrice;
         } catch (Throwable e) {
             chain.getLogger().error("统计最终报价异常.. {}, {}", token, date);

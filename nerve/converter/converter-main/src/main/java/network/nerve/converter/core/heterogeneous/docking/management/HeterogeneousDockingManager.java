@@ -32,10 +32,13 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.AccountCall;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static network.nerve.converter.config.ConverterContext.*;
+import static network.nerve.converter.config.ConverterContext.HUOBI_CROSS_CHAIN_HEIGHT;
+import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 
 /**
  * @author: Mimi

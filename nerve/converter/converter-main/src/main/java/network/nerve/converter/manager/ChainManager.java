@@ -45,6 +45,7 @@ import network.nerve.converter.core.thread.handler.SignMessageByzantineHandler;
 import network.nerve.converter.core.thread.task.CfmTxSubsequentProcessTask;
 import network.nerve.converter.core.thread.task.ExeProposalProcessTask;
 import network.nerve.converter.core.thread.task.TxCheckAndCreateProcessTask;
+import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.ConfigBean;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
@@ -321,6 +322,11 @@ public class ChainManager {
                 new NulsThreadFactory(ConverterConstant.CV_CHECK_THREAD));
         checkExecutor.scheduleAtFixedRate(new TxCheckAndCreateProcessTask(chain),
                 ConverterConstant.CV_CHECK_TASK_INITIALDELAY, ConverterConstant.CV_CHECK_TASK_PERIOD, TimeUnit.SECONDS);
+
+        ScheduledThreadPoolExecutor htgBalanceExecutor = ThreadUtils.createScheduledThreadPool(1,
+                new NulsThreadFactory(ConverterConstant.CV_HTG_BALANCE_THREAD));
+        htgBalanceExecutor.scheduleAtFixedRate(new VirtualBankDirectorBalanceTask(chain),
+                ConverterConstant.CV_HTG_BALANCE_TASK_INITIALDELAY, ConverterConstant.CV_HTG_BALANCE_TASK_PERIOD, TimeUnit.SECONDS);
     }
 
 

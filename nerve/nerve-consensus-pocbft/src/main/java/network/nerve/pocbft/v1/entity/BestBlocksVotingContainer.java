@@ -43,7 +43,8 @@ public class BestBlocksVotingContainer {
         try {
             if (currentHeight < header.getHeight() || NulsHash.EMPTY_NULS_HASH.equals(this.votedBlockHash)) {
                 this.clear(true);
-                currentHeight = header.getHeight();
+                this.currentHeight = header.getHeight();
+                this.votedBlockHash = header.getHash();
                 if (null != this.listener) {
                     this.listener.onChange(header);
                 }

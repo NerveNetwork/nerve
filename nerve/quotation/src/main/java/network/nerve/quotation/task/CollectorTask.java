@@ -32,6 +32,7 @@ import network.nerve.quotation.constant.QuotationContext;
 import network.nerve.quotation.constant.QuotationErrorCode;
 import network.nerve.quotation.heterogeneouschain.BNBWalletApi;
 import network.nerve.quotation.heterogeneouschain.ETHWalletApi;
+import network.nerve.quotation.heterogeneouschain.HECOWalletApi;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.QuotationActuator;
 import network.nerve.quotation.model.bo.QuotationContractCfg;
@@ -55,6 +56,7 @@ import static network.nerve.quotation.constant.QuotationConstant.*;
 import static network.nerve.quotation.constant.QuotationContext.*;
 import static network.nerve.quotation.heterogeneouschain.constant.BnbConstant.BSC_CHAIN;
 import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ETH_CHAIN;
+import static network.nerve.quotation.heterogeneouschain.constant.HtConstant.HECO_CHAIN;
 
 /**
  * 获取第三方价格 发交易
@@ -71,6 +73,7 @@ public class CollectorTask implements Runnable {
     private QuotationIntradayStorageService quotationIntradayStorageService = SpringLiteContext.getBean(QuotationIntradayStorageService.class);
     private ETHWalletApi ethWalletApi = SpringLiteContext.getBean(ETHWalletApi.class);
     private BNBWalletApi bnbWalletApi = SpringLiteContext.getBean(BNBWalletApi.class);
+    private HECOWalletApi hecoWalletApi = SpringLiteContext.getBean(HECOWalletApi.class);
 
     public CollectorTask(Chain chain) {
         this.chain = chain;
@@ -186,6 +189,11 @@ public class CollectorTask implements Runnable {
                         break;
                     case BSC_CHAIN:
                         resultPrice = bscContractQuote(quContractCfg.getSwapTokenContractAddress(),
+                                quContractCfg.getBaseTokenContractAddress(),
+                                unitPrice.toString());
+                        break;
+                    case HECO_CHAIN:
+                        resultPrice = hecoContractQuote(quContractCfg.getSwapTokenContractAddress(),
                                 quContractCfg.getBaseTokenContractAddress(),
                                 unitPrice.toString());
                         break;
@@ -315,6 +323,41 @@ public class CollectorTask implements Runnable {
         chain.getLogger().debug("cakeLpCount:" + cakeLpCount);
         BigDecimal cakeLpPrice = wethPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
         chain.getLogger().debug("cakeLpPrice:" + cakeLpPrice);
+        return cakeLpPrice.doubleValue();
+    }
+
+    /**
+     * Heco网络 计算 HSwap LP token价格
+     *
+     * @param swapTokenContractAddress swap HSwap LP合约地址
+     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
+     * @param baseTokenUnitPrice       基准token的单价
+     * @return
+     * @throws Exception
+     */
+    public double hecoContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
+        // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+        chain.getLogger().debug("HECO,  Cake-LP:{}, HUSD:{}", swapTokenContractAddress, baseTokenContractAddress);
+        // 池子里HUSD的数量
+        BigInteger husdBalance = hecoWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+        chain.getLogger().debug("husdBalance:" + husdBalance);
+        int husdDecimals = hecoWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+        chain.getLogger().debug("husdDecimals:" + husdDecimals);
+        BigInteger husdTwice = husdBalance.multiply(new BigInteger("2"));
+        chain.getLogger().debug("husdTwice:" + husdTwice);
+        BigDecimal husdCount = new BigDecimal(husdTwice).movePointLeft(husdDecimals);
+        chain.getLogger().debug("husdCount:" + husdCount);
+        BigDecimal husdPrice = husdCount.multiply(new BigDecimal(baseTokenUnitPrice));
+        chain.getLogger().debug("husdPrice:" + husdPrice);
+        chain.getLogger().debug("");
+        BigInteger totalSupplyCakeLp = hecoWalletApi.totalSupply(swapTokenContractAddress);
+        chain.getLogger().debug("totalSupplyHSwapLP:" + totalSupplyCakeLp);
+        int cakeLpDecimals = hecoWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+        chain.getLogger().debug("HSwapLpDecimals:" + cakeLpDecimals);
+        BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
+        chain.getLogger().debug("HSwapLpCount:" + cakeLpCount);
+        BigDecimal cakeLpPrice = husdPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
+        chain.getLogger().debug("HSwapLpPrice:" + cakeLpPrice);
         return cakeLpPrice.doubleValue();
     }
 }

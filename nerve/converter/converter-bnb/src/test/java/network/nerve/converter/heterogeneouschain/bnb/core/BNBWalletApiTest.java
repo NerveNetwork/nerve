@@ -17,8 +17,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.DynamicArray;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -370,16 +372,16 @@ public class BNBWalletApiTest extends Base {
     public void managerAdd() throws Exception {
         // 正式网环境数据
         //setUpgradeMain();
-        //setLocalTest();
+        setLocalTest();
         //setBeta();
-        setBnbMainTest();
-        setMain();
+        //setBnbMainTest();
+        //setMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
         BnbContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0x17e61e0176ad8a88cac5f786ca0779de87b3043b"};
-        String[] removes = new String[]{"0x78c30fa073f6cbe9e544f1997b91dd616d66c590"};
+        String txKey = "aaa4000000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{};
+        String[] removes = new String[]{"0x018fc24ec7a4a69c83884d93b3b8f87b670c0ef5"};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
@@ -762,6 +764,76 @@ public class BNBWalletApiTest extends Base {
         BigInteger gasPrice = bnbWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+    }
+
+    @Test
+    public void allContractManagerSet() throws Exception {
+        //localdev();
+        //localdevII();
+        //setMain();
+        //
+        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        //mainnetII();
+        System.out.println("查询当前合约管理员列表，请等待……");
+        Set<String> all = this.allManagers(multySignContractAddress);
+        System.out.println(String.format("size : %s", all.size()));
+        for (String address : all) {
+            BigDecimal balance = bnbWalletApi.getBalance(address).movePointLeft(18);
+            System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            System.out.println();
+        }
+    }
+
+    private Set<String> allManagers(String contract) throws Exception {
+        Function allManagersFunction = new Function(
+                "allManagers",
+                List.of(),
+                List.of(new TypeReference<DynamicArray<Address>>() {
+                })
+        );
+        Function function = allManagersFunction;
+        String encode = FunctionEncoder.encode(function);
+        org.web3j.protocol.core.methods.request.Transaction ethCallTransaction = org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(null, contract, encode);
+        EthCall ethCall = bnbWalletApi.getWeb3j().ethCall(ethCallTransaction, DefaultBlockParameterName.PENDING).sendAsync().get();
+        String value = ethCall.getResult();
+        List<Type> typeList = FunctionReturnDecoder.decode(value, function.getOutputParameters());
+        List<String> results = new ArrayList();
+        for(Type type : typeList) {
+            results.add(type.getValue().toString());
+        }
+        String resultStr = results.get(0).substring(1, results.get(0).length() - 1);
+        String[] resultArr = resultStr.split(",");
+        Set<String> resultList = new HashSet<>();
+        for(String result : resultArr) {
+            resultList.add(result.trim().toLowerCase());
+        }
+        return resultList;
+    }
+
+    @Test
+    public void symboltest() throws Exception {
+        setMain();
+        String contractAddress = "0x66a79d23e58475d2738179ca52cd0b41d73f0bea";
+        List<Type> symbolResult = bnbWalletApi.callViewFunction(contractAddress, BnbUtil.getSymbolERC20Function());
+        if (symbolResult.isEmpty()) {
+            return;
+        }
+        String symbol = symbolResult.get(0).getValue().toString();
+        System.out.println(symbol);
+
+        List<Type> nameResult = bnbWalletApi.callViewFunction(contractAddress, BnbUtil.getNameERC20Function());
+        if (nameResult.isEmpty()) {
+            return;
+        }
+        String name = nameResult.get(0).getValue().toString();
+        System.out.println(name);
+
+        List<Type> decimalsResult = bnbWalletApi.callViewFunction(contractAddress, BnbUtil.getDecimalsERC20Function());
+        if (decimalsResult.isEmpty()) {
+            return;
+        }
+        String decimals = decimalsResult.get(0).getValue().toString();
+        System.out.println(decimals);
     }
 
     static class MockEthERC20Helper extends BnbERC20Helper {

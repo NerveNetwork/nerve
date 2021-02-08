@@ -39,6 +39,7 @@ public class VoteMsgProcessor extends BasicRunnable {
                 log.error(e);
             }
         }
+        chain.getLogger().warn("投票停止处理!!!!");
     }
 
     private void doit() throws Exception {

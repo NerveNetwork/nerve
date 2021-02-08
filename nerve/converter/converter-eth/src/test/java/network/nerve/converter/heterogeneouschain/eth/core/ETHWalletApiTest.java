@@ -78,6 +78,7 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
+        setMain();
         System.out.println(ethWalletApi.getBlockHeight());
     }
 
@@ -712,11 +713,19 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void overrideOneTest() throws Exception {
-        String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
-        String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
-        String hash = ethWalletApi.sendETHWithNonce(from, fromPriKey, from, BigDecimal.ZERO, EthConstant.ETH_GAS_LIMIT_OF_ETH,
-                BigInteger.valueOf(105L).multiply(BigInteger.TEN.pow(9)),
-                ethWalletApi.getLatestNonce(from));
+        setMain();
+        String from = "";
+        String fromPriKey = "";
+
+        String to = "???";
+
+        BigInteger nonce = BigInteger.valueOf(24L);
+        BigInteger gasPrice = BigInteger.valueOf(82L).multiply(BigInteger.TEN.pow(9));
+        String hash = ethWalletApi.sendETHWithNonce(from, fromPriKey, to,
+                new BigDecimal("0.14"),
+                EthConstant.ETH_GAS_LIMIT_OF_ETH,
+                gasPrice,
+                nonce);
         System.out.println(String.format("hash is %s", hash));
     }
 
@@ -1317,9 +1326,9 @@ public class ETHWalletApiTest extends Base {
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // eth的usdt价格
-        ethUsdt = new BigDecimal("1047.29");
+        ethUsdt = new BigDecimal("1210.29");
         // gas Gwei
-        price = 200L;
+        price = 210L;
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
         gasCost(1200000);
         gasCost(800000);
@@ -1328,6 +1337,7 @@ public class ETHWalletApiTest extends Base {
         gasCost(380000);
         gasCost(350000);
         gasCost(300000);
+        gasCost(250000);
         gasCost(220000);
         gasCost(200000);
         gasCost(150000);

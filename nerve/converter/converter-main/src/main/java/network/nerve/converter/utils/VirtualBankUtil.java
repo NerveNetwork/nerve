@@ -29,18 +29,27 @@ import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
 import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.model.dto.HeterogeneousAddressDTO;
 import network.nerve.converter.model.dto.SignAccountDTO;
+import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.storage.VirtualBankStorageService;
 
+import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -225,6 +234,71 @@ public class VirtualBankUtil {
         int i = 1;
         for (VirtualBankDirector director : list) {
             virtualBankMap.get(director.getSignAddress()).setOrder(i++);
+        }
+    }
+
+    public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager) throws Exception {
+        ExecutorService threadPool = null;
+        try {
+            // 并行查询余额
+            threadPool = Executors.newFixedThreadPool(5);
+            int fixedCount = 5;
+            int listSize = list.size();
+            VirtualBankDirectorDTO directorDTO;
+            CountDownLatch countDownLatch = null;
+            for (int s = 0; s < listSize; s++) {
+                directorDTO = list.get(s);
+                if (s % fixedCount == 0) {
+                    // 剩余的dto数量不小于fixedCount
+                    if (listSize - s >= fixedCount) {
+                        countDownLatch = new CountDownLatch(fixedCount);
+                    } else {
+                        // 剩余的dto数量不足fixedCount
+                        countDownLatch = new CountDownLatch(listSize - s);
+                    }
+                }
+                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch));
+                // 达到CountDown的最大任务数时，等待执行完成
+                if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
+                    countDownLatch.await();
+                }
+            }
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            if (threadPool != null) {
+                threadPool.shutdown();
+            }
+        }
+    }
+
+    static class GetBalance implements Runnable {
+        private NulsLogger logger;
+        private CountDownLatch countDownLatch;
+        private HeterogeneousDockingManager heterogeneousDockingManager;
+        private VirtualBankDirectorDTO directorDTO;
+
+        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch) {
+            this.heterogeneousDockingManager = heterogeneousDockingManager;
+            this.countDownLatch = countDownLatch;
+            this.directorDTO = directorDTO;
+            this.logger = logger;
+        }
+
+        @Override
+        public void run() {
+            try {
+                for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                    BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
+                    addr.setBalance(balance.toPlainString());
+                    logger.info("[{}]成功查询[{}]余额", addr.getAddress(), docking.getChainSymbol());
+                }
+            } catch (Exception e) {
+                logger.error("查询异构链账户余额异常", e);
+            } finally {
+                countDownLatch.countDown();
+            }
         }
     }
 }

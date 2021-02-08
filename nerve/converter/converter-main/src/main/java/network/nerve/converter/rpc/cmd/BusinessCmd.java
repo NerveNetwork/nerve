@@ -34,12 +34,12 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
-import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.ObjectUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -60,15 +60,14 @@ import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author: Loki
@@ -217,7 +216,6 @@ public class BusinessCmd extends BaseCmd {
     )
     public Response getVirtualBankDirector(Map params) {
         Chain chain = null;
-        ExecutorService threadPool = null;
         try {
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             chain = chainManager.getChain((Integer) params.get("chainId"));
@@ -241,67 +239,25 @@ public class BusinessCmd extends BaseCmd {
             if (!checkBalance) {
                 return success(map);
             }
-            // 并行查询余额
-            threadPool = Executors.newFixedThreadPool(5);
-            int fixedCount = 5;
-            int listSize = list.size();
-            VirtualBankDirectorDTO directorDTO;
-            CountDownLatch countDownLatch = null;
-            for (int s = 0; s < listSize; s++) {
-                directorDTO = list.get(s);
-                if (s % fixedCount == 0) {
-                    // 剩余的dto数量不小于fixedCount
-                    if (listSize - s >= fixedCount) {
-                        countDownLatch = new CountDownLatch(fixedCount);
-                    } else {
-                        // 剩余的dto数量不足fixedCount
-                        countDownLatch = new CountDownLatch(listSize - s);
+            if (ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.isEmpty()) {
+                chain.getLogger().debug("缓存未建立，直接查询异构链余额");
+                // 并行查询异构链余额
+                VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager);
+            } else {
+                chain.getLogger().debug("使用缓存的异构链余额");
+                // 使用缓存的异构链余额
+                Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
+                for (VirtualBankDirectorDTO dto : list) {
+                    VirtualBankDirectorDTO cacheDto = cacheMap.get(dto.getSignAddress());
+                    if (cacheDto != null) {
+                        dto.setHeterogeneousAddresses(cacheDto.getHeterogeneousAddresses());
                     }
-                }
-                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch));
-                // 达到CountDown的最大任务数时，等待执行完成
-                if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
-                    countDownLatch.await();
                 }
             }
             return success(map);
         } catch (Exception e) {
             errorLogProcess(chain, e);
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
-        } finally {
-            if (threadPool != null) {
-                threadPool.shutdown();
-            }
-        }
-    }
-
-    static class GetBalance implements Runnable {
-        private NulsLogger logger;
-        private CountDownLatch countDownLatch;
-        private HeterogeneousDockingManager heterogeneousDockingManager;
-        private VirtualBankDirectorDTO directorDTO;
-
-        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch) {
-            this.heterogeneousDockingManager = heterogeneousDockingManager;
-            this.countDownLatch = countDownLatch;
-            this.directorDTO = directorDTO;
-            this.logger = logger;
-        }
-
-        @Override
-        public void run() {
-            try {
-                for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                    BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
-                    addr.setBalance(balance.toPlainString());
-                    logger.info("[{}]成功查询[{}]余额", addr.getAddress(), docking.getChainSymbol());
-                }
-            } catch (Exception e) {
-                logger.error("查询异构链账户余额异常", e);
-            } finally {
-                countDownLatch.countDown();
-            }
         }
     }
 

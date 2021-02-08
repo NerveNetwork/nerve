@@ -52,6 +52,7 @@ import network.nerve.quotation.util.CommonUtil;
 import network.nerve.quotation.util.LoggerUtil;
 import network.nerve.quotation.util.TimeUtil;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -173,7 +174,7 @@ public class QuotationProcessor implements TransactionProcessor {
                 quotationStorageService.saveNodeQuotation(chain, key, nqWrapperPO);
                 for(NodeQuotationPO po : nqWrapperPO.getList()) {
                     chain.getLogger().info("[commit] 确认普通报价 General-quotation key:{}, dbKey:{}, price:{}, hash:{}",
-                            entry.getKey(), key, po.getPrice(), po.getTxHash());
+                            entry.getKey(), key, (new BigDecimal(Double.toString(po.getPrice()))).toPlainString() , po.getTxHash());
                 }
             }
             return true;

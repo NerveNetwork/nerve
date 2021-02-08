@@ -100,7 +100,7 @@ public class BnbWaitingTxInvokeDataScheduled implements Runnable {
                 }
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
-                    if (bnbParseTxHelper.isCompletedTransaction(nerveTxHash)) {
+                    if (bnbParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
                         logger().info("Nerve tx 在BNB网络已确认, 成功移除队列, nerveHash: {}", nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;

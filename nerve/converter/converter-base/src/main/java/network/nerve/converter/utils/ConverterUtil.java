@@ -32,6 +32,9 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterErrorCode;
 
+import java.util.Comparator;
+import java.util.Map;
+
 import static io.nuls.core.constant.CommonCodeConstanst.FAILED;
 import static network.nerve.converter.utils.LoggerUtil.LOG;
 
@@ -149,4 +152,16 @@ public class ConverterUtil {
     public static <T> T getInstance(String hex, Class<? extends BaseNulsData> clazz) throws NulsException {
         return getInstance(HexUtil.decode(hex), clazz);
     }
+
+    public static Comparator CHANGE_SORT = new Comparator<Map.Entry<String, Integer>>() {
+        @Override
+        public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+            if(o1.getValue() > o2.getValue()) {
+                return 1;
+            } else if(o1.getValue() < o2.getValue()) {
+                return -1;
+            }
+            return 0;
+        }
+    };
 }

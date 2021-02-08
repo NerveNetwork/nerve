@@ -153,6 +153,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawalProcessor(pendingPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
+                            if (pendingPO.isWithdrawExceedErrorTime(10)) {
+                                chain.getLogger().warn("[withdraw] 提现手续费不足，重试次数超过限制，暂停处理当前提前任务, txHash: {}", tx.getHash().toHex());
+                                throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+                            }
                             if (!withdrawalByzantineProcessor(pendingPO)) {
                                 TxSubsequentProcessPO po = chain.getPendingTxQueue().poll();
                                 chain.getPendingTxQueue().addLast(po);
@@ -516,7 +520,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
         boolean rs = false;
         if (compSignPO.getByzantinePass()) {
-            if (!compSignPO.getCompleted()) {
+            if (pendingPO.getRetry() || !compSignPO.getCompleted()) {
                 // 执行调用异构链
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
                 if (null == callParmsList) {
@@ -529,6 +533,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     BigInteger totalFee = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
                     boolean enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
                     if (!enoughFeeOfWithdraw) {
+                        // 异常计数
+                        pendingPO.increaseWithdrawErrorTime();
                         chain.getLogger().error("[withdraw] 提现手续费计算, 手续费不足以支付提现费用. hash:{}, amount:{}",
                                 txHash, callParm.getValue());
                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);

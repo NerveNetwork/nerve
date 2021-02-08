@@ -143,6 +143,7 @@ public class HtWalletApiTest extends Base {
         list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
         this.multySignContractAddress = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
+        // 备用: 0xB29A26df2702B10BFbCf8cd52914Ad1fc99A4540
         init();
     }
     protected void setBeta() {
@@ -398,8 +399,9 @@ public class HtWalletApiTest extends Base {
     public void allContractManagerSet() throws Exception {
         //localdev();
         //localdevII();
-        setMain();
-        this.multySignContractAddress = "0x23023c99dcede393d6d18ca7fb08541b3364fa90";
+        //setMain();
+        //
+        this.multySignContractAddress = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
         //mainnetII();
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
@@ -435,6 +437,32 @@ public class HtWalletApiTest extends Base {
             resultList.add(result.trim().toLowerCase());
         }
         return resultList;
+    }
+
+    @Test
+    public void symboltest() throws Exception {
+        setMain();
+        String contractAddress = "0x66a79d23e58475d2738179ca52cd0b41d73f0bea";
+        List<Type> symbolResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getSymbolERC20Function());
+        if (symbolResult.isEmpty()) {
+            return;
+        }
+        String symbol = symbolResult.get(0).getValue().toString();
+        System.out.println(symbol);
+
+        List<Type> nameResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getNameERC20Function());
+        if (nameResult.isEmpty()) {
+            return;
+        }
+        String name = nameResult.get(0).getValue().toString();
+        System.out.println(name);
+
+        List<Type> decimalsResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getDecimalsERC20Function());
+        if (decimalsResult.isEmpty()) {
+            return;
+        }
+        String decimals = decimalsResult.get(0).getValue().toString();
+        System.out.println(decimals);
     }
 
     /**
@@ -810,6 +838,7 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
+        setMain();
         BigInteger gasPrice = htWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

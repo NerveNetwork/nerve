@@ -205,10 +205,12 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             }
         }
         int hSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
+        chain.getLogger().debug("heterogeneousSize: {}, hSize: {}, bankNumber: {}", heterogeneousSize, hSize, bankNumber);
         /**
          * 判断需要进行初始化
          */
         if (heterogeneousSize != hSize || (INIT_VIRTUAL_BANK_HEIGHT <= height && bankNumber == 0)) {
+            chain.getLogger().debug("INIT_VIRTUAL_BANK_HEIGHT: {}, height: {}", INIT_VIRTUAL_BANK_HEIGHT, height);
             try {
                 //初始化种子节点为初始虚拟银行
                 initVirtualBank(chain, listAgent, height);

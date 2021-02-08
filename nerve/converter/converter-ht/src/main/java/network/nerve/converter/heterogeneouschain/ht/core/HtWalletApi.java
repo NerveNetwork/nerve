@@ -36,6 +36,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -858,7 +859,7 @@ public class HtWalletApi implements WalletApi {
                 throw e;
             }
             // 若遭遇网络连接异常
-            if (e instanceof ConnectException) {
+            if (e instanceof ConnectException || e instanceof UnknownHostException) {
                 // 应急API重置，切换到普通API
                 if (HtContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
                     getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.rpcAddress);

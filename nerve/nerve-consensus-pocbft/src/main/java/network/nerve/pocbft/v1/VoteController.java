@@ -17,6 +17,7 @@ import network.nerve.pocbft.v1.entity.VoteStageResult;
 import network.nerve.pocbft.v1.entity.VoteSummaryData;
 import network.nerve.pocbft.v1.message.VoteMessage;
 import network.nerve.pocbft.v1.message.VoteResultMessage;
+import network.nerve.pocbft.v1.utils.HashSetDuplicateProcessor;
 
 import java.io.IOException;
 import java.util.*;
@@ -66,13 +67,18 @@ public class VoteController extends BasicObject {
             CallMethodUtils.noticeGetBlock(chain, vote.getHeight(), vote.getSendNode(), vote.getBlockHash(), null);
         }
     }
-
+    private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(100);
     /**
      * 广播投票消息
      *
      * @param message
      */
     public void broadcastVote(VoteMessage message) {
+        //   去重
+        if(!duplicateProcessor.insertAndCheck(message.getMessageKey())){
+            log.info("重复投票！！！");
+            return;
+        }
         ConsensusNetUtil.broadcastInConsensus(chain.getChainId(), CommandConstant.MESSAGE_VOTE, message.getRawData(), message.getSendNode());
         log.debug("广播投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
     }

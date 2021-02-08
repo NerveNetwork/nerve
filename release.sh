@@ -17,6 +17,7 @@ fi
 ./package -a converter
 ./package -a dex
 ./package -a quotation
+./package -a mykernel
 if [ -n "$JRE" ]; then
     JRE=" -J $JRE "
 fi

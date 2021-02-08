@@ -3,6 +3,7 @@ package io.nuls.provider.rpctools;
 import io.nuls.base.api.provider.Result;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsRuntimeException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.provider.rpctools.vo.AccountBalance;
@@ -43,8 +44,8 @@ public class LegderTools implements CallRpc {
                 balanceInfo.setFreeze(map.get("freeze").toString());
                 balanceInfo.setNonce((String) map.get("nonce"));
                 balanceInfo.setTotalBalance(new BigInteger(balanceInfo.getBalance())
-                                .add(new BigInteger(balanceInfo.getConsensusLock()))
-                                .add(new BigInteger(balanceInfo.getTimeLock())).toString());
+                        .add(new BigInteger(balanceInfo.getConsensusLock()))
+                        .add(new BigInteger(balanceInfo.getTimeLock())).toString());
                 balanceInfo.setNonceType((Integer) map.get("nonceType"));
                 return new Result<>(balanceInfo);
             });
@@ -66,6 +67,36 @@ public class LegderTools implements CallRpc {
             });
         } catch (NulsRuntimeException e) {
             return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 查询异构跨链资产在nerve链对应的资产信息
+     * 当contractAddress=null时，默认查询异构链主资产
+     */
+    public Result<Map> getHeterogeneousChainAssetInfo(int heterogeneousChainId, String contractAddress) {
+        Map<String, Object> params = new HashMap(2);
+
+        if (StringUtils.isNotBlank(contractAddress)) {
+            params.put("heterogeneousChainId", heterogeneousChainId);
+            params.put("contractAddress", contractAddress);
+            try {
+                return callRpc(ModuleE.CV.abbr, "cv_get_heterogeneous_chain_asset_info_by_address", params, (Function<Map<String, Object>, Result<Map>>) map -> {
+                    return new Result<>(map);
+                });
+            } catch (NulsRuntimeException e) {
+                return Result.fail(e.getCode(), e.getMessage());
+            }
+        } else {
+            params.put("heterogeneousChainId", heterogeneousChainId);
+            params.put("heterogeneousAssetId", 1);
+            try {
+                return callRpc(ModuleE.CV.abbr, "cv_get_heterogeneous_chain_asset_info_by_id", params, (Function<Map<String, Object>, Result<Map>>) map -> {
+                    return new Result<>(map);
+                });
+            } catch (NulsRuntimeException e) {
+                return Result.fail(e.getCode(), e.getMessage());
+            }
         }
     }
 }
