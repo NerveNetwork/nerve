@@ -1,5 +1,8 @@
 package network.nerve.quotation;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.protocol.ModuleHelper;
 import io.nuls.base.protocol.ProtocolGroupManager;
@@ -24,6 +27,7 @@ import network.nerve.quotation.manager.ChainManager;
 import network.nerve.quotation.model.bo.QuConfig;
 import network.nerve.quotation.rpc.call.QuotationCall;
 import network.nerve.quotation.util.LoggerUtil;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -142,6 +146,14 @@ public class QuotationBootstrap extends RpcModule {
         Field charset = Charset.class.getDeclaredField("defaultCharset");
         charset.setAccessible(true);
         charset.set(null, UTF_8);
+        try {
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger logger = context.getLogger("org.web3j.protocol.http.HttpService");
+            logger.setLevel(Level.INFO);
+        } catch (Exception e) {
+            // skip it
+            Log.warn("log level setting error", e);
+        }
     }
 
     public void initDB() throws Exception {

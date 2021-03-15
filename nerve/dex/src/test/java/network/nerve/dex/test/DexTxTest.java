@@ -99,13 +99,13 @@ public class DexTxTest {
     public void sendCreateCoinTradingTx() {
         try {
             Map params = new HashMap();
-            params.put("address", "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+            params.put("address", "TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
             params.put("password", password);
-            params.put("quoteAssetChainId", 2);
-            params.put("quoteAssetId", 1);
+            params.put("quoteAssetChainId", 5);
+            params.put("quoteAssetId", 6);
             params.put("scaleQuoteDecimal", 4);
             params.put("baseAssetChainId", 5);
-            params.put("baseAssetId", 1);
+            params.put("baseAssetId", 21);
             params.put("scaleBaseDecimal", 4);
             params.put("minBaseAmount", new BigInteger("100000000"));
             params.put("minQuoteAmount", new BigInteger("2500000"));
@@ -152,12 +152,12 @@ public class DexTxTest {
         try {
 //            for (int i = 2; i > 0; i--) {
             Map params = new HashMap();
-            params.put("address", "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+            params.put("address", "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
             params.put("password", password);
             params.put("type", 2);
-            params.put("tradingHash", "cd1593fe5d34ea87d84e57afe3169da3035718579ea2bc86aeeaa878df71ccc5");
-            params.put("amount", 10);
-            params.put("price", 1000000L);
+            params.put("tradingHash", "020f834efdf13a4aa346c6999deffb03bda77098a1702751f682e6ee9ee31f2f");
+            params.put("amount", 100000000L);
+            params.put("price", 100000000L);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingOrderTx", params);
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingOrderTx");
             String txHash = (String) callResult.get("txHash");
@@ -202,28 +202,6 @@ public class DexTxTest {
             params.put("scaleBaseDecimal", 6);
             params.put("minQuoteAmount", 10000000);
             params.put("minBaseAmount", 10000000);
-            Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_editCoinTradingTx", params);
-            HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_editCoinTradingTx");
-            String txHash = (String) callResult.get("txHash");
-            System.out.println("---Hash: " + txHash);
-        } catch (NulsException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void sendEditTradingTxMain() {
-        try {
-            Map params = new HashMap();
-            params.put("address", "NERVEepb65HJ4zsKG786XtUm8TwfzTXyMgoDiX");
-            params.put("password", password);
-            params.put("tradingHash", "af800abd1068c24f8758d74af3d68a1a62f2f48b2fe2ce91dd227114f2b740e1");
-            params.put("scaleQuoteDecimal", 4);
-            params.put("scaleBaseDecimal", 4);
-            params.put("minQuoteAmount", 1000000);
-            params.put("minBaseAmount", 100000000);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_editCoinTradingTx", params);
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_editCoinTradingTx");
             String txHash = (String) callResult.get("txHash");

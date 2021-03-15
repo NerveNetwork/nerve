@@ -244,6 +244,16 @@ public class HtWalletApiTest extends Base {
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
         System.out.println(String.format("ht充值[%s], hash: %s", sendAmount, hash));
     }
+
+    @Test
+    public void balanceOf() throws Exception {
+        //"swapTokenContractAddress": "0x57691c1effa1ca7bcb9de5eefd3d1b23d736148f",
+        //        "baseTokenContractAddress": "0x0298c2b32eae4da002a15f36fdf7615bea3da047",
+        String account = "0x57691c1effa1ca7bcb9de5eefd3d1b23d736148f";
+        String contract = "0x0298c2b32eae4da002a15f36fdf7615bea3da047";
+        BigInteger erc20Balance = htWalletApi.getERC20Balance(account, contract);
+        System.out.println(erc20Balance);
+    }
     /**
      * 新方式充值erc20
      */
@@ -442,27 +452,27 @@ public class HtWalletApiTest extends Base {
     @Test
     public void symboltest() throws Exception {
         setMain();
-        String contractAddress = "0x66a79d23e58475d2738179ca52cd0b41d73f0bea";
+        String contractAddress = "0x57691c1effa1ca7bcb9de5eefd3d1b23d736148f";
         List<Type> symbolResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
         }
         String symbol = symbolResult.get(0).getValue().toString();
-        System.out.println(symbol);
+        System.out.println("symbol: " + symbol);
 
         List<Type> nameResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getNameERC20Function());
         if (nameResult.isEmpty()) {
             return;
         }
         String name = nameResult.get(0).getValue().toString();
-        System.out.println(name);
+        System.out.println("name: " + name);
 
         List<Type> decimalsResult = htWalletApi.callViewFunction(contractAddress, HtUtil.getDecimalsERC20Function());
         if (decimalsResult.isEmpty()) {
             return;
         }
         String decimals = decimalsResult.get(0).getValue().toString();
-        System.out.println(decimals);
+        System.out.println("decimals: " + decimals);
     }
 
     /**
@@ -838,7 +848,7 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        setMain();
+        //setMain();
         BigInteger gasPrice = htWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

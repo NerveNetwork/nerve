@@ -135,8 +135,10 @@ public class DexBootstrap extends RpcModule {
             Map map = JSONUtils.json2map(IoUtils.read(DexConstant.DEX_CONFIG_FILE + dexConfig.getChainId() + ".json"));
             long skipHeight = Long.parseLong(map.get("skipHeight").toString());
             long priceSkipHeight = Long.parseLong(map.get("priceSkipHeight").toString());
+            long cancelConfirmSkipHeight = Long.parseLong(map.get("cancelConfirmSkipHeight").toString());
             DexContext.skipHeight = skipHeight;
             DexContext.priceSkipHeight = priceSkipHeight;
+            DexContext.cancelConfirmSkipHeight = cancelConfirmSkipHeight;
         } catch (Exception e) {
             DexContext.skipHeight = 0;
             DexContext.priceSkipHeight = 0;

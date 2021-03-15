@@ -34,12 +34,12 @@ public class CmdAssetRegTest {
     public void chainAssetTxRegTest() throws Exception {
         // Build params map
         Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","HT2");
-        params.put("assetName","HT2");
+        params.put("assetSymbol","BNB");
+        params.put("assetName","BNB");
 //        params.put("assetSymbol","Cake-LP");
 //        params.put("assetName","Cake-LP");
-        params.put("initNumber",1000000);
-        params.put("decimalPlace",18);
+        params.put("initNumber",1000000000);
+        params.put("decimalPlace",8);
         params.put("txCreatorAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
         params.put("assetOwnerAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
         params.put("password","nuls123456");

@@ -611,7 +611,7 @@ public class TxServiceImpl implements TxService {
             feeAssetId = chain.getConfig().getAssetId();
         }
         BigInteger fee = coinData.getFeeByAsset(feeAssetChainId, feeAssetId);
-        if (BigIntegerUtils.isEqualOrLessThan(fee, BigInteger.ZERO)) {
+        if (BigIntegerUtils.isLessThan(fee, BigInteger.ZERO)) {
             throw new NulsException(TxErrorCode.INSUFFICIENT_FEE);
         }
         //根据交易大小重新计算手续费，用来验证实际手续费
@@ -621,7 +621,8 @@ public class TxServiceImpl implements TxService {
             int validSize = tx.getSize() - tx.getTransactionSignature().length;
             targetFee = TransactionFeeCalculator.getCrossTxFee(validSize);
         } else {
-            targetFee = TransactionFeeCalculator.getNormalTxFee(tx.getSize());
+//            targetFee = TransactionFeeCalculator.getNormalTxFee(tx.getSize());
+            targetFee = BigInteger.ZERO;
         }
         try {
             if (type == 45) {

@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.ht.helper;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
 import network.nerve.converter.heterogeneouschain.ht.helper.interfaces.IHtAnalysisTx;
 import network.nerve.converter.heterogeneouschain.ht.model.HtSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
@@ -67,8 +68,8 @@ public class HtBlockAnalysisHelper {
         htLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // 只保留最近的三个区块
         htLocalBlockHelper.deleteByHeight(blockHeight - 3);
-        if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("同步HT高度[{}]完成", block.getNumber().longValue());
+        if (blockHeight % 50 == 0) {
+            HtContext.logger().info("同步HT高度[{}]完成", blockHeight);
         }
     }
 

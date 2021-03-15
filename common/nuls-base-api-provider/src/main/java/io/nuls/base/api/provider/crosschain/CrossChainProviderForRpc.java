@@ -7,6 +7,7 @@ import io.nuls.base.api.provider.crosschain.facade.*;
 import io.nuls.core.parse.MapUtils;
 import io.nuls.core.rpc.model.ModuleE;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -37,6 +38,17 @@ public class CrossChainProviderForRpc extends BaseRpcService implements CrossCha
                 return fail(RPC_ERROR_CODE,"tx not found");
             }
             Integer data = (Integer) res.get("value");
+            return success(data);
+        });
+    }
+
+    @Override
+    public Result<List> getRegisteredChainInfoList() {
+        return _call("getRegisteredChainInfoList",null,res->{
+            if(res == null){
+                return fail(RPC_ERROR_CODE,"data not found");
+            }
+            List data = (List) res.get("list");
             return success(data);
         });
     }

@@ -1,7 +1,6 @@
 package network.nerve.quotation.rpc.cmd;
 
 import io.nuls.base.data.Transaction;
-import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
@@ -13,7 +12,6 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.ConfigBean;
-import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.model.txdata.Quotation;
 import network.nerve.quotation.util.CommonUtil;
 import org.junit.Before;
@@ -192,23 +190,23 @@ public class QuotationCmdTest {
 //            Log.info("{}:{}", d.getKey(), d.getValue());
 //        });
 
-        String txHex = "1e00a264b45f00c717090001172e7534c4c3268629423ee9d8061ad10a4878de01ad0a08424e422d55534454a8c64b3789913c40084e56542d5553445405f65e9ddf07c33f084254432d55534454ae47e17a5438d140094e554c532d55534454174850fc1873cf3f09555344542d55534454000000000000f03f09555344432d55534454492eff21fdf6ef3f0748542d5553445489d2dee00b930d40084441492d555344543b70ce88d2deef3f084554482d555344545c8fc2f528227e40085041582d555344545f07ce1951daef3f0069210364fcaab16ae0cf1ec8ed6d138abc5ce3d89f32ffd3f53cf6fbf1153ff88f133a4630440220461d4259f85b8882625370856811cdc556336eb7a618b25afac124c9ab8a20a5022065a715411c6ad6b9a98c0a9b038cda2fd475823cdfe534916be788279dd14242";
-        Transaction transaction = new Transaction();
-        transaction.parse(HexUtil.decode(txHex),0);
-        Quotation quotation = new Quotation();
-        quotation.parse(transaction.getTxData(),0);
-        Log.info("{}",quotation);
+//        String txHex = "17090001f79dd4abaf8dfe2241128c56d7d6c4fedb88381a01fd0e010e084e56542d55534454cf6bec12d55bb33f084254432d55534454b81e856b4d51e84009555344432d5553445489bc61b223fbef3f084f4b422d55534454105839b4c8963240085041582d5553445462156f641ef9ef3f124e5654455448554e4956324c502d555344545e2ee2256418404108424e422d555344546197348887e46f40114e5654424e4243616b654c502d5553445419e6043d06942941094e554c532d55534454d2448e63da350c4009555344542d55534454000000000000f03f0748542d55534454a9a3e36a64b73340124e565448555344484d44584c502d55534454177303ca785ef441084441492d55534454daacfa5c6d25f03f084554482d55534454713d0ad7a3649940";
+//        Transaction transaction = new Transaction();
+//        transaction.parse(HexUtil.decode(txHex),0);
+//        Quotation quotation = new Quotation();
+//        quotation.parse(transaction.getTxData(),0);
+//        Log.info("{}",quotation);
 
 //
 //        // 最终报价txdata
-//        String txDataStr = "08084e56542d555344540bef7211df89c53f084254432d55534454f853e3a508e8c340094e554c532d55534454b8dd57275f77d33f09555344542d55534454000000000000f03f09555344432d555344543515b91247ffef3f084441492d555344542b689c7e374af03f084554482d55534454fca9f1d28db07540085041582d555344541c25afce3100f03f";
+        String txDataStr = "17090001f79dd4abaf8dfe2241128c56d7d6c4fedb88381a01fd0e010e084e56542d55534454cf6bec12d55bb33f084254432d55534454b81e856b4d51e84009555344432d5553445489bc61b223fbef3f084f4b422d55534454105839b4c8963240085041582d5553445462156f641ef9ef3f124e5654455448554e4956324c502d555344545e2ee2256418404108424e422d555344546197348887e46f40114e5654424e4243616b654c502d5553445419e6043d06942941094e554c532d55534454d2448e63da350c4009555344542d55534454000000000000f03f0748542d55534454a9a3e36a64b73340124e565448555344484d44584c502d55534454177303ca785ef441084441492d55534454daacfa5c6d25f03f084554482d55534454713d0ad7a3649940";
 //        Prices price = CommonUtil.getInstance(txDataStr, Prices.class);
 //        price.getPrices().forEach(d -> {
 //            Log.info("{}:{}", d.getKey(), d.getValue());
 //        });
         /** 喂价*/
-//        Quotation quotation = CommonUtil.getInstance(txDataStr, Quotation.class);
-//        Log.info("{}", quotation.toString());
+        Quotation quotation = CommonUtil.getInstance(txDataStr, Quotation.class);
+        Log.info("{}", quotation.toString());
     }
 
 

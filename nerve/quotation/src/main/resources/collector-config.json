@@ -21,7 +21,7 @@
     "name": "Dex",
     "baseurl": "http://api.nervedex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
-    "weight": "0.70"
+    "weight": "0.30"
   },
   {
     "name": "AEX",

@@ -67,7 +67,9 @@ public class VoteController extends BasicObject {
             CallMethodUtils.noticeGetBlock(chain, vote.getHeight(), vote.getSendNode(), vote.getBlockHash(), null);
         }
     }
+
     private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(100);
+
     /**
      * 广播投票消息
      *
@@ -75,7 +77,7 @@ public class VoteController extends BasicObject {
      */
     public void broadcastVote(VoteMessage message) {
         //   去重
-        if(!duplicateProcessor.insertAndCheck(message.getMessageKey())){
+        if (!duplicateProcessor.insertAndCheck(message.getMessageKey())) {
             log.info("重复投票！！！");
             return;
         }

@@ -115,27 +115,25 @@ public class DexTxPackageProcessor implements ModuleTxPackageProcessor {
             LoggerUtil.dexLog.error("-------- 区块高度：" + height);
             LoggerUtil.dexLog.error("--------dealTxList1.size:{}, dealTxList1.size:{}", dealTxList1.size(), dealTxList2.size());
 
-            LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
             for (Transaction tx1 : dealTxList1) {
+                LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
                 for (CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
                     LoggerUtil.dexLog.error(from.toString());
                 }
-            }
-            LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
-            for (Transaction tx1 : dealTxList1) {
+
+                LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
                 for (CoinTo to : tx1.getCoinDataInstance().getTo()) {
                     LoggerUtil.dexLog.error(to.toString());
                 }
             }
+
             LoggerUtil.dexLog.error("---------------- ------------");
-            LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
             for (Transaction tx1 : dealTxList2) {
+                LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
                 for (CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
                     LoggerUtil.dexLog.error(from.toString());
                 }
-            }
-            LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
-            for (Transaction tx1 : dealTxList2) {
+                LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
                 for (CoinTo to : tx1.getCoinDataInstance().getTo()) {
                     LoggerUtil.dexLog.error(to.toString());
                 }
@@ -149,28 +147,26 @@ public class DexTxPackageProcessor implements ModuleTxPackageProcessor {
                     LoggerUtil.dexLog.error("--------dealTxList validate fail 金额不一致 ------------");
                     LoggerUtil.dexLog.error("-------- 区块高度：" + height);
 
-                    LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
+
                     for (Transaction tx1 : dealTxList1) {
+                        LoggerUtil.dexLog.error("--------dealTxList1 from ------------");
                         for (CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
                             LoggerUtil.dexLog.error(from.toString());
                         }
-                    }
-
-                    LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
-                    for (Transaction tx1 : dealTxList1) {
+                        LoggerUtil.dexLog.error("--------dealTxList1 to ------------");
                         for (CoinTo to : tx1.getCoinDataInstance().getTo()) {
                             LoggerUtil.dexLog.error(to.toString());
                         }
                     }
+
                     LoggerUtil.dexLog.error("---------------- ------------");
-                    LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
+
                     for (Transaction tx1 : dealTxList2) {
+                        LoggerUtil.dexLog.error("--------dealTxList2 from ------------");
                         for (CoinFrom from : tx1.getCoinDataInstance().getFrom()) {
                             LoggerUtil.dexLog.error(from.toString());
                         }
-                    }
-                    LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
-                    for (Transaction tx1 : dealTxList2) {
+                        LoggerUtil.dexLog.error("--------dealTxList2 to ------------");
                         for (CoinTo to : tx1.getCoinDataInstance().getTo()) {
                             LoggerUtil.dexLog.error(to.toString());
                         }

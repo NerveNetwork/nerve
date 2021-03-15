@@ -24,6 +24,7 @@
 package network.nerve.converter.heterogeneouschain.eth.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.subgraph.orchid.encoders.Hex;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.core.constant.BaseConstant;
@@ -127,6 +128,21 @@ public class EthAccountTest extends Base {
     }
 
     @Test
+    public void compressedPubkey() {
+        String[] ps = new String[]{"0x71a594ebf01f3b39f5410d384ff17b42e24cd9a8eba0a1f3dcb2a9c2fca81f9a7b7622daee723bc52eec124308a65909e9c8b6fa6e5b887df5a7814d6fe0daf2"};
+        for (String p : ps) {
+            String pub = Numeric.cleanHexPrefix(p);
+            pub = leftPadding(pub, "0", 128);
+            String pubkeyFromEth = "04" + pub;
+            System.out.println(String.format("pubkey From Eth: %s", pubkeyFromEth));
+            ECPublicKeyParameters publicKey = new ECPublicKeyParameters(CURVE.getCurve().decodePoint(HexUtil.decode(pubkeyFromEth)), CURVE);
+            String compressedPubkey = Numeric.toHexStringNoPrefix(publicKey.getQ().getEncoded(true));
+            System.out.println(String.format("compressed pubkey: %s", compressedPubkey));
+            System.out.println(String.format("eth address: %s", EthUtil.genEthAddressByCompressedPublickey(compressedPubkey)));
+        }
+    }
+
+    @Test
     public void verifySignDataTest() throws Exception {
         String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
         String data = "202008111807";
@@ -213,6 +229,64 @@ public class EthAccountTest extends Base {
         //0x32a6d6b1e968f996757cb49fd4f0b08692f9d7f6
         String pubkey = "03e5ce2adaac4168c7c1f6ddc7dbe5cd296fb1bbbb54a9f069fa7f407b32143fc0";
         System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+    }
+
+    @Test
+    public void ETHAndNVTAddressByPubkeys() {
+        String[] ps = new String[]{
+                "0xEe3F3607AEc6d6326de596d8181C04a367E4D2B2, 0x407bde02185657b7cf27516770d2bb0a817c738a0c7c9b28e64134a80f440a56beef86a04d8bab1ffd0b543054c2be43684ee1ee1ff5d87da8fc3077d06193a4",
+                "0x189bc7eE35e675FEC9C26Af4F890898e65eBd483, 0x9f253339dd1dc7a2f79ec016b28f99a7c0f6e546a2d4b605ccfa1b4655efbf3e88e88c712b16cecd493368d165201070e018e536b6e54f3024ed2c23978fcf00",
+                "0xe00616e7FAAB5Bcc3c7A63746BEa412834BF3676, 0xa996e9ba32d1729799bb6da4de0baff09a2e5b600066749c00c9da0151c5877a8e788d44fb3ca70389ba2fa5b9bb9cda6969a644387bd8bf009c1d4758e7dd37",
+                "0x3A7ac5f9f66e36831547c8691c14bA185BC10E2A, 0xd5a4b57e8cd36ffadbd640c92a5acebbbdb541ddf6f2b69afe4b081673e9aa4e980c344a91c84a9cdf2bb2eaa29170e0b6cd661731ce517d926e20086ea80c1b",
+                "0x8400973B7B3EA8068315F7951798ec60382feEBf, 0x35dbc570c22e6b672d64e816e5b39e2fd9ff456664c1cf15ed1862df19b4b32a85bcd1e5a728c7fd615875684cfebc2805f3f454d778ca69b0db49dd6cfebde7",
+                "0x933bFaB0921be8F88ac2361F32c1e71Ae805Ba07, 0xce212e1ef42738e8db37560413feb66b9927cce2564de0b765868bf645d4ea224c1ed46c471718c9324ae85e016e604648167d8e7b95445e71721da0a5158adf",
+                "0x933bFaB0921be8F88ac2361F32c1e71Ae805Ba07, 0xc6a88baa362a4627b08e10280a87a8b3b6e40ea196a897e7b2d36108b927c6b09f4d90c9446ca828d66f2dbcaae5489e40bef7cfa17f20a3f55db030b1594d26",
+                "0x03dD524286AAc38A2b32d303173A0bc0ce468146, 0xe5786f260049ecfedb0f9cbcdc5f445ef6396e0ac124923e253e8f3f477002fd0407012961ee335b7dd73c125d57b5e039dfe20747c636d2af54868d21ca11eb",
+                "0x06b004fDdD2c128fAEDF73f639390B16103b1564, 0x58257035522f888b75f73a34098bc5fbfdb8796537852981c7b7e1ff5de98270aa17d58fb9d876f4affc4426caa6e57c236734ac0b9a1ba82b5b396ff8339ad7",
+                "0x278BE581238C5a4fd78004615d34bb063F879678, 0x51e5d8dd37a0f968b43f2e501412b6d7d8cd92986f7962f80f90087bdd13ec8eb32ce98d53f276177499f6d195dc86cfef0eaea65f2bbb4193c389e8d73bb541",
+                "0xa88247c5FA24a80f6f1035118168A6e0450B8a4E, 0xc38b6d89a0e2a9d5470c9d9b32581665420db39b625c5ab4703cbad1d2cd431f1d8c1d79a636b1a310f79d5bccb65f83533ddd0e8cb8b57e8c6ccf069ab74efc",
+                "0x3D01741d52525807e8846166314b7470525B0dC1, 0x1ce372e7c9125f75fd911e820f6eacece0e6733bf36b3b486c667d80aebaf93224877dd90cd932aa55559767c0f96db1a5f8c56c4d6bf33a80ac4397343bad53",
+                "0xd76821fc6B87b5D4EA7cD732cEcBD20839cB1009, 0x726993f25030febe69b7c1bc6510df4f0ab843800a4a5d06792f82ffc23e0452cf1d79ef33470d110d874b1ce0508aa67f17913589ea0876c40a8746a9846f41",
+                "0x21d5Ffff349Ae521eC7Ed4EE05CEAd89DF06Cce1, 0x783aeec1af1540e8e3eebfe8b07a9df9134b1c4aa0a36ff6ef323e57d4182de6e05e1ebfba5400ec93f976c77e78eaf64e5460ab329405ca010032fc4e5b3e5c",
+                "0x678b8C3887392BB52A53eaaeB84813c9b109174D, 0xb4faaaa9f30eab65e96bf5ac7fb4b7e823675c71c3028fd637d72ad003d25ac19048d622edc2ae69ae1436289a1b56c7a7fc1bcd757bc83462862913b3dc5fce",
+                "0x47A676b0f704251889aEB157f8b710778C5bc84D, 0xd09a06051a4f94c15020a6a82637bb3cbb9fda06afe7139038f9311d4d475f70feb2dfdaf001275dfbed01e409b26ca306a9252f73942ac148222a66e7ac1798",
+                "0xBe3081dFB1436ff0b7DFE514A99464d7FdbC81A0, 0x9c8069a5dd6eb686f97948d0e33aad7d2c1b540e19ab9c5866b95b6cdb93cbf7e49f3199132274157f775852e6b45bae1d8caab52a47db6d8bdbe26eda88911d",
+                "0x583Cdc09776694EF56F0E6aD0174a29e2d3c7C5B, 0x4c914f17f4971b08fc484b121f9d36635f841dbc3d753ef99dddbb83c5e874cf7d02ae1c2669c6699ae82e906209e8ce574dde810f30bb6b1a497564457bd902",
+                "0x06b004fDdD2c128fAEDF73f639390B16103b1564, 0xe3eb9d9684e0c6b638a54c111d3fcc7a6c8aa8b94772282da217e925fc40c5db9b6828d24874c8d1af1f012e416e552ed055ce873884249bf6a4dbb50fd39286",
+                "0x0D0707963952f2fBA59dD06f2b425ace40b492Fe, 0x33d5c47563fc5f53f04bfb5167d68c0953023d49e4ec2aa4aac97f7c22a72e58bccad9d89868475b69c45edf151f0360e968e300b99b06887836e252f238894f",
+                "0x8e99161a0e6a5DcBFc4CBBbEEa8AE95Bec3CEe1D, 0x3d34f080b5e4469471e301b33f32f99d49f135350da4de7ded89fffc65ba996dc7643d170050fd3a2e10b3646221b46281ef9313179c811d50a94a7710a4bc41",
+                "0xf7C8b386E13B9fB64Ae389780b9b0E5ce36ce0Cf, 0x89268c876eda43df1d1bb114f4eb70ece9b549cf88b188bc2e77bc50318adb01d9193e1762fa9ccfdc4563f0158531902dfb0670104ab46b30c073079d0f9c09",
+                "0x6dA654F5B5a4c67136a70D9e08427527f86c03E4, 0x71a594ebf01f3b39f5410d384ff17b42e24cd9a8eba0a1f3dcb2a9c2fca81f9a7b7622daee723bc52eec124308a65909e9c8b6fa6e5b887df5a7814d6fe0daf2",
+                "0xdd526461c6192CBFe69797c96B64791bF4Ef99c4, 0x0f43411ca13ab35adef74aae7b87ee626369bf33ba162ded9e4251d41ccc6fb3a419e278d976e83f2a08fa4b4d632d9742cfc0610d6aa43c2ba51bec63b35a5c",
+                "0x6Ef42501C331f6135691c623c26DD55fe973553D, 0x0d47b81baa406773d0e99be0bdd8254ebfff19337fb325f19397b0648b2c1629efa5bd58c7ce3a166ec5843cec6ff7c208ab37d210c855ab396a1e3d1953e86c",
+                "0xE32DfeC237e31A505Fbe992fa6D96d13A710B536, 0x2254416e32ec11c91462de6792295e9485820f4f582e5e22d03fb1edc3a3f0c904d4161bb85bfae19f918c32aae5bc8749795e64fe7aa0b6f8b8f88c1a7c1d9a",
+                "0x1390dB12d2D4DcF36aD674E26AaB7187E4766696, 0xb729a5776f948ca2c022bae9af10171ee03b64d5d6dbdd660d6a797848d73a4527c0d651530f40b03024dfae16bf22c3b481ba7dfb0c72bf1b39e5f57200cea2",
+                "0xa873A7B1d63B6a00c389FeaE5990ff6f7Bce4Cc0, 0x7f3cbbac9bd585d32bd51c2177dcc174d8a3b09c2f8d82a2a18aeed1c994670b91538f4d5a0445d08c9470cac5bbad839ea330a47de9f0f18d494cbf4126f0c7",
+                "0xAA3e34C024271c476a979fafc181AaDB9D8ecFfD, 0xfcb18a9580d3d8c06efba2df41ae24741272b87eba68737818c3b3f788f682db5733e08816e60fada0b77072c528084863848003ce0886bfc143051899059277",
+                "0x3aa2C5DA4bdAca180BF8E92eB9F18b22f9DcC006, 0x9aea24414cb23c27eeb6a05a2aff5a02ef846e41ce4b692313de9478f0c3f1a16e3650bfae174051e288e8d930c982c660b6deab272e879391021cb09595f2cb"
+        };
+
+        for (String it : ps) {
+            String[] s = it.split(",");
+            String pub = Numeric.cleanHexPrefix(s[1].trim());
+            pub = leftPadding(pub, "0", 128);
+            String pubkeyFromEth = "04" + pub;
+//                    System.out.println(String.format("pubkey From Eth: %s", pubkeyFromEth));
+            ECPublicKeyParameters publicKey = new ECPublicKeyParameters(CURVE.getCurve().decodePoint(HexUtil.decode(pubkeyFromEth)), CURVE);
+            String compressedPubkey = Numeric.toHexStringNoPrefix(publicKey.getQ().getEncoded(true));
+//                    System.out.println(String.format("compressed pubkey: %s", compressedPubkey));
+            String ethAddress = EthUtil.genEthAddressByCompressedPublickey(compressedPubkey);
+            if (s[0].equalsIgnoreCase(ethAddress)) {
+                System.out.println(String.format("address: %s == %s", ethAddress, AddressTool.getAddressString(HexUtil.decode(compressedPubkey), 9)));
+            }else{
+                System.out.println(String.format("错误: %s != %s", ethAddress, s[0]));
+            }
+//                    String pub = Numeric.toHexStringNoPrefix(ecKeyPair.getPublicKey());
+//                    byte[] bytes = HexUtil.decode(pub);
+//                    System.out.println(EthUtil.genEthAddressByCompressedPublickey()+"===="+
+//                            AddressTool.getAddressString(,9));
+        }
+
     }
 
     @Test

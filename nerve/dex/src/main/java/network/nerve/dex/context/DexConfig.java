@@ -30,6 +30,8 @@ public class DexConfig implements ModuleConfig {
 
     private String createTradingAmount;
 
+    private long cancelConfirmSkipHeight;
+
 
     public String getLanguage() {
         return language;
@@ -89,5 +91,13 @@ public class DexConfig implements ModuleConfig {
 
     public void setSysFeeScale(int sysFeeScale) {
         this.sysFeeScale = sysFeeScale;
+    }
+
+    public long getCancelConfirmSkipHeight() {
+        return cancelConfirmSkipHeight;
+    }
+
+    public void setCancelConfirmSkipHeight(long cancelConfirmSkipHeight) {
+        this.cancelConfirmSkipHeight = cancelConfirmSkipHeight;
     }
 }

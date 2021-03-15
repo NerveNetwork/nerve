@@ -203,13 +203,13 @@ public abstract class BaseValidator {
      * @param tx       交易
      */
     public Result validFee(Chain chain, CoinData coinData, Transaction tx) throws IOException {
-        int size = tx.serialize().length;
-        BigInteger fee = TransactionFeeCalculator.getConsensusTxFee(size, chain.getConfig().getFeeUnit());
-        ChargeResult result = ConsensusManager.getFee(coinData, chain.getConfig().getAgentChainId(), chain.getConfig().getAgentAssetId());
-        if (fee.compareTo(result.getMainCharge().getFee()) > 0) {
-            chain.getLogger().error("Insufficient service charge");
-            return Result.getFailed(ConsensusErrorCode.FEE_NOT_ENOUGH);
-        }
+//        int size = tx.serialize().length;
+//        BigInteger fee = TransactionFeeCalculator.getConsensusTxFee(size, chain.getConfig().getFeeUnit());
+//        ChargeResult result = ConsensusManager.getFee(coinData, chain.getConfig().getAgentChainId(), chain.getConfig().getAgentAssetId());
+//        if (fee.compareTo(result.getMainCharge().getFee()) > 0) {
+//            chain.getLogger().error("Insufficient service charge");
+//            return Result.getFailed(ConsensusErrorCode.FEE_NOT_ENOUGH);
+//        }
         return ConsensusNetUtil.getSuccess();
     }
 }

@@ -6,9 +6,12 @@ import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.ledger.constant.LedgerConstant;
 import io.nuls.ledger.model.tx.txdata.TxLedgerAsset;
+import org.checkerframework.checker.units.qual.C;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -23,6 +26,8 @@ import java.util.Map;
  * @author lanjinsheng
  */
 public class LedgerUtil {
+
+    public static ChainCfg chainCfg;
 
     public static String getRealAddressStr(String addrContainPre) {
         return AddressTool.getRealAddress(addrContainPre);
@@ -156,8 +161,11 @@ public class LedgerUtil {
 //            return false;
 //        }
         String addr = AddressTool.getStringAddressByBytes(address);
-        //todo 临时处理
-        if (height > 8050000 && AddressTool.BLOCK_HOLE_ADDRESS_SET1.contains(addr)) {
+
+        if (height > chainCfg.getV1_9_0Height() && AddressTool.BLOCK_HOLE_ADDRESS_SET1.contains(addr)) {
+            return true;
+        }
+        if (height > chainCfg.getV1_10_0Height() && AddressTool.BLOCK_HOLE_ADDRESS_SET2.contains(addr)) {
             return true;
         }
         return AddressTool.BLOCK_HOLE_ADDRESS_SET.contains(addr);
@@ -189,5 +197,30 @@ public class LedgerUtil {
 
     public static boolean isPermanentLock(long lockTime) {
         return (lockTime < 0);
+    }
+
+    public static void initChainCfg(int chainId) {
+        try {
+            Map<String, Object> specConfigMap = JSONUtils.json2map(IoUtils.read("chain-cfg-" + chainId + ".json"));
+            chainCfg = new ChainCfg();
+
+            Long v1_9_0Height = null, v1_10_0Height = null;
+            if (specConfigMap.get("v1_9_0Height") != null) {
+                v1_9_0Height = Long.parseLong(specConfigMap.get("v1_9_0Height").toString());
+            }
+            if (specConfigMap.get("v1_9_0Height") != null) {
+                v1_10_0Height = Long.parseLong(specConfigMap.get("v1_10_0Height").toString());
+            }
+
+            if (null != v1_9_0Height) {
+                chainCfg.setV1_9_0Height(v1_9_0Height.longValue());
+            }
+            if (v1_10_0Height != null) {
+                chainCfg.setV1_10_0Height(v1_10_0Height.longValue());
+            }
+
+        } catch (Exception e) {
+            Log.error(e);
+        }
     }
 }

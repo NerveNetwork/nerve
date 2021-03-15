@@ -12,6 +12,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import network.nerve.dex.context.DexConfig;
 import network.nerve.dex.context.DexConstant;
+import network.nerve.dex.context.DexContext;
 import network.nerve.dex.manager.DexManager;
 import network.nerve.dex.model.po.TradingOrderPo;
 import network.nerve.dex.model.txData.CancelDeal;
@@ -61,7 +62,7 @@ public class OrderCancelConfirmProcessor implements TransactionProcessor {
         return true;
     }
 
-    public void txCommit(Transaction tx) {
+    public void txCommit(Transaction tx, long blockHeight) {
         try {
             TradingCancelTxData txData = new TradingCancelTxData();
             txData.parse(new NulsByteBuffer(tx.getTxData()));
@@ -69,10 +70,19 @@ public class OrderCancelConfirmProcessor implements TransactionProcessor {
                 CancelDeal cancelDeal = txData.getCancelDealList().get(i);
                 if (cancelDeal.getStatus() == DexConstant.CANCEL_ORDER_SUCC) {
                     TradingOrderPo orderPo = orderStorageService.query(cancelDeal.getOrderHash());
-                    //删除盘口对应的订单记录
-                    dexManager.removeTradingOrder(orderPo);
-                    //持久化数据库
-                    orderStorageService.stop(orderPo);
+                    if (blockHeight > DexContext.cancelConfirmSkipHeight) {
+                        if (orderPo != null) {
+                            //删除盘口对应的订单记录
+                            dexManager.removeTradingOrder(orderPo);
+                            //持久化数据库
+                            orderStorageService.stop(orderPo);
+                        }
+                    } else {
+                        //删除盘口对应的订单记录
+                        dexManager.removeTradingOrder(orderPo);
+                        //持久化数据库
+                        orderStorageService.stop(orderPo);
+                    }
                 }
                 orderCancelStorageService.save(cancelDeal);
             }

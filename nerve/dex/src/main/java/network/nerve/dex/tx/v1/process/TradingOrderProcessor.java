@@ -89,8 +89,10 @@ public class TradingOrderProcessor implements TransactionProcessor {
             TradingOrder order = new TradingOrder();
             order.parse(new NulsByteBuffer(tx.getTxData()));
             TradingOrderPo orderPo = new TradingOrderPo(tx, index, null, order);
-            tradingOrderStorageService.delete(orderPo.getOrderHash());
-            dexManager.removeTradingOrder(orderPo);
+            if(orderPo != null) {
+                tradingOrderStorageService.delete(orderPo.getOrderHash());
+                dexManager.removeTradingOrder(orderPo);
+            }
         } catch (NulsException e) {
             LoggerUtil.dexLog.error("Failure to TradingOrder rollback, hash:" + tx.getHash().toHex());
             LoggerUtil.dexLog.error(e);

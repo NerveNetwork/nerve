@@ -127,7 +127,7 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void getTxAndPublicKeyTest() throws Exception {
         setMain();
-        String txHash = "0x90531b6669bb7794cb16e01e04ab9dad8dece63c0d78e6b72a74c8337a77e924";
+        String txHash = "0x52eec80039cb715d5352f7a136f4ab69d9b60441f7e06fbf11ce054bf0ab3999";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         converPublicKey(tx);
     }

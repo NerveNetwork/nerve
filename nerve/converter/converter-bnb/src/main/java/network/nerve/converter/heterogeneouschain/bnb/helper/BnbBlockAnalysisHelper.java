@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.bnb.helper;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.bnb.helper.interfaces.IBnbAnalysisTx;
 import network.nerve.converter.heterogeneouschain.bnb.model.BnbSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
@@ -67,8 +68,8 @@ public class BnbBlockAnalysisHelper {
         bnbLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // 只保留最近的三个区块
         bnbLocalBlockHelper.deleteByHeight(blockHeight - 3);
-        if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("同步BNB高度[{}]完成", block.getNumber().longValue());
+        if (blockHeight % 50 == 0) {
+            BnbContext.logger().info("同步BNB高度[{}]完成", blockHeight);
         }
     }
 

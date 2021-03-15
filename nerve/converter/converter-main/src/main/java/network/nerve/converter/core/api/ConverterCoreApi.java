@@ -193,10 +193,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return info;
     }
 
-    private BigDecimal minBalance = new BigDecimal("0.02");
+    private BigDecimal minBalance = new BigDecimal("0.04");
     /**
      * 返回指定异构链下的当前虚拟银行列表和顺序
-     * 当异构链余额低于0.02时，顺序挪到末尾
+     * 当异构链余额低于0.04时，顺序挪到末尾
      */
     @Override
     public Map<String, Integer> currentVirtualBanks(int hChainId) {
@@ -209,7 +209,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             if (address != null) {
                 int order = director.getOrder();
                 VirtualBankDirectorDTO cacheDto = cacheMap.get(director.getSignAddress());
-                // 当异构链余额低于0.02时，顺序挪到末尾
+                // 当异构链余额低于0.04时，顺序挪到末尾
                 if (cacheDto != null) {
                     List<HeterogeneousAddressDTO> cacheBalanceList = cacheDto.getHeterogeneousAddresses();
                     if (cacheBalanceList != null && !cacheBalanceList.isEmpty()) {

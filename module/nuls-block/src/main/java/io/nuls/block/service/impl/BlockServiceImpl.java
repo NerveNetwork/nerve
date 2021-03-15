@@ -419,7 +419,7 @@ public class BlockServiceImpl implements BlockService {
         if (needLock) {
             l = lock.writeLock();
         }
-//        logger.debug("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
+        logger.info("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
         try {
             if (block.getHeader().getHeight() > 0 && block.getHeader().getHeight() <= context.getLatestHeight()) {
                 logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
@@ -492,7 +492,7 @@ public class BlockServiceImpl implements BlockService {
              * 拜占庭没完成，先返回等待
              */
             if (download == 1 && !isVerifyBZTAndBlock(chainId, hash)) {
-                logger.debug("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
+                logger.info("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
                 return true;
             }
 

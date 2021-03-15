@@ -45,10 +45,14 @@ public class QuotationContext {
     /** 统计报价时, 有效报价节点的数量*/
     public static int effectiveQuotation = 5;
      /**
-     * 去掉最高和最低 数据的数量
+     * 统计最终报价时, 去掉最高和最低 数据的数量
      * 如果为2 则去掉2个最高和2个最低，共计4条价格数据
      * */
      public static int removeMaxMinCount = 2;
+    /**
+     * 采集第三方价格时 去掉一个最高价 去掉一个最低价
+     */
+    public static int enquiryRemoveMaxMinCount = 1;
     /**
      * 记录当天无需再计算最终报价的token
      * 1. 记录当前已提供最终报价的token,以防2次报价

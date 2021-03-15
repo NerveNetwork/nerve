@@ -38,9 +38,6 @@ import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIAnalysisTxHe
 import network.nerve.converter.utils.LoggerUtil;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 /**
  * @author: Mimi
  * @date: 2020-02-20
@@ -95,22 +92,12 @@ public class EthIIBlockScheduled implements Runnable {
             LoggerUtil.LOG.debug("[ETH区块解析任务] - 每隔20秒执行一次。");
         }
         try {
-            ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
-            BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
-            if (currentGasPrice != null) {
-                EthContext.logger().debug("当前Price: {} Gwei.", new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
-                EthContext.setEthGasPrice(currentGasPrice);
-            }
-        } catch (Exception e) {
-            EthContext.logger().error("同步ETH当前Price失败", e);
-        }
-        try {
             ethCommonHelper.clearHash();
         } catch (Exception e) {
             EthContext.logger().error("清理充值交易hash再次验证的集合失败", e);
         }
         try {
-
+            ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
             // 当前ETH网络最新的区块
             long blockHeightFromEth = ethWalletApi.getBlockHeight();
             // 本地最新的区块

@@ -45,6 +45,7 @@ import io.nuls.core.rpc.util.NulsDateUtils;
 import io.nuls.ledger.config.LedgerConfig;
 import io.nuls.ledger.constant.LedgerConstant;
 import io.nuls.ledger.manager.LedgerChainManager;
+import io.nuls.ledger.utils.LedgerUtil;
 import io.nuls.ledger.utils.LoggerUtil;
 
 /**
@@ -89,6 +90,7 @@ public class LedgerBootstrap extends RpcModule {
             super.init();
             //增加地址工具类初始化
             AddressTool.init(addressPrefixDatas);
+            LedgerUtil.initChainCfg(ledgerConfig.getChainId());
             LedgerConstant.UNCONFIRM_NONCE_EXPIRED_TIME = ledgerConfig.getUnconfirmedTxExpired();
             LedgerConstant.DEFAULT_ENCODING = ledgerConfig.getEncoding();
             LedgerConstant.blackHolePublicKey = HexUtil.decode(ledgerConfig.getBlackHolePublicKey());

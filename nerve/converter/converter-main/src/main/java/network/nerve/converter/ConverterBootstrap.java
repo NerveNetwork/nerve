@@ -24,6 +24,9 @@
 
 package network.nerve.converter;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -56,6 +59,7 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.rpc.call.BlockCall;
 import network.nerve.converter.rpc.call.ConsensusCall;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -237,6 +241,14 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.error(e);
             throw e;
+        }
+        try {
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger logger = context.getLogger("org.web3j.protocol.http.HttpService");
+            logger.setLevel(Level.INFO);
+        } catch (Exception e) {
+            // skip it
+            Log.warn("log level setting error", e);
         }
     }
 

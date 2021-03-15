@@ -1,6 +1,7 @@
 package io.nuls.core.rpc.netty.processor;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.netty.channel.Channel;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.exception.NulsException;
@@ -37,6 +38,9 @@ public class RequestMessageProcessor {
     public static final Map<String, Object> handlerMap = new HashMap<>();
     public static final Map<String, Class<?>> classMap = new ConcurrentHashMap<>();
 
+    static {
+        JSONUtils.getInstance().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
     /**
      * 确认握手成功
      * Confirm successful handshake

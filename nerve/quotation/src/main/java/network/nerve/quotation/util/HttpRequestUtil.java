@@ -25,10 +25,12 @@ public class HttpRequestUtil {
     public static Map<String, Object> httpRequest(Chain chain, String url) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
+//        HttpHost proxy = new HttpHost("127.0.0.1", 1080);
         HttpGet httpGet = new HttpGet(url);
         RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT_MILLIS)
                 .setSocketTimeout(TIMEOUT_MILLIS).setConnectTimeout(TIMEOUT_MILLIS).build();
         httpGet.setConfig(requestConfig);
+
         CloseableHttpResponse response = null;
         try {
             response = httpClient.execute(httpGet);

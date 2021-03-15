@@ -1,5 +1,8 @@
 package network.nerve.converter.heterogeneouschain.ethII.core;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
@@ -17,6 +20,7 @@ import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
@@ -26,11 +30,11 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
-import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.*;
+import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -750,6 +754,40 @@ public class ETHIIWalletApiTest extends BaseII {
 
         BigDecimal newPrice = EthIIUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmountCalc, ethUsd, assetId);
         System.out.println("newPrice: " + newPrice.movePointLeft(9).toPlainString());
+    }
+
+    @Test
+    public void getBlockHeaderByHeight() throws Exception {
+        Long height = Long.valueOf(70437);
+        EthBlock.Block block = ethWalletApi.getBlockHeaderByHeight(height);
+        System.out.println(block.getHash());
+    }
+
+    @Test
+    public void getBlockHeight() throws Exception {
+        setMain();
+        System.out.println(ethWalletApi.getBlockHeight());
+    }
+
+    @Test
+    public void getTestNetTxReceipt() throws Exception {
+        // 直接调用erc20合约
+        String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
+        TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt);
+    }
+
+    @Test
+    public void getCurrentGasPrice() throws IOException {
+        //setMain();
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        Logger logger = context.getLogger("org.web3j.protocol.http.HttpService");
+        logger.setLevel(Level.INFO);
+
+        BigInteger gasPrice = ethWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
+        System.out.println(gasPrice);
+        System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+        System.out.println();
     }
 
     static class MockEthERC20Helper extends EthERC20Helper {

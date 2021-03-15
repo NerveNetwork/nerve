@@ -120,11 +120,20 @@ public class EthIIConfirmTxScheduled implements Runnable {
             LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
             return;
         }
+        try {
+            ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
+            BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
+            if (currentGasPrice != null) {
+                EthContext.logger().debug("当前Price: {} Gwei.", new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+                EthContext.setEthGasPrice(currentGasPrice);
+            }
+        } catch (Exception e) {
+            EthContext.logger().error("同步ETH当前Price失败", e);
+        }
         LoggerUtil.LOG.debug("[ETH交易确认任务] - 每隔20秒执行一次。");
         LinkedBlockingDeque<EthUnconfirmedTxPo> queue = EthContext.UNCONFIRMED_TX_QUEUE;
         EthUnconfirmedTxPo po = null;
         try {
-            ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
             // 等待重启应用时，加载的持久化未确认交易
             EthContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.await();
             long ethNewestHeight = ethWalletApi.getBlockHeight();

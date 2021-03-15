@@ -1,6 +1,5 @@
 package io.nuls.crosschain.base.rpc.cmd;
 
-import io.nuls.base.data.CoinData;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;

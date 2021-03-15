@@ -14,6 +14,7 @@ import io.nuls.core.log.Log;
 import io.nuls.core.parse.SerializeUtils;
 import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.v1.utils.VoteMessageObjManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -279,5 +280,21 @@ public class VoteMessage extends BaseBusinessMessage {
             }
         }
         return rawData;
+    }
+
+    public void clear() {
+        this.height = 0;
+        this.roundIndex = 0;
+        this.packingIndexOfRound = 0;
+        this.voteRoundIndex = 0;
+        this.voteStage = 0;
+        this.blockHash = null;
+        this.roundStartTime = 0;
+        this.sign = null;
+        this.address = null;
+        this.voteHash = null;
+        this.sendNode = null;
+        this.rawData = null;
+        VoteMessageObjManager.putBack(this);
     }
 }

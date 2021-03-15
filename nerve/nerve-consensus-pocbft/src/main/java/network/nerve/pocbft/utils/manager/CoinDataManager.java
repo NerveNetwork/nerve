@@ -75,13 +75,13 @@ public class CoinDataManager {
         //验证账户余额是否足够
         CoinFrom from = new CoinFrom(address, assetChainId, assetId, amount, nonce, (byte) 0);
         txSize += from.size();
-        BigInteger fee;
+//        BigInteger fee;
         long feeUnit = chain.getConfig().getFeeUnit();
         int feeAssetChainId = chain.getConfig().getAgentChainId();
         int feeAssetId = chain.getConfig().getAssetId();
         if (assetChainId == feeAssetChainId && assetId == feeAssetId) {
-            fee = TransactionFeeCalculator.getConsensusTxFee(txSize, feeUnit);
-            BigInteger fromAmount = amount.add(fee);
+//            fee = TransactionFeeCalculator.getConsensusTxFee(txSize, feeUnit);
+            BigInteger fromAmount = amount;//.add(fee);
             if (BigIntegerUtils.isLessThan(available, fromAmount)) {
                 throw new NulsException(ConsensusErrorCode.BANANCE_NOT_ENNOUGH);
             }
@@ -94,20 +94,20 @@ public class CoinDataManager {
             coinData.addFrom(from);
 
             //计算手续费
-            Map<String, Object> feeResult = CallMethodUtils.getBalanceAndNonce(chain, AddressTool.getStringAddressByBytes(address), feeAssetChainId, feeAssetId);
-            if (feeResult == null) {
-                throw new NulsException(ConsensusErrorCode.BANANCE_NOT_ENNOUGH);
-            }
-            byte[] feeNonce = RPCUtil.decode((String) feeResult.get(ParameterConstant.PARAM_NONCE));
-            CoinFrom feeFrom = new CoinFrom(address, feeAssetChainId, feeAssetId, BigInteger.valueOf(feeUnit), feeNonce, (byte) 0);
-            txSize += feeFrom.size();
-            fee = TransactionFeeCalculator.getConsensusTxFee(txSize, chain.getConfig().getFeeUnit());
-            BigInteger feeAvailable = new BigInteger(feeResult.get(ParameterConstant.PARAM_AVAILABLE).toString());
-            if (BigIntegerUtils.isLessThan(feeAvailable, fee)) {
-                throw new NulsException(ConsensusErrorCode.FEE_NOT_ENOUGH);
-            }
-            feeFrom.setAmount(fee);
-            coinData.addFrom(feeFrom);
+//            Map<String, Object> feeResult = CallMethodUtils.getBalanceAndNonce(chain, AddressTool.getStringAddressByBytes(address), feeAssetChainId, feeAssetId);
+//            if (feeResult == null) {
+//                throw new NulsException(ConsensusErrorCode.BANANCE_NOT_ENNOUGH);
+//            }
+//            byte[] feeNonce = RPCUtil.decode((String) feeResult.get(ParameterConstant.PARAM_NONCE));
+//            CoinFrom feeFrom = new CoinFrom(address, feeAssetChainId, feeAssetId, BigInteger.valueOf(feeUnit), feeNonce, (byte) 0);
+//            txSize += feeFrom.size();
+//            fee = TransactionFeeCalculator.getConsensusTxFee(txSize, chain.getConfig().getFeeUnit());
+//            BigInteger feeAvailable = new BigInteger(feeResult.get(ParameterConstant.PARAM_AVAILABLE).toString());
+//            if (BigIntegerUtils.isLessThan(feeAvailable, fee)) {
+//                throw new NulsException(ConsensusErrorCode.FEE_NOT_ENOUGH);
+//            }
+//            feeFrom.setAmount(fee);
+//            coinData.addFrom(feeFrom);
         }
         return coinData;
     }

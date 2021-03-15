@@ -3,6 +3,7 @@ package network.nerve.pocbft.v1;
 import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.pocbft.model.bo.Chain;
@@ -41,9 +42,15 @@ public class CsController extends BasicObject {
     //目标是不管哪种情况，都能尽快达成共识（轮次一致）
     public void consensus() {
         //等待上一个确认的区块保存
+        int index = 0;
         while (chain.getBestHeader().getHeight() < comfirmedHeight) {
             try {
                 Thread.sleep(100L);
+                index++;
+                if (index > 20) {
+                    index = 0;
+                    Log.warn("It's been too long..");
+                }
             } catch (InterruptedException e) {
                 log.error(e);
             }
@@ -59,7 +66,8 @@ public class CsController extends BasicObject {
             if (chain.isConsonsusNode()) {
                 //实时监测
                 chain.setConsonsusNode(false);
-            }log.info("here1112");
+            }
+            log.info("here1112");
             return;
         }
 
@@ -74,7 +82,8 @@ public class CsController extends BasicObject {
                 // 计算本轮是否有延迟，有的话计算出来设置进去
                 checkDelayedTime(newRound);
                 this.comfirmedResult(newRound, result);
-            }log.info("here1113");
+            }
+            log.info("here1113");
             return;
         }
 
@@ -94,7 +103,7 @@ public class CsController extends BasicObject {
             packingData.setPackStartTime(packStartTime);
             packingData.setRound(round);
             chain.getConsensusCache().getPackingQueue().offer(packingData);
-            log.info( "准备出块{}-{},高度：{},开始时间：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
+            log.info("准备出块{}-{},高度：{},开始时间：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
                     , round.getIndex(), localMember.getPackingIndexOfRound(), chain.getBestHeader().getHeight() + 1);
         }
         long wait = 0;

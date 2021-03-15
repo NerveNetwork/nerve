@@ -618,41 +618,41 @@ public class TransactionServiceImpl implements TransactionService {
      */
     private CoinData getCoinData(Chain chain, List<CoinFrom> listFrom, List<CoinTo> listTo, int txSize) throws NulsException {
         //总来源费用
-        BigInteger feeTotalFrom = BigInteger.ZERO;
-        for (CoinFrom coinFrom : listFrom) {
-            txSize += coinFrom.size();
-            if (TxUtil.isMainAsset(chain, coinFrom.getAssetsChainId(), coinFrom.getAssetsId())) {
-                feeTotalFrom = feeTotalFrom.add(coinFrom.getAmount());
-            }
-        }
-        //总转出费用
-        BigInteger feeTotalTo = BigInteger.ZERO;
-        for (CoinTo coinTo : listTo) {
-            txSize += coinTo.size();
-            if (TxUtil.isMainAsset(chain, coinTo.getAssetsChainId(), coinTo.getAssetsId())) {
-                feeTotalTo = feeTotalTo.add(coinTo.getAmount());
-            }
-        }
-        //本交易预计收取的手续费
-        BigInteger targetFee = TransactionFeeCalculator.getNormalTxFee(txSize);
-        //实际收取的手续费, 可能自己已经组装完成
-        BigInteger actualFee = feeTotalFrom.subtract(feeTotalTo);
-        if (BigIntegerUtils.isLessThan(actualFee, BigInteger.ZERO)) {
-            chain.getLogger().error("insufficient fee");
-            //所有from中账户的当前链主资产余额总和小于to的总和，不够支付手续费
-            throw new NulsException(AccountErrorCode.INSUFFICIENT_FEE);
-        } else if (BigIntegerUtils.isLessThan(actualFee, targetFee)) {
-            //只从资产为当前链主资产的coinfrom中收取手续费
-            actualFee = getFeeDirect(chain, listFrom, targetFee, actualFee);
-            if (BigIntegerUtils.isLessThan(actualFee, targetFee)) {
-                //如果没收到足够的手续费，则从CoinFrom中资产不是当前链主资产的coin账户中查找当前链主资产余额，并组装新的coinfrom来收取手续费
-                if (!getFeeIndirect(chain, listFrom, txSize, targetFee, actualFee)) {
-                    chain.getLogger().error("insufficient fee");
-                    //所有from中账户的当前链主资产余额总和都不够支付手续费
-                    throw new NulsException(AccountErrorCode.INSUFFICIENT_FEE);
-                }
-            }
-        }
+//        BigInteger feeTotalFrom = BigInteger.ZERO;
+//        for (CoinFrom coinFrom : listFrom) {
+//            txSize += coinFrom.size();
+//            if (TxUtil.isMainAsset(chain, coinFrom.getAssetsChainId(), coinFrom.getAssetsId())) {
+//                feeTotalFrom = feeTotalFrom.add(coinFrom.getAmount());
+//            }
+//        }
+//        //总转出费用
+//        BigInteger feeTotalTo = BigInteger.ZERO;
+//        for (CoinTo coinTo : listTo) {
+//            txSize += coinTo.size();
+//            if (TxUtil.isMainAsset(chain, coinTo.getAssetsChainId(), coinTo.getAssetsId())) {
+//                feeTotalTo = feeTotalTo.add(coinTo.getAmount());
+//            }
+//        }
+//        //本交易预计收取的手续费
+//        BigInteger targetFee = TransactionFeeCalculator.getNormalTxFee(txSize);
+//        //实际收取的手续费, 可能自己已经组装完成
+//        BigInteger actualFee = feeTotalFrom.subtract(feeTotalTo);
+//        if (BigIntegerUtils.isLessThan(actualFee, BigInteger.ZERO)) {
+//            chain.getLogger().error("insufficient fee");
+//            //所有from中账户的当前链主资产余额总和小于to的总和，不够支付手续费
+//            throw new NulsException(AccountErrorCode.INSUFFICIENT_FEE);
+//        } else if (BigIntegerUtils.isLessThan(actualFee, targetFee)) {
+//            //只从资产为当前链主资产的coinfrom中收取手续费
+//            actualFee = getFeeDirect(chain, listFrom, targetFee, actualFee);
+//            if (BigIntegerUtils.isLessThan(actualFee, targetFee)) {
+//                //如果没收到足够的手续费，则从CoinFrom中资产不是当前链主资产的coin账户中查找当前链主资产余额，并组装新的coinfrom来收取手续费
+//                if (!getFeeIndirect(chain, listFrom, txSize, targetFee, actualFee)) {
+//                    chain.getLogger().error("insufficient fee");
+//                    //所有from中账户的当前链主资产余额总和都不够支付手续费
+//                    throw new NulsException(AccountErrorCode.INSUFFICIENT_FEE);
+//                }
+//            }
+//        }
         CoinData coinData = new CoinData();
         coinData.setFrom(listFrom);
         coinData.setTo(listTo);

@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.eth.helper;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.helper.interfaces.IEthAnalysisTx;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
@@ -62,13 +63,13 @@ public class EthBlockAnalysisHelper {
         EthSimpleBlockHeader simpleBlockHeader = new EthSimpleBlockHeader();
         simpleBlockHeader.setHash(block.getHash());
         simpleBlockHeader.setPreHash(block.getParentHash());
-        simpleBlockHeader.setHeight(block.getNumber().longValue());
+        simpleBlockHeader.setHeight(blockHeight);
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         ethLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // 只保留最近的三个区块
         ethLocalBlockHelper.deleteByHeight(blockHeight - 3);
-        if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("同步ETH高度[{}]完成", block.getNumber().longValue());
+        if (blockHeight % 20 == 0) {
+            EthContext.logger().info("同步ETH高度[{}]完成", blockHeight);
         }
     }
 

@@ -14,4 +14,6 @@ public class DexContext {
     public static long skipHeight;
 
     public static long priceSkipHeight;
+
+    public static long cancelConfirmSkipHeight;
 }

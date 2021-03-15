@@ -40,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static network.nerve.quotation.constant.QuotationConstant.QU_CONTRACT_FILE;
 import static network.nerve.quotation.heterogeneouschain.constant.BnbConstant.BSC_CHAIN;
 import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ETH_CHAIN;
 import static network.nerve.quotation.heterogeneouschain.constant.HtConstant.HECO_CHAIN;
@@ -230,7 +231,7 @@ public class ChainManager {
      * @throws Exception
      */
     private void loadQuoteContractCfgJson(Chain chain) throws Exception {
-        String quotationConfigJson = IoUtils.read(QuotationConstant.QU_CONTRACT_CONFIG_FILE);
+        String quotationConfigJson = IoUtils.read(QU_CONTRACT_FILE + chain.getChainId() + ".json");
         List<QuotationContractCfg> quotationContractCfg = JSONUtils.json2list(quotationConfigJson, QuotationContractCfg.class);
 
         for (QuotationContractCfg quContractCfg : quotationContractCfg) {

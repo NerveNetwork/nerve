@@ -15,7 +15,6 @@ import org.web3j.abi.datatypes.generated.Uint8;
 
 import java.io.File;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,7 @@ import java.util.stream.Collectors;
 
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.ETH_ERC20_STANDARD_FILE;
 
-public class EthUtilTest extends Base {
+public class EthUtilDownloadTest extends Base {
 
     @Test
     public void newTransactionInfoByEthUnconfirmedTxPoTest() {
@@ -49,13 +48,10 @@ public class EthUtilTest extends Base {
 
 
     @Test
-    public void parseERC20() throws Exception {
+    public void parseErc20() throws Exception {
         setMain();
         List<TokenInfo> list = new ArrayList<>();
-
-        BigDecimal value = new BigDecimal("0.05");
-
-        for (int i = 1; i <= 18; i++) {
+        for (int i = 1; i <= 2; i++) {
             String file = String.format("token/token_%s.txt", i);
             System.out.println();
             System.out.println(String.format("open file: %s", file));
@@ -73,14 +69,13 @@ public class EthUtilTest extends Base {
                 String icon = topERC20.substring(m, n);
                 s = icon.indexOf("src=");
                 icon = icon.substring(s);
-                icon = "https://etherscan.io" + icon.substring(5);
+                icon = "https://etherscan.io/" + icon.substring(5);
 
                 m = topERC20.indexOf("</div></td><td class='text-nowrap'>");
                 n = topERC20.indexOf("<div", m);
                 String usdPrice = topERC20.substring(m, n);
                 s = usdPrice.indexOf("$");
                 usdPrice = usdPrice.substring(s + 1);
-                usdPrice = usdPrice.replace(",", "");
 
                 m = topERC20.indexOf("<a class='text-primary'");
                 n = topERC20.indexOf("</a>", m);
@@ -99,20 +94,16 @@ public class EthUtilTest extends Base {
                 name = name.trim();
                 symbol = symbol.trim();
                 int decimals = decimals(address);
-
-                n = topERC20.indexOf("</tr>", m);
+                System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s, price:%s, icon: %s,", address, name, symbol, decimals, usdPrice, icon));
+                n =  topERC20.indexOf("</tr>", m);
                 topERC20 = topERC20.substring(n);
-
-                BigDecimal price = new BigDecimal(usdPrice);
-                if (price.compareTo(value) > 0) {
-                    System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s, price:%s, icon: %s,", address, name, symbol, decimals, usdPrice, icon));
-                    list.add(new TokenInfo(address, name, symbol, decimals, usdPrice, icon));
-                }
+                list.add(new TokenInfo(address, name, symbol, decimals, usdPrice, icon));
             }
+
         }
         String json = JSONUtils.obj2PrettyJson(list);
         //System.out.println(json);
-        String path = new File(EthUtilTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
+        String path = new File(EthUtilDownloadTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
                 + String.format("%ssrc%stest%sresources%s", File.separator, File.separator, File.separator, File.separator);
         IoUtils.writeString(new File(path + "eth_tokens.json"), json);
     }
@@ -121,7 +112,7 @@ public class EthUtilTest extends Base {
     public void parseBEP20() throws Exception {
         setMain();
         List<TokenInfo> list = new ArrayList<>();
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 2; i++) {
             String file = String.format("bsc_token/token_%s.txt", i);
             System.out.println();
             System.out.println(String.format("open file: %s", file));
@@ -146,7 +137,6 @@ public class EthUtilTest extends Base {
                 String usdPrice = topERC20.substring(m, n);
                 s = usdPrice.indexOf("$");
                 usdPrice = usdPrice.substring(s + 1);
-                usdPrice = usdPrice.replace(",", "");
 
                 m = topERC20.indexOf("<a class='text-primary'");
                 n = topERC20.indexOf("</a>", m);
@@ -166,83 +156,17 @@ public class EthUtilTest extends Base {
                 symbol = symbol.trim();
                 int decimals = decimals(address);
                 System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s, price:%s, icon: %s,", address, name, symbol, decimals, usdPrice, icon));
-                n = topERC20.indexOf("</tr>", m);
+                n =  topERC20.indexOf("</tr>", m);
                 topERC20 = topERC20.substring(n);
-
                 list.add(new TokenInfo(address, name, symbol, decimals, usdPrice, icon));
             }
 
         }
         String json = JSONUtils.obj2PrettyJson(list);
         //System.out.println(json);
-        String path = new File(EthUtilTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
+        String path = new File(EthUtilDownloadTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
                 + String.format("%ssrc%stest%sresources%s", File.separator, File.separator, File.separator, File.separator);
         IoUtils.writeString(new File(path + "bsc_tokens.json"), json);
-    }
-
-
-
-    @Test
-    public void parseHT20() throws Exception {
-        setMain();
-        List<TokenInfo> list = new ArrayList<>();
-        for (int i = 1; i <= 1; i++) {
-            String file = String.format("ht_token/token_%s.txt", i);
-            System.out.println();
-            System.out.println(String.format("open file: %s", file));
-            String read = IoUtils.read(file);
-            int q = read.indexOf("<tbody>");
-            int w = read.indexOf("</tbody>", q);
-            if (q == -1 || w == -1) {
-                continue;
-            }
-            String topERC20 = read.substring(q, w);
-
-            int m, n, s, k, j;
-            while ((m = topERC20.indexOf("<img class='u-xs-avatar mr-2'")) != -1) {
-                n = topERC20.indexOf("'>", m);
-                String icon = topERC20.substring(m, n);
-                s = icon.indexOf("src=");
-                icon = icon.substring(s);
-                icon = "https://hecoinfo.com/" + icon.substring(5);
-
-                m = topERC20.indexOf("</div></td><td class='text-nowrap'>");
-                n = topERC20.indexOf("<div", m);
-                String usdPrice = topERC20.substring(m, n);
-                s = usdPrice.indexOf("$");
-                usdPrice = usdPrice.substring(s + 1);
-                usdPrice = usdPrice.replace(",", "");
-
-                m = topERC20.indexOf("<a class='text-primary'");
-                n = topERC20.indexOf("</a>", m);
-                String tokenInfo = topERC20.substring(m, n);
-                k = tokenInfo.indexOf("(");
-                j = tokenInfo.indexOf(")");
-                String address, name, symbol;
-                address = tokenInfo.substring(37, 37 + 42);
-                if (k == -1) {
-                    name = tokenInfo.substring(81);
-                    symbol = name;
-                } else {
-                    name = tokenInfo.substring(81, k);
-                    symbol = tokenInfo.substring(k + 1, j);
-                }
-                name = name.trim();
-                symbol = symbol.trim();
-                int decimals = decimals(address);
-                System.out.println(String.format("address: %s, name: %s, symbol: %s, decimals: %s, price:%s, icon: %s,", address, name, symbol, decimals, usdPrice, icon));
-                n = topERC20.indexOf("</tr>", m);
-                topERC20 = topERC20.substring(n);
-
-                list.add(new TokenInfo(address, name, symbol, decimals, usdPrice, icon));
-            }
-
-        }
-        String json = JSONUtils.obj2PrettyJson(list);
-        //System.out.println(json);
-        String path = new File(EthUtilTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
-                + String.format("%ssrc%stest%sresources%s", File.separator, File.separator, File.separator, File.separator);
-        IoUtils.writeString(new File(path + "ht_tokens.json"), json);
     }
 
     @Test
@@ -269,7 +193,7 @@ public class EthUtilTest extends Base {
 
         String jsonToLowerCase = JSONUtils.obj2PrettyJson(list);
         //System.out.println(json);
-        String path = new File(EthUtilTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
+        String path = new File(EthUtilDownloadTest.class.getClassLoader().getResource("").getPath()).getParentFile().getParent()
                 + String.format("%ssrc%stest%sresources%s", File.separator, File.separator, File.separator, File.separator);
         IoUtils.writeString(new File(path + "lowercasetokens.json"), jsonToLowerCase);
     }

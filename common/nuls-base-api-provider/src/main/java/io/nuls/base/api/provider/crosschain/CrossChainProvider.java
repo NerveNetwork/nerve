@@ -3,6 +3,8 @@ package io.nuls.base.api.provider.crosschain;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.crosschain.facade.*;
 
+import java.util.List;
+
 /**
  * @Author: zhoulijun
  * @Time: 2019-05-06 17:01
@@ -25,4 +27,5 @@ public interface CrossChainProvider {
      */
     Result<Integer> getCrossTxState(GetCrossTxStateReq req);
 
+    Result<List> getRegisteredChainInfoList();
 }
