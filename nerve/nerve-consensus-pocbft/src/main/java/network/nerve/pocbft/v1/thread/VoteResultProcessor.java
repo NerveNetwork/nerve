@@ -80,7 +80,7 @@ public class VoteResultProcessor extends BasicRunnable {
             byte[] addressBytes = AddressTool.getAddress(signature.getPublicKey(), chain.getChainId());
             String address = AddressTool.getStringAddressByBytes(addressBytes);
             if (!round.getMemberAddressSet().contains(address)) {
-                log.info("==========地址不对=from:{}========", resultMessage.getNodeId());
+                log.info("==========地址不对={}========", address);
                 return;
             }
             boolean result = signature.verifySignature(resultMessage.getHash()).isSuccess();

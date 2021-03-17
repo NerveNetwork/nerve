@@ -75,6 +75,7 @@ public class VoteMessage extends BaseBusinessMessage {
     private NulsHash voteHash;
     private String sendNode;
     private String rawData;
+    private boolean lock;
 
 
     public VoteMessage() {
@@ -283,6 +284,9 @@ public class VoteMessage extends BaseBusinessMessage {
     }
 
     public void clear() {
+        if (lock) {
+            return;
+        }
         this.height = 0;
         this.roundIndex = 0;
         this.packingIndexOfRound = 0;
@@ -296,5 +300,14 @@ public class VoteMessage extends BaseBusinessMessage {
         this.sendNode = null;
         this.rawData = null;
         VoteMessageObjManager.putBack(this);
+    }
+
+    public void lock() {
+        this.lock = true;
+    }
+
+    public void unlock() {
+        this.lock = false;
+        this.clear();
     }
 }
