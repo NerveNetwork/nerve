@@ -82,8 +82,8 @@ public class VoteSummaryData extends BasicObject {
             } else if (stage2First && vote.getVoteStage() == ConsensusConstant.VOTE_STAGE_TWO) {
                 stage2First = false;
                 data.setResultMessage(new VoteResultMessage(chain, new ArrayList<>(stageTwoMap.values())));
-                log.debug("提交2阶段结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
-                        vote.getVoteStage(), vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
+//                log.debug("提交2阶段结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+//                        vote.getVoteStage(), vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
                 chain.getConsensusCache().getStageTwoQueue().offer(data);
             }
         }
