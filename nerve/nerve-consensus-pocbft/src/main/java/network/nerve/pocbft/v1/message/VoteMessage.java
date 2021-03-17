@@ -283,31 +283,31 @@ public class VoteMessage extends BaseBusinessMessage {
         return rawData;
     }
 
-    public void clear() {
-        if (lock) {
-            return;
-        }
-        this.height = 0;
-        this.roundIndex = 0;
-        this.packingIndexOfRound = 0;
-        this.voteRoundIndex = 0;
-        this.voteStage = 0;
-        this.blockHash = null;
-        this.roundStartTime = 0;
-        this.sign = null;
-        this.address = null;
-        this.voteHash = null;
-        this.sendNode = null;
-        this.rawData = null;
-        VoteMessageObjManager.putBack(this);
-    }
-
-    public void lock() {
-        this.lock = true;
-    }
-
-    public void unlock() {
-        this.lock = false;
-        this.clear();
-    }
+//    public void clear() {
+//        if (lock) {
+//            return;
+//        }
+//        this.height = 0;
+//        this.roundIndex = 0;
+//        this.packingIndexOfRound = 0;
+//        this.voteRoundIndex = 0;
+//        this.voteStage = 0;
+//        this.blockHash = null;
+//        this.roundStartTime = 0;
+//        this.sign = null;
+//        this.address = null;
+//        this.voteHash = null;
+//        this.sendNode = null;
+//        this.rawData = null;
+//        VoteMessageObjManager.putBack(this);
+//    }
+//
+//    public void lock() {
+//        this.lock = true;
+//    }
+//
+//    public void unlock() {
+//        this.lock = false;
+//        this.clear();
+//    }
 }

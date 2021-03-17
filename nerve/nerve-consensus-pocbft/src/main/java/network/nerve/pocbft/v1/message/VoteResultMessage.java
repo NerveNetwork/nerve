@@ -99,7 +99,7 @@ public class VoteResultMessage extends BaseBusinessMessage {
                 first = false;
             }
             this.signList.add(msg.getSign());
-            msg.unlock();
+//            msg.unlock();
         }
 
     }

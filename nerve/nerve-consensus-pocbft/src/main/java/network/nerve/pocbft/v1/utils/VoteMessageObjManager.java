@@ -15,29 +15,29 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class VoteMessageObjManager {
     private static final LinkedBlockingQueue<VoteMessage> QUEUE = new LinkedBlockingQueue<>(2000);
 
-    public static VoteMessage getInstance(String msg) {
-        if (StringUtils.isBlank(msg)) {
-            Log.error("error code-" + CommonCodeConstanst.DESERIALIZE_ERROR);
-            return null;
-        }
-        VoteMessage vote = QUEUE.poll();
-        if (null == vote) {
-            vote = new VoteMessage();
-        }
-        try {
-            vote.parse(new NulsByteBuffer(RPCUtil.decode(msg)));
-        } catch (Exception e) {
-            Log.error(e);
-            return null;
-        }
-        return vote;
-    }
-
-    public static void putBack(VoteMessage voteMessage) {
-        try {
-            QUEUE.offer(voteMessage);
-        } catch (Throwable e) {
-            //不处理
-        }
-    }
+//    public static VoteMessage getInstance(String msg) {
+//        if (StringUtils.isBlank(msg)) {
+//            Log.error("error code-" + CommonCodeConstanst.DESERIALIZE_ERROR);
+//            return null;
+//        }
+//        VoteMessage vote = QUEUE.poll();
+//        if (null == vote) {
+//            vote = new VoteMessage();
+//        }
+//        try {
+//            vote.parse(new NulsByteBuffer(RPCUtil.decode(msg)));
+//        } catch (Exception e) {
+//            Log.error(e);
+//            return null;
+//        }
+//        return vote;
+//    }
+//
+//    public static void putBack(VoteMessage voteMessage) {
+//        try {
+//            QUEUE.offer(voteMessage);
+//        } catch (Throwable e) {
+//            //不处理
+//        }
+//    }
 }
