@@ -70,6 +70,8 @@ public class EthBlockAnalysisHelper {
         ethLocalBlockHelper.deleteByHeight(blockHeight - 3);
         if (blockHeight % 20 == 0) {
             EthContext.logger().info("同步ETH高度[{}]完成", blockHeight);
+        } else {
+            EthContext.logger().debug("同步ETH高度[{}]完成", blockHeight);
         }
     }
 

@@ -115,6 +115,32 @@ public class Chain {
      */
     private int currentHeterogeneousVersion = 1;
 
+    private transient Map<String, Integer> withdrawFeeChanges = new ConcurrentHashMap<>();
+
+    public void increaseWithdrawFeeChangeVersion(String withdrawHash) {
+        Integer version = withdrawFeeChanges.getOrDefault(withdrawHash, 0);
+        version++;
+        withdrawFeeChanges.put(withdrawHash, version);
+    }
+
+    public void decreaseWithdrawFeeChangeVersion(String withdrawHash) {
+        Integer version = withdrawFeeChanges.getOrDefault(withdrawHash, 0);
+        if (version == 0) {
+            return;
+        }
+        version--;
+        withdrawFeeChanges.put(withdrawHash, version);
+    }
+
+    public int getWithdrawFeeChangeVersion(String withdrawHash) {
+        return withdrawFeeChanges.getOrDefault(withdrawHash, 0);
+    }
+
+    public void clearWithdrawFeeChange(String withdrawHash) {
+        withdrawFeeChanges.remove(withdrawHash);
+    }
+
+
     public int getCurrentHeterogeneousVersion() {
         return currentHeterogeneousVersion;
     }

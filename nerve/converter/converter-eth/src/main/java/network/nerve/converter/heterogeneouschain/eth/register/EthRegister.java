@@ -249,31 +249,6 @@ public class EthRegister implements IHeterogeneousChainRegister {
         EthContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
     }
 
-    private void initERC20() throws Exception {
-        if (ethERC20StorageService.hadInitDB()) {
-            return;
-        }
-        String json = null;
-        try {
-            json = IoUtils.read(ETH_ERC20_STANDARD_FILE);
-        } catch (Exception e) {
-            // skip it
-            logger().error("init ERC20Standard error.", e);
-        }
-        if (json == null) {
-            return;
-        }
-        List<EthERC20Po> ethERC20Pos = JSONUtils.json2list(json, EthERC20Po.class);
-        int maxAssetId = 1;
-        for (EthERC20Po po : ethERC20Pos) {
-            po.setAssetId(++maxAssetId);
-            po.setAddress(po.getAddress().toLowerCase());
-            ethERC20StorageService.save(po);
-        }
-        ethERC20StorageService.saveMaxAssetId(maxAssetId);
-        ethERC20StorageService.initDBCompleted(maxAssetId);
-    }
-
     /**
      * 停止当前区块解析任务与待确认交易任务
      */

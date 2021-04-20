@@ -26,13 +26,15 @@ package network.nerve.converter.heterogeneouschain.bnb.context;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
-import network.nerve.converter.heterogeneouschain.bnb.constant.BnbConstant;
-import network.nerve.converter.heterogeneouschain.bnb.model.BnbUnconfirmedTxPo;
-import network.nerve.converter.heterogeneouschain.bnb.model.BnbWaitingTxPo;
+import network.nerve.converter.enums.AssetName;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,14 +44,16 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static network.nerve.converter.heterogeneouschain.bnb.constant.BnbConstant.BNB_GAS_LIMIT_OF_USDT;
-
 /**
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class BnbContext implements Serializable {
+public class BnbContext implements Serializable, HtgContext {
 
+    public static int HTG_CHAIN_ID = 102;
+    public static int HTG_ASSET_ID = 1;
+    public static byte VERSION = 2;
+    public static HtgDocking DOCKING;
     /**
      * 当 importAccountByPriKey 或者 importAccountByKeystore 被调用时，覆写这个地址作为虚拟银行管理员地址
      */
@@ -60,7 +64,7 @@ public class BnbContext implements Serializable {
     /**
      * 待确认交易队列
      */
-    public static LinkedBlockingDeque<BnbUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
+    public static LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
     public static CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
     // 初始化配置地址
@@ -69,32 +73,24 @@ public class BnbContext implements Serializable {
     /**
      * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
      */
-    public static LinkedBlockingDeque<BnbWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
+    public static LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
     public static CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
 
-    public static int NERVE_CHAINID = 1;
+    public static int NERVE_CHAINID;
     public static String MULTY_SIGN_ADDRESS;
     public static List<String> RPC_ADDRESS_LIST = new ArrayList<>();
     public static List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
      * 日志实例
      */
-    private static NulsLogger logger;
-    private static HeterogeneousCfg config;
-    private static IConverterCoreApi converterCoreApi;
+    public static NulsLogger logger;
+    public static HeterogeneousCfg config;
+    public static IConverterCoreApi converterCoreApi;
 
-    private static Integer intervalWaitting;
-
-    public static IConverterCoreApi getConverterCoreApi() {
-        return converterCoreApi;
-    }
+    public static Integer intervalWaitting;
 
     public static void setConverterCoreApi(IConverterCoreApi converterCoreApi) {
         BnbContext.converterCoreApi = converterCoreApi;
-    }
-
-    public static HeterogeneousCfg getConfig() {
-        return config;
     }
 
     public static void setConfig(HeterogeneousCfg config) {
@@ -109,7 +105,7 @@ public class BnbContext implements Serializable {
         if(StringUtils.isNotBlank(interval)) {
             intervalWaitting = Integer.parseInt(interval);
         } else {
-            intervalWaitting = BnbConstant.DEFAULT_INTERVAL_WAITTING;
+            intervalWaitting = HtgConstant.DEFAULT_INTERVAL_WAITTING;
         }
         return intervalWaitting;
     }
@@ -118,16 +114,12 @@ public class BnbContext implements Serializable {
         BnbContext.logger = logger;
     }
 
-    public static NulsLogger logger() {
-        return logger;
-    }
+    private static BigInteger MAX_HTG_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
+    private static BigInteger HTG_GAS_PRICE;
 
-    private static BigInteger MAX_BNB_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
-    private static BigInteger BNB_GAS_PRICE;
-
-    public static BigInteger getEthGasPrice() {
+    public static BigInteger getEthGasPriceStatic() {
         int time = 0;
-        while (BNB_GAS_PRICE == null) {
+        while (HTG_GAS_PRICE == null) {
             time++;
             try {
                 TimeUnit.SECONDS.sleep(10);
@@ -138,22 +130,160 @@ public class BnbContext implements Serializable {
                 break;
             }
         }
-        if (BNB_GAS_PRICE == null) {
-            BNB_GAS_PRICE = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
+        if (HTG_GAS_PRICE == null) {
+            HTG_GAS_PRICE = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
         }
-        return BNB_GAS_PRICE;
+        return HTG_GAS_PRICE;
     }
 
-    public static void setEthGasPrice(BigInteger ethGasPrice) {
+    public static void setEthGasPriceStatic(BigInteger ethGasPrice) {
         if (ethGasPrice != null) {
-            if (ethGasPrice.compareTo(MAX_BNB_GAS_PRICE) > 0) {
-                ethGasPrice = MAX_BNB_GAS_PRICE;
+            if (ethGasPrice.compareTo(MAX_HTG_GAS_PRICE) > 0) {
+                ethGasPrice = MAX_HTG_GAS_PRICE;
             }
-            BNB_GAS_PRICE = ethGasPrice;
+            HTG_GAS_PRICE = ethGasPrice;
         }
     }
 
-    public static BigDecimal getFee() {
-        return new BigDecimal(getEthGasPrice().multiply(BNB_GAS_LIMIT_OF_USDT)).divide(BigDecimal.TEN.pow(18));
+    @Override
+    public IConverterCoreApi getConverterCoreApi() {
+        return converterCoreApi;
+    }
+
+    @Override
+    public HeterogeneousCfg getConfig() {
+        return config;
+    }
+
+    @Override
+    public NulsLogger logger() {
+        return logger;
+    }
+
+    @Override
+    public BigInteger getEthGasPrice() {
+        return getEthGasPriceStatic();
+    }
+
+    @Override
+    public void setEthGasPrice(BigInteger ethGasPrice) {
+        setEthGasPriceStatic(ethGasPrice);
+    }
+
+    @Override
+    public List<String> RPC_ADDRESS_LIST() {
+        return RPC_ADDRESS_LIST;
+    }
+
+    @Override
+    public List<String> STANDBY_RPC_ADDRESS_LIST() {
+        return STANDBY_RPC_ADDRESS_LIST;
+    }
+
+    @Override
+    public String ADMIN_ADDRESS_PUBLIC_KEY() {
+        return ADMIN_ADDRESS_PUBLIC_KEY;
+    }
+
+    @Override
+    public String ADMIN_ADDRESS() {
+        return ADMIN_ADDRESS;
+    }
+
+    @Override
+    public String ADMIN_ADDRESS_PASSWORD() {
+        return ADMIN_ADDRESS_PASSWORD;
+    }
+
+    @Override
+    public String MULTY_SIGN_ADDRESS() {
+        return MULTY_SIGN_ADDRESS;
+    }
+
+    @Override
+    public void SET_ADMIN_ADDRESS_PUBLIC_KEY(String s) {
+        ADMIN_ADDRESS_PUBLIC_KEY = s;
+    }
+
+    @Override
+    public void SET_ADMIN_ADDRESS(String s) {
+        ADMIN_ADDRESS = s;
+    }
+
+    @Override
+    public void SET_ADMIN_ADDRESS_PASSWORD(String s) {
+        ADMIN_ADDRESS_PASSWORD = s;
+    }
+
+    @Override
+    public void SET_MULTY_SIGN_ADDRESS(String s) {
+        MULTY_SIGN_ADDRESS = s;
+    }
+
+    @Override
+    public int NERVE_CHAINID() {
+        return NERVE_CHAINID;
+    }
+
+    @Override
+    public int HTG_ASSET_ID() {
+        return HTG_ASSET_ID;
+    }
+
+    @Override
+    public byte VERSION() {
+        return VERSION;
+    }
+
+    @Override
+    public LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE() {
+        return WAITING_TX_QUEUE;
+    }
+
+    @Override
+    public LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE() {
+        return UNCONFIRMED_TX_QUEUE;
+    }
+
+    @Override
+    public CountDownLatch INIT_WAITING_TX_QUEUE_LATCH() {
+        return INIT_WAITING_TX_QUEUE_LATCH;
+    }
+
+    @Override
+    public CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH() {
+        return INIT_UNCONFIRMEDTX_QUEUE_LATCH;
+    }
+
+    @Override
+    public Set<String> FILTER_ACCOUNT_SET() {
+        return FILTER_ACCOUNT_SET;
+    }
+
+    @Override
+    public HtgDocking DOCKING() {
+        return DOCKING;
+    }
+
+    @Override
+    public AssetName ASSET_NAME() {
+        return AssetName.BNB;
+    }
+
+    private static volatile boolean availableRPC = true;
+
+    @Override
+    public void setAvailableRPC(boolean available) {
+        this.availableRPC = available;
+    }
+
+    @Override
+    public boolean isAvailableRPC() {
+        return availableRPC;
+    }
+
+    @Override
+    public boolean supportPendingCall() {
+        return true;
     }
 }

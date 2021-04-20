@@ -118,6 +118,10 @@ public class ConverterContext {
      * v1.8.0 协议升级高度 支持火币生态链跨链
      */
     public static long HUOBI_CROSS_CHAIN_HEIGHT = 0L;
+    /**
+     * v1.11.0 协议升级高度 支持欧科生态链跨链
+     */
+    public static long OKT_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
      * 初始化虚拟银行公钥

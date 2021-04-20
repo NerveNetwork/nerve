@@ -23,58 +23,18 @@
  */
 package network.nerve.converter.heterogeneouschain.ht.model;
 
-import java.io.Serializable;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 
 /**
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class HtERC20Po implements Serializable {
-
-    private String address;
-    private String symbol;
-    private int decimals;
-    private int assetId;
+public class HtERC20Po extends HtgERC20Po {
 
     public HtERC20Po() {
     }
 
     public HtERC20Po(String address, String symbol, int decimals, int assetId) {
-        this.address = address;
-        this.symbol = symbol;
-        this.decimals = decimals;
-        this.assetId = assetId;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    public void setSymbol(String symbol) {
-        this.symbol = symbol;
-    }
-
-    public int getDecimals() {
-        return decimals;
-    }
-
-    public void setDecimals(int decimals) {
-        this.decimals = decimals;
-    }
-
-    public int getAssetId() {
-        return assetId;
-    }
-
-    public void setAssetId(int assetId) {
-        this.assetId = assetId;
+        super(address, symbol, decimals, assetId);
     }
 }

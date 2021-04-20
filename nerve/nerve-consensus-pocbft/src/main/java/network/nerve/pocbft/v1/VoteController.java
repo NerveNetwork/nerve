@@ -4,6 +4,7 @@ import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import network.nerve.pocbft.constant.CommandConstant;
 import network.nerve.pocbft.constant.ConsensusConstant;
 import network.nerve.pocbft.model.bo.Chain;

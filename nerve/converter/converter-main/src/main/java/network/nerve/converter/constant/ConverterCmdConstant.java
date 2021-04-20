@@ -48,6 +48,7 @@ public interface ConverterCmdConstant {
     String CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_create_heterogeneous_contract_asset_reg_pending_tx";
     String VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_validate_heterogeneous_contract_asset_reg_pending_tx";
     String CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX = "cv_create_heterogeneous_main_asset_reg_tx";
+    String GET_HETEROGENEOUS_REGISTER_NETWORK = "cv_get_heterogeneous_register_network";
 
     String VALIDATE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_validate_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";

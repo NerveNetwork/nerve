@@ -16,11 +16,12 @@ import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteChoiceEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
-import network.nerve.converter.heterogeneouschain.bnb.constant.BnbConstant;
+import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
-import network.nerve.converter.heterogeneouschain.ht.constant.HtConstant;
+import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
+import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.ConfigBean;
 import network.nerve.converter.model.bo.NerveAssetInfo;
@@ -120,6 +121,14 @@ public class TxSendTest {
     String packageAddressPrivateKey7 = "0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85";
     String packageAddressPrivateKey8 = "CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2";
 
+    /** Okt */
+    static String USDT_OKT = "0xb6D685346106B697E6b2BbA09bc343caFC930cA3";
+    static String USDX_OKT = "0x3139dBe1Bf7FEb917CF8e978b72b6eAd764b0e6C";
+    static String NVT_OKT_MINTER = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
+    static String NULS_OKT_MINTER = "0xf3392C7b8d47694c10564C85736d6B0643b1761E";
+    static String ETH_OKT_MINTER = "0xbBF80744c94C85d65B08290860df6ff04089F050";
+
+    /** Huobi */
     static String USDT_HT = "0x04f535663110a392a6504839beed34e019fdb4e0";
     static String USDX_HT = "0x03Cf96223BD413eb7777AFE3cdb689e7E851CB32";
     static String USDI_HT = "0x3F1f3D17619E916C4F04707BA57d8E0b9e994fB0";
@@ -128,6 +137,7 @@ public class TxSendTest {
     static String NULS_HT_MINTER = "0x5045b6a04AC33f8D16d47E46b971C848141eE270";
     static String ETH_HT_MINTER = "0x830befa62501F1073ebE2A519B882e358f2a0318";
 
+    /** Binance */
     static String USDX_BNB = "0xb6D685346106B697E6b2BbA09bc343caFC930cA3";
     static String NVT_BNB_MINTER = "0x3F1f3D17619E916C4F04707BA57d8E0b9e994fB0";
     static String NULS_BNB_MINTER = "0x2eDCf5f18D949c51776AFc42CDad667cDA2cF862";
@@ -136,6 +146,7 @@ public class TxSendTest {
     static String ETH_BNB_MINTER = "0x9296D0AF7DA81AAD9ae273118Ba377403db6691a";
 
 
+    /** Ethereum */
     static String USDX = "0xB058887cb5990509a3D0DD2833B2054E4a7E4a55";
     static String USDI = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
     static String ENVT = "0x53be0d78b686f68643c38dfcc4f141a0c2785a08";
@@ -158,6 +169,7 @@ public class TxSendTest {
     static int ethChainId = 101;
     static int bnbChainId = 102;
     static int htChainId = 103;
+    static int oktChainId = 104;
     static int heterogeneousAssetId = 1;
 
     static String version = "1.0";
@@ -185,6 +197,7 @@ public class TxSendTest {
     // 私钥: CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2 / 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17 [Account 8] / tNULSeBaMrmiuHZg9c2JVAbLQydAxjNvuKRgFj
     @Test
     public void importPriKeyTest() {
+        // HF: 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
         //公钥: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
         //importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp, 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
         //公钥: 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b
@@ -328,6 +341,14 @@ public class TxSendTest {
         BigInteger balanceHtUsdt = LedgerCall.getBalance(chain, htUsdtAssetId.getAssetChainId(), htUsdtAssetId.getAssetId(), address);
         System.out.println(String.format("火币资产USDT %s-%s: %s", htUsdtAssetId.getAssetChainId(), htUsdtAssetId.getAssetId(), balanceHtUsdt));
 
+        NerveAssetInfo oktAssetId = this.findAssetIdByHeterogeneousId(oktChainId, heterogeneousAssetId);
+        BigInteger oktBalance = LedgerCall.getBalance(chain, oktAssetId.getAssetChainId(), oktAssetId.getAssetId(), address);
+        System.out.println(String.format("欧科资产OKT %s-%s: %s", oktAssetId.getAssetChainId(), oktAssetId.getAssetId(), oktBalance));
+
+        NerveAssetInfo oktUsdtAssetId = this.findAssetIdByAddress(oktChainId, USDT_OKT);
+        BigInteger balanceOktUsdt = LedgerCall.getBalance(chain, oktUsdtAssetId.getAssetChainId(), oktUsdtAssetId.getAssetId(), address);
+        System.out.println(String.format("欧科资产USDT %s-%s: %s", oktUsdtAssetId.getAssetChainId(), oktUsdtAssetId.getAssetId(), balanceOktUsdt));
+
         NerveAssetInfo nvtAssetId = this.findAssetIdByAddress(ethChainId, NVT_ETH_MINTER);
         if (nvtAssetId.isEmpty()) {
             nvtAssetId = this.findAssetIdByAddress(bnbChainId, NVT_BNB_MINTER);
@@ -388,12 +409,24 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalOKT() throws Exception {
+        int htgChainId = oktChainId;
+        String from = address31;
+        String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        // 0.08个HT
+        BigInteger value = new BigInteger(Long.valueOf(8_0000_0000_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalHT() throws Exception {
         int htgChainId = htChainId;
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        // 0.01个HT
-        BigInteger value = new BigInteger(Long.valueOf(1_0000_0000_0000_0000L).toString());
+        // 0.09个HT
+        BigInteger value = new BigInteger(Long.valueOf(9_0000_0000_0000_0000L).toString());
         BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -405,7 +438,7 @@ public class TxSendTest {
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
         // 0.01个BNB
-        BigInteger value = new BigInteger(Long.valueOf(4_0000_0000_0000_0000L).toString());
+        BigInteger value = new BigInteger(Long.valueOf(1_0000_0000_0000_0000L).toString());
         BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -432,8 +465,8 @@ public class TxSendTest {
         //String contract = USDX;
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        // 1个USDX
-        BigInteger value = new BigInteger(Long.valueOf(1_000000L).toString());
+        // 0.1个USDX
+        BigInteger value = new BigInteger(Long.valueOf(1_00000L).toString());
         BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -441,8 +474,10 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSDT() throws Exception {
-        int htgChainId = htChainId;
-        String contract = USDT_HT;
+        //int htgChainId = htChainId;
+        //String contract = USDT_HT;
+        int htgChainId = oktChainId;
+        String contract = USDT_OKT;
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
         // 0.2个USDT
@@ -460,8 +495,8 @@ public class TxSendTest {
         //String contract = USDI_BNB_MINTER;
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        // 2个USDI
-        BigInteger value = new BigInteger(Long.valueOf(2_000000L).toString());
+        // 0.2个USDI
+        BigInteger value = new BigInteger(Long.valueOf(2_00000L).toString());
         BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -552,11 +587,11 @@ public class TxSendTest {
 
         // 追加nvt手续费
         // 提现金额ETH
-        String amount = "1";
+        String amount = "14";
         BigDecimal am = new BigDecimal(amount).movePointRight(8);
         amount = am.toPlainString();
 
-        params.put("txHash", "e18512529814c2d40852b8e122258d0f6f67246f9ef9d0aa4e3b9a28244ea4fd");
+        params.put("txHash", "1d47353a99012103e30110216af86911bcc398af59dd4a79ddc888a5c3b3386f");
         params.put("amount", amount);
         params.put("remark", "追加手续费");
         params.put("address", address31);
@@ -569,10 +604,13 @@ public class TxSendTest {
     public void contractAssetReg() throws Exception {
         // 0x1c78958403625aeA4b0D5a0B527A27969703a270 USDI in ropsten
         // 0xAb58ee8e62178693265a1418D109b70dB4595586 USDK in rinkeby
+
+        regERC20(oktChainId, "USDT", USDT_OKT, 6);
         regERC20(htChainId, "USDT", USDT_HT, 6);
         regERC20(bnbChainId, "USDX", USDX_BNB, 6);
         regERC20(ethChainId, "USDX", USDX, 6);
         regERC20(ethChainId, "USDI", USDI, 6);
+
         //regERC20(ethChainId, "ENVT", ENVT, 18);
         //regERC20(ethChainId, "DAI", DAI, 18);
         //regERC20("FAU", FAU, 18);
@@ -582,9 +620,11 @@ public class TxSendTest {
     @Test
     public void mainAssetReg() throws Exception {
         // BNB
-        regHeterogeneousMainAsset(BnbConstant.BNB_CHAIN_ID);
+        regHeterogeneousMainAsset(BnbContext.HTG_CHAIN_ID);
         // HT
-        regHeterogeneousMainAsset(HtConstant.HT_CHAIN_ID);
+        regHeterogeneousMainAsset(HtContext.HTG_CHAIN_ID);
+        // OKT
+        regHeterogeneousMainAsset(OktContext.HTG_CHAIN_ID);
     }
 
     @Test
@@ -592,13 +632,11 @@ public class TxSendTest {
         bindERC20(ethChainId, "NVT", NVT_ETH_MINTER, 8, 5, 1);
         bindERC20(bnbChainId, "NVT", NVT_BNB_MINTER, 8, 5, 1);
         bindERC20(htChainId, "NVT", NVT_HT_MINTER, 8, 5, 1);
+        bindERC20(oktChainId, "NVT", NVT_OKT_MINTER, 8, 5, 1);
 
         bindERC20(bnbChainId, "ETH", ETH_BNB_MINTER, 18, 5, 2);
         bindERC20(htChainId, "ETH", ETH_HT_MINTER, 18, 5, 2);
-        //bindERC20(bnbChainId, "USDI", USDI_BNB_MINTER, 6, 5, 6);
-        //bindERC20(bnbChainId, "DXA_ETH_MINTER", DXA_BNB_MINTER, 8, 5, 7);
-        //bindERC20(ethChainId, "DXA_ETH_MINTER", DXA_ETH_MINTER, 8, 5, 7);
-        //bindERC20(ethChainId, "NVT_ETH_MINTER", NVT_ETH_MINTER, 8, 5, 1);
+        bindERC20(oktChainId, "ETH", ETH_OKT_MINTER, 18, 5, 2);
     }
 
     @Test
@@ -777,6 +815,16 @@ public class TxSendTest {
     }
 
     @Test
+    public void getRegisterNetwork() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put("chainId", 5);
+        params.put("assetId", 9);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.GET_HETEROGENEOUS_REGISTER_NETWORK, params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+    }
+
+    @Test
     public void gatPriceTest() throws Exception {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -923,7 +971,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put("agentAddress", agentAddress);
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("deposit", "27000000000000"); // 27W
+        params.put("deposit", "21000000000000"); // 21W
         params.put("packingAddress", packageAddress);
         params.put("password", password);
         params.put("rewardAddress", agentAddress);
@@ -1008,8 +1056,8 @@ public class TxSendTest {
     @Test
     public void randomDepositOrWithdrawalTest() throws Exception {
         System.out.println(String.format("开始前，总账户余额: %s, 多签合约余额: %s",
-                    ethWalletApi.getERC20Balance("0xf173805F1e3fE6239223B17F0807596Edc283012", USDI),
-                    ethWalletApi.getERC20Balance("0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", USDI)
+                    htgWalletApi.getERC20Balance("0xf173805F1e3fE6239223B17F0807596Edc283012", USDI),
+                    htgWalletApi.getERC20Balance("0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", USDI)
                 ));
         for (int i = 0; i < 2000; i++) {
             int oddEven = RandomUtils.nextInt(1, 3);
@@ -1040,24 +1088,24 @@ public class TxSendTest {
             TimeUnit.SECONDS.sleep(2);
         }
         System.out.println(String.format("结束后，总账户余额: %s, 多签合约余额: %s, 总账户支出: %s, 总充值: %s, 总提现: %s",
-                ethWalletApi.getERC20Balance("0xf173805F1e3fE6239223B17F0807596Edc283012", USDI),
-                ethWalletApi.getERC20Balance("0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", USDI),
+                htgWalletApi.getERC20Balance("0xf173805F1e3fE6239223B17F0807596Edc283012", USDI),
+                htgWalletApi.getERC20Balance("0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", USDI),
                 bigTotal,
                 depositTotal,
                 withdrawTotal
         ));
     }
 
-    protected ETHWalletApi ethWalletApi;
+    protected ETHWalletApi htgWalletApi;
 
     @Before
     public void setUp() throws Exception {
         String ethRpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
-        ethWalletApi = new ETHWalletApi();
+        htgWalletApi = new ETHWalletApi();
         EthContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
-        ethWalletApi.setWeb3j(web3j);
-        ethWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(ethRpcAddress);
     }
 
     private String dealDepositUSDI(int random, String account) throws Exception {
@@ -1075,16 +1123,16 @@ public class TxSendTest {
         String ethAccountPrivateKey = fieldValue("privateKey" + random);
         Credentials credentials = Credentials.create(ethAccountPrivateKey);
         String ethAccount = credentials.getAddress();
-        BigInteger USDIBalance = ethWalletApi.getERC20Balance(ethAccount, USDI);
+        BigInteger USDIBalance = htgWalletApi.getERC20Balance(ethAccount, USDI);
         if (USDIBalance.compareTo(BigInteger.valueOf(1_000000L)) < 0) {
-            EthSendTransaction tx = ethWalletApi.transferERC20Token(account1, ethAccount, BigInteger.valueOf(10_000000L), account1PrivateKey, USDI);
+            EthSendTransaction tx = htgWalletApi.transferERC20Token(account1, ethAccount, BigInteger.valueOf(10_000000L), account1PrivateKey, USDI);
             if (StringUtils.isNotBlank(tx.getTransactionHash())) {
                 bigTotal += 10;
                 System.out.println(String.format("总账户支出10个USDI[%s], ethTxHash: %s, 累积支出: %s", ethAccount, tx.getTransactionHash(), bigTotal));
             }
             return null;
         }
-        EthSendTransaction info = ethWalletApi.transferERC20Token(ethAccount, "0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", BigInteger.valueOf(1_000000L), ethAccountPrivateKey, USDI);
+        EthSendTransaction info = htgWalletApi.transferERC20Token(ethAccount, "0xce0fb0b8075f8f54517d939cb4887ba42d97a23a", BigInteger.valueOf(1_000000L), ethAccountPrivateKey, USDI);
         if (StringUtils.isNotBlank(info.getTransactionHash())) {
             depositTotal += 1;
             System.out.println(String.format("    [%s]充值1个USDI, ethTxHash: %s, 累积充值: %s", ethAccount, info.getTransactionHash(), depositTotal));

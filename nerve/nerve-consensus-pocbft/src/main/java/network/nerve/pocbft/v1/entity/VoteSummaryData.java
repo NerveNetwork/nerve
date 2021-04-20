@@ -51,7 +51,7 @@ public class VoteSummaryData extends BasicObject {
             stageOneMap.put(vote.getAddress(chain), vote);
             count = stageOneMap.size();
         } else if (vote.getVoteStage() == ConsensusConstant.VOTE_STAGE_TWO) {
-//            vote.lock();
+            vote.lock();
             stageTwoMap.put(vote.getAddress(chain), vote);
             count = stageTwoMap.size();
         }

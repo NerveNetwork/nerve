@@ -91,4 +91,9 @@ public class EthListener {
     public void removeListeningTx(String txHash) {
         listeningTxHashSet.remove(txHash);
     }
+
+    public void clear() {
+        listeningAddressSet.clear();
+        listeningTxHashSet.clear();
+    }
 }

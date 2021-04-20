@@ -59,6 +59,8 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private long bnbKeyHeight;
     /** HT OKB 协议升级配置高度 */
     private long htOkbKeyHeight;
+    /** OKT 协议升级配置高度 */
+    private long oktKeyHeight;
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
@@ -150,5 +152,13 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setRemoveMaxMinCount(int removeMaxMinCount) {
         this.removeMaxMinCount = removeMaxMinCount;
+    }
+
+    public long getOktKeyHeight() {
+        return oktKeyHeight;
+    }
+
+    public void setOktKeyHeight(long oktKeyHeight) {
+        this.oktKeyHeight = oktKeyHeight;
     }
 }

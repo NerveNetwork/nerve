@@ -31,7 +31,7 @@ package network.nerve.converter.heterogeneouschain.ht.constant;
  */
 public interface HtDBConstant {
     /**
-     * BSC信息表
+     * HT信息表
      * - 同步区块头信息
      * - 交易关系信息
      * - 账户信息

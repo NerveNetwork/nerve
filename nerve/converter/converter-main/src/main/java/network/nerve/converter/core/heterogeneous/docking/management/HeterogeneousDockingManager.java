@@ -27,7 +27,8 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
-import network.nerve.converter.heterogeneouschain.ht.constant.HtConstant;
+import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
+import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.AccountCall;
@@ -37,8 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static network.nerve.converter.config.ConverterContext.HUOBI_CROSS_CHAIN_HEIGHT;
-import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
+import static network.nerve.converter.config.ConverterContext.*;
 
 /**
  * @author: Mimi
@@ -53,6 +53,7 @@ public class HeterogeneousDockingManager {
     private Map<Integer, IHeterogeneousChainDocking> heterogeneousDockingMap = new ConcurrentHashMap<>();
 
     private boolean huobiCrossChainAvailable = false;
+    private boolean oktCrossChainAvailable = false;
 
     public void registerHeterogeneousDocking(int heterogeneousChainId, IHeterogeneousChainDocking docking) {
         heterogeneousDockingMap.put(heterogeneousChainId, docking);
@@ -72,10 +73,17 @@ public class HeterogeneousDockingManager {
 
     public Collection<IHeterogeneousChainDocking> getAllHeterogeneousDocking() {
         // 增加HT跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtConstant.HT_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtContext.HTG_CHAIN_ID)) {
             Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
             result.putAll(heterogeneousDockingMap);
-            result.remove(HtConstant.HT_CHAIN_ID);
+            result.remove(HtContext.HTG_CHAIN_ID);
+            return result.values();
+        }
+        // 增加OKT跨链的生效高度
+        if (LATEST_BLOCK_HEIGHT < OKT_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OktContext.HTG_CHAIN_ID)) {
+            Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
+            result.putAll(heterogeneousDockingMap);
+            result.remove(OktContext.HTG_CHAIN_ID);
             return result.values();
         }
         return heterogeneousDockingMap.values();
@@ -89,15 +97,33 @@ public class HeterogeneousDockingManager {
                 if (null != signAccountDTO) {
                     String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
                     // 向HT跨链组件导入账户
-                    IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(HtConstant.HT_CHAIN_ID);
+                    IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(HtContext.HTG_CHAIN_ID);
                     if (dock != null && dock.getCurrentSignAddress() == null) {
                         dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
-                        chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件注册签名账户信息..");
+                        chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件[HT]注册签名账户信息..");
                     }
                 }
                 huobiCrossChainAvailable = true;
             } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件注册地址签名信息异常, 错误: {}", e.format());
+                chain.getLogger().warn("向异构链组件[HT]注册地址签名信息异常, 错误: {}", e.format());
+            }
+        }
+        if (!oktCrossChainAvailable && LATEST_BLOCK_HEIGHT >= OKT_CROSS_CHAIN_HEIGHT) {
+            // 向OKT异构链组件,注册地址签名信息
+            try {
+                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
+                if (null != signAccountDTO) {
+                    String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
+                    // 向OKT跨链组件导入账户
+                    IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(OktContext.HTG_CHAIN_ID);
+                    if (dock != null && dock.getCurrentSignAddress() == null) {
+                        dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
+                        chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件[OKT]注册签名账户信息..");
+                    }
+                }
+                oktCrossChainAvailable = true;
+            } catch (NulsException e) {
+                chain.getLogger().warn("向异构链组件[OKT]注册地址签名信息异常, 错误: {}", e.format());
             }
         }
     }

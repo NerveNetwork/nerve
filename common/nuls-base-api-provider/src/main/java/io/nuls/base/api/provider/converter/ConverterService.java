@@ -80,7 +80,7 @@ public interface ConverterService {
 
     Result<String> unbind(UnbindReq req);
 
-    Result<String> retryWithdrawal(RetryWithdrawalReq req);
+    Result<Boolean> retryWithdrawal(RetryWithdrawalReq req);
 
     Result<Boolean> validateRegisterHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 

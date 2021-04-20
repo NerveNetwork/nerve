@@ -24,6 +24,7 @@ import org.junit.Test;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class DexTxTest {
 
@@ -128,12 +129,12 @@ public class DexTxTest {
         try {
 //            for (int i = 1; i < 3; i++) {
             Map params = new HashMap();
-            params.put("address", "TNVTdTSPLmP6SKyn2RigSA8Lr9bMTgjUhnve4");
+            params.put("address", "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
             params.put("password", password);
             params.put("type", 1);
-            params.put("tradingHash", "cd1593fe5d34ea87d84e57afe3169da3035718579ea2bc86aeeaa878df71ccc5");
-            params.put("amount", 11);
-            params.put("price", 1000000L);
+            params.put("tradingHash", "020f834efdf13a4aa346c6999deffb03bda77098a1702751f682e6ee9ee31f2f");
+            params.put("amount", 110000000L);
+            params.put("price", 10000000L);
 
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingOrderTx", params);
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingOrderTx");
@@ -156,8 +157,8 @@ public class DexTxTest {
             params.put("password", password);
             params.put("type", 2);
             params.put("tradingHash", "020f834efdf13a4aa346c6999deffb03bda77098a1702751f682e6ee9ee31f2f");
-            params.put("amount", 100000000L);
-            params.put("price", 100000000L);
+            params.put("amount", 110000000L);
+            params.put("price", 10000000L);
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingOrderTx", params);
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingOrderTx");
             String txHash = (String) callResult.get("txHash");
@@ -171,18 +172,61 @@ public class DexTxTest {
     }
 
 
+    public String sendCreateTradingBuyOrderTx2() throws Exception {
+        Random random = new Random();
+        Map params = new HashMap();
+        params.put("address", "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
+        params.put("password", password);
+        params.put("type", 1);
+        params.put("tradingHash", "020f834efdf13a4aa346c6999deffb03bda77098a1702751f682e6ee9ee31f2f");
+        params.put("amount", 1000000000L + random.nextInt(50) * 10000000L);
+        params.put("price", 10000000L);
+
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingOrderTx", params);
+        HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingOrderTx");
+        String txHash = (String) callResult.get("txHash");
+        System.out.println("---buy orderHash: " + txHash);
+        return txHash;
+    }
+
+    public String sendCreateTradingSellOrderTx2() throws Exception {
+        Map params = new HashMap();
+        params.put("address", "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
+        params.put("password", password);
+        params.put("type", 2);
+        params.put("tradingHash", "020f834efdf13a4aa346c6999deffb03bda77098a1702751f682e6ee9ee31f2f");
+        params.put("amount", 1000000000L);
+        params.put("price", 10000000L);
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingOrderTx", params);
+        HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingOrderTx");
+        String txHash = (String) callResult.get("txHash");
+        System.out.println("---sell orderHash: " + txHash);
+        return txHash;
+    }
+
     @Test
     public void sendCreateTradingOrderCancelTx() {
         try {
-            Map params = new HashMap();
-            params.put("address", address20);
-            params.put("password", password);
-            params.put("orderHash", "c756c32a0f99bda8322060a077e228a2029a1ea737f09914ba70f5f1799fa7ec");
+            for (int i = 0; i < 100; i++) {
+                String buyOrderHash = sendCreateTradingBuyOrderTx2();
+                Thread.sleep(6000);
+                String sellOrderHash = sendCreateTradingSellOrderTx2();
 
-            Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingCancelOrderTx", params);
-            HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingCancelOrderTx");
-            String txHash = (String) callResult.get("txHash");
-            System.out.println("---orderHash: " + txHash);
+                Map params = new HashMap();
+                params.put("address", "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
+                params.put("password", password);
+                params.put("orderHash", buyOrderHash);
+
+                Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingCancelOrderTx", params);
+                HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingCancelOrderTx");
+                String txHash = (String) callResult.get("txHash");
+                System.out.println("---orderHash: " + txHash);
+
+                response = ResponseMessageProcessor.requestAndResponse(ModuleE.DX.abbr, "dx_createTradingCancelOrderTx", params);
+                callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createTradingCancelOrderTx");
+                txHash = (String) callResult.get("txHash");
+                System.out.println("---orderHash: " + txHash);
+            }
         } catch (NulsException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -221,22 +265,22 @@ public class DexTxTest {
 
         TradingOrderCancel orderCancel = new TradingOrderCancel();
         orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
-        System.out.println(HexUtil.encode(orderCancel.getOrderHash()) );
+        System.out.println(HexUtil.encode(orderCancel.getOrderHash()));
     }
 
 
-        public static void main(String[] args) throws NulsException {
-            String txHex = "e5001c85e85e00911ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0270679f060000000000000000000000000000000000000000000000000000000000e1f5050000000000000000000000000000000000000000000000000000000017050001f390fea4a51157eda93f07719a73a4f92becd2c6058c0117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010010eea00600000000000000000000000000000000000000000000000000000000088bb2a83be13eda3f000117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010070679f0600000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102f0536147426e1c8ab5a327f69277e15d4e9b33e65552a1af73033465d6385bf74730450220313b3a22fe89c4385629203b9f7026d94fc8ed7987b40185081df3fddd6aa6a2022100837edce656540997738523f496d12f8c221e9fef58b4b7ad97e8120382f60ce6";
-            Transaction transaction = new Transaction();
-            transaction.parse(new NulsByteBuffer(HexUtil.decode(txHex)));
+    public static void main(String[] args) throws NulsException {
+        String txHex = "e5001c85e85e00911ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0270679f060000000000000000000000000000000000000000000000000000000000e1f5050000000000000000000000000000000000000000000000000000000017050001f390fea4a51157eda93f07719a73a4f92becd2c6058c0117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010010eea00600000000000000000000000000000000000000000000000000000000088bb2a83be13eda3f000117050001a304cda6e0a0c1dad8de5700e8fb8578a261e11c0500010070679f0600000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102f0536147426e1c8ab5a327f69277e15d4e9b33e65552a1af73033465d6385bf74730450220313b3a22fe89c4385629203b9f7026d94fc8ed7987b40185081df3fddd6aa6a2022100837edce656540997738523f496d12f8c221e9fef58b4b7ad97e8120382f60ce6";
+        Transaction transaction = new Transaction();
+        transaction.parse(new NulsByteBuffer(HexUtil.decode(txHex)));
 //            byte[] bytes = transaction.getTransactionSignature();
 //            System.out.println(HexUtil.encode(bytes));tradingOrder
-            System.out.println(transaction.getCoinDataInstance());
-            TradingOrder tradingOrder = new TradingOrder();
-            tradingOrder.parse(new NulsByteBuffer(transaction.getTxData()));
-            System.out.println(AddressTool.getStringAddressByBytes(tradingOrder.getFeeAddress(), "TNVT"));
-            System.out.println(transaction.getHash().toHex());
-            //1ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07
+        System.out.println(transaction.getCoinDataInstance());
+        TradingOrder tradingOrder = new TradingOrder();
+        tradingOrder.parse(new NulsByteBuffer(transaction.getTxData()));
+        System.out.println(AddressTool.getStringAddressByBytes(tradingOrder.getFeeAddress(), "TNVT"));
+        System.out.println(transaction.getHash().toHex());
+        //1ef715cec29207455a4f2c9b58864cc3797d5446a5574bad0d1c496ef9c19b07
 //            TradingOrder tradingOrder = new TradingOrder();
 //            tradingOrder.parse(new NulsByteBuffer(transaction.getTxData()));
 //            System.out.println(tradingOrder);
@@ -246,7 +290,7 @@ public class DexTxTest {
 //            Address address = new Address(4, "TNVT", BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(signature.getP2PHKSignatures().get(0).getPublicKey()));
 //            System.out.println("=".repeat(100));
 //            System.out.println("address   :" + AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix()));
-            System.out.println(AddressTool.getChainIdByAddress("TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf"));
-        }
+        System.out.println(AddressTool.getChainIdByAddress("TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf"));
+    }
 
 }

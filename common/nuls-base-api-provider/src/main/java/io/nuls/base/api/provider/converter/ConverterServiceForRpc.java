@@ -143,9 +143,9 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
-    public Result<String> retryWithdrawal(RetryWithdrawalReq req) {
+    public Result<Boolean> retryWithdrawal(RetryWithdrawalReq req) {
         Function<Map, Result> fun = res -> {
-            String data = (String) res.get("value");
+            Boolean data = (Boolean) res.get("value");
             return success(data);
         };
         return callRpc(ModuleE.CV.abbr, "cv_retry_withdrawal", req, fun);

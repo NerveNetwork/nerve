@@ -1,7 +1,7 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/niels/workspace/nerve-network/Logs
+logPath=/Users/niels/workspace/nerve-network/logs
 logLevel=INFO
 dataPath=/Users/niels/workspace/nerve-network/data
 #默认本链ID
@@ -27,8 +27,8 @@ serviceManagerPort=8771
 packageVersion=%PACKAGE_VERSION%
 
 [network]
-reverseCheck=0
 port=7001
+reverseCheck=0
 crossPort=7002
 #魔法参数
 packetMagic=2020071001

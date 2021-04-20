@@ -153,7 +153,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawalProcessor(pendingPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
-                            if (pendingPO.isWithdrawExceedErrorTime(10)) {
+                            if (pendingPO.isWithdrawExceedErrorTime(chain.getWithdrawFeeChangeVersion(tx.getHash().toHex()), 10)) {
                                 chain.getLogger().warn("[withdraw] 提现手续费不足，重试次数超过限制，暂停处理当前提前任务, txHash: {}", tx.getHash().toHex());
                                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                             }
@@ -461,7 +461,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         NulsHash hash = tx.getHash();
         String txHash = hash.toHex();
         // 判断是否收到过该消息, 并签了名
-        ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, pendingPO.getTx().getHash().toHex());
+        ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
         boolean sign = false;
         if (null != compSignPO) {
             if (!compSignPO.getCurrentSigned()) {
@@ -486,7 +486,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
             }
             if (null == assetInfo) {
-                chain.getLogger().error("[异构链地址签名消息-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
+                chain.getLogger().error("[异构链地址签名消息-withdraw] no withdrawCoinTo. hash:{}", txHash);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
             int heterogeneousChainId = assetInfo.getChainId();
@@ -547,6 +547,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         callParm.getAssetId(),
                         callParm.getSigned());
                 compSignPO.setCompleted(true);
+                // 提现交易发出成功，清理手续费追加状态
+                chain.clearWithdrawFeeChange(txHash);
                 chain.getLogger().info("[异构链地址签名消息-拜占庭通过-withdraw] 调用异构链组件执行提现. hash:{}, ethHash:{}", txHash, ethTxHash);
             }
             rs = true;

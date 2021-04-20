@@ -23,78 +23,22 @@
  */
 package network.nerve.converter.heterogeneouschain.bnb.model;
 
-import io.nuls.core.model.StringUtils;
-import network.nerve.converter.model.bo.HeterogeneousAccount;
-import org.web3j.crypto.Credentials;
-import org.web3j.utils.Numeric;
-
-import java.io.Serializable;
-import java.util.Arrays;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 
 /**
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class BnbAccount extends HeterogeneousAccount implements Serializable {
-
-    private int order;
-
-    private String compressedPublicKey;
-
-    private transient int mod;
-    private transient int bankSize;
+public class BnbAccount extends HtgAccount {
 
     public BnbAccount() {
     }
 
-    public BnbAccount(int order) {
-        this.order = order;
+    public BnbAccount(int order){
+        super(order);
     }
 
     public static BnbAccount newEmptyAccount(int order) {
         return new BnbAccount(order);
-    }
-
-    @Override
-    protected boolean validatePubKey(byte[] newPriKey, byte[] orginPubKey) {
-        Credentials credentials = Credentials.create(Numeric.toHexStringNoPrefix(newPriKey));
-        byte[] pubKey = credentials.getEcKeyPair().getPublicKey().toByteArray();
-        return Arrays.equals(pubKey, orginPubKey);
-    }
-
-    public String getCompressedPublicKey() {
-        return compressedPublicKey;
-    }
-
-    public void setCompressedPublicKey(String compressedPublicKey) {
-        this.compressedPublicKey = compressedPublicKey;
-    }
-
-    public int getOrder() {
-        return order;
-    }
-
-    public void setOrder(int order) {
-        this.order = order;
-    }
-
-    public boolean isEmpty() {
-        return StringUtils.isBlank(getAddress());
-    }
-
-    public int getMod() {
-        return mod;
-    }
-
-    public void setMod(int mod) {
-        this.mod = mod;
-    }
-
-    public int getBankSize() {
-        return bankSize;
-    }
-
-    public void setBankSize(int bankSize) {
-        this.bankSize = bankSize;
     }
 }

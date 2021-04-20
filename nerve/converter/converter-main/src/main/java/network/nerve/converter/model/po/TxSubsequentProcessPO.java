@@ -104,13 +104,20 @@ public class TxSubsequentProcessPO implements Serializable {
 
     private transient int withdrawErrorTimes;
     private transient int withdrawErrorTotalTimes;
+    private transient int feeChangeVersion;
 
     public void increaseWithdrawErrorTime() {
         this.withdrawErrorTimes++;
         this.withdrawErrorTotalTimes++;
     }
 
-    public boolean isWithdrawExceedErrorTime(int limit) {
+    public boolean isWithdrawExceedErrorTime(int currentFeeChangeVersion, int limit) {
+        // 当用户提供的手续费发生变化，从暂停提现中恢复提现流程
+        if (currentFeeChangeVersion != feeChangeVersion) {
+            feeChangeVersion = currentFeeChangeVersion;
+            this.clearWithdrawErrorTime();
+            return true;
+        }
         int multiplier = (this.withdrawErrorTotalTimes + limit - 1) / limit;
         multiplier = Math.min(multiplier, 5);
         if (this.withdrawErrorTimes >= (limit * multiplier)) {
@@ -127,6 +134,11 @@ public class TxSubsequentProcessPO implements Serializable {
             this.withdrawErrorTimes++;
         }
         return error;
+    }
+
+    private void clearWithdrawErrorTime() {
+        this.withdrawErrorTimes = 0;
+        this.withdrawErrorTotalTimes = 0;
     }
 
     public TxSubsequentProcessPO() {

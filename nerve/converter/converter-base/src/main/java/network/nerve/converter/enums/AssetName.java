@@ -31,5 +31,6 @@ public enum AssetName {
     NVT,
     ETH,
     BNB,
-    HT;
+    HT,
+    OKT;
 }

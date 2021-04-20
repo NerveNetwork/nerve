@@ -355,29 +355,6 @@ public class EthDocking implements IHeterogeneousChainDocking {
         return assetInfo;
     }
 
-    @Override
-    public List<HeterogeneousAssetInfo> getAllInitializedAssets() throws Exception {
-        List<HeterogeneousAssetInfo> result;
-        List<EthERC20Po> erc20PoList = ethERC20Helper.getAllInitializedERC20();
-        if (erc20PoList.isEmpty()) {
-            result = new ArrayList<>(1);
-            result.add(this.getMainAsset());
-            return result;
-        }
-        result = new ArrayList<>(1 + erc20PoList.size());
-        result.add(this.getMainAsset());
-        erc20PoList.stream().forEach(erc20 -> {
-            HeterogeneousAssetInfo assetInfo = new HeterogeneousAssetInfo();
-            assetInfo.setChainId(EthConstant.ETH_CHAIN_ID);
-            assetInfo.setSymbol(erc20.getSymbol());
-            assetInfo.setDecimals(erc20.getDecimals());
-            assetInfo.setAssetId(erc20.getAssetId());
-            assetInfo.setContractAddress(erc20.getAddress());
-            result.add(assetInfo);
-        });
-        return result;
-    }
-
     private static HeterogeneousAssetInfo ethereum() {
         if (ethereum == null) {
             ethereum = new HeterogeneousAssetInfo();

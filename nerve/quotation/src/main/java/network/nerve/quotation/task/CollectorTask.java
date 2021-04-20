@@ -120,7 +120,23 @@ public class CollectorTask implements Runnable {
                     } else {
                         continue;
                     }
-                } else {
+                }/* else if (ANCHOR_TOKEN_OKT.equals(anchorToken)) {
+                    *//**
+                     * 2021-03-29 新增OKT报价，使用OKB报价结果。
+                     *//*
+                    if (blockHeight < oktKeyHeight) {
+                        continue;
+                    }
+                    Double priceDouble = pricesMap.get(ANCHOR_TOKEN_OKB);
+                    if (null != priceDouble) {
+                        // 直接使用OKB的报价
+                        pricesMap.put(anchorToken, priceDouble);
+                    } else {
+                        // 如果没有OKB报价，则直接获取计算OKB报价
+                        Collector collector = getCollector(qa.getCollector());
+                        price = collector.enquiry(chain, ANCHOR_TOKEN_OKB);
+                    }
+                }*/ else {
                     if (ANCHOR_TOKEN_DAI.equals(anchorToken)
                             || ANCHOR_TOKEN_USDC.equals(anchorToken)
                             || ANCHOR_TOKEN_PAX.equals(anchorToken)) {
@@ -139,6 +155,12 @@ public class CollectorTask implements Runnable {
                             continue;
                         }
                     }
+
+                    if (ANCHOR_TOKEN_OKT.equals(anchorToken)) {
+                        if (blockHeight < oktKeyHeight) {
+                            continue;
+                        }
+                    }
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
                 }
@@ -152,7 +174,7 @@ public class CollectorTask implements Runnable {
 
             // swap合约报价
             for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
-                if(blockHeight < quContractCfg.getEffectiveHeight()){
+                if (blockHeight < quContractCfg.getEffectiveHeight()) {
                     continue;
                 }
                 String anchorToken = quContractCfg.getAnchorToken();
@@ -265,29 +287,34 @@ public class CollectorTask implements Runnable {
      * @param baseTokenUnitPrice       基准token的单价
      * @throws Exception
      */
-    public double ethContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
-        // 池子里ETH的数量
-        chain.getLogger().debug("ETH,  V2-LP:{}, WETH:{}", swapTokenContractAddress, baseTokenContractAddress);
-        BigInteger wethBalance = ethWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
-        chain.getLogger().debug("wethBalance:" + wethBalance);
-        int wethDecimals = ethWalletApi.getContractTokenDecimals(baseTokenContractAddress);
-        chain.getLogger().debug("wethDecimals:" + wethDecimals);
-        BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
-        chain.getLogger().debug("wethTwice:" + wethTwice);
-        BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
-        chain.getLogger().debug("wethCount:{}, baseTokenUnitPrice:{}",  wethCount, baseTokenUnitPrice);
-        BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
-        chain.getLogger().debug("wethPrice:" + wethPrice);
-        chain.getLogger().debug("");
-        BigInteger totalSupplyV2 = ethWalletApi.totalSupply(swapTokenContractAddress);
-        chain.getLogger().debug("totalSupplyV2:" + totalSupplyV2);
-        int v2Decimals = ethWalletApi.getContractTokenDecimals(swapTokenContractAddress);
-        chain.getLogger().debug("V2Decimals:" + v2Decimals);
-        BigDecimal v2Count = new BigDecimal(totalSupplyV2).movePointLeft(v2Decimals);
-        chain.getLogger().debug("V2Count:" + v2Count);
-        BigDecimal uniV2Price = wethPrice.divide(v2Count, 6, RoundingMode.DOWN);
-        chain.getLogger().debug("uniV2Price:" + uniV2Price);
-        return uniV2Price.doubleValue();
+    public Double ethContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
+        try {
+            // 池子里ETH的数量
+            chain.getLogger().debug("ETH,  V2-LP:{}, WETH:{}", swapTokenContractAddress, baseTokenContractAddress);
+            BigInteger wethBalance = ethWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+            chain.getLogger().debug("wethBalance:" + wethBalance);
+            int wethDecimals = ethWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+            chain.getLogger().debug("wethDecimals:" + wethDecimals);
+            BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
+            chain.getLogger().debug("wethTwice:" + wethTwice);
+            BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
+            chain.getLogger().debug("wethCount:{}, baseTokenUnitPrice:{}", wethCount, baseTokenUnitPrice);
+            BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
+            chain.getLogger().debug("wethPrice:" + wethPrice);
+            chain.getLogger().debug("");
+            BigInteger totalSupplyV2 = ethWalletApi.totalSupply(swapTokenContractAddress);
+            chain.getLogger().debug("totalSupplyV2:" + totalSupplyV2);
+            int v2Decimals = ethWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+            chain.getLogger().debug("V2Decimals:" + v2Decimals);
+            BigDecimal v2Count = new BigDecimal(totalSupplyV2).movePointLeft(v2Decimals);
+            chain.getLogger().debug("V2Count:" + v2Count);
+            BigDecimal uniV2Price = wethPrice.divide(v2Count, 6, RoundingMode.DOWN);
+            chain.getLogger().debug("uniV2Price:" + uniV2Price);
+            return uniV2Price.doubleValue();
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
     }
 
 
@@ -300,30 +327,35 @@ public class CollectorTask implements Runnable {
      * @return
      * @throws Exception
      */
-    public double bscContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
-        // 计算ETH网络下 CAKE_LP 的价格 cakeLp
-        chain.getLogger().debug("BSC,  Cake-LP:{}, WBNB:{}", swapTokenContractAddress, baseTokenContractAddress);
-        // 池子里ETH的数量
-        BigInteger wethBalance = bnbWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
-        chain.getLogger().debug("wethBalance:" + wethBalance);
-        int wethDecimals = bnbWalletApi.getContractTokenDecimals(baseTokenContractAddress);
-        chain.getLogger().debug("wethDecimals:" + wethDecimals);
-        BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
-        chain.getLogger().debug("wethTwice:" + wethTwice);
-        BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
-        chain.getLogger().debug("wethCount:" + wethCount);
-        BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
-        chain.getLogger().debug("wethPrice:" + wethPrice);
-        chain.getLogger().debug("");
-        BigInteger totalSupplyCakeLp = bnbWalletApi.totalSupply(swapTokenContractAddress);
-        chain.getLogger().debug("totalSupplyCakeLp:" + totalSupplyCakeLp);
-        int cakeLpDecimals = bnbWalletApi.getContractTokenDecimals(swapTokenContractAddress);
-        chain.getLogger().debug("cakeLpDecimals:" + cakeLpDecimals);
-        BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
-        chain.getLogger().debug("cakeLpCount:" + cakeLpCount);
-        BigDecimal cakeLpPrice = wethPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
-        chain.getLogger().debug("cakeLpPrice:" + cakeLpPrice);
-        return cakeLpPrice.doubleValue();
+    public Double bscContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
+        try {
+            // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+            chain.getLogger().debug("BSC,  Cake-LP:{}, WBNB:{}", swapTokenContractAddress, baseTokenContractAddress);
+            // 池子里ETH的数量
+            BigInteger wethBalance = bnbWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+            chain.getLogger().debug("wethBalance:" + wethBalance);
+            int wethDecimals = bnbWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+            chain.getLogger().debug("wethDecimals:" + wethDecimals);
+            BigInteger wethTwice = wethBalance.multiply(new BigInteger("2"));
+            chain.getLogger().debug("wethTwice:" + wethTwice);
+            BigDecimal wethCount = new BigDecimal(wethTwice).movePointLeft(wethDecimals);
+            chain.getLogger().debug("wethCount:" + wethCount);
+            BigDecimal wethPrice = wethCount.multiply(new BigDecimal(baseTokenUnitPrice));
+            chain.getLogger().debug("wethPrice:" + wethPrice);
+            chain.getLogger().debug("");
+            BigInteger totalSupplyCakeLp = bnbWalletApi.totalSupply(swapTokenContractAddress);
+            chain.getLogger().debug("totalSupplyCakeLp:" + totalSupplyCakeLp);
+            int cakeLpDecimals = bnbWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+            chain.getLogger().debug("cakeLpDecimals:" + cakeLpDecimals);
+            BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
+            chain.getLogger().debug("cakeLpCount:" + cakeLpCount);
+            BigDecimal cakeLpPrice = wethPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
+            chain.getLogger().debug("cakeLpPrice:" + cakeLpPrice);
+            return cakeLpPrice.doubleValue();
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
     }
 
     /**
@@ -335,29 +367,34 @@ public class CollectorTask implements Runnable {
      * @return
      * @throws Exception
      */
-    public double hecoContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) throws Exception {
-        // 计算ETH网络下 CAKE_LP 的价格 cakeLp
-        chain.getLogger().debug("HECO,  Cake-LP:{}, HUSD:{}", swapTokenContractAddress, baseTokenContractAddress);
-        // 池子里HUSD的数量
-        BigInteger husdBalance = hecoWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
-        chain.getLogger().debug("husdBalance:" + husdBalance);
-        int husdDecimals = hecoWalletApi.getContractTokenDecimals(baseTokenContractAddress);
-        chain.getLogger().debug("husdDecimals:" + husdDecimals);
-        BigInteger husdTwice = husdBalance.multiply(new BigInteger("2"));
-        chain.getLogger().debug("husdTwice:" + husdTwice);
-        BigDecimal husdCount = new BigDecimal(husdTwice).movePointLeft(husdDecimals);
-        chain.getLogger().debug("husdCount:" + husdCount);
-        BigDecimal husdPrice = husdCount.multiply(new BigDecimal(baseTokenUnitPrice));
-        chain.getLogger().debug("husdPrice:" + husdPrice);
-        chain.getLogger().debug("");
-        BigInteger totalSupplyCakeLp = hecoWalletApi.totalSupply(swapTokenContractAddress);
-        chain.getLogger().debug("totalSupplyHSwapLP:" + totalSupplyCakeLp);
-        int cakeLpDecimals = hecoWalletApi.getContractTokenDecimals(swapTokenContractAddress);
-        chain.getLogger().debug("HSwapLpDecimals:" + cakeLpDecimals);
-        BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
-        chain.getLogger().debug("HSwapLpCount:" + cakeLpCount);
-        BigDecimal cakeLpPrice = husdPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
-        chain.getLogger().debug("HSwapLpPrice:" + cakeLpPrice);
-        return cakeLpPrice.doubleValue();
+    public Double hecoContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
+        try {
+            // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+            chain.getLogger().debug("HECO,  Cake-LP:{}, HUSD:{}", swapTokenContractAddress, baseTokenContractAddress);
+            // 池子里HUSD的数量
+            BigInteger husdBalance = hecoWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
+            chain.getLogger().debug("husdBalance:" + husdBalance);
+            int husdDecimals = hecoWalletApi.getContractTokenDecimals(baseTokenContractAddress);
+            chain.getLogger().debug("husdDecimals:" + husdDecimals);
+            BigInteger husdTwice = husdBalance.multiply(new BigInteger("2"));
+            chain.getLogger().debug("husdTwice:" + husdTwice);
+            BigDecimal husdCount = new BigDecimal(husdTwice).movePointLeft(husdDecimals);
+            chain.getLogger().debug("husdCount:" + husdCount);
+            BigDecimal husdPrice = husdCount.multiply(new BigDecimal(baseTokenUnitPrice));
+            chain.getLogger().debug("husdPrice:" + husdPrice);
+            chain.getLogger().debug("");
+            BigInteger totalSupplyCakeLp = hecoWalletApi.totalSupply(swapTokenContractAddress);
+            chain.getLogger().debug("totalSupplyHSwapLP:" + totalSupplyCakeLp);
+            int cakeLpDecimals = hecoWalletApi.getContractTokenDecimals(swapTokenContractAddress);
+            chain.getLogger().debug("HSwapLpDecimals:" + cakeLpDecimals);
+            BigDecimal cakeLpCount = new BigDecimal(totalSupplyCakeLp).movePointLeft(cakeLpDecimals);
+            chain.getLogger().debug("HSwapLpCount:" + cakeLpCount);
+            BigDecimal cakeLpPrice = husdPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
+            chain.getLogger().debug("HSwapLpPrice:" + cakeLpPrice);
+            return cakeLpPrice.doubleValue();
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
     }
 }

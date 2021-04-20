@@ -27,11 +27,13 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
-import network.nerve.converter.heterogeneouschain.bnb.constant.BnbConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
-import network.nerve.converter.heterogeneouschain.bnb.core.BNBWalletApi;
-import network.nerve.converter.heterogeneouschain.bnb.model.BnbSendTransactionPo;
-import network.nerve.converter.heterogeneouschain.bnb.utils.BnbUtil;
+import network.nerve.converter.heterogeneouschain.bnb.core.BeanUtilTest;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
+import network.nerve.converter.model.bo.HeterogeneousCfg;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -55,7 +57,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static network.nerve.converter.heterogeneouschain.bnb.utils.BnbUtil.leftPadding;
+import static network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil.leftPadding;
 
 
 /**
@@ -68,7 +70,7 @@ public class Base {
     protected String priKey = "";
     protected String multySignContractAddress = "";
     protected byte VERSION = 2;
-    protected BNBWalletApi bnbWalletApi;
+    protected HtgWalletApi htgWalletApi;
     protected List<String> list;
 
     @BeforeClass
@@ -79,22 +81,28 @@ public class Base {
     @Before
     public void setUp() throws Exception {
         String ethRpcAddress = "https://data-seed-prebsc-2-s1.binance.org:8545/";
-        bnbWalletApi = new BNBWalletApi();
+        htgWalletApi = new HtgWalletApi();
         BnbContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
-        bnbWalletApi.setWeb3j(web3j);
-        bnbWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(ethRpcAddress);
+        BnbContext context = new BnbContext();
+        HeterogeneousCfg cfg = new HeterogeneousCfg();
+        cfg.setChainIdOnHtgNetwork(97);
+        BnbContext.setConfig(cfg);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", context);
     }
 
     protected void setMain() {
-        if(bnbWalletApi.getWeb3j() != null) {
-            bnbWalletApi.getWeb3j().shutdown();
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
         //String mainEthRpcAddress = "http://bsc.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
-        bnbWalletApi.setWeb3j(web3j);
-        bnbWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        BnbContext.config.setChainIdOnHtgNetwork(56);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
@@ -103,31 +111,31 @@ public class Base {
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
         // 验证合约交易合法性
-        EthCall ethCall = bnbWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
+        EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
-            Log.error("[{}]交易验证失败，fromAddress: {}, value: {}, 原因: {}", txType, fromAddress, value, ethCall.getRevertReason());
+            Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = bnbWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
             //estimateGas = BigInteger.valueOf(100000L);
         }
-        BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
-        BnbSendTransactionPo bnbSendTransactionPo = bnbWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
-        String ethTxHash = bnbSendTransactionPo.getTxHash();
+        BigInteger gasLimit = estimateGas;
+        HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
+        String ethTxHash = htSendTransactionPo.getTxHash();
         return ethTxHash;
     }
 
-    protected String sendBNBWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {
+    protected String sendMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
-        String vHash = this.encoderWithdraw(txKey, toAddress, bValue, false, BnbConstant.ZERO_ADDRESS, VERSION);
+        String vHash = this.encoderWithdraw(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, VERSION);
         String signData = this.ethSign(vHash, signCount);
         //signData += "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
-        Function function = BnbUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, BnbConstant.ZERO_ADDRESS, signData);
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
@@ -135,7 +143,7 @@ public class Base {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
         String vHash = this.encoderWithdraw(txKey, toAddress, bValue, true, erc20, VERSION);
         String signData = this.ethSign(vHash, signCount);
-        Function function =  BnbUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
@@ -143,14 +151,14 @@ public class Base {
         String signData = this.ethSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
-        Function function = BnbUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
     }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
         String vHash = this.encoderUpgrade(txKey, upgradeContract, VERSION);
         String signData = this.ethSign(vHash, signCount);
-        Function function =  BnbUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
+        Function function =  HtgUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.UPGRADE);
     }
 

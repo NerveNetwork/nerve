@@ -31,7 +31,12 @@ import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
-import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
+import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
+import network.nerve.converter.heterogeneouschain.ethII.core.BeanUtilTest;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
+import network.nerve.converter.model.bo.HeterogeneousCfg;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -67,7 +72,7 @@ public class BaseII {
     protected String priKey = "";
     protected String multySignContractAddress = "";
     protected byte VERSION = 2;
-    protected ETHWalletApi ethWalletApi;
+    protected HtgWalletApi htgWalletApi;
     protected List<String> list;
 
     @BeforeClass
@@ -78,42 +83,49 @@ public class BaseII {
     @Before
     public void setUp() throws Exception {
         String ethRpcAddress = "https://ropsten.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
-        ethWalletApi = new ETHWalletApi();
+        htgWalletApi = new HtgWalletApi();
         EthContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
-        ethWalletApi.setWeb3j(web3j);
-        ethWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(ethRpcAddress);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", new EthIIContext());
+        EthIIContext context = new EthIIContext();
+        HeterogeneousCfg cfg = new HeterogeneousCfg();
+        cfg.setChainIdOnHtgNetwork(3);
+        EthContext.setConfig(cfg);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", context);
     }
 
     protected void setMain() {
-        if(ethWalletApi.getWeb3j() != null) {
-            ethWalletApi.getWeb3j().shutdown();
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
         //String mainEthRpcAddress = "http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
-        ethWalletApi.setWeb3j(web3j);
-        ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        EthIIContext.config().setChainIdOnHtgNetwork(1);
     }
 
     protected void setRinkeby() {
-        if(ethWalletApi.getWeb3j() != null) {
-            ethWalletApi.getWeb3j().shutdown();
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://rinkeby.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
-        ethWalletApi.setWeb3j(web3j);
-        ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
     }
 
     protected void setLocalRpc() {
-        if(ethWalletApi.getWeb3j() != null) {
-            ethWalletApi.getWeb3j().shutdown();
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "http://localhost:9898/jsonrpc";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
-        ethWalletApi.setWeb3j(web3j);
-        ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
@@ -122,13 +134,13 @@ public class BaseII {
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
         // 验证合约交易合法性
-        EthCall ethCall = ethWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
+        EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
             Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = ethWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
@@ -136,7 +148,7 @@ public class BaseII {
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
-        EthSendTransactionPo ethSendTransactionPo = ethWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
+        HtgSendTransactionPo ethSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
         String ethTxHash = ethSendTransactionPo.getTxHash();
         return ethTxHash;
     }
@@ -146,7 +158,7 @@ public class BaseII {
         String vHash = this.encoderWithdraw(txKey, toAddress, bValue, false, EthConstant.ZERO_ADDRESS, VERSION);
         String signData = this.ethSign(vHash, signCount);
         //signData += "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
-        Function function = EthIIUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, EthConstant.ZERO_ADDRESS, signData);
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, EthConstant.ZERO_ADDRESS, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
@@ -154,7 +166,7 @@ public class BaseII {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
         String vHash = this.encoderWithdraw(txKey, toAddress, bValue, true, erc20, VERSION);
         String signData = this.ethSign(vHash, signCount);
-        Function function =  EthIIUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
@@ -162,14 +174,14 @@ public class BaseII {
         String signData = this.ethSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
-        Function function = EthIIUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
     }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
         String vHash = this.encoderUpgrade(txKey, upgradeContract, VERSION);
         String signData = this.ethSign(vHash, signCount);
-        Function function =  EthIIUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
+        Function function =  HtgUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.UPGRADE);
     }
 

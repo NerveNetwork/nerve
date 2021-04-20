@@ -127,5 +127,6 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0099");
     ErrorCode DUPLICATE_REGISTER = ErrorCode.init(ModuleE.CV.getPrefix() + "_0100");
     ErrorCode PROPOSAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0101");
+    ErrorCode HTG_RPC_UNAVAILABLE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0102");
 
 }

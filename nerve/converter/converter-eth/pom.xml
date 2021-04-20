@@ -27,9 +27,10 @@
 
         <dependency>
             <groupId>network.nerve</groupId>
-            <artifactId>converter-base</artifactId>
+            <artifactId>converter-lib</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+
 
         <!-- eth -->
         <dependency>
@@ -144,7 +145,7 @@
         <dependency>
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>
-            <version>1.0.7.RELEASE</version>
+            <version>1.1.5.RELEASE</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>

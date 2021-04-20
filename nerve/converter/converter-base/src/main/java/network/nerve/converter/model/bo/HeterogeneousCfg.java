@@ -89,6 +89,26 @@ public class HeterogeneousCfg {
      */
     private String filterAddresses;
 
+    /**
+     * 任务队列的执行周期
+     */
+    private int blockQueuePeriod;
+    private int confirmTxQueuePeriod;
+    private int waitingTxQueuePeriod;
+
+    /**
+     * 异构链网络内部chainId
+     */
+    private long chainIdOnHtgNetwork;
+
+    public long getChainIdOnHtgNetwork() {
+        return chainIdOnHtgNetwork;
+    }
+
+    public void setChainIdOnHtgNetwork(long chainIdOnHtgNetwork) {
+        this.chainIdOnHtgNetwork = chainIdOnHtgNetwork;
+    }
+
     public int getChainId() {
         return chainId;
     }
@@ -199,6 +219,30 @@ public class HeterogeneousCfg {
 
     public void setInitialBalance(BigDecimal initialBalance) {
         this.initialBalance = initialBalance;
+    }
+
+    public int getBlockQueuePeriod() {
+        return blockQueuePeriod;
+    }
+
+    public void setBlockQueuePeriod(int blockQueuePeriod) {
+        this.blockQueuePeriod = blockQueuePeriod;
+    }
+
+    public int getConfirmTxQueuePeriod() {
+        return confirmTxQueuePeriod;
+    }
+
+    public void setConfirmTxQueuePeriod(int confirmTxQueuePeriod) {
+        this.confirmTxQueuePeriod = confirmTxQueuePeriod;
+    }
+
+    public int getWaitingTxQueuePeriod() {
+        return waitingTxQueuePeriod;
+    }
+
+    public void setWaitingTxQueuePeriod(int waitingTxQueuePeriod) {
+        this.waitingTxQueuePeriod = waitingTxQueuePeriod;
     }
 
     public String getFilterAddresses() {

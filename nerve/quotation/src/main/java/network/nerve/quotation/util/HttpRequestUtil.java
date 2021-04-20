@@ -27,7 +27,7 @@ public class HttpRequestUtil {
 
 //        HttpHost proxy = new HttpHost("127.0.0.1", 1080);
         HttpGet httpGet = new HttpGet(url);
-        RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT_MILLIS)
+        RequestConfig requestConfig = RequestConfig.custom().setConnectionRequestTimeout(TIMEOUT_MILLIS)/*.setProxy(proxy)*/
                 .setSocketTimeout(TIMEOUT_MILLIS).setConnectTimeout(TIMEOUT_MILLIS).build();
         httpGet.setConfig(requestConfig);
 

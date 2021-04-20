@@ -80,6 +80,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "OKB-USDT",
           "desc": "OKB相对USDT价格"
+        },
+        {
+          "key": "OKT_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "OKT-USDT",
+          "desc": "OKT相对USDT价格"
         }
       ]
     }

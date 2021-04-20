@@ -77,7 +77,7 @@ public class DexTxResource extends BaseCmd {
                 return failed(DexErrorCode.ERROR_ADDRESS_ERROR);
             }
             String priKey = AccountCall.getPriKey(dexConfig.getChainId(), address, password);
-            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
+            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
             BigInteger available = new BigInteger(balanceMap.get("available").toString());
             String nonce = (String) balanceMap.get("nonce");
             /* 组装交易发送 (Send transaction) */
@@ -145,7 +145,7 @@ public class DexTxResource extends BaseCmd {
                 System.out.println(from.toString());
             }
             tx.setCoinData(coinData.serialize());
-            TradingOrder order = DexUtil.createTradingOrder(nulsHash, type, amount, price,address);
+            TradingOrder order = DexUtil.createTradingOrder(nulsHash, type, amount, price, address);
             tx.setTxData(order.serialize());
 
             AccountCall.txSignature(dexConfig.getChainId(), address, password, priKey, tx);
@@ -234,7 +234,7 @@ public class DexTxResource extends BaseCmd {
             String tradingHash = (String) params.get("tradingHash");
 
             String priKey = AccountCall.getPriKey(dexConfig.getChainId(), address, password);
-            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
+            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
             BigInteger available = new BigInteger(balanceMap.get("available").toString());
             String nonce = (String) balanceMap.get("nonce");
             if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
@@ -361,52 +361,19 @@ public class DexTxResource extends BaseCmd {
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
         BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
 
-        //如果挂单是本链资产，直接将手续费加在一起
-        if (tradingPo.getQuoteAssetChainId() == dexConfig.getChainId() && tradingPo.getQuoteAssetId() == dexConfig.getAssetId()) {
-            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
-            BigInteger available = new BigInteger(balanceMap.get("available").toString());
-            String nonce = (String) balanceMap.get("nonce");
-            BigInteger fromAmount = quoteAmount.add(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
-            if (available.compareTo(fromAmount) < 0) {
-                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
-            }
-            CoinFrom from = new CoinFrom();
-            from.setAssetsChainId(dexConfig.getChainId());
-            from.setAssetsId(dexConfig.getAssetId());
-            from.setAddress(AddressTool.getAddress(address));
-            from.setAmount(fromAmount);
-            from.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from);
-        } else {
-            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
-            Map balanceMap = AccountCall.getAccountBalance(tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), address);
-            BigInteger available = new BigInteger(balanceMap.get("available").toString());
-            String nonce = (String) balanceMap.get("nonce");
-            if (available.compareTo(quoteAmount) < 0) {
-                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
-            }
-            CoinFrom from1 = new CoinFrom();
-            from1.setAssetsChainId(tradingPo.getQuoteAssetChainId());
-            from1.setAssetsId(tradingPo.getQuoteAssetId());
-            from1.setAddress(AddressTool.getAddress(address));
-            from1.setAmount(quoteAmount);
-            from1.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from1);
-
-            balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
-            available = new BigInteger(balanceMap.get("available").toString());
-            nonce = (String) balanceMap.get("nonce");
-            if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
-                throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
-            }
-            CoinFrom from2 = new CoinFrom();
-            from2.setAssetsChainId(dexConfig.getChainId());
-            from2.setAssetsId(dexConfig.getAssetId());
-            from2.setAddress(AddressTool.getAddress(address));
-            from2.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
-            from2.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from2);
+        Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), address);
+        BigInteger available = new BigInteger(balanceMap.get("available").toString());
+        String nonce = (String) balanceMap.get("nonce");
+        if (available.compareTo(quoteAmount) < 0) {
+            throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
         }
+        CoinFrom from = new CoinFrom();
+        from.setAssetsChainId(tradingPo.getQuoteAssetChainId());
+        from.setAssetsId(tradingPo.getQuoteAssetId());
+        from.setAddress(AddressTool.getAddress(address));
+        from.setAmount(quoteAmount);
+        from.setNonce(HexUtil.decode(nonce));
+        coinData.addFrom(from);
 
         CoinTo to = new CoinTo();
         to.setAssetsChainId(tradingPo.getQuoteAssetChainId());
@@ -417,6 +384,63 @@ public class DexTxResource extends BaseCmd {
         coinData.addTo(to);
 
         return coinData;
+
+//        //如果挂单是本链资产，直接将手续费加在一起
+//        if (tradingPo.getQuoteAssetChainId() == dexConfig.getChainId() && tradingPo.getQuoteAssetId() == dexConfig.getAssetId()) {
+//            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
+//            BigInteger available = new BigInteger(balanceMap.get("available").toString());
+//            String nonce = (String) balanceMap.get("nonce");
+//            BigInteger fromAmount = quoteAmount.add(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
+//            if (available.compareTo(fromAmount) < 0) {
+//                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
+//            }
+//            CoinFrom from = new CoinFrom();
+//            from.setAssetsChainId(dexConfig.getChainId());
+//            from.setAssetsId(dexConfig.getAssetId());
+//            from.setAddress(AddressTool.getAddress(address));
+//            from.setAmount(fromAmount);
+//            from.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from);
+//        } else {
+//            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+//            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), address);
+//            BigInteger available = new BigInteger(balanceMap.get("available").toString());
+//            String nonce = (String) balanceMap.get("nonce");
+//            if (available.compareTo(quoteAmount) < 0) {
+//                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
+//            }
+//            CoinFrom from1 = new CoinFrom();
+//            from1.setAssetsChainId(tradingPo.getQuoteAssetChainId());
+//            from1.setAssetsId(tradingPo.getQuoteAssetId());
+//            from1.setAddress(AddressTool.getAddress(address));
+//            from1.setAmount(quoteAmount);
+//            from1.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from1);
+//
+//            balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
+//            available = new BigInteger(balanceMap.get("available").toString());
+//            nonce = (String) balanceMap.get("nonce");
+//            if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
+//                throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
+//            }
+//            CoinFrom from2 = new CoinFrom();
+//            from2.setAssetsChainId(dexConfig.getChainId());
+//            from2.setAssetsId(dexConfig.getAssetId());
+//            from2.setAddress(AddressTool.getAddress(address));
+//            from2.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
+//            from2.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from2);
+//        }
+//
+//        CoinTo to = new CoinTo();
+//        to.setAssetsChainId(tradingPo.getQuoteAssetChainId());
+//        to.setAssetsId(tradingPo.getQuoteAssetId());
+//        to.setAddress(AddressTool.getAddress(address));
+//        to.setAmount(quoteAmount);
+//        to.setLockTime(DexConstant.DEX_LOCK_TIME);
+//        coinData.addTo(to);
+//
+//        return coinData;
     }
 
     private CoinData createSellOrderTxCoinData(String address, String tradingHash, BigInteger baseAmount) throws NulsException {
@@ -428,52 +452,19 @@ public class DexTxResource extends BaseCmd {
         }
         CoinTradingPo tradingPo = container.getCoinTrading();
 
-        //如果挂单是本链资产，直接将手续费加在一起
-        if (tradingPo.getBaseAssetChainId() == dexConfig.getChainId() && tradingPo.getBaseAssetId() == dexConfig.getAssetId()) {
-            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
-            BigInteger available = new BigInteger(balanceMap.get("available").toString());
-            String nonce = (String) balanceMap.get("nonce");
-            BigInteger fromAmount = baseAmount.add(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
-            if (available.compareTo(fromAmount) < 0) {
-                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
-            }
-            CoinFrom from = new CoinFrom();
-            from.setAssetsChainId(dexConfig.getChainId());
-            from.setAssetsId(dexConfig.getAssetId());
-            from.setAddress(AddressTool.getAddress(address));
-            from.setAmount(fromAmount);
-            from.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from);
-        } else {
-            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
-            Map balanceMap = AccountCall.getAccountBalance(tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), address);
-            BigInteger available = new BigInteger(balanceMap.get("available").toString());
-            String nonce = (String) balanceMap.get("nonce");
-            if (available.compareTo(baseAmount) < 0) {
-                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
-            }
-            CoinFrom from1 = new CoinFrom();
-            from1.setAssetsChainId(tradingPo.getBaseAssetChainId());
-            from1.setAssetsId(tradingPo.getBaseAssetId());
-            from1.setAddress(AddressTool.getAddress(address));
-            from1.setAmount(baseAmount);
-            from1.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from1);
-
-            balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
-            available = new BigInteger(balanceMap.get("available").toString());
-            nonce = (String) balanceMap.get("nonce");
-            if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
-                throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
-            }
-            CoinFrom from2 = new CoinFrom();
-            from2.setAssetsChainId(dexConfig.getChainId());
-            from2.setAssetsId(dexConfig.getAssetId());
-            from2.setAddress(AddressTool.getAddress(address));
-            from2.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
-            from2.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from2);
+        Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), address);
+        BigInteger available = new BigInteger(balanceMap.get("available").toString());
+        String nonce = (String) balanceMap.get("nonce");
+        if (available.compareTo(baseAmount) < 0) {
+            throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
         }
+        CoinFrom from = new CoinFrom();
+        from.setAssetsChainId(tradingPo.getBaseAssetChainId());
+        from.setAssetsId(tradingPo.getBaseAssetId());
+        from.setAddress(AddressTool.getAddress(address));
+        from.setAmount(baseAmount);
+        from.setNonce(HexUtil.decode(nonce));
+        coinData.addFrom(from);
 
         CoinTo to = new CoinTo();
         to.setAssetsChainId(tradingPo.getBaseAssetChainId());
@@ -484,70 +475,94 @@ public class DexTxResource extends BaseCmd {
         coinData.addTo(to);
 
         return coinData;
+
+//        //如果挂单是本链资产，直接将手续费加在一起
+//        if (tradingPo.getBaseAssetChainId() == dexConfig.getChainId() && tradingPo.getBaseAssetId() == dexConfig.getAssetId()) {
+//            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
+//            BigInteger available = new BigInteger(balanceMap.get("available").toString());
+//            String nonce = (String) balanceMap.get("nonce");
+//            BigInteger fromAmount = baseAmount.add(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
+//            if (available.compareTo(fromAmount) < 0) {
+//                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
+//            }
+//            CoinFrom from = new CoinFrom();
+//            from.setAssetsChainId(dexConfig.getChainId());
+//            from.setAssetsId(dexConfig.getAssetId());
+//            from.setAddress(AddressTool.getAddress(address));
+//            from.setAmount(fromAmount);
+//            from.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from);
+//        } else {
+//            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+//            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), address);
+//            BigInteger available = new BigInteger(balanceMap.get("available").toString());
+//            String nonce = (String) balanceMap.get("nonce");
+//            if (available.compareTo(baseAmount) < 0) {
+//                throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
+//            }
+//            CoinFrom from1 = new CoinFrom();
+//            from1.setAssetsChainId(tradingPo.getBaseAssetChainId());
+//            from1.setAssetsId(tradingPo.getBaseAssetId());
+//            from1.setAddress(AddressTool.getAddress(address));
+//            from1.setAmount(baseAmount);
+//            from1.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from1);
+//
+//            balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
+//            available = new BigInteger(balanceMap.get("available").toString());
+//            nonce = (String) balanceMap.get("nonce");
+//            if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
+//                throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
+//            }
+//            CoinFrom from2 = new CoinFrom();
+//            from2.setAssetsChainId(dexConfig.getChainId());
+//            from2.setAssetsId(dexConfig.getAssetId());
+//            from2.setAddress(AddressTool.getAddress(address));
+//            from2.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
+//            from2.setNonce(HexUtil.decode(nonce));
+//            coinData.addFrom(from2);
+//        }
+//
+//        CoinTo to = new CoinTo();
+//        to.setAssetsChainId(tradingPo.getBaseAssetChainId());
+//        to.setAssetsId(tradingPo.getBaseAssetId());
+//        to.setAddress(AddressTool.getAddress(address));
+//        to.setAmount(baseAmount);
+//        to.setLockTime(DexConstant.DEX_LOCK_TIME);
+//        coinData.addTo(to);
+//
+//        return coinData;
     }
 
 
     private CoinData createTradingOrderCancelTxCoinData(String address, TradingOrderPo orderPo) throws NulsException {
         TradingContainer container = dexManager.getTradingContainer(orderPo.getTradingHash().toHex());
-        CoinTradingPo tradingPo = container.getCoinTrading();
+
+        Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
+        BigInteger available = new BigInteger(balanceMap.get("available").toString());
+        String nonce = (String) balanceMap.get("nonce");
+        if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
+            throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
+        }
 
         CoinData coinData = new CoinData();
-
         CoinFrom from = new CoinFrom();
+        from.setAssetsChainId(dexConfig.getChainId());
+        from.setAssetsId(dexConfig.getAssetId());
         from.setAddress(orderPo.getAddress());
-        from.setNonce(orderPo.getNonce());
-        if (orderPo.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
-            from.setAmount(orderPo.getLeftQuoteAmount());
-        } else {
-            from.setAmount(orderPo.getLeftAmount());
-        }
-        if (orderPo.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
-            from.setAssetsChainId(tradingPo.getQuoteAssetChainId());
-            from.setAssetsId(tradingPo.getQuoteAssetId());
-        } else {
-            from.setAssetsChainId(tradingPo.getBaseAssetChainId());
-            from.setAssetsId(tradingPo.getBaseAssetId());
-        }
-        from.setLocked(DexConstant.ASSET_LOCK_TYPE);
+        from.setNonce(HexUtil.decode(nonce));
+        from.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
         coinData.addFrom(from);
-        //如果取消委托的资产不等于本链主资产， 则需要另外查询手续费
-        if (from.getAssetsChainId() != dexConfig.getChainId() ||
-                from.getAssetsId() != dexConfig.getAssetId() ||
-                from.getAmount().compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
-            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getAssetId(), address);
-            BigInteger available = new BigInteger(balanceMap.get("available").toString());
-            String nonce = (String) balanceMap.get("nonce");
-            if (available.compareTo(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES) < 0) {
-                throw new NulsException(DexErrorCode.INSUFFICIENT_FEE);
-            }
-
-            CoinFrom from2 = new CoinFrom();
-            from2.setAssetsChainId(dexConfig.getChainId());
-            from2.setAssetsId(dexConfig.getAssetId());
-            from2.setAddress(AddressTool.getAddress(address));
-            from2.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
-            from2.setNonce(HexUtil.decode(nonce));
-            coinData.addFrom(from2);
-        }
 
         CoinTo to = new CoinTo();
-        if (from.getAssetsChainId() != dexConfig.getChainId() || from.getAssetsId() != dexConfig.getAssetId()) {
-            to.setAssetsChainId(from.getAssetsChainId());
-            to.setAssetsId(from.getAssetsId());
-            to.setAddress(from.getAddress());
-            to.setLockTime(0);
-            to.setAmount(from.getAmount());
-            coinData.addTo(to);
-            return coinData;
-        } else {
-            to.setAssetsChainId(from.getAssetsChainId());
-            to.setAssetsId(from.getAssetsId());
-            to.setAddress(from.getAddress());
-            to.setLockTime(0);
-            to.setAmount(from.getAmount().subtract(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES));
-            coinData.addTo(to);
-            return coinData;
-        }
+        to.setAssetsChainId(dexConfig.getChainId());
+        to.setAssetsId(dexConfig.getAssetId());
+        to.setAddress(from.getAddress());
+        to.setLockTime(0);
+        to.setAmount(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
+        coinData.addTo(to);
+
+        return coinData;
     }
 
 }

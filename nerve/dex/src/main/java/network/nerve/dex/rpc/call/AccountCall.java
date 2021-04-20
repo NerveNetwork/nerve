@@ -49,13 +49,13 @@ public class AccountCall {
         }
     }
 
-    public static HashMap getAccountBalance(int chainId, int assetId, String address) throws NulsException {
+    public static HashMap getAccountBalance(int chainId,int assetChainId, int assetId, String address) throws NulsException {
 
         try {
             Map<String, Object> params = new HashMap<>(4);
             params.put(Constants.CHAIN_ID, chainId);
             params.put("address", address);
-            params.put("assetChainId", chainId);
+            params.put("assetChainId", assetChainId);
             params.put("assetId", assetId);
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, DexRpcConstant.GET_BALANCE_NONCE, params);
             if (!cmdResp.isSuccess()) {

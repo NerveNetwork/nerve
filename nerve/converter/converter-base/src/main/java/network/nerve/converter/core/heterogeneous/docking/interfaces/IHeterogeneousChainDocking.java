@@ -151,11 +151,6 @@ public interface IHeterogeneousChainDocking {
     HeterogeneousAssetInfo getAssetByAssetId(int assetId);
 
     /**
-     * 获取当前异构链下所有的初始资产
-     */
-    List<HeterogeneousAssetInfo> getAllInitializedAssets() throws Exception;
-
-    /**
      * 从异构链网络上查询异构链合约资产信息，验证资产数据是否正确
      */
     boolean validateHeterogeneousAssetInfoFromNet(String contractAddress, String symbol, int decimals) throws Exception;
@@ -313,6 +308,10 @@ public interface IHeterogeneousChainDocking {
     }
 
     default boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+        return false;
+    }
+
+    default boolean isMinterERC20(String erc20) throws Exception {
         return false;
     }
 }

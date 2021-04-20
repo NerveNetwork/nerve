@@ -1,6 +1,7 @@
 [
   {
     "chainId": 101,
+    "chainIdOnHtgNetwork": 1,
     "type": 1,
     "symbol": "ETH",
     "decimals": 18,
@@ -13,10 +14,14 @@
     "txBlockConfirmationsOfWithdraw": 3,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
+    "blockQueuePeriod": 20,
+    "confirmTxQueuePeriod": 20,
+    "waitingTxQueuePeriod": 20,
     "filterAddresses": "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15,0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"
   },
   {
     "chainId": 102,
+    "chainIdOnHtgNetwork": 56,
     "type": 1,
     "symbol": "BNB",
     "decimals": 18,
@@ -29,10 +34,14 @@
     "txBlockConfirmationsOfWithdraw": 3,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
     "filterAddresses": "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15,0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"
   },
   {
     "chainId": 103,
+    "chainIdOnHtgNetwork": 128,
     "type": 1,
     "symbol": "HT",
     "decimals": 18,
@@ -45,6 +54,9 @@
     "txBlockConfirmationsOfWithdraw": 3,
     "intervalWaittingSendTransaction": 8,
     "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
     "filterAddresses": "0xbbdb9e2ce4f8c8a4463303a9a90ac1aedefb1e1c,0x23023c99dcede393d6d18ca7fb08541b3364fa90"
   }
 ]

@@ -815,6 +815,47 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_REGISTER_NETWORK, version = 1.0, description = "资产异构链注册网络")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID")
+    })
+    )
+    public Response getRegisterNetwork(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+        try {
+            Integer chainId = Integer.parseInt(params.get("chainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
+            if (assetInfos == null || assetInfos.isEmpty()) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            int resultChainId = 0;
+            for (HeterogeneousAssetInfo assetInfo : assetInfos) {
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+                if (docking == null) {
+                    return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
+                }
+                if (StringUtils.isBlank(assetInfo.getContractAddress())) {
+                    resultChainId = docking.getChainId();
+                    break;
+                }
+                if (!docking.isMinterERC20(assetInfo.getContractAddress())) {
+                    resultChainId = docking.getChainId();
+                    break;
+                }
+            }
+            rtMap.put("heterogeneousChainId", resultChainId);
+
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {
             LoggerUtil.LOG.error(e);

@@ -256,6 +256,9 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == po.getMapAdditionalFee()) {
                     po.setMapAdditionalFee(new HashMap<>(INIT_CAPACITY_8));
                 }
+                // 更新提现手续费追加的变化
+                chain.increaseWithdrawFeeChangeVersion(basicTxHash);
+                // 保存交易
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 BigInteger fee = coinData.getTo().get(0).getAmount();
                 po.getMapAdditionalFee().put(tx.getHash().toHex(), fee);
@@ -291,6 +294,8 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (po == null || null == po.getMapAdditionalFee() || po.getMapAdditionalFee().isEmpty()) {
                     continue;
                 }
+                // 回滚提现手续费追加的变化
+                chain.decreaseWithdrawFeeChangeVersion(withdrawalTxHash);
                 //移除当前交易的kv
                 po.getMapAdditionalFee().remove(tx.getHash().toHex());
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);

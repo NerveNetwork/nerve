@@ -24,62 +24,24 @@
 package network.nerve.converter.heterogeneouschain.eth.model;
 
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgInput;
 
 /**
  * @author: Mimi
  * @date: 2020-05-21
  */
-public class EthInput {
+public class EthInput extends HtgInput {
     private static final EthInput EMPTY = new EthInput(false, null, null);
-    private boolean isBroadcastTx;
-    private boolean isDepositTx;
-    private HeterogeneousChainTxType txType;
-    private String nerveTxHash;
 
     public EthInput(boolean isBroadcastTx, HeterogeneousChainTxType txType, String nerveTxHash) {
-        this.isBroadcastTx = isBroadcastTx;
-        this.txType = txType;
-        this.nerveTxHash = nerveTxHash;
+        super(isBroadcastTx, txType, nerveTxHash);
     }
 
     public EthInput(boolean isDepositTx, HeterogeneousChainTxType txType) {
-        this.isDepositTx = isDepositTx;
-        this.txType = txType;
+        super(isDepositTx, txType);
     }
 
     public static EthInput empty() {
         return EMPTY;
-    }
-
-    public boolean isBroadcastTx() {
-        return isBroadcastTx;
-    }
-
-    public void setBroadcastTx(boolean broadcastTx) {
-        isBroadcastTx = broadcastTx;
-    }
-
-    public boolean isDepositTx() {
-        return isDepositTx;
-    }
-
-    public void setDepositTx(boolean depositTx) {
-        isDepositTx = depositTx;
-    }
-
-    public HeterogeneousChainTxType getTxType() {
-        return txType;
-    }
-
-    public void setTxType(HeterogeneousChainTxType txType) {
-        this.txType = txType;
-    }
-
-    public String getNerveTxHash() {
-        return nerveTxHash;
-    }
-
-    public void setNerveTxHash(String nerveTxHash) {
-        this.nerveTxHash = nerveTxHash;
     }
 }

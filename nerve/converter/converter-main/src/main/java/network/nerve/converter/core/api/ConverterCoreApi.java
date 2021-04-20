@@ -322,6 +322,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             case ETH: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_ETH_PRICE);
             case BNB: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_BNB_PRICE);
             case HT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_HT_PRICE);
+            case OKT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_OKT_PRICE);
         }
         return BigDecimal.ZERO;
     }

@@ -75,10 +75,10 @@ public class RetryWithdrawalProcess implements CommandProcessor {
 
     @Override
     public CommandResult execute(String[] args) {
-        Result<String> result = converterService.retryWithdrawal(new RetryWithdrawalReq(args[1]));
+        Result<Boolean> result = converterService.retryWithdrawal(new RetryWithdrawalReq(args[1]));
         if (result.isFailed()) {
             return CommandResult.getFailed(result);
         }
-        return CommandResult.getSuccess(result.getData());
+        return CommandResult.getSuccess(result.getData().toString());
     }
 }

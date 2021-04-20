@@ -24,108 +24,16 @@
 
 package network.nerve.converter.heterogeneouschain.ethII.model;
 
-import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
-
-import java.io.Serializable;
-import java.util.Map;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 
 /**
  * @author: Mimi
  * @date: 2020-08-26
  */
-public class EthWaitingTxPo extends HeterogeneousTransactionInfo implements Serializable {
-
-    private Long validateHeight;
-    private Map<String, Integer> currentVirtualBanks;
-    private int currentNodeSendOrder;
-    private long waitingEndTime;
-    private long maxWaitingEndTime;
-    /**
-     * 合约升级的参数
-     */
-    private String upgradeContract;
-    /**
-     * 拜占庭签名数据
-     */
-    private String signatures;
-
-
-    public String getUpgradeContract() {
-        return upgradeContract;
-    }
-
-    public void setUpgradeContract(String upgradeContract) {
-        this.upgradeContract = upgradeContract;
-    }
-
-    public String getSignatures() {
-        return signatures;
-    }
-
-    public void setSignatures(String signatures) {
-        this.signatures = signatures;
-    }
-
-    public long getMaxWaitingEndTime() {
-        return maxWaitingEndTime;
-    }
-
-    public void setMaxWaitingEndTime(long maxWaitingEndTime) {
-        this.maxWaitingEndTime = maxWaitingEndTime;
-    }
-
-    public long getWaitingEndTime() {
-        return waitingEndTime;
-    }
-
-    public void setWaitingEndTime(long waitingEndTime) {
-        this.waitingEndTime = waitingEndTime;
-    }
-
-    public int getCurrentNodeSendOrder() {
-        return currentNodeSendOrder;
-    }
-
-    public void setCurrentNodeSendOrder(int currentNodeSendOrder) {
-        this.currentNodeSendOrder = currentNodeSendOrder;
-    }
-
-    public Map<String, Integer> getCurrentVirtualBanks() {
-        return currentVirtualBanks;
-    }
-
-    public void setCurrentVirtualBanks(Map<String, Integer> currentVirtualBanks) {
-        this.currentVirtualBanks = currentVirtualBanks;
-    }
-
-    public Long getValidateHeight() {
-        return validateHeight;
-    }
-
-    public void setValidateHeight(Long validateHeight) {
-        this.validateHeight = validateHeight;
-    }
+public class EthWaitingTxPo extends HtgWaitingTxPo {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("{");
-        sb.append("\"validateHeight\":")
-                .append(validateHeight);
-        sb.append(",\"currentVirtualBanks\":")
-                .append('\"').append(currentVirtualBanks).append('\"');
-        sb.append(",\"currentNodeSendOrder\":")
-                .append(currentNodeSendOrder);
-        sb.append(",\"waitingEndTime\":")
-                .append(waitingEndTime);
-        sb.append(",\"maxWaitingEndTime\":")
-                .append(maxWaitingEndTime);
-        sb.append(",\"upgradeContract\":")
-                .append('\"').append(upgradeContract).append('\"');
-        sb.append(",\"signatures\":")
-                .append('\"').append(signatures).append('\"');
-        sb.append(",\"baseInfo\":")
-                .append(super.toString());
-        sb.append('}');
-        return sb.toString();
+        return super.toString();
     }
 }

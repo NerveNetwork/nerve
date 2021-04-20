@@ -105,6 +105,7 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_BNB = "BNB-USDT";
     String ANCHOR_TOKEN_HT = "HT-USDT";
     String ANCHOR_TOKEN_OKB = "OKB-USDT";
+    String ANCHOR_TOKEN_OKT = "OKT-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

@@ -19,6 +19,8 @@
         <module>converter-ethII</module>
         <module>converter-bnb</module>
         <module>converter-ht</module>
+        <module>converter-lib</module>
+        <module>converter-okt</module>
     </modules>
 
 </project>

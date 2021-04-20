@@ -31,7 +31,7 @@ package network.nerve.converter.heterogeneouschain.bnb.constant;
  */
 public interface BnbDBConstant {
     /**
-     * BSC信息表
+     * BNB信息表
      * - 同步区块头信息
      * - 交易关系信息
      * - 账户信息

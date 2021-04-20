@@ -27,13 +27,14 @@ import io.nuls.core.core.annotation.Component;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IHeterogeneousUpgrade;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
+import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 
 /**
  * @author: Mimi
  * @date: 2020-02-17
  */
 @Component
-public class EthCallBackManager {
+public class EthCallBackManager implements HtgCallBackManager {
 
     private IDepositTxSubmitter depositTxSubmitter;
     private ITxConfirmedProcessor txConfirmedProcessor;

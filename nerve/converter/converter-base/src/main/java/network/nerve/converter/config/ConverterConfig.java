@@ -119,6 +119,11 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      */
     private String initVirtualBankPubKeyList;
 
+    /**
+     * v1.11.0 协议升级高度 支持欧科生态链跨链
+     */
+    private long oktCrossChainHeight;
+
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;
     }
@@ -305,5 +310,13 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setHuobiCrossChainHeight(long huobiCrossChainHeight) {
         this.huobiCrossChainHeight = huobiCrossChainHeight;
+    }
+
+    public long getOktCrossChainHeight() {
+        return oktCrossChainHeight;
+    }
+
+    public void setOktCrossChainHeight(long oktCrossChainHeight) {
+        this.oktCrossChainHeight = oktCrossChainHeight;
     }
 }

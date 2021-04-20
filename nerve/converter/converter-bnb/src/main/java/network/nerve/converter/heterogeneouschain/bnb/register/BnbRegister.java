@@ -25,7 +25,6 @@ package network.nerve.converter.heterogeneouschain.bnb.register;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -35,28 +34,31 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
 import network.nerve.converter.heterogeneouschain.bnb.callback.BnbCallBackManager;
-import network.nerve.converter.heterogeneouschain.bnb.constant.BnbConstant;
 import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
-import network.nerve.converter.heterogeneouschain.bnb.core.BNBWalletApi;
-import network.nerve.converter.heterogeneouschain.bnb.docking.BnbDocking;
-import network.nerve.converter.heterogeneouschain.bnb.helper.*;
-import network.nerve.converter.heterogeneouschain.bnb.listener.BnbListener;
-import network.nerve.converter.heterogeneouschain.bnb.model.BnbUnconfirmedTxPo;
-import network.nerve.converter.heterogeneouschain.bnb.model.BnbWaitingTxPo;
-import network.nerve.converter.heterogeneouschain.bnb.schedules.BnbBlockScheduled;
-import network.nerve.converter.heterogeneouschain.bnb.schedules.BnbConfirmTxScheduled;
-import network.nerve.converter.heterogeneouschain.bnb.schedules.BnbWaitingTxInvokeDataScheduled;
-import network.nerve.converter.heterogeneouschain.bnb.storage.*;
+import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
+import network.nerve.converter.heterogeneouschain.lib.helper.*;
+import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
+import network.nerve.converter.heterogeneouschain.lib.storage.*;
+import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import static network.nerve.converter.heterogeneouschain.bnb.context.BnbContext.logger;
 
 
 /**
@@ -67,56 +69,24 @@ import static network.nerve.converter.heterogeneouschain.bnb.context.BnbContext.
  */
 @Component("bnbRegister")
 public class BnbRegister implements IHeterogeneousChainRegister {
-    @Autowired
-    private BNBWalletApi bnbWalletApi;
+
     @Autowired
     private ConverterConfig converterConfig;
     @Autowired
-    private BnbListener bnbListener;
-    @Autowired
     private BnbCallBackManager bnbCallBackManager;
-    @Autowired
-    private BnbTxRelationStorageService bnbTxRelationStorageService;
-    @Autowired
-    private BnbUnconfirmedTxStorageService bnbUnconfirmedTxStorageService;
-    @Autowired
-    private BnbAccountStorageService bnbAccountStorageService;
-    @Autowired
-    private BnbERC20Helper bnbERC20Helper;
-    @Autowired
-    private BnbMultiSignAddressHistoryStorageService bnbMultiSignAddressHistoryStorageService;
-    @Autowired
-    private BnbTxStorageService bnbTxStorageService;
-    @Autowired
-    private BnbCommonHelper bnbCommonHelper;
-    @Autowired
-    private BnbInvokeTxHelper bnbInvokeTxHelper;
-    @Autowired
-    private BnbParseTxHelper bnbParseTxHelper;
-    @Autowired
-    private BnbAnalysisTxHelper bnbAnalysisTxHelper;
-    @Autowired
-    private BnbResendHelper bnbResendHelper;
-    @Autowired
-    private BnbBlockScheduled bnbBlockScheduled;
-    @Autowired
-    private BnbConfirmTxScheduled bnbConfirmTxScheduled;
-    @Autowired
-    private BnbWaitingTxInvokeDataScheduled bnbWaitingTxInvokeDataScheduled;
-    @Autowired
-    private BnbPendingTxHelper bnbPendingTxHelper;
-    @Autowired
-    private BnbTxInvokeInfoStorageService bnbTxInvokeInfoStorageService;
-    @Autowired
-    private BnbUpgradeContractSwitchHelper bnbUpgradeContractSwitchHelper;
+
+    private BnbContext bnbContext;
+    private HtgListener htgListener;
+    private HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
+    private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
+    private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
 
     private ScheduledThreadPoolExecutor blockSyncExecutor;
     private ScheduledThreadPoolExecutor confirmTxExecutor;
     private ScheduledThreadPoolExecutor waitingTxExecutor;
-
     private boolean isInitial = false;
-
     private boolean newProcessActivated = false;
+    private BeanMap beanMap = new BeanMap();
 
     @Override
     public int order() {
@@ -125,7 +95,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
 
     @Override
     public int getChainId() {
-        return BnbConstant.BNB_CHAIN_ID;
+        return BnbContext.HTG_CHAIN_ID;
     }
 
     @Override
@@ -136,9 +106,11 @@ public class BnbRegister implements IHeterogeneousChainRegister {
             isInitial = true;
             // 存放配置实例
             BnbContext.setConfig(config);
+            // 初始化实例
+            initBean();
             // 初始化默认API
             initDefualtAPI();
-            // 解析BNB API URL
+            // 解析HT API URL
             initEthWalletRPC();
             // 存放nerveChainId
             BnbContext.NERVE_CHAINID = converterConfig.getChainId();
@@ -150,36 +122,65 @@ public class BnbRegister implements IHeterogeneousChainRegister {
         }
     }
 
+    private void initBean() {
+        try {
+            beanMap.add(HtgDocking.class, (BnbContext.DOCKING = new HtgDocking()));
+            beanMap.add(HtgContext.class, (bnbContext = new BnbContext()));
+            beanMap.add(HtgListener.class, (htgListener = new HtgListener()));
+
+            beanMap.add(ConverterConfig.class, converterConfig);
+            beanMap.add(HtgCallBackManager.class, bnbCallBackManager);
+
+            beanMap.add(HtgWalletApi.class);
+            beanMap.add(HtgBlockHandler.class);
+            beanMap.add(HtgConfirmTxHandler.class);
+            beanMap.add(HtgWaitingTxInvokeDataHandler.class);
+            beanMap.add(HtgAccountHelper.class);
+            beanMap.add(HtgAnalysisTxHelper.class);
+            beanMap.add(HtgBlockAnalysisHelper.class);
+            beanMap.add(HtgCommonHelper.class);
+            beanMap.add(HtgERC20Helper.class);
+            beanMap.add(HtgInvokeTxHelper.class);
+            beanMap.add(HtgLocalBlockHelper.class);
+            beanMap.add(HtgParseTxHelper.class);
+            beanMap.add(HtgPendingTxHelper.class);
+            beanMap.add(HtgResendHelper.class);
+            beanMap.add(HtgStorageHelper.class);
+            beanMap.add(HtgUpgradeContractSwitchHelper.class);
+
+            beanMap.add(HtgAccountStorageService.class, new HtgAccountStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB));
+            beanMap.add(HtgBlockHeaderStorageService.class, new HtgBlockHeaderStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB));
+            beanMap.add(HtgERC20StorageService.class, new HtgERC20StorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB));
+            beanMap.add(HtgMultiSignAddressHistoryStorageService.class, (htgMultiSignAddressHistoryStorageService = new HtgMultiSignAddressHistoryStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB)));
+            beanMap.add(HtgTxInvokeInfoStorageService.class, (htgTxInvokeInfoStorageService = new HtgTxInvokeInfoStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB)));
+            beanMap.add(HtgTxRelationStorageService.class, new HtgTxRelationStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB));
+            beanMap.add(HtgTxStorageService.class, new HtgTxStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB));
+            beanMap.add(HtgUnconfirmedTxStorageService.class, (htgUnconfirmedTxStorageService = new HtgUnconfirmedTxStorageServiceImpl(bnbContext, BnbDBConstant.DB_BNB)));
+
+            Collection<Object> values = beanMap.values();
+            for (Object value : values) {
+                if (value instanceof BeanInitial) {
+                    BeanInitial beanInitial = (BeanInitial) value;
+                    beanInitial.init(beanMap);
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Override
     public HeterogeneousChainInfo getChainInfo() {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
-        info.setChainId(BnbConstant.BNB_CHAIN_ID);
-        info.setChainName(BnbConstant.BNB_SYMBOL);
-        info.setMultySignAddress(BnbContext.getConfig().getMultySignAddress().toLowerCase());
+        info.setChainId(BnbContext.config.getChainId());
+        info.setChainName(BnbContext.config.getSymbol());
+        info.setMultySignAddress(BnbContext.config.getMultySignAddress().toLowerCase());
         return info;
     }
 
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
-        BnbDocking docking = BnbDocking.getInstance();
-        docking.setBnbWalletApi(bnbWalletApi);
-        docking.setBnbListener(bnbListener);
-        docking.setConverterConfig(converterConfig);
-        docking.setBnbTxRelationStorageService(bnbTxRelationStorageService);
-        docking.setBnbUnconfirmedTxStorageService(bnbUnconfirmedTxStorageService);
-        docking.setBnbAccountStorageService(bnbAccountStorageService);
-        docking.setBnbMultiSignAddressHistoryStorageService(bnbMultiSignAddressHistoryStorageService);
-        docking.setBnbERC20Helper(bnbERC20Helper);
-        docking.setBnbTxStorageService(bnbTxStorageService);
-        docking.setBnbCallBackManager(bnbCallBackManager);
-        docking.setBnbCommonHelper(bnbCommonHelper);
-        docking.setBnbUpgradeContractSwitchHelper(bnbUpgradeContractSwitchHelper);
-        docking.setBnbInvokeTxHelper(bnbInvokeTxHelper);
-        docking.setBnbParseTxHelper(bnbParseTxHelper);
-        docking.setBnbAnalysisTxHelper(bnbAnalysisTxHelper);
-        docking.setBnbResendHelper(bnbResendHelper);
-        docking.setBnbPendingTxHelper(bnbPendingTxHelper);
-        return docking;
+        return BnbContext.DOCKING;
     }
 
     @Override
@@ -187,7 +188,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
         if (!this.newProcessActivated) {
             String multiSigAddress = registerInfo.getMultiSigAddress().toLowerCase();
             // 监听多签地址交易
-            bnbListener.addListeningAddress(multiSigAddress);
+            htgListener.addListeningAddress(multiSigAddress);
             // 管理回调函数实例
             bnbCallBackManager.setDepositTxSubmitter(registerInfo.getDepositTxSubmitter());
             bnbCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
@@ -197,7 +198,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
             // 更新多签地址
             BnbContext.MULTY_SIGN_ADDRESS = multiSigAddress;
             // 保存当前多签地址到多签地址历史列表中
-            bnbMultiSignAddressHistoryStorageService.save(multiSigAddress);
+            htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
             // 初始化交易等待任务队列
             initWaitingTxQueue();
             // 启动新流程的工作任务池
@@ -205,7 +206,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
             // 设置新流程切换标志
             this.newProcessActivated = true;
         }
-        logger().info("BNB 注册完成.");
+        BnbContext.logger.info("{} 注册完成.", BnbContext.config.getSymbol());
     }
 
     /**
@@ -223,19 +224,20 @@ public class BnbRegister implements IHeterogeneousChainRegister {
         }
     }
 
-    private void initDefualtAPI() throws NulsException {
-        bnbWalletApi.init(ethWalletRpcProcessing(BnbContext.getConfig().getCommonRpcAddress()));
+    private void initDefualtAPI() throws Exception {
+        HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
+        htgWalletApi.init(ethWalletRpcProcessing(BnbContext.config.getCommonRpcAddress()));
     }
 
     private void initEthWalletRPC() {
-        String orderRpcAddresses = BnbContext.getConfig().getOrderRpcAddresses();
+        String orderRpcAddresses = BnbContext.config.getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
             for(String rpc : rpcArray) {
                 BnbContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
-        String standbyRpcAddresses = BnbContext.getConfig().getStandbyRpcAddresses();
+        String standbyRpcAddresses = BnbContext.config.getStandbyRpcAddresses();
         if(StringUtils.isNotBlank(standbyRpcAddresses)) {
             String[] rpcArray = standbyRpcAddresses.split(",");
             for(String rpc : rpcArray) {
@@ -253,7 +255,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
     }
 
     private void initFilterAddresses() {
-        String filterAddresses = BnbContext.getConfig().getFilterAddresses();
+        String filterAddresses = BnbContext.config.getFilterAddresses();
         if(StringUtils.isNotBlank(filterAddresses)) {
             String[] filterArray = filterAddresses.split(",");
             for(String address : filterArray) {
@@ -264,14 +266,14 @@ public class BnbRegister implements IHeterogeneousChainRegister {
     }
 
     private void initUnconfirmedTxQueue() {
-        List<BnbUnconfirmedTxPo> list = bnbUnconfirmedTxStorageService.findAll();
+        List<HtgUnconfirmedTxPo> list = htgUnconfirmedTxStorageService.findAll();
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
                     BnbContext.UNCONFIRMED_TX_QUEUE.offer(po);
                     // 把待确认的交易加入到监听交易hash列表中
-                    bnbListener.addListeningTx(po.getTxHash());
+                    htgListener.addListeningTx(po.getTxHash());
                 }
             });
         }
@@ -280,17 +282,17 @@ public class BnbRegister implements IHeterogeneousChainRegister {
 
     private void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("bnb-block-sync"));
-        blockSyncExecutor.scheduleWithFixedDelay(bnbBlockScheduled, 60, 5, TimeUnit.SECONDS);
+        blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, 5, TimeUnit.SECONDS);
 
         confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("bnb-confirm-tx"));
-        confirmTxExecutor.scheduleWithFixedDelay(bnbConfirmTxScheduled, 60, 10, TimeUnit.SECONDS);
+        confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
 
         waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("bnb-waiting-tx"));
-        waitingTxExecutor.scheduleWithFixedDelay(bnbWaitingTxInvokeDataScheduled, 60, 10, TimeUnit.SECONDS);
+        waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {
-        List<BnbWaitingTxPo> list = bnbTxInvokeInfoStorageService.findAllWaitingTxPo();
+        List<HtgWaitingTxPo> list = htgTxInvokeInfoStorageService.findAllWaitingTxPo();
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {

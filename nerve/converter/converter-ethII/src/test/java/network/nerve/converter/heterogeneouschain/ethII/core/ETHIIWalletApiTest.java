@@ -10,13 +10,13 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
-import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.heterogeneouschain.ethII.base.BaseII;
-import network.nerve.converter.heterogeneouschain.ethII.constant.EthIIConstant;
-import network.nerve.converter.heterogeneouschain.ethII.helper.EthIIParseTxHelper;
-import network.nerve.converter.heterogeneouschain.ethII.utils.EthIIUtil;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +31,6 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.*;
-import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -138,20 +137,20 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void eventHashTest() {
-        System.out.println(String.format("event: %s, hash: %s", EthIIConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED.getName(), EventEncoder.encode(EthIIConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED)));
-        System.out.println(String.format("event: %s, hash: %s", EthIIConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED.getName(), EventEncoder.encode(EthIIConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED)));
-        System.out.println(String.format("event: %s, hash: %s", EthIIConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED.getName(), EventEncoder.encode(EthIIConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED)));
+        System.out.println(String.format("event: %s, hash: %s", HtgConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED.getName(), EventEncoder.encode(HtgConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED)));
+        System.out.println(String.format("event: %s, hash: %s", HtgConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED.getName(), EventEncoder.encode(HtgConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED)));
+        System.out.println(String.format("event: %s, hash: %s", HtgConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED.getName(), EventEncoder.encode(HtgConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED)));
     }
 
     @Test
     public void methodHashTest() {
-        Function upgradeFunction = EthIIUtil.getCreateOrSignUpgradeFunction("", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", "0x");
+        Function upgradeFunction = HtgUtil.getCreateOrSignUpgradeFunction("", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", "0x");
         System.out.println(String.format("name: %s, hash: %s", upgradeFunction.getName(), FunctionEncoder.encode(upgradeFunction)));
-        Function withdrawFunction = EthIIUtil.getCreateOrSignWithdrawFunction("", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", BigInteger.ZERO, false, "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", "0x");
+        Function withdrawFunction = HtgUtil.getCreateOrSignWithdrawFunction("", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", BigInteger.ZERO, false, "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd", "0x");
         System.out.println(String.format("name: %s, hash: %s", withdrawFunction.getName(), FunctionEncoder.encode(withdrawFunction)));
-        Function changeFunction = EthIIUtil.getCreateOrSignManagerChangeFunction("", List.of(), List.of(), 1, "0x");
+        Function changeFunction = HtgUtil.getCreateOrSignManagerChangeFunction("", List.of(), List.of(), 1, "0x");
         System.out.println(String.format("name: %s, hash: %s", changeFunction.getName(), FunctionEncoder.encode(changeFunction)));
-        Function crossOutFunction = EthIIUtil.getCrossOutFunction("TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd", BigInteger.ZERO, "0x7D759A3330ceC9B766Aa4c889715535eeD3c0484");
+        Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd", BigInteger.ZERO, "0x7D759A3330ceC9B766Aa4c889715535eeD3c0484");
         System.out.println(String.format("name: %s, hash: %s", crossOutFunction.getName(), FunctionEncoder.encode(crossOutFunction)));
     }
 
@@ -172,7 +171,7 @@ public class ETHIIWalletApiTest extends BaseII {
                     "totalSupply",
                     List.of(),
                     List.of(new TypeReference<Uint256>() {}));
-            List<Type> typeList = ethWalletApi.callViewFunction(contract, totalSupply);
+            List<Type> typeList = htgWalletApi.callViewFunction(contract, totalSupply);
             return new BigInteger(typeList.get(0).getValue().toString());
         } catch (Exception e) {
             Log.error("contract[{}] error[{}]", contract, e.getMessage());
@@ -190,13 +189,13 @@ public class ETHIIWalletApiTest extends BaseII {
         setAccount_EFa1();
         // ETH数量
         String sendAmount = "0.1";
-        String txHash = ethWalletApi.sendETH(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个ETH, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
         // ERC20
         String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
         String tokenAmount = "100";
         int tokenDecimals = 6;
-        EthSendTransaction token = ethWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
 
@@ -209,11 +208,11 @@ public class ETHIIWalletApiTest extends BaseII {
         // 初始化 账户
         setAccount_EFa1();
         // ETH数量
-        String sendAmount = "0.2";
+        String sendAmount = "0.1";
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        BigInteger convertAmount = ethWalletApi.convertEthToWei(new BigDecimal(sendAmount));
-        Function crossOutFunction = EthIIUtil.getCrossOutFunction(to, convertAmount, EthConstant.ZERO_ADDRESS);
+        BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
+        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, EthConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
         System.out.println(String.format("eth充值[%s], hash: %s", sendAmount, hash));
     }
@@ -241,28 +240,28 @@ public class ETHIIWalletApiTest extends BaseII {
                 Arrays.asList(new Address(from), new Address(multySignContractAddress)),
                 Arrays.asList(new TypeReference<Uint256>() {}));
 
-        BigInteger allowanceAmount = (BigInteger) ethWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
+        BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
             // erc20授权
             String approveAmount = "99999999";
             Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
             System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
-            while (ethWalletApi.getTxReceipt(authHash) == null) {
+            while (htgWalletApi.getTxReceipt(authHash) == null) {
                 System.out.println("等待8秒查询[ERC20授权]交易打包结果");
                 TimeUnit.SECONDS.sleep(8);
             }
             TimeUnit.SECONDS.sleep(8);
-            BigInteger tempAllowanceAmount = (BigInteger) ethWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
+            BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
                 System.out.println("等待8秒查询[ERC20授权]交易额度");
                 TimeUnit.SECONDS.sleep(8);
-                tempAllowanceAmount = (BigInteger) ethWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
+                tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
         System.out.println("[ERC20授权]额度已满足条件");
         // crossOut erc20转账
-        Function crossOutFunction = EthIIUtil.getCrossOutFunction(to, convertAmount, erc20Address);
+        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
         System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
     }
@@ -281,7 +280,7 @@ public class ETHIIWalletApiTest extends BaseII {
         // 注册的ERC20Minter合约地址
         String erc20Minter = "0x7b6F71c8B123b38aa8099e0098bEC7fbc35B8a13";
 
-        EthGetTransactionCount transactionCount = ethWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
+        EthGetTransactionCount transactionCount = htgWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
         //创建RawTransaction交易对象
         Function function = new Function(
@@ -303,7 +302,7 @@ public class ETHIIWalletApiTest extends BaseII {
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
         //发送交易
-        EthSendTransaction ethSendTransaction = ethWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
+        EthSendTransaction ethSendTransaction = htgWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
         System.out.println(ethSendTransaction.getTransactionHash());
     }
 
@@ -370,7 +369,7 @@ public class ETHIIWalletApiTest extends BaseII {
         String signData = "d911709c21077ca10a42acf34af721498267afdd15e17535575c8876aab167fe1fbc2429781f9c9fe6c95d023ec548eafcc6df5989ee0e6fc8c3daa7392a21e71b4259a66f0283820e04594186ac3885fb8d69b13a08432be41f65be1cc4c6164b04b77bf1a36a65c2a0c61d29e38d4a8fb076baf5146de686b2859a0876ce19741b0bc3d8c5145fab640f676e611ab6f548fbd3f097be8523b65d710dafa62791d12eb0e287c16a0aa16263546e6ccc58c45c27d85bbb71837c27d77975cb8d4eed1b16a61369a2866e5f1b9268e36a029939f4884501223819303fc19c6be5ef53870c30a38020dd65e3f9acfe3508af587a41b60c8b50daf73c3dbeef5793b3c8111cff089679a891c085c32e77bbbb94be664c533a04e4c3e4c6cbc81952ee79362f622afd5e4178bdd5a9cfd7eda699ff8f0b6cd22be14653ea64faf1d1242c98141cff341c2dc5a7a5522ed729e74359ea7ce07f19259b3701c8a47a3ce89dccd67b1664b2619b987529bd04ce5469bd672c75997793c5cddd8088d7f88ad807966a1c4c637b98f6d3bd350f9a7de9d1c4b0ecf45e0828c4e9e2bdedfe971f593c4fae0b164d69b2cba2027b6ae152926f8722ce6da5545ede42aafc7085ebc8cf41ed1cd0731607440da2ed59f1817a54ca29f8bd54dcc5efbe6e5ec23e3e37770fcdea5af6174a648e087b2ff83676444575f46a41c3b4326adff07c04a9fd6a7c48411b01e8466251717196ce0bab84df6e4692e830fda095aea22b90e040e6a9f939ac104ef67fa2886ebdc3aa4ccd30af19036e476351b4ebbbcb0dff7edd480eb1a61b7ffa71c5a122daf40484c211addd8f8a46e5a3fab1f713863c48b8a5c33769b20bc3fed3a967084eec2678dacbc4726a2375ce5c99adf3e2f99542f454cbf58a1b";
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
-        Function function = EthIIUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
         String hash = this.sendTx(fromAddress, priKey, function, HeterogeneousChainTxType.CHANGE);
         System.out.println(String.format("hash: %s", hash));
     }
@@ -389,7 +388,7 @@ public class ETHIIWalletApiTest extends BaseII {
         String toAddress = "0x8caF3998f48f14898CDF25Dc2300bE4f094b9aEA";
         String signData = "0xbbb65fb506594c82cacb5d1853f3354fb53649738df3a1509d5a208349da85550afa5f27d787ed6cae96335b8814e7bfbd2ad39e91d3713d20479876801cb67a1cfe7af0da7872595acd61933fd1f55f60308a5c899d41465eb5b0f4cbe265e3945b14fdcdb4c194b6caca75f3ac043c0283406c2baa1534e35bdd9c8a57c451081c22d4327849b8b59f97dd4a8d2ffcaaca57f51019d4b30339664623ee4c935509768bc7143109e18fc578811f3067f0a1013211165fabc4e683b2fd393c3440bd1c74e153ee92ba764e1ef81e730213338202bb5d2a4f8769527443c321235e7d88614f1438bdeb03342849b6d3d94f08f6a60959de2694add0a7cc97605a8206c51b70374be07b44d5830247419540d80f000621d62c67702940738362d424e5a89c4144a72af6c2e477928f4e9eba788eb7a4a2c0d55bc6e265ed1fc1945b9159f71cc3d0ed2e97c1709db6f8a68972f7e1222432e35808c0a60076ebe7846a9edd9f3f4e4e39cf33f7562525fa5974ee101103fbbf0e65b996193ccad9cb42cb3bcc1c5810066933ed91fad4563c956e8812ac37502654bdc4e8b4b4c3cdbb647456dd343fc5314cd01f394c0dc0318dc89fd9a77b89a153bd92ee5350b13da682d8091b4daf3fd431691900208ba3f73e4b5724fe64f35d192633f0333f743a53d6d07261b0b01d755eb422ba58752a89837ac9fc432bafbe7c633104beaa6cf254c8ee1bfe4959ba9714c3953e5cbb8ba2adf5a3dc0dc4f15b2e7e215a37e03f69744ba27438b4856f3174495daf705cffec9f881245b6f828dfdd618fc1560b1aa1a3c01bca1f1fc049097502be82149186e7f3ec96717e4b3988f30d423d6139025f64a020cc5183e1153df603cbecb71157aafdb96936b5ab2cce443bf1632d34de8b691c";
         BigInteger bValue = new BigInteger("6040000000000000000");
-        Function function = EthIIUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, EthConstant.ZERO_ADDRESS, signData);
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, EthConstant.ZERO_ADDRESS, signData);
 
         String hash = this.sendTx(fromAddress, priKey, function, HeterogeneousChainTxType.WITHDRAW);
         System.out.println(String.format("hash: %s", hash));*/
@@ -398,7 +397,7 @@ public class ETHIIWalletApiTest extends BaseII {
         String toAddress = "0xE0d7A4fB97eB822A62a4Be1824A4c83C5e50828D";
         String signData = "b652ef3b02008214d3c0a60018f573490ad95e702f9793f13917f86342c2dc84210a8f43b179f4a3494d07d4acfffc49f77b4566538a61f908681e291aa4b4f91c32fa2a6e9a29f1d3af2649494c1ee7e308929592f95c37a322cf5eefbf20e6876792eec66269149e9bafd722991534e804abc2a01f5e573d940b76c6d1f5f54b1baf84a2896c8e2cc586c36627a54b288f8aa4330bd5bc29dde4a3a2e094a4f74154b590449ca2da93daa37beb9d3556fc7908ae0e76a0f4db86a5eba9a8ca86a41b0b67d43c7ff9332746e353fcff5164278433ad18fd10e0f2541f071d950a5af74a8e5f4b396eeda756b0a9f787cb3dbcc34137da90b0ec7084706ce811ef4e2d1b46894218bbd58573b2fd81f961e153a0d67be2dabb0c664f8a8a94caf8b2477a7d7d2f01b0c2ccca4f39b25f253ff0710cadb46f41d8a6f95485bdebab1c5e621c60dc8c3ddbbe32545fab70d629bc841e50681748462a777005199fae0c1e69df2b866869181f94c6bcb8ead1a37e6c3415b5dc256ef5b8657323745f301090be1b906f82764e372eabfdb1fcbaf7e5a64341169bc80306a1f65c272164c9f4ea6c69beeeafeed8aa71170b19fc32bf40c2fda0275fe75414f878210afb8f02f3fb1bd4bef8d70d18da21a07da4e8eb48011b0d5cc8ac888641d48345124629f14c80051575b2e1745342b3d4e7edabb2d0a22aa16a6baf76205d17344ba2e87a65221b188c3c566758db17d88e434fdb96860eea4fbdbe735b1fcda844735795df6aab64d4149f60e8b1ef14f6dd415b969e5f389a279d26a719f30eedc41e49ef920b1bb02cb234d7c389af1811b1a652d2b2ed663ac36152941e256bd6a9d9a925bee53b7618df4b6203bca40f3be45d71942e37f8ff934cfcc01805fe2297abe9307b1b";
         BigInteger bValue = new BigInteger("1505000000000");
-        Function function = EthIIUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, "0x7b6f71c8b123b38aa8099e0098bec7fbc35b8a13", signData);
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, "0x7b6f71c8b123b38aa8099e0098bec7fbc35b8a13", signData);
 
         String hash = this.sendTx(fromAddress, priKey, function, HeterogeneousChainTxType.WITHDRAW);
         System.out.println(String.format("hash: %s", hash));
@@ -582,8 +581,8 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void txInputCrossOutDecoderTest() throws JsonProcessingException {
-        String input = "0x0889d1f00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000bebc20000000000000000000000000025ebbac2ca9db0c1d6f0fc959bbc74985417bab00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e553541784339735141000000000000000000000000000000000000000000000000000000";
-        List<Object> typeList = EthUtil.parseInput(input, EthIIConstant.INPUT_CROSS_OUT);
+        String input = "0x0889d1f000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000001bc16d674ec800000000000000000000000000005cceffcfd3e2fe4aacbf57123b6d42dddc2319900000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e553541784339735141000000000000000000000000000000000000000000000000000000";
+        List<Object> typeList = EthUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
     }
@@ -591,7 +590,7 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void txInputWithdrawDecoderTest() throws JsonProcessingException {
         String input = "0xab6c2b1000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000e0d7a4fb97eb822a62a4be1824a4c83c5e50828d000000000000000000000000000000000000000000000000000001f2b9262c0000000000000000000000000000000000000000000000000000000000000000010000000000000000000000007b6f71c8b123b38aa8099e0098bec7fbc35b8a130000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004031373366333765386539363133633165356631373663646662323764313965613632633262653031306437316637666434373239303061373938323932613338000000000000000000000000000000000000000000000000000000000000028ae2b83d3d2b29f71cdee3981b8d477818fb913d7de720ef3444289f50ea46fdb93c1e5b19f7ffda43698b506536b5c82256a2eb608352ff7564d697fcbd63c9121c8bf080476d7f8fb2637b842bee9673c210746272f2420a15c7b7201001fb3fc972192c4347d1478bd2fffa82458d77abdc2a9b3a647a3aafd3508811699ad9391bbc46b8c87279b55bfbfc7484136118da80fa01f98a219f7fffaf3b3e6a76907a706c76227604d977951c35b82bd6934892b70a673ce73adefcaff9cd8bf73c701b6d315aa70ac70face17e1281620f080d53550310f0c1883487b1689c3a65328716a28db94930adc42079f03c0abd07094678a3ae90e27b2ae08855a9ad8a27471bf28e78fb94c494464a3c0b499cd24dd4c84e443b6bb4b000725c3367179f51f86a5fa7e5077b76a33c103bec8a49adb7b61a73c7569188cddc0be91eeb9fe9831c64c28e6bfb35b711a404a3446216180378a2b495561ae99254119610a08dcf174ffd46ff049c82756bb9838996630a6d1790a4597bddc8a9e174ad4085a078091bb0cabb1dbb7646544c88d94bba2ee9f77dfe097ab68da861112e7a631567b387416d0cf1d511ac3c6afb9d27774d2c2f38948fb2cf4ac8c8cdba1d96b84f52331b7cdb95c6bc5fb08f87873bd5ed13ca56b32157fd5d7c66f34e4d07874bb53d8d066f992ca968a585b6f5be0b8b4429756441aadd4c8e228befe3744080a7e32d1cff912e61076031282662e633050e8f79e10d027492f7a41183993eac7fb82682009a88fdfb293cd2332275e1554af22bbb9dabd39ff38a62dd3c7a58e6c7ee021c44fbcc9b7b0420d3ae9b442fd56ca9f55ba7e1b2bd357e2617465ad1a1a4e5314c472c437ded0fad927814cbb81765fb9e0fd3cc5a58b5b8180a3cdf4b21d31c1c00000000000000000000000000000000000000000000";
-        List<Object> typeList = EthUtil.parseInput(input, EthIIConstant.INPUT_WITHDRAW);
+        List<Object> typeList = EthUtil.parseInput(input, HtgConstant.INPUT_WITHDRAW);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
         String signs = HexUtil.encode((byte[]) typeList.get(5));
         System.out.println(signs);
@@ -603,7 +602,7 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void txInputChangeDecoderTest() throws JsonProcessingException {
         String changeInput = "0x0071922600000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000004062396238383039666435653266643438633761326637373530306136313465653564383230376462313063663733656664343663303365363936613135613461000000000000000000000000000000000000000000000000000000000000000100000000000000000000000078c30fa073f6cbe9e544f1997b91dd616d66c590000000000000000000000000000000000000000000000000000000000000000100000000000000000000000017e61e0176ad8a88cac5f786ca0779de87b3043b000000000000000000000000000000000000000000000000000000000000028ad911709c21077ca10a42acf34af721498267afdd15e17535575c8876aab167fe1fbc2429781f9c9fe6c95d023ec548eafcc6df5989ee0e6fc8c3daa7392a21e71b4259a66f0283820e04594186ac3885fb8d69b13a08432be41f65be1cc4c6164b04b77bf1a36a65c2a0c61d29e38d4a8fb076baf5146de686b2859a0876ce19741b0bc3d8c5145fab640f676e611ab6f548fbd3f097be8523b65d710dafa62791d12eb0e287c16a0aa16263546e6ccc58c45c27d85bbb71837c27d77975cb8d4eed1b16a61369a2866e5f1b9268e36a029939f4884501223819303fc19c6be5ef53870c30a38020dd65e3f9acfe3508af587a41b60c8b50daf73c3dbeef5793b3c8111cd0731607440da2ed59f1817a54ca29f8bd54dcc5efbe6e5ec23e3e37770fcdea5af6174a648e087b2ff83676444575f46a41c3b4326adff07c04a9fd6a7c48411bff341c2dc5a7a5522ed729e74359ea7ce07f19259b3701c8a47a3ce89dccd67b1664b2619b987529bd04ce5469bd672c75997793c5cddd8088d7f88ad807966a1c4c637b98f6d3bd350f9a7de9d1c4b0ecf45e0828c4e9e2bdedfe971f593c4fae0b164d69b2cba2027b6ae152926f8722ce6da5545ede42aafc7085ebc8cf41ed1c7ffa71c5a122daf40484c211addd8f8a46e5a3fab1f713863c48b8a5c33769b20bc3fed3a967084eec2678dacbc4726a2375ce5c99adf3e2f99542f454cbf58a1b7bc76289f42d676a8084a4d9935fbc23b4c4c9864210a6b37298707ea9e074c3787058a5a8d4e7f28216eb1cbad6970f3544dcc5e59ced832d49ed18c7afdd9d1cff089679a891c085c32e77bbbb94be664c533a04e4c3e4c6cbc81952ee79362f622afd5e4178bdd5a9cfd7eda699ff8f0b6cd22be14653ea64faf1d1242c98141c00000000000000000000000000000000000000000000";
-        List<Object> typeListOfChange = EthUtil.parseInput(changeInput, EthIIConstant.INPUT_CHANGE);
+        List<Object> typeListOfChange = EthUtil.parseInput(changeInput, HtgConstant.INPUT_CHANGE);
         System.out.println(JSONUtils.obj2PrettyJson(typeListOfChange));
     }
 
@@ -631,7 +630,7 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void changeEventTest() throws Exception {
         String data = "0x000000000000000000000000742e9290053f63f38270b64b1a8daf52c91e6a510000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000271000000000000000000000000080b47d949b4bbd09bb48300c81e2c30df243310c00000000000000000000000000000000000000000000000000000000000000264e4552564565706236426b3765474b776e33546e6e373534633244674b65784b4c5467325a720000000000000000000000000000000000000000000000000000";
-        List<Object> eventResult = EthUtil.parseEvent(data, EthIIConstant.EVENT_CROSS_OUT_FUNDS);
+        List<Object> eventResult = EthUtil.parseEvent(data, HtgConstant.EVENT_CROSS_OUT_FUNDS);
         System.out.println(JSONUtils.obj2PrettyJson(eventResult));
     }
 
@@ -705,9 +704,9 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void ethDepositByCrossOutTest() throws Exception {
         String directTxHash = "0x176856463c4bf086e5f6df8c600867f5e3d39f6a293bcac188f4bcc61e019b3d";
-        Transaction tx = ethWalletApi.getTransactionByHash(directTxHash);
-        EthIIParseTxHelper helper = new EthIIParseTxHelper();
-        BeanUtilTest.setBean(helper, "ethWalletApi", ethWalletApi);
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        HtgParseTxHelper helper = new HtgParseTxHelper();
+        BeanUtilTest.setBean(helper, "htgWalletApi", htgWalletApi);
         EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
         boolean crossOut = helper.validationEthDepositByCrossOut(tx, po);
         System.out.println(crossOut);
@@ -728,10 +727,10 @@ public class ETHIIWalletApiTest extends BaseII {
     public void erc20DepositByCrossOutTest() throws Exception {
         // 直接调用erc20合约
         String directTxHash = "0x6abc5a7f2f50e644bb0e75caae0a460d0f8793c19da7b272074784ebee5b8ab5";
-        Transaction tx = ethWalletApi.getTransactionByHash(directTxHash);
-        EthIIParseTxHelper helper = new EthIIParseTxHelper();
-        BeanUtilTest.setBean(helper, "ethWalletApi", ethWalletApi);
-        BeanUtilTest.setBean(helper, "ethERC20Helper", new MockEthERC20Helper());
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        HtgParseTxHelper helper = new HtgParseTxHelper();
+        BeanUtilTest.setBean(helper, "htgWalletApi", htgWalletApi);
+        BeanUtilTest.setBean(helper, "htgERC20Helper", new MockHtgERC20Helper());
         EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
         boolean crossOut = helper.validationEthDepositByCrossOut(tx, po);
         System.out.println(crossOut);
@@ -745,35 +744,35 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println("nvtAmount: " + nvtAmount.movePointLeft(8).toPlainString());
         BigDecimal ethUsd = new BigDecimal("380.16");
         int assetId = 2;
-        BigDecimal price = EthIIUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println("price: " + price.movePointLeft(9).toPlainString());
 
         BigDecimal needPrice = new BigDecimal("31.789081289").movePointRight(9);
-        BigDecimal nvtAmountCalc = EthIIUtil.calNVTOfWithdraw(nvtUsd, needPrice, ethUsd, assetId);
+        BigDecimal nvtAmountCalc = HtgUtil.calNVTOfWithdraw(nvtUsd, needPrice, ethUsd, assetId);
         System.out.println("newNvtAmount: " + nvtAmountCalc.movePointLeft(8).toPlainString());
 
-        BigDecimal newPrice = EthIIUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmountCalc, ethUsd, assetId);
+        BigDecimal newPrice = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmountCalc, ethUsd, assetId);
         System.out.println("newPrice: " + newPrice.movePointLeft(9).toPlainString());
     }
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
         Long height = Long.valueOf(70437);
-        EthBlock.Block block = ethWalletApi.getBlockHeaderByHeight(height);
+        EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
     }
 
     @Test
     public void getBlockHeight() throws Exception {
         setMain();
-        System.out.println(ethWalletApi.getBlockHeight());
+        System.out.println(htgWalletApi.getBlockHeight());
     }
 
     @Test
     public void getTestNetTxReceipt() throws Exception {
         // 直接调用erc20合约
         String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
-        TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(directTxHash);
+        TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
 
@@ -784,13 +783,52 @@ public class ETHIIWalletApiTest extends BaseII {
         Logger logger = context.getLogger("org.web3j.protocol.http.HttpService");
         logger.setLevel(Level.INFO);
 
-        BigInteger gasPrice = ethWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
+        BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
         System.out.println();
     }
 
-    static class MockEthERC20Helper extends EthERC20Helper {
+    @Test
+    public void crossOutEstimateGasTest() throws Exception {
+        String contractAddress = "0x7d759a3330cec9b766aa4c889715535eed3c0484";
+        //BigInteger convertAmount = htgWalletApi.convertEthToWei(new BigDecimal("0.01"));
+        //Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, EthConstant.ZERO_ADDRESS);
+        BigInteger convertAmount = new BigInteger("2" + "000000000000000000");
+        Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x5cCEffCFd3E2fE4AaCBF57123B6d42DDDc231990");
+        //Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x0000000000000000000000000000000000000000");
+
+        String encodedFunction = FunctionEncoder.encode(crossOutFunction);
+
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                null,
+                BigInteger.ONE,
+                BigInteger.valueOf(1000000L),
+                contractAddress,
+                null,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void allowanceTest() throws Exception {
+        Function allowanceFunction = new Function("allowance",
+                Arrays.asList(new Address("0xc11D9943805e56b630A401D4bd9A29550353EFa1"), new Address("0x7d759a3330cec9b766aa4c889715535eed3c0484")),
+                Arrays.asList(new TypeReference<Uint256>() {}));
+
+        BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction("0x5cCEffCFd3E2fE4AaCBF57123B6d42DDDc231990", allowanceFunction).get(0).getValue();
+        System.out.println(allowanceAmount);
+    }
+
+    static class MockHtgERC20Helper extends HtgERC20Helper {
         @Override
         public boolean isERC20(String address, HeterogeneousTransactionBaseInfo po) {
             return true;

@@ -106,7 +106,7 @@ public class EthERC20StorageServiceImpl implements EthERC20StorageService {
             return;
         }
         this.deleteAddressByAssetId(po.getAssetId());
-        this.deleteAddressBySymbol(po.getSymbol());
+        this.deleteAddressBySymbol(po.getSymbol(), address);
         RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
     }
 
@@ -172,8 +172,12 @@ public class EthERC20StorageServiceImpl implements EthERC20StorageService {
         return erc20PoList;
     }
 
-    private void deleteAddressBySymbol(String symbol) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol));
+    private void deleteAddressBySymbol(String symbol, String address) throws Exception {
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol), StringSetPo.class);
+        if (setPo != null) {
+            setPo.getCollection().remove(address);
+            ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol), setPo);
+        }
     }
 
     @Override
@@ -248,7 +252,10 @@ public class EthERC20StorageServiceImpl implements EthERC20StorageService {
         }
         List<EthERC20Po> list = new ArrayList<>(maxInitializedAssetId - 1);
         for (int i = 2; i <= maxInitializedAssetId; i++) {
-            list.add(this.findByAssetId(i));
+            EthERC20Po erc20Po = this.findByAssetId(i);
+            if (erc20Po != null) {
+                list.add(erc20Po);
+            }
         }
         return list;
     }
