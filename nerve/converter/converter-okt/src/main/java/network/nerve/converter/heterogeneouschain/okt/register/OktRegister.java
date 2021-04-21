@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
  * @author: Mimi
  * @date: 2020-02-20
  */
-@Component("oktRegister")
+//@Component("oktRegister")
 public class OktRegister implements IHeterogeneousChainRegister {
 
     @Autowired
