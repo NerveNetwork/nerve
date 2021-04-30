@@ -304,9 +304,7 @@ public class ConverterBootstrap extends RpcModule {
         // v1.8.0 协议升级高度 支持火币生态链跨链
         ConverterContext.HUOBI_CROSS_CHAIN_HEIGHT = converterConfig.getHuobiCrossChainHeight();
         // v1.11.0 协议升级高度 支持欧科生态链跨链
-        //ConverterContext.OKT_CROSS_CHAIN_HEIGHT = converterConfig.getOktCrossChainHeight();
-        //TODO pierre 暂时定义一个很远的升级高度
-        ConverterContext.OKT_CROSS_CHAIN_HEIGHT = 30000000L;
+        ConverterContext.OKT_CROSS_CHAIN_HEIGHT = converterConfig.getOktCrossChainHeight();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

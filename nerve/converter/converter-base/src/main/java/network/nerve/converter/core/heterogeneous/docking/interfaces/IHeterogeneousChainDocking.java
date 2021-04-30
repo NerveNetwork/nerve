@@ -221,6 +221,11 @@ public interface IHeterogeneousChainDocking {
     Boolean reAnalysisDepositTx(String ethTxHash) throws Exception;
 
     /**
+     * 异构链网络内部chainId
+     */
+    long getHeterogeneousNetworkChainId();
+
+    /**
      * 创建或签名提现交易
      *
      * @return 异构链交易hash

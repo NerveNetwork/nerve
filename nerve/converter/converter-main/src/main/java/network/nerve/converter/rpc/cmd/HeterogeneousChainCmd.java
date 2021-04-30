@@ -856,6 +856,31 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_NETWORK_CHAIN_ID, version = 1.0, description = "资产异构链注册网络")
+    @Parameters(value = {
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousNetworkChainId", valueType = long.class, description = "异构链网络内部chainId")
+    })
+    )
+    public Response getHtgNetworkChainId(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+        try {
+            Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (docking == null) {
+                return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneousChainId");
+            }
+            long resultChainId = docking.getHeterogeneousNetworkChainId();
+            rtMap.put("heterogeneousNetworkChainId", resultChainId);
+
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {
             LoggerUtil.LOG.error(e);

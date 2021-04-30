@@ -677,6 +677,11 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
+    public long getHeterogeneousNetworkChainId() {
+        return htgContext.getConfig().getChainIdOnHtgNetwork();
+    }
+
+    @Override
     public String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
         // 获取管理员账户
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());

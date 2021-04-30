@@ -58,5 +58,25 @@
     "confirmTxQueuePeriod": 10,
     "waitingTxQueuePeriod": 10,
     "filterAddresses": "0xbbdb9e2ce4f8c8a4463303a9a90ac1aedefb1e1c,0x23023c99dcede393d6d18ca7fb08541b3364fa90"
+  },
+  {
+    "chainId": 104,
+    "chainIdOnHtgNetwork": 66,
+    "type": 1,
+    "symbol": "OKT",
+    "decimals": 18,
+    "commonRpcAddress": "https://exchainrpc.okex.org",
+    "mainRpcAddress": "https://exchain.okexcn.com",
+    "orderRpcAddresses": "https://exchainrpc.okex.org",
+    "standbyRpcAddresses": "https://exchainrpc.okex.org",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 30,
+    "txBlockConfirmationsOfWithdraw": 3,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "filterAddresses": "0x3250dabb584f7fea1bafaff6000ffbbd2f419a15,0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"
   }
 ]

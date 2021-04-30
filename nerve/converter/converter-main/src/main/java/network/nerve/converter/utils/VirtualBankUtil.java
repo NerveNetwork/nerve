@@ -292,7 +292,7 @@ public class VirtualBankUtil {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
                     BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
                     addr.setBalance(balance.toPlainString());
-                    logger.info("[{}]成功查询[{}]余额", addr.getAddress(), docking.getChainSymbol());
+                    logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
                 }
             } catch (Exception e) {
                 logger.error("查询异构链账户余额异常", e);
