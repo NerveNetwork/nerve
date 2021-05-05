@@ -768,6 +768,11 @@ public class EthDocking implements IHeterogeneousChainDocking {
         }
     }
 
+    @Override
+    public long getHeterogeneousNetworkChainId() {
+        return EthContext.getConfig().getChainIdOnHtgNetwork();
+    }
+
     private String recovery(String nerveTxKey, String[] adds, String[] removes, EthRecoveryDto recoveryDto) throws NulsException {
         try {
             // 当前虚拟银行触发恢复机制时，持久化保存调用参数，以提供给第二步恢复时使用
