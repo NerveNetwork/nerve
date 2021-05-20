@@ -1,14 +1,14 @@
 {
-  "depositAwardChangeHeight":1860000,
-  "depositVerifyHeight":1200000,
+  "depositAwardChangeHeight": 1860000,
+  "depositVerifyHeight": 1200000,
   "minRewardHeight": 1350000,
   "maxCoinToOfCoinbase": 3000,
   "v130Height": 2260000,
   "v160Height": 5600000,
   "v170Height": 6650000,
   "minStakingAmount": 100000000000,
-  "minAppendAndExitAmount":200000000000,
-  "exitStakingLockHours":168,
+  "minAppendAndExitAmount": 200000000000,
+  "exitStakingLockHours": 168,
   "limit": [
     {
       "key": "USDs",
@@ -39,7 +39,8 @@
           "assetsId": 70
         }
       ]
-    },{
+    },
+    {
       "key": "BNB",
       "totalCount": 100000,
       "assets": [
@@ -48,7 +49,8 @@
           "assetsId": 25
         }
       ]
-    }, {
+    },
+    {
       "key": "HT",
       "totalCount": 200000,
       "assets": [
@@ -61,13 +63,24 @@
           "assetsId": 55
         }
       ]
-    }, {
+    },
+    {
       "key": "OKB",
       "totalCount": 200000,
       "assets": [
         {
           "assetsChainId": 9,
           "assetsId": 9
+        }
+      ]
+    },
+    {
+      "key": "OKT",
+      "totalCount": 5000,
+      "assets": [
+        {
+          "assetsChainId": 9,
+          "assetsId": 87
         }
       ]
     }

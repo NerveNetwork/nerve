@@ -24,11 +24,9 @@
 package network.nerve.converter.heterogeneouschain.ethII.context;
 
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
@@ -37,13 +35,11 @@ import network.nerve.converter.model.bo.HeterogeneousCfg;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author: Mimi

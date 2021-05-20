@@ -87,7 +87,10 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
                         break;
                     }
                     if (now - lastRecordTime > MINUTES_1) {
-                        htgContext.logger().error("{}网络区块同步异常，本地区块高度: {}, 请检查网络RPC服务", htgContext.getConfig().getSymbol(), localBlockHeight);
+                        htgContext.logger().error("{}网络区块同步异常，本地区块高度: {}, 已有{}秒未同步区块，请检查网络RPC服务",
+                                htgContext.getConfig().getSymbol(),
+                                localBlockHeight,
+                                (now - lastRecordTime) / 1000);
                         availableRPC = false;
                         break;
                     }

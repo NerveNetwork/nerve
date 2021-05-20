@@ -123,6 +123,10 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      * v1.11.0 协议升级高度 支持欧科生态链跨链
      */
     private long oktCrossChainHeight;
+    /**
+     * v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
+     */
+    private long erc20OfTransferBurnHeight;
 
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;
@@ -318,5 +322,13 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setOktCrossChainHeight(long oktCrossChainHeight) {
         this.oktCrossChainHeight = oktCrossChainHeight;
+    }
+
+    public long getErc20OfTransferBurnHeight() {
+        return erc20OfTransferBurnHeight;
+    }
+
+    public void setErc20OfTransferBurnHeight(long erc20OfTransferBurnHeight) {
+        this.erc20OfTransferBurnHeight = erc20OfTransferBurnHeight;
     }
 }

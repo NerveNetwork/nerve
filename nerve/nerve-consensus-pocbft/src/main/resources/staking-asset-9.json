@@ -127,5 +127,13 @@
     "decimal": 18,
     "simple": "HMDX",
     "weight": 25
+  },
+  {
+    "assetId": "87",
+    "oracleKey": "OKT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKT",
+    "weight": 1
   }
 ]

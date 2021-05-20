@@ -130,6 +130,7 @@ public class TxSendTest {
 
     /** Huobi */
     static String USDT_HT = "0x04f535663110a392a6504839beed34e019fdb4e0";
+    static String GOAT_HT = "0x81793d5d366a3f8884aceac9ea0dea012e31809e";//decimals=9
     static String USDX_HT = "0x03Cf96223BD413eb7777AFE3cdb689e7E851CB32";
     static String USDI_HT = "0x3F1f3D17619E916C4F04707BA57d8E0b9e994fB0";
     static String DEX_HT_18 = "0x2eDCf5f18D949c51776AFc42CDad667cDA2cF862";
@@ -341,6 +342,10 @@ public class TxSendTest {
         BigInteger balanceHtUsdt = LedgerCall.getBalance(chain, htUsdtAssetId.getAssetChainId(), htUsdtAssetId.getAssetId(), address);
         System.out.println(String.format("火币资产USDT %s-%s: %s", htUsdtAssetId.getAssetChainId(), htUsdtAssetId.getAssetId(), balanceHtUsdt));
 
+        NerveAssetInfo htGoatAssetId = this.findAssetIdByAddress(htChainId, GOAT_HT);
+        BigInteger balanceHtGoat = LedgerCall.getBalance(chain, htGoatAssetId.getAssetChainId(), htGoatAssetId.getAssetId(), address);
+        System.out.println(String.format("火币资产GOAT %s-%s: %s", htGoatAssetId.getAssetChainId(), htGoatAssetId.getAssetId(), balanceHtGoat));
+
         NerveAssetInfo oktAssetId = this.findAssetIdByHeterogeneousId(oktChainId, heterogeneousAssetId);
         BigInteger oktBalance = LedgerCall.getBalance(chain, oktAssetId.getAssetChainId(), oktAssetId.getAssetId(), address);
         System.out.println(String.format("欧科资产OKT %s-%s: %s", oktAssetId.getAssetChainId(), oktAssetId.getAssetId(), oktBalance));
@@ -474,14 +479,27 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSDT() throws Exception {
-        //int htgChainId = htChainId;
-        //String contract = USDT_HT;
-        int htgChainId = oktChainId;
-        String contract = USDT_OKT;
+        int htgChainId = htChainId;
+        String contract = USDT_HT;
+        //int htgChainId = oktChainId;
+        //String contract = USDT_OKT;
         String from = address31;
         String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        // 0.2个USDT
-        BigInteger value = new BigInteger(Long.valueOf(200000L).toString());
+        // 2个USDT
+        BigInteger value = new BigDecimal("2").scaleByPowerOfTen(6).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
+        NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
+    public void withdrawalGOAT() throws Exception {
+        int htgChainId = htChainId;
+        String contract = GOAT_HT;
+        String from = address31;
+        String to = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        // 8个GOAT
+        BigInteger value = new BigDecimal("8").scaleByPowerOfTen(9).toBigInteger();
         BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
@@ -605,8 +623,9 @@ public class TxSendTest {
         // 0x1c78958403625aeA4b0D5a0B527A27969703a270 USDI in ropsten
         // 0xAb58ee8e62178693265a1418D109b70dB4595586 USDK in rinkeby
 
-        regERC20(oktChainId, "USDT", USDT_OKT, 6);
+        //regERC20(oktChainId, "USDT", USDT_OKT, 6);
         regERC20(htChainId, "USDT", USDT_HT, 6);
+        regERC20(htChainId, "GOAT", GOAT_HT, 9);
         regERC20(bnbChainId, "USDX", USDX_BNB, 6);
         regERC20(ethChainId, "USDX", USDX, 6);
         regERC20(ethChainId, "USDI", USDI, 6);
@@ -624,7 +643,7 @@ public class TxSendTest {
         // HT
         regHeterogeneousMainAsset(HtContext.HTG_CHAIN_ID);
         // OKT
-        regHeterogeneousMainAsset(OktContext.HTG_CHAIN_ID);
+        //regHeterogeneousMainAsset(OktContext.HTG_CHAIN_ID);
     }
 
     @Test

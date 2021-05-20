@@ -138,6 +138,7 @@ interval=1000
 height_1_6_0=5600000
 height_1_8_0=7385000
 height_1_11_0=12530000
+height_1_12_0=13420000
 
 [nuls-api]
 #httpServer的启动ip

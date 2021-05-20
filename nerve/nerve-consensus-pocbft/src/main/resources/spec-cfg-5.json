@@ -41,6 +41,15 @@
           "assetsId": 11
         }
       ]
+    }, {
+      "key": "OKT",
+      "totalCount": 5000,
+      "assets": [
+        {
+          "assetsChainId": 5,
+          "assetsId": 12
+        }
+      ]
     }
   ]
 }

@@ -142,7 +142,7 @@ interval=1000
 height_1_6_0=0
 height_1_8_0=0
 height_1_11_0=2680000
-
+height_1_12_0=4830000
 [nuls-api]
 #httpServer的启动ip
 serverIp=0.0.0.0

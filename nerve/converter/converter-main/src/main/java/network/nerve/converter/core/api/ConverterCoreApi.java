@@ -331,4 +331,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isSupportNewMechanismOfWithdrawalFee() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.FEE_ADDITIONAL_HEIGHT;
     }
+
+    @Override
+    public boolean isSupportERC20OfTransferBurn() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.ERC20_OF_TRANSFER_BURN_HEIGHT;
+    }
 }

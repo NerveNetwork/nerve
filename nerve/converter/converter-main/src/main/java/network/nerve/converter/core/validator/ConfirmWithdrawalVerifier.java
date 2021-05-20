@@ -33,6 +33,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
@@ -77,6 +78,8 @@ public class ConfirmWithdrawalVerifier {
     private VirtualBankService virtualBankService;
     @Autowired
     private HeterogeneousAssetHelper heterogeneousAssetHelper;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
         byte[] coinData = tx.getCoinData();
@@ -151,9 +154,16 @@ public class ConfirmWithdrawalVerifier {
          */
         BigInteger fee = new BigInteger("0");
         BigInteger arrivedAmount = withdrawalTo.getAmount().subtract(fee);
-        if (arrivedAmount.compareTo(info.getValue()) != 0) {
-            // 提现交易确认交易中金额与异构确认交易金额数据不匹配
-            throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
+        if (converterCoreApi.isSupportERC20OfTransferBurn()) {
+            if (arrivedAmount.compareTo(info.getValue()) < 0) {
+                // 提现交易确认交易中金额与异构确认交易金额数据不匹配
+                throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
+            }
+        } else {
+            if (arrivedAmount.compareTo(info.getValue()) != 0) {
+                // 提现交易确认交易中金额与异构确认交易金额数据不匹配
+                throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
+            }
         }
     }
 

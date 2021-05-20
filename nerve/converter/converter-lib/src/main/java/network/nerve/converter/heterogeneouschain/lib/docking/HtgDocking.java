@@ -522,7 +522,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         logger().info("验证{}网络虚拟银行变更交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
         try {
             // 向HTG网络请求验证
-            boolean isCompleted = htgParseTxHelper.isCompletedTransaction(nerveTxHash);
+            boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
             if (isCompleted) {
                 logger().info("[{}]交易[{}]已完成", HeterogeneousChainTxType.CHANGE, nerveTxHash);
                 return true;
@@ -1123,7 +1123,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             logger().debug("顺序计算参数 bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}", bankSize, seed, mod, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
         }
         // 向HTG网络请求验证
-        boolean isCompleted = htgParseTxHelper.isCompletedTransaction(nerveTxHash);
+        boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {
             logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
             return HtgAccount.newEmptyAccount(bankOrder);

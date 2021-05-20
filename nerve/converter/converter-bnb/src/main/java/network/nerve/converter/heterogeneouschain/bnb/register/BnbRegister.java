@@ -42,6 +42,7 @@ import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
 import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
@@ -84,6 +85,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
     private ScheduledThreadPoolExecutor blockSyncExecutor;
     private ScheduledThreadPoolExecutor confirmTxExecutor;
     private ScheduledThreadPoolExecutor waitingTxExecutor;
+    private ScheduledThreadPoolExecutor rpcAvailableExecutor;
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
@@ -135,6 +137,7 @@ public class BnbRegister implements IHeterogeneousChainRegister {
             beanMap.add(HtgBlockHandler.class);
             beanMap.add(HtgConfirmTxHandler.class);
             beanMap.add(HtgWaitingTxInvokeDataHandler.class);
+            beanMap.add(HtgRpcAvailableHandler.class);
             beanMap.add(HtgAccountHelper.class);
             beanMap.add(HtgAnalysisTxHelper.class);
             beanMap.add(HtgBlockAnalysisHelper.class);
@@ -222,6 +225,9 @@ public class BnbRegister implements IHeterogeneousChainRegister {
         if (waitingTxExecutor != null && !waitingTxExecutor.isShutdown()) {
             waitingTxExecutor.shutdown();
         }
+        if (rpcAvailableExecutor != null && !rpcAvailableExecutor.isShutdown()) {
+            rpcAvailableExecutor.shutdown();
+        }
     }
 
     private void initDefualtAPI() throws Exception {
@@ -289,6 +295,9 @@ public class BnbRegister implements IHeterogeneousChainRegister {
 
         waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("bnb-waiting-tx"));
         waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
+
+        rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("bnb-rpcavailable-tx"));
+        rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {

@@ -72,21 +72,17 @@ public class HeterogeneousDockingManager {
     }
 
     public Collection<IHeterogeneousChainDocking> getAllHeterogeneousDocking() {
+        Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
+        result.putAll(heterogeneousDockingMap);
         // 增加HT跨链的生效高度
         if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtContext.HTG_CHAIN_ID)) {
-            Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
-            result.putAll(heterogeneousDockingMap);
             result.remove(HtContext.HTG_CHAIN_ID);
-            return result.values();
         }
         // 增加OKT跨链的生效高度
         if (LATEST_BLOCK_HEIGHT < OKT_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OktContext.HTG_CHAIN_ID)) {
-            Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
-            result.putAll(heterogeneousDockingMap);
             result.remove(OktContext.HTG_CHAIN_ID);
-            return result.values();
         }
-        return heterogeneousDockingMap.values();
+        return result.values();
     }
 
     public void checkAccountImportedInDocking(Chain chain, SignAccountDTO signAccountDTO) {

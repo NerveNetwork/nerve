@@ -39,5 +39,13 @@
     "decimal": 18,
     "simple": "HT",
     "weight": 1
+  },
+  {
+    "assetId": "12",
+    "oracleKey": "OKT_PRICE",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "OKT",
+    "weight": 1
   }
 ]

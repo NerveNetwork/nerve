@@ -115,4 +115,8 @@ public interface IConverterCoreApi {
      * 是否支持新的提现手续费机制
      */
     boolean isSupportNewMechanismOfWithdrawalFee();
+    /**
+     * 是否支持转账即销毁部分的ERC20
+     */
+    boolean isSupportERC20OfTransferBurn();
 }

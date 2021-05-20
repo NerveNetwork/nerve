@@ -72,6 +72,10 @@ public class HtWalletApiTest extends Base {
         erc20Address = USDT_HT;
         erc20Decimals = 6;
     }
+    protected void setErc20GOAT() {
+        erc20Address = "0x81793d5d366a3f8884aceac9ea0dea012e31809e";
+        erc20Decimals = 9;
+    }
     protected void setErc20USDXMainTest() {
         erc20Address = USDX_HT_MAIN_TEST;
         erc20Decimals = 6;
@@ -262,17 +266,18 @@ public class HtWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        HtContext.setEthGasPriceStatic(BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9)));
+        HtContext.setEthGasPriceStatic(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "1.5";
+        String sendAmount = "15";
         // 初始化 ERC20 地址信息
         //setErc20EthMinter();
         //setErc20UsdiMinter();
         //setErc20DXA();
         //setErc20USDX();
-        setErc20USDT();
+        //setErc20USDT();
+        setErc20GOAT();
         //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址

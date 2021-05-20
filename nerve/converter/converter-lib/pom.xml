@@ -15,13 +15,13 @@
         <nuls.v2.version>1.0.0-SNAPSHOT</nuls.v2.version>
     </properties>
 
-    <repositories>
+    <!--<repositories>
         <repository>
             <id>eth</id>
             <name>eth-rep</name>
             <url>https://dl.bintray.com/ethereum/maven/</url>
         </repository>
-    </repositories>
+    </repositories>-->
     <dependencies>
 
         <dependency>
@@ -54,7 +54,149 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+
+
         <dependency>
+            <groupId>org.ethereum</groupId>
+            <artifactId>ethereumj-core</artifactId>
+            <version>1.7.2-RELEASE</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/ethereum/ethereumj-core/1.7.2-RELEASE/ethereumj-core-1.7.2-RELEASE.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.ethereum</groupId>
+            <artifactId>solcJ-all</artifactId>
+            <version>0.4.19</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/ethereum/solcJ-all/0.4.19/solcJ-all-0.4.19.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.ethereum</groupId>
+            <artifactId>leveldbjni-all</artifactId>
+            <version>1.18.3</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/ethereum/leveldbjni-all/1.18.3/leveldbjni-all-1.18.3.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>com.cedarsoftware</groupId>
+            <artifactId>java-util</artifactId>
+            <version>1.8.0</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.concurrent-locks</groupId>
+            <artifactId>concurrent-locks</artifactId>
+            <version>1.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>junit</artifactId>
+                    <groupId>junit</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>core</artifactId>
+            <version>1.58.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>prov</artifactId>
+            <version>1.58.0.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+            <version>1.2.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+            <version>1.9.13</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.iq80.leveldb</groupId>
+            <artifactId>leveldb</artifactId>
+            <version>0.7</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.2.0.RELEASE</version>
+            <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>4.2.0.RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>4.2.0.RELEASE</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>1.1.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.7</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
+
+
+
+        <!--<dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj-core</artifactId>
             <version>1.7.2-RELEASE</version>
@@ -100,7 +242,10 @@
                     <groupId>org.ethereum</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
+
+
+
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>

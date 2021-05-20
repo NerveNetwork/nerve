@@ -34,6 +34,9 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.rlp.RlpEncoder;
+import org.web3j.rlp.RlpList;
+import org.web3j.rlp.RlpType;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
@@ -125,9 +128,32 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void getTxAndPublicKeyTest() throws Exception {
         setMain();
-        String txHash = "0x52eec80039cb715d5352f7a136f4ab69d9b60441f7e06fbf11ce054bf0ab3999";
+        String txHash = "0x855d092b64df8a6346e691a33071fb8fac197e45ee4ac8769386b4121e80da6d";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
-        converPublicKey(tx);
+        String data = "";
+        if (StringUtils.isNotBlank(tx.getInput()) && !"0x".equals(tx.getInput().toLowerCase())) {
+            data = tx.getInput();
+        }
+        RawTransaction rawTx = RawTransaction.createTransaction(
+                tx.getNonce(),
+                tx.getGasPrice(),
+                tx.getGas(),
+                tx.getTo(),
+                tx.getValue(),
+                data);
+        byte v = (byte) (tx.getV());
+        byte[] r = Numeric.hexStringToByteArray(tx.getR());
+        byte[] s = Numeric.hexStringToByteArray(tx.getS());
+
+        Sign.SignatureData signatureData = new Sign.SignatureData(v, r, s);
+        List<RlpType> values = TransactionEncoder.asRlpValues(rawTx, signatureData);
+        RlpList rlpList = new RlpList(values);
+        byte[] encode = RlpEncoder.encode(rlpList);
+        System.out.println(HexUtil.encode(encode));
+        // f8a9068501a13b860082f28a949b4e2b4b13d125238aa0480dd42b4f6fc71b37cc80b844a9059cbb000000000000000000000000f173805f1e3fe6239223b17f0807596edc2830120000000000000000000000000000000000000000000000000de0b6b3a764000025a039950dcaa3a777889aa3fcc8664fd88fcfa132962a266af4403e126071b042baa02bea3f724b531993d45aa6bfd9c20ca247179951c3720e359bbf2aa2e2e9d1cb
+        // f8a9068501a13b860082f28a949b4e2b4b13d125238aa0480dd42b4f6fc71b37cc80b844a9059cbb000000000000000000000000f173805f1e3fe6239223b17f0807596edc2830120000000000000000000000000000000000000000000000000de0b6b3a764000025a039950dcaa3a777889aa3fcc8664fd88fcfa132962a266af4403e126071b042baa02bea3f724b531993d45aa6bfd9c20ca247179951c3720e359bbf2aa2e2e9d1cb
+        // f869068501a13b860082f28a949b4e2b4b13d125238aa0480dd42b4f6fc71b37cc80b844a9059cbb000000000000000000000000f173805f1e3fe6239223b17f0807596edc2830120000000000000000000000000000000000000000000000000de0b6b3a7640000018080
+        //converPublicKey(tx);
     }
 
     @Test
@@ -295,11 +321,12 @@ public class ETHWalletApiTest extends Base {
         System.out.println(Numeric.decodeQuantity("0x" + data).toString(16));
         //System.out.println(Hex.decode(HexUtil.decode(data)));
 //        System.out.println(HexUtil.encode(Hex.encode(HexUtil.decode(data))));
-        System.out.println(HexUtil.encode(Hash.sha3(HexUtil.decode(data))));
-        System.out.println(HexUtil.encode(HashUtil.sha3(HexUtil.decode(data))));
-        System.out.println(HexUtil.encode(HashUtil.sha256(HexUtil.decode(data))));
-        System.out.println(HexUtil.encode(HashUtil.ripemd160(HexUtil.decode(data))));
-        System.out.println(HexUtil.encode(HashUtil.doubleDigest(HexUtil.decode(data))));
+        System.out.println(Numeric.toHexString(Hash.sha3(HexUtil.decode(data))));// 正确hash
+        //System.out.println(HexUtil.encode(Hash.sha3(HexUtil.decode(data))));
+        //System.out.println(HexUtil.encode(HashUtil.sha3(HexUtil.decode(data))));
+        //System.out.println(HexUtil.encode(HashUtil.sha256(HexUtil.decode(data))));
+        //System.out.println(HexUtil.encode(HashUtil.ripemd160(HexUtil.decode(data))));
+        //System.out.println(HexUtil.encode(HashUtil.doubleDigest(HexUtil.decode(data))));
     }
 
     @Test

@@ -343,6 +343,7 @@ public class HtgParseTxHelper implements BeanInitial {
             boolean transferEvent = false;
             boolean burnEvent = true;
             boolean crossOutEvent = false;
+            BigInteger actualAmount = _amount;
             for (Log log : logs) {
                 List<String> topics = log.getTopics();
                 String eventHash = topics.get(0);
@@ -388,10 +389,20 @@ public class HtgParseTxHelper implements BeanInitial {
                             logger().warn("交易[{}]的ERC20充值地址不匹配", txHash);
                             return false;
                         }
-                        if (amount.compareTo(_amount) != 0) {
-                            logger().warn("交易[{}]的ERC20充值金额不匹配", txHash);
-                            return false;
+                        // 是否支持转账即销毁部分的ERC20
+                        if (htgContext.getConverterCoreApi().isSupportERC20OfTransferBurn()) {
+                            if (amount.compareTo(_amount) > 0) {
+                                logger().warn("交易[{}]的ERC20充值金额不匹配", txHash);
+                                return false;
+                            }
+                            actualAmount = amount;
+                        } else {
+                            if (amount.compareTo(_amount) != 0) {
+                                logger().warn("交易[{}]的ERC20充值金额不匹配", txHash);
+                                return false;
+                            }
                         }
+
                         transferEvent = true;
                     }
                 }
@@ -425,12 +436,12 @@ public class HtgParseTxHelper implements BeanInitial {
                 }
             }
             if (transferEvent && burnEvent && crossOutEvent) {
-                if (po != null && _amount.compareTo(BigInteger.ZERO) > 0) {
+                if (po != null && actualAmount.compareTo(BigInteger.ZERO) > 0) {
                     po.setIfContractAsset(true);
                     po.setContractAddress(_erc20);
                     po.setFrom(tx.getFrom());
                     po.setTo(tx.getTo());
-                    po.setValue(_amount);
+                    po.setValue(actualAmount);
                     po.setNerveAddress(_to);
                 }
                 return true;
