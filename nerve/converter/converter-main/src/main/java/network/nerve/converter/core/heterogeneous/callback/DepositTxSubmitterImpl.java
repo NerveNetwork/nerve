@@ -34,6 +34,7 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousHash;
@@ -57,23 +58,26 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
      */
     private int hChainId;
     private AssembleTxService assembleTxService;
-    private IHeterogeneousChainDocking docking;
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
     private ConverterCoreApi converterCoreApi;
+    private HeterogeneousDockingManager heterogeneousDockingManager;
 
     public DepositTxSubmitterImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
         this.nerveChain = nerveChain;
         this.hChainId = hChainId;
         this.assembleTxService = callBackBeanManager.getAssembleTxService();
+        this.ledgerAssetRegisterHelper = callBackBeanManager.getLedgerAssetRegisterHelper();
+        this.converterCoreApi = callBackBeanManager.getConverterCoreApi();
+        this.heterogeneousDockingManager = callBackBeanManager.getHeterogeneousDockingManager();
+    }
+
+    private IHeterogeneousChainDocking getDocking() {
         try {
-            this.docking = callBackBeanManager.getHeterogeneousDockingManager().getHeterogeneousDocking(hChainId);
+            return heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         } catch (NulsException e) {
             throw new NulsRuntimeException(e);
         }
-        this.ledgerAssetRegisterHelper = callBackBeanManager.getLedgerAssetRegisterHelper();
-        this.converterCoreApi = callBackBeanManager.getConverterCoreApi();
     }
-
     /**
      * @param txHash          交易hash
      * @param blockHeight     交易确认高度
@@ -132,7 +136,7 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     public Result validateDepositTx(String hTxHash) {
         nerveChain.getLogger().info("验证充值交易: {}", hTxHash);
         try {
-            HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
+            HeterogeneousTransactionInfo depositTx = getDocking().getDepositTransaction(hTxHash);
             if (depositTx == null) {
                 return Result.getFailed(ConverterErrorCode.DATA_PARSE_ERROR);
             }
