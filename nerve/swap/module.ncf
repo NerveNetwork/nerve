@@ -1,0 +1,10 @@
+[JAVA]
+APP_NAME=swap
+MAIN_CLASS=network.nerve.swap.SwapBootstrap
+VERSION=1.0.0
+JOPT_XMS=512
+JOPT_XMX=1024
+
+[Core]
+Managed=1
+loadLanguage=1
