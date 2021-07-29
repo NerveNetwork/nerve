@@ -70,6 +70,13 @@ public interface ConverterService {
      */
     Result<Boolean> checkRetryParse(CheckRetryParseReq req);
 
+    /**
+     * 取消虚拟银行发送到异构链网络的交易
+     * @param req
+     * @return
+     */
+    Result<Boolean> cancelHtgTx(CancelHtgTxReq req);
+
     Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 
     Result<String> registerHeterogeneousMainAsset(RegisterHeterogeneousMainAssetReq req);
@@ -79,6 +86,8 @@ public interface ConverterService {
     Result<String> bindOverride(BindOverrideReq req);
 
     Result<String> unbind(UnbindReq req);
+
+    Result<String> unregister(UnbindReq req);
 
     Result<Boolean> retryWithdrawal(RetryWithdrawalReq req);
 

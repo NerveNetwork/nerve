@@ -99,4 +99,15 @@ public class LegderTools implements CallRpc {
             }
         }
     }
+
+    public Result<Map> getAssetInfo(int chainId, int assetChainId, int assetId) {
+        Map<String, Object> params = new HashMap(2);
+        params.put("chainId",chainId);
+        params.put("assetChainId",assetChainId);
+        params.put("assetId",assetId);
+
+        return callRpc(ModuleE.LG.abbr,"lg_get_asset",params,(Function<Map<String, Object>, Result<Map>>) map -> {
+            return new Result<>(map);
+        });
+    }
 }

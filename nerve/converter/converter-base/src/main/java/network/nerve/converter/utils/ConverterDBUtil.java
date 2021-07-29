@@ -23,7 +23,6 @@
  */
 package network.nerve.converter.utils;
 
-import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.manager.RocksDBManager;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -52,7 +51,7 @@ public class ConverterDBUtil {
             byte[] bytes = getModelSerialize(value);
             return RocksDBService.put(area, key, bytes);
         } catch (Exception e) {
-            Log.error(e);
+            LoggerUtil.LOG.error(e);
             throw e;
         }
     }
@@ -76,7 +75,7 @@ public class ConverterDBUtil {
             }
             return (T) model.getT();
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggerUtil.LOG.error(e);
             return null;
         }
     }
@@ -106,7 +105,7 @@ public class ConverterDBUtil {
             }
             return (T) model.getT();
         } catch (Exception e) {
-            e.printStackTrace();
+            LoggerUtil.LOG.error(e);
             return null;
         }
     }

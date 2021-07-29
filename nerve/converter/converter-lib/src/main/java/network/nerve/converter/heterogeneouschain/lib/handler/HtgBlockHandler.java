@@ -64,36 +64,36 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
 
 
     public void run() {
-        if (!htgContext.getConverterCoreApi().isRunning()) {
-            if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
-            }
-            return;
-        }
-        if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-            try {
-                if(!clearDB) {
-                    htgLocalBlockHelper.deleteAllLocalBlockHeader();
-                    clearDB = true;
+        try {
+            if (!htgContext.getConverterCoreApi().isRunning()) {
+                if (LoggerUtil.LOG.isDebugEnabled()) {
+                    LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
                 }
-            } catch (Exception e) {
-                htgContext.logger().error(e);
+                return;
             }
+            if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
+                try {
+                    if(!clearDB) {
+                        htgLocalBlockHelper.deleteAllLocalBlockHeader();
+                        clearDB = true;
+                    }
+                } catch (Exception e) {
+                    htgContext.logger().error(e);
+                }
+                if (LoggerUtil.LOG.isDebugEnabled()) {
+                    LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+                }
+                return;
+            }
+            clearDB = false;
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+                LoggerUtil.LOG.debug("[{}区块解析任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
-            return;
-        }
-        clearDB = false;
-        if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("[{}区块解析任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
-        }
-        try {
-            htgCommonHelper.clearHash();
-        } catch (Exception e) {
-            htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
-        }
-        try {
+            try {
+                htgCommonHelper.clearHash();
+            } catch (Exception e) {
+                htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
+            }
             htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
             // 当前HTG网络最新的区块
             long blockHeightFromEth = htgWalletApi.getBlockHeight();
@@ -154,7 +154,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 }
             }
         } catch (Exception e) {
-            htgContext.logger().error(String.format("同步{}区块失败", htgContext.getConfig().getSymbol()), e);
+            htgContext.logger().error(String.format("同步%s区块失败", htgContext.getConfig().getSymbol()), e);
         }
     }
 

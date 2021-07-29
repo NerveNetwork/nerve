@@ -1112,7 +1112,7 @@ public class CoinDataValidator {
      * @return
      */
     public boolean validateTxAmount(CoinData coinData, int txType) {
-        if (txType == TxType.CONTRACT_TOKEN_CROSS_TRANSFER || txType == TxType.COIN_BASE || txType == TxType.RECHARGE) {
+        if (txType == TxType.CONTRACT_TOKEN_CROSS_TRANSFER || txType == TxType.COIN_BASE || txType == TxType.RECHARGE || txType == TxType.SWAP_SYSTEM_DEAL) {
             return true;
         }
         Map<String, BigInteger> assetMap = new HashMap<>();

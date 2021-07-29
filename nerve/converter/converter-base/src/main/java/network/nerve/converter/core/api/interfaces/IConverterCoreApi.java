@@ -119,4 +119,14 @@ public interface IConverterCoreApi {
      * 是否支持转账即销毁部分的ERC20
      */
     boolean isSupportERC20OfTransferBurn();
+
+    /**
+     * 验证是否为nerve地址
+     */
+    boolean validNerveAddress(String address);
+
+    /**
+     * 是否支持充值ERC20的新验证方式I
+     */
+    boolean isSupportNewValidationOfERC20();
 }

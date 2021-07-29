@@ -49,6 +49,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
@@ -140,7 +141,9 @@ public class BaseII {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        BigInteger estimateGas = estimateGasObj.getAmountUsed();
+
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);

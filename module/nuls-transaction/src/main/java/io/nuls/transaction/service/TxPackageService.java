@@ -25,6 +25,7 @@
 package io.nuls.transaction.service;
 
 import io.nuls.transaction.model.bo.Chain;
+import io.nuls.transaction.model.bo.TxPackage;
 
 import java.util.List;
 
@@ -43,7 +44,7 @@ public interface TxPackageService {
      * @param maxTxDataSize
      * @return
      */
-    List<String> packageBasic (Chain chain, long endtimestamp, long maxTxDataSize, long blockTime);
+    TxPackage packageBasic (Chain chain, long endtimestamp, long maxTxDataSize, long blockTime, String preStateRoot);
 
     /**
      * 验证区块交易
@@ -53,6 +54,6 @@ public interface TxPackageService {
      * @return
      * @throws Exception
      */
-    boolean verifyBlockTransations(Chain chain, List<String> txStrList, String blockHeaderStr) throws Exception;
+    boolean verifyBlockTransations(Chain chain, List<String> txStrList, String blockHeaderStr, String preStateRoot) throws Exception;
 
 }

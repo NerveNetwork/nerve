@@ -21,6 +21,10 @@
         <module>converter-ht</module>
         <module>converter-lib</module>
         <module>converter-okt</module>
+        <module>converter-one</module>
+        <module>converter-matic</module>
+        <module>converter-kcs</module>
+
     </modules>
 
 </project>

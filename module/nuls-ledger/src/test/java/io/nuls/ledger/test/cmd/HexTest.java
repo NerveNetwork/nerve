@@ -26,11 +26,15 @@ package io.nuls.ledger.test.cmd;
 
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.*;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.ByteUtils;
+import io.nuls.core.rockdb.service.RocksDBService;
+import io.nuls.ledger.model.po.AccountState;
+import io.nuls.ledger.utils.LedgerUtil;
 import org.apache.commons.codec.DecoderException;
 import org.bouncycastle.util.encoders.Base64;
 import org.bouncycastle.util.encoders.Hex;
@@ -38,6 +42,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -181,6 +186,16 @@ public class HexTest {
 //        long time8 = System.currentTimeMillis();
 //        Log.info("{} time used - org.apache.commons.codec.binary.Base64.encode && decode ===StringLenght= {}", (time8 - time7), base3.length());
 
+    }
+
+    @Test
+    public void test() throws Exception {
+        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/logs/ledger/");
+        byte[] bytes = RocksDBService.get("account_5", LedgerUtil.getKey("TSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5", 2, 1));
+        AccountState accountState = new AccountState();
+        accountState.parse(new NulsByteBuffer(bytes));
+        System.out.println(accountState.getAvailableAmount());
+        System.out.println(accountState.getTotalAmount());
     }
 
 }

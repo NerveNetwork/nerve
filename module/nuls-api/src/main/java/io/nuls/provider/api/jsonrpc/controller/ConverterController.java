@@ -160,4 +160,36 @@ public class ConverterController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+    @RpcMethod("getProposalInfo")
+    @ApiOperation(description = "查询提案信息（序列化字符串）", order = 606)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回 network.nerve.converter.model.po.ProposalPO 对象的序列化字符串")
+    public RpcResult getProposalInfo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String proposalTxHash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            proposalTxHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[proposalTxHash] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(proposalTxHash)) {
+            return RpcResult.paramError("[proposalTxHash] is incorrect");
+        }
+        Result<String> result = converterTools.getProposalInfo(chainId, proposalTxHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+
 }

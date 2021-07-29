@@ -13,6 +13,7 @@ import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
+import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
@@ -30,6 +31,7 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -54,6 +56,9 @@ public class HtWalletApiTest extends Base {
     static String USDI_HT_MINTER = "0xF3B4771813f27C390B11703450F5E188b83829F9";
 
     static String USDX_HT_MAIN_TEST = "0x7dce26DFad3bb82B0605073480352B6FECEa169a";
+    static String OKUSD_OKT_8 = "0x10B382863647C4610050A69fBc1E582aC29fE58A";
+    static String HUSD_HT_18 = "0x10B382863647C4610050A69fBc1E582aC29fE58A";
+    static String BUSD_BNB_18 = "0x02e1aFEeF2a25eAbD0362C4Ba2DC6d20cA638151";
 
 
     protected void setErc20USDI() {
@@ -67,6 +72,10 @@ public class HtWalletApiTest extends Base {
     protected void setErc20USDX() {
         erc20Address = USDX_HT;
         erc20Decimals = 6;
+    }
+    protected void setErc20HUSD() {
+        erc20Address = HUSD_HT_18;
+        erc20Decimals = 18;
     }
     protected void setErc20USDT() {
         erc20Address = USDT_HT;
@@ -153,6 +162,7 @@ public class HtWalletApiTest extends Base {
         init();
     }
     protected void setBeta() {
+        // ["0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd","0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac","0x3c2ff003ff996836d39601ca22394a58ca9c473b"]
         list = new ArrayList<>();
         list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
         list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
@@ -164,7 +174,7 @@ public class HtWalletApiTest extends Base {
     }
 
     public void init() {
-        HtContext.setEthGasPriceStatic(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        context.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -218,7 +228,7 @@ public class HtWalletApiTest extends Base {
      */
     @Test
     public void transferHTAndERC20() throws Exception {
-        BigInteger gasPrice = HtContext.getEthGasPriceStatic();
+        BigInteger gasPrice = context.getEthGasPrice();
         // 初始化 账户
         setAccount_EFa1();
         // HT数量
@@ -266,18 +276,19 @@ public class HtWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        HtContext.setEthGasPriceStatic(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        context.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "15";
+        String sendAmount = "1500";
         // 初始化 ERC20 地址信息
         //setErc20EthMinter();
         //setErc20UsdiMinter();
         //setErc20DXA();
         //setErc20USDX();
+        setErc20HUSD();
         //setErc20USDT();
-        setErc20GOAT();
+        //setErc20GOAT();
         //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址
@@ -383,7 +394,7 @@ public class HtWalletApiTest extends Base {
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
         this.multySignContractAddress = "0x23023c99dcede393d6d18ca7fb08541b3364fa90";
@@ -402,7 +413,7 @@ public class HtWalletApiTest extends Base {
         setMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        HtContext.setEthGasPriceStatic(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{"0x17e61e0176ad8a88cac5f786ca0779de87b3043b"};
         String[] removes = new String[]{"0x78c30fa073f6cbe9e544f1997b91dd616d66c590"};
@@ -414,12 +425,7 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        //localdev();
-        //localdevII();
-        //setMain();
-        //
-        this.multySignContractAddress = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
-        //mainnetII();
+        setBeta();
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
@@ -430,7 +436,7 @@ public class HtWalletApiTest extends Base {
         }
     }
 
-    private Set<String> allManagers(String contract) throws Exception {
+    private LinkedHashSet<String> allManagers(String contract) throws Exception {
         Function allManagersFunction = new Function(
                 "allManagers",
                 List.of(),
@@ -449,7 +455,7 @@ public class HtWalletApiTest extends Base {
         }
         String resultStr = results.get(0).substring(1, results.get(0).length() - 1);
         String[] resultArr = resultStr.split(",");
-        Set<String> resultList = new HashSet<>();
+        LinkedHashSet<String> resultList = new LinkedHashSet<>();
         for(String result : resultArr) {
             resultList.add(result.trim().toLowerCase());
         }
@@ -517,7 +523,7 @@ public class HtWalletApiTest extends Base {
         setUpgradeMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        HtContext.setEthGasPriceStatic(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
         String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
         String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
@@ -859,6 +865,48 @@ public class HtWalletApiTest extends Base {
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+    }
+
+    @Test
+    public void newParseWithdrawTxReceiptTest() throws Exception {
+        setMain();
+        setHtMainTest();
+        context.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
+        List<String> list = new ArrayList<>();
+        list.add("0xb9d192fd11d822d7bd8ce7cedb91c2ee1dc6b64b3db6efe21cbe090ce37f704e");
+        list.add("0x139bc8245e330e97f4753bb36d2250f7c925778517348f5da2acbfdf682d66d8");
+        list.add("0xcc92c97fbe3b47762787c7f37e5aae7b783dab31dc21dcc97a4721576091d49c");
+        list.add("0x3397705b7b5207dd1e9e80ecb75172c42706349ec1c5b09cd3df6cdb01b76d5e");
+        list.add("0xafe27c329739b088e977ab184c2a567a98c9022b6dc85311b82ba9ea814a83a5");
+        list.add("0xd648bb94070fe3c64638167bfb1c616e432883c6b401d141b79df4a8d4e6ea43");
+        list.add("0xa54d0a0325059771f97bda91ae76f5432c554a8f40405396a1d257fe43b23478");
+        list.add("0x24543ab15507293068963ce008d07eb0de79ccb90450c0a1427700db24ed71c9");
+        list.add("0x1506547e1af34593188512e1ffff571784f704655401e52afd19141e8ddb5667");
+        list.add("0xae544043f7cdd13be12e22994b462402f22b36bde3a1abf0a681032456b74bf0");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", context);
+            Method method = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceipt", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+            BigInteger newValue = po.getValue();
+            System.out.println(newValue);
+            newValue = newValue == null ? BigInteger.ZERO : newValue;
+
+            Method method1 = helper.getClass().getDeclaredMethod("parseWithdrawTxReceipt", TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method1.setAccessible(true);
+            Object invoke1 = method1.invoke(helper, txReceipt, po);
+            System.out.println(invoke1);
+            BigInteger oldValue = po.getValue();
+            System.out.println(oldValue);
+            oldValue = oldValue == null ? BigInteger.ZERO : oldValue;
+            System.out.println(newValue.compareTo(oldValue) == 0);
+            System.out.println();
+        }
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

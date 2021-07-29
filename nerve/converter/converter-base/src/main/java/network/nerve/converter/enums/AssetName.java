@@ -32,5 +32,8 @@ public enum AssetName {
     ETH,
     BNB,
     HT,
-    OKT;
+    OKT,
+    ONE,
+    MATIC,
+    KCS;
 }

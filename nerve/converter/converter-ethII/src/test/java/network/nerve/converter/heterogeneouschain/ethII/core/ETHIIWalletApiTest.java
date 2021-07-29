@@ -13,11 +13,17 @@ import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.heterogeneouschain.ethII.base.BaseII;
+import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgBlockAnalysisHelper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
+import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
@@ -34,6 +40,7 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -63,6 +70,10 @@ public class ETHIIWalletApiTest extends BaseII {
     protected void setErc20NULS() {
         erc20Address = "0x79D7c11CC945a1734d21Ef41e631EFaE894Af2C3";
         erc20Decimals = 8;
+    }
+    protected void setErc20GOAT() {
+        erc20Address = "0xfeD0D0E316aC3E1EA8e46771fEd27Cf18f883122";
+        erc20Decimals = 9;
     }
     protected void setAccount_c684() {
         from = "0xfa27c84eC062b2fF89EB297C24aaEd366079c684";
@@ -222,14 +233,15 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
+        //setBeta();
         EthContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "130";
+        String sendAmount = "1300";
         // 初始化 ERC20 地址信息
-        setErc20USDI();
-        //setErc20USDX();
+        //setErc20USDI();
+        setErc20USDX();
         //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址
@@ -590,7 +602,7 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void txInputWithdrawDecoderTest() throws JsonProcessingException {
-        String input = "0xab6c2b1000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000e0d7a4fb97eb822a62a4be1824a4c83c5e50828d000000000000000000000000000000000000000000000000000001f2b9262c0000000000000000000000000000000000000000000000000000000000000000010000000000000000000000007b6f71c8b123b38aa8099e0098bec7fbc35b8a130000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004031373366333765386539363133633165356631373663646662323764313965613632633262653031306437316637666434373239303061373938323932613338000000000000000000000000000000000000000000000000000000000000028ae2b83d3d2b29f71cdee3981b8d477818fb913d7de720ef3444289f50ea46fdb93c1e5b19f7ffda43698b506536b5c82256a2eb608352ff7564d697fcbd63c9121c8bf080476d7f8fb2637b842bee9673c210746272f2420a15c7b7201001fb3fc972192c4347d1478bd2fffa82458d77abdc2a9b3a647a3aafd3508811699ad9391bbc46b8c87279b55bfbfc7484136118da80fa01f98a219f7fffaf3b3e6a76907a706c76227604d977951c35b82bd6934892b70a673ce73adefcaff9cd8bf73c701b6d315aa70ac70face17e1281620f080d53550310f0c1883487b1689c3a65328716a28db94930adc42079f03c0abd07094678a3ae90e27b2ae08855a9ad8a27471bf28e78fb94c494464a3c0b499cd24dd4c84e443b6bb4b000725c3367179f51f86a5fa7e5077b76a33c103bec8a49adb7b61a73c7569188cddc0be91eeb9fe9831c64c28e6bfb35b711a404a3446216180378a2b495561ae99254119610a08dcf174ffd46ff049c82756bb9838996630a6d1790a4597bddc8a9e174ad4085a078091bb0cabb1dbb7646544c88d94bba2ee9f77dfe097ab68da861112e7a631567b387416d0cf1d511ac3c6afb9d27774d2c2f38948fb2cf4ac8c8cdba1d96b84f52331b7cdb95c6bc5fb08f87873bd5ed13ca56b32157fd5d7c66f34e4d07874bb53d8d066f992ca968a585b6f5be0b8b4429756441aadd4c8e228befe3744080a7e32d1cff912e61076031282662e633050e8f79e10d027492f7a41183993eac7fb82682009a88fdfb293cd2332275e1554af22bbb9dabd39ff38a62dd3c7a58e6c7ee021c44fbcc9b7b0420d3ae9b442fd56ca9f55ba7e1b2bd357e2617465ad1a1a4e5314c472c437ded0fad927814cbb81765fb9e0fd3cc5a58b5b8180a3cdf4b21d31c1c00000000000000000000000000000000000000000000";
+        String input = "0xab6c2b1000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000001f610776e0d7111dcea613efc9ed41cc7e5dc052000000000000000000000000000000000000000000000000002386f26fc10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004030353561626565613662666438333765353863333665336164313435663239323633623261313835623532373339393261393736663663313733623536343366000000000000000000000000000000000000000000000000000000000000028aa60e705ca63ec5ff8fbdc2d7c90b730421615f1fdfc0ef70a0cc138c51969375528c8f60111f6f01ebc05d150c9cb093e2df7022ee40475ad5ff869fa180ec9c1bc2213e2340c55024242a9aa4fbc143c86324a31a69d7bf007e5d6192c3c6fd4d33697c087240a2cf70f7becbb6728701743d732e030afbb147286c720c73b97c1c85046012421d44166ac43d558d6d4a49ade3f3d7268d9e3061e353c1007998cc31830855a20d5385fd9646eff43e461b3ad74ae008a84f083e69b8d66b302cb81b2fcb07bb9f4f698ac83429f1a1cfa75edd0315bd3b4d0226fed11718fa0136006609d7c07951a146d4a874d6b9cf94161caf8f86a4c3832121c5ce9d44b588861b98e85379acf8c593e6d4b8db52d7d17594bd40e7d9a4a46af29aead4917cfaf3416e9450ef4f5ba4b145c0092b95899d2e02cabcb9c8d2a2dae9bf9856b194b81cba6f556b119849cc7267538437743bfabfe88a81f2386810ebe64bfc34f2c36f35c03394f3215f2faf29311eefb03ecac32e94fdf01db6878229bfdbcea498fb1b372938ba577739e55844d677819813d1be6b1dc0c66793643564e78ccc4b52171063b818cd4cf0970a1dbaf1965cc8eab474896a34c47ac7f2edf9823312a2921b01d30f8ed68271adaa1447ad324ef4b797249df5ed3766503a8166b94f5ace9c6b6b652078ed0faf7a3029077263a4b4cf88073b43d373c24362e28ed24287b41b64d464a2a2ed80e80b8b869386b8e6032f8c672c67aeb594870347c72961815d4c3acb94b2365cd8e5f80f50ae4ece3f8ae9aaf414dd51f2eda53bbf58fa57241c3348bdebca500be98ba4eef0f5173bf99a621ee9e667d58bb1215365a049aaa82021c213dc176052feceaeddc5271647f912d33af1665b075d6fe2347bba61821c00000000000000000000000000000000000000000000";
         List<Object> typeList = EthUtil.parseInput(input, HtgConstant.INPUT_WITHDRAW);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
         String signs = HexUtil.encode((byte[]) typeList.get(5));
@@ -798,22 +810,20 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void crossOutEstimateGasTest() throws Exception {
-        String contractAddress = "0x7d759a3330cec9b766aa4c889715535eed3c0484";
-        //BigInteger convertAmount = htgWalletApi.convertEthToWei(new BigDecimal("0.01"));
-        //Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, EthConstant.ZERO_ADDRESS);
-        BigInteger convertAmount = new BigInteger("2" + "000000000000000000");
-        Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x5cCEffCFd3E2fE4AaCBF57123B6d42DDDc231990");
-        //Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x0000000000000000000000000000000000000000");
+        setMain();
+        String contractAddress = "0x6758d4c4734ac7811358395a8e0c3832ba6ac624";
+        BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal("0.01"));
+        Function function = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, EthConstant.ZERO_ADDRESS);
 
-        String encodedFunction = FunctionEncoder.encode(crossOutFunction);
+        String encodedFunction = FunctionEncoder.encode(function);
 
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                "0xaff68CD458539A16b932748Cf4BdD53bf196789F",//364151
                 null,
-                BigInteger.ONE,
-                BigInteger.valueOf(1000000L),
+                null,
+                null,
                 contractAddress,
-                null,
+                convertAmount,
                 encodedFunction
         );
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
@@ -826,6 +836,65 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
+    public void withdrawEstimateGasTest() throws Exception {
+        setMain();
+        Function withdrawFunction = HtgUtil.getCreateOrSignWithdrawFunction(
+                "7511c6447e32f817bafb717352f7d92719959097ad2e9e086ab13c1a87c03b68",
+                "0xaf308156c2A172747592111dD4c01FD1c739D9aB",
+                BigInteger.valueOf(96950000000000000L),
+                false,
+                "0x0000000000000000000000000000000000000000",
+                "0x2ad1faf5c32cb2703d7e4eb846168a7903bd4d928277e9f751bd076f341e11ee0c62bb3f7890097ba14cc87ea3a43a6f812a9609e6e829e81934cd87161b21491c38dbbb1490b6cfc07183c804026cdb053767156651c9f0907ba531b70bed0ce3420e290b6dd64df233f08b0a85c5d45f14b1076adf281133619a44a3bd30d3241c23835455deca849849a172050d8c128b50447a97219058eca6564e3d2d978e476d4bb249134790c7fbf95f4f4d46f044279a77a4ab98f930fc8581270ad6fe341cd3d136954aa84927973003bee9ec913f382259e822562bcbced5ebdab3ac66d76496482262933f01fc813c40fdfde0c094ef16382e7bf086ecf76eb5c78bde621bae38831bbbf5a765b4ec84476f5f5f312e891c27dbcd5e485f188739a46e909716f224beeeb6484e294efe654e4b0abee1f6a338bfc4803ee0dad2c28fcada721b251f0ee236cd461c059143eb09727039f82c32b28459233eb07746587f106db3662a1e4786a2ca9d9853114792d50e522c982376491519a046ce1ace001183641c134cafdc1a4f67ca9e0da2fc41d3cd737e77611b7e45a4652ad2091d8d2c508e229b00b6bf0ed329f8ba72025db51edfc3e21ef84aedd79fbfc6a7aa4ae998cd1b7ba9c81d62b57398ca4ac9439490b2a209f22da7aff9ae0c41645c09ae6b4fde7ed79623a229650567cd760bfba6a0b67caff6253eea8d47d66c3588f27750b61b56b63d21306d082afe12f064d60fbd11ba5636fe664231d0bacebaadac8c692e61ad28a99dc1f4a94cc8b51136dbbb0a761adffc222cf217ecf14ff497906d381beb3f8382fb2fae47a3f60302a9428ea377ddbfb245b85146776ef5ddd759e47007f55968ad072d8fea5a432ddc3d430ffd22f15798272404c23368395e36da9d1b7a7bd38f38a2cd57ec20d51999af8410d9a9bedc0b83b9a06eb134134b43b8b8661c74ff15828e9cc690a78bb33f917b63bd5d1b353cdb0ca02cf1258671518a1b1d842a98c7be596145f8d03b7783daff88ff03908b13300b6bbb4dcbeb871a5d5d030c26cd3dbd646b3bf644d985719029f2b8b259b8b7b3c5efd7511b7587db1b103b542f489a695ed45c2ce18db795299a8680151369264fdad6c2af49e3315351fcdea17ea6e56bcfe0547fc49f67f5da00ce7369d1b9efc560d0d2166cd9ca1b1e5d905f9dcf6d0d3284c9391347cf18f5a8672815bf103e975a2bd74d1c23a8394ace1926ace1ac82b24bf766f9aaac55ff9c92af11d068f700168ba7b332181b83dcc3a4686f023fe5e370142861fb952298467667909e125e148745e9795aa23cd066d5cee90f5e46a6aae874a5e0dcf3a39d168b825ecd5e68bc3c8a2bfdf71b"
+        );
+
+        String encodedFunction = FunctionEncoder.encode(withdrawFunction);
+
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xaff68cd458539a16b932748cf4bdd53bf196789f",//364151
+                null,
+                null,
+                null,
+                "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624",
+                BigInteger.ZERO,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void validate() throws Exception {
+        setMain();
+        // 1096853502d76fad290b411231312cbc3d2323b6896a0d750c427556b1565440
+        BigInteger value = BigInteger.ZERO;
+        Function withdrawFunction = HtgUtil.getCreateOrSignWithdrawFunction("1096853502d76fad290b411231312cbc3d2323b6896a0d750c427556b1565440", "0x42129b75a285863d9850feefd11af4a00ebecef8",
+                BigInteger.valueOf(33000000), true, "0xb058887cb5990509a3d0dd2833b2054e4a7e4a55", "803e83a17be1c86cef63dc992cd56d7a0d0eaf3439224c874810b37467d559f1017ebc3df3008e2a1a62487c5723e73d071e59eeb6ab954cf1f0e26fe0ee4a281b87ddecf03386f4bf2985f65d92ebcff6e074db13c6944313ab909d84efd9d99f4f7f843689cdd2d749918e643abe0361bf61687ceefd9caf4c8e6abb45670a001cdffc85303cafce1e3880f9a57251bf750870d8c2a131b0da1706280f42033165373a3d735f2605a9866eec3f3de2d9a42f32cd0a2a63f2c0ead513158b4419991c");
+        Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", (value = BigInteger.valueOf(33000000)),  EthConstant.ZERO_ADDRESS);
+        String fromAddress = "0x3c2ff003fF996836d39601cA22394A58ca9c473b";
+        String multyAddress = "0x7D759A3330ceC9B766Aa4c889715535eeD3c0484";
+        EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, multyAddress, crossOutFunction, value);
+        System.out.println(JSONUtils.obj2PrettyJson(ethCall));
+    }
+
+    @Test
+    public void crossOutValidateMain() throws Exception {
+        setMain();
+        BigInteger value = BigInteger.ZERO;
+        Function crossOutFunction = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", (value = BigInteger.valueOf(33000000)),  EthConstant.ZERO_ADDRESS);
+        String fromAddress = "0xaff68cd458539a16b932748cf4bdd53bf196789f";
+        String multyAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
+        EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, multyAddress, crossOutFunction, value);
+        System.out.println(JSONUtils.obj2PrettyJson(ethCall));
+    }
+
+
+
+    @Test
     public void allowanceTest() throws Exception {
         Function allowanceFunction = new Function("allowance",
                 Arrays.asList(new Address("0xc11D9943805e56b630A401D4bd9A29550353EFa1"), new Address("0x7d759a3330cec9b766aa4c889715535eed3c0484")),
@@ -833,6 +902,83 @@ public class ETHIIWalletApiTest extends BaseII {
 
         BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction("0x5cCEffCFd3E2fE4AaCBF57123B6d42DDDc231990", allowanceFunction).get(0).getValue();
         System.out.println(allowanceAmount);
+    }
+    /*public static void main(String[] args) throws Exception {
+        HtgWalletApi htgWalletApi = new HtgWalletApi();
+        htgWalletApi.init("https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5");
+        HtgParseTxHelper helper = new HtgParseTxHelper();
+        helper.htgWalletApi = htgWalletApi;
+        String directTxHash = "0x7c74f2c95808bbf92533198ebcf75552f18c59c339c1d8c3637e9ae94f748062";
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+        boolean out = helper.newValidationEthDepositByCrossOut(tx, txReceipt, po);
+        System.out.println(out);
+
+        BeanMap beanMap = new BeanMap();
+        beanMap.add(HtgBlockAnalysisHelper.class);
+        beanMap.add(HtgContext.class, (bnbContext = new BnbContext()));
+
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", new EthIIContext());
+        EthIIContext context = new EthIIContext();
+        HeterogeneousCfg cfg = new HeterogeneousCfg();
+        cfg.setChainIdOnHtgNetwork(3);
+        EthContext.setConfig(cfg);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", context);
+
+    }*/
+    @Test
+    public void newValidationEthDepositByCrossOutTest() throws Exception {
+        setMain();
+        List<String> list = new ArrayList<>();
+        //list.add("0x7c74f2c95808bbf92533198ebcf75552f18c59c339c1d8c3637e9ae94f748062");
+        //list.add("0xc2c5cd34d49813cc0c5438a272fa3902e8eee20bf992d8562035703c2467ec7f");
+        //list.add("0x5530db02a1e2768621fff41c2e5827092b9b5b10538f7a99b1d188b657f06447");
+        //list.add("0x8fc500075949643f78eb2ba9ed605792f551c325162af4db65577586421e9dc9");
+        //list.add("0x8310276c339c816107406cda3ad3e3a1862a270651eafb7cb995c03b18bc83a5");
+        //list.add("0x06ced804faea7b64ad04751f6b19eddb650f88ede385993117f25dcce07c4abe");
+        //list.add("0x8b2695b5802545a3a6505f92b3f389cb4e22d8af20f38047e7f6f4d810759a2b");
+        //list.add("0xaf8997a68242369fa6f0bc57a29150d3ffda9934e2858ca52deaef5981ef6cd5");
+        //list.add("0x3966201a9e553ba8cb8fc24023541aff1b7cfb544a01857614fdb79097d7273b");
+        //list.add("0x0aaf4b69440eb9e8ea296497c96a81ef84a7389d5c1f646d9d2b9b0809e438a2");
+        //list.add("0xebb5a7887125c68d205e7ab6d81afb5f63e74bd2935b6219f586a26aadb2508f");
+        //list.add("0xe86cce5d0c36a38e6d70b719228cd00033921c75472eba2f796748b0e1e47a77");
+        list.add("0xf284372659597dc42cb2b86a7b55bdb08b110b79fa93884af00cd8f47fbf378a");
+        list.add("0xdfb7d251794395dfc536fbbaec9fd1457c787138043b5dac741ce05b482e34ef");
+        list.add("0x8e226808f4f65b49bf814c508de98671a20008f314409211ed3fe502a1cbcb00");
+        list.add("0x182e45e30df234734031e009dd7accd297c110510cd6f9a576dc6dca86be6d32");
+        list.add("0x6f504331ff4ea25d273bc146db13a211c128589053ba5299bf47009cf601a8ab");
+        list.add("0x9ff1c35e620efda7e1ab9a7b6d56b4ed36423898ff23f13bc20630c27168b838");
+        list.add("0xd6b37946fce975a78c74949461a1c58abd9c594eec1eef6270723e420fcfb36b");
+        list.add("0x7027e81b7a252b47ee5e253c5f6832733ec45cfdf27a39c5df1fe53ed6f0cd10");
+        list.add("0x038d07919bb77e3ed33d74979698ef797b777e4ea43b69601fa331065cbe779a");
+        list.add("0xf1705cc51e0da7d5574a17d8707a72165a9472cacb0e1922c82f62749b15ef08");
+        list.add("0xbf133b5dfbbfa6889ff40e4040c870dd7d9cabef75f0c8f3b3350ca0c72c225a");
+        list.add("0x67975e35a46c965f2f2492052677d2ba0e9b20b2e04679168181f84ad620b7e9");
+        list.add("0xdff3b51747a1a81aa5d2751cd230f74874a20e7f60604952e3247196fbbe4738");
+        list.add("0xc8f2ffe4972778e74ab92c3e022011c136ccaa6f3545d0731ca89291cacb5ed3");
+        list.add("0x2f0ef2a48fc40f5cfc3175df819177c1ee41c0822e16f8b1cd98dcfa088caeec");
+        list.add("0xff6aa9083658f3b41097fd0963191bd48e99523d19d7ba5ef18658c3f4a08910");
+        list.add("0xd1f744dcbc56170504df1436b4d8132e4fb6817ebae8b524369db4d90c9da1a7");
+        list.add("0xc046907e69f89c8d51cd8395b34a523a2163731a381c3e288a2d47d11c090966");
+        list.add("0x4804816782a8540eb7cb78e316b347ac9b8dc44e1aac866ccb2375349103830d");
+        list.add("0x1247285e97cae152a7aca3aeacf12d7de709c69054ae288c27e72e06bd8a2207");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", new EthIIContext());
+            Method method = helper.getClass().getDeclaredMethod("newValidationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+
+            method = helper.getClass().getDeclaredMethod("_validationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            method.setAccessible(true);
+            invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+        }
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

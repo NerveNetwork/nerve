@@ -57,6 +57,8 @@ public final class TxCmd {
     public static final String TX_ISLOCKED = "tx_isLocked";
     public static final String TX_ALL_LOCKED_ADDRESS= "tx_allLockedAddress";
 
+    public static final String TX_SET_MODULE_GENERATE_TX_TYPES = "tx_setModuleGenerateTxTypes";
+
     /**
      * 修改节点共识状态
      * Modify the node consensus state

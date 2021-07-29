@@ -78,6 +78,7 @@ public interface HtgConstant {
     String EVENT_HASH_TRANSACTION_MANAGER_CHANGE_COMPLETED = "0xac9b82db4e104d515319a481096bfd91a4f40ee10837d5a2c8d51b9a03dc48ae";
     String EVENT_HASH_TRANSACTION_UPGRADE_COMPLETED = "0x5e06c4b22547d430736ce834764dbfee08f1c4cf7ae3d53178aa56effa593ed0";
     String EVENT_HASH_CROSS_OUT_FUNDS = "0x5ddf9724d8fe5d9e12499be2867f93d41a582733dcd65f74a486ad7e30667146";
+    String EVENT_HASH_UNKNOWN_ON_POLYGON = "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63";
 
 
     List<TypeReference<Type>> INPUT_WITHDRAW = Utils.convert(
@@ -161,7 +162,10 @@ public interface HtgConstant {
     long SECOND_30 = 30 * 1000L;
     long SECOND_20 = 20 * 1000L;
     long SECOND_10 = 10 * 1000L;
+    long WAITING_MINUTES = MINUTES_2;
 
+    BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(230000L);
+    BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(400000L);
     BigInteger GAS_LIMIT_OF_MAIN_ASSET = BigInteger.valueOf(21000L);
     BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(60000L);
     BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
@@ -170,11 +174,17 @@ public interface HtgConstant {
 
     Long ROLLBACK_NUMER = 100L;
 
+    BigInteger GWEI_DOT_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(8));
+    BigInteger GWEI_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_2 = BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_3 = BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_5 = BigInteger.valueOf(5L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_10 = BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_20 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
     BigInteger HIGH_GAS_PRICE = GWEI_200;
+    BigInteger MAX_HTG_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
 
     ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
     ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");

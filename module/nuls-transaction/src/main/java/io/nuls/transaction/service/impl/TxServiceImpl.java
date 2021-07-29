@@ -166,7 +166,8 @@ public class TxServiceImpl implements TxService {
             if (!verifyResult.getResult()) {
                 chain.getLogger().error("verify failed: type:{} - txhash:{}, code:{}",
                         tx.getType(), hash.toHex(), verifyResult.getErrorCode().getCode());
-                throw new NulsException(ErrorCode.init(verifyResult.getErrorCode().getCode()));
+//                throw new NulsException(ErrorCode.init(verifyResult.getErrorCode().getCode()));
+                throw new NulsException(verifyResult.getErrorCode());
             }
             VerifyLedgerResult verifyLedgerResult = LedgerCall.commitUnconfirmedTx(chain, RPCUtil.encode(tx.serialize()));
             if (!verifyLedgerResult.businessSuccess()) {
@@ -313,7 +314,14 @@ public class TxServiceImpl implements TxService {
 //        }
 
         //验证签名
-        validateTxSignature(tx, txRegister, chain);
+        try {
+            validateTxSignature(tx, txRegister, chain);
+        } catch (NulsException e) {
+           throw e;
+        }catch (Exception e) {
+            throw new NulsException(TxErrorCode.SIGNATURE_ERROR);
+        }
+        
         //如果有coinData, 则进行验证,有一些交易(黄牌)没有coinData数据
         if (tx.getType() == TxType.FINAL_QUOTATION
                 || tx.getType() == TxType.QUOTATION
@@ -535,7 +543,7 @@ public class TxServiceImpl implements TxService {
                 throw new NulsException(TxErrorCode.INVALID_ADDRESS);
             }
 
-            int chainId = AddressTool.getChainIdByAddress(coinTo.getAddress());
+            int chainId = validAddressChainId;
             if (null == addressChainId) {
                 addressChainId = chainId;
             } else if (addressChainId != chainId) {
@@ -571,14 +579,45 @@ public class TxServiceImpl implements TxService {
             if (!rs) {
                 throw new NulsException(TxErrorCode.COINTO_HAS_DUPLICATE_COIN);
             }
+            // 地址类型
+            int addressType = AddressTool.getTypeByAddress(coinTo.getAddress());
             //合约地址接受NULS的交易只能是coinBase交易,调用合约交易,普通停止节点(合约停止节点交易是系统交易,不走基础验证)
-            if (TxUtil.isLegalContractAddress(coinTo.getAddress(), chain)) {
+            if (addressType == BaseConstant.CONTRACT_ADDRESS_TYPE) {
                 boolean sysTx = txRegister.getSystemTx();
                 if (!sysTx && type != TxType.COIN_BASE
                         && type != TxType.CALL_CONTRACT
                         && type != TxType.STOP_AGENT) {
                     chain.getLogger().error("contract data error: The contract does not accept transfers of this type{} of transaction.", type);
                     throw new NulsException(TxErrorCode.TX_DATA_VALIDATION_ERROR);
+                }
+            }
+            // SWAP交易对地址不允许出现在非swap交易中
+            if (addressType == BaseConstant.PAIR_ADDRESS_TYPE) {
+                if (type != TxType.SWAP_TRADE
+                        && type != TxType.SWAP_ADD_LIQUIDITY
+                        && type != TxType.SWAP_REMOVE_LIQUIDITY
+                        && type != TxType.SWAP_SYSTEM_DEAL
+                ) {
+                    chain.getLogger().error("swap data error: The swap pair address does not accept transfers of this type{} of transaction.", type);
+                    throw new NulsException(TxErrorCode.TX_DATA_PAIR_ADDRESS_VALIDATION_ERROR);
+                }
+            }
+            // STABLE-SWAP交易对地址不允许出现在非stable-swap交易中
+            if (addressType == BaseConstant.STABLE_PAIR_ADDRESS_TYPE) {
+                if (type != TxType.SWAP_TRADE_STABLE_COIN
+                        && type != TxType.SWAP_ADD_LIQUIDITY_STABLE_COIN
+                        && type != TxType.SWAP_REMOVE_LIQUIDITY_STABLE_COIN
+                        && type != TxType.SWAP_SYSTEM_DEAL
+                ) {
+                    chain.getLogger().error("stable-swap data error: The stable-swap pair address does not accept transfers of this type{} of transaction.", type);
+                    throw new NulsException(TxErrorCode.TX_DATA_PAIR_ADDRESS_VALIDATION_ERROR);
+                }
+            }
+            if (addressType == BaseConstant.FARM_ADDRESS_TYPE) {
+                if (type != TxType.FARM_STAKE
+                        && type != TxType.FARM_CREATE) {
+                    chain.getLogger().error("swap data error: The swap farm address does not accept transfers of this type{} of transaction.", type);
+                    throw new NulsException(TxErrorCode.TX_DATA_FARM_ADDRESS_VALIDATION_ERROR);
                 }
             }
         }

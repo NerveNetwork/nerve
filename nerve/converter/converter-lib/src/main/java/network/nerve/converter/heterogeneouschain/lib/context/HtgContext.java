@@ -38,6 +38,9 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_1;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.MAX_HTG_GAS_PRICE;
+
 /**
  * @author: PierreLuo
  * @date: 2021-03-22
@@ -76,5 +79,28 @@ public interface HtgContext {
      */
     default boolean supportPendingCall() {
         return true;
+    }
+
+    default BigInteger calcGasPrice(BigInteger ethGasPrice, BigInteger currentGasPrice) {
+        if (ethGasPrice == null) {
+            return currentGasPrice;
+        }
+        if (ethGasPrice.compareTo(MAX_HTG_GAS_PRICE) > 0) {
+            ethGasPrice = MAX_HTG_GAS_PRICE;
+        }
+        if (ethGasPrice.compareTo(GWEI_1) < 0) {
+            return currentGasPrice;
+        }
+        return ethGasPrice;
+        /*
+        回滚异构网络打包价格，稳定6次后再更新的机制，原因是造成前后端price不一致
+        if (HTG_GAS_PRICE == null || HTG_GAS_PRICE.compareTo(ethGasPrice) <= 0) {
+            HTG_GAS_PRICE = ethGasPrice;
+        } else {
+            gasPriceOrders = HtgUtil.sortByInsertionDsc(gasPriceOrders, ethGasPrice);
+            if (gasPriceOrders[5] != null) {
+                HTG_GAS_PRICE = gasPriceOrders[0];
+            }
+        }*/
     }
 }

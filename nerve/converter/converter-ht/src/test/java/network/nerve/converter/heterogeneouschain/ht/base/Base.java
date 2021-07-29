@@ -46,6 +46,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
@@ -72,6 +73,7 @@ public class Base {
     protected byte VERSION = 2;
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
+    protected HtContext context;
 
     @BeforeClass
     public static void initClass() {
@@ -86,9 +88,10 @@ public class Base {
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
-        HtContext context = new HtContext();
+        context = new HtContext();
         HeterogeneousCfg cfg = new HeterogeneousCfg();
         cfg.setChainIdOnHtgNetwork(256);
+        cfg.setDecimals(18);
         HtContext.setConfig(cfg);
         BeanUtilTest.setBean(htgWalletApi, "htgContext", context);
     }
@@ -118,7 +121,9 @@ public class Base {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        BigInteger estimateGas = estimateGasObj.getAmountUsed();
+
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);

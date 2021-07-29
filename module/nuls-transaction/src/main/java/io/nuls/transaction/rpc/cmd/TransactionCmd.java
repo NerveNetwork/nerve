@@ -26,6 +26,7 @@ import io.nuls.transaction.constant.TxErrorCode;
 import io.nuls.transaction.manager.ChainManager;
 import io.nuls.transaction.manager.TxManager;
 import io.nuls.transaction.model.bo.Chain;
+import io.nuls.transaction.model.bo.TxPackage;
 import io.nuls.transaction.model.bo.VerifyLedgerResult;
 import io.nuls.transaction.model.dto.ModuleTxRegisterDTO;
 import io.nuls.transaction.model.po.TransactionConfirmedPO;
@@ -143,7 +144,8 @@ public class TransactionCmd extends BaseCmd {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "endTimestamp", requestType = @TypeDescriptor(value = long.class), parameterDes = "截止时间"),
             @Parameter(parameterName = "blockTime", requestType = @TypeDescriptor(value = long.class), parameterDes = "本次出块区块时间"),
-            @Parameter(parameterName = "maxTxDataSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易集最大容量")
+            @Parameter(parameterName = "maxTxDataSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易集最大容量"),
+            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "前一个区块的状态根")
     })
     @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "list", valueType = List.class, valueElement = String.class, description = "可打包交易集")
@@ -164,10 +166,13 @@ public class TransactionCmd extends BaseCmd {
             //交易数据最大容量值
             int maxTxDataSize = (int) params.get("maxTxDataSize");
             long blockTime = Long.parseLong(params.get("blockTime").toString());
+            String preStateRoot = (String) params.get("preStateRoot");
 //            chain.getLogger().info("总可用:{}", endTimestamp - NulsDateUtils.getCurrentTimeMillis());
-            List<String> list = txPackageService.packageBasic(chain, endTimestamp, maxTxDataSize, blockTime);
+            TxPackage txPackage = txPackageService.packageBasic(chain, endTimestamp, maxTxDataSize, blockTime, preStateRoot);
+            List<String> list = txPackage.getList();
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
             map.put("list", null == list ? new ArrayList<>() : list);
+            map.put("stateRoot", txPackage.getStateRoot());
             return success(map);
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -593,7 +598,8 @@ public class TransactionCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待验证交易序列化数据字符串集合"),
-            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "对应的区块头")
+            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "对应的区块头"),
+            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "前一个区块状态根")
     })
     @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class,  description = "是否验证成功")
@@ -611,10 +617,46 @@ public class TransactionCmd extends BaseCmd {
             }
             List<String> txList = (List<String>) params.get("txList");
             String blockHeaderStr = (String) params.get("blockHeader");
-            txPackageService.verifyBlockTransations(chain, txList, blockHeaderStr);
+            String preStateRoot = (String) params.get("preStateRoot");
+            txPackageService.verifyBlockTransations(chain, txList, blockHeaderStr, preStateRoot);
             Map<String, Boolean> resultMap = new HashMap<>(TxConstant.INIT_CAPACITY_2);
             resultMap.put("value", true);
             return success(resultMap);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(TxErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+
+    }
+
+    @CmdAnnotation(cmd = TxCmd.TX_SET_MODULE_GENERATE_TX_TYPES, priority = CmdPriority.HIGH, version = 1.0, description = "设置模块生成的系统交易类型")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "moduleAbbr", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
+            @Parameter(parameterName = "txTypeList", requestType = @TypeDescriptor(value = List.class, collectionElement = Integer.class), parameterDes = "设置模块生成的系统交易类型"),
+    })
+    @ResponseData(description = "无特定返回值，没有错误即设置成功")
+    public Response setContractGenerateTxTypes(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("moduleAbbr"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("txTypeList"), TxErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
+            }
+            List<Integer> txTypeList = (List<Integer>) params.get("txTypeList");
+            if (txTypeList == null) {
+                txTypeList = new ArrayList<>();
+            }
+            String moduleAbbr = (String) params.get("moduleAbbr");
+            chain.getModuleGenerateTxTypesMap().put(moduleAbbr, new HashSet<>(txTypeList));
+            chain.getLogger().info("设置模块{}生成交易类型: {}", moduleAbbr, Arrays.toString(txTypeList.toArray()));
+            return success();
         } catch (NulsException e) {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode());

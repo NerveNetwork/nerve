@@ -56,16 +56,16 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
     private long lastRecordTime = 0;
 
     public void run() {
-        if (!htgContext.getConverterCoreApi().isRunning()) {
-            if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
-            }
-            return;
-        }
-        if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("[{}网络RPC可用性检查任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
-        }
         try {
+            if (!htgContext.getConverterCoreApi().isRunning()) {
+                if (LoggerUtil.LOG.isDebugEnabled()) {
+                    LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+                }
+                return;
+            }
+            if (LoggerUtil.LOG.isDebugEnabled()) {
+                LoggerUtil.LOG.debug("[{}网络RPC可用性检查任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+            }
             boolean availableRPC = true;
             do {
                 // 本地最新的区块

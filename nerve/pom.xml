@@ -20,6 +20,7 @@
         <module>converter</module>
         <module>dex</module>
         <module>nerve-consensus-pocbft</module>
+        <module>swap</module>
     </modules>
 
     <dependencies>

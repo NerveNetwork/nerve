@@ -47,6 +47,7 @@ import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogene
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
+import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.message.ComponentSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
@@ -540,12 +541,25 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                     }
                 }
-                String ethTxHash = docking.createOrSignWithdrawTxII(
-                        callParm.getTxHash(),
-                        callParm.getToAddress(),
-                        callParm.getValue(),
-                        callParm.getAssetId(),
-                        callParm.getSigned());
+                String ethTxHash;
+                if (pendingPO.getRetry() && docking instanceof HtgDocking) {
+                    // 当执行重发提现的机制时，触发提现，不检查执行顺序，当前节点立刻执行
+                    HtgDocking htgDocking = (HtgDocking) docking;
+                    ethTxHash = htgDocking.createOrSignWithdrawTxII(
+                            callParm.getTxHash(),
+                            callParm.getToAddress(),
+                            callParm.getValue(),
+                            callParm.getAssetId(),
+                            callParm.getSigned(), false);
+                } else {
+                    ethTxHash = docking.createOrSignWithdrawTxII(
+                            callParm.getTxHash(),
+                            callParm.getToAddress(),
+                            callParm.getValue(),
+                            callParm.getAssetId(),
+                            callParm.getSigned());
+                }
+
                 compSignPO.setCompleted(true);
                 // 提现交易发出成功，清理手续费追加状态
                 chain.clearWithdrawFeeChange(txHash);

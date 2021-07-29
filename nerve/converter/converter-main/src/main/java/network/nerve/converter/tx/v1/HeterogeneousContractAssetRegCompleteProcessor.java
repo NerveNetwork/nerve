@@ -88,6 +88,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
             Set<String> bindNewSet = new HashSet<>();
             Set<String> bindRemoveSet = new HashSet<>();
             Set<String> bindOverrideSet = new HashSet<>();
+            Set<String> unregisterSet = new HashSet<>();
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
                 if(coinData != null && coinData.length > 0){
@@ -97,7 +98,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
                 txData.parse(tx.getTxData(), 0);
                 String contractAddress = txData.getContractAddress().toLowerCase();
-                errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, false);
+                errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, false);
                 if (StringUtils.isNotBlank(errorCode)) {
                     failsList.add(tx);
                     continue;
@@ -146,7 +147,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 Integer hChainId = txData.getChainId();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
                 // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
-                boolean isBindNew = false, isBindRemove = false, isBindOverride = false;
+                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false;
                 do {
                     byte[] remark = tx.getRemark();
                     if (remark == null) {
@@ -189,11 +190,17 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                         isBindOverride = true;
                         chain.getLogger().info("[commit] NERVE资产绑定异构链合约资产[覆盖绑定], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
                                 assetChainId, assetId, hChainId, hAssetInfo.getAssetId(), hAssetInfo.getSymbol(), hAssetInfo.getDecimals(), hAssetInfo.getContractAddress());
+                    } else if (BindHeterogeneousContractMode.UNREGISTER.toString().equals(mode)) {
+                        docking.rollbackHeterogeneousAssetInfos(List.of(info));
+                        ledgerAssetRegisterHelper.deleteCrossChainAsset(hChainId, info.getAssetId());
+                        isUnregister = true;
+                        chain.getLogger().info("[commit] NERVE资产取消注册异构链合约资产[取消注册], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                                assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     }
 
                 } while (false);
                 // 异构合约资产注册
-                if (!isBindNew && !isBindRemove && !isBindOverride) {
+                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister) {
                     docking.saveHeterogeneousAssetInfos(List.of(info));
                     ledgerAssetRegisterHelper.crossChainAssetReg(chainId, hChainId, info.getAssetId(),
                             info.getSymbol(), info.getDecimals(), info.getSymbol(), info.getContractAddress());
@@ -231,7 +238,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 Integer hChainId = txData.getChainId();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
                 // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
-                boolean isBindNew = false, isBindRemove = false, isBindOverride = false;
+                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false;
                 do {
                     byte[] remark = tx.getRemark();
                     if (remark == null) {
@@ -271,11 +278,16 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                         ledgerAssetRegisterHelper.crossChainAssetRegByExistNerveAsset(oldAssetChainId, oldAssetId, hChainId, hAssetInfo.getAssetId(),
                                 hAssetInfo.getSymbol(), hAssetInfo.getDecimals(), hAssetInfo.getSymbol(), hAssetInfo.getContractAddress());
                         isBindOverride = true;
+                    } else if (BindHeterogeneousContractMode.UNREGISTER.toString().equals(mode)) {
+                        docking.saveHeterogeneousAssetInfos(List.of(info));
+                        ledgerAssetRegisterHelper.crossChainAssetReg(chainId, hChainId, info.getAssetId(),
+                                info.getSymbol(), info.getDecimals(), info.getSymbol(), info.getContractAddress());
+                        isUnregister = true;
                     }
 
                 } while (false);
                 // 异构合约资产注册
-                if (!isBindNew && !isBindRemove && !isBindOverride) {
+                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister) {
                     docking.rollbackHeterogeneousAssetInfos(List.of(info));
                     ledgerAssetRegisterHelper.deleteCrossChainAsset(hChainId, info.getAssetId());
                 }

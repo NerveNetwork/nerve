@@ -56,6 +56,7 @@ import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
@@ -836,6 +837,27 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         return htgParseTxHelper.isMinterERC20(erc20);
     }
 
+    @Override
+    public String cancelHtgTx(String nonce, String priceGWei) throws Exception {
+        // 获取管理员账户
+        HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+        String fromAddress = account.getAddress();
+        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+        BigInteger gasPrice = new BigInteger(priceGWei).multiply(BigInteger.TEN.pow(9));
+        // 计算一个合适的gasPrice
+        gasPrice = HtgUtil.calNiceGasPriceOfWithdraw(new BigDecimal(htgContext.getEthGasPrice()), new BigDecimal(gasPrice)).toBigInteger();
+        return htgWalletApi.sendMainAssetWithNonce(
+                fromAddress,
+                priKey,
+                fromAddress,
+                BigDecimal.ZERO,
+                HtgConstant.GAS_LIMIT_OF_MAIN_ASSET,
+                gasPrice,
+                new BigInteger(nonce)
+        );
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
@@ -1149,13 +1171,25 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+        BigInteger estimateGas;
+        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+        if (estimateGasObj.getError() != null) {
+            String error = estimateGasObj.getError().getMessage();
+            /*boolean completedTransaction = ConverterUtil.isCompletedTransaction(error);
+            if (completedTransaction && (txType == HeterogeneousChainTxType.WITHDRAW || txType == HeterogeneousChainTxType.CHANGE)) {
+                estimateGas = txType == HeterogeneousChainTxType.WITHDRAW ? HtgConstant.GAS_LIMIT_OF_WITHDRAW : HtgConstant.GAS_LIMIT_OF_CHANGE;
+            } else {
+                logger().error("[{}]交易估算GasLimit失败失败，原因: {}", txType, error);
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败, " + error);
+            }*/
+            logger().error("[{}]交易估算GasLimit失败失败，原因: {}", txType, error);
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败, " + error);
+        } else {
+            estimateGas = estimateGasObj.getAmountUsed();
+        }
+
         if (logger().isDebugEnabled()) {
             logger().debug("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
-        }
-        if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
-            logger().error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
         }
         BigInteger gasLimit = estimateGas.add(HtgConstant.BASE_GAS_LIMIT);
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, htgContext.MULTY_SIGN_ADDRESS(), gasLimit, txFunction, BigInteger.ZERO, gasPrice);

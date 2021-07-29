@@ -96,7 +96,9 @@ public class AccountStateCmd extends BaseLedgerCmd {
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
                     @Key(name = "total", valueType = BigInteger.class, description = "总金额"),
                     @Key(name = "freeze", valueType = BigInteger.class, description = "冻结金额"),
-                    @Key(name = "available", valueType = String.class, description = "可用金额")
+                    @Key(name = "available", valueType = String.class, description = "可用金额"),
+                    @Key(name = "permanentLocked", valueType = BigInteger.class, description = "永久锁定金额"),
+                    @Key(name = "timeHeightLocked", valueType = BigInteger.class, description = "高度或时间锁定金额")
             })
     )
     public Response getBalance(Map params) {
@@ -265,6 +267,7 @@ public class AccountStateCmd extends BaseLedgerCmd {
                     @Key(name = "nonce", valueType = String.class, description = "账户资产nonce值"),
                     @Key(name = "nonceType", valueType = Integer.class, description = "1：已确认的nonce值,0：未确认的nonce值"),
                     @Key(name = "available", valueType = BigInteger.class, description = "可用金额"),
+                    @Key(name = "freeze", valueType = BigInteger.class, description = "总锁定金额"),
                     @Key(name = "permanentLocked", valueType = BigInteger.class, description = "永久锁定金额"),
                     @Key(name = "timeHeightLocked", valueType = BigInteger.class, description = "高度或时间锁定金额")
             })

@@ -125,6 +125,10 @@ public class Log {
         BASIC_LOGGER.warn(msg, throwable);
     }
 
+    public static void warn(Throwable throwable) {
+        BASIC_LOGGER.warn("", throwable);
+    }
+
     /**
      * 提供error级别基本的日志输出
      *
@@ -143,7 +147,7 @@ public class Log {
                     objStrs.add(obj);
                 } else if (obj instanceof Throwable) {
                     objStrs.add(obj);
-                }else{
+                } else {
                     objStrs.add(JSONUtils.obj2json(obj));
                 }
             }

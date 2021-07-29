@@ -61,6 +61,8 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private long htOkbKeyHeight;
     /** OKT 协议升级配置高度 */
     private long oktKeyHeight;
+    /** ONE MATIC KCS 协议升级配置高度 */
+    private long oneMaticKcsHeight;
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
@@ -160,5 +162,13 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setOktKeyHeight(long oktKeyHeight) {
         this.oktKeyHeight = oktKeyHeight;
+    }
+
+    public long getOneMaticKcsHeight() {
+        return oneMaticKcsHeight;
+    }
+
+    public void setOneMaticKcsHeight(long oneMaticKcsHeight) {
+        this.oneMaticKcsHeight = oneMaticKcsHeight;
     }
 }

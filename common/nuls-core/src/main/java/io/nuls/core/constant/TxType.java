@@ -118,13 +118,13 @@ public class TxType {
     /**
      * 验证人变更
      * Verifier Change
-     * */
+     */
     public static final int VERIFIER_CHANGE = 24;
 
     /**
      * 验证人初始化
      * Verifier init
-     * */
+     */
     public static final int VERIFIER_INIT = 25;
 
     /**
@@ -138,16 +138,16 @@ public class TxType {
     public static final int LEDGER_ASSET_REG_TRANSFER = 27;
 
 
-     /**
+    /**
      * 追加节点保证金
      * Additional agent margin
-     * */
+     */
     public static final int APPEND_AGENT_DEPOSIT = 28;
 
     /**
      * 撤销节点保证金
      * Cancel agent deposit
-     * */
+     */
     public static final int REDUCE_AGENT_DEPOSIT = 29;
 
     /**
@@ -285,4 +285,71 @@ public class TxType {
      */
     public static final int REGISTERED_CHAIN_CHANGE = 60;
 
+    /**
+     * 创建swap交易对
+     */
+    public static final int CREATE_SWAP_PAIR = 61;
+
+    /**
+     * 创建挖矿池
+     */
+    public static final int FARM_CREATE = 62;
+
+    /**
+     * swap交易
+     */
+    public static final int SWAP_TRADE = 63;
+
+    /**
+     * 添加流动性
+     */
+    public static final int SWAP_ADD_LIQUIDITY = 64;
+
+    /**
+     * 撤销流动性
+     */
+    public static final int SWAP_REMOVE_LIQUIDITY = 65;
+
+    /**
+     * 质押挖矿
+     */
+    public static final int FARM_STAKE = 66;
+
+    /**
+     * 退出质押
+     */
+    public static final int FARM_WITHDRAW = 67;
+    /**
+     * SWAP系统成交交易
+     */
+    public static final int SWAP_SYSTEM_DEAL = 68;
+    /**
+     * SWAP系统退还交易
+     */
+    public static final int SWAP_SYSTEM_REFUND = 69;
+
+    /**
+     * FARM系统交易
+     */
+    public static final int FARM_SYSTEM_TX = 70;
+
+    /**
+     * 创建稳定币 pair
+     */
+    public static final int CREATE_SWAP_PAIR_STABLE_COIN = 71;
+
+    /**
+     * swap稳定币交易
+     */
+    public static final int SWAP_TRADE_STABLE_COIN = 72;
+
+    /**
+     * 添加稳定币流动性
+     */
+    public static final int SWAP_ADD_LIQUIDITY_STABLE_COIN = 73;
+
+    /**
+     * 撤销稳定币流动性
+     */
+    public static final int SWAP_REMOVE_LIQUIDITY_STABLE_COIN = 74;
 }

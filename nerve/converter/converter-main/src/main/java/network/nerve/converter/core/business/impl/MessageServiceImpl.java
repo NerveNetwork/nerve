@@ -25,10 +25,7 @@
 package network.nerve.converter.core.business.impl;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.TxType;
@@ -153,6 +150,21 @@ public class MessageServiceImpl implements MessageService {
             return;
         }
         try {
+            Transaction tx = txPO.getTx();
+            if (tx.getType() == TxType.RECHARGE) {
+                CoinData coinData = tx.getCoinDataInstance();
+                List<CoinTo> tos = coinData.getTo();
+                if (tos == null || tos.isEmpty()) {
+                    //chain.getLogger().error("error recharge tx[0], info: {}", tx.format());
+                    return;
+                }
+                for (CoinTo to : tos) {
+                    if (!AddressTool.validNormalAddress(to.getAddress(), chainId)) {
+                        //chain.getLogger().error("error recharge tx[1], info: {}", tx.format());
+                        return;
+                    }
+                }
+            }
             UntreatedMessage untreatedSignMessage = new UntreatedMessage(chainId, nodeId, message, hash);
             chain.getSignMessageByzantineQueue().offer(untreatedSignMessage);
         } catch (Exception e) {
@@ -257,6 +269,32 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    @Override
+    public void cancelHtgTx(Chain chain, String nodeId, CancelHtgTxMessage message) {
+        try {
+            int heterogeneousChainId = message.getHeterogeneousChainId();
+            String address = message.getHeterogeneousAddress();
+            String nonce = message.getNonce();
+            String priceGwei = message.getPriceGwei();
+            if (heterogeneousChainId <= 0
+                    || StringUtils.isBlank(address)
+                    || StringUtils.isBlank(nonce)
+                    || StringUtils.isBlank(priceGwei)
+            ) {
+                throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (address.equalsIgnoreCase(docking.getCurrentSignAddress())) {
+                String hash = docking.cancelHtgTx(nonce, priceGwei);
+                chain.getLogger().info("[cancelHtgTx 消息处理完成] 异构chainId: {}, 异构address:{}, 取消操作的hash:{}", heterogeneousChainId, address, hash);
+            } else {
+                NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
+                chain.getLogger().info("[cancelHtgTx 消息转发完成] 异构chainId: {}, 异构address:{}", heterogeneousChainId, address);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     private boolean isExistMessage(ComponentSignByzantinePO compSignPO, ComponentSignMessage message) {
         boolean existMsg = false;

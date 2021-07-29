@@ -12,6 +12,7 @@ import io.nuls.v2.model.annotation.Api;
 import io.nuls.v2.model.annotation.ApiType;
 
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @Api(type = ApiType.JSONRPC)
@@ -20,6 +21,27 @@ public class LegerController {
 
     @Autowired
     private LegderTools legderTools;
+    @RpcMethod("getAssetInfo")
+    public RpcResult getAssetInfo(List<Object> params) {
+        if(params.size()<3){
+            return RpcResult.paramError("parmas is inValid,chainId,assetChainId,assetId");
+        }
+        int chainId,assetChainId,assetId;
+        try {
+            chainId = (int) params.get(0);
+            assetChainId = (int) params.get(1);
+            assetId = (int) params.get(2);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+
+        Result<Map> result = legderTools.getAssetInfo(chainId,assetChainId,assetId);
+        RpcResult rpcResult = new RpcResult();
+        if (result.isFailed()) {
+            return rpcResult.setError(new RpcResultError(result.getStatus(), result.getMessage(), null));
+        }
+        return rpcResult.setResult(result.getData());
+    }
 
     @RpcMethod("getAllAsset")
     public RpcResult getAllAsset(List<Object> params) {

@@ -54,7 +54,8 @@ public enum ModuleE {
     DXP("dex-public-service", Constant.DEXPUBSERVICE, ModuleE.DOMAIN),
     DXA("dex-api", Constant.DEXAPI, ModuleE.DOMAIN),
     QU("qu", Constant.QUOTATION, ModuleE.DOMAIN),
-    CV("cv", Constant.CONVERTER, ModuleE.DOMAIN);
+    CV("cv", Constant.CONVERTER, ModuleE.DOMAIN),
+    SW("sw", Constant.SWAP, ModuleE.DOMAIN);
 
 
     public static final String DOMAIN = "Nuls";
@@ -98,6 +99,8 @@ public enum ModuleE {
         public static final String QUOTATION = "quotation";
 
         public static final String CONVERTER = "converter";
+
+        public static final String SWAP = "swap";
     }
 
     public final String abbr;

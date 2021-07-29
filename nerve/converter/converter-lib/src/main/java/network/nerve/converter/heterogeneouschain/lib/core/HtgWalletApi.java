@@ -30,6 +30,8 @@ import org.web3j.protocol.exceptions.ClientConnectionException;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -189,21 +191,17 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             if (unavailableRpc(oldRpc) && unavailableRpc(rpc)) {
                 String mainRpcAddress = htgContext.getConfig().getMainRpcAddress();
                 getLog().info("{} API 不可用: {} - {}, 准备切换至应急API: {}, ", symbol(), oldRpc, rpc, mainRpcAddress);
-                if (!mainRpcAddress.equals(this.rpcAddress)) {
-                    changeApi(mainRpcAddress);
-                    if (mainRpcAddress.equals(this.rpcAddress)) {
-                        clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
-                    }
+                changeApi(mainRpcAddress);
+                if (mainRpcAddress.equals(this.rpcAddress)) {
+                    clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
                 }
                 return;
             }
             // 正常切换API
-            if (!rpc.equals(this.rpcAddress)) {
-                changeApi(rpc);
-                // 相等，说明切换成功
-                if (rpc.equals(this.rpcAddress)) {
-                    switchStatus = expectSwitchStatus;
-                }
+            changeApi(rpc);
+            // 相等，说明切换成功
+            if (rpc.equals(this.rpcAddress)) {
+                switchStatus = expectSwitchStatus;
             }
         } catch (NulsException e) {
             throw e;
@@ -252,14 +250,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     private Web3j newInstanceWeb3j(String rpcAddress) throws NulsException {
-        Web3j web3j;
-        if (htgContext.getConfig().getMainRpcAddress().equals(rpcAddress)) {
-            String data = String.valueOf(System.currentTimeMillis());
-            String sign = htgAccountHelper.sign(data, htgContext);
-            web3j = Web3j.build(new HttpService(rpcAddress + String.format("?d=%s&s=%s&p=%s", data, sign, htgContext.ADMIN_ADDRESS_PUBLIC_KEY())));
-        } else {
-            web3j = Web3j.build(new HttpService(rpcAddress));
-        }
+        Web3j web3j = Web3j.build(new HttpService(rpcAddress));
         return web3j;
     }
 
@@ -504,6 +495,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             String hexValue = Numeric.toHexString(signedMessage);
             EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
             if (ethSendTransaction == null || ethSendTransaction.getResult() == null) {
+                if (ethSendTransaction != null && ethSendTransaction.getError() != null) {
+                    getLog().error("Failed to transfer, error: {}", ethSendTransaction.getError().getMessage());
+                } else {
+                    getLog().error("Failed to transfer");
+                }
                 return null;
             }
             return ethSendTransaction.getTransactionHash();
@@ -777,8 +773,8 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
                     _from,
                     null,
-                    BigInteger.ONE,
-                    HtgConstant.HTG_ESTIMATE_GAS,
+                    null,
+                    null,
                     _contractAddress,
                     _value,
                     _encodedFunction
@@ -790,19 +786,19 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         return ethCall;
     }
 
-    public BigInteger ethEstimateGas(String from, String contractAddress, Function function) throws Exception {
+    public EthEstimateGas ethEstimateGas(String from, String contractAddress, Function function) throws Exception {
         String encodedFunction = FunctionEncoder.encode(function);
         return this.ethEstimateGas(from, contractAddress, encodedFunction, null);
     }
 
-    public BigInteger ethEstimateGas(String from, String contractAddress, Function function, BigInteger value) throws Exception {
+    public EthEstimateGas ethEstimateGas(String from, String contractAddress, Function function, BigInteger value) throws Exception {
         String encodedFunction = FunctionEncoder.encode(function);
         return this.ethEstimateGas(from, contractAddress, encodedFunction, value);
     }
 
-    public BigInteger ethEstimateGas(String from, String contractAddress, String encodedFunction, BigInteger value) throws Exception {
+    public EthEstimateGas ethEstimateGas(String from, String contractAddress, String encodedFunction, BigInteger value) throws Exception {
         value = value == null ? BigInteger.ZERO : value;
-        BigInteger gas = this.timeOutWrapperFunction("ethEstimateGas", List.of(from, contractAddress, encodedFunction, value), args -> {
+        EthEstimateGas gas = this.timeOutWrapperFunction("ethEstimateGas", List.of(from, contractAddress, encodedFunction, value), args -> {
             String _from = args.get(0).toString();
             String _contractAddress = args.get(1).toString();
             String _encodedFunction = (String) args.get(2);
@@ -811,17 +807,22 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
                     _from,
                     null,
-                    BigInteger.ONE,
-                    HtgConstant.HTG_ESTIMATE_GAS,
+                    null,
+                    null,
                     _contractAddress,
                     _value,
                     _encodedFunction
             );
             EthEstimateGas estimateGas = web3j.ethEstimateGas(tx).send();
             if(StringUtils.isBlank(estimateGas.getResult())) {
-                return BigInteger.ZERO;
+                if (estimateGas.getError() != null) {
+                    getLog().error("Failed to estimate gas, error: {}", estimateGas.getError().getMessage());
+                } else {
+                    getLog().error("Failed to estimate gas");
+                }
+                //return BigInteger.ZERO;
             }
-            return estimateGas.getAmountUsed();
+            return estimateGas;
         });
         return gas;
     }
@@ -882,6 +883,9 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                     ex.printStackTrace();
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
+            }
+            if (e instanceof SSLHandshakeException || e instanceof SSLException) {
+                changeApi(this.rpcAddress);
             }
             getLog().error(e.getMessage(), e);
             throw e;
@@ -969,7 +973,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * @throws InterruptedException
      */
     public BigInteger getERC20Balance(String address, String contractAddress) throws Exception {
-        return this.getERC20BalanceReal(address, contractAddress, DefaultBlockParameterName.PENDING, 0);
+        return this.getERC20BalanceReal(address, contractAddress, DefaultBlockParameterName.LATEST, 0);
     }
 
     private BigInteger getERC20BalanceReal(String address, String contractAddress, DefaultBlockParameterName status, int times) throws Exception {

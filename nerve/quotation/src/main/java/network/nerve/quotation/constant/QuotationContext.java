@@ -72,6 +72,7 @@ public class QuotationContext {
     public static long bnbKeyHeight = 0L;
     public static long htOkbKeyHeight = 0L;
     public static long oktKeyHeight = 0L;
+    public static long oneMaticKcsHeight = 0L;
 
     /**
      * 日志实例

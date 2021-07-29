@@ -74,6 +74,10 @@ public interface CmdConstant {
     String CMD_CHAIN_ASSET_HETEROGENEOUS_ROLLBACK = "lg_chain_asset_heterogeneous_rollback";
     String CMD_BIND_HETEROGENEOUS_ASSET_REG = "lg_bind_heterogeneous_asset_reg";
     String CMD_UNBIND_HETEROGENEOUS_ASSET_REG = "lg_unbind_heterogeneous_asset_reg";
+
+    String CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_REG = "lg_chain_asset_swap_liquidity_pool_reg";
+    String CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_ROLLBACK = "lg_chain_asset_swap_liquidity_pool_rollback";
+
     /**
      * 获取确认交易余额
      */

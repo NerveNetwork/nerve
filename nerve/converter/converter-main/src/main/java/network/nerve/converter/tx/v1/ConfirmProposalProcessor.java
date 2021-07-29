@@ -24,6 +24,7 @@
 
 package network.nerve.converter.tx.v1;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
@@ -34,6 +35,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.HeterogeneousService;
@@ -50,6 +52,7 @@ import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ConfirmUpgradeTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
+import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.ProposalExeStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
@@ -192,6 +195,13 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                     if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
                         // 重置执行撤银行节点提案标志
                         heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.ADDCOIN) {
+                        // 执行币种添加到稳定币兑换交易对里
+                        String[] split = po.getContent().split("-");
+                        int assetChainId = Integer.parseInt(split[0].trim());
+                        int assetId = Integer.parseInt(split[1].trim());
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.addCoinForAddStable(chainId, stablePairAddress, assetChainId, assetId);
                     }
                 }
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {

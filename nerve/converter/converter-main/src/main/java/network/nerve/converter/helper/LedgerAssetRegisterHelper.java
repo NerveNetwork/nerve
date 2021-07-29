@@ -136,13 +136,14 @@ public class LedgerAssetRegisterHelper {
                         Set<String> bindNewSet,
                         Set<String> bindRemoveSet,
                         Set<String> bindOverrideSet,
+                        Set<String> unregisterSet,
                         boolean validateHeterogeneousAssetInfoFromNet) throws Exception {
         String errorCode;
         NulsLogger logger = chain.getLogger();
         int chainId = chain.getChainId();
         ErrorCode bindError = null;
-        boolean isBindNew = false, isBindRemove = false, isBindOverride = false;
-        String bindNewKey, bindRemoveKey, bindOverrideKey;
+        boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false;
+        String bindNewKey, bindRemoveKey, bindOverrideKey, unregisterKey;
         try {
             do {
                 byte[] remark = tx.getRemark();
@@ -252,6 +253,26 @@ public class LedgerAssetRegisterHelper {
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
+                } else if (BindHeterogeneousContractMode.UNREGISTER.toString().equals(mode)) {
+                    if (hAssetInfo == null) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
+                        break;
+                    }
+                    Integer assetType = Integer.parseInt(nerveAsset.get("assetType").toString());
+                    if (assetType != 4) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH;
+                        break;
+                    }
+                    isUnregister = true;
+                    unregisterKey = new StringBuilder(heterogeneousChainId).append("_")
+                            .append(assetChainId).append("_")
+                            .append(assetId).toString();
+                    boolean notExist = unregisterSet.add(unregisterKey);
+                    if (!notExist) {
+                        logger.error("[冲突检测重复交易]合约资产取消注册");
+                        bindError = ConverterErrorCode.DUPLICATE_REGISTER;
+                        break;
+                    }
                 }
             } while (false);
         } catch (Exception e) {
@@ -268,8 +289,8 @@ public class LedgerAssetRegisterHelper {
         }
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
         HeterogeneousAssetInfo assetInfo = docking.getAssetByContractAddress(contractAddress);
-        // 绑定覆盖资产时，合约资产必须存在
-        if (isBindOverride) {
+        // 绑定覆盖资产 OR 异构链资产取消注册，合约资产必须存在
+        if (isBindOverride || isUnregister) {
             if (assetInfo == null) {
                 logger.error("合约资产不存在");
                 ErrorCode error = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
@@ -288,7 +309,7 @@ public class LedgerAssetRegisterHelper {
             return errorCode;
         }
         // 异构合约资产注册
-        if (!isBindNew && !isBindRemove && !isBindOverride) {
+        if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister) {
             String key = heterogeneousChainId + "_" + contractAddress;
             boolean notExist = contractAssetRegSet.add(key);
             if (!notExist) {

@@ -108,10 +108,6 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
                 txList.add(tx);
                 tx.setBlockHeight(blockHeader.getHeight());
                 txHashs.add(tx.getHash().getBytes());
-                if (TxManager.isSystemSmartContract(chain, tx.getType())) {
-                    continue;
-                }
-                // end code by pierre
                 TxUtil.moduleGroups(chain, moduleVerifyMap, tx.getType(), txStr);
             }
         } catch (Exception e) {

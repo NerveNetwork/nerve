@@ -43,6 +43,19 @@ public class BaseConstant {
     public static byte P2SH_ADDRESS_TYPE = 3;
 
     /**
+     * SWAP交易对地址
+     */
+    public static byte PAIR_ADDRESS_TYPE = 4;
+    /**
+     * SWAP质押池地址
+     */
+    public static byte FARM_ADDRESS_TYPE = 5;
+    /**
+     * STABLE-SWAP交易对地址
+     */
+    public static byte STABLE_PAIR_ADDRESS_TYPE = 6;
+
+    /**
      * 主网运行中的版本，默认为1，会根据钱包更新到的块的最新版本做修改
      */
     public static volatile Integer MAIN_NET_VERSION = 1;

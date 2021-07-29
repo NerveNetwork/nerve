@@ -331,8 +331,21 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void txDecoderTest() {
-        String data = "0xf8a9068501a13b860082f28a949b4e2b4b13d125238aa0480dd42b4f6fc71b37cc80b844a9059cbb000000000000000000000000f173805f1e3fe6239223b17f0807596edc2830120000000000000000000000000000000000000000000000000de0b6b3a764000025a039950dcaa3a777889aa3fcc8664fd88fcfa132962a266af4403e126071b042baa02bea3f724b531993d45aa6bfd9c20ca247179951c3720e359bbf2aa2e2e9d1cb";
-        RawTransaction decode = TransactionDecoder.decode(data);
+        // 5001000063
+        // [3]	(null)	@"rawTransaction" : @"0xf8ac82016d85012a05f20483013880945cceffcfd3e2fe4aacbf57123b6d42dddc23199080b844095ea7b3000000000000000000000000de03261f1bd05ba98ba1517e4f54a02e638109860000000000000000000000000000000000000000000000000de0b6b3a764000045a08a527283048a9985d660808100bbe37530eea86aae34a71b0a4258d535c9097ca03024465fbbb90dda541038f7ee378fff88454c5cdd1a179f313d7cb57d93d8f6"
+        String data = "0xf8ac82016e85012a15344b8301388094ae7fccff7ec3cf126cd96678adae83a2b303791c80b844095ea7b3000000000000000000000000de03261f1bd05ba98ba1517e4f54a02e638109860000000000000000000000000000000000000000000000000de0b6b3a76400002aa0cb5a57394d54b0ac73ca0b69430fc22f406b4abfda8e22c92e37dd4cb4b02e3aa07d3996fbd9ab1f1439656bd8cbae8c26664538b143c8969c41ca6d2e10eb7070";
+        SignedRawTransaction decode = (SignedRawTransaction) TransactionDecoder.decode(data);
+        ECDSASignature signature = new ECDSASignature(new BigInteger(decode.getSignatureData().getR()), new BigInteger(decode.getSignatureData().getS()));
+        byte[] hashBytes = HexUtil.decode("8f5c999bfe4b1b1683f1132cedeec38aaf18a18527056116d5911f6bece14484");
+
+        for (int i = 0; i < 4; i++) {
+            BigInteger recover = Sign.recoverFromSignature(i, signature, hashBytes);
+            if (recover != null) {
+                String address = "0x" + Keys.getAddress(recover);
+                System.out.println(String.format("地址: %s, 公钥: %s", address, Numeric.toHexStringWithPrefix(recover)));
+            }
+        }
+
         System.out.println();
     }
 

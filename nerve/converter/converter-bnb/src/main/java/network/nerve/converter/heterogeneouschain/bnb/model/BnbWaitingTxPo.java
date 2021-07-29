@@ -27,6 +27,7 @@ package network.nerve.converter.heterogeneouschain.bnb.model;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 
 /**
+ * 这几个model，历史数据遗留，protostuff的反序列化要使用它们，不能删除
  * @author: Mimi
  * @date: 2020-08-26
  */

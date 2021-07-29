@@ -519,6 +519,12 @@ public class EthAccountTest extends Base {
     }
 
     @Test
+    public void addressTest() {
+        String address = "NERVEepb6E2gaL9pMMocwFFfdiTKSsQar3ycGB";
+        System.out.println(AddressTool.validAddress(5, address));
+    }
+
+    @Test
     public void order() {
         List<String> list = new ArrayList<>();
         list.add("0xea46968e05c8b204daecd5840fb1aabf8a6f12bd7b8962be4606c21fe47a7cde");

@@ -38,9 +38,11 @@ import io.nuls.cmd.client.processor.crosschain.GetCrossTxStateProcessor;
 import io.nuls.cmd.client.processor.dex.CreateTradingProcess;
 import io.nuls.cmd.client.processor.dex.EditTradingProcess;
 import io.nuls.cmd.client.processor.dex.QueryTradingProcess;
+import io.nuls.cmd.client.processor.farm.*;
 import io.nuls.cmd.client.processor.ledger.GetBalanceProcessor;
 import io.nuls.cmd.client.processor.ledger.GetLocalCrossAssetProcessor;
 import io.nuls.cmd.client.processor.network.GetNetworkProcessor;
+import io.nuls.cmd.client.processor.swap.StableAddCoinProposalProcess;
 import io.nuls.cmd.client.processor.system.EvalProcessor;
 import io.nuls.cmd.client.processor.system.ExitProcessor;
 import io.nuls.cmd.client.processor.system.HelpProcessor;
@@ -144,11 +146,13 @@ public class CommandHandler implements InitializingBean {
         register(getBean(RegisterHeterogeneousMainAssetProcessor.class));
         register(getBean(ResetBankProcess.class));
         register(getBean(CheckRetryParseProcess.class));
+        register(getBean(CancelHtgTxProcess.class));
         register(getBean(UpgradeContractProposalProcess.class));
         register(getBean(BindProcess.class));
         register(getBean(BindOverrideProcess.class));
         register(getBean(UnbindProcess.class));
         register(getBean(RetryWithdrawalProcess.class));
+        register(getBean(UnregisterProcess.class));
         /**
          * consensus
          */
@@ -234,6 +238,16 @@ public class CommandHandler implements InitializingBean {
 //        register(getBean(TestInitNetProcessor.class));
 //        register(getBean(TestUpdateNetProcessor.class));
 //        register(getBean(TestCleanNetProcessor.class));
+
+        //farm
+        register(getBean(FarmCreateProcessor.class));
+        register(getBean(FarmInfoProcessor.class));
+        register(getBean(FarmUserInfoProcessor.class));
+        register(getBean(FarmStakeProcessor.class));
+        register(getBean(FarmWithdrawProcessor.class));
+
+        //swap
+        register(getBean(StableAddCoinProposalProcess.class));
     }
 
     public void start() {

@@ -193,6 +193,13 @@ public class ExeProposalProcessTask implements Runnable {
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
                             withdrawProposalByzantine(pendingPO, proposalPO);
                         }
+                    case ADDCOIN:
+                        // swap模块 稳定币兑换交易对 - 添加币种
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                                ProposalTypeEnum.ADDCOIN,
+                                proposalPO.getHash().toHex());
+                        break;
                     case OTHER:
                     default:
                         break;

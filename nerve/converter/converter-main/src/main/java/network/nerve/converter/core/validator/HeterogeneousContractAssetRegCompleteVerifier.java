@@ -66,11 +66,12 @@ public class HeterogeneousContractAssetRegCompleteVerifier {
             Set<String> bindNewSet = new HashSet<>();
             Set<String> bindRemoveSet = new HashSet<>();
             Set<String> bindOverrideSet = new HashSet<>();
-            // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
+            Set<String> unregisterSet = new HashSet<>();
+            // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定 / 取消绑定 OR 异构合约资产取消注册
             HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
             txData.parse(tx.getTxData(), 0);
             String contractAddress = txData.getContractAddress().toLowerCase();
-            String errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, true);
+            String errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, true);
             if (StringUtils.isNotBlank(errorCode)) {
                 throw new NulsException(ErrorCode.init(errorCode));
             }

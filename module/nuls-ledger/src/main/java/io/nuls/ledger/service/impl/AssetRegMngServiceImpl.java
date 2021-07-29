@@ -320,6 +320,19 @@ public class AssetRegMngServiceImpl implements AssetRegMngService {
         return assetRegMngRepository.isContractAsset(chainId, assetId);
     }
 
+    @Override
+    public int registerSwapLiquidityPoolAsset(int chainId, LedgerAsset ledgerAsset) throws Exception {
+        ledgerAsset.setAssetId(getAndSetAssetIdByTemp(chainId, 1));
+        assetRegMngRepository.saveLedgerSwapLiquidityPoolAssetReg(chainId, ledgerAsset);
+        return ledgerAsset.getAssetId();
+    }
+
+    @Override
+    public void rollBackSwapLiquidityPoolAsset(int chainId, int assetId) throws Exception {
+        if (assetId > 0) {
+            assetRegMngRepository.deleteLedgerAssetReg(chainId, assetId);
+        }
+    }
 }
 
 

@@ -100,6 +100,12 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
     }
 
     @Override
+    public void saveLedgerSwapLiquidityPoolAssetReg(int chainId, LedgerAsset ledgerAsset) throws Exception {
+        String assetRegTable = getLedgerAssetRegMngTableName(chainId);
+        RocksDBService.put(assetRegTable, ByteUtils.intToBytes(ledgerAsset.getAssetId()), ledgerAsset.serialize());
+    }
+
+    @Override
     public void batchSaveLedgerAssetReg(int chainId, Map<byte[], byte[]> ledgerAssets, Map<byte[], byte[]> ledgerAssetsHashs) throws Exception {
         //update account
         String assetRegTable = getLedgerAssetRegMngTableName(chainId);

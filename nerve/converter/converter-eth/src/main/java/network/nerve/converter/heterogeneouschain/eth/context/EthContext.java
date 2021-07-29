@@ -40,6 +40,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.ETH_GAS_LIMIT_OF_USDT;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.*;
 
 /**
  * @author: Mimi
@@ -111,7 +112,6 @@ public class EthContext implements Serializable {
 
     public static CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
-    private static BigInteger MAX_ETH_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
     private static BigInteger ETH_GAS_PRICE;
 
     public static BigInteger getEthGasPrice() {
@@ -128,17 +128,30 @@ public class EthContext implements Serializable {
             }
         }
         if (ETH_GAS_PRICE == null) {
-            ETH_GAS_PRICE = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
+            ETH_GAS_PRICE = GWEI_20;
         }
         return ETH_GAS_PRICE;
     }
 
+    public static BigInteger[] gasPriceOrders = new BigInteger[6];
     public static void setEthGasPrice(BigInteger ethGasPrice) {
         if (ethGasPrice != null) {
-            if (ethGasPrice.compareTo(MAX_ETH_GAS_PRICE) > 0) {
-                ethGasPrice = MAX_ETH_GAS_PRICE;
+            if (ethGasPrice.compareTo(MAX_HTG_GAS_PRICE) > 0) {
+                ethGasPrice = MAX_HTG_GAS_PRICE;
             }
-            ETH_GAS_PRICE = ethGasPrice;
+            if (ethGasPrice.compareTo(GWEI_1) >= 0) {
+                ETH_GAS_PRICE = ethGasPrice;
+            }
+            /*
+            回滚异构网络打包价格，稳定6次后再更新的机制，原因是造成前后端price不一致
+            if (ETH_GAS_PRICE == null || ETH_GAS_PRICE.compareTo(ethGasPrice) <= 0) {
+                ETH_GAS_PRICE = ethGasPrice;
+            } else {
+                gasPriceOrders = HtgUtil.sortByInsertionDsc(gasPriceOrders, ethGasPrice);
+                if (gasPriceOrders[5] != null) {
+                    ETH_GAS_PRICE = gasPriceOrders[0];
+                }
+            }*/
         }
     }
 

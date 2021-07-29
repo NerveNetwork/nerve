@@ -278,6 +278,9 @@ public class CallMethodUtils {
             params.put(PARAM_END_TIME_STAMP, packEndTime - CALL_BACK_HANDLE_TIME);
             params.put(PARAM_MAX_TX_SIZE, chain.getConfig().getBlockMaxSize());
             params.put(PARAM_BLOCK_TIME, blockTime);
+            BlockExtendsData preExtendsData = chain.getBestHeader().getExtendsData();
+            byte[] preStateRoot = preExtendsData.getStateRoot();
+            params.put("preStateRoot", RPCUtil.encode(preStateRoot));
 
 //            chain.getLogger().info("packEndTime:{},currentTime:{},打包时间为：{}",packEndTime,currentTime,surplusTime);
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, CALL_TX_PACKABLE_TXS, params, surplusTime - CALL_BACK_HANDLE_TIME);

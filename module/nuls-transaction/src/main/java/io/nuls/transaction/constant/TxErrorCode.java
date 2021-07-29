@@ -61,6 +61,10 @@ public interface TxErrorCode extends CommonCodeConstanst {
 
     // ErrorCode EXIST_GAS_RETURN_WITHOUT_SC_RETURN = ErrorCode.init(ModuleE.TX.getPrefix() + "_0043");
     ErrorCode ADDRESS_LOCKED = ErrorCode.init(ModuleE.TX.getPrefix() + "_0043");
+    ErrorCode SWAP_VERIFY_STATE_ROOT_FAIL = ErrorCode.init(ModuleE.TX.getPrefix() + "_0044");
+    ErrorCode SWAP_VERIFY_GENERATE_TXS_FAIL = ErrorCode.init(ModuleE.TX.getPrefix() + "_0045");
+    ErrorCode TX_DATA_PAIR_ADDRESS_VALIDATION_ERROR = ErrorCode.init(ModuleE.TX.getPrefix() + "_0046");
+    ErrorCode TX_DATA_FARM_ADDRESS_VALIDATION_ERROR = ErrorCode.init(ModuleE.TX.getPrefix() + "_0047");
 
 
 }

@@ -129,6 +129,14 @@ public class ConverterContext {
     public static long ERC20_OF_TRANSFER_BURN_HEIGHT = 0L;
 
     /**
+     * v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
+     */
+    public static long NEW_VALIDATION_OF_ERC20 = 0L;
+    public static long ONE_CROSS_CHAIN_HEIGHT = 0L;
+    public static long POLYGON_CROSS_CHAIN_HEIGHT = 0L;
+    public static long KUCOIN_CROSS_CHAIN_HEIGHT = 0L;
+
+    /**
      * 初始化虚拟银行公钥
      */
     public static List<String> INIT_VIRTUAL_BANK_PUBKEY_LIST = new ArrayList<>();

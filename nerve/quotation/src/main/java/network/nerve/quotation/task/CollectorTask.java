@@ -161,6 +161,15 @@ public class CollectorTask implements Runnable {
                             continue;
                         }
                     }
+
+                    if(ANCHOR_TOKEN_ONE.equals(anchorToken)
+                        || ANCHOR_TOKEN_MATIC.equals(anchorToken)
+                            || ANCHOR_TOKEN_KCS.equals(anchorToken)) {
+                        if (blockHeight < oneMaticKcsHeight) {
+                            continue;
+                        }
+                    }
+
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
                 }

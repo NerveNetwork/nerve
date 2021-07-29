@@ -40,6 +40,7 @@ import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
 import network.nerve.converter.core.validator.*;
@@ -113,6 +114,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
     @Autowired
     private ProposalExeStorageService proposalExeStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public Transaction createChangeVirtualBankTx(Chain chain, List<byte[]> inAgentList, List<byte[]> outAgentList, long outHeight, long txTime) throws NulsException {
@@ -335,69 +338,11 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction withdrawalAdditionalFeeTx(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        // 验证参数
-        String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
-        if (StringUtils.isBlank(txHash)) {
-            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        if (converterCoreApi.isSupportNewValidationOfERC20()) {
+            return withdrawalAdditionalFeeTxV13(chain, withdrawalAdditionalFeeTxDTO);
+        } else {
+            return withdrawalAdditionalFeeTxV0(chain, withdrawalAdditionalFeeTxDTO);
         }
-        Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
-        if (null == basicTx) {
-            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
-            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
-        }
-        if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-            // 不是提现交易
-            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
-            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
-        }
-        if (basicTx.getType() == TxType.WITHDRAWAL) {
-            CoinData withdrawalTxCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
-            CoinFrom withdrawalTxCoinFrom = withdrawalTxCoinData.getFrom().get(0);
-            byte[] withdrawalTxAddress = withdrawalTxCoinFrom.getAddress();
-            byte[] sendAddress = AddressTool.getAddress(withdrawalAdditionalFeeTxDTO.getSignAccount().getAddress());
-            if (!Arrays.equals(sendAddress, withdrawalTxAddress)) {
-                chain.getLogger().error("该提现交易与追加交易用户不匹配 -withdrawalAdditionalFeeTx, withdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
-                        txHash,
-                        AddressTool.getStringAddressByBytes(withdrawalTxAddress),
-                        AddressTool.getStringAddressByBytes(sendAddress));
-                throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED);
-            }
-            // 判断该提现交易是否已经有对应的确认提现交易
-            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
-            if (null != po) {
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
-                throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
-
-            }
-        } else if(basicTx.getType() == TxType.PROPOSAL){
-            String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
-            if (StringUtils.isNotBlank(confirmProposalHash)) {
-                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
-                throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
-            }
-        }
-        WithdrawalAdditionalFeeTxData txData = new WithdrawalAdditionalFeeTxData(txHash);
-        byte[] txDataBytes = null;
-        try {
-            txDataBytes = txData.serialize();
-        } catch (IOException e) {
-            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
-        }
-        BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
-        if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
-            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR);
-        }
-
-        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
-        byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
-        tx.setCoinData(coinData);
-        //签名
-        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
-        chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
-        //广播
-        TransactionCall.newTx(chain, tx);
-        return tx;
     }
 
     @Override
@@ -1317,6 +1262,129 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             }
         }
         return feeTo;
+    }
+
+    private Transaction withdrawalAdditionalFeeTxV0(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
+        // 验证参数
+        String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
+        if (StringUtils.isBlank(txHash)) {
+            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        }
+        Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
+        if (null == basicTx) {
+            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
+            // 不是提现交易
+            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() == TxType.WITHDRAWAL) {
+            CoinData withdrawalTxCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
+            CoinFrom withdrawalTxCoinFrom = withdrawalTxCoinData.getFrom().get(0);
+            byte[] withdrawalTxAddress = withdrawalTxCoinFrom.getAddress();
+            byte[] sendAddress = AddressTool.getAddress(withdrawalAdditionalFeeTxDTO.getSignAccount().getAddress());
+            if (!Arrays.equals(sendAddress, withdrawalTxAddress)) {
+                chain.getLogger().error("该提现交易与追加交易用户不匹配 -withdrawalAdditionalFeeTx, withdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
+                        txHash,
+                        AddressTool.getStringAddressByBytes(withdrawalTxAddress),
+                        AddressTool.getStringAddressByBytes(sendAddress));
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED);
+            }
+            // 判断该提现交易是否已经有对应的确认提现交易
+            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+            if (null != po) {
+                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
+
+            }
+        } else if(basicTx.getType() == TxType.PROPOSAL){
+            String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
+            if (StringUtils.isNotBlank(confirmProposalHash)) {
+                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
+            }
+        }
+        WithdrawalAdditionalFeeTxData txData = new WithdrawalAdditionalFeeTxData(txHash);
+        byte[] txDataBytes = null;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
+        if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
+            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
+        byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
+        tx.setCoinData(coinData);
+        //签名
+        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
+        //广播
+        TransactionCall.newTx(chain, tx);
+        return tx;
+    }
+
+    /**
+     * 协议v1.13 任意地址可给跨链转出交易追加手续费
+     */
+    private Transaction withdrawalAdditionalFeeTxV13(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
+        // 验证参数
+        String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
+        if (StringUtils.isBlank(txHash)) {
+            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        }
+        Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
+        if (null == basicTx) {
+            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
+            // 不是提现交易
+            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() == TxType.WITHDRAWAL) {
+            // 判断该提现交易是否已经有对应的确认提现交易
+            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+            if (null != po) {
+                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
+            }
+        } else if(basicTx.getType() == TxType.PROPOSAL){
+            String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
+            if (StringUtils.isNotBlank(confirmProposalHash)) {
+                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
+            }
+        }
+        WithdrawalAdditionalFeeTxData txData = new WithdrawalAdditionalFeeTxData(txHash);
+        byte[] txDataBytes = null;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
+        if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
+            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
+        byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
+        tx.setCoinData(coinData);
+        //签名
+        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
+        //广播
+        TransactionCall.newTx(chain, tx);
+        return tx;
     }
 
 }

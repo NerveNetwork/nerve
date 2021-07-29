@@ -98,6 +98,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<Boolean> cancelHtgTx(CancelHtgTxReq req) {
+        Function<Map, Result> fun = res -> {
+            Boolean rs = (Boolean) res.get("value");
+            return success(rs);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_cancelHtgTx", req, fun);
+    }
+
+    @Override
     public Result<String> registerHeterogeneousAsset(RegisterHeterogeneousAssetReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
@@ -140,6 +149,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
             return success(data);
         };
         return callRpc(ModuleE.CV.abbr, "cv_unbind_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> unregister(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_unregister_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
     }
 
     @Override

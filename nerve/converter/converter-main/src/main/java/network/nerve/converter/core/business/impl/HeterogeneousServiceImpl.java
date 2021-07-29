@@ -28,6 +28,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -36,6 +37,7 @@ import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTx
 import network.nerve.converter.core.heterogeneous.callback.management.HeterogeneousCallBackManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.message.CancelHtgTxMessage;
 import network.nerve.converter.message.CheckRetryParseMessage;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.rpc.call.NetWorkCall;
@@ -122,5 +124,34 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
             throw new NulsException(e);
         }
 
+    }
+
+    @Override
+    public void cancelHtgTx(Chain chain, int heterogeneousChainId, String address, String nonce, String priceGwei) throws NulsException {
+
+        if (!VirtualBankUtil.isCurrentDirector(chain)) {
+            chain.getLogger().error("当前非虚拟银行成员节点, 不处理cancelHtgTx");
+            throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+        }
+        if (heterogeneousChainId <= 0
+                || StringUtils.isBlank(address)
+                || StringUtils.isBlank(nonce)
+                || StringUtils.isBlank(priceGwei)
+        ) {
+            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        }
+        try {
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            if (address.equalsIgnoreCase(docking.getCurrentSignAddress())) {
+                String hash = docking.cancelHtgTx(nonce, priceGwei);
+                chain.getLogger().info("[cancelHtgTx 消息处理完成] 异构chainId: {}, 异构address:{}, 取消操作的hash:{}", heterogeneousChainId, address, hash);
+            } else {
+                CancelHtgTxMessage message = new CancelHtgTxMessage(heterogeneousChainId, address, nonce, priceGwei);
+                NetWorkCall.broadcast(chain, message, ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
+                chain.getLogger().info("[cancelHtgTx 消息转发完成] 异构chainId: {}, 异构address:{}", heterogeneousChainId, address);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -136,4 +136,17 @@ public class ConverterTools implements CallRpc {
         }
     }
 
+    /**
+     * 查询提案信息（序列化字符串）
+     */
+    public Result<String> getProposalInfo(int chainId, String proposalTxHash) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("proposalTxHash", proposalTxHash);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_getProposalInfo", params, (Function<String, Result<String>>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
 }

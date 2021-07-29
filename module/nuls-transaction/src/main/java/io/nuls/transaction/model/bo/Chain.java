@@ -5,6 +5,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.ByteArrayWrapper;
+import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.transaction.constant.TxConstant;
 import io.nuls.transaction.model.bo.config.ConfigBean;
 import io.nuls.transaction.model.po.TransactionNetPO;
@@ -114,8 +115,7 @@ public class Chain {
      */
     private AtomicBoolean protocolUpgrade;
 
-
-    private Set<Integer> contractGenerateTxTypes;
+    private Map<String, Set<Integer>> moduleGenerateTxTypesMap;
 
     public Chain() {
         this.packaging = new AtomicBoolean(false);
@@ -130,7 +130,7 @@ public class Chain {
         this.orphanMap = new ConcurrentHashMap<>();
         this.protocolUpgrade = new AtomicBoolean(false);
         this.orphanListDataSize = new AtomicInteger(0);
-        this.contractGenerateTxTypes = new HashSet<>();
+        this.moduleGenerateTxTypesMap = new HashMap<>();
     }
 
     public int getChainId(){
@@ -258,10 +258,17 @@ public class Chain {
     }
 
     public Set<Integer> getContractGenerateTxTypes() {
-        return contractGenerateTxTypes;
+        return this.moduleGenerateTxTypesMap.get(ModuleE.SC.abbr);
+    }
+    public Set<Integer> getSwapGenerateTxTypes() {
+        return this.moduleGenerateTxTypesMap.get(ModuleE.SW.abbr);
     }
 
-    public void setContractGenerateTxTypes(Set<Integer> contractGenerateTxTypes) {
-        this.contractGenerateTxTypes = contractGenerateTxTypes;
+    public Map<String, Set<Integer>> getModuleGenerateTxTypesMap() {
+        return moduleGenerateTxTypesMap;
+    }
+
+    public void setModuleGenerateTxTypesMap(Map<String, Set<Integer>> moduleGenerateTxTypesMap) {
+        this.moduleGenerateTxTypesMap = moduleGenerateTxTypesMap;
     }
 }

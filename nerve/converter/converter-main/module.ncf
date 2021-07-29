@@ -10,5 +10,5 @@ JOPT_XMX=512
 Managed=1
 
 [converter]
-moduleDynamicDependent=protocol-update,cross-chain
+moduleDynamicDependent=protocol-update,cross-chain,swap
 

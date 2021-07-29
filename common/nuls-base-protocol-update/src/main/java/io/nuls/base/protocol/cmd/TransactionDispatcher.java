@@ -8,9 +8,11 @@ import io.nuls.base.protocol.ModuleTxPackageProcessor;
 import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.CommonCodeConstanst;
+import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.ObjectUtils;
 import io.nuls.core.model.StringUtils;
@@ -138,24 +140,25 @@ public final class TransactionDispatcher extends BaseCmd {
     @Parameter(parameterName = "txList", parameterType = "List")
     @Parameter(parameterName = "blockHeader", parameterType = "String")
     public Response txValidator(Map params) {
-        ObjectUtils.canNotEmpty(params.get(Constants.CHAIN_ID), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
-        ObjectUtils.canNotEmpty(params.get("txList"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
-        int chainId = Integer.parseInt(params.get(Constants.CHAIN_ID).toString());
-        String blockHeaderStr = (String) params.get("blockHeader");
-        BlockHeader blockHeader = null;
-        if (StringUtils.isNotBlank(blockHeaderStr)) {
-            blockHeader = RPCUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
-        }
-        List<String> txList = (List<String>) params.get("txList");
-        List<Transaction> txs = new ArrayList<>();
-        List<Transaction> finalInvalidTxs = new ArrayList<>();
-        for (String txStr : txList) {
-            Transaction tx = RPCUtil.getInstanceRpcStr(txStr, Transaction.class);
-            txs.add(tx);
-        }
-
-        String errorCode = "";
-        Map<String, Object> validateMap;
+        try {
+            ObjectUtils.canNotEmpty(params.get(Constants.CHAIN_ID), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("txList"), CommonCodeConstanst.PARAMETER_ERROR.getMsg());
+            int chainId = Integer.parseInt(params.get(Constants.CHAIN_ID).toString());
+            String blockHeaderStr = (String) params.get("blockHeader");
+            BlockHeader blockHeader = null;
+            if (StringUtils.isNotBlank(blockHeaderStr)) {
+                blockHeader = RPCUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
+            }
+            List<String> txList = (List<String>) params.get("txList");
+            List<Transaction> txs = new ArrayList<>();
+            List<Transaction> finalInvalidTxs = new ArrayList<>();
+            for (String txStr : txList) {
+                Transaction tx = RPCUtil.getInstanceRpcStr(txStr, Transaction.class);
+                txs.add(tx);
+            }
+            validatorAdvice.begin(chainId, txs, blockHeader, 1);
+            String errorCode = "";
+            Map<String, Object> validateMap;
 //        Map<String, Object> validateMap = validatorAdvice.validates(chainId, txs, blockHeader);
 //        if (validateMap != null) {
 //            List<Transaction> invalidTxs = (List<Transaction>) validateMap.get("txList");
@@ -165,38 +168,52 @@ public final class TransactionDispatcher extends BaseCmd {
 //            }
 //        }
 
-        Map<Integer, List<Transaction>> map = new HashMap<>();
-        for (TransactionProcessor processor : processors) {
-            for (Transaction tx : txs) {
-                List<Transaction> transactions = map.computeIfAbsent(processor.getType(), k -> new ArrayList<>());
-                if (tx.getType() == processor.getType()) {
-                    if (null != blockHeader) {
-                        tx.setBlockHeight(blockHeader.getHeight());
+            Map<Integer, List<Transaction>> map = new HashMap<>();
+            for (TransactionProcessor processor : processors) {
+                for (Transaction tx : txs) {
+                    List<Transaction> transactions = map.computeIfAbsent(processor.getType(), k -> new ArrayList<>());
+                    if (tx.getType() == processor.getType()) {
+                        if (null != blockHeader) {
+                            tx.setBlockHeight(blockHeader.getHeight());
+                        }
+                        transactions.add(tx);
                     }
-                    transactions.add(tx);
                 }
             }
-        }
 
-        for (TransactionProcessor processor : processors) {
-            validateMap = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
-            if (validateMap == null) {
-                continue;
+            for (TransactionProcessor processor : processors) {
+                validateMap = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
+                if (validateMap == null) {
+                    continue;
+                }
+                List<Transaction> invalidTxs = (List<Transaction>) validateMap.get("txList");
+                //List<Transaction> invalidTxs = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
+                if (invalidTxs != null && !invalidTxs.isEmpty()) {
+                    errorCode = (String) validateMap.get("errorCode");
+                    finalInvalidTxs.addAll(invalidTxs);
+                    invalidTxs.forEach(e -> map.get(e.getType()).remove(e));
+                }
             }
-            List<Transaction> invalidTxs = (List<Transaction>) validateMap.get("txList");
-            //List<Transaction> invalidTxs = processor.validate(chainId, map.get(processor.getType()), map, blockHeader);
-            if (invalidTxs != null && !invalidTxs.isEmpty()) {
-                errorCode = (String) validateMap.get("errorCode");
-                finalInvalidTxs.addAll(invalidTxs);
-                invalidTxs.forEach(e -> map.get(e.getType()).remove(e));
+            Map<String, Object> resultMap = new HashMap<>(2);
+            List<String> list = finalInvalidTxs.stream().map(e -> e.getHash().toHex()).collect(Collectors.toList());
+            resultMap.put("errorCode", errorCode);
+            resultMap.put("list", list);
+            validatorAdvice.end(chainId, txs, blockHeader);
+            return success(resultMap);
+        } catch (Exception e) {
+            ErrorCode code = CommonCodeConstanst.DATA_ERROR;
+            String msg = e.getMessage() == null ? code.getMsg() : e.getMessage();
+            if (e instanceof NulsException) {
+                NulsException e1 = (NulsException) e;
+                code = e1.getErrorCode();
+                msg = e1.format();
+            } else if (e instanceof NulsRuntimeException) {
+                NulsRuntimeException e1 = (NulsRuntimeException) e;
+                code = e1.getErrorCode();
+                msg = e1.format();
             }
+            return failed(code, msg);
         }
-        Map<String, Object> resultMap = new HashMap<>(2);
-        List<String> list = finalInvalidTxs.stream().map(e -> e.getHash().toHex()).collect(Collectors.toList());
-        resultMap.put("errorCode", errorCode);
-        resultMap.put("list", list);
-        validatorAdvice.end(chainId, txs, blockHeader);
-        return success(resultMap);
     }
 
     /**

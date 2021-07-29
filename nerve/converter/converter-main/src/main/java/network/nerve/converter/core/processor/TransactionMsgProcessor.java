@@ -147,6 +147,14 @@ public class TransactionMsgProcessor {
             try {
                 TransactionCall.newTx(chain, tx);
             } catch (NulsException e) {
+                if("tx_0033".equals(e.getErrorCode().getCode())){
+                    try {
+                        chain.getLogger().error("new tx address error, tx format: {}", tx.format());
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                    return;
+                }
                 if(!"tx_0013".equals(e.getErrorCode().getCode())){
                     throw e;
                 }

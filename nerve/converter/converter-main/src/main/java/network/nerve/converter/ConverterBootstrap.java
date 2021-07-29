@@ -135,6 +135,12 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.warn("Failed to get height_1_12_0", e);
         }
+        try {
+            long heightVersion1_13_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_13_0"));
+            converterConfig.setNewValidationOfErc20(heightVersion1_13_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_13_0", e);
+        }
     }
 
     @Override
@@ -313,6 +319,11 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.OKT_CROSS_CHAIN_HEIGHT = converterConfig.getOktCrossChainHeight();
         // v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
         ConverterContext.ERC20_OF_TRANSFER_BURN_HEIGHT = converterConfig.getErc20OfTransferBurnHeight();
+        // v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
+        ConverterContext.NEW_VALIDATION_OF_ERC20 = converterConfig.getNewValidationOfErc20();
+        ConverterContext.ONE_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
+        ConverterContext.POLYGON_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
+        ConverterContext.KUCOIN_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

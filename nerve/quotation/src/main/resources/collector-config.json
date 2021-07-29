@@ -40,6 +40,18 @@
     "baseurl": "https://api.bitzspeed.com/",
     "collector": "network.nerve.quotation.rpc.querier.impl.BitzQuerier",
     "weight": "0.10"
+  },
+  {
+    "name": "Kucoin",
+    "baseurl": "https://api.kucoin.com",
+    "collector": "network.nerve.quotation.rpc.querier.impl.KucoinQuerier",
+    "weight": "0.30"
+  },
+  {
+    "name": "Poloniex",
+    "baseurl": "https://poloniex.com",
+    "collector": "network.nerve.quotation.rpc.querier.impl.PoloniexQuerier",
+    "weight": "0.10"
   }
 ]
 

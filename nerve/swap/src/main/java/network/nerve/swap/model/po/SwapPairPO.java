@@ -1,36 +1,25 @@
 package network.nerve.swap.model.po;
 
-import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.basic.NulsOutputStreamBuffer;
-import io.nuls.base.data.BaseNulsData;
-import io.nuls.core.exception.NulsException;
+import io.nuls.base.basic.AddressTool;
 import network.nerve.swap.model.NerveToken;
 
-import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * @author Niels
  */
-public class SwapPairPO extends BaseNulsData {
+public class SwapPairPO {
+
     private byte[] address;
-    private int lpAssetId;
+
     private NerveToken token0;
     private NerveToken token1;
+    private NerveToken tokenLP;
 
-    @Override
-    protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
-
+    public SwapPairPO(byte[] address) {
+        this.address = address;
     }
 
-    @Override
-    public void parse(NulsByteBuffer byteBuffer) throws NulsException {
-
-    }
-
-    @Override
-    public int size() {
-        return 0;
-    }
 
     public byte[] getAddress() {
         return address;
@@ -38,14 +27,6 @@ public class SwapPairPO extends BaseNulsData {
 
     public void setAddress(byte[] address) {
         this.address = address;
-    }
-
-    public int getLpAssetId() {
-        return lpAssetId;
-    }
-
-    public void setLpAssetId(int lpAssetId) {
-        this.lpAssetId = lpAssetId;
     }
 
     public NerveToken getToken0() {
@@ -62,5 +43,37 @@ public class SwapPairPO extends BaseNulsData {
 
     public void setToken1(NerveToken token1) {
         this.token1 = token1;
+    }
+
+    public NerveToken getTokenLP() {
+        return tokenLP;
+    }
+
+    public void setTokenLP(NerveToken tokenLP) {
+        this.tokenLP = tokenLP;
+    }
+
+    @Override
+    public SwapPairPO clone() {
+        SwapPairPO po = new SwapPairPO(address);
+        po.setToken0(token0.clone());
+        po.setToken1(token1.clone());
+        po.setTokenLP(tokenLP.clone());
+        return po;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"address\":")
+                .append('\"').append(AddressTool.getStringAddressByBytes(address)).append('\"');
+        sb.append(",\"token0\":")
+                .append('\"').append(token0.str()).append('\"');
+        sb.append(",\"token1\":")
+                .append('\"').append(token1.str()).append('\"');
+        sb.append(",\"tokenLP\":")
+                .append('\"').append(tokenLP.str()).append('\"');
+        sb.append('}');
+        return sb.toString();
     }
 }

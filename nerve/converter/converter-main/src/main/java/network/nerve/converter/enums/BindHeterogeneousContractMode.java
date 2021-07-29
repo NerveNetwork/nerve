@@ -30,5 +30,6 @@ package network.nerve.converter.enums;
 public enum BindHeterogeneousContractMode {
     NEW,
     REMOVE,
-    OVERRIDE;
+    OVERRIDE,
+    UNREGISTER;
 }

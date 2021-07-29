@@ -29,6 +29,7 @@ import com.google.common.primitives.UnsignedBytes;
 import io.nuls.base.data.Address;
 import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.crypto.Base58;
+import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
@@ -49,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AddressTool {
     private static AddressPrefixInf addressPrefixToolsInf = null;
     private static final String ERROR_MESSAGE = "Address prefix can not be null!";
-    private static final String[] LENGTHPREFIX = new String[]{"", "a", "b", "c", "d", "e","f","g","h"};
+    private static final String[] LENGTHPREFIX = new String[]{"", "a", "b", "c", "d", "e", "f", "g", "h"};
     private static final Map<Integer, byte[]> BLACK_HOLE_ADDRESS_MAP = new ConcurrentHashMap<>();
     public static Set<String> BLOCK_HOLE_ADDRESS_SET = new HashSet<>();
     public static Set<String> BLOCK_HOLE_ADDRESS_SET1 = new HashSet<>();
@@ -267,6 +268,15 @@ public class AddressTool {
         return Arrays.equals(blackHoleAddress, address);
     }
 
+    public static byte[] getAddress(byte[] publicKey, int chainId, byte addressType) {
+        if (publicKey == null) {
+            return null;
+        }
+        byte[] hash160 = SerializeUtils.sha256hash160(publicKey);
+        Address address = new Address(chainId, BaseConstant.NERVE_MAINNET_DEFAULT_ADDRESS_PREFIX, addressType, hash160);
+        return address.getAddressBytes();
+    }
+
     public static byte[] getAddress(byte[] publicKey, int chainId, String prefix) {
         if (publicKey == null) {
             return null;
@@ -351,7 +361,7 @@ public class AddressTool {
 //        if (BaseConstant.MAIN_NET_VERSION <= 1 && BaseConstant.DEFAULT_ADDRESS_TYPE != type) {
 //            return false;
 //        }
-        if (BaseConstant.DEFAULT_ADDRESS_TYPE != type && BaseConstant.CONTRACT_ADDRESS_TYPE != type && BaseConstant.P2SH_ADDRESS_TYPE != type) {
+        if (BaseConstant.DEFAULT_ADDRESS_TYPE != type && BaseConstant.CONTRACT_ADDRESS_TYPE != type && BaseConstant.P2SH_ADDRESS_TYPE != type && BaseConstant.PAIR_ADDRESS_TYPE != type && BaseConstant.FARM_ADDRESS_TYPE != type && BaseConstant.STABLE_PAIR_ADDRESS_TYPE != type) {
             return false;
         }
         try {
@@ -394,10 +404,9 @@ public class AddressTool {
     }
 
     /**
-     *
-     * @param bytes 地址
+     * @param bytes   地址
      * @param chainId 链id
-     * @param type 账户类型，如果传0，则不验证
+     * @param type    账户类型，如果传0，则不验证
      * @return
      */
     public static boolean validAddress(byte[] bytes, int chainId, byte type) {
@@ -418,6 +427,34 @@ public class AddressTool {
             return false;
         }
         if (type != 0 && type != _type) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param bytes   地址
+     * @param chainId 链id
+     * @return
+     */
+    public static boolean validAddress(int chainId, byte[] bytes) {
+        if (null == bytes || bytes.length != Address.ADDRESS_LENGTH) {
+            return false;
+        }
+        NulsByteBuffer byteBuffer = new NulsByteBuffer(bytes);
+        int _chainId;
+        byte type;
+        try {
+            _chainId = byteBuffer.readUint16();
+            type = byteBuffer.readByte();
+        } catch (NulsException e) {
+            Log.error(e);
+            return false;
+        }
+        if (chainId != _chainId) {
+            return false;
+        }
+        if (BaseConstant.DEFAULT_ADDRESS_TYPE != type && BaseConstant.CONTRACT_ADDRESS_TYPE != type && BaseConstant.P2SH_ADDRESS_TYPE != type && BaseConstant.PAIR_ADDRESS_TYPE != type && BaseConstant.FARM_ADDRESS_TYPE != type && BaseConstant.STABLE_PAIR_ADDRESS_TYPE != type) {
             return false;
         }
         return true;
@@ -585,7 +622,7 @@ public class AddressTool {
         if (pubKeyList.size() < m) {
             throw new RuntimeException();
         }
-        Collections.sort(pubKeyList, new Comparator<String>() {
+        Collections.sort(pubKeyList, new Comparator<>() {
             private Comparator<byte[]> comparator = UnsignedBytes.lexicographicalComparator();
 
             @Override
@@ -609,5 +646,27 @@ public class AddressTool {
             }
         }
         return result;
+    }
+
+    public static int getTypeByAddress(byte[] addressBytes) {
+        if (addressBytes == null) {
+            return 0;
+        }
+        if (addressBytes.length != Address.ADDRESS_LENGTH) {
+            return 0;
+        }
+        NulsByteBuffer byteBuffer = new NulsByteBuffer(addressBytes);
+        try {
+            byteBuffer.readUint16();
+            byte type = byteBuffer.readByte();
+            return type;
+        } catch (NulsException e) {
+            Log.error(e);
+            return 0;
+        }
+    }
+
+    public static byte[] getAddressByPrikey(byte[] prikey, int chainId, byte addressType) {
+        return AddressTool.getAddress(ECKey.fromPrivate(prikey).getPubKey(), chainId, addressType);
     }
 }

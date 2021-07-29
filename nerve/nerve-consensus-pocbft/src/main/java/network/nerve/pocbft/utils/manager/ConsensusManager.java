@@ -115,13 +115,22 @@ public class ConsensusManager {
          */
         Map<String, Object> resultMap = CallMethodUtils.getPackingTxList(chain, bd.getTime());
         List<Transaction> packingTxList = new ArrayList<>();
+        BlockExtendsData bestExtendsData = chain.getBestHeader().getExtendsData();
         if (resultMap != null) {
             List<String> txHexList = (List) resultMap.get(ParameterConstant.PARAM_LIST);
+            String stateRoot = (String) resultMap.get(ParameterConstant.PARAM_STATE_ROOT);
+            if (StringUtils.isBlank(stateRoot)) {
+                bd.getExtendsData().setStateRoot(bestExtendsData.getStateRoot());
+            } else {
+                bd.getExtendsData().setStateRoot(RPCUtil.decode(stateRoot));
+            }
             for (String txHex : txHexList) {
                 Transaction tx = new Transaction();
                 tx.parse(RPCUtil.decode(txHex), 0);
                 packingTxList.add(tx);
             }
+        } else {
+            bd.getExtendsData().setStateRoot(bestExtendsData.getStateRoot());
         }
         return packingTxList;
     }

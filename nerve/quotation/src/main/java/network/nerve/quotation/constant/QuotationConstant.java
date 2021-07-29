@@ -106,6 +106,10 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_HT = "HT-USDT";
     String ANCHOR_TOKEN_OKB = "OKB-USDT";
     String ANCHOR_TOKEN_OKT = "OKT-USDT";
+    //oneMaticKcsHeight
+    String ANCHOR_TOKEN_ONE = "ONE-USDT";
+    String ANCHOR_TOKEN_MATIC = "MATIC-USDT";
+    String ANCHOR_TOKEN_KCS = "KCS-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

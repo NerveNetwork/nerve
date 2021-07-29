@@ -173,6 +173,11 @@
         "name": "network.nerve.converter.message.ComponentSignMessage",
         "protocolCmd": "compSign",
         "handlers": "ComponentSignHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.CancelHtgTxMessage",
+        "protocolCmd": "cancelHtgTx",
+        "handlers": "CancelHtgTxHandlerV1"
       }
     ],
     "invalidTxs": "",

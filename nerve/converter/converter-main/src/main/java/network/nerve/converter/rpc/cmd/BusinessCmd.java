@@ -32,6 +32,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.ObjectUtils;
@@ -51,10 +52,12 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.*;
+import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.ProposalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.DisqualificationStorageService;
+import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
@@ -65,7 +68,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -88,6 +90,8 @@ public class BusinessCmd extends BaseCmd {
     private HeterogeneousService heterogeneousService;
     @Autowired
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
+    @Autowired
+    private ProposalStorageService proposalStorageService;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -516,7 +520,7 @@ public class BusinessCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
     })
     )
     public Response checkRetryParse(Map params) {
@@ -592,6 +596,87 @@ public class BusinessCmd extends BaseCmd {
                 pendingPO.setBlockHeader(header);
                 txSubsequentProcessStorageService.save(chain, pendingPO);
                 map.put("value", chain.getPendingTxQueue().offer(pendingPO));
+            }
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_PROPOSAL_INFO, version = 1.0, description = "查询提案")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回 network.nerve.converter.model.po.ProposalPO 对象的序列化字符串")
+    public Response getProposalInfo(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("proposalTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            String proposalTxHash = (String) params.get("proposalTxHash");
+            ProposalPO po = proposalStorageService.find(chain, NulsHash.fromHex(proposalTxHash));
+            if (po == null) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            return success(HexUtil.encode(po.serialize()));
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.CANCEL_HTG_TX, version = 1.0, description = "取消虚拟银行发出的异构链网络交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
+            @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "虚拟银行管理员签名账户地址"),
+            @Parameter(parameterName = "nonce", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户nonce"),
+            @Parameter(parameterName = "priceGwei", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链price(Gwei)")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public Response cancelHtgTx(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousAddress"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("nonce"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("priceGwei"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            int heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            String heterogeneousAddress = params.get("heterogeneousAddress").toString();
+            String nonce = params.get("nonce").toString();
+            String priceGwei = params.get("priceGwei").toString();
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("当前非虚拟银行成员节点, 不处理cancelHtgTx");
+                map.put("value", false);
+            } else {
+                heterogeneousService.cancelHtgTx(chain, heterogeneousChainId, heterogeneousAddress, nonce, priceGwei);
+                map.put("value", true);
             }
             return success(map);
         } catch (NulsRuntimeException e) {

@@ -319,4 +319,8 @@ public interface IHeterogeneousChainDocking {
     default boolean isMinterERC20(String erc20) throws Exception {
         return false;
     }
+
+    default String cancelHtgTx(String nonce, String priceGWei) throws Exception {
+        return EMPTY_STRING;
+    }
 }

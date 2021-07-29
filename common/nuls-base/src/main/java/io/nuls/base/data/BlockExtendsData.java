@@ -79,7 +79,7 @@ public class BlockExtendsData extends BaseNulsData {
     private short continuousIntervalCount;
 
     /**
-     * 智能合约初始状态根
+     * SWAP交易状态根
      */
     private byte[] stateRoot;
 

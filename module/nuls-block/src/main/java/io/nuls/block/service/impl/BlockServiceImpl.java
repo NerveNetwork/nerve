@@ -419,10 +419,10 @@ public class BlockServiceImpl implements BlockService {
         if (needLock) {
             l = lock.writeLock();
         }
-        logger.info("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
+        logger.info("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
         try {
             if (block.getHeader().getHeight() > 0 && block.getHeader().getHeight() <= context.getLatestHeight()) {
-                logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash, isRecPocNet, download, nodeId);
+                logger.info("=====Block has been saved height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
                 return true;
             }
             //默认不进行拜占庭校验

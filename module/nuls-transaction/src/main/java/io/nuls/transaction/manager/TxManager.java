@@ -190,4 +190,29 @@ public class TxManager {
     public static boolean isCrossTx(int txType) {
         return txType == TxType.CROSS_CHAIN || txType == TxType.CONTRACT_TOKEN_CROSS_TRANSFER;
     }
+
+    public static boolean isUnSystemSwap(TxRegister txRegister){
+        if (txRegister == null) {
+            return false;
+        }
+        if(ModuleE.SW.abbr.equals(txRegister.getModuleCode()) && !txRegister.getSystemTx()){
+            return true;
+        }
+        return false;
+    }
+    public static boolean isSystemSwap(Chain chain, int txType){
+        TxRegister txRegister = getTxRegister(chain, txType);
+        if (txRegister == null) {
+            return false;
+        }
+        return ModuleE.SW.abbr.equals(txRegister.getModuleCode()) && txRegister.getSystemTx();
+    }
+    public static boolean isSystemSwap(TxRegister txRegister){
+        if (txRegister == null) {
+            return false;
+        }
+        return ModuleE.SW.abbr.equals(txRegister.getModuleCode()) && txRegister.getSystemTx();
+    }
+
+
 }

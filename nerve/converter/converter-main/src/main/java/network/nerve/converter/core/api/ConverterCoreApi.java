@@ -323,6 +323,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
             case BNB: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_BNB_PRICE);
             case HT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_HT_PRICE);
             case OKT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_OKT_PRICE);
+            case ONE: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_ONE_PRICE);
+            case MATIC: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_MATIC_PRICE);
+            case KCS: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_KCS_PRICE);
         }
         return BigDecimal.ZERO;
     }
@@ -335,5 +338,17 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isSupportERC20OfTransferBurn() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.ERC20_OF_TRANSFER_BURN_HEIGHT;
+    }
+
+    @Override
+    public boolean validNerveAddress(String address) {
+        boolean valid = AddressTool.validAddress(nerveChain.getChainId(), address);
+        nerveChain.getLogger().debug("chainId: {}, address: {}, valid: {}", nerveChain.getChainId(), address, valid);
+        return valid;
+    }
+
+    @Override
+    public boolean isSupportNewValidationOfERC20() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.NEW_VALIDATION_OF_ERC20;
     }
 }

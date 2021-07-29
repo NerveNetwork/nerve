@@ -87,6 +87,27 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "OKT-USDT",
           "desc": "OKT相对USDT价格"
+        },
+        {
+          "key": "ONE_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "ONE-USDT",
+          "desc": "ONE相对USDT价格"
+        },
+        {
+          "key": "MATIC_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "MATIC-USDT",
+          "desc": "MATIC相对USDT价格"
+        },
+        {
+          "key": "KCS_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "KCS-USDT",
+          "desc": "KCS相对USDT价格"
         }
       ]
     }

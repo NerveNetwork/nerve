@@ -42,7 +42,7 @@ public class ProposalTxDTO {
      */
     byte voteRangeType = ProposalVoteRangeTypeEnum.BANK.value();
     /**
-     * 提案类容
+     * 提案内容
      */
     String content;
 

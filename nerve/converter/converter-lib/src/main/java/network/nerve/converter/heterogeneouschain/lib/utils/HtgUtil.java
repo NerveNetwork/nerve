@@ -406,4 +406,63 @@ public class HtgUtil {
         BigDecimal nvtAmount = ethUSD.multiply(gasPrice).multiply(gasLimit).divide(nvtUSD.multiply(BigDecimal.TEN.pow(10)), 0, RoundingMode.UP);
         return nvtAmount;
     }
+
+    public static BigInteger[] sortByInsertionAsc(BigInteger[] orders, BigInteger value) {
+        return sortByInsertion(orders, value, true);
+    }
+    public static BigInteger[] sortByInsertionDsc(BigInteger[] orders, BigInteger value) {
+        return sortByInsertion(orders, value, false);
+    }
+
+    private static BigInteger[] sortByInsertion(BigInteger[] orders, BigInteger value, boolean aes) {
+        if (orders == null) {
+            return new BigInteger[]{value};
+        }
+        int length = orders.length;
+        BigInteger order, tmp1 = value, tmp2 = null;
+        for (int i = 0; i < length; i++) {
+            order = orders[i];
+            if (order == null) {
+                orders[i] = tmp1;
+                break;
+            }
+            if (tmp2 != null){
+                tmp2 = orders[i];
+                orders[i] = tmp1;
+                tmp1 = tmp2;
+                continue;
+            }
+            int compare = orders[i].compareTo(tmp1);
+            if (aes) {
+                if (compare < 0) {
+                    continue;
+                }
+            } else {
+                if (compare > 0) {
+                    continue;
+                }
+            }
+            tmp2 = orders[i];
+            orders[i] = tmp1;
+            tmp1 = tmp2;
+
+        }
+        return orders;
+    }
+
+    public static BigInteger[] emptyFillZero(BigInteger[] amounts) {
+        if (amounts == null) {
+            return null;
+        } else {
+            int length = amounts.length;
+
+            for(int i = 0; i < length; ++i) {
+                if (amounts[i] == null) {
+                    amounts[i] = BigInteger.ZERO;
+                }
+            }
+
+            return amounts;
+        }
+    }
 }

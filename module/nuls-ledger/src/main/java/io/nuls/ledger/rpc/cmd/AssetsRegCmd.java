@@ -258,6 +258,73 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
+     * 链内Swap-LP资产登记接口
+     *
+     * @param params
+     * @return
+     */
+    @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_REG, version = 1.0,
+            description = "链内Swap-LP资产登记接口")
+    @Parameters(value = {
+            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产名称: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
+            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "资产初始值"),
+            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "资产最小分割位数"),
+            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产单位符号: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "新资产地址"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象",
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "chainId", valueType = int.class, description = "链id"),
+                    @Key(name = "assetId", valueType = int.class, description = "资产id")
+            })
+    )
+    public Response chainAssetSwapLiquidityPoolReg(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(4);
+        try {
+            LoggerUtil.COMMON_LOG.debug("Swap Liquidity Pool asset register params={}", JSONUtils.obj2json(params));
+            params.put("chainId", ledgerConfig.getChainId());
+            LedgerAsset asset = new LedgerAsset();
+            asset.map2pojo(params, LedgerConstant.SWAP_LIQUIDITY_POOL_CROSS_CHAIN_ASSET_TYPE);
+            int assetId = assetRegMngService.registerSwapLiquidityPoolAsset(asset.getChainId(), asset);
+            rtMap.put("assetId", assetId);
+            rtMap.put("chainId", asset.getChainId());
+            LoggerUtil.COMMON_LOG.debug("return={}", JSONUtils.obj2json(rtMap));
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.error(e);
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    /**
+     * 链内Swap-LP资产登记回滚
+     *
+     * @param params
+     * @return
+     */
+    @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_ROLLBACK, version = 1.0,
+            description = "链内Swap-LP资产登记回滚")
+    @Parameters(value = {
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产Id"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象",
+            responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+            })
+    )
+    public Response chainAssetSwapLiquidityPoolRollBack(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(1);
+        try {
+            assetRegMngService.rollBackSwapLiquidityPoolAsset(ledgerConfig.getChainId(), Integer.parseInt(params.get("assetId").toString()));
+            rtMap.put("value", true);
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.error(e);
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }
+
+    /**
      * 查看链内注册资产信息
      *
      * @param params

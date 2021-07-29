@@ -38,7 +38,7 @@ import java.math.BigInteger;
  */
 public class HtgInvokeTxHelper implements BeanInitial {
 
-    private HtgTxInvokeInfoStorageService htTxInvokeInfoStorageService;
+    private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
     private HtgContext htgContext;
 
     //public HtgInvokeTxHelper(BeanMap beanMap) {
@@ -55,7 +55,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
             info.setTo(toAddress);
             info.setValue(value);
             info.setAssetId(assetId);
-            htTxInvokeInfoStorageService.save(nerveTxHash, info);
+            htgTxInvokeInfoStorageService.save(nerveTxHash, info);
             htgContext.WAITING_TX_QUEUE().offer(info);
         }
     }
@@ -69,7 +69,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
             info.setAddAddresses(addAddresses);
             info.setRemoveAddresses(removeAddresses);
             info.setOrginTxCount(orginTxCount);
-            htTxInvokeInfoStorageService.save(nerveTxHash, info);
+            htgTxInvokeInfoStorageService.save(nerveTxHash, info);
             htgContext.WAITING_TX_QUEUE().offer(info);
         }
     }
@@ -81,18 +81,18 @@ public class HtgInvokeTxHelper implements BeanInitial {
             this.saveCommonData(info, nerveTxHash, signatureData, currentNodeSendOrder);
             info.setTxType(HeterogeneousChainTxType.UPGRADE);
             info.setUpgradeContract(upgradeContract);
-            htTxInvokeInfoStorageService.save(nerveTxHash, info);
+            htgTxInvokeInfoStorageService.save(nerveTxHash, info);
             htgContext.WAITING_TX_QUEUE().offer(info);
         }
     }
 
     public boolean ifSavedWaittingPo(String nerveTxHash) {
-        return htTxInvokeInfoStorageService.existNerveTxHash(nerveTxHash);
+        return htgTxInvokeInfoStorageService.existNerveTxHash(nerveTxHash);
     }
 
     public void clearRecordOfCurrentNodeSentEthTx(String nerveTxHash, HtgWaitingTxPo po) throws Exception {
         this.clearEthWaitingTxPo(po);
-        htTxInvokeInfoStorageService.deleteSentEthTx(nerveTxHash);
+        htgTxInvokeInfoStorageService.deleteSentEthTx(nerveTxHash);
     }
 
     private void saveCommonData(HtgWaitingTxPo info, String nerveTxHash, String signatureData, int currentNodeSendOrder) {
@@ -102,34 +102,35 @@ public class HtgInvokeTxHelper implements BeanInitial {
         info.setNerveTxHash(nerveTxHash);
         info.setCurrentNodeSendOrder(currentNodeSendOrder);
         info.setSignatures(signatureData);
-        info.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.MINUTES_5 * (currentNodeSendOrder - 1));
-        info.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.MINUTES_5 * (info.getCurrentVirtualBanks().size() - 1));
+        info.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (currentNodeSendOrder - 1));
+        info.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (info.getCurrentVirtualBanks().size() - 1));
     }
 
     public HtgWaitingTxPo findEthWaitingTxPo(String nerveTxHash) {
-        return htTxInvokeInfoStorageService.findEthWaitingTxPo(nerveTxHash);
+        return htgTxInvokeInfoStorageService.findEthWaitingTxPo(nerveTxHash);
     }
 
     public void clearEthWaitingTxPo(HtgWaitingTxPo po) throws Exception {
-        po.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.MINUTES_5 * (po.getCurrentNodeSendOrder() - 1));
-        po.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.MINUTES_5 * (po.getCurrentVirtualBanks().size() - 1));
+        po.setInvokeResend(false);
+        po.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (po.getCurrentNodeSendOrder() - 1));
+        po.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (po.getCurrentVirtualBanks().size() - 1));
         po.setValidateHeight(htgContext.getConverterCoreApi().getCurrentBlockHeightOnNerve() + 30);
-        htTxInvokeInfoStorageService.save(po.getNerveTxHash(), po);
+        htgTxInvokeInfoStorageService.save(po.getNerveTxHash(), po);
     }
 
     public void saveSuccessfulNerve(String nerveTxHash) throws Exception {
-        htTxInvokeInfoStorageService.saveCompletedNerveTx(nerveTxHash);
+        htgTxInvokeInfoStorageService.saveCompletedNerveTx(nerveTxHash);
     }
 
     public boolean isSuccessfulNerve(String nerveTxHash) throws Exception {
-        return htTxInvokeInfoStorageService.ifCompletedNerveTx(nerveTxHash);
+        return htgTxInvokeInfoStorageService.ifCompletedNerveTx(nerveTxHash);
     }
 
     public void saveSentEthTx(String nerveTxHash) throws Exception {
-        htTxInvokeInfoStorageService.saveSentEthTx(nerveTxHash);
+        htgTxInvokeInfoStorageService.saveSentEthTx(nerveTxHash);
     }
 
     public boolean currentNodeSentEthTx(String nerveTxHash) throws Exception {
-        return htTxInvokeInfoStorageService.ifSentEthTx(nerveTxHash);
+        return htgTxInvokeInfoStorageService.ifSentEthTx(nerveTxHash);
     }
 }

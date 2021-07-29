@@ -32,6 +32,7 @@ import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 
 import java.io.Serializable;
@@ -43,6 +44,8 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_10;
 
 /**
  * @author: Mimi
@@ -102,7 +105,7 @@ public class BnbContext implements Serializable, HtgContext {
             return intervalWaitting;
         }
         String interval = config.getIntervalWaittingSendTransaction();
-        if(StringUtils.isNotBlank(interval)) {
+        if (StringUtils.isNotBlank(interval)) {
             intervalWaitting = Integer.parseInt(interval);
         } else {
             intervalWaitting = HtgConstant.DEFAULT_INTERVAL_WAITTING;
@@ -114,36 +117,9 @@ public class BnbContext implements Serializable, HtgContext {
         BnbContext.logger = logger;
     }
 
-    private static BigInteger MAX_HTG_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
     private static BigInteger HTG_GAS_PRICE;
 
-    public static BigInteger getEthGasPriceStatic() {
-        int time = 0;
-        while (HTG_GAS_PRICE == null) {
-            time++;
-            try {
-                TimeUnit.SECONDS.sleep(10);
-            } catch (InterruptedException e) {
-                //do nothing
-            }
-            if (time == 3) {
-                break;
-            }
-        }
-        if (HTG_GAS_PRICE == null) {
-            HTG_GAS_PRICE = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
-        }
-        return HTG_GAS_PRICE;
-    }
-
-    public static void setEthGasPriceStatic(BigInteger ethGasPrice) {
-        if (ethGasPrice != null) {
-            if (ethGasPrice.compareTo(MAX_HTG_GAS_PRICE) > 0) {
-                ethGasPrice = MAX_HTG_GAS_PRICE;
-            }
-            HTG_GAS_PRICE = ethGasPrice;
-        }
-    }
+    public static BigInteger[] gasPriceOrders = new BigInteger[6];
 
     @Override
     public IConverterCoreApi getConverterCoreApi() {
@@ -162,12 +138,30 @@ public class BnbContext implements Serializable, HtgContext {
 
     @Override
     public BigInteger getEthGasPrice() {
-        return getEthGasPriceStatic();
+        int time = 0;
+        while (HTG_GAS_PRICE == null) {
+            time++;
+            try {
+                TimeUnit.SECONDS.sleep(10);
+            } catch (InterruptedException e) {
+                //do nothing
+            }
+            if (time == 3) {
+                break;
+            }
+        }
+        if (HTG_GAS_PRICE == null) {
+            HTG_GAS_PRICE = GWEI_10;
+        }
+        return HTG_GAS_PRICE;
     }
 
     @Override
     public void setEthGasPrice(BigInteger ethGasPrice) {
-        setEthGasPriceStatic(ethGasPrice);
+        if (HTG_GAS_PRICE == null) {
+            HTG_GAS_PRICE = GWEI_10;
+        }
+        HTG_GAS_PRICE = calcGasPrice(ethGasPrice, HTG_GAS_PRICE);
     }
 
     @Override

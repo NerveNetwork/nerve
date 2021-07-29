@@ -48,7 +48,19 @@ public class HtgWaitingTxPo extends HeterogeneousTransactionInfo implements Seri
      * 拜占庭签名数据
      */
     private String signatures;
+    private transient boolean invokeResend;
 
+    public HtgWaitingTxPo() {
+        this.invokeResend = false;
+    }
+
+    public boolean isInvokeResend() {
+        return invokeResend;
+    }
+
+    public void setInvokeResend(boolean invokeResend) {
+        this.invokeResend = invokeResend;
+    }
 
     public String getUpgradeContract() {
         return upgradeContract;

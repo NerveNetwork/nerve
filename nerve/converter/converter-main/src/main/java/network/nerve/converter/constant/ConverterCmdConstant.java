@@ -37,6 +37,7 @@ public interface ConverterCmdConstant {
     String NEW_TX_MESSAGE = "newTx";
 
     String CHECK_RETRY_PARSE_MESSAGE = "checkRetry";
+    String CANCEL_HTG_TX_MESSAGE = "cancelHtgTx";
     String COMPONENT_SIGN = "compSign";
 
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO = "cv_get_heterogeneous_chain_asset_info";
@@ -55,6 +56,7 @@ public interface ConverterCmdConstant {
     String BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String OVERRIDE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_override_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_unbind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
+    String UNREGISTER_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_unregister_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     /** 提现 */
     String WITHDRAWAL = "cv_withdrawal";
     String WITHDRAWAL_ADDITIONAL_FEE = "cv_withdrawal_additional_fee";
@@ -66,5 +68,7 @@ public interface ConverterCmdConstant {
     String DISQUALIFICATION = "cv_disqualification";
     String CHECK_RETRY_PARSE = "cv_checkRetryParse";
     String RETRY_WITHDRAWAL = "cv_retry_withdrawal";
+    String CANCEL_HTG_TX = "cv_cancelHtgTx";
+    String GET_PROPOSAL_INFO = "cv_getProposalInfo";
 
 }

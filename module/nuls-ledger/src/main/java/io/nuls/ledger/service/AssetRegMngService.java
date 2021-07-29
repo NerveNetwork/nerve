@@ -73,4 +73,9 @@ public interface AssetRegMngService {
     int getRegAssetId(int chainId, String contractAddr) throws Exception;
 
     boolean isContractAsset(int chainId, int assetId);
+
+    int registerSwapLiquidityPoolAsset(int chainId, LedgerAsset asset) throws Exception;
+
+    void rollBackSwapLiquidityPoolAsset(int chainId, int assetId) throws Exception;
+
 }

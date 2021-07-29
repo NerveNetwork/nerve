@@ -94,32 +94,32 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     public void run() {
-        if (!htgContext.getConverterCoreApi().isRunning()) {
-            LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
-            return;
-        }
-        if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-            LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
-            return;
-        }
-        if (!htgContext.isAvailableRPC()) {
-            htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
-            return;
-        }
-        try {
-            htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
-            BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
-            if (currentGasPrice != null) {
-                htgContext.logger().debug("当前{}网络的Price: {} Gwei.", htgContext.getConfig().getSymbol(), new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
-                htgContext.setEthGasPrice(currentGasPrice);
-            }
-        } catch (Exception e) {
-            htgContext.logger().error(String.format("同步%s当前Price失败", htgContext.getConfig().getSymbol()), e);
-        }
-        LoggerUtil.LOG.debug("[{}交易确认任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
-        LinkedBlockingDeque<HtgUnconfirmedTxPo> queue = htgContext.UNCONFIRMED_TX_QUEUE();
         HtgUnconfirmedTxPo po = null;
+        LinkedBlockingDeque<HtgUnconfirmedTxPo> queue = htgContext.UNCONFIRMED_TX_QUEUE();
         try {
+            if (!htgContext.getConverterCoreApi().isRunning()) {
+                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+                return;
+            }
+            if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
+                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+                return;
+            }
+            if (!htgContext.isAvailableRPC()) {
+                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                return;
+            }
+            try {
+                htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
+                BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
+                if (currentGasPrice != null) {
+                    htgContext.logger().debug("当前{}网络的Price: {} Gwei.", htgContext.getConfig().getSymbol(), new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+                    htgContext.setEthGasPrice(currentGasPrice);
+                }
+            } catch (Exception e) {
+                htgContext.logger().error(String.format("同步%s当前Price失败", htgContext.getConfig().getSymbol()), e);
+            }
+            LoggerUtil.LOG.debug("[{}交易确认任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
             // 等待重启应用时，加载的持久化未确认交易
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             long ethNewestHeight = htgWalletApi.getBlockHeight();
@@ -278,6 +278,11 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     private boolean dealDeposit(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {
         boolean isReOfferQueue = true;
         String htgTxHash = po.getTxHash();
+        if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
+            logger().warn("[充值地址异常] 交易[{}], 移除队列, [1]充值地址: {}", htgTxHash, po.getNerveAddress());
+            this.clearDB(htgTxHash);
+            return !isReOfferQueue;
+        }
         HtgUnconfirmedTxPo txPo = poFromDB;
         if(txPo == null) {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);

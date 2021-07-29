@@ -46,6 +46,7 @@ public class LedgerConstant {
     public static final short BIND_COMMON_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET = 7;
     public static final short BIND_CROSS_CHAIN_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET = 8;
     public static final short BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET = 9;
+    public static final short SWAP_LIQUIDITY_POOL_CROSS_CHAIN_ASSET_TYPE = 10;
 
     /**
      * 资产小数分割位

@@ -46,6 +46,7 @@ import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
@@ -72,6 +73,7 @@ public class Base {
     protected byte VERSION = 2;
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
+    protected BnbContext context;
 
     @BeforeClass
     public static void initClass() {
@@ -80,13 +82,19 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://data-seed-prebsc-2-s1.binance.org:8545/";
+        /*
+         "commonRpcAddress": "https://data-seed-prebsc-2-s3.binance.org:8545/",
+         "mainRpcAddress": "http://data-seed-prebsc-1-s2.binance.org:8545/",
+         "orderRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s1.binance.org:8545/",
+         "standbyRpcAddresses": "https://data-seed-prebsc-1-s3.binance.org:8545/,https://data-seed-prebsc-2-s3.binance.org:8545/",
+         */
+        String ethRpcAddress = "https://data-seed-prebsc-1-s2.binance.org:8545/";
         htgWalletApi = new HtgWalletApi();
         BnbContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
-        BnbContext context = new BnbContext();
+        context = new BnbContext();
         HeterogeneousCfg cfg = new HeterogeneousCfg();
         cfg.setChainIdOnHtgNetwork(97);
         BnbContext.setConfig(cfg);
@@ -97,8 +105,14 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-        //String mainEthRpcAddress = "http://bsc.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
+        //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
+        //String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
+        //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed2.binance.org/";
+        //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed3.binance.org/";
+        String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
@@ -117,7 +131,9 @@ public class Base {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
         // 估算GasLimit
-        BigInteger estimateGas = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        BigInteger estimateGas = estimateGasObj.getAmountUsed();
+
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
             Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);

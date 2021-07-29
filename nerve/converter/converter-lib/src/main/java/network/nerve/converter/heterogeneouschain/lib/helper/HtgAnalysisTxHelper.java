@@ -160,6 +160,10 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             }
 
         } while (false);
+        if (isDepositTx && !htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
+            htgContext.logger().warn("[充值地址异常] 交易[{}], [0]充值地址: {}", htTxHash, po.getNerveAddress());
+            return;
+        }
         // 检查是否被Nerve网络确认，产生原因是当前节点解析eth交易比其他节点慢，其他节点确认了此交易后，当前节点才解析到此交易
         HtgUnconfirmedTxPo txPoFromDB = null;
         if (isBroadcastTx || isDepositTx) {

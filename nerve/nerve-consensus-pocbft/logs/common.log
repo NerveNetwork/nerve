@@ -1,3 +1,0 @@
-2020-09-25 16:17:19,506 INFO [main] - ---currentTime:2020-09-25 16:17:19.498--,java.lang.StackTraceElement.createConnect(NettyClient.java:79):创建ws:ws://192.168.0.140:8771失败，第1重试
-2020-09-25 16:17:22,513 INFO [main] - ---currentTime:2020-09-25 16:17:22.512--,java.lang.StackTraceElement.createConnect(NettyClient.java:79):创建ws:ws://192.168.0.140:8771失败，第2重试
-2020-09-25 16:17:25,520 INFO [main] - ---currentTime:2020-09-25 16:17:25.520--,java.lang.StackTraceElement.createConnect(NettyClient.java:79):创建ws:ws://192.168.0.140:8771失败，第3重试

@@ -74,4 +74,11 @@ public interface MessageService {
      */
     void componentSign(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate);
 
+    /**
+     * 取消当前虚拟银行发出的异构链交易
+     * @param chain
+     * @param nodeId
+     * @param cancelHtgTxMessage
+     */
+    void cancelHtgTx(Chain chain, String nodeId, CancelHtgTxMessage cancelHtgTxMessage);
 }

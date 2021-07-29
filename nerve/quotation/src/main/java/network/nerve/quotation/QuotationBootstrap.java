@@ -210,6 +210,7 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.bnbKeyHeight = quConfig.getBnbKeyHeight();
         QuotationContext.htOkbKeyHeight = quConfig.getHtOkbKeyHeight();
         QuotationContext.oktKeyHeight = quConfig.getOktKeyHeight();
+        QuotationContext.oneMaticKcsHeight = quConfig.getOneMaticKcsHeight();
 
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

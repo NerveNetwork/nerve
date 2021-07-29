@@ -61,6 +61,12 @@ public class QuotationCall {
             return new BigDecimal("13.7531");
         } else if (ORACLE_KEY_OKT_PRICE.equals(oracleKey)){
             return new BigDecimal("13.992");
+        } else if (ORACLE_KEY_ONE_PRICE.equals(oracleKey)){
+            return new BigDecimal("0.0829");
+        } else if (ORACLE_KEY_MATIC_PRICE.equals(oracleKey)){
+            return new BigDecimal("0.99");
+        } else if (ORACLE_KEY_KCS_PRICE.equals(oracleKey)){
+            return new BigDecimal("11.28");
         }*/
         /************************************************/
         try {

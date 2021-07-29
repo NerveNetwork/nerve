@@ -21,6 +21,8 @@ public enum CommandGroup {
     Cross_Chain,
     System,
     Converter,
+    Farm,
+    Swap,
     Dex;
 
     final String title;
