@@ -16,6 +16,7 @@ fi
 ./package -a nuls-api
 ./package -a converter
 ./package -a dex
+./package -a swap
 ./package -a quotation
 ./package -a mykernel
 if [ -n "$JRE" ]; then

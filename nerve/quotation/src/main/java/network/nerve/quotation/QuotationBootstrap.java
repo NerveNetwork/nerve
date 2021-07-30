@@ -175,6 +175,10 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setBnbKeyHeight(bnbKeyHeight);
             long htOkbKeyHeight = Long.parseLong(map.get("htOkbKeyHeight").toString());
             quConfig.setHtOkbKeyHeight(htOkbKeyHeight);
+            long oktKeyHeight = Long.parseLong(map.get("OktKeyHeight").toString());
+            quConfig.setOktKeyHeight(oktKeyHeight);
+            long oneMaticKcsHeight = Long.parseLong(map.get("oneMaticKcsHeight").toString());
+            quConfig.setOneMaticKcsHeight(oneMaticKcsHeight);
 
         } catch (Exception e) {
             Log.error(e);

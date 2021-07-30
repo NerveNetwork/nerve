@@ -12,6 +12,7 @@ import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.model.bo.ConfigBean;
+import network.nerve.quotation.model.txdata.Prices;
 import network.nerve.quotation.model.txdata.Quotation;
 import network.nerve.quotation.util.CommonUtil;
 import org.junit.Before;
@@ -199,13 +200,13 @@ public class QuotationCmdTest {
 
 //
 //        // 最终报价txdata
-        String txDataStr = "17090001f79dd4abaf8dfe2241128c56d7d6c4fedb88381a01fd0e010e084e56542d55534454cf6bec12d55bb33f084254432d55534454b81e856b4d51e84009555344432d5553445489bc61b223fbef3f084f4b422d55534454105839b4c8963240085041582d5553445462156f641ef9ef3f124e5654455448554e4956324c502d555344545e2ee2256418404108424e422d555344546197348887e46f40114e5654424e4243616b654c502d5553445419e6043d06942941094e554c532d55534454d2448e63da350c4009555344542d55534454000000000000f03f0748542d55534454a9a3e36a64b73340124e565448555344484d44584c502d55534454177303ca785ef441084441492d55534454daacfa5c6d25f03f084554482d55534454713d0ad7a3649940";
+        String txDataStr = "010a4d415449432d55534454dd3b30a1fe6af03f";
 //        Prices price = CommonUtil.getInstance(txDataStr, Prices.class);
 //        price.getPrices().forEach(d -> {
 //            Log.info("{}:{}", d.getKey(), d.getValue());
 //        });
         /** 喂价*/
-        Quotation quotation = CommonUtil.getInstance(txDataStr, Quotation.class);
+        Prices quotation = CommonUtil.getInstance(txDataStr, Prices.class);
         Log.info("{}", quotation.toString());
     }
 
