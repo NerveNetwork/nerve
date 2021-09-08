@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>converter</artifactId>
+        <groupId>network.nerve</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>converter-trx</artifactId>
+
+    <properties>
+        <nuls.v2.version>1.0.0-SNAPSHOT</nuls.v2.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.tron.trident</groupId>
+            <artifactId>core</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/tron/trident/core/0.3.0-SNAPSHOT/core-0.3.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+
+        <dependency>
+            <groupId>org.tron.trident</groupId>
+            <artifactId>utils</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/tron/trident/utils/0.3.0-SNAPSHOT/utils-0.3.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.tron.trident</groupId>
+            <artifactId>abi</artifactId>
+            <version>0.3.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/../../lib/org/tron/trident/abi/0.3.0-SNAPSHOT/abi-0.3.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty</artifactId>
+            <version>1.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-okhttp</artifactId>
+            <version>1.31.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>okio</artifactId>
+                    <groupId>com.squareup.okio</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>okhttp</artifactId>
+                    <groupId>com.squareup.okhttp</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>1.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>1.31.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.11.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-lib</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+
+    </dependencies>
+
+
+</project>
