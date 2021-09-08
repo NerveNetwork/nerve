@@ -14,8 +14,10 @@ public class CreateFarmReq extends BaseReq {
     private long lockedHeight;
     private String password;
     private double totalSyrupAmount;
+    private boolean modifiable;
+    private long withdrawLockTime;
 
-    public CreateFarmReq(String address, String stakeTokenStr, String syrupTokenStr, double totalSyrupAmount, double syrupPerBlock, long startHeight, long lockedHeight, String password) {
+    public CreateFarmReq(String address, String stakeTokenStr, String syrupTokenStr, double totalSyrupAmount, double syrupPerBlock, long startHeight, long lockedHeight, boolean modifiable, long withdrawLockTime, String password) {
         this.address = address;
         this.stakeTokenStr = stakeTokenStr;
         this.syrupPerBlock = syrupPerBlock;
@@ -24,6 +26,8 @@ public class CreateFarmReq extends BaseReq {
         this.lockedHeight = lockedHeight;
         this.password = password;
         this.totalSyrupAmount = totalSyrupAmount;
+        this.modifiable = modifiable;
+        this.withdrawLockTime = withdrawLockTime;
     }
 
     public String getAddress() {
@@ -88,5 +92,21 @@ public class CreateFarmReq extends BaseReq {
 
     public void setTotalSyrupAmount(double totalSyrupAmount) {
         this.totalSyrupAmount = totalSyrupAmount;
+    }
+
+    public boolean isModifiable() {
+        return modifiable;
+    }
+
+    public void setModifiable(boolean modifiable) {
+        this.modifiable = modifiable;
+    }
+
+    public long getWithdrawLockTime() {
+        return withdrawLockTime;
+    }
+
+    public void setWithdrawLockTime(long withdrawLockTime) {
+        this.withdrawLockTime = withdrawLockTime;
     }
 }

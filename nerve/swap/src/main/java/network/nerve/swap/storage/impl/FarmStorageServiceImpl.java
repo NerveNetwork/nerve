@@ -1,12 +1,9 @@
 package network.nerve.swap.storage.impl;
 
-import io.nuls.base.data.NulsHash;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
-import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
-import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapDBConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.model.po.FarmPoolPO;
@@ -52,7 +49,8 @@ public class FarmStorageServiceImpl implements FarmStorageService {
         List<FarmPoolPO> farmList = new ArrayList<>();
         if (list != null && !list.isEmpty()) {
             for (byte[] value : list) {
-                farmList.add(SwapDBUtil.getModel(value, FarmPoolPO.class));
+                FarmPoolPO po = SwapDBUtil.getModel(value, FarmPoolPO.class);
+                farmList.add(po);
             }
         }
         return farmList;

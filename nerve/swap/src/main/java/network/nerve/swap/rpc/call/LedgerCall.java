@@ -144,7 +144,7 @@ public class LedgerCall extends BaseCall {
             if (result == null || result.get("assetSymbol") == null) {
                 return null;
             }
-            return new LedgerAssetDTO(chainId, result);
+            return new LedgerAssetDTO(assetChainId, result);
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_get_asset");
             LoggerUtil.LOG.error(msg, e);

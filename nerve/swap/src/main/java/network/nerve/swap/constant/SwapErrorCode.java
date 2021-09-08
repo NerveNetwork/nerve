@@ -112,5 +112,6 @@ public interface SwapErrorCode extends CommonCodeConstanst {
     ErrorCode FARM_SYRUP_ASSET_TYPE_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1025");
     //Assets must be transferred to the farm address
     ErrorCode FARM_ADDRESS_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1026");
-
+    ErrorCode FARM_CHANGE_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1027");
+    ErrorCode FARM_PERMISSION_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1028");
 }

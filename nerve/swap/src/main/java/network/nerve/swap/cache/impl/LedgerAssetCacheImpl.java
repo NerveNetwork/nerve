@@ -43,11 +43,11 @@ public class LedgerAssetCacheImpl implements LedgerAssetCache {
     private Map<String, LedgerAssetDTO> CACHE_MAP = new HashMap<>();
 
     @Override
-    public LedgerAssetDTO getLedgerAsset(int chainId, int assetId) {
-        String key = chainId + "_" + assetId;
+    public LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId) {
+        String key = assetChainId + "_" + assetId;
         LedgerAssetDTO dto = CACHE_MAP.get(key);
         if (dto == null) {
-            dto = LedgerCall.getNerveAsset(chainId, chainId, assetId);
+            dto = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
             if (dto == null) {
                 return null;
             }
@@ -57,10 +57,10 @@ public class LedgerAssetCacheImpl implements LedgerAssetCache {
     }
 
     @Override
-    public LedgerAssetDTO getLedgerAsset(NerveToken token) {
+    public LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token) {
         if (token == null) {
             return null;
         }
-        return getLedgerAsset(token.getChainId(), token.getAssetId());
+        return getLedgerAsset(chainId, token.getChainId(), token.getAssetId());
     }
 }

@@ -320,7 +320,7 @@ public class BlockServiceImpl implements BlockService {
             if (isVerifyBlock(chainId, hash)) {
                 BlockSaveTemp blockSaveTemp = getBlockBasicVerifyResult(chainId, hash);
                 if (null != blockSaveTemp) {
-                    logger.debug("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
+                    logger.info("bzt存储数据height={}", blockSaveTemp.getBlock().getHeader().getHeight());
                     // 这里改成异步
                     RunnableManager.offer(new BlockSaver.Saver(chainId, blockSaveTemp.getBlock(), 1, true, true, false, null));
                     return true;
@@ -398,6 +398,8 @@ public class BlockServiceImpl implements BlockService {
         SmallBlockCacher.nodeMap.remove(hash);
     }
 
+    private boolean showLockLog;
+
     /**
      * 拜占庭与区块校验标识处理=================================end
      **/
@@ -416,8 +418,16 @@ public class BlockServiceImpl implements BlockService {
         NulsHash hash = header.getHash();
         StampedLock lock = context.getLock();
         long l = 0;
+        boolean lockLoged = false;
         if (needLock) {
+            if (showLockLog) {
+                lockLoged = true;
+                logger.info("lock");
+            }
             l = lock.writeLock();
+            if (showLockLog) {
+                logger.info("locked");
+            }
         }
         logger.info("====saveBlock height={},hash={},isRecPocNet={},download={},nodeId={}", height, hash.toHex(), isRecPocNet, download, nodeId);
         try {
@@ -492,6 +502,7 @@ public class BlockServiceImpl implements BlockService {
              * 拜占庭没完成，先返回等待
              */
             if (download == 1 && !isVerifyBZTAndBlock(chainId, hash)) {
+                showLockLog = true;
                 logger.info("wait for BZTAndBlock  bzt={} verify={},height-{}", isVerifyBZT(chainId, hash), isVerifyBlock(chainId, hash), height);
                 return true;
             }
@@ -531,7 +542,7 @@ public class BlockServiceImpl implements BlockService {
             context.getFutureBlockCache().remove(height);
 
             logger.info("save block,height-" + height + ",time-" + (elapsedNanos / 1000000) + "ms,blocktime: " + NulsDateUtils.timeStamp2Str(block.getHeader().getTime() * 1000) + ",txCount-" + block.getHeader().getTxCount() + ",hash-" + hash + ", size-" + block.size() + "\n\n");
-
+            showLockLog = false;
             //区块处理完成之后，查看本地是否缓存有下一个区块，如果存在下一个区块则直接拿出下一个区块保存
             if (height > 0 && download == 1) {
                 handleCacheBlock(chainId, height + 1);
@@ -539,7 +550,13 @@ public class BlockServiceImpl implements BlockService {
             return true;
         } finally {
             if (needLock) {
+                if (lockLoged) {
+                    logger.info("unlock");
+                }
                 lock.unlockWrite(l);
+                if (lockLoged) {
+                    logger.info("unlock-done");
+                }
             }
             if (context.isStoping()) {
                 logger.warn("The system is about to stop.......");

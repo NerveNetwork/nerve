@@ -73,6 +73,12 @@
         </dependency>
 
         <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-trx</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>
             <version>1.1.5.RELEASE</version>

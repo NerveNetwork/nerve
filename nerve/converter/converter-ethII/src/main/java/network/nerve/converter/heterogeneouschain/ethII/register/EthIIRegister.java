@@ -133,6 +133,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
             beanMap.add(HtgContext.class, (ethIIContext = new EthIIContext()));
             beanMap.add(HtgListener.class, (htgListener = new HtgListener()));
             beanMap.add(HtgUpgradeContractSwitchHelper.class, (htgUpgradeContractSwitchHelper = new HtgUpgradeContractSwitchHelper()));
+            ethRegister.setEthUpgradeContractSwitchHelper(htgUpgradeContractSwitchHelper);
 
             beanMap.add(ConverterConfig.class, converterConfig);
             beanMap.add(HtgCallBackManager.class, ethCallBackManager);

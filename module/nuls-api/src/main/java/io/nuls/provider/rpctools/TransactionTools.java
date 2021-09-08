@@ -103,10 +103,28 @@ public class TransactionTools implements CallRpc {
                     TransactionDto txDto = new TransactionDto(tx);
                     txDto.setBlockHeight(height);
                     txDto.setStatus(status);
+
                     return new Result(txDto);
                 } catch (NulsException e) {
                     return ResultUtil.getNulsExceptionResult(e);
                 }
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    public Result<String> getTxSerialize(int chainId, String txHash) {
+        Map<String, Object> params = new HashMap(4);
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("txHash", txHash);
+        try {
+            return callRpc(ModuleE.TX.abbr, "tx_getTxClient", params, (Function<Map<String, Object>, Result<String>>) res -> {
+                if (res == null || res.get("tx") == null) {
+                    return Result.fail(CommonCodeConstanst.DATA_NOT_FOUND.getCode(), CommonCodeConstanst.DATA_NOT_FOUND.getMsg());
+                }
+                String txStr = (String) res.get("tx");
+                return new Result(txStr);
             });
         } catch (NulsRuntimeException e) {
             return Result.fail(e.getCode(), e.getMessage());

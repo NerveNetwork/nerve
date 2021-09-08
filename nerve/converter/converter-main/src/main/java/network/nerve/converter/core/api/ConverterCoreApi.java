@@ -326,6 +326,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             case ONE: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_ONE_PRICE);
             case MATIC: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_MATIC_PRICE);
             case KCS: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_KCS_PRICE);
+            case TRX: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_TRX_PRICE);
         }
         return BigDecimal.ZERO;
     }
@@ -343,6 +344,12 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean validNerveAddress(String address) {
         boolean valid = AddressTool.validAddress(nerveChain.getChainId(), address);
+        // v1.14.0 协议升级后，地址校验增加验证逻辑，换成字节数组后，重新生成base58地址后，再和用户提供的base58地址相比，避免地址前缀不同的问题
+        if (isProtocol14() && valid) {
+            byte[] addressBytes = AddressTool.getAddress(address);
+            String addressStr = AddressTool.getStringAddressByBytes(addressBytes);
+            valid = address.equals(addressStr);
+        }
         nerveChain.getLogger().debug("chainId: {}, address: {}, valid: {}", nerveChain.getChainId(), address, valid);
         return valid;
     }
@@ -350,5 +357,15 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isSupportNewValidationOfERC20() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.NEW_VALIDATION_OF_ERC20;
+    }
+
+    @Override
+    public boolean isSupportTrxCrossChain() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.TRX_CROSS_CHAIN_HEIGHT;
+    }
+
+    @Override
+    public boolean isProtocol14() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_14_0;
     }
 }

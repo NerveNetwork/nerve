@@ -24,6 +24,7 @@
 package network.nerve.converter.heterogeneouschain.eth.core;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.handler.codec.base64.Base64Decoder;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.core.constant.BaseConstant;
@@ -50,11 +51,13 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLOutput;
 import java.util.*;
 
 import static io.nuls.core.crypto.ECKey.CURVE;
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.PUBLIC_KEY_UNCOMPRESSED_PREFIX;
 import static network.nerve.converter.heterogeneouschain.eth.utils.EthUtil.leftPadding;
+import static org.web3j.crypto.Hash.sha256;
 
 /**
  * @author: Mimi
@@ -82,7 +85,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
+        String prikey = "8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -281,7 +284,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0xb12a6716624431730c3ef55f80c458371954fa52, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x196c4b2b6e947b57b366967a1822f3fb7d9be1a8, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0xbb5ba69105a330218e4a433f5e2a273bf0075e64, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x15cb37aa4d55d5a0090966bef534c89904841065, 0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0x17e61e0176ad8a88cac5f786ca0779de87b3043b";
+        String pubkeySet = "0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x15cb37aa4d55d5a0090966bef534c89904841065, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x10c17be7b6d3e1f424111c8bddf221c9557728b0";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -397,11 +400,29 @@ public class EthAccountTest extends Base {
      */
     @Test
     public void importByMnemonicest() throws Exception {
-        String mnemonic = "capable delay jacket impulse neck marine exile target spy jar mass slam";
-        String password = "qwer!1234";
+        String mnemonic = "deny they health custom company worth tank hungry police direct eternal urban";
+        String password = "";
         System.out.println(JSONUtils.obj2PrettyJson(importByMnemonic("m/44'/60'/0'/0/0", Arrays.asList(mnemonic.split(" ")), password)));
     }
 
+    /**
+     * 助记词导入测试II
+     */
+    @Test
+    public void importByMnemonicestII() throws Exception {
+        String mnemonic = "deny they health custom company worth tank hungry police direct eternal urban";
+        String password = "";
+        byte[] seed = MnemonicUtils.generateSeed(mnemonic, password);
+        System.out.println(Numeric.toHexString(seed));
+        ECKeyPair privateKey = ECKeyPair.create(sha256(seed));
+        System.out.println(Numeric.toHexString(privateKey.getPrivateKey().toByteArray()));
+    }
+
+    @Test
+    public void test() {
+        String b64 = "ZGVueSB0aGV5IGhlYWx0aCBjdXN0b20gY29tcGFueSB3b3J0aCB0YW5rIGh1bmdyeSBwb2xpY2UgZGlyZWN0IGV0ZXJuYWwgdXJiYW4=";
+        System.out.println(Numeric.toHexString(Base64.getDecoder().decode(b64)));
+    }
     /**
      * 通过助记词导入钱包
      *
@@ -415,12 +436,14 @@ public class EthAccountTest extends Base {
         if (!path.startsWith("m") && !path.startsWith("M")) {
             throw new RuntimeException("请输入正确路径");
         }
+
         String[] pathArray = path.split("/");
         long creationTimeSeconds = System.currentTimeMillis() / 1000;
         //主要就是这里会有不同，原来是随机生成，这次我们替换成用户助记词构建
         DeterministicSeed ds = new DeterministicSeed(mnemonics, null, "", creationTimeSeconds);
         //根私钥
         byte[] seedBytes = ds.getSeedBytes();
+        System.out.println("seedBytes: " + Numeric.toHexString(seedBytes));
         //助记词
         List<String> mnemonic = ds.getMnemonicCode();
         try {

@@ -112,8 +112,8 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
                 NerveToken tokenB = txData.getTokenB();
 
                 // 检查tokenA,B是否存在，pair地址是否合法
-                LedgerAssetDTO assetA = ledgerAssetCache.getLedgerAsset(tokenA);
-                LedgerAssetDTO assetB = ledgerAssetCache.getLedgerAsset(tokenB);
+                LedgerAssetDTO assetA = ledgerAssetCache.getLedgerAsset(chainId, tokenA);
+                LedgerAssetDTO assetB = ledgerAssetCache.getLedgerAsset(chainId, tokenB);
                 if (assetA == null || assetB == null) {
                     logger.error("Ledger asset not exist! hash-{}", tx.getHash().toHex());
                     failsList.add(tx);

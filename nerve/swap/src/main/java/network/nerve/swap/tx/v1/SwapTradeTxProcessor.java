@@ -5,14 +5,10 @@ import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
-import io.nuls.core.constant.CommonCodeConstanst;
-import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
-import io.nuls.core.exception.NulsException;
-import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.swap.cache.LedgerAssetCache;
@@ -109,7 +105,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                 }
                 for (int i = 0; i < pathLength; i++) {
                     NerveToken token = path[i];
-                    LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(token);
+                    LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(chainId, token);
                     if (asset == null) {
                         logger.error("Ledger asset not exist! hash-{}", tx.getHash().toHex());
                         failsList.add(tx);

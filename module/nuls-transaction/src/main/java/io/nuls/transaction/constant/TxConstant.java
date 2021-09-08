@@ -2,6 +2,8 @@ package io.nuls.transaction.constant;
 
 import io.nuls.core.crypto.HexUtil;
 
+import java.math.BigInteger;
+
 /**
  * @author: Charlie
  * @date: 2020/06/25
@@ -86,5 +88,7 @@ public interface TxConstant {
 
 
     String TX_PROTOCOL_FILE = "tx-cfg-";
+
+    BigInteger MAX_SUPPORT_AMOUNT = new BigInteger("7fffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
 
 }

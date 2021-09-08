@@ -49,6 +49,8 @@ import network.nerve.converter.utils.ConverterSignValidUtil;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
+
 /**
  * @author: Mimi
  * @date: 2020-03-23
@@ -97,7 +99,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 }
                 HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
                 txData.parse(tx.getTxData(), 0);
-                String contractAddress = txData.getContractAddress().toLowerCase();
+                String contractAddress = addressToLowerCase(txData.getContractAddress());
                 errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, false);
                 if (StringUtils.isNotBlank(errorCode)) {
                     failsList.add(tx);
@@ -141,7 +143,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 txData.parse(tx.getTxData(), 0);
                 HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
                 info.setChainId(txData.getChainId());
-                info.setContractAddress(txData.getContractAddress().toLowerCase());
+                info.setContractAddress(addressToLowerCase(txData.getContractAddress()));
                 info.setSymbol(txData.getSymbol());
                 info.setDecimals(txData.getDecimals());
                 Integer hChainId = txData.getChainId();

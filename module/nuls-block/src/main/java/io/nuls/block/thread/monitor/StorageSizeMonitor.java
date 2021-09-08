@@ -69,6 +69,7 @@ public class StorageSizeMonitor extends BaseMonitor {
         long stamp = lock.tryOptimisticRead();
         NulsLogger logger = context.getLogger();
         try {
+            logger.info("StorageSizeMonitor");
             for (; ; stamp = lock.writeLock()) {
                 if (stamp == 0L) {
                     continue;
@@ -77,7 +78,7 @@ public class StorageSizeMonitor extends BaseMonitor {
                 //1.获取某链ID的数据库缓存的所有区块数量
                 int actualSize = BlockChainManager.getForkChains(chainId).stream().mapToInt(e -> e.getHashList().size()).sum();
                 actualSize += BlockChainManager.getOrphanChains(chainId).stream().mapToInt(e -> e.getHashList().size()).sum();
-                logger.debug("cacheSize:" + cacheSize + ", actualSize:" + actualSize);
+                logger.info("cacheSize:" + cacheSize + ", actualSize:" + actualSize);
                 if (!lock.validate(stamp)) {
                     continue;
                 }
@@ -114,6 +115,7 @@ public class StorageSizeMonitor extends BaseMonitor {
             if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
             }
+            logger.info("StorageSizeMonitor: End");
         }
     }
 
@@ -129,6 +131,7 @@ public class StorageSizeMonitor extends BaseMonitor {
         long stamp = lock.tryOptimisticRead();
         NulsLogger logger = context.getLogger();
         try {
+            logger.info("forkChainsCleaner");
             for (; ; stamp = lock.writeLock()) {
                 if (stamp == 0L) {
                     continue;
@@ -168,11 +171,13 @@ public class StorageSizeMonitor extends BaseMonitor {
             if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
             }
+            logger.info("forkChainsCleaner:End");
         }
     }
 
     /**
      * 清理孤儿链
+     *
      * @param chainId
      * @param heightRange
      * @param context
@@ -183,6 +188,7 @@ public class StorageSizeMonitor extends BaseMonitor {
         long stamp = lock.tryOptimisticRead();
         NulsLogger logger = context.getLogger();
         try {
+            logger.info("orphanChainsCleaner");
             for (; ; stamp = lock.writeLock()) {
                 if (stamp == 0L) {
                     continue;
@@ -222,6 +228,7 @@ public class StorageSizeMonitor extends BaseMonitor {
             if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
             }
+            logger.info("orphanChainsCleaner: End");
         }
     }
 

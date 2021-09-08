@@ -69,7 +69,12 @@ public class ECIESUtil {
     }
 
     public static byte[] decrypt(byte[] userPriKey, String encryptedData) throws CryptoException {
+
         byte[] decode = HexUtil.decode(encryptedData);
+        return decrypt(userPriKey, decode);
+    }
+
+    public static byte[] decrypt(byte[] userPriKey, byte[] decode) throws CryptoException {
         int encryptSize = decode.length - 65 - 16 - 32;
         byte[] encryptedBytes = new byte[encryptSize];
         byte[] ephemPublicKeyBytes = new byte[65];

@@ -95,7 +95,7 @@ public class StableSwapHelper {
         NerveToken[] newCoins = Arrays.copyOf(coins, length + 1);
         newCoins[length] = newCoin;
         pairPo.setCoins(newCoins);
-        LedgerAssetDTO newAsset = ledgerAssetCache.getLedgerAsset(newCoin);
+        LedgerAssetDTO newAsset = ledgerAssetCache.getLedgerAsset(chainId, newCoin);
         int[] newDecimalsOfCoins = Arrays.copyOf(pairPo.getDecimalsOfCoins(), length + 1);
         newDecimalsOfCoins[length] = newAsset.getDecimalPlace();
         pairPo.setDecimalsOfCoins(newDecimalsOfCoins);

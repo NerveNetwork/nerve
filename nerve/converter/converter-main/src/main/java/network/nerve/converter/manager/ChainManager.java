@@ -63,6 +63,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
+
 
 /**
  * 链管理类,负责各条链的初始化,运行,启动,参数维护等
@@ -248,7 +250,7 @@ public class ChainManager {
             String address = addressInfo[1];
             for(HeterogeneousCfg cfg : list) {
                 if(cfg.getChainId() == chainId && cfg.getType() == 1) {
-                    cfg.setMultySignAddress(address.toLowerCase());
+                    cfg.setMultySignAddress(addressToLowerCase(address));
                     break;
                 }
             }

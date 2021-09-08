@@ -430,6 +430,12 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     public HeterogeneousTransactionInfo getWithdrawTransaction(String txHash) throws Exception {
         // 从DB中获取数据，若获取不到，再到HTG网络中获取
         HeterogeneousTransactionInfo txInfo = htgTxStorageService.findByTxHash(txHash);
+        // 历史遗留问题，直接从heco网络上查询交易在组装txInfo
+        String problemHash = "0xb9d192fd11d822d7bd8ce7cedb91c2ee1dc6b64b3db6efe21cbe090ce37f704e";
+        // v14协议升级后，处理遗留问题
+        if (htgContext.getConverterCoreApi().isProtocol14() && txHash.equals(problemHash)) {
+            txInfo = null;
+        }
         if (txInfo != null) {
             txInfo.setTxType(HeterogeneousChainTxType.WITHDRAW);
             Long txTime = txInfo.getTxTime();
@@ -813,18 +819,19 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
         BigDecimal gasPrice = HtgUtil.calGasPriceOfWithdraw(nvtUSD, nvtAmount, htgUSD, hAssetId);
+        String gasPriceStr = gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString();
         if (gasPrice.toBigInteger().compareTo(htgContext.getEthGasPrice()) >= 0) {
             logger().info("[{}]手续费足够，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei",
                     htgContext.getConfig().getSymbol(),
                     new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
-                    gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString());
+                    gasPriceStr);
             return true;
         }
         BigDecimal nvtAmountCalc = HtgUtil.calNVTOfWithdraw(nvtUSD, new BigDecimal(htgContext.getEthGasPrice()), htgUSD, hAssetId);
         logger().warn("[{}]手续费不足，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei, 总共需要的NVT: {}, 用户提供的NVT: {}, 需要追加的NVT: {}",
                 htgContext.getConfig().getSymbol(),
                 new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
-                gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString(),
+                gasPriceStr,
                 nvtAmountCalc.movePointLeft(8).toPlainString(),
                 nvtAmount.movePointLeft(8).toPlainString(),
                 nvtAmountCalc.subtract(nvtAmount).movePointLeft(8).toPlainString()

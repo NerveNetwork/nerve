@@ -131,7 +131,7 @@ public class BlockResource extends BaseCmd {
         NulsLogger logger = context.getLogger();
         long height = Long.parseLong(map.get("height").toString());
         if (height <= context.getLatestHeight()) {
-            logger.debug("=======Block to save complete=======");
+            logger.info("=======Block to save complete=======");
             return success();
         }
         String firstHash = String.valueOf(map.get("firstHash"));

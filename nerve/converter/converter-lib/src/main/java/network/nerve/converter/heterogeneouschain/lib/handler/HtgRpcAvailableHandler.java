@@ -23,13 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.lib.handler;
 
-import network.nerve.converter.config.ConverterConfig;
-import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgAnalysisTxHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgBlockAnalysisHelper;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgCommonHelper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
@@ -44,12 +38,6 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
 public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
 
     private HtgLocalBlockHelper htgLocalBlockHelper;
-    private HtgWalletApi htgWalletApi;
-    private ConverterConfig converterConfig;
-    private HtgBlockAnalysisHelper htgBlockAnalysisHelper;
-    private HtgCommonHelper htgCommonHelper;
-    private HtgAnalysisTxHelper htgAnalysisTxHelper;
-    private HtgCallBackManager htgCallBackManager;
     private HtgContext htgContext;
 
     private long lastRecordHeight = 0;

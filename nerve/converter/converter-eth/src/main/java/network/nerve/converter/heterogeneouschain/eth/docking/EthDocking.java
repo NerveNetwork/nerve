@@ -42,6 +42,7 @@ import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.*;
 import network.nerve.converter.heterogeneouschain.eth.storage.*;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgUpgradeContractSwitchHelper;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.datatypes.Address;
@@ -90,7 +91,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
     protected EthCallBackManager ethCallBackManager;
     protected EthAnalysisTxHelper ethAnalysisTxHelper;
     protected EthCommonHelper ethCommonHelper;
-    protected EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
+    protected HtgUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
     protected ReentrantLock reAnalysisLock = new ReentrantLock();
     private String keystorePath;
 
@@ -1174,7 +1175,7 @@ public class EthDocking implements IHeterogeneousChainDocking {
         this.ethAnalysisTxHelper = ethAnalysisTxHelper;
     }
 
-    public void setEthUpgradeContractSwitchHelper(EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper) {
+    public void setEthUpgradeContractSwitchHelper(HtgUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper) {
         this.ethUpgradeContractSwitchHelper = ethUpgradeContractSwitchHelper;
     }
 

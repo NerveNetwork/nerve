@@ -137,6 +137,15 @@ public class ConverterContext {
     public static long KUCOIN_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
+     * v1.14.0 协议升级高度
+     */
+    public static long PROTOCOL_1_14_0 = 0L;
+    /**
+     * v1.15.0 协议升级高度 支持波场生态链跨链
+     */
+    public static long TRX_CROSS_CHAIN_HEIGHT = 0L;
+
+    /**
      * 初始化虚拟银行公钥
      */
     public static List<String> INIT_VIRTUAL_BANK_PUBKEY_LIST = new ArrayList<>();

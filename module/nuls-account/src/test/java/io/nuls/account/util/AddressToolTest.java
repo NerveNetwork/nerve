@@ -22,6 +22,26 @@ import static junit.framework.TestCase.assertTrue;
 public class AddressToolTest {
 
     @Test
+    public void createMultiSigAccount() throws Exception {
+        int chainId = 5;
+        int minSigns = 2;
+        String prikey2 = "3e73f764492e95362cf325bd7168d145110a75e447510c927612586c06b23e91";
+        String prikey1 = "6d10f3aa23018de6bc7d1ee52badd696f0db56082c62826ba822978fdf3a59fa";
+        String prikey3 = "f7bb391ab82ba9ec7a552955b2fe50d79eea085d7571e5e2480d1777bc171f5e";
+        List<String> pubKeys= List.of(ECKey.fromPrivate(HexUtil.decode(prikey1)).getPublicKeyAsHex(),
+                ECKey.fromPrivate(HexUtil.decode(prikey2)).getPublicKeyAsHex(),
+                ECKey.fromPrivate(HexUtil.decode(prikey3)).getPublicKeyAsHex());
+
+        byte[] pubHash = AddressTool.createMultiSigAccountOriginBytes(chainId, minSigns, pubKeys);
+        System.out.println(HexUtil.encode(pubHash));
+        pubHash = SerializeUtils.sha256hash160(pubHash);
+        System.out.println(HexUtil.encode(pubHash));
+
+        Address address = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE, pubHash);
+        System.out.println(address.getBase58());
+    }
+
+    @Test
     public void createAgent() {
         List<String> prilist = new ArrayList<>();
         prilist.add("2d2d04ca5f74dd17736a30b7b65ea2dc9eff61136cceec8d3b4da8ddc65314d7");

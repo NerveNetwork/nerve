@@ -347,6 +347,7 @@ public class TxServiceImpl implements TxService {
         }
         validateCoinFromBase(chain, txRegister, coinData.getFrom());
         validateCoinToBase(chain, txRegister, coinData.getTo(), height);
+
         if (txRegister.getVerifyFee()) {
             validateFee(chain, tx, coinData, txRegister);
         }
@@ -434,6 +435,16 @@ public class TxServiceImpl implements TxService {
     }
 
     private void validateCoinFromBase(Chain chain, TxRegister txRegister, List<CoinFrom> listFrom) throws NulsException {
+        // add by pierre at 2021/8/30 限制最大交易金额
+        if (listFrom != null && !listFrom.isEmpty()) {
+            for (CoinFrom coinFrom : listFrom) {
+                BigInteger fromAmount = coinFrom.getAmount();
+                if (fromAmount.compareTo(TxConstant.MAX_SUPPORT_AMOUNT) > 0) {
+                    throw new NulsException(TxErrorCode.DATA_ERROR);
+                }
+            }
+        }
+        // end code by pierre
         int type = txRegister.getTxType();
         //coinBase交易/智能合约退还gas交易没有from
         if (type == TxType.COIN_BASE || type == TxType.CONTRACT_RETURN_GAS) {
@@ -466,7 +477,8 @@ public class TxServiceImpl implements TxService {
                 existMultiSignAddress = addrBytes;
             }
             int addrChainId = AddressTool.getChainIdByAddress(addrBytes);
-            if (coinFrom.getAmount().compareTo(BigInteger.ZERO) < 0) {
+            BigInteger fromAmount = coinFrom.getAmount();
+            if (fromAmount.compareTo(BigInteger.ZERO) < 0) {
                 throw new NulsException(TxErrorCode.DATA_ERROR);
             }
             //所有from是否是同一条链的地址
@@ -515,6 +527,16 @@ public class TxServiceImpl implements TxService {
     }
 
     private void validateCoinToBase(Chain chain, TxRegister txRegister, List<CoinTo> listTo, Long height) throws NulsException {
+        // add by pierre at 2021/8/30 限制最大交易金额
+        if (listTo != null && !listTo.isEmpty()) {
+            for (CoinTo coinTo : listTo) {
+                BigInteger toAmount = coinTo.getAmount();
+                if (toAmount.compareTo(TxConstant.MAX_SUPPORT_AMOUNT) > 0) {
+                    throw new NulsException(TxErrorCode.DATA_ERROR);
+                }
+            }
+        }
+        // end code by pierre
         String moduleCode = txRegister.getModuleCode();
         int type = txRegister.getTxType();
         if (type == TxType.COIN_BASE || ModuleE.SC.abbr.equals(moduleCode)) {
@@ -549,19 +571,20 @@ public class TxServiceImpl implements TxService {
             } else if (addressChainId != chainId) {
                 throw new NulsException(TxErrorCode.COINTO_NOT_SAME_CHAINID);
             }
+            BigInteger toAmount = coinTo.getAmount();
             height = null == height ? chain.getBestBlockHeight() : height;
             if (height >= TxContext.COINTO_PTL_HEIGHT_SECOND) {
                 // 禁止锁定金额为0的to
-                if (coinTo.getLockTime() < 0L && coinTo.getAmount().compareTo(BigInteger.ZERO) <= 0) {
+                if (coinTo.getLockTime() < 0L && toAmount.compareTo(BigInteger.ZERO) <= 0) {
                     chain.getLogger().error("交易基础验证失败, 禁止锁定金额为0的to");
                     throw new NulsException(TxErrorCode.DATA_ERROR);
                 }
             } else if (height >= TxContext.COINTO_PTL_HEIGHT_FIRST) {
-                if (coinTo.getAmount().compareTo(BigInteger.ZERO) <= 0) {
+                if (toAmount.compareTo(BigInteger.ZERO) <= 0) {
                     throw new NulsException(TxErrorCode.DATA_ERROR);
                 }
             } else {
-                if (coinTo.getAmount().compareTo(BigInteger.ZERO) < 0) {
+                if (toAmount.compareTo(BigInteger.ZERO) < 0) {
                     throw new NulsException(TxErrorCode.DATA_ERROR);
                 }
             }
@@ -615,7 +638,7 @@ public class TxServiceImpl implements TxService {
             }
             if (addressType == BaseConstant.FARM_ADDRESS_TYPE) {
                 if (type != TxType.FARM_STAKE
-                        && type != TxType.FARM_CREATE) {
+                        && type != TxType.FARM_CREATE && type != TxType.FARM_UPDATE) {
                     chain.getLogger().error("swap data error: The swap farm address does not accept transfers of this type{} of transaction.", type);
                     throw new NulsException(TxErrorCode.TX_DATA_FARM_ADDRESS_VALIDATION_ERROR);
                 }

@@ -105,7 +105,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
             //处理
             executeBusiness(chain, tx, txData, farm, batchInfo, result, blockHeight, blockTime);
 
-            batchInfo.getFarmTempManager().putFarm(farm);
+//            batchInfo.getFarmTempManager().putFarm(farm);
 
             // 装填执行结果
             result.setSuccess(true);
@@ -148,31 +148,42 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         bus.setUserAmountOld(user.getAmount());
         bus.setUserRewardDebtOld(user.getRewardDebt());
         //生成领取奖励的交易
-        BigInteger reward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
-        farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(reward));
-        if (reward.compareTo(farm.getSyrupTokenBalance()) > 0) {
-            reward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
+        BigInteger expectedReward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
+        BigInteger realReward = expectedReward;
+
+        if (realReward.compareTo(farm.getSyrupTokenBalance()) > 0) {
+            realReward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
         }
         LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
         LedgerBalance syrupBalance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
 
-        if (syrupBalance.getBalance().compareTo(reward) < 0) {
+        if (syrupBalance.getBalance().compareTo(realReward) < 0) {
             //能领多少算多少，应该不会出现这种情况
-            reward = BigInteger.ZERO.add(syrupBalance.getBalance());
+            realReward = BigInteger.ZERO.add(syrupBalance.getBalance());
         }
-        Transaction subTx = transferReward(chain.getChainId(), farm, address, reward, tx, blockTime, txData.getAmount(), tempBalanceManager, syrupBalance);
-        result.setSubTx(subTx);
-        try {
-            result.setSubTxStr(HexUtil.encode(subTx.serialize()));
-        } catch (IOException e) {
-            throw new NulsException(SwapErrorCode.IO_ERROR, e);
+        farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(realReward));
+        if (realReward.compareTo(BigInteger.ZERO) > 0) {
+            Transaction subTx = transferReward(chain.getChainId(), farm, address, realReward, tx, blockTime, txData.getAmount(), tempBalanceManager, syrupBalance, farm.getWithdrawLockTime());
+            result.setSubTx(subTx);
+            try {
+                result.setSubTxStr(HexUtil.encode(subTx.serialize()));
+            } catch (IOException e) {
+                throw new NulsException(SwapErrorCode.IO_ERROR, e);
+            }
         }
         farm.setStakeTokenBalance(farm.getStakeTokenBalance().subtract(txData.getAmount()));
         //更新池子信息
         batchInfo.getFarmTempManager().putFarm(farm);
         //更新用户状态数据
         user.setAmount(user.getAmount().subtract(txData.getAmount()));
+
+        BigInteger difference = expectedReward.subtract(realReward);
         user.setRewardDebt(user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12));
+        if (difference.compareTo(BigInteger.ZERO) > 0) {
+        } else {
+            BigInteger value = difference.divide(user.getAmount());
+            user.setRewardDebt(user.getRewardDebt().subtract(value));
+        }
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
         bus.setLastRewardBlockNew(farm.getLastRewardBlock());
@@ -184,28 +195,47 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         batchInfo.getFarmUserTempManager().putUserInfo(user);
     }
 
-    private Transaction transferReward(int chainId, FarmPoolPO farm, byte[] address, BigInteger reward, Transaction tx, long blockTime, BigInteger withdrawAmount, LedgerTempBalanceManager tempBalanceManager, LedgerBalance syrupBalance) {
+    private Transaction transferReward(int chainId, FarmPoolPO farm, byte[] address, BigInteger reward, Transaction tx, long blockTime, BigInteger withdrawAmount, LedgerTempBalanceManager tempBalanceManager, LedgerBalance syrupBalance, long lockTime) {
         FarmSystemTransaction sysWithdrawTx = new FarmSystemTransaction(tx.getHash().toHex(), blockTime);
         sysWithdrawTx.setRemark("Withdraw.");
         LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chainId), farm.getStakeToken().getChainId(), farm.getStakeToken().getAssetId()).getData();
-
+        long toLockTime = 0;
+        if (lockTime > 0) {
+            toLockTime = lockTime + blockTime;
+        }
         if (farm.getStakeToken().getChainId() == farm.getSyrupToken().getChainId() && farm.getStakeToken().getAssetId() == farm.getSyrupToken().getAssetId()) {
             BigInteger amount = reward.add(withdrawAmount);
-
             sysWithdrawTx.newFrom().setFrom(balance, amount).endFrom();
-            sysWithdrawTx.newTo()
-                    .setToAddress(address)
-                    .setToAssetsChainId(farm.getStakeToken().getChainId())
-                    .setToAssetsId(farm.getStakeToken().getAssetId())
-                    .setToAmount(amount).endTo();
+
+
+            if (lockTime == 0 || reward.compareTo(BigInteger.ZERO) == 0) {
+                sysWithdrawTx.newTo()
+                        .setToAddress(address)
+                        .setToAssetsChainId(farm.getStakeToken().getChainId())
+                        .setToAssetsId(farm.getStakeToken().getAssetId())
+                        .setToAmount(amount).endTo();
+            } else {
+                sysWithdrawTx.newTo()
+                        .setToAddress(address)
+                        .setToAssetsChainId(farm.getStakeToken().getChainId())
+                        .setToAssetsId(farm.getStakeToken().getAssetId())
+                        .setToAmount(withdrawAmount).setToLockTime(toLockTime).endTo();
+                sysWithdrawTx.newTo()
+                        .setToAddress(address)
+                        .setToAssetsChainId(farm.getSyrupToken().getChainId())
+                        .setToAssetsId(farm.getSyrupToken().getAssetId())
+                        .setToAmount(reward).endTo();
+            }
+
             return sysWithdrawTx.build();
         }
         sysWithdrawTx.newFrom().setFrom(balance, withdrawAmount).endFrom();
+
         sysWithdrawTx.newTo()
                 .setToAddress(address)
                 .setToAssetsChainId(farm.getStakeToken().getChainId())
                 .setToAssetsId(farm.getStakeToken().getAssetId())
-                .setToAmount(withdrawAmount).endTo();
+                .setToAmount(withdrawAmount).setToLockTime(toLockTime).endTo();
         if (reward.compareTo(BigInteger.ZERO) > 0) {
             sysWithdrawTx.newFrom().setFrom(syrupBalance, reward).endFrom();
             sysWithdrawTx.newTo()

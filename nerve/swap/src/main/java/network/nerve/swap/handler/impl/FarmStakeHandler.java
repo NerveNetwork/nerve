@@ -186,7 +186,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
             //处理
             executeBusiness(chain, tx, txData, farm, batchInfo, result, blockHeight, blockTime);
 
-            batchInfo.getFarmTempManager().putFarm(farm);
+//            batchInfo.getFarmTempManager().putFarm(farm);
 
             // 装填执行结果
             result.setSuccess(true);
@@ -234,28 +234,31 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         bus.setUserRewardDebtOld(user.getRewardDebt());
         //生成领取奖励的交易
 //        uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
-        BigInteger reward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
-
+        BigInteger expectedReward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
+        BigInteger realReward = expectedReward;
         do {
-            if (reward.compareTo(BigInteger.ZERO) <= 0) {
+            if (realReward.compareTo(BigInteger.ZERO) <= 0) {
                 break;
             }
             // 糖果余额不足的情况，剩多少领多少
-            if (farm.getSyrupTokenBalance().compareTo(reward) < 0) {
-                reward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
+            if (farm.getSyrupTokenBalance().compareTo(realReward) < 0) {
+                realReward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
             }
-            if (reward.compareTo(BigInteger.ZERO) <= 0) {
+            if (realReward.compareTo(BigInteger.ZERO) <= 0) {
                 break;
             }
 
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
             // farm余额不足的情况，能领多少算多少,理论上不会出现这种情况
-            if (balance.getBalance().compareTo(reward) < 0) {
-                reward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
+            if (balance.getBalance().compareTo(realReward) < 0) {
+                realReward = BigInteger.ZERO.add(balance.getBalance());
             }
-            farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(reward));
-            Transaction subTx = transferReward(chain, farm, address, reward, tx, blockTime, balance);
+            farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(realReward));
+            if (realReward.compareTo(BigInteger.ZERO) == 0) {
+                break;
+            }
+            Transaction subTx = transferReward(chain, farm, address, realReward, tx, blockTime, balance);
             tempBalanceManager.refreshTempBalance(chain.getChainId(), subTx, blockTime);
             result.setSubTx(subTx);
             try {
@@ -270,8 +273,14 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         batchInfo.getFarmTempManager().putFarm(farm);
         //更新用户状态数据
         user.setAmount(user.getAmount().add(txData.getAmount()));
-        user.setRewardDebt(user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12));
 
+        BigInteger difference = expectedReward.subtract(realReward);
+        user.setRewardDebt(user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12));
+        if (difference.compareTo(BigInteger.ZERO) > 0) {
+        } else {
+            BigInteger value = difference.divide(user.getAmount());
+            user.setRewardDebt(user.getRewardDebt().subtract(value));
+        }
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
         bus.setLastRewardBlockNew(farm.getLastRewardBlock());

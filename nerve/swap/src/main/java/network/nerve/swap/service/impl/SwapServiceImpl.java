@@ -226,7 +226,7 @@ public class SwapServiceImpl implements SwapService {
         // 简单检查交易业务
         NerveToken _tokenA = SwapUtils.parseTokenStr(tokenA);
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
-        if (ledgerAssetCache.getLedgerAsset(_tokenA) == null || ledgerAssetCache.getLedgerAsset(_tokenB) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null) {
             logger.warn("资产类型不正确");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
@@ -275,7 +275,7 @@ public class SwapServiceImpl implements SwapService {
         }
         NerveToken _tokenA = SwapUtils.parseTokenStr(tokenA);
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
-        if (ledgerAssetCache.getLedgerAsset(_tokenA) == null || ledgerAssetCache.getLedgerAsset(_tokenB) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null) {
             logger.warn("资产类型不正确");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
@@ -338,7 +338,7 @@ public class SwapServiceImpl implements SwapService {
         NerveToken _tokenA = SwapUtils.parseTokenStr(tokenA);
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
         NerveToken _tokenLP = SwapUtils.parseTokenStr(tokenLP);
-        if (ledgerAssetCache.getLedgerAsset(_tokenA) == null || ledgerAssetCache.getLedgerAsset(_tokenB) == null || ledgerAssetCache.getLedgerAsset(_tokenLP) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenLP) == null) {
             logger.warn("资产类型不正确");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
@@ -402,7 +402,7 @@ public class SwapServiceImpl implements SwapService {
             _tokenPath[i] = SwapUtils.parseTokenStr(tokenPath[i]);
         }
         for (NerveToken token : _tokenPath) {
-            if (ledgerAssetCache.getLedgerAsset(token) == null) {
+            if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
                 logger.warn("资产类型不正确");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
@@ -459,7 +459,7 @@ public class SwapServiceImpl implements SwapService {
             _coins[i] = SwapUtils.parseTokenStr(coins[i]);
         }
         for (NerveToken token : _coins) {
-            if (ledgerAssetCache.getLedgerAsset(token) == null) {
+            if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
                 logger.warn("资产类型不正确");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
@@ -517,7 +517,7 @@ public class SwapServiceImpl implements SwapService {
             _tokens[i] = SwapUtils.parseTokenStr(tokens[i]);
         }
         for (NerveToken token : _tokens) {
-            if (ledgerAssetCache.getLedgerAsset(token) == null) {
+            if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
                 logger.warn("资产类型不正确");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
@@ -571,7 +571,7 @@ public class SwapServiceImpl implements SwapService {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
         NerveToken _tokenLP = SwapUtils.parseTokenStr(tokenLP);
-        if (ledgerAssetCache.getLedgerAsset(_tokenLP) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, _tokenLP) == null) {
             logger.warn("资产类型不正确");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
@@ -634,7 +634,7 @@ public class SwapServiceImpl implements SwapService {
             _tokensIn[i] = SwapUtils.parseTokenStr(tokensIn[i]);
         }
         for (NerveToken tokenIn : _tokensIn) {
-            if (ledgerAssetCache.getLedgerAsset(tokenIn) == null) {
+            if (ledgerAssetCache.getLedgerAsset(chainId, tokenIn) == null) {
                 logger.warn("资产类型不正确");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }

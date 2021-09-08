@@ -35,5 +35,6 @@ public enum AssetName {
     OKT,
     ONE,
     MATIC,
-    KCS;
+    KCS,
+    TRX;
 }

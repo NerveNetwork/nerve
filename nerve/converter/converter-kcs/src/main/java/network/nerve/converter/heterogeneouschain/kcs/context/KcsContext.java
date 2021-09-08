@@ -89,27 +89,12 @@ public class KcsContext implements Serializable, HtgContext {
     public static HeterogeneousCfg config;
     public static IConverterCoreApi converterCoreApi;
 
-    public static Integer intervalWaitting;
-
     public static void setConverterCoreApi(IConverterCoreApi converterCoreApi) {
         KcsContext.converterCoreApi = converterCoreApi;
     }
 
     public static void setConfig(HeterogeneousCfg config) {
         KcsContext.config = config;
-    }
-
-    public static int getIntervalWaitting() {
-        if (intervalWaitting != null) {
-            return intervalWaitting;
-        }
-        String interval = config.getIntervalWaittingSendTransaction();
-        if(StringUtils.isNotBlank(interval)) {
-            intervalWaitting = Integer.parseInt(interval);
-        } else {
-            intervalWaitting = HtgConstant.DEFAULT_INTERVAL_WAITTING;
-        }
-        return intervalWaitting;
     }
 
     public static void setLogger(NulsLogger logger) {

@@ -25,10 +25,12 @@ import network.nerve.converter.heterogeneouschain.kcs.context.KcsContext;
 import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
 import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 import network.nerve.converter.heterogeneouschain.one.context.OneContext;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.ConfigBean;
 import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.model.bo.NonceBalance;
+import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.utils.ConverterUtil;
@@ -125,6 +127,10 @@ public class TxSendTest {
     String packageAddressPrivateKey8 = "CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2";
 
 
+    /** TRX */
+    static String DX_TRX_6 = "TEzJjjC4NrLrYFthGFHzQon5zrErNw1JN9";
+    static String FCI_TRX_18 = "TFqCQLGxG2o188eESoYkr1Ji9x85SEXBDP";
+
     /** Kcs */
     static String USDT_KCS = "0xbBF80744c94C85d65B08290860df6ff04089F050";
     static String NVT_KCS_MINTER = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
@@ -201,6 +207,7 @@ public class TxSendTest {
     static int oneChainId = 105;
     static int maticChainId = 106;
     static int kcsChainId = 107;
+    static int trxChainId = 108;
     static int heterogeneousAssetId = 1;
 
     static String version = "1.0";
@@ -334,6 +341,9 @@ public class TxSendTest {
 
         this.balanceInfoPrint("　主资产NVT", new NerveAssetInfo(chainId, assetId), address);
 
+        this.balanceInfoPrint("Tron-资产TRX", this.findAssetIdByHeterogeneousId(trxChainId, heterogeneousAssetId), address);
+        this.balanceInfoPrint("Tron-资产DX", this.findAssetIdByAddress(trxChainId, DX_TRX_6), address);
+
         this.balanceInfoPrint("Harmony-资产ONE", this.findAssetIdByHeterogeneousId(oneChainId, heterogeneousAssetId), address);
         this.balanceInfoPrint("Harmony-资产USDT", this.findAssetIdByAddress(oneChainId, USDT_ONE), address);
         this.balanceInfoPrint("Polygon-资产MATIC", this.findAssetIdByHeterogeneousId(maticChainId, heterogeneousAssetId), address);
@@ -418,6 +428,18 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalTRX() throws Exception {
+        int htgChainId = trxChainId;
+        String from = address31;
+        String to = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        // 0.5个TRX
+        BigInteger value = new BigDecimal("0.5").movePointRight(6).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(31_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalKCS() throws Exception {
         int htgChainId = kcsChainId;
         String from = address31;
@@ -476,6 +498,20 @@ public class TxSendTest {
         BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(ethChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
+    public void withdrawalDX() throws Exception {
+        int htgChainId = trxChainId;
+        String contract = DX_TRX_6;
+        String from = address31;
+        String to = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        // 200个DX
+        String value = "200";
+        BigInteger valueBig = new BigDecimal(value).movePointRight(6).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(31_0000_0000L).toString());
+        NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
+        this.withdrawalByParams(from, to, valueBig, fee, htgChainId, assetInfo);
     }
 
     @Test
@@ -619,11 +655,11 @@ public class TxSendTest {
 
         // 追加nvt手续费
         // 提现金额ETH
-        String amount = "3";
+        String amount = "30";
         BigDecimal am = new BigDecimal(amount).movePointRight(8);
         amount = am.toPlainString();
 
-        params.put("txHash", "65c572dfe6994799d0d3f53bf218ac30b2d1a81184a65f9efb62cc6138129609");
+        params.put("txHash", "9108ddd5eb98366c6bb1d270e40e0ddb74d79a07cd1aa92f2da8f1b5197f40e9");
         params.put("amount", amount);
         params.put("remark", "追加手续费");
         params.put("address", address31);
@@ -647,13 +683,14 @@ public class TxSendTest {
         //regERC20(bnbChainId, "DXA", DXA_BNB_8, 8);
         //regERC20(bnbChainId, "SAFEMOON", SAFEMOON_BNB_9, 9);
         //regERC20(bnbChainId, "GOAT", GOAT_BNB_9, 9);
-        regERC20(bnbChainId, "BUSD", BUSD_BNB_18, 18);
+        //regERC20(bnbChainId, "BUSD", BUSD_BNB_18, 18);
         //regERC20(htChainId, "HUSD", HUSD_HT_18, 18);
         //regERC20(oktChainId, "OKUSD", OKUSD_OKT_8, 8);
 
         //regERC20(oneChainId, "USDT", USDT_ONE, 6);
         //regERC20(maticChainId, "USDT", USDT_MATIC, 6);
         //regERC20(kcsChainId, "USDT", USDT_KCS, 6);
+        regERC20(trxChainId, "DX", DX_TRX_6, 6);
 
         //regERC20(ethChainId, "ENVT", ENVT, 18);
         //regERC20(ethChainId, "DAI", DAI, 18);
@@ -680,6 +717,8 @@ public class TxSendTest {
         regHeterogeneousMainAsset(MaticContext.HTG_CHAIN_ID);
         // KCS
         regHeterogeneousMainAsset(KcsContext.HTG_CHAIN_ID);
+        // TRX
+        regHeterogeneousMainAsset(TrxContext.HTG_CHAIN_ID);
     }
 
     @Test
@@ -894,6 +933,21 @@ public class TxSendTest {
         params.put("assetId", 9);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.GET_HETEROGENEOUS_REGISTER_NETWORK, params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+    }
+
+    @Test
+    public void getProposalInfo() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put("chainId", 5);
+        params.put("proposalTxHash", "3355e95d8f16f45347f97917134089d52a1d390ab9fe29d52c92ed47b822ec58");
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, ConverterCmdConstant.GET_PROPOSAL_INFO, params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        Map responseData = (Map) cmdResp.getResponseData();
+        String result = (String) responseData.get(ConverterCmdConstant.GET_PROPOSAL_INFO);
+        ProposalPO po = new ProposalPO();
+        po.parse(HexUtil.decode(result), 0);
+        System.out.println(JSONUtils.obj2PrettyJson(po));
     }
 
     @Test
@@ -1359,18 +1413,42 @@ public class TxSendTest {
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
 
+    /** 回退资金 */
     @Test
-    public void proposal() throws Exception {
+    public void proposalREFUND() throws Exception {
         //账户已存在则覆盖 If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
         params.put("type", ProposalTypeEnum.REFUND.value());
-        params.put("content", "这是提案的内容……");
-        params.put("heterogeneousChainId", bnbChainId);
-        params.put("heterogeneousTxHash", "0x4b65e4f94365081013c159ce80712d931e28d481be4e0b2859933e5969288e42");
-        params.put("businessAddress", "");
+        params.put("content", "这是提案的内容……回退资金");
+        params.put("heterogeneousChainId", trxChainId);
+        params.put("heterogeneousTxHash", "0x3db1462ef1988747db5d3bfddf6a8615e026af4b6749eae15eb7bdd9a9ea5026");
+        params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
+        params.put("remark", "提案");
+        params.put("address", agentAddress);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+    /** 撤销银行资格 */
+    @Test
+    public void proposalEXPELLED() throws Exception {
+        //账户已存在则覆盖 If the account exists, it covers.
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", ProposalTypeEnum.EXPELLED.value());
+        params.put("content", "这是提案的内容……撤销银行资格");
+        params.put("businessAddress", address26);
         params.put("hash", "");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
@@ -1383,7 +1461,6 @@ public class TxSendTest {
         String txHex = (String) result.get("hex");
         Log.debug("hash:{}", hash);
         Log.debug("txHex:{}", txHex);
-
     }
 
     @Test
@@ -1392,7 +1469,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "dd1f44aece842147a001afb62e2fec6f73b443c539c84dabe9bf9f5e34fc494d");
+        params.put("proposalTxHash", "492a2a882885a2ff8d3a8d0d0bf83b3d217c52202d8aa4f6eaeb21f43450bbfb");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", agentAddress);
@@ -1407,6 +1484,31 @@ public class TxSendTest {
 
     }
 
+    @Test
+    public void proposal() throws Exception {
+        //账户已存在则覆盖 If the account exists, it covers.
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", ProposalTypeEnum.REFUND.value());
+        params.put("content", "这是提案的内容……");
+        params.put("heterogeneousChainId", trxChainId);
+        params.put("heterogeneousTxHash", "0x3db1462ef1988747db5d3bfddf6a8615e026af4b6749eae15eb7bdd9a9ea5026");
+        params.put("businessAddress", "");
+        params.put("hash", "");
+        params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
+        params.put("remark", "提案");
+        params.put("address", agentAddress);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
     /**
      * 删除账户
      */

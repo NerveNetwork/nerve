@@ -73,6 +73,7 @@ import java.util.*;
 import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
 import static network.nerve.converter.enums.ProposalTypeEnum.REFUND;
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 /**
  * @author: Loki
@@ -306,7 +307,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException {
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTxDTO.getHeterogeneousChainId(), withdrawalTxDTO.getAssetChainId(), withdrawalTxDTO.getAssetId());
 
-        String heterogeneousAddress = withdrawalTxDTO.getHeterogeneousAddress().toLowerCase();
+        String heterogeneousAddress = addressToLowerCase(withdrawalTxDTO.getHeterogeneousAddress());
         if (null == heterogeneousAssetInfo ||
                 null == heterogeneousChainManager.getHeterogeneousChainByChainId(heterogeneousAssetInfo.getChainId())) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
@@ -577,7 +578,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         txData.setChainId(heterogeneousChainId);
         txData.setDecimals((byte) decimals);
         txData.setSymbol(symbol);
-        txData.setContractAddress(contractAddress.toLowerCase());
+        txData.setContractAddress(addressToLowerCase(contractAddress));
         byte[] txDataBytes;
         try {
             txDataBytes = txData.serialize();

@@ -108,7 +108,11 @@ public class TxSubsequentProcessStorageServiceImpl implements TxSubsequentProces
             return list;
         }
         for (String txHash : listPO.getListTxHash()) {
-            list.add(this.get(chain, txHash));
+            TxSubsequentProcessPO po = this.get(chain, txHash);
+            if (po == null) {
+                continue;
+            }
+            list.add(po);
         }
         return list;
     }

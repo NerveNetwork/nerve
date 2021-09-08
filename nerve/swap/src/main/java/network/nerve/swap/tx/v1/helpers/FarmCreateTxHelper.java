@@ -18,7 +18,6 @@ import network.nerve.swap.model.ValidaterResult;
 import network.nerve.swap.model.po.FarmPoolPO;
 import network.nerve.swap.model.txdata.FarmCreateData;
 import network.nerve.swap.storage.FarmStorageService;
-import network.nerve.swap.tx.v1.helpers.converter.LedgerService;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
@@ -81,6 +80,8 @@ public class FarmCreateTxHelper {
         po.setSyrupToken(txData.getSyrupToken());
         po.setTotalSyrupAmount(txData.getTotalSyrupAmount());
         po.setSyrupTokenBalance(txData.getTotalSyrupAmount());
+        po.setModifiable(txData.isModifiable());
+        po.setWithdrawLockTime(txData.getWithdrawLockTime());
         return po;
     }
 
@@ -112,11 +113,11 @@ public class FarmCreateTxHelper {
             return ValidaterResult.getFailed(SwapErrorCode.FARM_TX_DATA_ERROR);
         }
         // 验证2种资产存在
-        if (ledgerAssetCache.getLedgerAsset(txData.getStakeToken()) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, txData.getStakeToken()) == null) {
             logger.warn("Incorrect type of stake assets");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_STAKE_ASSET_TYPE_ERROR);
         }
-        if (ledgerAssetCache.getLedgerAsset(txData.getSyrupToken()) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, txData.getSyrupToken()) == null) {
             logger.warn("Incorrect type of syrup assets");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SYRUP_ASSET_TYPE_ERROR);
         }

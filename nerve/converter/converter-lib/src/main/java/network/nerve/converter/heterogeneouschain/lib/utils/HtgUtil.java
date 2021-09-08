@@ -46,6 +46,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -354,7 +355,8 @@ public class HtgUtil {
      * 在网络平均价格和用户提供的价格之间，取一个合适的值
      */
     public static BigDecimal calNiceGasPriceOfWithdraw(BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
-        BigDecimal maximumPrice, medianPrice, smallPrice;
+        return gasPriceSupport;
+        /*BigDecimal maximumPrice, medianPrice, smallPrice;
         if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
             return maximumPrice;
         } else if ((medianPrice = gasPriceNetwork.multiply(MEDIAN)).compareTo(gasPriceSupport) <= 0) {
@@ -363,7 +365,7 @@ public class HtgUtil {
             return smallPrice;
         } else {
             return gasPriceSupport;
-        }
+        }*/
     }
 
     public static BigDecimal calGasPriceOfWithdraw(BigDecimal nvtUSD, BigDecimal nvtAmount, BigDecimal ethUSD, int hAssetId) {
@@ -465,4 +467,31 @@ public class HtgUtil {
             return amounts;
         }
     }
+
+    public static org.web3j.protocol.core.methods.response.Transaction genEthTransaction(String hash, String txHex) throws SignatureException {
+        if (StringUtils.isBlank(txHex)) {
+            return null;
+        }
+        if (StringUtils.isBlank(hash)) {
+            hash = Numeric.toHexString(Hash.sha3(Numeric.hexStringToByteArray(txHex)));
+        }
+        org.web3j.protocol.core.methods.response.Transaction etx = new Transaction();
+        SignedRawTransaction tx = (SignedRawTransaction) TransactionDecoder.decode(txHex);
+        Sign.SignatureData signatureData = tx.getSignatureData();
+        BigInteger bv = Numeric.toBigInt(signatureData.getV());
+        etx.setHash(hash);
+        etx.setFrom(tx.getFrom());
+        etx.setTo(tx.getTo());
+        etx.setNonce(tx.getNonce().toString());
+        etx.setValue(tx.getValue().toString());
+        etx.setGas(tx.getGasLimit().toString());
+        etx.setGasPrice(tx.getGasPrice().toString());
+        etx.setInput(tx.getData());
+        etx.setR(Numeric.toHexStringNoPrefix(signatureData.getR()));
+        etx.setS(Numeric.toHexStringNoPrefix(signatureData.getS()));
+        etx.setV(bv.longValue());
+        etx.setBlockNumber("-1");
+        return etx;
+    }
+    
 }

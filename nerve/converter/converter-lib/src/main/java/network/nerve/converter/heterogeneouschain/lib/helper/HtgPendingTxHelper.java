@@ -74,7 +74,7 @@ public class HtgPendingTxHelper implements BeanInitial {
                 logger().info("Nerve充值待确认交易已存在，忽略[{}]", htTxHash);
                 return;
             }
-            logger().warn("在NERVE网络发出充值待确认交易异常, error: {}", e.getMessage());
+            logger().error("在NERVE网络发出充值待确认交易异常", e);
         }
     }
 

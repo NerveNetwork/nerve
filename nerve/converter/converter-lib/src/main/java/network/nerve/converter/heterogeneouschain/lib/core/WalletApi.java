@@ -41,10 +41,6 @@ public interface WalletApi {
 
     long getBlockHeight() throws Exception;
 
-    Block getBlock(String hash) throws Exception;
-
-    Block getBlock(long height) throws Exception;
-
     BigDecimal getBalance(String address) throws Exception;
 
     boolean canTransferBatch();

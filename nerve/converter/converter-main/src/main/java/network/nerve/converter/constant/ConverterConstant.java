@@ -96,6 +96,7 @@ public interface ConverterConstant {
     String ORACLE_KEY_ONE_PRICE = "ONE_PRICE";
     String ORACLE_KEY_MATIC_PRICE = "MATIC_PRICE";
     String ORACLE_KEY_KCS_PRICE = "KCS_PRICE";
+    String ORACLE_KEY_TRX_PRICE = "TRX_PRICE";
 
     int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
     byte[] ZERO_BYTES = new byte[]{0};

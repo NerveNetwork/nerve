@@ -107,7 +107,7 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
                 if (!coinSet.add(token)) {
                     throw new NulsException(IDENTICAL_TOKEN);
                 }
-                LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(token);
+                LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(chainId, token);
                 if (asset == null) {
                     logger.error("Ledger asset not exist! hash-{}", txHash.toHex());
                     throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);

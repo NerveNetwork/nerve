@@ -40,6 +40,11 @@ public class FarmProviderImpl extends BaseRpcService implements FarmProvider {
     }
 
     @Override
+    public Result<String> getFarmList() {
+        return call("sw_getfarmlist", null, null);
+    }
+
+    @Override
     protected <T, R> Result<T> call(String method, Object req, Function<R, Result> callback) {
         if (callback == null) {
             callback = res -> {

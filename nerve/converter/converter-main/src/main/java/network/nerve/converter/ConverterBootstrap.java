@@ -141,6 +141,18 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.warn("Failed to get height_1_13_0", e);
         }
+        try {
+            long heightVersion1_14_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_14_0"));
+            converterConfig.setProtocol14Height(heightVersion1_14_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_14_0", e);
+        }
+        try {
+            long heightVersion1_15_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_15_0"));
+            converterConfig.setTrxCrossChainHeight(heightVersion1_15_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_15_0", e);
+        }
     }
 
     @Override
@@ -324,6 +336,10 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.ONE_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
         ConverterContext.POLYGON_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
         ConverterContext.KUCOIN_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
+        // v1.14.0 协议升级高度
+        ConverterContext.PROTOCOL_1_14_0 = converterConfig.getProtocol14Height();
+        // v1.15.0 协议升级高度 支持波场生态链跨链
+        ConverterContext.TRX_CROSS_CHAIN_HEIGHT = converterConfig.getTrxCrossChainHeight();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

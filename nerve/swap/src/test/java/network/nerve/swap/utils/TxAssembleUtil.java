@@ -36,9 +36,9 @@ public class TxAssembleUtil {
         data.setSyrupToken(token2);
         data.setTotalSyrupAmount(BigInteger.valueOf(10000000000000000L));
         data.setSyrupPerBlock(BigInteger.valueOf(100000000L));
+        data.setWithdrawLockTime(100L);
 
         AssembleTransaction aTx = new AssembleTransaction(data.serialize());
-
 
 
         aTx.setTime(System.currentTimeMillis() / 1000L);
@@ -76,7 +76,6 @@ public class TxAssembleUtil {
         AssembleTransaction aTx = new AssembleTransaction(data.serialize());
 
 
-
         aTx.setTime(System.currentTimeMillis() / 1000L);
         aTx.setTxType(TxType.FARM_STAKE);
 
@@ -109,7 +108,6 @@ public class TxAssembleUtil {
         data.setAmount(amount);
 
         AssembleTransaction aTx = new AssembleTransaction(data.serialize());
-
 
 
         aTx.setTime(System.currentTimeMillis() / 1000L);
@@ -394,4 +392,19 @@ public class TxAssembleUtil {
         return tx;
     }
 
+    public static Transaction asmbFarmUpdate(FarmUpdateData txData, byte[] privKeyBytes) throws IOException {
+        AssembleTransaction aTx = new AssembleTransaction(txData.serialize());
+
+        aTx.setTime(System.currentTimeMillis() / 1000L);
+        aTx.setTxType(TxType.FARM_UPDATE);
+
+        Transaction tx = aTx.build();
+        P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByEckey(tx.getHash(), ECKey.fromPrivate(privKeyBytes));
+        TransactionSignature transactionSignature = new TransactionSignature();
+        List<P2PHKSignature> list = new ArrayList<>();
+        list.add(p2PHKSignature);
+        transactionSignature.setP2PHKSignatures(list);
+        tx.setTransactionSignature(transactionSignature.serialize());
+        return tx;
+    }
 }

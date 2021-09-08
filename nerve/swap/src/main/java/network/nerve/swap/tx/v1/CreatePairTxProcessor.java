@@ -9,11 +9,13 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.help.LedgerAssetRegisterHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
+import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.ValidaterResult;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.dto.LedgerAssetDTO;
@@ -42,6 +44,8 @@ public class CreatePairTxProcessor implements TransactionProcessor {
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
     @Autowired
     private SwapExecuteResultStorageService swapExecuteResultStorageService;
+    @Autowired
+    private LedgerAssetCache ledgerAssetCache;
 
     @Override
     public int getType() {
@@ -75,14 +79,24 @@ public class CreatePairTxProcessor implements TransactionProcessor {
                 }
                 CreatePairData txData = new CreatePairData();
                 txData.parse(tx.getTxData(), 0);
-                if (txData.getToken0().equals(txData.getToken1())) {
+                NerveToken token0 = txData.getToken0();
+                NerveToken token1 = txData.getToken1();
+                if (token0.equals(token1)) {
                     logger.error("Identical addresses! hash-{}", tx.getHash().toHex());
                     failsList.add(tx);
                     errorCode = SwapErrorCode.IDENTICAL_ADDRESSES.getCode();
                     continue;
                 }
+                if (ledgerAssetCache.getLedgerAsset(chainId, token0) == null) {
+                    logger.error("Ledger asset not exist! hash-{}", tx.getHash().toHex());
+                    throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
+                }
+                if (ledgerAssetCache.getLedgerAsset(chainId, token1) == null) {
+                    logger.error("Ledger asset not exist! hash-{}", tx.getHash().toHex());
+                    throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
+                }
 
-                String address = SwapUtils.getStringPairAddress(chainId, txData.getToken0(), txData.getToken1());
+                String address = SwapUtils.getStringPairAddress(chainId, token0, token1);
                 ValidaterResult result = validater.isPairNotExist(address);
                 if (result.isFailed()) {
                     Log.error(result.getErrorCode().getMsg());

@@ -96,17 +96,17 @@ public class StableRemoveLiquidityHandlerTest {
         BeanUtilTest.setBean(handler, "stableSwapPairCache", stableAddLiquidityHandlerTest.stableSwapPairCache);
         BeanUtilTest.setBean(handler, "ledgerAssetCache", new LedgerAssetCache() {
             @Override
-            public LedgerAssetDTO getLedgerAsset(int chainId, int assetId) {
-                String key = chainId + "-" + assetId;
-                return new LedgerAssetDTO(chainId, assetId, "symbol_" + key, "name_" + key, 0);
+            public LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId) {
+                String key = assetChainId + "-" + assetId;
+                return new LedgerAssetDTO(assetChainId, assetId, "symbol_" + key, "name_" + key, 0);
             }
 
             @Override
-            public LedgerAssetDTO getLedgerAsset(NerveToken token) {
+            public LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token) {
                 if (token == null) {
                     return null;
                 }
-                return getLedgerAsset(token.getChainId(), token.getAssetId());
+                return getLedgerAsset(chainId, token.getChainId(), token.getAssetId());
             }
         });
     }

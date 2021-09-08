@@ -170,6 +170,12 @@ public class CollectorTask implements Runnable {
                         }
                     }
 
+                    if (ANCHOR_TOKEN_TRX.equals(anchorToken)) {
+                        if (blockHeight < trxKeyHeight) {
+                            continue;
+                        }
+                    }
+
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
                 }

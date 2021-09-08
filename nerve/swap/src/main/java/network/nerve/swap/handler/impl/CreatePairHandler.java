@@ -29,10 +29,12 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.SwapTempPairManager;
+import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.BatchInfo;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.txdata.CreatePairData;
@@ -51,6 +53,8 @@ public class CreatePairHandler extends SwapHandlerConstraints {
     private ISwapInvoker iSwapInvoker;
     @Autowired
     private ChainManager chainManager;
+    @Autowired
+    private LedgerAssetCache ledgerAssetCache;
 
     @Override
     public Integer txType() {
@@ -70,10 +74,18 @@ public class CreatePairHandler extends SwapHandlerConstraints {
             // 提取业务参数
             CreatePairData txData = new CreatePairData();
             txData.parse(tx.getTxData(), 0);
-            if (txData.getToken0().equals(txData.getToken1())) {
+            NerveToken token0 = txData.getToken0();
+            NerveToken token1 = txData.getToken1();
+            if (token0.equals(token1)) {
                 throw new NulsException(IDENTICAL_TOKEN);
             }
-            String address = SwapUtils.getStringPairAddress(chainId, txData.getToken0(), txData.getToken1());
+            if (ledgerAssetCache.getLedgerAsset(chainId, token0) == null) {
+                throw new NulsException(LEDGER_ASSET_NOT_EXIST);
+            }
+            if (ledgerAssetCache.getLedgerAsset(chainId, token1) == null) {
+                throw new NulsException(LEDGER_ASSET_NOT_EXIST);
+            }
+            String address = SwapUtils.getStringPairAddress(chainId, token0, token1);
             SwapTempPairManager swapTempPairManager = batchInfo.getSwapTempPairManager();
             if (swapTempPairManager.isExist(address)) {
                 throw new NulsException(PAIR_ALREADY_EXISTS);

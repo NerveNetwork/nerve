@@ -9,6 +9,7 @@ import network.nerve.converter.heterogeneouschain.ht.base.Base;
 import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
 import network.nerve.converter.heterogeneouschain.ht.model.HtUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
@@ -36,6 +37,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EVENT_HASH_ERC20_TRANSFER;
 
 
 public class HtWalletApiTest extends Base {
@@ -861,7 +864,7 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        //setMain();
+        setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -909,10 +912,105 @@ public class HtWalletApiTest extends Base {
         }
     }
 
+    @Test
+    public void parseToken20TransferTest() throws Exception {
+        setMain();
+        //2500000000000000000000
+        Transaction tx = htgWalletApi.getTransactionByHash("0xb5b35967c80ba7048e5b44984c8c9c593c1662b0325a83926cbb8f80dd348e0d");
+        List<Token20TransferDTO> dtoList = parseToken20Transfer(tx, htgWalletApi);
+        System.out.println(dtoList.size());
+    }
+
+    private List<Token20TransferDTO> parseToken20Transfer(Transaction ethTx, HtgWalletApi htgWalletApi) throws Exception {
+        try {
+            List<Token20TransferDTO> resultList = new ArrayList<>();
+            String hash = ethTx.getHash();
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(hash);
+            if (txReceipt == null || !txReceipt.isStatusOK()) {
+                return resultList;
+            }
+            List<org.web3j.protocol.core.methods.response.Log> logs = txReceipt.getLogs();
+            if (logs != null && logs.size() > 0) {
+                for(org.web3j.protocol.core.methods.response.Log log : logs) {
+                    String eventHash = log.getTopics().get(0);
+                    if (EVENT_HASH_ERC20_TRANSFER.equals(eventHash)) {
+                        Token20TransferDTO dto = parseToken20TransferEvent(log);
+                        if (dto == null) {
+                            continue;
+                        }
+                        resultList.add(dto);
+                    }
+                }
+            }
+            return resultList;
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+    }
+
+    public static Token20TransferDTO parseToken20TransferEvent(org.web3j.protocol.core.methods.response.Log log) {
+        try {
+            String contractAddress = log.getAddress();
+            List<String> topics = log.getTopics();
+            String from = new org.web3j.abi.datatypes.Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(1)))).getValue();
+            String to = new org.web3j.abi.datatypes.Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(2)))).getValue();
+            BigInteger value = new BigInteger(Numeric.hexStringToByteArray(log.getData()));
+            return new Token20TransferDTO(from, to, value, contractAddress);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     static class MockHtgERC20Helper extends HtgERC20Helper {
         @Override
         public boolean isERC20(String address, HeterogeneousTransactionBaseInfo po) {
             return true;
+        }
+    }
+
+    static class Token20TransferDTO {
+        private String from;
+        private String to;
+        private BigInteger value;
+        private String contractAddress;
+
+        public Token20TransferDTO(String from, String to, BigInteger value, String contractAddress) {
+            this.from = from;
+            this.to = to;
+            this.value = value;
+            this.contractAddress = contractAddress;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public void setFrom(String from) {
+            this.from = from;
+        }
+
+        public String getTo() {
+            return to;
+        }
+
+        public void setTo(String to) {
+            this.to = to;
+        }
+
+        public BigInteger getValue() {
+            return value;
+        }
+
+        public void setValue(BigInteger value) {
+            this.value = value;
+        }
+
+        public String getContractAddress() {
+            return contractAddress;
+        }
+
+        public void setContractAddress(String contractAddress) {
+            this.contractAddress = contractAddress;
         }
     }
 }

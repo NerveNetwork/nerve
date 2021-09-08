@@ -25,6 +25,12 @@ public class FarmBus extends BaseBus {
     private BigInteger userAmountOld;
     private BigInteger userRewardDebtNew;
     private BigInteger userRewardDebtOld;
+    private BigInteger syrupPerBlockNew;
+    private BigInteger syrupPerBlockOld;
+    private BigInteger totalSyrupAmountNew;
+    private BigInteger totalSyrupAmountOld;
+    private Long withdrawLockTimeNew;
+    private Long withdrawLockTimeOld;
 
     public long getLastRewardBlockNew() {
         return lastRewardBlockNew;
@@ -136,5 +142,53 @@ public class FarmBus extends BaseBus {
 
     public void setUserAddress(byte[] userAddress) {
         this.userAddress = userAddress;
+    }
+
+    public BigInteger getSyrupPerBlockNew() {
+        return syrupPerBlockNew;
+    }
+
+    public void setSyrupPerBlockNew(BigInteger syrupPerBlockNew) {
+        this.syrupPerBlockNew = syrupPerBlockNew;
+    }
+
+    public BigInteger getSyrupPerBlockOld() {
+        return syrupPerBlockOld;
+    }
+
+    public void setSyrupPerBlockOld(BigInteger syrupPerBlockOld) {
+        this.syrupPerBlockOld = syrupPerBlockOld;
+    }
+
+    public BigInteger getTotalSyrupAmountNew() {
+        return totalSyrupAmountNew;
+    }
+
+    public void setTotalSyrupAmountNew(BigInteger totalSyrupAmountNew) {
+        this.totalSyrupAmountNew = totalSyrupAmountNew;
+    }
+
+    public BigInteger getTotalSyrupAmountOld() {
+        return totalSyrupAmountOld;
+    }
+
+    public void setTotalSyrupAmountOld(BigInteger totalSyrupAmountOld) {
+        this.totalSyrupAmountOld = totalSyrupAmountOld;
+    }
+
+    public Long getWithdrawLockTimeNew() {
+        return withdrawLockTimeNew;
+    }
+
+    public void setWithdrawLockTimeNew(Long withdrawLockTimeNew) {
+        this.withdrawLockTimeNew = withdrawLockTimeNew;
+    }
+
+    public Long getWithdrawLockTimeOld() {
+        return withdrawLockTimeOld;
+    }
+
+    public void setWithdrawLockTimeOld(Long withdrawLockTimeOld) {
+        this.withdrawLockTimeOld = withdrawLockTimeOld;
     }
 }

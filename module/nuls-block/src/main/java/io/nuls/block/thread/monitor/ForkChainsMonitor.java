@@ -57,6 +57,7 @@ public class ForkChainsMonitor extends BaseMonitor {
         long stamp = lock.tryOptimisticRead();
         try {
             for (; ; stamp = lock.writeLock()) {
+                commonLog.info("Fork-Chains-Monitor");
                 if (stamp == 0L) {
                     continue;
                 }

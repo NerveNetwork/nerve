@@ -43,6 +43,7 @@ import org.bouncycastle.math.ec.FixedPointCombMultiplier;
 import org.bouncycastle.math.ec.FixedPointUtil;
 import org.bouncycastle.math.ec.custom.sec.SecP256K1Curve;
 import org.bouncycastle.util.Properties;
+import org.bouncycastle.util.encoders.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -649,6 +650,14 @@ public class ECKey {
         return new ECDSASignature(components[0], components[1]).toCanonicalised().encodeToDER();
     }
 
+    protected ECDSASignature sign(byte[] input, BigInteger privateKeyForSigning) {
+        HexUtil.checkNotNull(privateKeyForSigning);
+        ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
+        ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(privateKeyForSigning, CURVE);
+        signer.init(true, privKey);
+        BigInteger[] components = signer.generateSignature(input);
+        return new ECDSASignature(components[0], components[1]);
+    }
 
     /**
      * <p>Verifies the given ECDSA signature against the message bytes using the public key bytes.</p>
@@ -687,7 +696,7 @@ public class ECKey {
     /**
      * 用私钥对数据进行签名
      *
-     * @param hash   需签名数据
+     * @param hash 需签名数据
      * @return byte[] 签名
      */
     public byte[] sign(Sha256Hash hash) {
@@ -984,18 +993,18 @@ public class ECKey {
     /**
      * The string that prefixes all text messages signed using Bitcoin keys.
      */
-    private static final String BITCOIN_SIGNED_MESSAGE_HEADER = "Bitcoin Signed Message:\n";
-    private static final byte[] BITCOIN_SIGNED_MESSAGE_HEADER_BYTES = BITCOIN_SIGNED_MESSAGE_HEADER.getBytes(StandardCharsets.UTF_8);
+    private static final String NERVE_SIGNED_MESSAGE_HEADER = "NerveNetwork Signed Message:\n";
+    private static final byte[] NERVE_SIGNED_MESSAGE_HEADER_BYTES = NERVE_SIGNED_MESSAGE_HEADER.getBytes(StandardCharsets.UTF_8);
 
     /**
      * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
      * <p>{@code [24] "Bitcoin Signed Message:\n" [message.length as a varint] message}</p>
      */
-    private static byte[] formatMessageForSigning(String message) {
+    public static byte[] formatMessageForSigning(String message) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
-            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
+            bos.write(NERVE_SIGNED_MESSAGE_HEADER_BYTES.length);
+            bos.write(NERVE_SIGNED_MESSAGE_HEADER_BYTES);
             byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
             VarInt size = new VarInt(messageBytes.length);
             bos.write(size.encode());
@@ -1014,5 +1023,53 @@ public class ECKey {
      */
     public boolean verify(byte[] hash, byte[] signature) {
         return ECKey.verify(hash, signature, getPubKey());
+    }
+
+    public String signMessage(String message) {
+        byte[] data = formatMessageForSigning(message);
+        Sha256Hash hash = Sha256Hash.twiceOf(data);
+        ECKey.ECDSASignature sig = sign(hash.getBytes(), this.priv);
+        byte recId = findRecoveryId(hash, sig);
+        int headerByte = recId + 27 + (isCompressed() ? 4 : 0);
+        byte[] sigData = new byte[65];  // 1 header + 32 bytes for R + 32 bytes for S
+        sigData[0] = (byte) headerByte;
+        System.arraycopy(SerializeUtils.bigIntegerToBytes(sig.r, 32), 0, sigData, 1, 32);
+        System.arraycopy(SerializeUtils.bigIntegerToBytes(sig.s, 32), 0, sigData, 33, 32);
+        return new String(Base64.encode(sigData), StandardCharsets.UTF_8);
+    }
+
+    public static ECKey signedMessageToKey(String message, String signatureBase64) throws SignatureException {
+        byte[] signatureEncoded;
+        try {
+            signatureEncoded = Base64.decode(signatureBase64);
+        } catch (RuntimeException e) {
+            // This is what you get back from Bouncy Castle if base64 doesn't decode :(
+            throw new SignatureException("Could not decode base64", e);
+        }
+        // Parse the signature bytes into r/s and the selector value.
+        if (signatureEncoded.length < 65)
+            throw new SignatureException("Signature truncated, expected 65 bytes and got " + signatureEncoded.length);
+        int header = signatureEncoded[0] & 0xFF;
+        // The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
+        //                  0x1D = second key with even y, 0x1E = second key with odd y
+        if (header < 27 || header > 34)
+            throw new SignatureException("Header byte out of range: " + header);
+        BigInteger r = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 1, 33));
+        BigInteger s = new BigInteger(1, Arrays.copyOfRange(signatureEncoded, 33, 65));
+        ECDSASignature sig = new ECDSASignature(r, s);
+        byte[] messageBytes = formatMessageForSigning(message);
+        // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
+        // JSON-SPIRIT hands back. Assume UTF-8 for now.
+        Sha256Hash messageHash = Sha256Hash.twiceOf(messageBytes);
+        boolean compressed = false;
+        if (header >= 31) {
+            compressed = true;
+            header -= 4;
+        }
+        int recId = header - 27;
+        ECKey key = ECKey.recoverFromSignature(recId, sig, messageHash, compressed);
+        if (key == null)
+            throw new SignatureException("Could not recover public key from signature");
+        return key;
     }
 }

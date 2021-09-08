@@ -134,6 +134,24 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      */
     private long newValidationOfErc20;
 
+    /**
+     * v1.14.0 协议升级高度
+     */
+    private long protocol14Height;
+
+    /**
+     * v1.15.0 协议升级高度 支持波场生态链跨链
+     */
+    private long trxCrossChainHeight;
+
+    public long getProtocol14Height() {
+        return protocol14Height;
+    }
+
+    public void setProtocol14Height(long protocol14Height) {
+        this.protocol14Height = protocol14Height;
+    }
+
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;
     }
@@ -344,5 +362,13 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setNewValidationOfErc20(long newValidationOfErc20) {
         this.newValidationOfErc20 = newValidationOfErc20;
+    }
+
+    public long getTrxCrossChainHeight() {
+        return trxCrossChainHeight;
+    }
+
+    public void setTrxCrossChainHeight(long trxCrossChainHeight) {
+        this.trxCrossChainHeight = trxCrossChainHeight;
     }
 }

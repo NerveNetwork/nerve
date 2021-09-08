@@ -32,7 +32,7 @@ import network.nerve.swap.model.dto.LedgerAssetDTO;
  */
 public interface LedgerAssetCache {
 
-    LedgerAssetDTO getLedgerAsset(int chainId, int assetId);
+    LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId);
 
-    LedgerAssetDTO getLedgerAsset(NerveToken token);
+    LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token);
 }

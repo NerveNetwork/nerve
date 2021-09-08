@@ -49,6 +49,7 @@ import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.eth.storage.*;
 import network.nerve.converter.heterogeneouschain.eth.syncblock.EthBlockScheduled;
 import network.nerve.converter.heterogeneouschain.eth.syncblock.EthConfirmTxScheduled;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgUpgradeContractSwitchHelper;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
@@ -100,8 +101,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
     private EthAnalysisTxHelper ethAnalysisTxHelper;
     @Autowired
     private EthCommonHelper ethCommonHelper;
-    @Autowired
-    private EthUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
+    private HtgUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper;
     private ScheduledThreadPoolExecutor blockSyncExecutor;
     private ScheduledThreadPoolExecutor confirmTxExecutor;
     private boolean isInitial = false;
@@ -190,7 +190,6 @@ public class EthRegister implements IHeterogeneousChainRegister {
         ethDocking.setEthCallBackManager(ethCallBackManager);
         ethDocking.setEthAnalysisTxHelper(ethAnalysisTxHelper);
         ethDocking.setEthCommonHelper(ethCommonHelper);
-        ethDocking.setEthUpgradeContractSwitchHelper(ethUpgradeContractSwitchHelper);
         return ethDocking;
     }
 
@@ -259,5 +258,10 @@ public class EthRegister implements IHeterogeneousChainRegister {
         if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
             confirmTxExecutor.shutdown();
         }
+    }
+
+    public void setEthUpgradeContractSwitchHelper(HtgUpgradeContractSwitchHelper ethUpgradeContractSwitchHelper) {
+        this.ethUpgradeContractSwitchHelper = ethUpgradeContractSwitchHelper;
+        EthDocking.getInstance().setEthUpgradeContractSwitchHelper(this.ethUpgradeContractSwitchHelper);
     }
 }

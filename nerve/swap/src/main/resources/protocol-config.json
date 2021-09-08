@@ -98,6 +98,13 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "StableRemoveLiquidityTxProcessorV1"
+      },{
+        "type": "75",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "FarmUpdateTxProcessorV1"
       }
     ],
     "validMsgs": [

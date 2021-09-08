@@ -44,6 +44,7 @@ public class SwapTokenTradeRouteTest {
     @Before
     public void before() {
         pairs = new ArrayList<>();
+        pairs.add(new PairTest(sortTokens('A', 'E')));
         pairs.add(new PairTest(sortTokens('A', 'B')));
         pairs.add(new PairTest(sortTokens('A', 'C')));
         pairs.add(new PairTest(sortTokens('B', 'C')));
@@ -53,7 +54,7 @@ public class SwapTokenTradeRouteTest {
         pairs.add(new PairTest(sortTokens('D', 'E')));
         pairs.add(new PairTest(sortTokens('F', 'C')));
         pairs.add(new PairTest(sortTokens('C', 'H')));
-        pairs.add(new PairTest(sortTokens('A', 'E')));
+
     }
 
     @Test
@@ -105,34 +106,52 @@ public class SwapTokenTradeRouteTest {
 
     @Test
     public void testCalPaths() {
-        List<RouteTest> routeTests = calPaths(pairs, 'A', 'E', new LinkedHashSet<>(), new ArrayList<>(), 0, 2);
+        char in = 'A';
+        char out = 'E';
+        char[] tokens = this.sortTokens(in, out);
+        int length = pairs.size();
+        int subIndex = -1;
+        for (int i = 0; i < length; i++) {
+            PairTest pair = pairs.get(i);
+            if (pair.token0 == tokens[0] && pair.token1 == tokens[1]) {
+                subIndex = i;
+                break;
+            }
+        }
+        List<RouteTest> bestRouteTest = new ArrayList<>();
+        if (subIndex != -1) {
+            PairTest remove = pairs.remove(subIndex);
+            bestRouteTest.add(new RouteTest(List.of(remove), 0));
+        }
+        List<RouteTest> routeTests = calPaths(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 2);
         System.out.println(Arrays.deepToString(routeTests.toArray()));
     }
 
-    public List<RouteTest> calPaths(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, int depth, int maxPairSize) {
-        System.out.println(String.format("depth: %s, in: %s, out: %s, pairs: %s", depth, in, out, Arrays.deepToString(pairs.toArray())));
+    public List<RouteTest> calPaths(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, char orginIn, int depth, int maxPairSize) {
+        //System.out.println(String.format("depth: %s, in: %s, out: %s, pairs: %s", depth, in, out, Arrays.deepToString(pairs.toArray())));
         int length = pairs.size();
         for (int i = 0; i < length; i++) {
-            System.out.println(String.format("depth: %s, i: %s", depth, i));
+            //System.out.println(String.format("depth: %s, i: %s", depth, i));
             PairTest pair = pairs.get(i);
             if (pair.token0 != in && pair.token1 != in) continue;
             //if (currentPath.contains(pair)) continue;
             char tokenOut = pair.token0 == in ? pair.token1 : pair.token0;
+            if (in == orginIn && tokenOut == out) continue;
             if (containsCurrency(currentPath, tokenOut)) continue;
-            System.out.println(String.format("depth: %s, i: %s", depth, i));
+            //System.out.println(String.format("depth: %s, i: %s", depth, i));
 
-            System.out.println(String.format("depth: %s, 选中的Pair: %s, 选中的tokenOut: %s", depth, pair.toString(), tokenOut));
+            //System.out.println(String.format("depth: %s, 选中的Pair: %s, 选中的tokenOut: %s", depth, pair.toString(), tokenOut));
             if (tokenOut == out) {
                 currentPath.add(pair);
                 bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 cloneLinkedHashSet.add(pair);
-                System.out.println(String.format("depth: %s, 移除的Pair: %s", depth, pair.toString()));
-                System.out.println();
+                //System.out.println(String.format("depth: %s, 移除的Pair: %s", depth, pair.toString()));
+                //System.out.println();
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));
-                calPaths(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, depth + 1, maxPairSize);
+                calPaths(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, orginIn, depth + 1, maxPairSize);
             }
         }
         return bestRouteTest;

@@ -179,6 +179,8 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setOktKeyHeight(oktKeyHeight);
             long oneMaticKcsHeight = Long.parseLong(map.get("oneMaticKcsHeight").toString());
             quConfig.setOneMaticKcsHeight(oneMaticKcsHeight);
+            long trxKeyHeight = Long.parseLong(map.get("trxKeyHeight").toString());
+            quConfig.setTrxKeyHeight(trxKeyHeight);
 
         } catch (Exception e) {
             Log.error(e);
@@ -215,6 +217,7 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.htOkbKeyHeight = quConfig.getHtOkbKeyHeight();
         QuotationContext.oktKeyHeight = quConfig.getOktKeyHeight();
         QuotationContext.oneMaticKcsHeight = quConfig.getOneMaticKcsHeight();
+        QuotationContext.trxKeyHeight = quConfig.getTrxKeyHeight();
 
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

@@ -352,4 +352,9 @@ public class TxType {
      * 撤销稳定币流动性
      */
     public static final int SWAP_REMOVE_LIQUIDITY_STABLE_COIN = 74;
+
+    /**
+     * farm信息更新
+     */
+    public static final int FARM_UPDATE = 75;
 }

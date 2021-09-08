@@ -47,6 +47,8 @@ import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.util.*;
 
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
+
 /**
  * @author: Mimi
  * @date: 2020-03-23
@@ -90,7 +92,7 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
                 // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定 / 取消绑定 OR 异构合约资产取消注册
                 HeterogeneousContractAssetRegPendingTxData txData = new HeterogeneousContractAssetRegPendingTxData();
                 txData.parse(tx.getTxData(), 0);
-                String contractAddress = txData.getContractAddress().toLowerCase();
+                String contractAddress = addressToLowerCase(txData.getContractAddress());
                 // 签名验证(种子虚拟银行)
                 try {
                     ConverterSignValidUtil.validateSeedNodeSign(chain, tx);

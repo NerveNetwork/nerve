@@ -138,7 +138,7 @@ public class SwapUtils {
         if (amountOut.compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsRuntimeException(INSUFFICIENT_OUTPUT_AMOUNT);
         }
-        if (reserveIn.compareTo(BigInteger.ZERO) <= 0 || reserveOut.compareTo(BigInteger.ZERO) <= 0) {
+        if (reserveOut.compareTo(amountOut) <= 0 || reserveIn.compareTo(BigInteger.ZERO) <= 0 || reserveOut.compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsRuntimeException(INSUFFICIENT_LIQUIDITY);
         }
         BigInteger numerator = reserveIn.multiply(amountOut).multiply(BI_1000);
@@ -174,7 +174,7 @@ public class SwapUtils {
 
     public static BigInteger[] getAmountsIn(int chainId, IPairFactory pairFactory, BigInteger amountOut, NerveToken[] path) {
         int pathLength = path.length;
-        if (pathLength < 2) {
+        if (pathLength < 2 || pathLength > 100) {
             throw new NulsRuntimeException(INVALID_PATH);
         }
         BigInteger[] amounts = new BigInteger[pathLength];
@@ -443,9 +443,42 @@ public class SwapUtils {
         return bus;
     }
 
+    private static BigInteger getAmountOutForBestTrade(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut) {
+        if (amountIn.compareTo(BigInteger.ZERO) <= 0) {
+            return BigInteger.ZERO;
+        }
+        if (reserveIn.compareTo(BigInteger.ZERO) <= 0 || reserveOut.compareTo(BigInteger.ZERO) <= 0) {
+            return BigInteger.ZERO;
+        }
+        BigInteger amountInWithFee = amountIn.multiply(BI_997);
+        BigInteger numerator = amountInWithFee.multiply(reserveOut);
+        BigInteger denominator = reserveIn.multiply(BI_1000).add(amountInWithFee);
+        BigInteger amountOut = numerator.divide(denominator);
+        return amountOut;
+    }
+
     public static List<RouteVO> bestTradeExactIn(int chainId, IPairFactory iPairFactory, List<SwapPairVO> pairs, TokenAmount tokenAmountIn,
                                                  NerveToken out, LinkedHashSet<SwapPairVO> currentPath,
                                                  List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int maxPairSize) {
+        // 筛选出直接可换的交易对
+        NerveToken tokenIn = tokenAmountIn.getToken();
+        NerveToken[] tokens = tokenSort(tokenIn, out);
+        int length = pairs.size();
+        int subIndex = -1;
+        for (int i = 0; i < length; i++) {
+            SwapPairVO pair = pairs.get(i);
+            if (pair.getToken0().equals(tokens[0]) && pair.getToken1().equals(tokens[1])) {
+                subIndex = i;
+                break;
+            }
+        }
+        if (subIndex != -1) {
+            SwapPairVO removePair = pairs.remove(subIndex);
+            BigInteger[] reserves = getReserves(chainId, iPairFactory, tokenIn, out);
+            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
+            bestTrade.add(new RouteVO(List.of(removePair), orginTokenAmountIn, new TokenAmount(out, amountOut)));
+        }
+        // 查找所有匹配的交易路径
         List<RouteVO> routes = bestTradeExactIn(chainId, iPairFactory, pairs, tokenAmountIn, out, currentPath, bestTrade, orginTokenAmountIn, 0, maxPairSize);
         routes.sort(RouteVOSort.INSTANCE);
         return routes;
@@ -461,9 +494,9 @@ public class SwapUtils {
             if (!pair.getToken0().equals(tokenIn) && !pair.getToken1().equals(tokenIn)) continue;
             NerveToken tokenOut = pair.getToken0().equals(tokenIn) ? pair.getToken1() : pair.getToken0();
             if (containsCurrency(currentPath, tokenOut)) continue;
-            BigInteger[] reserves = SwapUtils.getReserves(chainId, iPairFactory, tokenIn, tokenOut);
+            BigInteger[] reserves = getReserves(chainId, iPairFactory, tokenIn, tokenOut);
             if (BigInteger.ZERO.equals(reserves[0]) || BigInteger.ZERO.equals(reserves[1])) continue;
-            BigInteger amountOut = SwapUtils.getAmountOut(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
+            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
 
             if (tokenOut.equals(out)) {
                 currentPath.add(pair);

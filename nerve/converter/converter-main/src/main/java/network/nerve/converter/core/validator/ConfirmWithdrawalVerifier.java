@@ -56,6 +56,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
+
 /**
  * 确认提现交易业务验证器
  * (创建交易后)
@@ -139,7 +141,7 @@ public class ConfirmWithdrawalVerifier {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
         }
 
-        if (!withdrawalTxData.getHeterogeneousAddress().toLowerCase().equals(info.getTo().toLowerCase())) {
+        if (!addressToLowerCase(withdrawalTxData.getHeterogeneousAddress()).equals(addressToLowerCase(info.getTo()))) {
             // 提现交易确认交易中到账地址与异构确认交易到账地址数据不匹配
             throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_ARRIVE_ADDRESS_MISMATCH);
         }

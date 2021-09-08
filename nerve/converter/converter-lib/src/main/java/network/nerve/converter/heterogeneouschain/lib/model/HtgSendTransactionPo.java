@@ -53,6 +53,17 @@ public class HtgSendTransactionPo {
         this.data = raw.getData();
     }
 
+    public HtgSendTransactionPo(String txHash, String from, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, BigInteger value, String data) {
+        this.txHash = txHash;
+        this.from = from;
+        this.nonce = nonce;
+        this.gasPrice = gasPrice;
+        this.gasLimit = gasLimit;
+        this.to = to;
+        this.value = value;
+        this.data = data;
+    }
+
     public String getTxHash() {
         return txHash;
     }

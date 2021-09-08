@@ -95,7 +95,7 @@ public class ConverterResource {
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "交易hash")
     }))
-    public RpcClientResult createContract(Map params) {
+    public RpcClientResult createProposal(Map params) {
         Result<String> proposal = converterTools.proposal(params);
         return ResultUtil.getRpcClientResult(proposal);
     }

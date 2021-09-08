@@ -53,6 +53,25 @@ public class ConverterUtil {
         return str.matches(HEX_REGEX);
     }
 
+    public static String addressToLowerCase(String address) {
+        if (StringUtils.isBlank(address)) {
+            return address;
+        }
+        String validAddress = cleanHexPrefix(address);
+        if (isHexStr(validAddress)) {
+            address = address.toLowerCase();
+        }
+        return address;
+    }
+
+    public static String cleanHexPrefix(String input) {
+        return containsHexPrefix(input) ? input.substring(2) : input;
+    }
+
+    public static boolean containsHexPrefix(String input) {
+        return !StringUtils.isBlank(input) && input.length() > 1 && input.charAt(0) == '0' && input.charAt(1) == 'x';
+    }
+
     public static Result getSuccess() {
         return Result.getSuccess(ConverterErrorCode.SUCCESS);
     }

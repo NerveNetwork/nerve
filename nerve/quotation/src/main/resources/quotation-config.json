@@ -108,6 +108,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "KCS-USDT",
           "desc": "KCS相对USDT价格"
+        },
+        {
+          "key": "TRX_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "TRX-USDT",
+          "desc": "TRX相对USDT价格"
         }
       ]
     }

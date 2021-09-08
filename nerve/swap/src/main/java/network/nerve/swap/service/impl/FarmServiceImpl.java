@@ -43,9 +43,7 @@ import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.NonceBalance;
-import network.nerve.swap.model.dto.FarmInfoDTO;
-import network.nerve.swap.model.dto.FarmUserInfoDTO;
-import network.nerve.swap.model.dto.LedgerAssetDTO;
+import network.nerve.swap.model.dto.*;
 import network.nerve.swap.model.po.FarmPoolPO;
 import network.nerve.swap.model.po.FarmUserInfoPO;
 import network.nerve.swap.model.txdata.FarmCreateData;
@@ -62,6 +60,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author: PierreLuo
@@ -80,7 +81,7 @@ public class FarmServiceImpl implements FarmService {
     private LedgerService ledgerService;
 
     @Override
-    public Result<String> createFarm(String address, String stakeTokenStr, String syrupTokenStr, double syrupPerBlock, long startHeight, long lockedTime, double totalSyrupAmount, String password) {
+    public Result<String> createFarm(String address, String stakeTokenStr, String syrupTokenStr, double syrupPerBlock, long startHeight, long lockedTime, double totalSyrupAmount, boolean modifiable, long withdrawLockTime, String password) {
         if (syrupPerBlock <= 0 || startHeight < 0 || lockedTime < 0) {
             return Result.getFailed(SwapErrorCode.PARAMETER_ERROR);
         }
@@ -144,6 +145,8 @@ public class FarmServiceImpl implements FarmService {
         data.setLockedTime(lockedTime);
         data.setTotalSyrupAmount(realTotalSyrupAmount);
         data.setStartBlockHeight(startHeight);
+        data.setModifiable(modifiable);
+        data.setWithdrawLockTime(withdrawLockTime);
         try {
             tx.setTxData(data.serialize());
         } catch (IOException e) {
@@ -368,9 +371,9 @@ public class FarmServiceImpl implements FarmService {
 
         FarmInfoDTO dto = new FarmInfoDTO();
         dto.setFarmHash(farmHash);
-        dto.setSyrupPerBlock(new BigDecimal(farm.getSyrupPerBlock()).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2,RoundingMode.DOWN).doubleValue());
-        dto.setSyrupBalance(new BigDecimal(farm.getSyrupTokenBalance()).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2,RoundingMode.DOWN).doubleValue());
-        dto.setStakeBalance(new BigDecimal(farm.getStakeTokenBalance()).movePointLeft(stakeLedgerAssetDTO.getDecimalPlace()).setScale(2,RoundingMode.DOWN).doubleValue());
+        dto.setSyrupPerBlock(new BigDecimal(farm.getSyrupPerBlock()).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
+        dto.setSyrupBalance(new BigDecimal(farm.getSyrupTokenBalance()).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
+        dto.setStakeBalance(new BigDecimal(farm.getStakeTokenBalance()).movePointLeft(stakeLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
 
         return Result.getSuccess(dto);
     }
@@ -395,13 +398,13 @@ public class FarmServiceImpl implements FarmService {
         FarmUserInfoDTO dto = new FarmUserInfoDTO();
         dto.setFarmHash(farmHash);
         dto.setUserAddress(userAddress);
-        dto.setAmount(new BigDecimal(user.getAmount()).movePointLeft(stakeLedgerAssetDTO.getDecimalPlace()).setScale(2,RoundingMode.DOWN).doubleValue());
-        if(user.getAmount().compareTo(BigInteger.ZERO) == 0){
+        dto.setAmount(new BigDecimal(user.getAmount()).movePointLeft(stakeLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
+        if (user.getAmount().compareTo(BigInteger.ZERO) == 0) {
             dto.setReward(0);
             return Result.getSuccess(dto);
         }
         BigInteger accSyrupPerShare;
-        if (null != chain.getBestHeight() ) {
+        if (null != chain.getBestHeight()) {
             accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(chain.getBestHeight() - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
         } else {
             accSyrupPerShare = farm.getAccSyrupPerShare();
@@ -409,6 +412,78 @@ public class FarmServiceImpl implements FarmService {
 
         BigInteger reward = user.getAmount().multiply(accSyrupPerShare).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
         dto.setReward(new BigDecimal(reward).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
+        if(dto.getReward()<0){
+            dto.setReward(0d);
+        }
+        return Result.getSuccess(dto);
+    }
+
+    @Override
+    public Result<List<FarmInfoVO>> getFarmList(int chainId) {
+        Collection<FarmPoolPO> list = farmCache.getList();
+        List<FarmInfoVO> volist = new ArrayList<>();
+        for (FarmPoolPO po : list) {
+            volist.add(poToVo(chainId, po));
+        }
+        return Result.getSuccess(volist);
+    }
+
+    private FarmInfoVO poToVo(int chainId, FarmPoolPO po) {
+        FarmInfoVO vo = new FarmInfoVO();
+        vo.setFarmHash(po.getFarmHash().toHex());
+        vo.setAccSyrupPerShare(po.getAccSyrupPerShare().toString());
+        vo.setCreatorAddress(AddressTool.getAddressString(po.getCreatorAddress(), chainId));
+        vo.setLockedTime(po.getLockedTime());
+        vo.setStakeTokenAssetId(po.getStakeToken().getAssetId());
+        vo.setStakeTokenChainId(po.getStakeToken().getChainId());
+        vo.setStakeTokenBalance(po.getStakeTokenBalance().toString());
+        vo.setModifiable(po.isModifiable());
+        vo.setSyrupTokenBalance(po.getSyrupTokenBalance().toString());
+        vo.setSyrupTokenAssetId(po.getSyrupToken().getAssetId());
+        vo.setSyrupTokenChainId(po.getSyrupToken().getChainId());
+        vo.setSyrupPerBlock(po.getSyrupPerBlock().toString());
+        vo.setStartBlockHeight(po.getStartBlockHeight());
+        vo.setTotalSyrupAmount(po.getTotalSyrupAmount().toString());
+        vo.setWithdrawLockTime(po.getWithdrawLockTime());
+        return vo;
+    }
+
+    @Override
+    public Result<FarmInfoVO> farmDetail(int chainId, String farmHash) {
+        FarmPoolPO farm = farmCache.get(NulsHash.fromHex(farmHash));
+        if (null == farm) {
+            return Result.getFailed(SwapErrorCode.FARM_NOT_EXIST);
+        }
+
+        return Result.getSuccess(poToVo(chainId, farm));
+    }
+
+    @Override
+    public Result<FarmUserInfoVO> farmUserDetail(int chainId, String farmHash, String userAddress) {
+        FarmPoolPO farm = farmCache.get(NulsHash.fromHex(farmHash));
+        if (null == farm) {
+            return Result.getFailed(SwapErrorCode.FARM_NOT_EXIST);
+        }
+        FarmUserInfoPO user = userInfoStorageService.load(chainId, farm.getFarmHash(), AddressTool.getAddress(userAddress));
+        if (user == null) {
+            return Result.getFailed(SwapErrorCode.FARM_NERVE_STAKE_ERROR);
+        }
+        Chain chain = chainManager.getChain(chainId);
+
+        FarmUserInfoVO dto = new FarmUserInfoVO();
+        dto.setFarmHash(farmHash);
+        dto.setUserAddress(userAddress);
+        dto.setAmount(user.getAmount().toString());
+        BigInteger accSyrupPerShare;
+        if (null != chain.getBestHeight()) {
+            accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(chain.getBestHeight() - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
+        } else {
+            accSyrupPerShare = farm.getAccSyrupPerShare();
+        }
+
+        BigInteger reward = user.getAmount().multiply(accSyrupPerShare).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
+        dto.setReward(reward.toString());
+
         return Result.getSuccess(dto);
     }
 }

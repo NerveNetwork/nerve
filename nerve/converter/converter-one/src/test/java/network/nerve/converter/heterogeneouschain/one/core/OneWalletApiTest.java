@@ -379,13 +379,19 @@ public class OneWalletApiTest extends Base {
      */
     @Test
     public void managerAdd() throws Exception {
-        setBeta();
+        setMain();
+        setMainData();
         // GasPrice准备
-        long gasPriceGwei = 1L;
+        long gasPriceGwei = 10L;
         context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa1000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
-                "0xae00574bdc6bbd40612ec024e2536cc0784f73e4"
+                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
+                "0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1", "0x15cb37aa4d55d5a0090966bef534c89904841065",
+                "0x66fb6d6df71bbbf1c247769ba955390710da40a5", "0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88",
+                "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1", "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
+                "0xaff68cd458539a16b932748cf4bdd53bf196789f", "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
+                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0x10c17be7b6d3e1f424111c8bddf221c9557728b0"
         };
         String[] removes = new String[]{};
         int txCount = 1;
@@ -670,6 +676,22 @@ public class OneWalletApiTest extends Base {
     }
 
     @Test
+    public void signTest() {
+        String hash = "b754df4d6cfe869501f9d0f1a40ab6644072524aa4edd3ac4aaef929e06ca0bf";
+        Credentials credentials = Credentials.create("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");
+        Sign.SignatureData signMessage = Sign.signMessage(HexUtil.decode(hash), credentials.getEcKeyPair(), false);
+        byte[] signed = new byte[65];
+        System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
+        System.arraycopy(signMessage.getS(), 0, signed, 32, 32);
+        System.arraycopy(signMessage.getV(), 0, signed, 64, 1);
+        String signedHex = Numeric.toHexStringNoPrefix(signed);
+        System.out.println(signedHex);
+        // fcb8d0df6b32a648f9fb67ca41bd06df9460d56e655324314586ec39b0aaddf077f1c8ae6896f87afa71efe6b2ca7cf78776e67b4a76ba74dcea57c7a06dc02e01
+        // fcb8d0df6b32a648f9fb67ca41bd06df9460d56e655324314586ec39b0aaddf077f1c8ae6896f87afa71efe6b2ca7cf78776e67b4a76ba74dcea57c7a06dc02e1c
+
+    }
+
+    @Test
     public void verifySign() {
         String vHash = "0x3bd2e6b75230eef9cfee5240e3dbb656410bff53c59e08e48eb07eef62b904dd";
         String data = "bb7a28181f68a36af5b69a9778eb1e17fe8016f7dba9053054d4989e6ab4144446169ab6e04e2b55e56949b33d49683839c3be6822d4f4a9dc3f29589f9ffa1e1b6f9477428711aa35936e3909283abcf629186884d09f5dd8dff699d90aa61f337a51831ae74f9a313c147bb08136731671c8cd4ee7e44539cc79fecaf3897d9f1b328ac24121da89f46a034c17a7d4869972fb41ba3d9a5661eafab988851cfbd656e04ed25f88727a66bb203f8787f4665e89110f769cde070249879d02b566311c";
@@ -819,7 +841,7 @@ public class OneWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        //setMain();
+        setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

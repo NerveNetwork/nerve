@@ -7,6 +7,7 @@ import network.nerve.swap.JunitExecuter;
 import network.nerve.swap.model.NerveToken;
 import org.junit.Test;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,5 +54,23 @@ public class SwapUtilsTest {
 
         JunitUtils.execute(items, executer);
 
+    }
+
+    @Test
+    public void quote() {
+        System.out.println(SwapUtils.quote(
+                BigInteger.valueOf(596),
+                BigInteger.valueOf(2222),
+                BigInteger.valueOf(3355)
+                ));
+    }
+
+    @Test
+    public void getAmountIn() {
+        System.out.println(SwapUtils.getAmountIn(
+                BigInteger.valueOf(7403190),
+                BigInteger.valueOf(171132069136L),
+                BigInteger.valueOf(16887743)
+                ));
     }
 }

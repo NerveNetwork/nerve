@@ -24,6 +24,7 @@
         <module>converter-one</module>
         <module>converter-matic</module>
         <module>converter-kcs</module>
+        <module>converter-trx</module>
 
     </modules>
 

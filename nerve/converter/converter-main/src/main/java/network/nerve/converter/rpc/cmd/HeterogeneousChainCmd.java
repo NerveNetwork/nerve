@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 /**
  * 异构链信息提供命令
@@ -186,7 +187,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
         Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
         try {
             Integer heterogeneousChainId = Integer.parseInt(params.get("heterogeneousChainId").toString());
-            String contractAddress = params.get("contractAddress").toString().toLowerCase();
+            String contractAddress = addressToLowerCase(params.get("contractAddress").toString());
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
             if (docking == null) {
                 return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid chainId");
@@ -274,7 +275,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer decimals = (Integer) params.get("decimals");
             String symbol = (String) params.get("symbol");
             String contractAddress = (String) params.get("contractAddress");
-            contractAddress = contractAddress.trim().toLowerCase();
+            contractAddress = addressToLowerCase(contractAddress.trim());
 
             chain = chainManager.getChain(chainId);
             if (null == chain) {
@@ -354,7 +355,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String remark = (String) params.get("remark");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            contractAddress = contractAddress.trim().toLowerCase();
+            contractAddress = addressToLowerCase(contractAddress.trim());
 
 
             chain = chainManager.getChain(chainId);
@@ -550,7 +551,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String contractAddress = (String) params.get("contractAddress");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            contractAddress = contractAddress.trim().toLowerCase();
+            contractAddress = addressToLowerCase(contractAddress.trim());
 
 
             chain = chainManager.getChain(chainId);
@@ -623,7 +624,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String contractAddress = (String) params.get("contractAddress");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            contractAddress = contractAddress.trim().toLowerCase();
+            contractAddress = addressToLowerCase(contractAddress.trim());
 
             chain = chainManager.getChain(chainId);
             if (null == chain) {

@@ -20,6 +20,8 @@ public class FarmCreateData extends BaseNulsData {
     private BigInteger totalSyrupAmount;
     private long startBlockHeight;
     private long lockedTime;
+    private boolean modifiable;
+    private long withdrawLockTime;
 
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
@@ -31,6 +33,10 @@ public class FarmCreateData extends BaseNulsData {
         stream.writeBigInteger(totalSyrupAmount);
         stream.writeInt64(startBlockHeight);
         stream.writeInt64(lockedTime);
+        if (withdrawLockTime > 0 || modifiable) {
+            stream.writeBoolean(modifiable);
+            stream.writeInt64(withdrawLockTime);
+        }
     }
 
     @Override
@@ -41,6 +47,11 @@ public class FarmCreateData extends BaseNulsData {
         this.totalSyrupAmount = byteBuffer.readBigInteger();
         this.startBlockHeight = byteBuffer.readInt64();
         this.lockedTime = byteBuffer.readInt64();
+        if (!byteBuffer.isFinished()) {
+            this.modifiable = byteBuffer.readBoolean();
+            this.withdrawLockTime = byteBuffer.readInt64();
+        }
+
     }
 
     @Override
@@ -51,6 +62,10 @@ public class FarmCreateData extends BaseNulsData {
         size += SerializeUtils.sizeOfBigInteger();
         size += SerializeUtils.sizeOfInt64();
         size += SerializeUtils.sizeOfInt64();
+        if (withdrawLockTime > 0 || modifiable) {
+            size += SerializeUtils.sizeOfBoolean();
+            size += SerializeUtils.sizeOfInt64();
+        }
         return size;
     }
 
@@ -100,5 +115,21 @@ public class FarmCreateData extends BaseNulsData {
 
     public void setTotalSyrupAmount(BigInteger totalSyrupAmount) {
         this.totalSyrupAmount = totalSyrupAmount;
+    }
+
+    public long getWithdrawLockTime() {
+        return withdrawLockTime;
+    }
+
+    public void setWithdrawLockTime(long withdrawLockTime) {
+        this.withdrawLockTime = withdrawLockTime;
+    }
+
+    public boolean isModifiable() {
+        return modifiable;
+    }
+
+    public void setModifiable(boolean modifiable) {
+        this.modifiable = modifiable;
     }
 }

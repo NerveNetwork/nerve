@@ -65,6 +65,7 @@ public class OrphanChainsMonitor extends BaseMonitor {
         StampedLock lock = context.getLock();
         long stamp = lock.tryOptimisticRead();
         try {
+            commonLog.info("OrphanChainsMonitor");
             for (; ; stamp = lock.writeLock()) {
                 if (stamp == 0L) {
                     continue;
@@ -114,6 +115,7 @@ public class OrphanChainsMonitor extends BaseMonitor {
             if (StampedLock.isWriteLockStamp(stamp)) {
                 lock.unlockWrite(stamp);
             }
+            commonLog.info("OrphanChainsMonitor: End");
         }
     }
 

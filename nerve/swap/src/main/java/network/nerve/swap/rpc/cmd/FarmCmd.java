@@ -14,9 +14,12 @@ import network.nerve.swap.config.SwapConfig;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.dto.FarmInfoDTO;
+import network.nerve.swap.model.dto.FarmInfoVO;
 import network.nerve.swap.model.dto.FarmUserInfoDTO;
+import network.nerve.swap.model.dto.FarmUserInfoVO;
 import network.nerve.swap.service.FarmService;
 
+import java.util.List;
 import java.util.Map;
 
 import static network.nerve.swap.constant.SwapCmdConstant.*;
@@ -44,6 +47,8 @@ public class FarmCmd extends BaseCmd {
             @Parameter(parameterName = "syrupPerBlock", parameterType = "Double", parameterDes = "每个区块的奖励数量"),
             @Parameter(parameterName = "startHeight", parameterType = "Long", parameterDes = "生效高度"),
             @Parameter(parameterName = "lockedHeight", parameterType = "Long", parameterDes = "最小允许退出高度"),
+            @Parameter(parameterName = "modifiable", parameterType = "Boolean", parameterDes = "是否允许修改"),
+            @Parameter(parameterName = "withdrawLockTime", parameterType = "Long", parameterDes = "退出farm后锁定时间（秒）"),
             @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
     })
     @ResponseData(description = "交易Hash")
@@ -58,7 +63,10 @@ public class FarmCmd extends BaseCmd {
             String password = (String) params.get("password");
             Double totalSyrupAmount = (Double) params.get("totalSyrupAmount");
 
-            Result<String> result = farmService.createFarm(address, stakeTokenStr, syrupTokenStr, syrupPerBlock, startHeight, lockedHeight, totalSyrupAmount, password);
+            boolean modifiable = (boolean) params.get("modifiable");
+            long withdrawLockTime = Long.parseLong("" + params.get("withdrawLockTime"));
+
+            Result<String> result = farmService.createFarm(address, stakeTokenStr, syrupTokenStr, syrupPerBlock, startHeight, lockedHeight, totalSyrupAmount, modifiable, withdrawLockTime, password);
 
             return success(result.getData());
         } catch (Exception e) {
@@ -118,13 +126,29 @@ public class FarmCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "farm详情")
     public Response getfarm(Map<String, Object> params) {
         try {
             String farmHash = (String) params.get("farmHash");
 
             Result<FarmInfoDTO> result = farmService.farmInfo(farmHash);
 
+            return success(result.getData());
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = FARM_LIST, version = 1.0, description = "获取farm列表")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+    })
+    @ResponseData(description = "farm列表")
+    public Response getfarmList(Map<String, Object> params) {
+        try {
+            int chainId = (int )params.get("chainId");
+            Result<List<FarmInfoVO>> result = farmService.getFarmList(chainId);
             return success(result.getData());
         } catch (Exception e) {
             logger().error(e);
@@ -144,6 +168,47 @@ public class FarmCmd extends BaseCmd {
             String farmHash = (String) params.get("farmHash");
 
             Result<FarmUserInfoDTO> result = farmService.farmUserInfo(farmHash, address);
+
+            return success(result.getData());
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = FARM_INFO_DETAIL, version = 1.0, description = "获取farm当前状态")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+    })
+    @ResponseData(description = "farm详情")
+    public Response farmInfo(Map<String, Object> params) {
+        try {
+            int chainId = (int )params.get("chainId");
+            String farmHash = (String) params.get("farmHash");
+            Result<FarmInfoVO> result = farmService.farmDetail(chainId,farmHash);
+
+            return success(result.getData());
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = FARM_USER_DETAIL, version = 1.0, description = "获取farm当前状态")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+    })
+    @ResponseData(description = "交易Hash")
+    public Response getStakeDetail(Map<String, Object> params) {
+        try {
+            int chainId = (int )params.get("chainId");
+            String address = (String) params.get("userAddress");
+            String farmHash = (String) params.get("farmHash");
+
+            Result<FarmUserInfoVO> result = farmService.farmUserDetail(chainId,farmHash, address);
 
             return success(result.getData());
         } catch (Exception e) {

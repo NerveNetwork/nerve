@@ -131,6 +131,38 @@ public class TransactionController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+
+    @RpcMethod("getTxSerialize")
+    @ApiOperation(description = "根据hash获取交易", order = 301)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hash", parameterDes = "交易hash")
+    })
+    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = TransactionDto.class))
+    public RpcResult getTxSerialize(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String txHash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            txHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[txHash] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(txHash) || !ValidateUtil.validHash(txHash)) {
+            return RpcResult.paramError("[txHash] is inValid");
+        }
+        Result<String> result = transactionTools.getTxSerialize(chainId, txHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
     @RpcMethod("validateTx")
     @ApiOperation(description = "验证交易", order = 302, detailDesc = "验证离线组装的交易,验证成功返回交易hash值,失败返回错误提示信息")
     @Parameters({

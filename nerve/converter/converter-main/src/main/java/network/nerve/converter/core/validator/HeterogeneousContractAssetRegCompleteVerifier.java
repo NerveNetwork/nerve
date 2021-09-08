@@ -41,6 +41,8 @@ import network.nerve.converter.model.txdata.HeterogeneousContractAssetRegComplet
 import java.util.HashSet;
 import java.util.Set;
 
+import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
+
 /**
  * @author: Mimi
  * @date: 2020-03-23
@@ -70,7 +72,7 @@ public class HeterogeneousContractAssetRegCompleteVerifier {
             // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定 / 取消绑定 OR 异构合约资产取消注册
             HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
             txData.parse(tx.getTxData(), 0);
-            String contractAddress = txData.getContractAddress().toLowerCase();
+            String contractAddress = addressToLowerCase(txData.getContractAddress());
             String errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(), contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, true);
             if (StringUtils.isNotBlank(errorCode)) {
                 throw new NulsException(ErrorCode.init(errorCode));

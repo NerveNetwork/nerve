@@ -32,6 +32,7 @@ import network.nerve.converter.heterogeneouschain.kcs.context.KcsContext;
 import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
 import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 import network.nerve.converter.heterogeneouschain.one.context.OneContext;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.AccountCall;
@@ -60,6 +61,7 @@ public class HeterogeneousDockingManager {
     private boolean oneCrossChainAvailable = false;
     private boolean polygonCrossChainAvailable = false;
     private boolean kucoinCrossChainAvailable = false;
+    private boolean trxCrossChainAvailable = false;
 
     public void registerHeterogeneousDocking(int heterogeneousChainId, IHeterogeneousChainDocking docking) {
         heterogeneousDockingMap.put(heterogeneousChainId, docking);
@@ -100,72 +102,60 @@ public class HeterogeneousDockingManager {
         if (LATEST_BLOCK_HEIGHT < KUCOIN_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(KcsContext.HTG_CHAIN_ID)) {
             result.remove(KcsContext.HTG_CHAIN_ID);
         }
+        // 增加TRX跨链的生效高度
+        if (LATEST_BLOCK_HEIGHT < TRX_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(TrxContext.HTG_CHAIN_ID)) {
+            result.remove(TrxContext.HTG_CHAIN_ID);
+        }
         return result.values();
     }
 
     public void checkAccountImportedInDocking(Chain chain, SignAccountDTO signAccountDTO) {
         if (!huobiCrossChainAvailable && LATEST_BLOCK_HEIGHT >= HUOBI_CROSS_CHAIN_HEIGHT) {
             // 向HT异构链组件,注册地址签名信息
-            try {
-                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-                this.registerAccount(chain, signAccountDTO, HtContext.HTG_CHAIN_ID);
-                huobiCrossChainAvailable = true;
-            } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件[HT]注册地址签名信息异常, 错误: {}", e.format());
-            }
+            this.registerAccount(HtContext.config.getSymbol(), chain, signAccountDTO, HtContext.HTG_CHAIN_ID);
+            huobiCrossChainAvailable = true;
         }
         if (!oktCrossChainAvailable && LATEST_BLOCK_HEIGHT >= OKT_CROSS_CHAIN_HEIGHT) {
             // 向OKT异构链组件,注册地址签名信息
-            try {
-                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-                this.registerAccount(chain, signAccountDTO, OktContext.HTG_CHAIN_ID);
-                oktCrossChainAvailable = true;
-            } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件[OKT]注册地址签名信息异常, 错误: {}", e.format());
-            }
+            this.registerAccount(OktContext.config.getSymbol(), chain, signAccountDTO, OktContext.HTG_CHAIN_ID);
+            oktCrossChainAvailable = true;
         }
         if (!oneCrossChainAvailable && LATEST_BLOCK_HEIGHT >= ONE_CROSS_CHAIN_HEIGHT) {
             // 向ONE异构链组件,注册地址签名信息
-            try {
-                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-                this.registerAccount(chain, signAccountDTO, OneContext.HTG_CHAIN_ID);
-                oneCrossChainAvailable = true;
-            } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件[ONE]注册地址签名信息异常, 错误: {}", e.format());
-            }
+            this.registerAccount(OneContext.config.getSymbol(), chain, signAccountDTO, OneContext.HTG_CHAIN_ID);
+            oneCrossChainAvailable = true;
         }
         if (!polygonCrossChainAvailable && LATEST_BLOCK_HEIGHT >= POLYGON_CROSS_CHAIN_HEIGHT) {
             // 向MATIC异构链组件,注册地址签名信息
-            try {
-                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-                this.registerAccount(chain, signAccountDTO, MaticContext.HTG_CHAIN_ID);
-                polygonCrossChainAvailable = true;
-            } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件[MATIC]注册地址签名信息异常, 错误: {}", e.format());
-            }
+            this.registerAccount(MaticContext.config.getSymbol(), chain, signAccountDTO, MaticContext.HTG_CHAIN_ID);
+            polygonCrossChainAvailable = true;
         }
         if (!kucoinCrossChainAvailable && LATEST_BLOCK_HEIGHT >= KUCOIN_CROSS_CHAIN_HEIGHT) {
             // 向KCS异构链组件,注册地址签名信息
-            try {
-                // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-                this.registerAccount(chain, signAccountDTO, KcsContext.HTG_CHAIN_ID);
-                kucoinCrossChainAvailable = true;
-            } catch (NulsException e) {
-                chain.getLogger().warn("向异构链组件[KCS]注册地址签名信息异常, 错误: {}", e.format());
-            }
+            this.registerAccount(KcsContext.config.getSymbol(), chain, signAccountDTO, KcsContext.HTG_CHAIN_ID);
+            kucoinCrossChainAvailable = true;
+        }
+        if (!trxCrossChainAvailable && LATEST_BLOCK_HEIGHT >= TRX_CROSS_CHAIN_HEIGHT) {
+            // 向TRX异构链组件,注册地址签名信息
+            this.registerAccount(TrxContext.config.getSymbol(), chain, signAccountDTO, TrxContext.HTG_CHAIN_ID);
+            trxCrossChainAvailable = true;
         }
     }
 
-    private void registerAccount(Chain chain, SignAccountDTO signAccountDTO, int htgChainId) throws NulsException {
-        // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
-        if (null != signAccountDTO) {
-            String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
-            // 向异构链跨链组件导入账户
-            IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(htgChainId);
-            if (dock != null && dock.getCurrentSignAddress() == null) {
-                dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
-                chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件[{}]注册签名账户信息..", dock.getChainSymbol());
+    private void registerAccount(String chainSymbol, Chain chain, SignAccountDTO signAccountDTO, int htgChainId) {
+        try {
+            // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
+            if (null != signAccountDTO) {
+                String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
+                // 向异构链跨链组件导入账户
+                IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(htgChainId);
+                if (dock != null && dock.getCurrentSignAddress() == null) {
+                    dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
+                    chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件[{}]注册签名账户信息..", dock.getChainSymbol());
+                }
             }
+        } catch (NulsException e) {
+            chain.getLogger().warn("向异构链组件[{}]注册地址签名信息异常, 错误: {}", chainSymbol, e.format());
         }
     }
 }

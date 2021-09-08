@@ -16,17 +16,12 @@ import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Before;
 import org.junit.Test;
-import org.web3j.abi.EventEncoder;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.FunctionReturnDecoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.DynamicArray;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.*;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint112;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint32;
+import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.*;
@@ -834,9 +829,8 @@ public class BnbWalletApiTest extends Base {
     public void allContractManagerSet() throws Exception {
         //localdev();
         //localdevII();
-        setMain();
-        //
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        //setMain();
+        setLocalTest();
         //mainnetII();
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
@@ -1010,6 +1004,20 @@ public class BnbWalletApiTest extends Base {
             System.out.println(newValue.compareTo(oldValue) == 0);
             System.out.println();
         }
+    }
+
+    @Test
+    public void deployERC20MinterDecoderTest() throws JsonProcessingException {
+        String input = "0xd98eea60000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000005546f6b656e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003544b4e0000000000000000000000000000000000000000000000000000000000";
+        List<Object> typeList = HtgUtil.parseInput(input, Utils.convert(
+                List.of(
+                        new TypeReference<Utf8String>(){},
+                        new TypeReference<Utf8String>(){},
+                        new TypeReference<Uint8>(){},
+                        new TypeReference<Uint8>(){}
+                )
+        ));
+        System.out.println(JSONUtils.obj2PrettyJson(typeList));
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

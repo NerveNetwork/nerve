@@ -138,5 +138,25 @@
     "confirmTxQueuePeriod": 10,
     "waitingTxQueuePeriod": 10,
     "filterAddresses": "0x3250dabb584f7fea1bafaff6000ffbbd2f419a15,0xf0e406c49c63abf358030a299c0e00118c4c6ba5"
+  },
+  {
+    "chainId": 108,
+    "chainIdOnHtgNetwork": 0,
+    "type": 1,
+    "symbol": "TRX",
+    "decimals": 6,
+    "commonRpcAddress": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
+    "mainRpcAddress": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
+    "orderRpcAddresses": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
+    "standbyRpcAddresses": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 30,
+    "txBlockConfirmationsOfWithdraw": 3,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "filterAddresses": "TEZFeWmzL5wjZx3rKP79gXMCtHdyfWbrRk"
   }
 ]

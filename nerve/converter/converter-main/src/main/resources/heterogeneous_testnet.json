@@ -27,7 +27,7 @@
     "decimals": 18,
     "commonRpcAddress": "https://data-seed-prebsc-2-s3.binance.org:8545/",
     "mainRpcAddress": "https://data-seed-prebsc-1-s2.binance.org:8545/",
-    "orderRpcAddresses": "https://data-seed-prebsc-2-s1.binance.org:8545/,https://data-seed-prebsc-1-s3.binance.org:8545/",
+    "orderRpcAddresses": "https://data-seed-prebsc-2-s1.binance.org:8545/,https://data-seed-prebsc-1-s2.binance.org:8545/",
     "standbyRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s3.binance.org:8545/",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 5,
@@ -138,5 +138,25 @@
     "confirmTxQueuePeriod": 10,
     "waitingTxQueuePeriod": 10,
     "filterAddresses": "0xf173805F1e3fE6239223B17F0807596Edc283012"
+  },
+  {
+    "chainId": 108,
+    "chainIdOnHtgNetwork": 0,
+    "type": 1,
+    "symbol": "TRX",
+    "decimals": 6,
+    "commonRpcAddress": "",
+    "mainRpcAddress": "",
+    "orderRpcAddresses": "",
+    "standbyRpcAddresses": "",
+    "defaultStartHeight": 0,
+    "txBlockConfirmations": 5,
+    "txBlockConfirmationsOfWithdraw": 2,
+    "intervalWaittingSendTransaction": 8,
+    "initialBalance": 0.1,
+    "blockQueuePeriod": 5,
+    "confirmTxQueuePeriod": 10,
+    "waitingTxQueuePeriod": 10,
+    "filterAddresses": "TFzEXjcejyAdfLSEANordcppsxeGW9jEm2"
   }
 ]

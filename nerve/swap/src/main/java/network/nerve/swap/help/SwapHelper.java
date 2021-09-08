@@ -55,7 +55,7 @@ public class SwapHelper {
     private LedgerAssetCache ledgerAssetCache;
 
     public List<RouteVO> bestTradeExactIn(int chainId, List<String> pairs, TokenAmount tokenAmountIn, NerveToken out, int maxPairSize) throws NulsException {
-        if (ledgerAssetCache.getLedgerAsset(tokenAmountIn.getToken()) == null || ledgerAssetCache.getLedgerAsset(out) == null) {
+        if (ledgerAssetCache.getLedgerAsset(chainId, tokenAmountIn.getToken()) == null || ledgerAssetCache.getLedgerAsset(chainId, out) == null) {
             throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         List<SwapPairVO> swapPairs = new ArrayList<>();

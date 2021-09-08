@@ -129,4 +129,14 @@ public interface IConverterCoreApi {
      * 是否支持充值ERC20的新验证方式I
      */
     boolean isSupportNewValidationOfERC20();
+
+    /**
+     * 是否支持波场跨链 v1.15.0
+     */
+    boolean isSupportTrxCrossChain();
+
+    /**
+     * 是否支持协议14 v1.14.0
+     */
+    boolean isProtocol14();
 }

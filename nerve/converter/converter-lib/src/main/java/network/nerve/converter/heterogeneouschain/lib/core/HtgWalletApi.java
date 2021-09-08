@@ -255,51 +255,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * Method:getBlock
-     * Description: 获取区块信息
-     * Author: xinjl
-     * Date: 2018/4/16 15:23
-     */
-    @Override
-    public Block getBlock(long height) throws Exception {
-        EthBlock.Block block = getBlockByHeight(height);
-        return createBlock(block);
-    }
-
-    @Override
-    public Block getBlock(String hash) throws Exception {
-        EthBlock.Block block = this.timeOutWrapperFunction("getBlock", hash, args -> {
-            return web3j.ethGetBlockByHash(args, true).send().getBlock();
-        });
-        if(block == null) {
-            return null;
-        }
-        return createBlock(block);
-    }
-
-    private Block createBlock(EthBlock.Block block) {
-        Block simpleBlock = new Block();
-        simpleBlock.setHeight(block.getNumber().longValue());
-        simpleBlock.setHash(block.getHash());
-        List<EthBlock.TransactionResult> transactions = block.getTransactions();
-        if (transactions != null && transactions.size() > 0) {
-            List<Transaction> list = new ArrayList<>();
-            for (int i = 0; i < transactions.size(); i++) {
-                org.web3j.protocol.core.methods.response.Transaction transaction = getTransaction(block.getNumber().longValue(), i);
-                Transaction transferTransaction = new Transaction();
-                transferTransaction.setFromAddress(transaction.getFrom());
-                transferTransaction.setToAddress(transaction.getTo());
-                BigDecimal value = convertWeiToMainAsset(transaction.getValue());
-                transferTransaction.setAmount(value);
-                transferTransaction.setTxHash(transaction.getHash());
-                list.add(transferTransaction);
-            }
-            simpleBlock.setTransactions(list);
-        }
-        return simpleBlock;
-    }
-
-    /**
      * Method:getBlockByHeight
      * Description: 根据高度获取区块
      * Author: xinjl
@@ -326,28 +281,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             getLog().error("获取区块头为空");
         }
         return header;
-    }
-
-    /**
-     * Method:获取链上交易
-     * Description:
-     * Author: xinjl
-     * Date: 2018/4/16 15:23
-     */
-    public org.web3j.protocol.core.methods.response.Transaction getTransaction(Long height, Integer index) {
-        Request<?, EthTransaction> ethTransactionRequest = web3j.ethGetTransactionByBlockNumberAndIndex(new DefaultBlockParameterNumber(height), new BigInteger(index.toString()));
-        org.web3j.protocol.core.methods.response.Transaction transaction = null;
-        try {
-            EthTransaction send = ethTransactionRequest.send();
-            if (send.getTransaction().isPresent()) {
-                transaction = send.getTransaction().get();
-            } else {
-                getLog().error("交易详情获取失败:" + transaction + ",height:" + height + ",index:" + index);
-            }
-        } catch (IOException e) {
-            getLog().error(e.getMessage(), e);
-        }
-        return transaction;
     }
 
     /**

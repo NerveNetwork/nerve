@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=Logs
+logPath=/Users/niels/workspace/nerve-network/logs
 logLevel=INFO
-dataPath=data
+dataPath=/Users/niels/workspace/nerve-network/data
 #默认本链ID
 chainId=5
 #地址前缀
@@ -30,7 +30,7 @@ serviceManagerPort=8771
 port=17001
 crossPort=17002
 #魔法参数
-packetMagic=20210617
+packetMagic=20210810
 reverseCheck=0
 #种子节点
 selfSeedIps=192.168.1.121:17001,192.168.1.122:17001,192.168.1.123:17001
@@ -53,7 +53,7 @@ extendMaxSize=1024
 #引发分叉链切换的高度差阈值
 chainSwtichThreshold=3
 #最小链接节点数,当链接到的网络节点低于此参数时,会持续等待
-minNodeAmount=1
+minNodeAmount=0
 #区块同步过程中,每次从网络上节点下载的区块数量
 downloadNumber=10
 #从网络节点下载单个区块的超时时间
@@ -64,10 +64,9 @@ cachedBlockSizeLimit=20971520
 genesisBlockPath=genesis-block.json
 
 [consensus]
-seedNodes=TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd,TNVTdTSPNeoGxTS92S2r1DZAtJegbeucL8tCT,TNVTdTSPLpegzD3B6qaVKhfj6t8cYtnkfR7Wx
+seedNodes=TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK
 #种子节点对应的公钥列表
-pubKeyList=037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
-
+pubKeyList=0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260
 #出块地址密码
 password=nuls123456
 #出块间隔时间(单位：s)
@@ -145,6 +144,8 @@ height_1_8_0=10
 height_1_11_0=10
 height_1_12_0=10
 height_1_13_0=10
+height_1_14_0=10
+height_1_15_0=10
 
 [nuls-api]
 #httpServer的启动ip
@@ -208,17 +209,16 @@ proposalPrice=1000000000
 proposalVotingDays=10
 distributionFee=1000000000
 byzantineRatio=66
-#old: 0x4A05428eC53195e4657739e7622E04594F8c4020 new: 0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2
-multySignAddressSet=101:0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2,102:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,103:0x8B3b22C252F431a75644E544FCAf67E390A206F4,104:0xdd35003eD2118D997F3404C9C17eb20dfea0f767
+multySignAddressSet=101:0x44f4eA5028992D160Dc0dc9A3cB93a2e4C913611,102:0xf7915d4de86b856F3e51b894134816680bf09EEE,103:0xb339211438Dcbf3D00d7999ad009637472FC72b3,104:0xab34B1F41dA5a32fdE53850EfB3e54423e93483e,105:0x74A163fCd791Ec7AaB2204ffAbf1A1DFb8854883,106:0x2eDCf5f18D949c51776AFc42CDad667cDA2cF862,107:0x74A163fCd791Ec7AaB2204ffAbf1A1DFb8854883,108:TWajcnpyyZLRtLkFd6p4ZAMn5y4GpDa6MB
+multySignAddressUpgradeSet=101:0x7D759A3330ceC9B766Aa4c889715535eeD3c0484
 heterogeneousMainNet=false
-initVirtualBankPubKeyList=037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
-newProcessorMode=true
-feeEffectiveHeightFirst=10
-feeEffectiveHeightSecond=10
+initVirtualBankPubKeyList=0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260,03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5,02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750
+newProcessorMode=false
+feeEffectiveHeightFirst=0
+feeEffectiveHeightSecond=0
 
 [swap]
 #手续费开发团队接收地址-TNVTdTSPP6vD8BuWUYibYRx5qHFUPfkztAFo4
 awardFeeSystemAddressPublicKey=031672b023ef35e37eb1d570015b54e1c29a6cc57d5a11c4733e960efe7ca56b80
 #手续费销毁地址-TNVTdTSPVnoPACtKgRmQy4s7SG3vm6XyR2Ffv
 awardFeeDestructionAddressPublicKey=0310346f49dc59c150756f0cc004d9d6a1e940fcfe09e851fff1ee48d6dc3a9653
-

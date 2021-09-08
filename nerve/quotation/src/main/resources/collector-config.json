@@ -19,15 +19,9 @@
   },
   {
     "name": "Dex",
-    "baseurl": "http://api.nervedex.com",
+    "baseurl": "https://api.nervedex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
     "weight": "0.30"
-  },
-  {
-    "name": "AEX",
-    "baseurl": "https://api.aex.zone/v3/ticker.php",
-    "collector": "network.nerve.quotation.rpc.querier.impl.AexQuerier",
-    "weight": "0.10"
   },
   {
     "name": "MXC",

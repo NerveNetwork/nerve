@@ -16,7 +16,12 @@ import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
+import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.utils.ConverterUtil;
 import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
@@ -48,6 +53,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EVENT_HASH_ERC20_TRANSFER;
+
 
 public class ETHWalletApiTest extends Base {
 
@@ -66,6 +73,13 @@ public class ETHWalletApiTest extends Base {
                 System.out.println(JSONUtils.obj2json(tx));
             }
         }
+        System.out.println();
+    }
+
+    @Test
+    public void txDecoder() throws SignatureException {
+        String txHex = "0xf8ab8084861c4680830249f09467bab912ee30074cf9a94826e2e02d993684278180b844a9059cbb000000000000000000000000a67f7a5f327647138a63d2ebe7b02cdcb830a0d20000000000000000000000000000000000000000000000000000000000002710820123a0568301c8db5df4553115875f0253484545cba51c3828b6d59a3c0d7c90f42e85a04634cf2144dc0950bc99291cd0c8077cc4a3b6bac2d353872995289d0e2637be";
+        Transaction tx = HtgUtil.genEthTransaction("", txHex);
         System.out.println();
     }
 
@@ -732,9 +746,9 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void getCurrentNonce() throws Exception {
-        //setMain();
-        System.out.println(ethWalletApi.getNonce("0xf173805F1e3fE6239223B17F0807596Edc283012"));
-        System.out.println(ethWalletApi.getLatestNonce("0xf173805F1e3fE6239223B17F0807596Edc283012"));
+        setMain();
+        System.out.println(ethWalletApi.getNonce("0x5BFEdBC25fC2d5E4AD25fEF8871823daa947E534"));
+        System.out.println(ethWalletApi.getLatestNonce("0x5BFEdBC25fC2d5E4AD25fEF8871823daa947E534"));
     }
 
     @Test
@@ -1364,9 +1378,9 @@ public class ETHWalletApiTest extends Base {
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // eth的usdt价格
-        ethUsdt = new BigDecimal("1210.29");
+        ethUsdt = new BigDecimal("3210.29");
         // gas Gwei
-        price = 210L;
+        price = 43L;
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
         gasCost(1200000);
         gasCost(800000);
@@ -1375,6 +1389,7 @@ public class ETHWalletApiTest extends Base {
         gasCost(380000);
         gasCost(350000);
         gasCost(300000);
+        gasCost(260000);
         gasCost(250000);
         gasCost(220000);
         gasCost(200000);
@@ -1460,4 +1475,113 @@ public class ETHWalletApiTest extends Base {
         }
     }
 
+    @Test
+    public void blockCheck() throws Exception {
+        setMain();
+        Long height = 13041605L;
+        EthBlock.Block block = ethWalletApi.getBlockByHeight(height);
+        List<EthBlock.TransactionResult> list = block.getTransactions();
+        for (EthBlock.TransactionResult txResult : list) {
+            Transaction tx = (Transaction) txResult;
+            List<Token20TransferDTO> dtoList = parseToken20Transfer(tx, ethWalletApi);
+            System.out.println(dtoList.size());
+        }
+        System.out.println();
+    }
+
+    @Test
+    public void parseToken20TransferTest() throws Exception {
+        setMain();
+        //2500000000000000000000
+        Transaction tx = ethWalletApi.getTransactionByHash("0xb5b35967c80ba7048e5b44984c8c9c593c1662b0325a83926cbb8f80dd348e0d");
+        List<Token20TransferDTO> dtoList = parseToken20Transfer(tx, ethWalletApi);
+        System.out.println(dtoList.size());
+    }
+
+    private List<Token20TransferDTO> parseToken20Transfer(Transaction ethTx, ETHWalletApi htgWalletApi) throws Exception {
+        TransactionReceipt txReceipt = null;
+        try {
+            List<Token20TransferDTO> resultList = new ArrayList<>();
+            String hash = ethTx.getHash();
+            txReceipt = htgWalletApi.getTxReceipt(hash);
+            if (txReceipt == null || !txReceipt.isStatusOK()) {
+                return resultList;
+            }
+            List<org.web3j.protocol.core.methods.response.Log> logs = txReceipt.getLogs();
+            if (logs != null && logs.size() > 0) {
+                for(org.web3j.protocol.core.methods.response.Log log : logs) {
+                    String eventHash = log.getTopics().get(0);
+                    if (EVENT_HASH_ERC20_TRANSFER.equals(eventHash)) {
+                        Token20TransferDTO dto = parseToken20TransferEvent(log);
+                        if (dto == null) {
+                            continue;
+                        }
+                        resultList.add(dto);
+                    }
+                }
+            }
+            return resultList;
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+    }
+
+    public static Token20TransferDTO parseToken20TransferEvent(org.web3j.protocol.core.methods.response.Log log) {
+        try {
+            String contractAddress = log.getAddress();
+            List<String> topics = log.getTopics();
+            String from = new org.web3j.abi.datatypes.Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(1)))).getValue();
+            String to = new org.web3j.abi.datatypes.Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(2)))).getValue();
+            BigInteger value = new BigInteger(Numeric.hexStringToByteArray(log.getData()));
+            return new Token20TransferDTO(from, to, value, contractAddress);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    static class Token20TransferDTO {
+        private String from;
+        private String to;
+        private BigInteger value;
+        private String contractAddress;
+
+        public Token20TransferDTO(String from, String to, BigInteger value, String contractAddress) {
+            this.from = from;
+            this.to = to;
+            this.value = value;
+            this.contractAddress = contractAddress;
+        }
+
+        public String getFrom() {
+            return from;
+        }
+
+        public void setFrom(String from) {
+            this.from = from;
+        }
+
+        public String getTo() {
+            return to;
+        }
+
+        public void setTo(String to) {
+            this.to = to;
+        }
+
+        public BigInteger getValue() {
+            return value;
+        }
+
+        public void setValue(BigInteger value) {
+            this.value = value;
+        }
+
+        public String getContractAddress() {
+            return contractAddress;
+        }
+
+        public void setContractAddress(String contractAddress) {
+            this.contractAddress = contractAddress;
+        }
+    }
 }

@@ -58,5 +58,8 @@ public interface SwapCmdConstant {
     String FARM_STAKE = "sw_farmstake";
     String FARM_WAITHDRAW = "sw_farmwithdraw";
     String FARM_INFO = "sw_getfarm";
+    String FARM_INFO_DETAIL = "sw_farmInfo";
+    String FARM_LIST = "sw_farmlist";
     String FARM_USER_INFO = "sw_getstakeinfo";
+    String FARM_USER_DETAIL = "sw_userstakeinfo";
 }

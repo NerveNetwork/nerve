@@ -141,8 +141,56 @@ public class VirtualBankUtilTest {
 
     @Test
     public void serializeTxTest() throws Exception {
-        NulsHash proposalTxHash = NulsHash.fromHex("dd1f44aece842147a001afb62e2fec6f73b443c539c84dabe9bf9f5e34fc494d");
-        String address = "TNVTdTSPyT1GGPrbahr9qo7S87dMBatx9NHtP";
+//        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
+//        String address = "NERVEepb6exLKu4eJkHCekXicn7YpDa3hzHGvt";
+//        List<byte[]> pubKeyList = new ArrayList<>();
+//        String pubkeys = "02aeddccc442bb3b4cd1a50efbf41aa4681d213b998e68295675e9dd149cdb72b4,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
+//        String arr[] = pubkeys.split(",");
+//        for(String pub:arr){
+//            pubKeyList.add(HexUtil.decode(pub));
+//        }
+//        String nonce = "2411ef0cf84f1ce0";
+
+//        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
+//        String address = "NERVEepb6eKxoK6ZmKhhDK4oZkuXnUMxZfCta4";
+//        List<byte[]> pubKeyList = new ArrayList<>();
+//        String pubkeys = "035b6fef36e032382a06ededf20ec7c522215cb114e46e6c828617680d7d376b00,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
+//        String arr[] = pubkeys.split(",");
+//        for(String pub:arr){
+//            pubKeyList.add(HexUtil.decode(pub));
+//        }
+//        String nonce = "c830cd416d60903f";
+
+//        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
+//        String address = "NERVEepb6bT6dAfEtY9Z4c38Khawdr4LKZNais";
+//        List<byte[]> pubKeyList = new ArrayList<>();
+//        String pubkeys = "027d1ae118dd1d5ab0c416dc78ee0268d38f3a8c8cee2641a03f1d851b1c8405b9,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
+//        String arr[] = pubkeys.split(",");
+//        for(String pub:arr){
+//            pubKeyList.add(HexUtil.decode(pub));
+//        }
+//        String nonce = "97120e657a76bb38";
+
+//        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
+//        String address = "NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk";
+//        List<byte[]> pubKeyList = new ArrayList<>();
+//        String pubkeys = "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
+//        String arr[] = pubkeys.split(",");
+//        for(String pub:arr){
+//            pubKeyList.add(HexUtil.decode(pub));
+//        }
+//        String nonce = "75c643fb277e8077";
+//
+        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
+        String address = "NERVEepb6bt22V1LgaWavLNPEyTKbayCD58xo4";
+        List<byte[]> pubKeyList = new ArrayList<>();
+        String pubkeys = "03501d23db2f62863d89631168d427d3cc5f8b4a28fbb643e26695ae6cd5fdcc4b,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
+        String arr[] = pubkeys.split(",");
+        for(String pub:arr){
+            pubKeyList.add(HexUtil.decode(pub));
+        }
+        String nonce = "dd41c40a11f0e927";
+
         VoteProposalTxData voteProposalTxData = new VoteProposalTxData(proposalTxHash, (byte)1);
         Transaction tx = new Transaction(TxType.VOTE_PROPOSAL);
         tx.setTxData(voteProposalTxData.serialize());
@@ -150,10 +198,10 @@ public class VirtualBankUtilTest {
 
         CoinFrom coinFrom = new CoinFrom(
                 AddressTool.getAddress(address),
-                5,
+                9,
                 1,
                 TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES,
-                HexUtil.decode("9d848f591514b4ec"),
+                HexUtil.decode(nonce),
                 (byte) 0);
         CoinData coinData = new CoinData();
         List<CoinFrom> froms = new ArrayList<>();
@@ -162,7 +210,7 @@ public class VirtualBankUtilTest {
         List<CoinTo> tos = new ArrayList<>();
         CoinTo coinTo = new CoinTo(
                 AddressTool.getAddress(address),
-                5,
+                9,
                 1,
                 BigInteger.ZERO);
         tos.add(coinTo);
@@ -172,14 +220,7 @@ public class VirtualBankUtilTest {
         tx.setCoinData(coinData.serialize());
 
         MultiSignTxSignature signature = new MultiSignTxSignature();
-        signature.setM((byte)2);
-        List<byte[]> pubKeyList = new ArrayList<>();
-        // 0224d86a584324fc8e92c6dba19c08926a7af77df884deec0d1c3b879a8f50720f,
-        // 02362c64e15ab653132ec753e4a8c181ef720ec927466a09417a07877824781f57,
-        // 02962c7942851fa2c937be788a18693885276e3d9688b5997d9f02ebf2fef218db
-        pubKeyList.add(HexUtil.decode("0224d86a584324fc8e92c6dba19c08926a7af77df884deec0d1c3b879a8f50720f"));
-        pubKeyList.add(HexUtil.decode("02362c64e15ab653132ec753e4a8c181ef720ec927466a09417a07877824781f57"));
-        pubKeyList.add(HexUtil.decode("02962c7942851fa2c937be788a18693885276e3d9688b5997d9f02ebf2fef218db"));
+        signature.setM((byte)3);
         signature.setPubKeyList(pubKeyList);
         tx.setTransactionSignature(signature.serialize());
         System.out.println(HexUtil.encode(tx.serialize()));

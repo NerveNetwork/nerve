@@ -2,7 +2,6 @@ package network.nerve.swap.handler.impl;
 
 import io.nuls.base.data.Transaction;
 import io.nuls.core.crypto.ECKey;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.LoggerBuilder;
 import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.swap.JunitCase;
@@ -17,14 +16,11 @@ import network.nerve.swap.manager.FarmUserInfoTempManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.BatchInfo;
-import network.nerve.swap.model.bo.LedgerBalance;
-import network.nerve.swap.model.bo.NonceBalance;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.dto.LedgerAssetDTO;
 import network.nerve.swap.model.po.FarmPoolPO;
 import network.nerve.swap.storage.FarmStorageService;
 import network.nerve.swap.tx.v1.helpers.FarmCreateTxHelper;
-import network.nerve.swap.tx.v1.helpers.converter.LedgerService;
 import network.nerve.swap.utils.NerveCallback;
 import network.nerve.swap.utils.TxAssembleUtil;
 import org.junit.Assert;
@@ -35,8 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Niels
@@ -67,17 +62,17 @@ public class FarmCreateHandlerTest {
         handler.getHelper().setFarmCacher(farmCacher);
         handler.getHelper().setLedgerAssetCache(new LedgerAssetCache() {
             @Override
-            public LedgerAssetDTO getLedgerAsset(int chainId, int assetId) {
-                String key = chainId + "-" + assetId;
-                return new LedgerAssetDTO(chainId, assetId, "symbol_" + key, "name_" + key, 0);
+            public LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId) {
+                String key = assetChainId + "-" + assetId;
+                return new LedgerAssetDTO(assetChainId, assetId, "symbol_" + key, "name_" + key, 0);
             }
 
             @Override
-            public LedgerAssetDTO getLedgerAsset(NerveToken token) {
+            public LedgerAssetDTO getLedgerAsset(int chainId, NerveToken token) {
                 if (token == null) {
                     return null;
                 }
-                return getLedgerAsset(token.getChainId(), token.getAssetId());
+                return getLedgerAsset(chainId, token.getChainId(), token.getAssetId());
             }
         });
         handler.getHelper().setStorageService(new FarmStorageService() {
@@ -140,7 +135,7 @@ public class FarmCreateHandlerTest {
 
     private JunitCase getCase1() throws IOException {
         ECKey ecKey = new ECKey();
-        Transaction tx1 = TxAssembleUtil.asmbFarmCreate(new NerveToken(5, 1), new NerveToken(1, 1), ecKey.getPrivKeyBytes());
+        Transaction tx1 = TxAssembleUtil.asmbFarmCreate(new NerveToken(5, 11), new NerveToken(1, 1), ecKey.getPrivKeyBytes());
         NerveCallback<SwapResult> callback1 = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) {
@@ -207,6 +202,7 @@ public class FarmCreateHandlerTest {
                 assertNotNull(farm.getLastRewardBlock());
                 assertNotNull(farm.getAccSyrupPerShare());
                 assertNotNull(farm.getStakeTokenBalance());
+                assertEquals(farm.getWithdrawLockTime(),100L);
                 System.out.println("[通过]Test Farm-Create tx execute: Normal process！");
             }
         };

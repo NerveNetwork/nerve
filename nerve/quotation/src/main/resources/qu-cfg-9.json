@@ -3,5 +3,6 @@
   "bnbKeyHeight": 5550000,
   "htOkbKeyHeight": 5550000,
   "OktKeyHeight": 12440000,
-  "oneMaticKcsHeight": 16240000
+  "oneMaticKcsHeight": 16240000,
+  "trxKeyHeight": 5000000000
 }

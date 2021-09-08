@@ -28,4 +28,5 @@ public interface FarmProvider {
     Result<String> farmUserInfo(String farmHash,String userAddress);
 
 
+    Result<String> getFarmList();
 }
