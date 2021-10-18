@@ -117,11 +117,11 @@ setTargetOS(){
 		?)   exit 2;;
 	esac
 	if [ -z "$TARGET_OS" ];
-  then
-      NULSTAR_FILE_NAME=linux_${NULSTAR_FILE_NAME}
-  else
-      NULSTAR_FILE_NAME=${TARGET_OS}_${NULSTAR_FILE_NAME}
-  fi
+ 	then
+     	    NULSTAR_FILE_NAME=linux_${NULSTAR_FILE_NAME}
+ 	else
+  	    NULSTAR_FILE_NAME=${TARGET_OS}_${NULSTAR_FILE_NAME}
+ 	fi
 }
 
 while getopts phb:o:j:iJ:zNa:r:sO:B name
