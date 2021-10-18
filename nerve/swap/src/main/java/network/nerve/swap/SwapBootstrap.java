@@ -113,6 +113,13 @@ public class SwapBootstrap extends RpcModule {
             Log.error("Failed to get height_1_13_0", e);
             throw new RuntimeException(e);
         }
+        try {
+            long heightVersion1_15_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_15_0"));
+            SwapContext.PROTOCOL_1_15_0 = heightVersion1_15_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_15_0", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -226,6 +233,7 @@ public class SwapBootstrap extends RpcModule {
     private void initContext() {
         // 提现黑洞公钥
         SwapContext.BLACKHOLE_PUBKEY = HexUtil.decode(swapConfig.getBlackHolePublicKey());
+        SwapContext.BLACKHOLE_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getBlackHolePublicKey(), swapConfig.getChainId());
         // 手续费奖励的系统接收地址
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKey(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeDestructionAddressPublicKey(), swapConfig.getChainId());

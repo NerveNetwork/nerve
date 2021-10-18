@@ -37,12 +37,14 @@ import io.nuls.core.log.Log;
 import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
+import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.BatchInfo;
 import network.nerve.swap.model.bo.LedgerBalance;
@@ -90,7 +92,8 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
     @Override
     public SwapResult execute(int chainId, Transaction tx, long blockHeight, long blockTime) {
         SwapResult result = new SwapResult();
-        BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
+        Chain chain = chainManager.getChain(chainId);
+        BatchInfo batchInfo = chain.getBatchInfo();
         StableRemoveLiquidityDTO dto = null;
         try {
             CoinData coinData = tx.getCoinDataInstance();
@@ -123,7 +126,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
             // 组装系统成交交易
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
-            Transaction sysDealTx = this.makeSystemDealTx(bus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
+            Transaction sysDealTx = this.makeSystemDealTx(chain, bus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
             // 更新临时余额
@@ -170,7 +173,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         return result;
     }
 
-    private Transaction makeSystemDealTx(StableRemoveLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash,
+    private Transaction makeSystemDealTx(Chain chain, StableRemoveLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash,
                                          long blockTime, LedgerTempBalanceManager tempBalanceManager) {
         SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
         BigInteger[] receives = bus.getAmounts();
@@ -179,6 +182,13 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(pairAddress, tokenLP.getChainId(), tokenLP.getAssetId()).getData();
         sysDeal.newFrom()
                 .setFrom(ledgerBalanceLp, bus.getLiquidity()).endFrom();
+        if (chain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_15_0) {
+            sysDeal.newTo()
+                    .setToAddress(SwapContext.BLACKHOLE_ADDRESS)
+                    .setToAssetsChainId(tokenLP.getChainId())
+                    .setToAssetsId(tokenLP.getAssetId())
+                    .setToAmount(bus.getLiquidity()).endTo();
+        }
         if (receives != null) {
             int length = coins.length;
             for (int i = 0; i < length; i++) {

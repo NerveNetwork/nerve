@@ -46,6 +46,10 @@ public class SwapContext {
      * 黑洞公钥
      */
     public static byte[] BLACKHOLE_PUBKEY;
+    /**
+     * 黑洞地址
+     */
+    public static byte[] BLACKHOLE_ADDRESS;
 
     public static NulsLogger logger;
     
@@ -71,4 +75,8 @@ public class SwapContext {
      */
     public static BigInteger FEE_PERCENT_SYSTEM_RECEIVE_STABLE_SWAP = BI_50;
 
+    /**
+     * v1.15.0 协议升级高度
+     */
+    public static long PROTOCOL_1_15_0 = 0L;
 }
