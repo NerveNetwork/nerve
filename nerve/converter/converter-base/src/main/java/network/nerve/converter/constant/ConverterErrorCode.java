@@ -128,5 +128,6 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode DUPLICATE_REGISTER = ErrorCode.init(ModuleE.CV.getPrefix() + "_0100");
     ErrorCode PROPOSAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0101");
     ErrorCode HTG_RPC_UNAVAILABLE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0102");
+    ErrorCode WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0103");
 
 }

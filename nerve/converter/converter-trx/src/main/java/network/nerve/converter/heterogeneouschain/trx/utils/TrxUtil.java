@@ -26,6 +26,7 @@ package network.nerve.converter.heterogeneouschain.trx.utils;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
@@ -346,11 +347,18 @@ public class TrxUtil {
         return false;
     }
 
-    public static BigDecimal calNVTOfWithdraw(BigDecimal nvtUSD, BigDecimal htgUSD) {
+    public static BigDecimal calcOtherMainAssetOfWithdraw(AssetName otherMainAssetName, BigDecimal otherMainAssetUSD, BigDecimal htgUSD) {
         BigDecimal feeLimit = new BigDecimal(TrxConstant.FEE_LIMIT_OF_WITHDRAW);
-        BigDecimal nvtAmount = feeLimit.multiply(BigDecimal.TEN.pow(2)).multiply(htgUSD).divide(nvtUSD, 0, RoundingMode.DOWN);
-        nvtAmount = nvtAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
-        return nvtAmount;
+        BigDecimal otherMainAssetAmount = feeLimit.multiply(htgUSD).movePointRight(otherMainAssetName.decimals()).movePointLeft(6).divide(otherMainAssetUSD, 0, RoundingMode.DOWN);
+        // 当NVT作为手续费时，向上取整
+        if (otherMainAssetName == AssetName.NVT) {
+            otherMainAssetAmount = otherMainAssetAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
+        }
+        return otherMainAssetAmount;
+    }
+
+    public static BigDecimal calcTrxOfWithdrawProtocol15() {
+        return new BigDecimal(TrxConstant.FEE_LIMIT_OF_WITHDRAW);
     }
 
     public static String trxAddress2eth(String address) {

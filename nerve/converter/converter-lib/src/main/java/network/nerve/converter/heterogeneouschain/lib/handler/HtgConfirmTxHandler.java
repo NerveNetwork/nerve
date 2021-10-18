@@ -47,9 +47,11 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxStorageServic
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
+import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 import org.springframework.beans.BeanUtils;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
@@ -84,6 +86,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     private HtgResendHelper htgResendHelper;
     private HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
+    int count = 0;
 
     //public HtgConfirmTxHandler(BeanMap beanMap) {
     //    this.htgContext = (HtgContext) beanMap.get("htgContext");
@@ -132,6 +135,14 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     }
                     continue;
                 }
+                // 临时处理: 问题交易延迟处理，下一个协议升级版本修复
+                if ("MATIC".equalsIgnoreCase(htgContext.getConfig().getSymbol()) && "0x3f5bf21246badadbef6dd9546ce433486e795f65e424805ee1aae6861379e22e".equalsIgnoreCase(po.getTxHash())) {
+                    count++;
+                    if (count % 30 != 0) {
+                        queue.offer(po);
+                        continue;
+                    }
+                }
                 // 清理无用的变更任务
                 if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
                     clearUnusedChange();
@@ -148,6 +159,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     poFromDB = htgUnconfirmedTxStorageService.findByTxHash(po.getTxHash());
                     if (poFromDB != null) {
                         po.setBlockHeight(poFromDB.getBlockHeight());
+                        po.setTxTime(poFromDB.getTxTime());
                     }
                 }
                 if (po.getBlockHeight() == null) {
@@ -315,14 +327,17 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             po.setValidateTx(validateTx);
         }
         try {
+            Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
+            Long height = htgTx.getBlockNumber().longValue();
+            EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
             // 回调充值交易
             String nerveTxHash = htgCallBackManager.getDepositTxSubmitter().txSubmit(
                     htgTxHash,
-                    po.getBlockHeight(),
+                    height,
                     po.getFrom(),
                     po.getTo(),
                     po.getValue(),
-                    po.getTxTime(),
+                    header.getTimestamp().longValue(),
                     po.getDecimals(),
                     po.isIfContractAsset(),
                     po.getContractAddress(),
@@ -441,13 +456,16 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 try {
                     String realNerveTxHash = nerveTxHash;
                     logger().info("[{}]签名完成的{}交易[{}]调用Nerve确认[{}]", po.getTxType(), htgContext.getConfig().getSymbol(), htgTxHash, realNerveTxHash);
+                    Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
+                    Long height = htgTx.getBlockNumber().longValue();
+                    EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
                     // 签名完成的交易将触发回调Nerve Core
                     htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
                             po.getTxType(),
                             realNerveTxHash,
                             htgTxHash,
-                            txPo.getBlockHeight(),
-                            txPo.getTxTime(),
+                            height,
+                            header.getTimestamp().longValue(),
                             htgContext.MULTY_SIGN_ADDRESS(),
                             txPo.getSigners());
                 } catch (NulsException e) {
@@ -493,6 +511,15 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     private boolean speedUpResendTransaction(HeterogeneousChainTxType txType, String nerveTxHash, HtgUnconfirmedTxPo unconfirmedTxPo, HtgSendTransactionPo txInfo) throws Exception {
+        if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
+            //协议15: 修改手续费机制，支持异构链主资产作为手续费
+            return speedUpResendTransactionProtocol15(txType, nerveTxHash, unconfirmedTxPo, txInfo);
+        } else {
+            return _speedUpResendTransaction(txType, nerveTxHash, unconfirmedTxPo, txInfo);
+        }
+    }
+
+    private boolean _speedUpResendTransaction(HeterogeneousChainTxType txType, String nerveTxHash, HtgUnconfirmedTxPo unconfirmedTxPo, HtgSendTransactionPo txInfo) throws Exception {
         if (txInfo == null) {
             return false;
         }
@@ -513,13 +540,9 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (logger().isDebugEnabled()) {
             logger().debug("加速前: {}", txInfo.toString());
         }
-        // 检查发出交易的地址和当前虚拟银行地址是否一致，否则，重新获取nonce发出交易
-        String from = txInfo.getFrom();
+        // 获取最新nonce发出交易
         String currentFrom = htgContext.ADMIN_ADDRESS();
-        BigInteger nonce = txInfo.getNonce();
-        if (!currentFrom.equals(from)) {
-            nonce = htgWalletApi.getNonce(currentFrom);
-        }
+        BigInteger nonce = htgWalletApi.getLatestNonce(currentFrom);
         txInfo.setNonce(nonce);
 
         BigInteger oldGasPrice = txInfo.getGasPrice();
@@ -528,12 +551,122 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         if (isWithdrawTx && coreApi.isSupportNewMechanismOfWithdrawalFee()) {
             // 计算GasPrice
-            BigDecimal gasPrice = HtgUtil.calGasPriceOfWithdraw(coreApi.getUsdtPriceByAsset(AssetName.NVT), coreApi.getFeeOfWithdrawTransaction(nerveTxHash), coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId());
+            BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, coreApi.getUsdtPriceByAsset(AssetName.NVT), new BigDecimal(coreApi.getFeeOfWithdrawTransaction(nerveTxHash).getFee()), coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId());
             if (gasPrice == null || gasPrice.toBigInteger().compareTo(oldGasPrice) < 0) {
                 logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前已发出交易[{}]的GasPrice: {}", nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
                 return false;
             }
-            gasPrice = HtgUtil.calNiceGasPriceOfWithdraw(new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
+            gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
+            newGasPrice = gasPrice.toBigInteger();
+            if (newGasPrice.compareTo(htgContext.getEthGasPrice()) < 0) {
+                logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前{}网络的GasPrice: {}", nerveTxHash, newGasPrice, htgContext.getConfig().getSymbol(), htgContext.getEthGasPrice());
+                return false;
+            }
+        } else {
+            newGasPrice = calSpeedUpGasPriceByOrdinaryWay(oldGasPrice);
+        }
+        if (newGasPrice == null) {
+            return false;
+        }
+        txInfo.setGasPrice(newGasPrice);
+        // 获取账户信息
+        HeterogeneousAccount account = htgContext.DOCKING().getAccount(currentFrom);
+        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+        // 验证业务数据
+        String contractAddress = txInfo.getTo();
+        String encodedFunction = txInfo.getData();
+        EthCall ethCall = htgWalletApi.validateContractCall(currentFrom, contractAddress, encodedFunction);
+        if (ethCall.isReverted()) {
+            if (ConverterUtil.isCompletedTransaction(ethCall.getRevertReason())) {
+                logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
+                // 发出一个转账给自己的交易覆盖此nonce
+                String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
+                if (StringUtils.isNotBlank(overrideHash)) {
+                    logger().info("转账覆盖交易: {}，被覆盖交易: {}", overrideHash, txInfo.getTxHash());
+                } else {
+                    logger().info("未成功发出覆盖交易");
+                }
+                return true;
+            }
+            logger().warn("[{}]加速重发交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            return false;
+        }
+        HtgSendTransactionPo newTxPo = htgWalletApi.callContractRaw(priKey, txInfo);
+        String htgTxHash = newTxPo.getTxHash();
+        // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
+        htgTxRelationStorageService.save(htgTxHash, nerveTxHash, newTxPo);
+
+        HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
+        BeanUtils.copyProperties(unconfirmedTxPo, po);
+        // 保存未确认交易
+        po.setTxHash(htgTxHash);
+        po.setFrom(currentFrom);
+        po.setTxType(txType);
+        po.setCreateDate(System.currentTimeMillis());
+        htgUnconfirmedTxStorageService.save(po);
+        htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
+        // 监听此交易的打包状态
+        htgListener.addListeningTx(htgTxHash);
+        if (isWithdrawTx && StringUtils.isNotBlank(htgTxHash)) {
+            // 记录提现交易已向HT网络发出
+            htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htgTxHash);
+        }
+        logger().info("加速重发{}网络交易成功, 类型: {}, 详情: {}", htgContext.getConfig().getSymbol(), txType, po.superString());
+        if (logger().isDebugEnabled()) {
+            logger().debug("加速后: {}", newTxPo.toString());
+        }
+        return true;
+    }
+
+    private boolean speedUpResendTransactionProtocol15(HeterogeneousChainTxType txType, String nerveTxHash, HtgUnconfirmedTxPo unconfirmedTxPo, HtgSendTransactionPo txInfo) throws Exception {
+        if (txInfo == null) {
+            return false;
+        }
+        logger().info("检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}", txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
+        // 向HT网络请求验证
+        boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
+        if (isCompleted) {
+            logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
+            // 发出一个转账给自己的交易覆盖此nonce
+            String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
+            if (StringUtils.isNotBlank(overrideHash)) {
+                logger().info("转账覆盖交易: {}，被覆盖交易: {}", overrideHash, txInfo.getTxHash());
+            } else {
+                logger().info("未成功发出覆盖交易");
+            }
+            return true;
+        }
+        if (logger().isDebugEnabled()) {
+            logger().debug("加速前: {}", txInfo.toString());
+        }
+        // 获取最新nonce发出交易
+        String currentFrom = htgContext.ADMIN_ADDRESS();
+        BigInteger nonce = htgWalletApi.getLatestNonce(currentFrom);
+        txInfo.setNonce(nonce);
+
+        BigInteger oldGasPrice = txInfo.getGasPrice();
+        BigInteger newGasPrice;
+        boolean isWithdrawTx = HeterogeneousChainTxType.WITHDRAW == txType;
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+        if (isWithdrawTx) {
+            // 计算GasPrice
+            // 修改手续费机制，支持异构链主资产作为手续费
+            WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
+            BigDecimal feeAmount = new BigDecimal(feeInfo.getFee());
+            BigDecimal gasPrice;
+            if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
+            // 使用非提现网络的其他主资产作为手续费时
+            if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
+                gasPrice = HtgUtil.calcGasPriceOfWithdraw(feeInfo.getHtgMainAssetName(), coreApi.getUsdtPriceByAsset(feeInfo.getHtgMainAssetName()), feeAmount, coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId());
+            } else {
+                gasPrice = HtgUtil.calcGasPriceOfWithdrawByMainAssetProtocol15(feeAmount, unconfirmedTxPo.getAssetId());
+            }
+            if (gasPrice == null || gasPrice.toBigInteger().compareTo(oldGasPrice) < 0) {
+                logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前已发出交易[{}]的GasPrice: {}", nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
+                return false;
+            }
+            gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
             newGasPrice = gasPrice.toBigInteger();
             if (newGasPrice.compareTo(htgContext.getEthGasPrice()) < 0) {
                 logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前{}网络的GasPrice: {}", nerveTxHash, newGasPrice, htgContext.getConfig().getSymbol(), htgContext.getEthGasPrice());

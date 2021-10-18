@@ -4,9 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.ht.base.Base;
-import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
 import network.nerve.converter.heterogeneouschain.ht.model.HtUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
@@ -837,14 +837,16 @@ public class HtWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(70437);
+        setMain();
+        Long height = Long.valueOf(6834640);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
+        System.out.println(block.getTimestamp());
         System.out.println(block.getHash());
     }
 
@@ -919,6 +921,22 @@ public class HtWalletApiTest extends Base {
         Transaction tx = htgWalletApi.getTransactionByHash("0xb5b35967c80ba7048e5b44984c8c9c593c1662b0325a83926cbb8f80dd348e0d");
         List<Token20TransferDTO> dtoList = parseToken20Transfer(tx, htgWalletApi);
         System.out.println(dtoList.size());
+    }
+
+    @Test
+    public void covertNerveAddressByEthTxTest() throws Exception {
+        setMain();
+        String txHash = "0x2f05ab966e9f98e67a099ec0886331e93bb386e2c0d119d34affbb50b34c981e";
+        Transaction tx = htgWalletApi.getTransactionByHash(txHash);
+        System.out.println(HtgUtil.covertNerveAddressByEthTx(tx, 9));
+    }
+
+    @Test
+    public void broadcastTx() {
+        setMain();
+        String txHex = "0xf8ab817f84ae57f54082fc1b94a71edc38d189767582c38a3145b5873052c3e47a80b844a9059cbb00000000000000000000000021decdab7af693437e77936e081c2f4d4391094a0000000000000000000000000000000000000000000000000de0b6b3a7640000820123a0108884db44ff6b7c50259b52183a3c82b0b0930a870771d4a82e30056e32c8d8a06fb3fc2ad4079492df1139b457ca64d05d031a04b2dcbdbc0e0068c73f68d331";
+        EthSendTransaction send = htgWalletApi.send(txHex);
+        System.out.println();
     }
 
     private List<Token20TransferDTO> parseToken20Transfer(Transaction ethTx, HtgWalletApi htgWalletApi) throws Exception {

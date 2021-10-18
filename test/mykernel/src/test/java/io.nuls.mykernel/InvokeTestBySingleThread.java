@@ -41,7 +41,7 @@ public class InvokeTestBySingleThread {
 
             String url = "ws://"+ HostInfo.getLocalIP()+":" + port + "/ws";
 
-            ResponseMessageProcessor.handshake(url);
+            ResponseMessageProcessor.handshake(url,2);
 
             /*
              * 和指定地址同步

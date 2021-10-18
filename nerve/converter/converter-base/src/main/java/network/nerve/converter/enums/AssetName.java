@@ -23,18 +23,51 @@
  */
 package network.nerve.converter.enums;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author: Mimi
  * @date: 2020-02-21
  */
 public enum AssetName {
-    NVT,
-    ETH,
-    BNB,
-    HT,
-    OKT,
-    ONE,
-    MATIC,
-    KCS,
-    TRX;
+    NVT(9, 8),
+    ETH(101, 18),
+    BNB(102, 18),
+    HT(103, 18),
+    OKT(104, 18),
+    ONE(105, 18),
+    MATIC(106, 18),
+    KCS(107, 18),
+    TRX(108, 6);
+
+    // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+    private int chainId;
+    private int decimals;
+    private static Map<Integer, AssetName> map;
+
+    AssetName(int chainId, int decimals) {
+        this.chainId = chainId;
+        this.decimals = decimals;
+        putValue(this.chainId, this);
+    }
+
+    public int chainId() {
+        return chainId;
+    }
+
+    public int decimals() {
+        return decimals;
+    }
+
+    private static AssetName putValue(int value, AssetName valueEnum) {
+        if (map == null) {
+            map = new HashMap<>(8);
+        }
+        return map.put(value, valueEnum);
+    }
+
+    public static AssetName getEnum(int value) {
+        return map.get(value);
+    }
 }

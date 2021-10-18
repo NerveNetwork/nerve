@@ -41,12 +41,14 @@ import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.VirtualBankDirector;
+import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.DistributionFeePO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
@@ -74,6 +76,8 @@ public class DistributionFeeProcessor implements TransactionProcessor {
     private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService;
     @Autowired
     private AssembleTxService assembleTxService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public int getType() {
@@ -198,7 +202,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             }
             listBasisTxRewardAddressBytes.add(AddressTool.getAddress(address));
         }
-        CoinData coinData = null;
+        CoinData coinData;
         try {
             coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
         } catch (NulsException e) {
@@ -215,9 +219,12 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         if (null != blockHeader) {
             height = blockHeader.getHeight();
         }
-        BigInteger distributionFee = null;
+        WithdrawalTotalFeeInfo distributionFeeInfo;
+        BigInteger distributionFee;
         try {
-            distributionFee = assembleTxService.calculateFee(chain, height, basisTx, isProposal);
+            // 修改手续费机制，支持异构链主资产作为手续费
+            distributionFeeInfo = assembleTxService.calculateFee(chain, height, basisTx, isProposal);
+            distributionFee = distributionFeeInfo.getFee();
         } catch (NulsException e) {
             return e.getErrorCode().getCode();
         }
@@ -230,7 +237,25 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             chain.getLogger().error(ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getMsg());
             return ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
         }
+
+        Coin feeCoin = distributionFeeInfo.getFeeCoin();
         for (CoinTo coinTo : coinData.getTo()) {
+            // 协议15: 增加验证feeCoin
+            if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
+                if (distributionFeeInfo.isNvtAsset()) {
+                    if (coinTo.getAssetsChainId() != chain.getConfig().getChainId()
+                            || coinTo.getAssetsId() != chain.getConfig().getAssetId()) {
+                        chain.getLogger().error("{}, coinTo:{}-{}, need: {}-{}", ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg(), coinTo.getAssetsChainId(), coinTo.getAssetsId(), chain.getConfig().getChainId(), chain.getConfig().getAssetId());
+                        return ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getCode();
+                    }
+                } else {
+                    if (coinTo.getAssetsChainId() != feeCoin.getAssetsChainId()
+                            || coinTo.getAssetsId() != feeCoin.getAssetsId()) {
+                        chain.getLogger().error("{}, coinTo:{}-{}, need: {}-{}", ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg(), coinTo.getAssetsChainId(), coinTo.getAssetsId(), feeCoin.getAssetsChainId(), feeCoin.getAssetsId());
+                        return ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getCode();
+                    }
+                }
+            }
             BigInteger originalAmount = coinToOriginalMap.get(AddressTool.getStringAddressByBytes(coinTo.getAddress()));
             if (!BigIntegerUtils.isEqual(coinTo.getAmount(), originalAmount)) {
                 chain.getLogger().error("{}, coinToAmount:{}, originalAmount:{}, amount:{}", ConverterErrorCode.DISTRIBUTION_FEE_ERROR.getMsg(), coinTo.getAmount(), originalAmount);
@@ -265,8 +290,8 @@ public class DistributionFeeProcessor implements TransactionProcessor {
      * @return
      */
     private String validProposalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
-        ConfirmProposalTxData txData = null;
-        ProposalExeBusinessData businessData = null;
+        ConfirmProposalTxData txData;
+        ProposalExeBusinessData businessData;
         try {
             txData = ConverterUtil.getInstance(basisTx.getTxData(), ConfirmProposalTxData.class);
             businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);

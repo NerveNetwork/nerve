@@ -54,7 +54,6 @@ public class QuotationBootstrap extends RpcModule {
     public Module[] declareDependent() {
         return new Module[]{
                 Module.build(ModuleE.NW),
-                Module.build(ModuleE.LG),
                 Module.build(ModuleE.TX),
                 Module.build(ModuleE.CS),
                 Module.build(ModuleE.AC),

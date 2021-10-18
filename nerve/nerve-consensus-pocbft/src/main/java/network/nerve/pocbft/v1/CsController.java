@@ -47,9 +47,10 @@ public class CsController extends BasicObject {
             try {
                 Thread.sleep(100L);
                 index++;
-                if (index > chain.getConfig().getPackingIntervalMills()/100L) {
+                if (index > chain.getConfig().getPackingIntervalMills() / 100L) {
                     index = 0;
                     Log.warn("It's been too long..");
+                    return;
                 }
             } catch (InterruptedException e) {
                 log.error(e);

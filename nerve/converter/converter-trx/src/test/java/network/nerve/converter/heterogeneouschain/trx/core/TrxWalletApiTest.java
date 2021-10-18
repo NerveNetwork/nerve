@@ -1,6 +1,7 @@
 package network.nerve.converter.heterogeneouschain.trx.core;
 
 import com.google.protobuf.UnknownFieldSet;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.trx.base.Base;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
@@ -55,6 +56,12 @@ public class TrxWalletApiTest extends Base {
         // 0x370dd53139e0d8923f9feaf1989344ec64f6ff6d
         erc20Address = "TEzJjjC4NrLrYFthGFHzQon5zrErNw1JN9";
         erc20Decimals = 6;
+    }
+
+    protected void setErc20K18N() {
+        // 0xe10095ee56d7181d59b49f3cbdd596945fd2d68d
+        erc20Address = "TWUujuxBNCGPZNiyySfYuBJgFumrvS2iRd";
+        erc20Decimals = 18;
     }
 
     /** FortuneCai (FCI) */
@@ -114,6 +121,17 @@ public class TrxWalletApiTest extends Base {
         keyPair = createPair(fromPriKey);
     }
 
+    protected void setBeta() {
+        list = new ArrayList<>();
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
+        list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
+        list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 0x3c2ff003ff996836d39601ca22394a58ca9c473b
+        this.multySignContractAddress = "TWajcnpyyZLRtLkFd6p4ZAMn5y4GpDa6MB";
+        this.priKey = list.get(0);
+        this.address = new KeyPair(priKey).toBase58CheckAddress();
+
+    }
+
     @Before
     public void before() {
         setDev();
@@ -124,8 +142,9 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void mainCrossOutTest() throws Exception {
+        setUX();
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        String value = "3";
+        String value = "100";
         BigInteger valueBig = TrxUtil.convertTrxToSun(new BigDecimal(value));
         String erc20 = TrxConstant.ZERO_ADDRESS_TRX;
         Function function = getCrossOutFunction(to, valueBig, erc20);
@@ -167,7 +186,7 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
-        setM2();
+        setUX();
         setErc20DX();
         // ERC20 转账数量
         String sendAmount = "200";
@@ -254,11 +273,14 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void transferTRC20() throws Exception {
-        setUX();
+        setM2();
+        //setUX();
+
         //setErc20FCI();
-        setErc20DX();
-        String to = multySignContractAddress;
-        String value = "1";
+        //setErc20DX();
+        setErc20K18N();
+        String to = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        String value = "90000000";
         // 估算feeLimit
         Function function = new Function(
                 "transfer",
@@ -328,12 +350,13 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void managerChange() throws Exception {
-        String txKey = "ddd0000000000000000000000000000000000000000000000000000000000004";
+        setBeta();
+        String txKey = "aaa0000000000000000000000000000000000000000000000000000000000000";
         //String[] adds = new String[]{"0x847772e7773061c93d0967c56f2e4b83145c8cb2","0x4273e90fbfe5fca32704c02987d938714947a937","0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
-        String[] adds = new String[]{};
-        String[] removes = new String[]{"0x847772e7773061c93d0967c56f2e4b83145c8cb2"};
+        String[] adds = new String[]{"0xae00574bdc6bbd40612ec024e2536cc0784f73e4"};
+        String[] removes = new String[]{};
         int txCount = 1;
-        int signCount = 10;
+        int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
@@ -401,7 +424,7 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getTxReceipt() throws Exception {
-        String txHash = "0x0e26a62e9ed30d3e802f4b69f78df83e85324d185bcd22b37eaae61fcc2d1893";
+        String txHash = "66c91f96f8d05ab36091fe38cc3b76b167b574329a7cc5d1b928971dc1d2f277";
         Response.TransactionInfo txInfo = wrapper.getTransactionInfoById(txHash);
         String s = Numeric.toHexString(txInfo.getContractResult(0).toByteArray());
         System.out.println(TrxUtil.getRevertReason(s));
@@ -522,7 +545,7 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void needFeeTest() {
-        BigDecimal nvt = calNVTOfWithdraw(new BigDecimal("0.0304"), new BigDecimal("0.07"));
+        BigDecimal nvt = calcOtherMainAssetOfWithdraw(AssetName.NVT, new BigDecimal("0.0304"), new BigDecimal("0.07"));
         System.out.println(nvt);
     }
 

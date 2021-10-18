@@ -277,6 +277,8 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         BigInteger difference = expectedReward.subtract(realReward);
         user.setRewardDebt(user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12));
         if (difference.compareTo(BigInteger.ZERO) > 0) {
+        } else if (user.getAmount().compareTo(BigInteger.ZERO) == 0) {
+            user.setRewardDebt(BigInteger.ZERO);
         } else {
             BigInteger value = difference.divide(user.getAmount());
             user.setRewardDebt(user.getRewardDebt().subtract(value));

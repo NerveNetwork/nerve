@@ -156,7 +156,7 @@ public class ConfirmWithdrawalVerifier {
          */
         BigInteger fee = new BigInteger("0");
         BigInteger arrivedAmount = withdrawalTo.getAmount().subtract(fee);
-        if (converterCoreApi.isSupportERC20OfTransferBurn()) {
+        if (converterCoreApi.isSupportProtocol12ERC20OfTransferBurn()) {
             if (arrivedAmount.compareTo(info.getValue()) < 0) {
                 // 提现交易确认交易中金额与异构确认交易金额数据不匹配
                 throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);

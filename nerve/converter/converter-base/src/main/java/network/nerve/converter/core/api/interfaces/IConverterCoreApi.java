@@ -28,6 +28,7 @@ import io.nuls.core.exception.NulsException;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
+import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -104,7 +105,7 @@ public interface IConverterCoreApi {
     /**
      * 获取提现交易提供的NVT手续费，包含用户追加的手续费
      */
-    BigDecimal getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException;
+    WithdrawalTotalFeeInfo getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException;
 
     /**
      * 获取指定资产的USDT价格
@@ -118,7 +119,7 @@ public interface IConverterCoreApi {
     /**
      * 是否支持转账即销毁部分的ERC20
      */
-    boolean isSupportERC20OfTransferBurn();
+    boolean isSupportProtocol12ERC20OfTransferBurn();
 
     /**
      * 验证是否为nerve地址
@@ -128,15 +129,15 @@ public interface IConverterCoreApi {
     /**
      * 是否支持充值ERC20的新验证方式I
      */
-    boolean isSupportNewValidationOfERC20();
-
-    /**
-     * 是否支持波场跨链 v1.15.0
-     */
-    boolean isSupportTrxCrossChain();
+    boolean isSupportProtocol13NewValidationOfERC20();
 
     /**
      * 是否支持协议14 v1.14.0
      */
     boolean isProtocol14();
+
+    /**
+     * 是否支持波场跨链 v1.15.0
+     */
+    boolean isSupportProtocol15TrxCrossChain();
 }

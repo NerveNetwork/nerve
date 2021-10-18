@@ -63,7 +63,7 @@ public class TrxWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
         LinkedBlockingDeque<HtgWaitingTxPo> queue = htgContext.WAITING_TX_QUEUE();
         HtgWaitingTxPo po = null;
         try {
-            if (!htgContext.getConverterCoreApi().isSupportTrxCrossChain()) return;
+            if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
                 return;

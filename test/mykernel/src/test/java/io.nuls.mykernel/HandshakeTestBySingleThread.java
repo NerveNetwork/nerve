@@ -34,11 +34,11 @@ public class HandshakeTestBySingleThread {
             ConnectManager.startService = true;
             SpringLiteContext.init("io.nuls.rpc.cmd.kernel");
             ConnectManager.scanPackage(Set.of("io.nuls.rpc.cmd.kernel"));
-            ConnectManager.ROLE_MAP.put(ModuleE.KE.abbr,connectionInformation);
+            ConnectManager.ROLE_MAP.put(ModuleE.KE.abbr, connectionInformation);
             ConnectManager.updateStatus();
 
 
-            String url = "ws://"+ HostInfo.getLocalIP()+":" + port + "/ws";
+            String url = "ws://" + HostInfo.getLocalIP() + ":" + port + "/ws";
 
 
             /*
@@ -47,15 +47,15 @@ public class HandshakeTestBySingleThread {
             ResponseMessageProcessor.syncKernel(url);
 
             long time = System.currentTimeMillis();
-            ResponseMessageProcessor.handshake(url);
+            ResponseMessageProcessor.handshake(url, 2);
             System.out.println("单次握手耗时：" + (System.currentTimeMillis() - time));
 
             long now = System.nanoTime();
 
-            int count  = 100000;
+            int count = 100000;
 
-            for(int i = 0 ; i < count ; i++) {
-                ResponseMessageProcessor.handshake(url);
+            for (int i = 0; i < count; i++) {
+                ResponseMessageProcessor.handshake(url,2);
             }
 
             long timeDiff = System.nanoTime() - now;

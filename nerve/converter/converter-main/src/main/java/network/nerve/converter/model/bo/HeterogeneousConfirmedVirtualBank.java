@@ -197,4 +197,23 @@ public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
         result = 31 * result + (heterogeneousTxHash != null ? heterogeneousTxHash.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"nerveTxHash\":")
+                .append('\"').append(nerveTxHash).append('\"');
+        sb.append(",\"heterogeneousChainId\":")
+                .append(heterogeneousChainId);
+        sb.append(",\"heterogeneousAddress\":")
+                .append('\"').append(heterogeneousAddress).append('\"');
+        sb.append(",\"heterogeneousTxHash\":")
+                .append('\"').append(heterogeneousTxHash).append('\"');
+        sb.append(",\"effectiveTime\":")
+                .append(effectiveTime);
+        sb.append(",\"signedHeterogeneousAddress\":")
+                .append('\"').append(signedHeterogeneousAddress.size()).append('\"');
+        sb.append('}');
+        return sb.toString();
+    }
 }

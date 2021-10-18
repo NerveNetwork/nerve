@@ -28,8 +28,8 @@ packageVersion=%PACKAGE_VERSION%
 
 [network]
 port=7001
-reverseCheck=0
 crossPort=7002
+reverseCheck=0
 #魔法参数
 packetMagic=2020071001
 #种子节点

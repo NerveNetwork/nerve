@@ -125,7 +125,7 @@ public class HtgParseTxHelper implements BeanInitial {
                 txReceipt = htgWalletApi.getTxReceipt(txHash);
             }
             // 协议v1.13
-            if (htgContext.getConverterCoreApi().isSupportNewValidationOfERC20()) {
+            if (htgContext.getConverterCoreApi().isSupportProtocol13NewValidationOfERC20()) {
                 isWithdraw = this.newParseWithdrawTxReceipt(tx, txReceipt, txInfo);
             } else {
                 isWithdraw = this.parseWithdrawTxReceipt(txReceipt, txInfo);
@@ -292,7 +292,7 @@ public class HtgParseTxHelper implements BeanInitial {
 
     private boolean validationEthDepositByCrossOut(Transaction tx, TransactionReceipt txReceipt, HeterogeneousTransactionInfo po) throws Exception {
         // 协议v1.13
-        if (htgContext.getConverterCoreApi().isSupportNewValidationOfERC20()) {
+        if (htgContext.getConverterCoreApi().isSupportProtocol13NewValidationOfERC20()) {
             return newValidationEthDepositByCrossOut(tx, txReceipt, po);
         } else {
             return _validationEthDepositByCrossOut(tx, txReceipt, po);
@@ -404,7 +404,7 @@ public class HtgParseTxHelper implements BeanInitial {
                             return false;
                         }
                         // 是否支持转账即销毁部分的ERC20
-                        if (htgContext.getConverterCoreApi().isSupportERC20OfTransferBurn()) {
+                        if (htgContext.getConverterCoreApi().isSupportProtocol12ERC20OfTransferBurn()) {
                             if (amount.compareTo(_amount) > 0) {
                                 logger().warn("交易[{}]的ERC20充值金额不匹配", txHash);
                                 return false;

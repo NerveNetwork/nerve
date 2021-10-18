@@ -175,15 +175,12 @@ public class SwapBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                Module.build(ModuleE.CS),
                 Module.build(ModuleE.TX),
                 Module.build(ModuleE.NW),
                 Module.build(ModuleE.LG),
                 Module.build(ModuleE.BL),
                 Module.build(ModuleE.AC),
-                new Module(ModuleE.PU.abbr, ROLE),
-                new Module(ModuleE.CC.abbr, ROLE),
-                new Module(ModuleE.QU.abbr, ROLE)
+                new Module(ModuleE.PU.abbr, ROLE)
         };
     }
 

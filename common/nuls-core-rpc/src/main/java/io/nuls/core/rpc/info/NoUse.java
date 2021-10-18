@@ -36,7 +36,7 @@ public class NoUse {
         ConnectManager.LOCAL.setAbbreviation(ModuleE.KE.abbr);
         ConnectManager.LOCAL.setModuleName(ModuleE.KE.name);
         ConnectManager.LOCAL.setModuleDomain(ModuleE.KE.domain);
-        Map<String, String> connectionInformation = new HashMap<>(2);
+        Map<String, String> connectionInformation = new HashMap<>(12);
         connectionInformation.put(Constants.KEY_IP, host);
         connectionInformation.put(Constants.KEY_PORT, port + "");
         ConnectManager.LOCAL.setConnectionInformation(connectionInformation);
@@ -54,6 +54,7 @@ public class NoUse {
         startKernel(HostInfo.getLocalIP(), port, "");
         return port;
     }
+
     /**
      * 模拟启动模块，单元测试专用
      * Analog Startup Module, Unit Test Specific
@@ -71,7 +72,7 @@ public class NoUse {
                 .moduleRoles("test_role", new String[]{"1.0"})
                 .moduleVersion("1.0");
 
-        ConnectManager.getConnectByUrl("ws://" + HostInfo.getLocalIP() + ":" + port);
+        ConnectManager.getConnectByUrl("ws://" + HostInfo.getLocalIP() + ":" + port, Constants.THREAD_POOL_SIZE);
         // Get information from kernel
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":" + port);
     }

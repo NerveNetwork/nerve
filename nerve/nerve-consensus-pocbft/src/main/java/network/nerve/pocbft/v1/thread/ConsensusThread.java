@@ -85,7 +85,7 @@ public class ConsensusThread extends BasicObject implements Runnable {
                     continue;
                 }
                 //真正的业务逻辑
-                startConsensus();
+                runConsenrunsus();
 
             } catch (Throwable e) {
                 log.error(e);
@@ -99,7 +99,7 @@ public class ConsensusThread extends BasicObject implements Runnable {
     }
 
     //执行共识功能：投票、出块、验证
-    private void startConsensus() {
+    private void runConsenrunsus() {
         //这里有几种情况：1启动网络从0开始，2重启网络从某个高度，3启动本节点
         //目标是不管哪种情况，都能尽快达成共识（轮次一致）
         this.csController.consensus();

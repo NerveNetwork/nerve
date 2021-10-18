@@ -34,11 +34,11 @@ public class NettyClient {
      * 连接服务器，返回连接通道
      * Connect to the server and return to the connection channel
      */
-    public static Channel createConnect(String uri) {
-        return createConnect(uri, 0);
+    public static Channel createConnect(String uri, int poolSize) {
+        return createConnect(uri, 0, poolSize);
     }
 
-    public static Channel createConnect(String uri, int tryCount) {
+    public static Channel createConnect(String uri, int tryCount, int poolSize) {
         try {
             URI webSocketURI = null;
             try {
@@ -49,7 +49,7 @@ public class NettyClient {
             final ClientHandler handler =
                     new ClientHandler(
                             WebSocketClientHandshakerFactory.newHandshaker(
-                                    webSocketURI, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), 104 * 1024 * 1024));
+                                    webSocketURI, WebSocketVersion.V13, null, true, new DefaultHttpHeaders(), 104 * 1024 * 1024), poolSize);
             EventLoopGroup group = new NioEventLoopGroup();
             Bootstrap b = new Bootstrap();
             b.group(group)
@@ -77,7 +77,7 @@ public class NettyClient {
                     Log.error("重试ws连接时，休眠进程发生异常");
                 }
                 Log.info("创建ws:{}失败，第{}重试", uri, tryCount + 1);
-                return createConnect(uri, tryCount + 1);
+                return createConnect(uri, tryCount + 1, poolSize);
             } else {
                 Log.error("创建ws连接失败：{}", uri, e);
                 return null;

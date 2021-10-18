@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.kcs.base.Base;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
@@ -199,11 +200,11 @@ public class KcsWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setBeta();
+        setLocalTest();
         // 初始化 账户
         setAccount_EFa1();
         // MainAsset数量
-        String sendAmount = "0.1";
+        String sendAmount = "2";
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
@@ -778,7 +779,7 @@ public class KcsWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 

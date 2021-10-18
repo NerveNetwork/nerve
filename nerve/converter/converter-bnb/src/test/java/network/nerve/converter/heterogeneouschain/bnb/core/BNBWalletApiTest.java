@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.bnb.base.Base;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
@@ -34,6 +35,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 
 public class BnbWalletApiTest extends Base {
@@ -622,6 +624,19 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void txInputErc20TransferDecoderTest() throws JsonProcessingException {
+        String input = "0xa9059cbb00000000000000000000000021decdab7af693437e77936e081c2f4d4391094a0000000000000000000000000000000000000000000000000de0b6b3a7640000";
+        List<Object> typeList = HtgUtil.parseInput(input, Utils.convert(
+                List.of(
+                        new TypeReference<Address>(){},
+                        new TypeReference<Uint256>(){}
+                )
+        ));
+        System.out.println(JSONUtils.obj2PrettyJson(typeList));
+
+    }
+
+    @Test
     public void txInputCrossOutDecoderTest() throws JsonProcessingException {
         String input = "0x0889d1f00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000bebc20000000000000000000000000025ebbac2ca9db0c1d6f0fc959bbc74985417bab00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e553541784339735141000000000000000000000000000000000000000000000000000000";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT);
@@ -793,7 +808,7 @@ public class BnbWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
@@ -869,9 +884,71 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void crossOutEstimateGasTest() throws Exception {
+        //setMain();
+        String contractAddress = "0xf7915d4de86b856F3e51b894134816680bf09EEE";
+        BigInteger convertAmount = BigInteger.valueOf(100000000L);
+        Function function = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x477fe38678c166ccf0e2d6cfa755216e2a09118e");
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        //setMain();
+        String contractAddress = "0x477fe38678c166ccf0e2d6cfa755216e2a09118e";
+        BigInteger convertAmount = BigInteger.valueOf(100000000L);
+        String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
     public void symboltest() throws Exception {
-        setMain();
-        String contractAddress = "0x66a79d23e58475d2738179ca52cd0b41d73f0bea";
+        //setMain();
+        String contractAddress = "0x75363e9a5e6fb87eb6197ef6b633961061636348";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
@@ -1003,6 +1080,53 @@ public class BnbWalletApiTest extends Base {
             oldValue = oldValue == null ? BigInteger.ZERO : oldValue;
             System.out.println(newValue.compareTo(oldValue) == 0);
             System.out.println();
+        }
+    }
+
+    @Test
+    public void newValidationEthDepositByCrossOutTest() throws Exception {
+        setMain();
+        List<String> list = new ArrayList<>();
+        list.add("0xf33d7958967d36331eb20eafb23e49dcfcbddb5f925b6b23608cb5fd74a1433c");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", new BnbContext());
+            Method method = helper.getClass().getDeclaredMethod("newValidationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+
+            method = helper.getClass().getDeclaredMethod("_validationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            method.setAccessible(true);
+            invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+        }
+    }
+
+    @Test
+    public void hasERC20WithListeningAddressTest() throws Exception {
+        setMain();
+        Predicate<String> predicate = toAddress -> "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5".equals(toAddress);
+        List<String> list = new ArrayList<>();
+        list.add("0xf33d7958967d36331eb20eafb23e49dcfcbddb5f925b6b23608cb5fd74a1433c");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgERC20Helper helper = new HtgERC20Helper();
+            BeanUtilTest.setBean(helper, "htgContext", new BnbContext());
+            Method method = helper.getClass().getDeclaredMethod("hasERC20WithListeningAddressNew", TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class, Predicate.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, txReceipt, po, predicate);
+            System.out.println(invoke);
+
+            method = helper.getClass().getDeclaredMethod("hasERC20WithListeningAddressOld", TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class, Predicate.class);
+            method.setAccessible(true);
+            invoke = method.invoke(helper, txReceipt, po, predicate);
+            System.out.println(invoke);
         }
     }
 

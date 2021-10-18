@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
@@ -12,6 +13,7 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.matic.base.Base;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
+import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
@@ -29,6 +31,7 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -199,11 +202,11 @@ public class MaticWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setBeta();
+        setLocalTest();
         // 初始化 账户
         setAccount_EFa1();
         // MainAsset数量
-        String sendAmount = "0.1";
+        String sendAmount = "0.09";
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
@@ -361,7 +364,7 @@ public class MaticWalletApiTest extends Base {
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
         this.multySignContractAddress = "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5";
@@ -778,14 +781,17 @@ public class MaticWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(1560320);
+        setMain();
+        //Long height = Long.valueOf(19146948);
+        Long height = Long.valueOf(19146953);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
+        System.out.println(block.getTimestamp());
         System.out.println(block.getHash());
     }
 
@@ -802,7 +808,8 @@ public class MaticWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
-        String directTxHash = "0x531d7ee163ef7e258036d701e730a5bc784a589999e4bfaf1d193700ac429bdf";
+        setMain();
+        String directTxHash = "0x3f5bf21246badadbef6dd9546ce433486e795f65e424805ee1aae6861379e22e";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(tx);
     }
@@ -877,6 +884,39 @@ public class MaticWalletApiTest extends Base {
                 new BigDecimal("15.1").scaleByPowerOfTen(9).toBigInteger(),
                 latestNonce);
         System.out.println(txHash);
+    }
+
+    @Test
+    public void newParseWithdrawTxReceiptTest() throws Exception {
+        setMain();
+        setMainData();
+        context.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
+        List<String> list = new ArrayList<>();
+        list.add("0x3f5bf21246badadbef6dd9546ce433486e795f65e424805ee1aae6861379e22e");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", context);
+            Method method = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceipt", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke);
+            BigInteger newValue = po.getValue();
+            System.out.println(newValue);
+            newValue = newValue == null ? BigInteger.ZERO : newValue;
+
+            Method method1 = helper.getClass().getDeclaredMethod("parseWithdrawTxReceipt", TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method1.setAccessible(true);
+            Object invoke1 = method1.invoke(helper, txReceipt, po);
+            System.out.println(invoke1);
+            BigInteger oldValue = po.getValue();
+            System.out.println(oldValue);
+            oldValue = oldValue == null ? BigInteger.ZERO : oldValue;
+            System.out.println(newValue.compareTo(oldValue) == 0);
+            System.out.println();
+        }
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

@@ -9,6 +9,7 @@ import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.CmdPriority;
+import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.RequestOnly;
 import io.nuls.core.rpc.model.message.Message;
 import io.nuls.core.rpc.model.message.MessageType;
@@ -32,9 +33,18 @@ import java.util.concurrent.TimeUnit;
  */
 public class ServerHandler extends SimpleChannelInboundHandler<Object> {
 
-    private ThreadPoolExecutor requestExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    private ThreadPoolExecutor requestExecutorService;
 
-    private ThreadPoolExecutor responseExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    private ThreadPoolExecutor responseExecutorService;
+
+    public ServerHandler() {
+        int count = Constants.THREAD_POOL_SIZE;
+//        if (ModuleE.CS.abbr.equals(ConnectManager.LOCAL.getAbbreviation())) {
+//            count = count * 2;
+//        }
+        requestExecutorService = new ThreadPoolExecutor(count, count, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+        responseExecutorService = new ThreadPoolExecutor(count, count, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {

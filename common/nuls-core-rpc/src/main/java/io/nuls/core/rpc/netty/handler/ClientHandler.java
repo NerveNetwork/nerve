@@ -36,10 +36,9 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
     private WebSocketClientHandshaker handShaker;
     private ChannelPromise handshakeFuture;
 
-    private ThreadPoolExecutor requestExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
+    private ThreadPoolExecutor requestExecutorService;
 
-    private ThreadPoolExecutor responseExecutorService = new ThreadPoolExecutor(Constants.THREAD_POOL_SIZE, Constants.THREAD_POOL_SIZE, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("server-handler-request"));
-
+    private ThreadPoolExecutor responseExecutorService;
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) {
@@ -66,8 +65,10 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
         return this.handshakeFuture;
     }
 
-    public ClientHandler(WebSocketClientHandshaker handShaker) {
+    public ClientHandler(WebSocketClientHandshaker handShaker, int poolSize) {
         this.handShaker = handShaker;
+        this.requestExecutorService = new ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("client-handler-request"));
+        this.responseExecutorService = new ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(), new NulsThreadFactory("client-handler-request"));
     }
 
     @Override

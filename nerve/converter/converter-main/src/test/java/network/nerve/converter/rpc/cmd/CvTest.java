@@ -354,12 +354,12 @@ public class CvTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
-        params.put("type", ProposalTypeEnum.TRANSFER.value());
+        params.put("type", ProposalTypeEnum.EXPELLED.value());
         params.put("content", "这是一个提案的内容...");
-        params.put("heterogeneousChainId", bnbChainId);
-        params.put("heterogeneousTxHash", "0x178373fc06f888487790b9d7fa256f4a166451c5f3facf17a65fb250a7cd2ea1");
-        params.put("businessAddress", address30);
-        params.put("hash", "fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0");
+        //params.put("heterogeneousChainId", bnbChainId);
+        //params.put("heterogeneousTxHash", "0x178373fc06f888487790b9d7fa256f4a166451c5f3facf17a65fb250a7cd2ea1");
+        params.put("businessAddress", "TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
+        //params.put("hash", "fac6cf4924910b3d30ff2509d43420bf34c030f6c4869e14bb5d94ed12d370a0");
         params.put("voteRangeType", ProposalVoteRangeTypeEnum.BANK.value());
         params.put("remark", "提案");
         params.put("address", address20);

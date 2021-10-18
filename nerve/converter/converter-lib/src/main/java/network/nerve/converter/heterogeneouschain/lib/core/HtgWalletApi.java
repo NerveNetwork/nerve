@@ -638,15 +638,16 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     public HtgSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function) throws Exception {
-        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null, null);
+        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null, null, null);
     }
 
-    public HtgSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value, BigInteger gasPrice) throws Exception {
+    public HtgSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value, BigInteger gasPrice, BigInteger nonce) throws Exception {
         value = value == null ? BigInteger.ZERO : value;
         gasPrice = gasPrice == null || gasPrice.compareTo(BigInteger.ZERO) == 0 ? htgContext.getEthGasPrice() : gasPrice;
+        nonce = nonce == null ? this.getNonce(from) : nonce;
         String encodedFunction = FunctionEncoder.encode(function);
 
-        HtgSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction, value, gasPrice), args -> {
+        HtgSendTransactionPo txPo = this.timeOutWrapperFunction("callContract", List.of(from, privateKey, contractAddress, gasLimit, encodedFunction, value, gasPrice, nonce), args -> {
             int i =0;
             String _from = args.get(i++).toString();
             String _privateKey = args.get(i++).toString();
@@ -655,10 +656,10 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             String _encodedFunction = args.get(i++).toString();
             BigInteger _value = (BigInteger) args.get(i++);
             BigInteger _gasPrice = (BigInteger) args.get(i++);
+            BigInteger _nonce = (BigInteger) args.get(i++);
             Credentials credentials = Credentials.create(_privateKey);
-            BigInteger nonce = this.getNonce(_from);
             RawTransaction rawTransaction = RawTransaction.createTransaction(
-                    nonce,
+                    _nonce,
                     _gasPrice,
                     _gasLimit,
                     _contractAddress,

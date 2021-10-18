@@ -149,4 +149,32 @@ public class ConverterTools implements CallRpc {
             return Result.fail(e.getCode(), e.getMessage());
         }
     }
+
+    /**
+     * 根据异构链跨链转入的交易hash查询NERVE的交易hash
+     */
+    public Result<String> getRechargeNerveHash(int chainId, String heterogeneousTxHash) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("heterogeneousTxHash", heterogeneousTxHash);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_getRechargeNerveHash", params, (Function<Map<String, Object>, Result<String>>) res -> new Result(res.get("value")));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 根据提现交易hash获取确认信息
+     */
+    public Result<Map<String, Object>> findByWithdrawalTxHash(int chainId, String txHash) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("txHash", txHash);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_findByWithdrawalTxHash", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
 }

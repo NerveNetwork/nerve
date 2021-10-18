@@ -52,7 +52,7 @@ public class ProtocolRegisterTest {
         /*
          * 链接到指定地址
          * */
-        ConnectManager.getConnectByUrl(kernelUrl);
+        ConnectManager.getConnectByUrl(kernelUrl, 2);
         /*
          * 和指定地址同步
          * */

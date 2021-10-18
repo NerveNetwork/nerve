@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -236,5 +237,14 @@ public class LoadJsonFileTest {
             String hashBase64 = (String) ((Map) ((Map) map.get("tx")).get("hash")).get("bytes");
             System.out.println(HexUtil.encode(Base64.getDecoder().decode(hashBase64)));
         }
+    }
+
+    @Test
+    public void bigNumberTest() {
+        BigInteger num = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639934");
+        BigInteger divide = num.divide(BigInteger.valueOf(2));
+        System.out.println(divide.toString());
+        System.out.println(divide.toByteArray().length);
+
     }
 }

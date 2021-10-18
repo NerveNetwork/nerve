@@ -204,7 +204,11 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     }
 
     private int confirmChangeTx(String nerveTxHash, HeterogeneousConfirmedVirtualBank bank, int mergeCount) throws Exception {
-        AtomicInteger count = countHash.getOrDefault(nerveTxHash, new AtomicInteger(0));
+        AtomicInteger count = countHash.get(nerveTxHash);
+        if (count == null) {
+            count = new AtomicInteger(0);
+            countHash.put(nerveTxHash, count);
+        }
         logger().info("收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
         HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
         if (vbPo == null) {
@@ -230,8 +234,9 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 return 0;
             }
             logger().info("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-            // 每重复收集10次，再检查是否收集完成
-            if (count.incrementAndGet() % 10 != 0) {
+            // 每重复收集5次，再检查是否收集完成
+            if (count.incrementAndGet() % 5 != 0) {
+                logger().info("当前 count: {}", count.get());
                 return 2;
             }
         }

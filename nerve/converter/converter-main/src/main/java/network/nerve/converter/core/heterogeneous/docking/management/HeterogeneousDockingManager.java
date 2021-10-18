@@ -83,59 +83,59 @@ public class HeterogeneousDockingManager {
         Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
         result.putAll(heterogeneousDockingMap);
         // 增加HT跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtContext.HTG_CHAIN_ID)) {
             result.remove(HtContext.HTG_CHAIN_ID);
         }
         // 增加OKT跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < OKT_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OktContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OktContext.HTG_CHAIN_ID)) {
             result.remove(OktContext.HTG_CHAIN_ID);
         }
         // 增加ONE跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < ONE_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OneContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OneContext.HTG_CHAIN_ID)) {
             result.remove(OneContext.HTG_CHAIN_ID);
         }
         // 增加POLYGON跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < POLYGON_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(MaticContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(MaticContext.HTG_CHAIN_ID)) {
             result.remove(MaticContext.HTG_CHAIN_ID);
         }
         // 增加KUCOIN跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < KUCOIN_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(KcsContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(KcsContext.HTG_CHAIN_ID)) {
             result.remove(KcsContext.HTG_CHAIN_ID);
         }
         // 增加TRX跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < TRX_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(TrxContext.HTG_CHAIN_ID)) {
+        if (LATEST_BLOCK_HEIGHT < PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(TrxContext.HTG_CHAIN_ID)) {
             result.remove(TrxContext.HTG_CHAIN_ID);
         }
         return result.values();
     }
 
     public void checkAccountImportedInDocking(Chain chain, SignAccountDTO signAccountDTO) {
-        if (!huobiCrossChainAvailable && LATEST_BLOCK_HEIGHT >= HUOBI_CROSS_CHAIN_HEIGHT) {
+        if (!huobiCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT) {
             // 向HT异构链组件,注册地址签名信息
             this.registerAccount(HtContext.config.getSymbol(), chain, signAccountDTO, HtContext.HTG_CHAIN_ID);
             huobiCrossChainAvailable = true;
         }
-        if (!oktCrossChainAvailable && LATEST_BLOCK_HEIGHT >= OKT_CROSS_CHAIN_HEIGHT) {
+        if (!oktCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT) {
             // 向OKT异构链组件,注册地址签名信息
             this.registerAccount(OktContext.config.getSymbol(), chain, signAccountDTO, OktContext.HTG_CHAIN_ID);
             oktCrossChainAvailable = true;
         }
-        if (!oneCrossChainAvailable && LATEST_BLOCK_HEIGHT >= ONE_CROSS_CHAIN_HEIGHT) {
+        if (!oneCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT) {
             // 向ONE异构链组件,注册地址签名信息
             this.registerAccount(OneContext.config.getSymbol(), chain, signAccountDTO, OneContext.HTG_CHAIN_ID);
             oneCrossChainAvailable = true;
         }
-        if (!polygonCrossChainAvailable && LATEST_BLOCK_HEIGHT >= POLYGON_CROSS_CHAIN_HEIGHT) {
+        if (!polygonCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT) {
             // 向MATIC异构链组件,注册地址签名信息
             this.registerAccount(MaticContext.config.getSymbol(), chain, signAccountDTO, MaticContext.HTG_CHAIN_ID);
             polygonCrossChainAvailable = true;
         }
-        if (!kucoinCrossChainAvailable && LATEST_BLOCK_HEIGHT >= KUCOIN_CROSS_CHAIN_HEIGHT) {
+        if (!kucoinCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT) {
             // 向KCS异构链组件,注册地址签名信息
             this.registerAccount(KcsContext.config.getSymbol(), chain, signAccountDTO, KcsContext.HTG_CHAIN_ID);
             kucoinCrossChainAvailable = true;
         }
-        if (!trxCrossChainAvailable && LATEST_BLOCK_HEIGHT >= TRX_CROSS_CHAIN_HEIGHT) {
+        if (!trxCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT) {
             // 向TRX异构链组件,注册地址签名信息
             this.registerAccount(TrxContext.config.getSymbol(), chain, signAccountDTO, TrxContext.HTG_CHAIN_ID);
             trxCrossChainAvailable = true;

@@ -4,14 +4,12 @@ import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
+import io.nuls.core.rpc.context.ModuleInfo;
 import io.nuls.core.rpc.info.HostInfo;
-import io.nuls.core.thread.ThreadUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Optional;
 
 /**
  * @Author: zhoulijun
@@ -48,11 +46,11 @@ public class NulsRpcModuleBootstrap {
         RpcModule module;
         try {
             module = SpringLiteContext.getBean(RpcModule.class);
+            ModuleInfo.name = module.moduleInfo().getName();
         } catch (NulsRuntimeException e) {
             Log.error("加载RpcModule的实现类失败");
             return;
         }
-
 //        String debug = "0";
 //        if (args.length > 1) {
 //            debug = args[1];

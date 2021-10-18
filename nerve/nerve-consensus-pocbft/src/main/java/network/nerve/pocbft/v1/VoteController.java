@@ -49,6 +49,11 @@ public class VoteController extends BasicObject {
 //        log.info("收到投票：{}-({}-{}),vote:{}-{},from:{}-{}", vote.getHeight(), vote.getRoundIndex(), vote.getPackingIndexOfRound(),
 //                vote.getVoteRoundIndex(), vote.getVoteStage(), vote.getAddress(chain), vote.getBlockHash().toHex());
         if (chain.getBestHeader().getHeight() >= vote.getHeight()) {
+            vote.clear();
+            return;
+        }
+        if (vote.getHeight() - chain.getBestHeader().getHeight() > 2) {
+            vote.clear();
             return;
         }
         VoteSummaryData data = summaryMap.computeIfAbsent(vote.getTargetKey(), val -> new VoteSummaryData(chain));
@@ -56,6 +61,7 @@ public class VoteController extends BasicObject {
         //如果不是轮次中的投票，则丢弃
         if (!round.getMemberAddressSet().contains(vote.getAddress(chain))) {
 //            log.info("丢弃投票，不是共识成员：" + vote.getHeight() + "-" + vote.getVoteRoundIndex() + "-" + vote.getVoteStage() + ": " + vote.getBlockHash().toHex());
+            vote.clear();
             return;
         }
         data.addVote(vote, round);

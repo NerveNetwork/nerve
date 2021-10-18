@@ -117,24 +117,24 @@ public class ConverterContext {
     /**
      * v1.8.0 协议升级高度 支持火币生态链跨链
      */
-    public static long HUOBI_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = 0L;
     /**
      * v1.11.0 协议升级高度 支持欧科生态链跨链
      */
-    public static long OKT_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
      * v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
      */
-    public static long ERC20_OF_TRANSFER_BURN_HEIGHT = 0L;
+    public static long PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = 0L;
 
     /**
      * v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
      */
-    public static long NEW_VALIDATION_OF_ERC20 = 0L;
-    public static long ONE_CROSS_CHAIN_HEIGHT = 0L;
-    public static long POLYGON_CROSS_CHAIN_HEIGHT = 0L;
-    public static long KUCOIN_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = 0L;
+    public static long PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
      * v1.14.0 协议升级高度
@@ -143,7 +143,7 @@ public class ConverterContext {
     /**
      * v1.15.0 协议升级高度 支持波场生态链跨链
      */
-    public static long TRX_CROSS_CHAIN_HEIGHT = 0L;
+    public static long PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
      * 初始化虚拟银行公钥

@@ -99,7 +99,7 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     /**
      * v1.8.0 协议升级高度 支持火币生态链跨链
      */
-    private long huobiCrossChainHeight;
+    private long protocol8HuobiCrossChainHeight;
 
     /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
@@ -122,17 +122,17 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     /**
      * v1.11.0 协议升级高度 支持欧科生态链跨链
      */
-    private long oktCrossChainHeight;
+    private long protocol11OktCrossChainHeight;
 
     /**
      * v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
      */
-    private long erc20OfTransferBurnHeight;
+    private long protocol12Erc20OfTransferBurnHeight;
 
     /**
      * v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式
      */
-    private long newValidationOfErc20;
+    private long protocol13NewValidationOfErc20;
 
     /**
      * v1.14.0 协议升级高度
@@ -142,7 +142,7 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     /**
      * v1.15.0 协议升级高度 支持波场生态链跨链
      */
-    private long trxCrossChainHeight;
+    private long protocol15TrxCrossChainHeight;
 
     public long getProtocol14Height() {
         return protocol14Height;
@@ -332,43 +332,43 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
         this.withdrawalRechargeChainHeight = withdrawalRechargeChainHeight;
     }
 
-    public long getHuobiCrossChainHeight() {
-        return huobiCrossChainHeight;
+    public long getProtocol8HuobiCrossChainHeight() {
+        return protocol8HuobiCrossChainHeight;
     }
 
-    public void setHuobiCrossChainHeight(long huobiCrossChainHeight) {
-        this.huobiCrossChainHeight = huobiCrossChainHeight;
+    public void setProtocol8HuobiCrossChainHeight(long protocol8HuobiCrossChainHeight) {
+        this.protocol8HuobiCrossChainHeight = protocol8HuobiCrossChainHeight;
     }
 
-    public long getOktCrossChainHeight() {
-        return oktCrossChainHeight;
+    public long getProtocol11OktCrossChainHeight() {
+        return protocol11OktCrossChainHeight;
     }
 
-    public void setOktCrossChainHeight(long oktCrossChainHeight) {
-        this.oktCrossChainHeight = oktCrossChainHeight;
+    public void setProtocol11OktCrossChainHeight(long protocol11OktCrossChainHeight) {
+        this.protocol11OktCrossChainHeight = protocol11OktCrossChainHeight;
     }
 
-    public long getErc20OfTransferBurnHeight() {
-        return erc20OfTransferBurnHeight;
+    public long getProtocol12Erc20OfTransferBurnHeight() {
+        return protocol12Erc20OfTransferBurnHeight;
     }
 
-    public void setErc20OfTransferBurnHeight(long erc20OfTransferBurnHeight) {
-        this.erc20OfTransferBurnHeight = erc20OfTransferBurnHeight;
+    public void setProtocol12Erc20OfTransferBurnHeight(long protocol12Erc20OfTransferBurnHeight) {
+        this.protocol12Erc20OfTransferBurnHeight = protocol12Erc20OfTransferBurnHeight;
     }
 
-    public long getNewValidationOfErc20() {
-        return newValidationOfErc20;
+    public long getProtocol13NewValidationOfErc20() {
+        return protocol13NewValidationOfErc20;
     }
 
-    public void setNewValidationOfErc20(long newValidationOfErc20) {
-        this.newValidationOfErc20 = newValidationOfErc20;
+    public void setProtocol13NewValidationOfErc20(long protocol13NewValidationOfErc20) {
+        this.protocol13NewValidationOfErc20 = protocol13NewValidationOfErc20;
     }
 
-    public long getTrxCrossChainHeight() {
-        return trxCrossChainHeight;
+    public long getProtocol15TrxCrossChainHeight() {
+        return protocol15TrxCrossChainHeight;
     }
 
-    public void setTrxCrossChainHeight(long trxCrossChainHeight) {
-        this.trxCrossChainHeight = trxCrossChainHeight;
+    public void setProtocol15TrxCrossChainHeight(long protocol15TrxCrossChainHeight) {
+        this.protocol15TrxCrossChainHeight = protocol15TrxCrossChainHeight;
     }
 }

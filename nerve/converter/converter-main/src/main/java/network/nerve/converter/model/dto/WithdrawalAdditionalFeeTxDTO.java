@@ -39,7 +39,11 @@ public class WithdrawalAdditionalFeeTxDTO {
     private String txHash;
 
     /**
-     * 要追加的 nvt手续费
+     * 要追加的 资产的链ID(5/9,101,102,103....)
+     */
+    private int feeChainId;
+    /**
+     * 要追加的 资产手续费
      */
     private BigInteger amount;
 
@@ -52,6 +56,14 @@ public class WithdrawalAdditionalFeeTxDTO {
      * 提现发起(签名)地址信息
      */
     private SignAccountDTO signAccount;
+
+    public int getFeeChainId() {
+        return feeChainId;
+    }
+
+    public void setFeeChainId(int feeChainId) {
+        this.feeChainId = feeChainId;
+    }
 
     public String getTxHash() {
         return txHash;

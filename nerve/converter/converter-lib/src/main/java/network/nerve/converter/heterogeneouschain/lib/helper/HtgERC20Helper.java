@@ -73,6 +73,15 @@ public class HtgERC20Helper implements BeanInitial {
     }
 
     public boolean hasERC20WithListeningAddress(TransactionReceipt txReceipt, HeterogeneousTransactionBaseInfo po, Predicate<String> isListening) {
+        // 协议v1.15
+        if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
+            return this.hasERC20WithListeningAddressNew(txReceipt, po, isListening);
+        } else {
+            return this.hasERC20WithListeningAddressOld(txReceipt, po, isListening);
+        }
+    }
+
+    private boolean hasERC20WithListeningAddressOld(TransactionReceipt txReceipt, HeterogeneousTransactionBaseInfo po, Predicate<String> isListening) {
         if (txReceipt == null || !txReceipt.isStatusOK()) {
             return false;
         }
@@ -92,6 +101,45 @@ public class HtgERC20Helper implements BeanInitial {
                     String data;
                     if (topics.size() == 3) {
                         data = logs.get(0).getData();
+                    } else {
+                        data = topics.get(3);
+                    }
+                    String[] v = data.split("x");
+                    // 转账金额
+                    BigInteger amount = new BigInteger(v[1], 16);
+                    if (amount.compareTo(BigInteger.ZERO) > 0) {
+                        po.setTo(toAddress);
+                        po.setValue(amount);
+                        return true;
+                    }
+                    return false;
+                }
+            }
+
+        }
+        return false;
+    }
+
+    private boolean hasERC20WithListeningAddressNew(TransactionReceipt txReceipt, HeterogeneousTransactionBaseInfo po, Predicate<String> isListening) {
+        if (txReceipt == null || !txReceipt.isStatusOK()) {
+            return false;
+        }
+        List<Log> logs = txReceipt.getLogs();
+        if (logs != null && logs.size() > 0) {
+            for(Log log : logs) {
+                List<String> topics = log.getTopics();
+                // ERC20 topics 解析事件名
+                if (topics.get(0).equals(HtgConstant.EVENT_HASH_ERC20_TRANSFER)) {
+                    // 为转账
+                    String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
+                    toAddress = toAddress.toLowerCase();
+                    // 接收地址不是监听的多签地址
+                    if (!isListening.test(toAddress)) {
+                        continue;
+                    }
+                    String data;
+                    if (topics.size() == 3) {
+                        data = log.getData();
                     } else {
                         data = topics.get(3);
                     }

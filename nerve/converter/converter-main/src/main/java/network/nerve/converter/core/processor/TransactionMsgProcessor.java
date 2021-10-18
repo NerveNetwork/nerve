@@ -36,6 +36,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.enums.ByzantineStateEnum;
 import network.nerve.converter.message.BroadcastHashSignMessage;
 import network.nerve.converter.model.bo.Chain;
@@ -63,6 +64,8 @@ public class TransactionMsgProcessor {
 
     @Autowired
     private static TxStorageService txStorageService;
+    @Autowired
+    private static ConverterCoreApi converterCoreApi;
 
     /**
      * 对本链广播的交易进行处理
@@ -74,6 +77,12 @@ public class TransactionMsgProcessor {
      */
     public static void handleSignMessageByzantine(Chain chain, NulsHash hash, String nodeId, BroadcastHashSignMessage messageBody, String hashHex) {
         try {
+            // v15波场协议升级后，特殊处理hash，历史遗留问题，polygon区块回滚导致的交易高度和时间不一致的问题
+            if (converterCoreApi.isSupportProtocol15TrxCrossChain() && "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26".equalsIgnoreCase(hash.toHex())) {
+                LoggerUtil.LOG.warn("过滤交易hash: {}", hash.toHex());
+                txStorageService.delete(chain, hash);
+                return;
+            }
             TransactionPO txPO = txStorageService.get(chain, hash);
             //如果交易已经拜占庭成功了, 就不用再广播该交易的签名
             if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || messageBody.getP2PHKSignature() == null) {

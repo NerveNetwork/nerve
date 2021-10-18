@@ -11,6 +11,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
+import io.nuls.core.rpc.context.ModuleInfo;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.invoke.BaseInvoke;
 import io.nuls.core.rpc.model.*;
@@ -61,7 +62,7 @@ public class ConnectManager {
     /**
      * 本模块各个CMD优先级
      * Each CMD priority of this module
-     * */
+     */
     public static final Map<String, Integer> CMD_PRIORITY_MAP = new ConcurrentHashMap<>();
 
     /**
@@ -235,7 +236,7 @@ public class ConnectManager {
         路径为空，跳过
         The path is empty, skip
          */
-        if (packageName == null || packageName.size() == 0){
+        if (packageName == null || packageName.size() == 0) {
             return;
         }
         Set<Class> classes = new HashSet<>();
@@ -316,7 +317,7 @@ public class ConnectManager {
                 cmdDetail.setPriority(cmdAnnotation.priority());
                 cmdDetail.setInvokeClass(method.getDeclaringClass().getName());
                 cmdDetail.setInvokeMethod(method.getName());
-                CMD_PRIORITY_MAP.put(cmdAnnotation.cmd(),cmdAnnotation.priority().getPriority());
+                CMD_PRIORITY_MAP.put(cmdAnnotation.cmd(), cmdAnnotation.priority().getPriority());
                 continue;
             }
 
@@ -342,9 +343,9 @@ public class ConnectManager {
         return cmdDetail;
     }
 
-    private static CmdParameter transferCmdParameter(Parameter parameter){
+    private static CmdParameter transferCmdParameter(Parameter parameter) {
         String parameterType = parameter.requestType().value().getSimpleName();
-        if(StringUtils.isNotBlank(parameter.parameterType()) ){
+        if (StringUtils.isNotBlank(parameter.parameterType())) {
             parameterType = parameter.parameterType();
         }
         CmdParameter cmdParameter = new CmdParameter(parameter.parameterName(), parameterType, parameter.parameterValidRange(), parameter.parameterValidRegExp());
@@ -608,7 +609,11 @@ public class ConnectManager {
             if (StringUtils.isBlank(url)) {
                 throw new Exception("Connection module not started");
             }
-            channel = getConnectByUrl(role);
+            int poolSize = Constants.THREAD_POOL_SIZE;
+            if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name)) {
+                poolSize = poolSize * 2;
+            }
+            channel = getConnectByUrl(role, poolSize);
         }
         return CHANNEL_DATA_MAP.get(channel);
     }
@@ -620,14 +625,18 @@ public class ConnectManager {
         }
         String url = getRemoteUri(role);
         if (StringUtils.isBlank(url)) {
-            throw new Exception("Connection module not started:"+role);
+            throw new Exception("Connection module not started:" + role);
         }
-        Channel channel = createConnect(url);
+        int poolSize = Constants.THREAD_POOL_SIZE;
+        if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name)) {
+            poolSize = poolSize * 2;
+        }
+        Channel channel = createConnect(url, poolSize);
         channel = cacheConnect(role, channel, true);
         return channel;
     }
 
-    public static Channel getConnectByUrl(String url) throws Exception {
+    public static Channel getConnectByUrl(String url, int poolSize) throws Exception {
         /*
         如果连接已存在，直接返回
         If the connection already exists, return directly
@@ -648,21 +657,21 @@ public class ConnectManager {
         if (ROLE_CHANNEL_MAP.containsKey(role)) {
             return ROLE_CHANNEL_MAP.get(role);
         }
-        Channel channel = createConnect(url);
+        Channel channel = createConnect(url, poolSize);
         channel = cacheConnect(role, channel, true);
         return channel;
     }
 
-    public static Channel createConnect(String url) throws Exception {
+    public static Channel createConnect(String url, int poolSize) throws Exception {
          /*
         如 果是第一次连接，则先放入集合
         If it's the first connection, put it in the collection first
          */
 
-        Channel channel = NettyClient.createConnect(url);
-        long start =  NulsDateUtils.getCurrentTimeMillis();
-        while (channel==null || !channel.isOpen()) {
-            if ( NulsDateUtils.getCurrentTimeMillis() - start > Constants.MILLIS_PER_SECOND * 5) {
+        Channel channel = NettyClient.createConnect(url, poolSize);
+        long start = NulsDateUtils.getCurrentTimeMillis();
+        while (channel == null || !channel.isOpen()) {
+            if (NulsDateUtils.getCurrentTimeMillis() - start > Constants.MILLIS_PER_SECOND * 5) {
                 throw new Exception("Failed to connect " + url);
             }
             Thread.sleep(Constants.INTERVAL_TIMEMILLIS);
@@ -771,9 +780,9 @@ public class ConnectManager {
         sendMessage(getConnectByRole(moduleAbbr), SerializeUtil.getBuffer(JSONUtils.obj2ByteArray(message)));
     }
 
-    public static String getRoleByChannel(Channel channel){
-        for (String role:ROLE_CHANNEL_MAP.keySet()) {
-            if(ROLE_CHANNEL_MAP.get(role).equals(channel)){
+    public static String getRoleByChannel(Channel channel) {
+        for (String role : ROLE_CHANNEL_MAP.keySet()) {
+            if (ROLE_CHANNEL_MAP.get(role).equals(channel)) {
                 return role;
             }
         }

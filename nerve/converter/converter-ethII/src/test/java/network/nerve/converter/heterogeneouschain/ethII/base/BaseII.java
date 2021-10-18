@@ -151,7 +151,7 @@ public class BaseII {
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
-        HtgSendTransactionPo ethSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null);
+        HtgSendTransactionPo ethSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);
         String ethTxHash = ethSendTransactionPo.getTxHash();
         return ethTxHash;
     }

@@ -24,10 +24,7 @@
 package network.nerve.converter.core.api;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -40,6 +37,7 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.VirtualBankService;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
@@ -61,6 +59,7 @@ import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -86,7 +85,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
     @Autowired
     private AssembleTxService assembleTxService;
-
+    @Autowired
+    private HeterogeneousDockingManager heterogeneousDockingManager;
+    private Map<Integer, NerveAssetInfo> htgMainAssetMap = new HashMap<>(16);
+    private Map<NerveAssetInfo, AssetName> htgMainAssetByNerveMap = new HashMap<>(16);
 
 
     private NulsLogger logger() {
@@ -309,9 +311,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     @Override
-    public BigDecimal getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException {
-        // 根据NERVE提现交易txHash返回总提供的NVT手续费
-        return new BigDecimal(assembleTxService.calculateWithdrawalTotalFee(nerveChain, this.getNerveTx(nerveTxHash)));
+    public WithdrawalTotalFeeInfo getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException {
+        // 根据NERVE提现交易txHash返回总提供的手续费
+        return assembleTxService.calculateWithdrawalTotalFee(nerveChain, this.getNerveTx(nerveTxHash));
     }
 
     @Override
@@ -337,8 +339,8 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     @Override
-    public boolean isSupportERC20OfTransferBurn() {
-        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.ERC20_OF_TRANSFER_BURN_HEIGHT;
+    public boolean isSupportProtocol12ERC20OfTransferBurn() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT;
     }
 
     @Override
@@ -355,17 +357,67 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     @Override
-    public boolean isSupportNewValidationOfERC20() {
-        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.NEW_VALIDATION_OF_ERC20;
-    }
-
-    @Override
-    public boolean isSupportTrxCrossChain() {
-        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.TRX_CROSS_CHAIN_HEIGHT;
+    public boolean isSupportProtocol13NewValidationOfERC20() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_13_NEW_VALIDATION_OF_ERC20;
     }
 
     @Override
     public boolean isProtocol14() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_14_0;
+    }
+
+    @Override
+    public boolean isSupportProtocol15TrxCrossChain() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT;
+    }
+
+    private void loadHtgMainAsset() {
+        if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
+        AssetName[] values = AssetName.values();
+        for (AssetName assetName : values) {
+            int htgChainId = assetName.chainId();
+            if (htgChainId < 101) continue;
+            this.getHtgMainAsset(htgChainId);
+        }
+    }
+    /**
+     * 获取异构链主资产(注册到NERVE网络上的资产信息)
+     */
+    public NerveAssetInfo getHtgMainAsset(int htgChainId) {
+        NerveAssetInfo nerveAssetInfo = htgMainAssetMap.get(htgChainId);
+        if (nerveAssetInfo == null) {
+            nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(htgChainId, 1);
+            if (nerveAssetInfo == null || nerveAssetInfo.isEmpty()) {
+                return NerveAssetInfo.emptyInstance();
+            }
+            htgMainAssetMap.put(htgChainId, nerveAssetInfo);
+            htgMainAssetByNerveMap.put(nerveAssetInfo, AssetName.getEnum(htgChainId));
+        }
+        return nerveAssetInfo;
+    }
+
+    public boolean isHtgMainAsset(Coin coin) {
+        if (coin == null) return false;
+        return isHtgMainAsset(coin.getAssetsChainId(), coin.getAssetsId());
+    }
+
+    private boolean isHtgMainAsset(int nerveAssetChainId, int nerveAssetId) {
+        // 加载缓存
+        this.loadHtgMainAsset();
+        // 检查是否为异构链主资产
+        AssetName assetName = htgMainAssetByNerveMap.get(new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
+        if (assetName != null) {
+            return true;
+        }
+        return false;
+    }
+
+    public AssetName getHtgMainAssetName(Coin coin) {
+        if (coin == null) return null;
+        return getHtgMainAssetName(coin.getAssetsChainId(), coin.getAssetsId());
+    }
+
+    private AssetName getHtgMainAssetName(int nerveAssetChainId, int nerveAssetId) {
+        return htgMainAssetByNerveMap.get(new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
     }
 }

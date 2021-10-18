@@ -63,4 +63,24 @@ public class NerveAssetInfo {
     public boolean isEmpty() {
         return assetChainId == 0 && assetId == 0;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NerveAssetInfo that = (NerveAssetInfo) o;
+
+        if (assetChainId != that.assetChainId) return false;
+        if (assetId != that.assetId) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = assetChainId;
+        result = 31 * result + assetId;
+        return result;
+    }
 }

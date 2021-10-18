@@ -69,8 +69,8 @@ public class EthAccountTest extends Base {
 
     @Before
     public void initChainId() {
-        chainId = 5;
-        AddressTool.addPrefix(chainId, "TNVT");
+        chainId = 1;
+        AddressTool.addPrefix(5, "TNVT");
     }
 
     @Test
@@ -85,7 +85,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78";
+        String prikey = "4594348e3482b751aa235b8e580efef69db465b3a291c5662ceda6459ed12e39";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");

@@ -61,11 +61,22 @@ public class WithdrawalTxDTO {
      * 提现发起(签名)地址信息
      */
     private SignAccountDTO signAccount;
-
+    /**
+     * 手续费链ID(5/9,101,102,103....)
+     */
+    private int feeChainId;
     /**
      * 用于支付异构链交易的手续费
      */
     private BigInteger distributionFee;
+
+    public int getFeeChainId() {
+        return feeChainId;
+    }
+
+    public void setFeeChainId(int feeChainId) {
+        this.feeChainId = feeChainId;
+    }
 
     public int getAssetChainId() {
         return assetChainId;

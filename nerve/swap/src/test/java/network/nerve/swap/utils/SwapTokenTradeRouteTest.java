@@ -40,11 +40,20 @@ import java.util.stream.Collectors;
  */
 public class SwapTokenTradeRouteTest {
 
+    static Map<Character, String> mapping = new HashMap<>();
+    static {
+        mapping.put('T', "T1");
+        mapping.put('U', "T2");
+        mapping.put('V', "T3");
+        mapping.put('W', "T4");
+        mapping.put('X', "T5");
+    }
+    Set<Character> group1 = new HashSet<>();
     List<PairTest> pairs;
     @Before
     public void before() {
         pairs = new ArrayList<>();
-        pairs.add(new PairTest(sortTokens('A', 'E')));
+        /*pairs.add(new PairTest(sortTokens('A', 'E')));
         pairs.add(new PairTest(sortTokens('A', 'B')));
         pairs.add(new PairTest(sortTokens('A', 'C')));
         pairs.add(new PairTest(sortTokens('B', 'C')));
@@ -53,8 +62,21 @@ public class SwapTokenTradeRouteTest {
         pairs.add(new PairTest(sortTokens('C', 'E')));
         pairs.add(new PairTest(sortTokens('D', 'E')));
         pairs.add(new PairTest(sortTokens('F', 'C')));
-        pairs.add(new PairTest(sortTokens('C', 'H')));
+        pairs.add(new PairTest(sortTokens('C', 'H')));*/
+        pairs.add(new PairTest(sortTokens('A', 'C')));
+        pairs.add(new PairTest(sortTokens('B', 'C')));
+        pairs.add(new PairTest(sortTokens('D', 'E')));
+        pairs.add(new PairTest(sortTokens('B', 'D')));
+        pairs.add(new PairTest(sortTokens('C', 'T')));
+        pairs.add(new PairTest(sortTokens('U', 'D')));
+        pairs.add(new PairTest(sortTokens('V', 'B')));
+        // A-C B-C D-E B-D C-T1 T2-D T3-B
 
+        group1.add('T');
+        group1.add('U');
+        group1.add('V');
+        group1.add('W');
+        group1.add('X');
     }
 
     @Test
@@ -123,11 +145,63 @@ public class SwapTokenTradeRouteTest {
             PairTest remove = pairs.remove(subIndex);
             bestRouteTest.add(new RouteTest(List.of(remove), 0));
         }
-        List<RouteTest> routeTests = calPaths(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 2);
-        System.out.println(Arrays.deepToString(routeTests.toArray()));
+        List<RouteTest> routeTests = calPathsV2(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
+        //System.out.println(Arrays.deepToString(routeTests.toArray()));
+        routeTests.stream().forEach(r -> System.out.println(r.toString()));
+        /*
+         // A-C B-C D-E B-D C-T1 T2-D T3-B
+            ===============
+            {"path":[{"pair":"A-C"}, {"pair":"B-C"}, {"pair":"B-D"}, {"pair":"D-E"}], "depth":3}
+            {"path":[{"pair":"A-C"}, {"pair":"B-C"}, {"pair":"B-T3"}, {"pair":"T2-T3"}, {"pair":"D-T2"}, {"pair":"D-E"}], "depth":4}
+            {"path":[{"pair":"A-C"}, {"pair":"C-T1"}, {"pair":"T1-T2"}, {"pair":"D-T2"}, {"pair":"D-E"}], "depth":3}
+            {"path":[{"pair":"A-C"}, {"pair":"C-T1"}, {"pair":"T1-T3"}, {"pair":"B-T3"}, {"pair":"B-D"}, {"pair":"D-E"}], "depth":4}
+         */
     }
 
-    public List<RouteTest> calPaths(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, char orginIn, int depth, int maxPairSize) {
+    public List<RouteTest> calPathsV2(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, char orginIn, int depth, int maxPairSize) {
+        int length = pairs.size();
+        for (int i = 0; i < length; i++) {
+            PairTest pair = pairs.get(i);
+            // pierre 改造
+            //if (!pairCheck(pair, in, currentPath)) continue;
+            //if (pair.token0 != in && pair.token1 != in) continue;
+            PairTest pairTest = null;
+            char currentIn = in;
+            if (pair.token0 != in && pair.token1 != in) {
+                // 加入同类token验证
+                if (group(pair.token0, in)) {
+                    pairTest = new PairTest(sortTokens(pair.token0, in));
+                    currentIn = pair.token0;
+                } else if (group(pair.token1, in)) {
+                    pairTest = new PairTest(sortTokens(pair.token1, in));
+                    currentIn = pair.token1;
+                } else {
+                    continue;
+                }
+            }
+
+            char tokenOut = pair.token0 == currentIn ? pair.token1 : pair.token0;
+            if (currentIn == orginIn && tokenOut == out) continue;
+            if (containsCurrency(currentPath, tokenOut)) continue;
+
+            if (tokenOut == out) {
+                if (pairTest != null) currentPath.add(pairTest);
+                currentPath.add(pair);
+                bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
+                break;
+            } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
+                LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
+                if (pairTest != null) cloneLinkedHashSet.add(pairTest);
+                cloneLinkedHashSet.add(pair);
+                List<PairTest> subList = subList(pairs, 0, i);
+                subList.addAll(subList(pairs, i + 1, length));
+                calPathsV2(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, orginIn, depth + 1, maxPairSize);
+            }
+        }
+        return bestRouteTest;
+    }
+
+    public List<RouteTest> calPathsOrigin(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, char orginIn, int depth, int maxPairSize) {
         //System.out.println(String.format("depth: %s, in: %s, out: %s, pairs: %s", depth, in, out, Arrays.deepToString(pairs.toArray())));
         int length = pairs.size();
         for (int i = 0; i < length; i++) {
@@ -151,10 +225,17 @@ public class SwapTokenTradeRouteTest {
                 //System.out.println();
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));
-                calPaths(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, orginIn, depth + 1, maxPairSize);
+                calPathsOrigin(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, orginIn, depth + 1, maxPairSize);
             }
         }
         return bestRouteTest;
+    }
+
+    private boolean group(char token1, char token2) {
+        if (group1.contains(token1) && group1.contains(token2)) {
+            return true;
+        }
+        return false;
     }
 
     LinkedHashSet cloneLinkedHashSet(LinkedHashSet set) {
@@ -267,10 +348,20 @@ public class SwapTokenTradeRouteTest {
         public String toString() {
             final StringBuilder sb = new StringBuilder("{");
             sb.append("\"pair\":")
-                    .append('\"').append(token0).append("-").append(token1).append('\"');
+                    .append('\"').append(getToken(token0)).append("-").append(getToken(token1)).append('\"');
             sb.append('}');
             return sb.toString();
         }
+
+        private String getToken(char token) {
+            String s = mapping.get(token);
+            if (s == null) {
+                return String.valueOf(token);
+            } else {
+                return s;
+            }
+        }
+
 
         public boolean hasToken(char tokenOut) {
             return token0 == tokenOut || token1 == tokenOut;

@@ -26,9 +26,11 @@ package network.nerve.converter.heterogeneouschain.lib.utils;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.lib.model.Token20TransferDTO;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.ethereum.crypto.ECKey;
 import org.springframework.beans.BeanUtils;
@@ -38,7 +40,9 @@ import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.*;
+import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.Transaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
 import java.lang.reflect.Array;
@@ -47,6 +51,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -351,11 +356,22 @@ public class HtgUtil {
     static BigDecimal MAXIMUM = new BigDecimal("1.5");
     static BigDecimal MEDIAN = new BigDecimal("1.25");
     static BigDecimal SMALL = new BigDecimal("1.1");
+
     /**
      * 在网络平均价格和用户提供的价格之间，取一个合适的值
      */
-    public static BigDecimal calNiceGasPriceOfWithdraw(BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
-        return gasPriceSupport;
+    public static BigDecimal calcNiceGasPriceOfWithdraw(AssetName currentNetworkAssetName, BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
+        // 非以太网络，用户给多少手续费，就花费多少手续费
+        if (currentNetworkAssetName != AssetName.ETH) {
+            return gasPriceSupport;
+        }
+        // 以太网络，最大花费当前网络平均手续费的1.5倍
+        BigDecimal maximumPrice;
+        if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
+            return maximumPrice;
+        } else {
+            return gasPriceSupport;
+        }
         /*BigDecimal maximumPrice, medianPrice, smallPrice;
         if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
             return maximumPrice;
@@ -368,7 +384,7 @@ public class HtgUtil {
         }*/
     }
 
-    public static BigDecimal calGasPriceOfWithdraw(BigDecimal nvtUSD, BigDecimal nvtAmount, BigDecimal ethUSD, int hAssetId) {
+    public static BigDecimal calcGasPriceOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal otherMainAssetAmount, BigDecimal currentMainAssetUSD, int hAssetId) {
         if (hAssetId == 0) {
             return null;
         }
@@ -378,18 +394,17 @@ public class HtgUtil {
         } else {
             gasLimit = BigDecimal.valueOf(190000L);
         }
-        BigDecimal nvtNumber = nvtAmount.movePointLeft(8);
-        BigDecimal gasPrice = calGasPriceByNVT(nvtUSD, nvtNumber, ethUSD, gasLimit);
+        BigDecimal otherMainAssetNumber = otherMainAssetAmount.movePointLeft(otherMainAsset.decimals());
+        BigDecimal gasPrice = calcGasPriceByOtherMainAsset(otherMainAssetUSD, otherMainAssetNumber, currentMainAssetUSD, gasLimit);
         return gasPrice;
     }
 
-
-    public static BigDecimal calGasPriceByNVT(BigDecimal nvtUSD, BigDecimal nvtNumber, BigDecimal ethUSD, BigDecimal gasLimit) {
-        BigDecimal gasPrice = nvtUSD.multiply(nvtNumber).divide(ethUSD.multiply(gasLimit), 18, RoundingMode.DOWN).multiply(BigDecimal.TEN.pow(18));
+    private static BigDecimal calcGasPriceByOtherMainAsset(BigDecimal otherMainAssetUSD, BigDecimal otherMainAssetNumber, BigDecimal currentMainAssetUSD, BigDecimal gasLimit) {
+        BigDecimal gasPrice = otherMainAssetUSD.multiply(otherMainAssetNumber).divide(currentMainAssetUSD.multiply(gasLimit), 18, RoundingMode.DOWN).movePointRight(18);
         return gasPrice;
     }
 
-    public static BigDecimal calNVTOfWithdraw(BigDecimal nvtUSD, BigDecimal gasPrice, BigDecimal ethUSD, int hAssetId) {
+    public static BigDecimal calcOtherMainAssetOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal gasPrice, BigDecimal currentMainAssetUSD, int hAssetId) {
         if (hAssetId == 0) {
             return null;
         }
@@ -399,14 +414,44 @@ public class HtgUtil {
         } else {
             gasLimit = BigDecimal.valueOf(190000L);
         }
-        BigDecimal nvtAmount = calNVTByGasPrice(nvtUSD, gasPrice, ethUSD, gasLimit);
-        nvtAmount = nvtAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
-        return nvtAmount;
+        BigDecimal otherMainAssetAmount = calcOtherMainAssetByGasPrice(otherMainAsset, otherMainAssetUSD, gasPrice, currentMainAssetUSD, gasLimit);
+        // 当NVT作为手续费时，向上取整
+        if (otherMainAsset == AssetName.NVT) {
+            otherMainAssetAmount = otherMainAssetAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
+        }
+        return otherMainAssetAmount;
     }
 
-    public static BigDecimal calNVTByGasPrice(BigDecimal nvtUSD, BigDecimal gasPrice, BigDecimal ethUSD, BigDecimal gasLimit) {
-        BigDecimal nvtAmount = ethUSD.multiply(gasPrice).multiply(gasLimit).divide(nvtUSD.multiply(BigDecimal.TEN.pow(10)), 0, RoundingMode.UP);
-        return nvtAmount;
+    private static BigDecimal calcOtherMainAssetByGasPrice(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal gasPrice, BigDecimal currentMainAssetUSD, BigDecimal gasLimit) {
+        BigDecimal otherMainAssetAmount = currentMainAssetUSD.multiply(gasPrice).multiply(gasLimit).movePointRight(otherMainAsset.decimals()).movePointLeft(18).divide(otherMainAssetUSD, 0, RoundingMode.UP);
+        return otherMainAssetAmount;
+    }
+
+    public static BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
+        if (hAssetId == 0) {
+            return null;
+        }
+        BigDecimal gasLimit;
+        if (hAssetId > 1) {
+            gasLimit = BigDecimal.valueOf(210000L);
+        } else {
+            gasLimit = BigDecimal.valueOf(190000L);
+        }
+        BigDecimal gasPrice = amount.divide(gasLimit, 0, RoundingMode.DOWN);
+        return gasPrice;
+    }
+
+    public static BigDecimal calcMainAssetOfWithdrawProtocol15(BigDecimal gasPrice, int hAssetId) {
+        if (hAssetId == 0) {
+            return null;
+        }
+        BigDecimal gasLimit;
+        if (hAssetId > 1) {
+            gasLimit = BigDecimal.valueOf(210000L);
+        } else {
+            gasLimit = BigDecimal.valueOf(190000L);
+        }
+        return gasPrice.multiply(gasLimit);
     }
 
     public static BigInteger[] sortByInsertionAsc(BigInteger[] orders, BigInteger value) {
@@ -493,5 +538,38 @@ public class HtgUtil {
         etx.setBlockNumber("-1");
         return etx;
     }
-    
+
+    public static Token20TransferDTO parseToken20TransferEvent(Log log) {
+        try {
+            String contractAddress = log.getAddress();
+            List<String> topics = log.getTopics();
+            String from = new Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(1)))).getValue();
+            String to = new Address(new BigInteger(Numeric.hexStringToByteArray(topics.get(2)))).getValue();
+            BigInteger value = new BigInteger(Numeric.hexStringToByteArray(log.getData()));
+            return new Token20TransferDTO(from, to, value, contractAddress);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static List<Token20TransferDTO> parseToken20Transfer(TransactionReceipt txReceipt) {
+        List<Token20TransferDTO> resultList = new ArrayList<>();
+        List<Log> logs = txReceipt.getLogs();
+        if (logs != null && logs.size() > 0) {
+            for (Log log : logs) {
+                if (log.getTopics().size() == 0) {
+                    continue;
+                }
+                String eventHash = log.getTopics().get(0);
+                if (HtgConstant.EVENT_HASH_ERC20_TRANSFER.equals(eventHash)) {
+                    Token20TransferDTO dto = HtgUtil.parseToken20TransferEvent(log);
+                    if (dto == null) {
+                        continue;
+                    }
+                    resultList.add(dto);
+                }
+            }
+        }
+        return resultList;
+    }
 }

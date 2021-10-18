@@ -30,14 +30,12 @@ import network.nerve.converter.heterogeneouschain.lib.helper.HtgCommonHelper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
-import network.nerve.converter.heterogeneouschain.trx.callback.TrxCallBackManager;
 import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxBlockAnalysisHelper;
 import network.nerve.converter.utils.LoggerUtil;
 import org.tron.trident.proto.Response;
 import org.tron.trident.utils.Numeric;
-import org.web3j.protocol.core.methods.response.EthBlock;
 
 /**
  * @author: Mimi
@@ -60,7 +58,7 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
 
     public void run() {
         try {
-            if (!htgContext.getConverterCoreApi().isSupportTrxCrossChain()) return;
+            if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
                     LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());

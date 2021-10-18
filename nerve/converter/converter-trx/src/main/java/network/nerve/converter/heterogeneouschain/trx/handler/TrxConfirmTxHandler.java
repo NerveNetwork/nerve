@@ -45,7 +45,6 @@ import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxParseTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
 import network.nerve.converter.utils.LoggerUtil;
-import org.tron.trident.proto.Chain;
 import org.tron.trident.proto.Response;
 
 import java.util.Iterator;
@@ -84,7 +83,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         HtgUnconfirmedTxPo po = null;
         LinkedBlockingDeque<HtgUnconfirmedTxPo> queue = htgContext.UNCONFIRMED_TX_QUEUE();
         try {
-            if (!htgContext.getConverterCoreApi().isSupportTrxCrossChain()) return;
+            if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
                 return;

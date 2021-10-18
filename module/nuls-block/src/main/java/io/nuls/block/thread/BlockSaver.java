@@ -24,8 +24,9 @@ public class BlockSaver implements Runnable {
             try {
                 Saver saver = queue.take();
                 Log.info("BLOCK-SAVE:" + saver.getBlock().getHeader().getHeight());
-                blockService.saveBlock(saver.getChainId(), saver.getBlock(), saver.getDownload(), saver.isNeedLock(),
+                boolean result = blockService.saveBlock(saver.getChainId(), saver.getBlock(), saver.getDownload(), saver.isNeedLock(),
                         saver.isBroadcast(), saver.isForward(), saver.getNodeId());
+                Log.info("BLOCK-SAVE-RESULT:{}", result);
             } catch (Throwable e) {
                 Log.error(e);
             }

@@ -29,6 +29,7 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousConfirmedVirtualBank;
+import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 import network.nerve.converter.model.dto.*;
 import network.nerve.converter.model.txdata.*;
 
@@ -330,9 +331,9 @@ public interface AssembleTxService {
      * @param isProposal
      * @return
      */
-     BigInteger calculateFee(Chain chain, Long height, Transaction basisTxHash, boolean isProposal) throws NulsException;
+    WithdrawalTotalFeeInfo calculateFee(Chain chain, Long height, Transaction basisTxHash, boolean isProposal) throws NulsException;
 
-     BigInteger calculateFee(Chain chain, Transaction basisTxHash, boolean isProposal) throws NulsException;
+    WithdrawalTotalFeeInfo calculateFee(Chain chain, Transaction basisTxHash, boolean isProposal) throws NulsException;
 
     /**
      * 获取原路退回提案交易支付的异构链手续费总额(不包含链内交易打包手续费)
@@ -351,5 +352,5 @@ public interface AssembleTxService {
      * @return
      * @throws NulsException
      */
-     BigInteger calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException;
+    WithdrawalTotalFeeInfo calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException;
 }

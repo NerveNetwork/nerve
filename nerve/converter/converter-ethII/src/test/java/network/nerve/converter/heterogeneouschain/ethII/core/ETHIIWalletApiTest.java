@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
@@ -15,12 +16,8 @@ import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
 import network.nerve.converter.heterogeneouschain.ethII.base.BaseII;
 import network.nerve.converter.heterogeneouschain.ethII.context.EthIIContext;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.helper.HtgBlockAnalysisHelper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
-import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
@@ -613,6 +610,95 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
+    public void getWithdrawDecoderTest() throws Exception {
+        setMain();
+        List<String> errorList = new ArrayList<>();
+        errorList.add("0x9ae49e043ff68277b14001b46ea77bcbaeb7e5a9a5823cfe925c4277360cc82b");
+        errorList.add("0xe32a27462f006c2ea1bfaf22df74ee5c0e9aa99de9aeaef1c3b9364a06aed2c6");
+        errorList.add("0x1437ee52b1293dd821c3e910f728b494e28005edfac44bd06fb8e44aaf0c15e2");
+        errorList.add("0xe9cad66845122f9a2d9901cdc1badfe415477e0e4ea3cedd21b134721f8711fe");
+        errorList.add("0x6f4bf72d15ed0a9f59e17693602c7e90d04c65855b2ce33166f4399e8f6aac5d");
+        errorList.add("0x9ab16ecdb63987eb40ae1465f82e82fbb3f2b27728d1603ddd856efc3025dffa");
+        errorList.add("0xcdb36dd4e92e4b11e77f3dcfd6103a291e7b821c84a37c542aef4933639fce6c");
+        errorList.add("0x0addb7e2d11936f64810c548d4b77b642c449d2fe576e1a8d59c0afde717fdac");
+        errorList.add("0x38934dba8a36cf9c1372e170745af26a0d8c65e456d30694c79365589fb03a52");
+        errorList.add("0x3f987320e0f9c3b417c5d08e6cfe8150180d929f12cb9cf341f15df9667a4f3d");
+        errorList.add("0x51f82ee99a5fcde16fd42aae545280cb559e7fd73d9732ee3d9a7c59b79a08e2");
+        errorList.add("0x9740248e8a9f049a2a7060a066a2c2995d4d3c8d43cfb771b6a7d811228739c7");
+        errorList.add("0x2906cb745f056792f92b502c1d39870b2176174e273baebc4623ea2bae3fb03a");
+        errorList.add("0x5a2e28695822358477517ba9dd75e2eef631db787eea818d4766c0047a5167b0");
+        errorList.add("0x0e814fd721a03c24b69bc15ebf09b110d051e303143c964354dd4eab98b53ba2");
+        errorList.add("0x21ce9c9bc128e2c8a0657b8b7b551b9ac94f7d7cced7fffcc86f44fb8269dba1");
+        errorList.add("0xd9b5dff5bb24fb1f5d63caa863b1a1879ee9d0ab5d4e402da4b374ce40f7d949");
+        errorList.add("0x9a0e1513bfe4cf3a8886dd75d11502c21edb7c1dd4cb6cd9e49f3338862f5747");
+        errorList.add("0x5b3a9681d9aea786efbe5104db5012d6c0259c03d76a2cb8fa05cf3eabeeee63");
+        errorList.add("0x967b0f5fda1d34817bdeed4a4eb2a00678261846b9bd6f5bbbd0310f6563c358");
+        errorList.add("0xff79d042bd7b81e04c2d0c6be7f10b8e4c25b8972d31f1f3d56a9bcade6714af");
+        errorList.add("0x7225b55846e181fcb2f1afe3e1ed5ed63b5a0e3432f593fc61f99dd80d98b9bb");
+        errorList.add("0x0f81db6dc78d60e9f42c2e7b7afca67222a75c754e8a7b60720e1a13b5bdea72");
+        errorList.add("0x1300c33e4f87569f8dfabe58a9a25251670ba7837efe514357084e1dd96ae5d0");
+        errorList.add("0x768176b885bdd04b1562292d6124607a5e7ad52f5baf25224e891862f975da1f");
+        errorList.add("0xce8c6289b6aea85256ce6249b39f56fe78a9e1f584733af744752178525d7718");
+        errorList.add("0x14f5a8f1221c6aa7e257b3e848126a03e4ecd161ef60128ce2609e136176867d");
+        errorList.add("0x6fa5a6ae9e257f132e273a7830b7c24bb92ed6f37bdc3a633964b8e5d756d011");
+        errorList.add("0xc1e87ba8a39e77788f7ce4e92b6d62c1d6a651d0e511ee2d993e1169e7c0706b");
+        errorList.add("0xd2a737b2ef510f44ec614e6b415912c1dcee86e92cd88f6fcf8af9f306cfaee9");
+        errorList.add("0x51a7e2347ca81e7db7dc876d2003d986ce78bfbf19011630362c1c7d4091bf03");
+        errorList.add("0x9c623ebf26b42237b2545f5b2205b127b228f8b7a34417ae971ce05f4cee5e9e");
+        errorList.add("0xc53bf2992e31a6c63f1980b746c7b5f6e5ede88976a498900ff8ff61012ef0cb");
+        errorList.add("0x075accaaab20136fe27d11c5b6254c377bb8cb7b32f6886813239a243f781ce8");
+        errorList.add("0x4caeacc147eb729e54f028c46483e3d83636c2c9dae09d2d0e56b0050645005e");
+        errorList.add("0x85e900115da050502114141414858eac50ca8f4e9808e34de3abc19b23d76b51");
+        errorList.add("0x962e3e42e275a006d5c20d9f51c22a31a3250e2a594065597c8d90861a9b2612");
+        errorList.add("0x8c9765fe383b8472b2af544aba31936fa1d226a33fd64a2ae62aa110f36ec11b");
+        errorList.add("0x0c4b47ed034e6e9130348e743a23a6fba015313ef60675ff10e06d38b06c17ae");
+        errorList.add("0x91d111bb56aea94ed992af3236161c2820397f3e2f7d0db74937233e327f6163");
+        errorList.add("0x4430abe7a18db2861f90d1ac7fe78f0eec81344f2482abf85c70b152dd0d4d12");
+        errorList.add("0x0a5b7b77810c220a400065aebd0f4fd1ff1d6c6342b25eecb23f0184003a133e");
+        errorList.add("0xdd644ba1ab564ad0ae357a4aca2fa7cd61902c1148a51673ac46d3b204a97bc5");
+        errorList.add("0x9983ee194d565128b69790ab1f4089515aedf80df81bdf8964b99e234cb52463");
+        errorList.add("0x46e5b9c0627e2278d9c75986869f45c3833f5dc3b2601ca0d3a884e5d607a8e4");
+        errorList.add("0x84f9ba30a7154c636f0120d7892c3f7ee47e777c288bdd6a4eae95cce9898c3e");
+        errorList.add("0x346db316366d35616f6afd5772d3a9ee4bf80f6dfabc141d30771c9522c77ae8");
+        errorList.add("0x4f9a207ae3307b2fdd6e02ff9e8026a945229d0329995d6ee785cc74ba55f198");
+        errorList.add("0xe51e13ba3da8c21cba5a800588669203077f20939ab3766f36c29ade9b4d0b41");
+        errorList.add("0x1a01ef960098f99b14562792847af1618c166782b14fe70e36785a526ba9368f");
+        errorList.add("0xbbcd679e398ecfa01c3e8eb9e10ff0c828910c4753ced66f79e5dbf8afd0a821");
+        errorList.add("0x5c08d3ce69143d34c41e745333ebe2d04e55e35916dc7228212e814dc19d7057");
+        errorList.add("0x39c7374b73cc50e90724e8ccda6431e24573bc20ceeab14442a889a52bdaf8fc");
+        errorList.add("0x05cf2ac00809124edd0d47b453ef08c17cb36580bbdd059303fab2af359bc7cc");
+        errorList.add("0x6df7d831391f89686ad8920c07404dad4b5ffb44778fd227d00d39a202e81eca");
+        errorList.add("0xf559f609c46f44069df4483acdaab7639361780d1243c4b731f56330dadf9bab");
+        errorList.add("0xc3b0818a4b724217e6642a0200e74264b1d2f6db58725579da4cd295741db3a1");
+        errorList.add("0x48aa3f2014c21313091ce4055a4d8ebdc23ddaddb6abcb54b4fbbcaa810f675a");
+        errorList.add("0x2b4853a87b98ce0da2e1acb44b0b42f224df4d0aa1b0d64315e4bb764638f6f6");
+        errorList.add("0x02aab08ef1eb788f6033e23836a5127a8a2e0da853032a7ebb57d4cec08cbd9e");
+        errorList.add("0x5f3dad37d8a8874d5fffe9d2635c248c58667aa96e2e3ba33ada783c4bf7cc4f");
+        errorList.add("0x17ee8d400f2fc783f1d44626a6c8a7d4fd7f42a7f8cca23e31e0981548388570");
+        errorList.add("0x7871e20d8bbc6e70ac7ae3fad50975450b723a9e9126dd6b36f243284deebc09");
+        errorList.add("0x4e0656b8f9f5a09352cfb908fc42248bcdbe6dc9ea0bfc5080e3d198df52247e");
+        errorList.add("0x12771fa1db0c9c82887b2561bd7803362d55d07b275e7031b9e04f4f228ce3fc");
+        errorList.add("0x7f9f7cb6abf887e90ca130aead5823db9397e7c7f5a7ec6a2290faa0e45d2bae");
+        errorList.add("0x54ff182911f5dbce431c7c4b5c195c19d68ee80f15cfdd88ee9575e3f5d62dcd");
+        errorList.add("0xa1a8602c6d328ebd65421fae425136103b0b15a7dd076650f38543d415ed6d3e");
+        errorList.add("0x310986488b1d9306f6c4094bd993fcb37948380923d40d90d7aea1439eb4e295");
+        errorList.add("0xa14f635597870096d62b4848d290de8c40676950a62f94c3c305efed8ecf0f80");
+        errorList.add("0x0e53aa6085c3482e6d88155785bac7b85131b545a9cebfe86d24deca8d1a8866");
+        errorList.add("0x62ec5a5bef98130ebe23d46629aa7d9fde5a565c74ce4f853b90588a5ee7784d");
+        for (String directTxHash : errorList) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            String input = tx.getInput();
+            List<Object> typeList = EthUtil.parseInput(input, HtgConstant.INPUT_WITHDRAW);
+            System.out.println(directTxHash + "\t" + typeList.get(0).toString() + "\t" + new BigDecimal(tx.getGasPrice()).movePointLeft(9).toPlainString());
+            //String signs = HexUtil.encode((byte[]) typeList.get(5));
+            //System.out.println(signs);
+            //System.out.println(String.format("签名个数: %s", signs.length() / 130));
+        }
+
+
+    }
+
+    @Test
     public void txInputChangeDecoderTest() throws JsonProcessingException {
         String changeInput = "0x0071922600000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000140000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000001800000000000000000000000000000000000000000000000000000000000000040633065336439316666316438303636613832623862303966333862383063623034376132666465383862353966346534326466663564663430326561313938320000000000000000000000000000000000000000000000000000000000000001000000000000000000000000196c4b2b6e947b57b366967a1822f3fb7d9be1a8000000000000000000000000000000000000000000000000000000000000000100000000000000000000000010c17be7b6d3e1f424111c8bddf221c9557728b0000000000000000000000000000000000000000000000000000000000000028a0c074974757d9c57fba3e4a82a4c85493abb5107023fcf61ef585d94d5e7b0b75ed9f76a251ba3db8b44028298b5db478053a518ca51ea533b98633e6e5209831ca3367fd298de4967c1e014a9277010ef571ebc2bbc7c8129c377e89efcb2794a0be9c6d63a83f2ae2d5afd9c311bd23785afb9e8cc9fc0f80e57f625b8ace8241c9a6007c4f5d4b5d89478f6afbca0a15496852cc8764b876c7ebcd15d030794ba7dde3063aeb48eec192d53a1705cd5b794004b57437172c76b468e1c7d61dbf81c85963bb8ece815dc5a36bc1c42d463104ea441bdac3c7aca178fb791f424063c26acd3f35ebc891964fd7fa62ea9ff0ab37e2b4bb7e914a8aa515e06713525f61baa27c67e2841649073e12842627003244bfa7653f391f2be2b70ada85f7dcca8016dbb2b251a49a5d39510b39f2c119bf7b14fc4f1c2de2943213fb8f31c11691b24ca74c00ba90d1824692bae4e1cc4739caaf94bbef96d93e2fe0be3575a171c7e6843f5cb6a88992f37baa1a60567703a82f95aa384f92cc4587584484d6a4a1cab182430ed0ea0ae64728e8b27a8687a5aee43774b2f933117cecadea34b1e605cedd4bcbefcfa4e704fd1e4301dc3b428f1aca5ea6de028fc13c394cb0764ba1be5106d7bc1975c1430eff5ad07745e4cdc02c8ed75b6aa7a77c7fbbba7dcb92169bacfb0705700b1cb5a6a7609af2de7c52ef4c4dca042227672c340430c74161bd75ad46a8ba421d8f24d5020f55649110bcf477a35a6f7cdf7682ec7b9d0b23d5e70666840f847435e2c4592b4522cd036330a1df452fef046fe83d911b06fe31b1eaf12755a62e965e17914e162b172573147fa8eef5fb90ed3a4447420f7f9244a77a32dc97b7beb008e7b6b2e6250175c774be147e157d936699927a14239e91b00000000000000000000000000000000000000000000";
         List<Object> typeListOfChange = EthUtil.parseInput(changeInput, HtgConstant.INPUT_CHANGE);
@@ -757,14 +843,14 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println("nvtAmount: " + nvtAmount.movePointLeft(8).toPlainString());
         BigDecimal ethUsd = new BigDecimal("380.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
         System.out.println("price: " + price.movePointLeft(9).toPlainString());
 
         BigDecimal needPrice = new BigDecimal("31.789081289").movePointRight(9);
-        BigDecimal nvtAmountCalc = HtgUtil.calNVTOfWithdraw(nvtUsd, needPrice, ethUsd, assetId);
+        BigDecimal nvtAmountCalc = HtgUtil.calcOtherMainAssetOfWithdraw(AssetName.NVT, nvtUsd, needPrice, ethUsd, assetId);
         System.out.println("newNvtAmount: " + nvtAmountCalc.movePointLeft(8).toPlainString());
 
-        BigDecimal newPrice = HtgUtil.calGasPriceOfWithdraw(nvtUsd, nvtAmountCalc, ethUsd, assetId);
+        BigDecimal newPrice = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmountCalc, ethUsd, assetId);
         System.out.println("newPrice: " + newPrice.movePointLeft(9).toPlainString());
     }
 

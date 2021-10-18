@@ -40,8 +40,8 @@ public class ResponseMessageProcessor {
      * @return boolean
      * @throws Exception 握手失败, handshake failed
      */
-    public static boolean handshake(String url) throws Exception {
-        Channel channel = ConnectManager.getConnectByUrl(url);
+    public static boolean handshake(String url, int poolSize) throws Exception {
+        Channel channel = ConnectManager.getConnectByUrl(url, poolSize);
         if (channel == null) {
             throw new Exception("Kernel not available");
         }
@@ -127,7 +127,7 @@ public class ResponseMessageProcessor {
         连接核心模块（Manager）
         Connect to Core Module (Manager)
          */
-        Channel channel = ConnectManager.getConnectByUrl(kernelUrl);
+        Channel channel = ConnectManager.getConnectByUrl(kernelUrl, 2);
         if (channel == null) {
             throw new Exception("Kernel not available");
         }
@@ -150,7 +150,7 @@ public class ResponseMessageProcessor {
         */
         int tryCount = 0;
         while (!response.isSuccess() && tryCount < Constants.TRY_COUNT) {
-            Log.info("向核心注册消息发送失败第{}次",tryCount + 1);
+            Log.info("向核心注册消息发送失败第{}次", tryCount + 1);
             responseContainer = RequestContainer.putRequest(message.getMessageID());
             ConnectManager.sendMessage(channel, SerializeUtil.getBuffer(JSONUtils.obj2ByteArray(message)));
             response = receiveResponse(responseContainer, REGISTER_API_TIME_OUT);
@@ -271,16 +271,16 @@ public class ResponseMessageProcessor {
      * 发送Request，不接收返回
      * Send Request and wait for Response
      *
-     * @param role       远程方法所属的角色，The role of remote method
-     * @param request    远程方法的命令，Command of the remote method
+     * @param role    远程方法所属的角色，The role of remote method
+     * @param request 远程方法的命令，Command of the remote method
      * @return 远程方法的返回结果，Response of the remote method
      * @throws Exception 请求超时（1分钟），timeout (1 minute)
      */
-    public static String requestOnly(String role, Request request)throws Exception{
+    public static String requestOnly(String role, Request request) throws Exception {
         Message message = MessageUtil.basicMessage(MessageType.RequestOnly);
         message.setMessageData(request);
         Channel channel = ConnectManager.getConnectByRole(role);
-        if(!channel.isWritable()){
+        if (!channel.isWritable()) {
             Log.info("当前请求堆积过多,等待请求处理");
             return "0";
         }
@@ -360,10 +360,10 @@ public class ResponseMessageProcessor {
         try {
             return responseContainer.getFuture().get(timeOut, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            if(timeOut > 0){
+            if (timeOut > 0) {
                 //Timeout Error
                 return MessageUtil.newFailResponse(responseContainer.getMessageId(), CommonCodeConstanst.REQUEST_TIME_OUT);
-            }else{
+            } else {
                 return MessageUtil.newSuccessResponse(responseContainer.getMessageId());
             }
         } finally {

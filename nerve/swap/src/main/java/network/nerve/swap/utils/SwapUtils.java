@@ -87,6 +87,18 @@ public class SwapUtils {
         return AddressTool.getAddress(Sha256Hash.hash(all), chainId, addressType);
     }
 
+    public static String getStableSwapAddress(int chainId, String hash) {
+        byte[] stablePairAddressBytes = AddressTool.getAddress(HexUtil.decode(hash), chainId, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
+        String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
+        return stablePairAddress;
+    }
+
+    public static void main(String[] args) {
+        String hash = "9094b0935304b897ac138ec32c3c0e8fe5f194078c0e5bb89b1a6c6834f78db5";
+        int chainId = 9;
+        System.out.println(getStableSwapAddress(chainId, hash));
+    }
+
     public static byte[] getFarmAddress(int chainId) {
         return AddressTool.getAddress(NulsHash.EMPTY_NULS_HASH.getBytes(), chainId, SwapConstant.FARM_ADDRESS_TYPE);
     }
@@ -491,6 +503,7 @@ public class SwapUtils {
         for (int i = 0; i < length; i++) {
             SwapPairVO pair = pairs.get(i);
             NerveToken tokenIn = tokenAmountIn.getToken();
+            //TODO pierre swap和稳定swap结合，这里的token比较，要加入稳定币池的元素，即稳定币池的token之间视为相同token，比如: T1 == T2 == T3
             if (!pair.getToken0().equals(tokenIn) && !pair.getToken1().equals(tokenIn)) continue;
             NerveToken tokenOut = pair.getToken0().equals(tokenIn) ? pair.getToken1() : pair.getToken0();
             if (containsCurrency(currentPath, tokenOut)) continue;

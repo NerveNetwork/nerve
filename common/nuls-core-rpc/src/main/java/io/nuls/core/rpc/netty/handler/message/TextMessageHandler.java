@@ -26,6 +26,7 @@ package io.nuls.core.rpc.netty.handler.message;
 
 import io.netty.channel.socket.SocketChannel;
 import io.nuls.core.core.annotation.Value;
+import io.nuls.core.rpc.context.ModuleInfo;
 import io.nuls.core.rpc.model.RequestOnly;
 import io.nuls.core.rpc.netty.processor.RequestMessageProcessor;
 import io.nuls.core.rpc.info.Constants;
@@ -68,7 +69,7 @@ public class TextMessageHandler implements Runnable, Comparable<TextMessageHandl
 
     @Override
     public int compareTo(TextMessageHandler o) {
-        return  Integer.compare(o.priority,this.priority);
+        return Integer.compare(o.priority, this.priority);
     }
 
     @Override
@@ -78,6 +79,8 @@ public class TextMessageHandler implements Runnable, Comparable<TextMessageHandl
 
     @SuppressWarnings("unchecked")
     private void handler() {
+        String logMsg = null;
+        long startTime = System.currentTimeMillis();
         try {
             ConnectData connectData = ConnectManager.CHANNEL_DATA_MAP.get(channel);
 
@@ -106,16 +109,16 @@ public class TextMessageHandler implements Runnable, Comparable<TextMessageHandl
                      */
                     if (!ConnectManager.isPureDigital(request.getSubscriptionEventCounter())
                             && !ConnectManager.isPureDigital(request.getSubscriptionPeriod())) {
-                        if(null==request.getTimeOut() || request.getTimeOut().isEmpty()){
+                        if (null == request.getTimeOut() || request.getTimeOut().isEmpty()) {
                             RequestMessageProcessor.callCommandsWithPeriod(channel, request.getRequestMethods(), messageId, false);
-                        }else{
+                        } else {
                             long requestTime = Long.parseLong(message.getTimestamp());
                             long timeOut = Long.parseLong(request.getTimeOut());
-                            long currentTime = System.currentTimeMillis() ;
-                            if(timeOut == 0 ||  currentTime< requestTime + timeOut){
+                            long currentTime = System.currentTimeMillis();
+                            if (timeOut == 0 || currentTime < requestTime + timeOut) {
                                 RequestMessageProcessor.callCommandsWithPeriod(channel, request.getRequestMethods(), messageId, false);
-                            }else{
-                                Log.debug("请求超时丢弃请求，当前时间：{}，请求时间:{},超时时间:{},请求方法：{}", currentTime,requestTime,timeOut,request.getRequestMethods());
+                            } else {
+                                Log.debug("请求超时丢弃请求，当前时间：{}，请求时间:{},超时时间:{},请求方法：{}", currentTime, requestTime, timeOut, request.getRequestMethods());
                             }
                         }
                     } else {
@@ -175,6 +178,11 @@ public class TextMessageHandler implements Runnable, Comparable<TextMessageHandl
             }
         } catch (Exception e) {
             Log.error(e);
+        } finally {
+            if (ModuleInfo.name == "consensus" && request != null && request.getRequestMethods() != null) {
+                long use = System.currentTimeMillis() - startTime;
+                Log.info("text: {}, use mills:{}", request.getRequestMethods().keySet(), use);
+            }
         }
     }
 

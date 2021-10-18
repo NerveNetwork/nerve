@@ -496,6 +496,10 @@ public class TxServiceImpl implements TxService {
             //验证账户地址,资产链id,资产id的组合唯一性
             int assetsChainId = coinFrom.getAssetsChainId();
             int assetsId = coinFrom.getAssetsId();
+            // 此资产不可用
+            if (assetsChainId == 5 && assetsId == 58) {
+                throw new NulsException(TxErrorCode.DATA_ERROR);
+            }
             boolean rs = uniqueCoin.add(addr + "-" + assetsChainId + "-" + assetsId + "-" + HexUtil.encode(coinFrom.getNonce()));
             if (!rs) {
                 throw new NulsException(TxErrorCode.COINFROM_HAS_DUPLICATE_COIN);
@@ -596,6 +600,10 @@ public class TxServiceImpl implements TxService {
             }
             int assetsChainId = coinTo.getAssetsChainId();
             int assetsId = coinTo.getAssetsId();
+            // 此资产不可用
+            if (assetsChainId == 5 && assetsId == 58) {
+                throw new NulsException(TxErrorCode.DATA_ERROR);
+            }
             long lockTime = coinTo.getLockTime();
             //to里面地址、资产链id、资产id、锁定时间的组合不能重复
             boolean rs = uniqueCoin.add(addr + "-" + assetsChainId + "-" + assetsId + "-" + lockTime);

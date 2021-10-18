@@ -25,10 +25,7 @@
 package network.nerve.converter.core.thread.task;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
@@ -40,6 +37,7 @@ import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.business.VirtualBankService;
@@ -146,11 +144,11 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         break;
                     case TxType.WITHDRAWAL:
                         // 处理提现
-                        if (chain.getHeterogeneousChangeBankExecuting().get()) {
-                            // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
-                            chain.getLogger().info("[Task-change_virtual_bank] pause withdrawal 正在执行虚拟银行变更异构链交易, 暂停新的提现异构处理!");
-                            break out;
-                        }
+                        //if (chain.getHeterogeneousChangeBankExecuting().get()) {
+                        //    // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
+                        //    chain.getLogger().info("[Task-change_virtual_bank] pause withdrawal 正在执行虚拟银行变更异构链交易, 暂停新的提现异构处理!");
+                        //    break out;
+                        //}
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawalProcessor(pendingPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
@@ -531,8 +529,18 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
-                    BigInteger totalFee = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
-                    boolean enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    WithdrawalTotalFeeInfo totalFeeInfo = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
+                    BigInteger totalFee = totalFeeInfo.getFee();
+                    boolean enoughFeeOfWithdraw;
+                    // 修改手续费机制，支持异构链主资产作为手续费
+                    if (totalFeeInfo.isNvtAsset()) {
+                        // 验证NVT作为手续费
+                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    } else {
+                        // 验证异构链主资产作为手续费
+                        // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdrawByMainAssetProtocol15(totalFeeInfo.getHtgMainAssetName(), new BigDecimal(totalFee), callParm.getAssetId());
+                    }
                     if (!enoughFeeOfWithdraw) {
                         // 异常计数
                         pendingPO.increaseWithdrawErrorTime();

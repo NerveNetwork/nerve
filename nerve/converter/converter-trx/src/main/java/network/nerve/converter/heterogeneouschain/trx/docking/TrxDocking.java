@@ -788,28 +788,17 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
-        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-        BigDecimal nvtUSD = coreApi.getUsdtPriceByAsset(AssetName.NVT);
-        BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
-        if(null == nvtUSD || null == htgUSD){
-            logger().error("[{}][withdraw] 提现手续费计算,没有获取到完整的报价. nvtUSD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), nvtUSD, htgContext.getConfig().getSymbol(), htgUSD);
-            throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
+        return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
+    }
+
+    @Override
+    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
+        // 可使用其他异构网络的主资产作为手续费, 比如提现到TRX，支付BNB作为手续费
+        if (assetName == htgContext.ASSET_NAME()) {
+            return this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(amount, hAssetId) != null;
+        } else {
+            return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId);
         }
-        BigDecimal needNVT = TrxUtil.calNVTOfWithdraw(nvtUSD, htgUSD);
-        if (nvtAmount.compareTo(needNVT) >= 0) {
-            logger().info("[{}]手续费足够，当前网络需要的NVT: {}, 实际支出的NVT: {}",
-                    htgContext.getConfig().getSymbol(),
-                    needNVT.movePointLeft(8).toPlainString(),
-                    nvtAmount.movePointLeft(8).toPlainString());
-            return true;
-        }
-        logger().warn("[{}]手续费不足，当前网络需要的NVT: {}, 实际支出的NVT: {}, 需要追加的NVT: {}",
-                htgContext.getConfig().getSymbol(),
-                needNVT.movePointLeft(8).toPlainString(),
-                nvtAmount.movePointLeft(8).toPlainString(),
-                needNVT.subtract(nvtAmount).movePointLeft(8).toPlainString()
-        );
-        return false;
     }
 
     @Override
@@ -871,6 +860,22 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 po.setContractAddress(contractAddressERC20);
             }
             Function createOrSignWithdrawFunction = TrxUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
+
+            // 检查手续费
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+            WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
+            BigDecimal feeAmount = new BigDecimal(feeInfo.getFee());
+            if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
+            BigDecimal need;
+            // // 使用非提现网络的其他主资产作为手续费时
+            if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
+            } else {
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
+            }
+            if (need == null) {
+                throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+            }
 
             // 验证合约后发出交易
             String htTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW);
@@ -1133,6 +1138,54 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         htgListener.addListeningTx(htTxHash);
         logger().info("Nerve网络向{}网络发出[{}]交易, nerveTxHash: {}, 详情: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
         return htTxHash;
+    }
+
+    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
+        return this.calcOtherMainAssetOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId) != null;
+    }
+
+    private BigDecimal calcOtherMainAssetOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
+        String otherSymbol = otherMainAssetName.toString();
+        int otherDecimals = otherMainAssetName.decimals();
+        IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+        BigDecimal otherMainAssetUSD = coreApi.getUsdtPriceByAsset(otherMainAssetName);
+        BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
+        if(null == otherMainAssetUSD || null == htgUSD){
+            logger().error("[{}][withdraw] 提现手续费计算,没有获取到完整的报价. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
+            throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
+        }
+        BigDecimal needOtherMainAssetAmount = TrxUtil.calcOtherMainAssetOfWithdraw(otherMainAssetName, otherMainAssetUSD, htgUSD);
+        if (otherMainAssetAmount.compareTo(needOtherMainAssetAmount) >= 0) {
+            logger().info("[{}]手续费足够，当前网络需要的{}: {}, 实际支出的{}: {}",
+                    htgContext.getConfig().getSymbol(),
+                    otherSymbol,
+                    needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
+                    otherSymbol,
+                    otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString());
+            return needOtherMainAssetAmount;
+        }
+        logger().warn("[{}]手续费不足，当前网络需要的{}: {}, 实际支出的{}: {}, 需要追加的{}: {}",
+                htgContext.getConfig().getSymbol(),
+                otherSymbol,
+                needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
+                otherSymbol,
+                otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
+                otherSymbol,
+                needOtherMainAssetAmount.subtract(otherMainAssetAmount).movePointLeft(otherDecimals).toPlainString());
+        return null;
+    }
+
+    private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
+        BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15();
+        if (amount.compareTo(amountCalc) >= 0) {
+            return amountCalc;
+        }
+        logger().warn("[{}]手续费不足，当前网络需要的TRX: {}, 实际支出的TRX: {}, 需要追加的TRX: {}",
+                htgContext.getConfig().getSymbol(),
+                amountCalc.movePointLeft(6).toPlainString(),
+                amount.movePointLeft(6).toPlainString(),
+                amountCalc.subtract(amount).movePointLeft(6).toPlainString());
+        return null;
     }
 
 }

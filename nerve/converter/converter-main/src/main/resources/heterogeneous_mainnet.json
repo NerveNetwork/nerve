@@ -146,9 +146,9 @@
     "symbol": "TRX",
     "decimals": 6,
     "commonRpcAddress": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
-    "mainRpcAddress": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
-    "orderRpcAddresses": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
-    "standbyRpcAddresses": "76f3c2b5-357a-4e6c-aced-9e1c42179717",
+    "mainRpcAddress": "e8f4451b-7f5e-4f7e-95b3-138997af84a5",
+    "orderRpcAddresses": "18765dbb-a9a5-47cc-83b3-0403d0625093,9a17e994-c722-40fc-a3a2-44470e8c5942,2e0713b5-6d7d-4b0f-b368-335c010c82a3,d332da45-82c6-4d1c-b05b-9bff01f43126,38b439d4-18f3-44c1-833c-5d26406e7aff,3e00a394-5d9b-4d6b-983b-72e6655b5c3a,88c5ee24-697c-4185-a4b2-a9ed45a1dd62,1a461596-7950-4c42-84e3-853b5e039445,60631406-f53a-4c2a-a57a-2c459268ebaa,ac44d45c-0c6b-4b14-aec6-4af06424b6a3,531f1989-622a-49fe-b1f6-80e5141b4a8d,d3ca87c1-c72b-47ef-b196-7e9879bd3b11,c680f17a-dac8-4788-bb27-8befdf4b9a8a,2d9398bf-9e55-4246-94c7-feadd6aa4471,fd7d95cb-639a-41a2-9ccb-f86540a257c4",
+    "standbyRpcAddresses": "2b18190c-73ea-402f-bb21-128339b09496,e620a98e-9988-4e11-9e39-ae2e324cbb72,0cfa9932-d68d-45da-bca6-682717cf841b,132a1214-1e43-4e41-8881-3bfaf142913c,e8baed07-a0ec-42a1-b71d-def8ce1e22af,5840d5f8-88c8-4b4a-aafe-aebd16285010,94670ffb-fc68-4e59-bdc9-d0826663c128,95a3b832-7c30-41ff-b4e8-8a5541897420,0b47ebd2-173d-4950-b1c7-f8d30059c6ce,0f768b6e-8505-4454-8957-20a5c99447ea,6a510453-8538-4f75-845e-9a106a912eff,34c7671f-814f-4a9b-abb8-6dc08b4e6769,4dad537e-299b-44aa-bfe8-32ccc6e8ee4c,076c6b48-4d14-4d77-bdae-e49c2d8988f7,affcc52d-b2e2-48ff-9a55-e545f9a2adc2",
     "defaultStartHeight": 0,
     "txBlockConfirmations": 30,
     "txBlockConfirmationsOfWithdraw": 3,
@@ -159,4 +159,5 @@
     "waitingTxQueuePeriod": 10,
     "filterAddresses": "TEZFeWmzL5wjZx3rKP79gXMCtHdyfWbrRk"
   }
+
 ]

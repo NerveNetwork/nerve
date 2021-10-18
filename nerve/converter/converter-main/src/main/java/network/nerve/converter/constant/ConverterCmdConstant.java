@@ -70,5 +70,7 @@ public interface ConverterCmdConstant {
     String RETRY_WITHDRAWAL = "cv_retry_withdrawal";
     String CANCEL_HTG_TX = "cv_cancelHtgTx";
     String GET_PROPOSAL_INFO = "cv_getProposalInfo";
+    String GET_RECHARGE_NERVE_HASH = "cv_getRechargeNerveHash";
+    String FIND_BY_WITHDRAWAL_TX_HASH = "cv_findByWithdrawalTxHash";
 
 }

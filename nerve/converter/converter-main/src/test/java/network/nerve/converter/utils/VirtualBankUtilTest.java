@@ -6,14 +6,20 @@ import io.nuls.base.data.*;
 import io.nuls.base.signture.MultiSignTxSignature;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import io.nuls.core.rpc.util.NulsDateUtils;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.TxSubsequentProcessKeyListPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
+import network.nerve.converter.model.txdata.RechargeTxData;
 import network.nerve.converter.model.txdata.VoteProposalTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -137,6 +143,36 @@ public class VirtualBankUtilTest {
         for (TxSubsequentProcessPO po : list) {
             System.out.println(po.getTx().format(WithdrawalTxData.class));
         }
+    }
+
+    @Test
+    public void recharge2nerve() throws Exception {
+        RechargeTxData txData = new RechargeTxData("0x2f05ab966e9f98e67a099ec0886331e93bb386e2c0d119d34affbb50b34c981e");
+        txData.setHeterogeneousChainId(103);
+        byte[] toAddress = AddressTool.getAddress("NERVEepb6ESTRJAjMX31XREfkzcD4AHNfM9gtG");
+        CoinTo coinTo = new CoinTo(
+                toAddress,
+                1,
+                1,
+                new BigInteger("60091679746"));
+        List<CoinTo> tos = new ArrayList<>();
+        tos.add(coinTo);
+        CoinData coinData = new CoinData();
+        coinData.setTo(tos);
+        byte[] coinDataBytes = null;
+        byte[] txDataBytes = null;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = new Transaction(TxType.RECHARGE);
+        tx.setTxData(txDataBytes);
+        tx.setTime(1627397685L);
+        tx.setCoinData(coinDataBytes);
+        tx.setRemark("0xa3a91082c9e3d4d8fc3544559b9c5d21e35f69d2".getBytes(StandardCharsets.UTF_8));
+        System.out.println(tx.getHash().toHex());
     }
 
     @Test

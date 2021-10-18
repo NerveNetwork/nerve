@@ -536,7 +536,7 @@ public class ETHWalletApi implements WalletApi {
             RawTransaction etherTransaction = RawTransaction.createEtherTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue);
             //交易签名
             Credentials credentials = Credentials.create(_privateKey);
-            byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, credentials);
+            byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, 1, credentials);
             String hexValue = Numeric.toHexString(signedMessage);
             EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
             if (ethSendTransaction == null || ethSendTransaction.getResult() == null) {

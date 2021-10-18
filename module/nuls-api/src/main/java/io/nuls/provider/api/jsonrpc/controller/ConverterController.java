@@ -191,5 +191,71 @@ public class ConverterController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+    @RpcMethod("getRechargeNerveHash")
+    @ApiOperation(description = "根据异构链跨链转入的交易hash查询NERVE的交易hash", order = 607)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链跨链转入的交易hash")
+    })
+    @ResponseData(name = "返回值", description = "NERVE交易hash")
+    public RpcResult getRechargeNerveHash(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String heterogeneousTxHash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            heterogeneousTxHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[heterogeneousTxHash] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(heterogeneousTxHash)) {
+            return RpcResult.paramError("[heterogeneousTxHash] is incorrect");
+        }
+        Result<String> result = converterTools.getRechargeNerveHash(chainId, heterogeneousTxHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("findByWithdrawalTxHash")
+    @ApiOperation(description = "根据提现交易hash获取确认信息", order = 608)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", description = "异构链ID"),
+            @Key(name = "heterogeneousHeight", description = "异构链交易区块高度"),
+            @Key(name = "heterogeneousTxHash", description = "异构链交易hash"),
+            @Key(name = "confirmWithdrawalTxHash", description = "NERVE确认交易hash")
+    }))
+    public RpcResult findByWithdrawalTxHash(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String txHash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            txHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[txHash] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(txHash)) {
+            return RpcResult.paramError("[txHash] is incorrect");
+        }
+        Result<Map<String, Object>> result = converterTools.findByWithdrawalTxHash(chainId, txHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 
 }

@@ -5,6 +5,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.manager.FarmTempManager;
@@ -76,7 +77,7 @@ public class FarmWithdrawHelper {
             return ValidaterResult.getFailed(SwapErrorCode.FARM_WITHDRAW_EXCESS_ERROR);
         }
 
-        if (blockTime > 0 && blockTime < farm.getLockedTime()) {
+        if ((blockTime > 0 && blockTime < farm.getLockedTime()) || (blockTime == 0 && NulsDateUtils.getCurrentTimeSeconds() < farm.getLockedTime())) {
             logger.warn("Farm is still locked.");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_IS_LOCKED_ERROR);
         }

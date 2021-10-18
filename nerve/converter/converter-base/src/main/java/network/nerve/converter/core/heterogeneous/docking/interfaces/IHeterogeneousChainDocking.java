@@ -24,6 +24,7 @@
 package network.nerve.converter.core.heterogeneous.docking.interfaces;
 
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.bo.*;
 
 import java.math.BigDecimal;
@@ -313,6 +314,10 @@ public interface IHeterogeneousChainDocking {
     }
 
     default boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+        return false;
+    }
+
+    default boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
         return false;
     }
 

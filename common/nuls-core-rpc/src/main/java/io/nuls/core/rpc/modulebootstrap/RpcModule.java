@@ -247,7 +247,7 @@ public abstract class RpcModule implements InitializingBean {
                     .addCmdDetail(ModuleStatusCmd.class);
             dependentReadyState.keySet().forEach(d -> server.dependencies(d.getName(), d.getVersion()));
             // Get information from kernel
-            ConnectManager.getConnectByUrl(serviceManagerUrl);
+            ConnectManager.getConnectByUrl(serviceManagerUrl,2);
             Log.info("RMB:开始连接service manager:{}",serviceManagerUrl);
             ResponseMessageProcessor.syncKernel(serviceManagerUrl, new RegisterInvoke(moduleInfo(), dependentReadyState.keySet()));
             //模块进入ready状态的准备工作，如果条件未达到，等待10秒重新尝试

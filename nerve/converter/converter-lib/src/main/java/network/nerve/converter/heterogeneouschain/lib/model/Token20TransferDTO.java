@@ -1,18 +1,18 @@
 /**
  * MIT License
- *
- * Copyright (c) 2017-2019 nuls.io
- *
+ * <p>
+ * Copyright (c) 2017-2018 nuls.io
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -21,22 +21,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.nuls.core.h2.transactional.annotation;
+package network.nerve.converter.heterogeneouschain.lib.model;
+
+import java.math.BigInteger;
 
 /**
- *
- * @author zhouwei
- * @date 2017/10/26
+ * @author: PierreLuo
+ * @date: 2021/8/16
  */
-public enum  PROPAGATION {
-    NONE("none"),
-    REQUIRED("required"),
-    INDEPENDENT("independent");
+public class Token20TransferDTO {
+    private String from;
+    private String to;
+    private BigInteger value;
+    private String contractAddress;
 
+    public Token20TransferDTO(String from, String to, BigInteger value, String contractAddress) {
+        this.from = from;
+        this.to = to;
+        this.value = value;
+        this.contractAddress = contractAddress;
+    }
 
-    PROPAGATION(String value) {
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public BigInteger getValue() {
+        return value;
+    }
+
+    public void setValue(BigInteger value) {
         this.value = value;
     }
 
-    private String value;
+    public String getContractAddress() {
+        return contractAddress;
+    }
+
+    public void setContractAddress(String contractAddress) {
+        this.contractAddress = contractAddress;
+    }
 }

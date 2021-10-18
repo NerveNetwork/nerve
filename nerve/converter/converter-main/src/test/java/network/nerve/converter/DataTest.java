@@ -23,6 +23,9 @@
  */
 package network.nerve.converter;
 
+import io.nuls.base.basic.NulsByteBuffer;
+import io.nuls.base.data.Transaction;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -30,6 +33,7 @@ import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.HtgERC20StorageServiceImpl;
+import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
 import org.junit.Test;
 
 /**
@@ -46,5 +50,19 @@ public class DataTest {
         HtgERC20StorageServiceImpl service = new HtgERC20StorageServiceImpl(context, BnbDBConstant.DB_BNB);
         HtgERC20Po po = service.findByAddress("0x72755f739b56ef98bda25e2622c63add229dec01");
         System.out.println(JSONUtils.obj2PrettyJson(po));
+    }
+
+
+    @Test
+    public void testCVTableTx() throws Exception {
+        // e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26
+        // ce728bae5c93c5ccd65422bf8303ba90315cdb405517a7ec0da497112e6423cb
+        String hash = "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26";
+        RocksDBService.init("/Users/pierreluo/Nuls/cv03");
+        byte[] bytes = RocksDBService.get("cv_table_tx_9", HexUtil.decode(hash));
+        System.out.println(HexUtil.encode(bytes));
+        Transaction tx = new Transaction();
+        tx.parse(bytes, 0);
+        System.out.println(tx.format(ConfirmWithdrawalTxData.class));
     }
 }

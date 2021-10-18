@@ -37,6 +37,7 @@ import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.MessageService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.IDepositTxSubmitter;
 import network.nerve.converter.core.heterogeneous.callback.management.HeterogeneousCallBackManager;
@@ -102,6 +103,8 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     private Object objectBankLock = new Object();
     private Object objectWithdrawLock = new Object();
@@ -116,7 +119,12 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == p2PHKSignature || null == p2PHKSignature.getPublicKey() || null == p2PHKSignature.getSignData()) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        LoggerUtil.LOG.debug("收到节点[{}]新交易签名 hash: {}, 签名地址:{}", nodeId, hash.toHex(),
+        // v15波场协议升级后，特殊处理hash，历史遗留问题，polygon区块回滚导致的交易高度和时间不一致的问题
+        if (converterCoreApi.isSupportProtocol15TrxCrossChain() && "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26".equalsIgnoreCase(hash.toHex())) {
+            LoggerUtil.LOG.warn("过滤交易hash: {}", hash.toHex());
+            return;
+        }
+        LoggerUtil.LOG.info("收到节点[{}]新交易签名 hash: {}, 签名地址:{}", nodeId, hash.toHex(),
                 AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chainId)));
         TransactionPO txPO = txStorageService.get(chain, hash);
         if (null == txPO) {
@@ -146,7 +154,7 @@ public class MessageServiceImpl implements MessageService {
         }
         //如果该交易已经被打包了，所以不需要再广播该交易的签名
         if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || message.getP2PHKSignature() == null) {
-            LoggerUtil.LOG.debug("交易在本节点已经处理完成,Hash:{}\n\n", hash.toHex());
+            LoggerUtil.LOG.info("交易在本节点已经处理完成,Hash:{}\n\n", hash.toHex());
             return;
         }
         try {
@@ -201,7 +209,7 @@ public class MessageServiceImpl implements MessageService {
         //判断本节点是否已经收到过该交易，如果已收到过直接忽略
         TransactionPO txPO = txStorageService.get(chain, localHash);
         if (txPO != null) {
-            LoggerUtil.LOG.debug("已收到并处理过该交易,Hash:{}\n\n", localHashHex);
+            LoggerUtil.LOG.info("已收到并处理过该交易,Hash:{}\n\n", localHashHex);
             return;
         }
         // 验证该交易
@@ -398,7 +406,7 @@ public class MessageServiceImpl implements MessageService {
                 return;
             }
             compSignPO = initCompSignPO(compSignPO, hash);
-            LoggerUtil.LOG.debug("[异构链地址签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
+            LoggerUtil.LOG.info("[异构链地址签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
             List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
             if (null == hInterfaces || hInterfaces.isEmpty()) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
@@ -711,7 +719,7 @@ public class MessageServiceImpl implements MessageService {
             HeterogeneousSign sign = message.getListSign().get(0);
             String signAddress = sign.getHeterogeneousAddress().getAddress();
             int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
-            LoggerUtil.LOG.debug("[异构链地址签名消息-处理refund], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
+            LoggerUtil.LOG.info("[异构链地址签名消息-处理refund], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
                     nodeId, txHash, heterogeneousChainId, signAddress);
 
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
@@ -743,7 +751,7 @@ public class MessageServiceImpl implements MessageService {
 
             // 处理消息并拜占庭验证, 更新compSignPO等
             if (!compSignPO.getCurrentSigned()) {
-                LoggerUtil.LOG.debug("[异构链地址签名消息 执行当前节点签名] txHash:{}", txHash);
+                LoggerUtil.LOG.info("[异构链地址签名消息 执行当前节点签名] txHash:{}", txHash);
                 // 如果当前节点还没签名则触发当前节点签名,存储 并广播
                 String signStrData = docking.signWithdrawII(txHash, info.getFrom(), info.getValue(), info.getAssetId());
                 String currentHaddress = docking.getCurrentSignAddress();
@@ -810,7 +818,7 @@ public class MessageServiceImpl implements MessageService {
             String signAddress = sign.getHeterogeneousAddress().getAddress();
             // 验证消息签名
             int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
-            LoggerUtil.LOG.debug("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
+            LoggerUtil.LOG.info("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
                     nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress);
             // 新合约多签地址
             String newMultySignAddress = Numeric.toHexString(proposalPO.getAddress());
@@ -888,10 +896,10 @@ public class MessageServiceImpl implements MessageService {
                     signAddress += sign.getHeterogeneousAddress().getChainId() + ":" + sign.getHeterogeneousAddress().getAddress() + " ";
                 }
             }
-            LoggerUtil.LOG.debug("[异构链地址签名消息 拜占庭通过] 当前签名数:{}, 签名地址:{}", list.size(), signAddress);
+            LoggerUtil.LOG.info("[异构链地址签名消息 拜占庭通过] 当前签名数:{}, 签名地址:{}", list.size(), signAddress);
             return true;
         }
-        LoggerUtil.LOG.debug("[异构链地址签名消息 - 暂时未达到拜占庭签名数], txhash: {}, 拜占庭需达到的签名数:{}, 当前签名数:{}, ",
+        LoggerUtil.LOG.info("[异构链地址签名消息 - 暂时未达到拜占庭签名数], txhash: {}, 拜占庭需达到的签名数:{}, 当前签名数:{}, ",
                 message.getHash().toHex(), byzantineMinPassCount, list.size());
         return false;
     }

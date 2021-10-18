@@ -52,13 +52,12 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.*;
+import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.ProposalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
-import network.nerve.converter.storage.DisqualificationStorageService;
-import network.nerve.converter.storage.ProposalStorageService;
-import network.nerve.converter.storage.TxSubsequentProcessStorageService;
+import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -92,6 +91,10 @@ public class BusinessCmd extends BaseCmd {
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService;
     @Autowired
     private ProposalStorageService proposalStorageService;
+    @Autowired
+    private RechargeStorageService rechargeStorageService;
+    @Autowired
+    private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -102,6 +105,7 @@ public class BusinessCmd extends BaseCmd {
             @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现到账地址"),
             @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "提现到账金额"),
             @Parameter(parameterName = "distributionFee", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "手续费"),
+            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "手续费链ID(5/9,101,102,103....)"),
             @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注"),
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
             @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
@@ -128,6 +132,10 @@ public class BusinessCmd extends BaseCmd {
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
             }
+            Integer feeChainId = (Integer) params.get("feeChainId");
+            if (feeChainId == null) {
+                feeChainId = chain.getChainId();
+            }
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
             signAccountDTO.setPassword((String) params.get("password"));
@@ -135,6 +143,7 @@ public class BusinessCmd extends BaseCmd {
             JSONUtils.getInstance().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             WithdrawalTxDTO withdrawalTxDTO = JSONUtils.map2pojo(params, WithdrawalTxDTO.class);
             withdrawalTxDTO.setSignAccount(signAccountDTO);
+            withdrawalTxDTO.setFeeChainId(feeChainId);
 
             Transaction tx = assembleTxService.createWithdrawalTx(chain, withdrawalTxDTO);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
@@ -158,6 +167,7 @@ public class BusinessCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
             @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "原始交易hash"),
+            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "追加的主资产的链ID(5/9,101,102,103....)"),
             @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "追加的手续费金额"),
             @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注"),
             @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
@@ -182,6 +192,10 @@ public class BusinessCmd extends BaseCmd {
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
             }
+            Integer feeChainId = (Integer) params.get("feeChainId");
+            if (feeChainId == null) {
+                feeChainId = chain.getChainId();
+            }
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
             signAccountDTO.setPassword((String) params.get("password"));
@@ -189,6 +203,7 @@ public class BusinessCmd extends BaseCmd {
             JSONUtils.getInstance().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO = JSONUtils.map2pojo(params, WithdrawalAdditionalFeeTxDTO.class);
             withdrawalAdditionalFeeTxDTO.setSignAccount(signAccountDTO);
+            withdrawalAdditionalFeeTxDTO.setFeeChainId(feeChainId);
 
             Transaction tx = assembleTxService.withdrawalAdditionalFeeTx(chain, withdrawalAdditionalFeeTxDTO);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
@@ -639,7 +654,6 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
-
     @CmdAnnotation(cmd = ConverterCmdConstant.CANCEL_HTG_TX, version = 1.0, description = "取消虚拟银行发出的异构链网络交易")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
@@ -683,6 +697,80 @@ public class BusinessCmd extends BaseCmd {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode());
         } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_RECHARGE_NERVE_HASH, version = 1.0, description = "根据异构链跨链转入的交易hash查询NERVE的交易hash")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链跨链转入的交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    }))
+    public Response getRechargeNerveHash(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            String heterogeneousTxHash = (String) params.get("heterogeneousTxHash");
+            NulsHash nerveTxHash = rechargeStorageService.find(chain, heterogeneousTxHash);
+            if (nerveTxHash == null) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", nerveTxHash.toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.FIND_BY_WITHDRAWAL_TX_HASH, version = 1.0, description = "根据提现交易hash获取确认信息")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", description = "异构链ID"),
+            @Key(name = "heterogeneousHeight", description = "异构链交易区块高度"),
+            @Key(name = "heterogeneousTxHash", description = "异构链交易hash"),
+            @Key(name = "confirmWithdrawalTxHash", description = "NERVE确认交易hash")
+    }))
+    public Response findByWithdrawalTxHash(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("txHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            String txHash = (String) params.get("txHash");
+            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, NulsHash.fromHex(txHash));
+            if (po == null) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
+            Map<String, Object> map = new HashMap<>();
+            map.put("heterogeneousChainId", po.getHeterogeneousChainId());
+            map.put("heterogeneousHeight", po.getHeterogeneousHeight());
+            map.put("heterogeneousTxHash", po.getHeterogeneousTxHash());
+            map.put("confirmWithdrawalTxHash", po.getConfirmWithdrawalTxHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode());
         } catch (Exception e) {

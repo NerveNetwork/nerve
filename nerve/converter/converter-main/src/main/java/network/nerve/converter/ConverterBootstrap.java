@@ -119,25 +119,25 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion180 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_8_0"));
-            converterConfig.setHuobiCrossChainHeight(heightVersion180);
+            converterConfig.setProtocol8HuobiCrossChainHeight(heightVersion180);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_8_0", e);
         }
         try {
             long heightVersion1_11_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_11_0"));
-            converterConfig.setOktCrossChainHeight(heightVersion1_11_0);
+            converterConfig.setProtocol11OktCrossChainHeight(heightVersion1_11_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_11_0", e);
         }
         try {
             long heightVersion1_12_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_12_0"));
-            converterConfig.setErc20OfTransferBurnHeight(heightVersion1_12_0);
+            converterConfig.setProtocol12Erc20OfTransferBurnHeight(heightVersion1_12_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_12_0", e);
         }
         try {
             long heightVersion1_13_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_13_0"));
-            converterConfig.setNewValidationOfErc20(heightVersion1_13_0);
+            converterConfig.setProtocol13NewValidationOfErc20(heightVersion1_13_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_13_0", e);
         }
@@ -149,7 +149,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_15_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_15_0"));
-            converterConfig.setTrxCrossChainHeight(heightVersion1_15_0);
+            converterConfig.setProtocol15TrxCrossChainHeight(heightVersion1_15_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_15_0", e);
         }
@@ -240,7 +240,6 @@ public class ConverterBootstrap extends RpcModule {
                 Module.build(ModuleE.BL),
                 Module.build(ModuleE.AC),
                 new Module(ModuleE.PU.abbr, ROLE),
-                new Module(ModuleE.CC.abbr, ROLE),
                 new Module(ModuleE.QU.abbr, ROLE)
         };
     }
@@ -326,20 +325,20 @@ public class ConverterBootstrap extends RpcModule {
         // 协议升级高度 修改提现和充值交易协议,增加异构链id
         ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = converterConfig.getWithdrawalRechargeChainHeight();
         // v1.8.0 协议升级高度 支持火币生态链跨链
-        ConverterContext.HUOBI_CROSS_CHAIN_HEIGHT = converterConfig.getHuobiCrossChainHeight();
+        ConverterContext.PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol8HuobiCrossChainHeight();
         // v1.11.0 协议升级高度 支持欧科生态链跨链
-        ConverterContext.OKT_CROSS_CHAIN_HEIGHT = converterConfig.getOktCrossChainHeight();
+        ConverterContext.PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol11OktCrossChainHeight();
         // v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
-        ConverterContext.ERC20_OF_TRANSFER_BURN_HEIGHT = converterConfig.getErc20OfTransferBurnHeight();
+        ConverterContext.PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = converterConfig.getProtocol12Erc20OfTransferBurnHeight();
         // v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
-        ConverterContext.NEW_VALIDATION_OF_ERC20 = converterConfig.getNewValidationOfErc20();
-        ConverterContext.ONE_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
-        ConverterContext.POLYGON_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
-        ConverterContext.KUCOIN_CROSS_CHAIN_HEIGHT = converterConfig.getNewValidationOfErc20();
+        ConverterContext.PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = converterConfig.getProtocol13NewValidationOfErc20();
+        ConverterContext.PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
+        ConverterContext.PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
+        ConverterContext.PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
         // v1.14.0 协议升级高度
         ConverterContext.PROTOCOL_1_14_0 = converterConfig.getProtocol14Height();
         // v1.15.0 协议升级高度 支持波场生态链跨链
-        ConverterContext.TRX_CROSS_CHAIN_HEIGHT = converterConfig.getTrxCrossChainHeight();
+        ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol15TrxCrossChainHeight();
 
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));

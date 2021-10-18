@@ -78,9 +78,11 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void txDecoder() throws SignatureException {
-        String txHex = "0xf8ab8084861c4680830249f09467bab912ee30074cf9a94826e2e02d993684278180b844a9059cbb000000000000000000000000a67f7a5f327647138a63d2ebe7b02cdcb830a0d20000000000000000000000000000000000000000000000000000000000002710820123a0568301c8db5df4553115875f0253484545cba51c3828b6d59a3c0d7c90f42e85a04634cf2144dc0950bc99291cd0c8077cc4a3b6bac2d353872995289d0e2637be";
+        String txHex = "0xf8aa7f84ae57f54082fc1b94a71edc38d189767582c38a3145b5873052c3e47a80b844a9059cbb00000000000000000000000021decdab7af693437e77936e081c2f4d4391094a0000000000000000000000000000000000000000000000004563918244f40000820124a0e710734bf6444159f3ba41c923553abc07c9d82fecbe80dd7fdaec12b11a50bea0656b35509a6f75d5bc85c734a3d755fd36cd682c1bc0aef4cac652d7dcc0b516";
         Transaction tx = HtgUtil.genEthTransaction("", txHex);
-        System.out.println();
+        converPublicKey(tx);
+        //RawTransaction decode = TransactionDecoder.decode(txHex);
+        //System.out.println();
     }
 
     @Test
@@ -229,7 +231,7 @@ public class ETHWalletApiTest extends Base {
                 tx.getGasPrice(),
                 tx.getGas(),
                 tx.getTo(),
-                tx.getValue(),
+                null,
                 data);
         byte[] rawTxEncode;
         if (tx.getChainId() != null) {
@@ -245,8 +247,11 @@ public class ETHWalletApiTest extends Base {
      * 遍历每一个可能的v值，来得到正确的公钥
      */
     private void converPublicKey(Transaction tx) {
-        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(tx.getR()), Numeric.decodeQuantity(tx.getS()));
+        ECDSASignature signature = new ECDSASignature(
+                Numeric.decodeQuantity(Numeric.prependHexPrefix(tx.getR())),
+                Numeric.decodeQuantity(Numeric.prependHexPrefix(tx.getS())));
         byte[] hashBytes = getRawTxHashBytes(tx);
+        //byte[] hashBytes = Numeric.hexStringToByteArray("0x6b9bcf40ba58be9f1bfe79c014526930ba239e2842cc2ecf4a7df56c403cb2ac");
 
         boolean exist = false;
         boolean success = false;
@@ -259,7 +264,7 @@ public class ETHWalletApiTest extends Base {
                 System.out.println(String.format("公钥: %s", Numeric.toHexStringWithPrefix(recover)));
                 if (tx.getFrom().toLowerCase().equals(address.toLowerCase())) {
                     success = true;
-                    System.out.println("成功: " + i + ": " + address + String.format(", tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+                    System.out.println("成功: " + i + ": " + address + String.format(", tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
                     break;
                 } else {
                     errorList.add(address);
@@ -267,10 +272,10 @@ public class ETHWalletApiTest extends Base {
             }
         }
         if (!exist) {
-            System.err.println(String.format("异常: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("异常: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
         }
         if (!success) {
-            System.err.println(String.format("失败: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("失败: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
         }
     }
 
@@ -769,12 +774,13 @@ public class ETHWalletApiTest extends Base {
         String from = "";
         String fromPriKey = "";
 
-        String to = "???";
+        String to = from;
 
-        BigInteger nonce = BigInteger.valueOf(24L);
+        BigInteger nonce = BigInteger.valueOf(89L);
+        // 看着 https://etherscan.io/gastracker 来设置
         BigInteger gasPrice = BigInteger.valueOf(82L).multiply(BigInteger.TEN.pow(9));
         String hash = ethWalletApi.sendETHWithNonce(from, fromPriKey, to,
-                new BigDecimal("0.14"),
+                new BigDecimal("0"),
                 EthConstant.ETH_GAS_LIMIT_OF_ETH,
                 gasPrice,
                 nonce);
@@ -1380,7 +1386,7 @@ public class ETHWalletApiTest extends Base {
         // eth的usdt价格
         ethUsdt = new BigDecimal("3210.29");
         // gas Gwei
-        price = 43L;
+        price = 83L;
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
         gasCost(1200000);
         gasCost(800000);
