@@ -311,10 +311,6 @@
                     <artifactId>nuls-base</artifactId>
                     <groupId>io.nuls.v2</groupId>
                 </exclusion>
-                <exclusion>
-                    <artifactId>nuls-core-h2</artifactId>
-                    <groupId>io.nuls.v2</groupId>
-                </exclusion>
             </exclusions>
         </dependency>
 
