@@ -32,6 +32,7 @@ import io.nuls.core.exception.NulsException;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.manager.ChainManager;
@@ -133,6 +134,9 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         bus.setStakingBalanceOld(farm.getStakeTokenBalance());
         bus.setSyrupBalanceOld(farm.getSyrupTokenBalance());
         bus.setFarmHash(farm.getFarmHash());
+        if (blockHeight >= SwapContext.PROTOCOL_1_16_0) {
+            bus.setStopHeightOld(farm.getStopHeight());
+        }
         SwapUtils.updatePool(farm, blockHeight);
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
@@ -162,7 +166,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
             realReward = BigInteger.ZERO.add(syrupBalance.getBalance());
         }
         farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(realReward));
-        if (realReward.compareTo(BigInteger.ZERO) > 0) {
+        if (realReward.compareTo(BigInteger.ZERO) > 0 || blockHeight >= SwapContext.PROTOCOL_1_16_0) {
             Transaction subTx = transferReward(chain.getChainId(), farm, address, realReward, tx, blockTime, txData.getAmount(), tempBalanceManager, syrupBalance, farm.getWithdrawLockTime());
             result.setSubTx(subTx);
             try {
@@ -180,11 +184,14 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         BigInteger difference = expectedReward.subtract(realReward);
         user.setRewardDebt(user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12));
         if (difference.compareTo(BigInteger.ZERO) > 0) {
-        } else if(user.getAmount().compareTo(BigInteger.ZERO)==0){
+        } else if (user.getAmount().compareTo(BigInteger.ZERO) == 0) {
             user.setRewardDebt(BigInteger.ZERO);
-        }else {
+        } else {
             BigInteger value = difference.divide(user.getAmount());
             user.setRewardDebt(user.getRewardDebt().subtract(value));
+        }
+        if (farm.getStakeTokenBalance().compareTo(BigInteger.ZERO) == 0) {
+            farm.setStopHeight(0L);
         }
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
@@ -193,11 +200,17 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         bus.setSyrupBalanceNew(farm.getSyrupTokenBalance());
         bus.setUserAmountNew(user.getAmount());
         bus.setUserRewardDebtNew(user.getRewardDebt());
+        if (blockHeight >= SwapContext.PROTOCOL_1_16_0) {
+            bus.setStopHeightNew(farm.getStopHeight());
+        }
         result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
         batchInfo.getFarmUserTempManager().putUserInfo(user);
     }
 
     private Transaction transferReward(int chainId, FarmPoolPO farm, byte[] address, BigInteger reward, Transaction tx, long blockTime, BigInteger withdrawAmount, LedgerTempBalanceManager tempBalanceManager, LedgerBalance syrupBalance, long lockTime) {
+        if (reward.compareTo(BigInteger.ZERO) < 0) {
+            reward = BigInteger.ZERO;
+        }
         FarmSystemTransaction sysWithdrawTx = new FarmSystemTransaction(tx.getHash().toHex(), blockTime);
         sysWithdrawTx.setRemark("Withdraw.");
         LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chainId), farm.getStakeToken().getChainId(), farm.getStakeToken().getAssetId()).getData();

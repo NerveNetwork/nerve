@@ -32,7 +32,6 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
-import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -59,7 +58,6 @@ import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -89,14 +87,21 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private HeterogeneousDockingManager heterogeneousDockingManager;
     private Map<Integer, NerveAssetInfo> htgMainAssetMap = new HashMap<>(16);
     private Map<NerveAssetInfo, AssetName> htgMainAssetByNerveMap = new HashMap<>(16);
+    private Set<String> skipTransactions = new HashSet<>();
+    private volatile List<Runnable> htgConfirmTxHandlers = new ArrayList<>();
+    private volatile List<Runnable> htgRpcAvailableHandlers = new ArrayList<>();
+    private volatile List<Runnable> htgWaitingTxInvokeDataHandlers = new ArrayList<>();
 
-
-    private NulsLogger logger() {
+    public NulsLogger logger() {
         return nerveChain.getLogger();
     }
 
     public void setNerveChain(Chain nerveChain) {
         this.nerveChain = nerveChain;
+        // 跳过历史遗留的问题交易
+        if (nerveChain.getChainId() == 9) {
+            skipTransactions.add("b0a3f4e0f7f28b6d55ced8f333e63f0844c25f061b8a843f8c49c6a0612ccd8d");
+        }
     }
 
     @Override
@@ -318,19 +323,12 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public BigDecimal getUsdtPriceByAsset(AssetName assetName) {
-        // 获取指定资产的USDT价格
-        switch (assetName) {
-            case NVT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_NVT_PRICE);
-            case ETH: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_ETH_PRICE);
-            case BNB: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_BNB_PRICE);
-            case HT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_HT_PRICE);
-            case OKT: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_OKT_PRICE);
-            case ONE: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_ONE_PRICE);
-            case MATIC: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_MATIC_PRICE);
-            case KCS: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_KCS_PRICE);
-            case TRX: return QuotationCall.getPriceByOracleKey(nerveChain, ConverterConstant.ORACLE_KEY_TRX_PRICE);
+        String key = ConverterContext.priceKeyMap.get(assetName.name());
+        if (key == null) {
+            return BigDecimal.ZERO;
         }
-        return BigDecimal.ZERO;
+        // 获取指定资产的USDT价格
+        return QuotationCall.getPriceByOracleKey(nerveChain, key);
     }
 
     @Override
@@ -369,6 +367,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isSupportProtocol15TrxCrossChain() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT;
+    }
+
+    @Override
+    public boolean isProtocol16() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_16_0;
     }
 
     private void loadHtgMainAsset() {
@@ -418,6 +421,37 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     private AssetName getHtgMainAssetName(int nerveAssetChainId, int nerveAssetId) {
+        // 加载缓存
+        this.loadHtgMainAsset();
         return htgMainAssetByNerveMap.get(new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
+    }
+
+    public List<Runnable> getHtgConfirmTxHandlers() {
+        return htgConfirmTxHandlers;
+    }
+
+    public List<Runnable> getHtgRpcAvailableHandlers() {
+        return htgRpcAvailableHandlers;
+    }
+
+    public List<Runnable> getHtgWaitingTxInvokeDataHandlers() {
+        return htgWaitingTxInvokeDataHandlers;
+    }
+
+    public void addHtgConfirmTxHandler(Runnable runnable) {
+        htgConfirmTxHandlers.add(runnable);
+    }
+
+    public void addHtgRpcAvailableHandler(Runnable runnable) {
+        htgRpcAvailableHandlers.add(runnable);
+    }
+
+    public void addHtgWaitingTxInvokeDataHandler(Runnable runnable) {
+        htgWaitingTxInvokeDataHandlers.add(runnable);
+    }
+
+    @Override
+    public boolean skippedTransaction(String nerveTxHash) {
+        return skipTransactions.contains(nerveTxHash);
     }
 }

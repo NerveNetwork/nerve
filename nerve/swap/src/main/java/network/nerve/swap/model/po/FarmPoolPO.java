@@ -25,6 +25,7 @@ public class FarmPoolPO {
     private BigInteger totalSyrupAmount = BigInteger.ZERO;
     private boolean modifiable; //0不可以修改，1可以修改
     private long withdrawLockTime;
+    private Long stopHeight;
 
     public BigInteger getTotalSyrupAmount() {
         return totalSyrupAmount;
@@ -138,6 +139,14 @@ public class FarmPoolPO {
         this.modifiable = modifiable;
     }
 
+    public Long getStopHeight() {
+        return stopHeight;
+    }
+
+    public void setStopHeight(Long stopHeight) {
+        this.stopHeight = stopHeight;
+    }
+
     public FarmPoolPO copy() {
         FarmPoolPO po = new FarmPoolPO();
         po.setLockedTime(this.getLockedTime());
@@ -154,6 +163,7 @@ public class FarmPoolPO {
         po.setTotalSyrupAmount(this.totalSyrupAmount);
         po.setWithdrawLockTime(this.withdrawLockTime);
         po.setModifiable(this.modifiable);
+        po.setStopHeight(this.stopHeight);
         return po;
     }
 

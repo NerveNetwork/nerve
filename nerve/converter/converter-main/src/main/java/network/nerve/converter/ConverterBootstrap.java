@@ -55,6 +55,7 @@ import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.rpc.call.BlockCall;
@@ -111,47 +112,73 @@ public class ConverterBootstrap extends RpcModule {
     private void initProtocolUpdate() {
         ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
         try {
-            long heightVersion160 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_6_0"));
-            converterConfig.setFeeAdditionalHeight(heightVersion160);
-            converterConfig.setWithdrawalRechargeChainHeight(heightVersion160);
+            long heightVersion1_6_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_6_0"));
+            // 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+            ConverterContext.FEE_ADDITIONAL_HEIGHT = heightVersion1_6_0;
+            // 协议升级高度 修改提现和充值交易协议,增加异构链id
+            ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = heightVersion1_6_0;
+            ConverterContext.protocolHeightMap.put(6, heightVersion1_6_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_6_0", e);
         }
         try {
-            long heightVersion180 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_8_0"));
-            converterConfig.setProtocol8HuobiCrossChainHeight(heightVersion180);
+            long heightVersion1_8_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_8_0"));
+            // v1.8.0 协议升级高度 支持火币生态链跨链
+            ConverterContext.PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = heightVersion1_8_0;
+            ConverterContext.protocolHeightMap.put(8, heightVersion1_8_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_8_0", e);
         }
         try {
             long heightVersion1_11_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_11_0"));
-            converterConfig.setProtocol11OktCrossChainHeight(heightVersion1_11_0);
+            // v1.11.0 协议升级高度 支持欧科生态链跨链
+            ConverterContext.PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = heightVersion1_11_0;
+            ConverterContext.protocolHeightMap.put(11, heightVersion1_11_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_11_0", e);
         }
         try {
             long heightVersion1_12_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_12_0"));
-            converterConfig.setProtocol12Erc20OfTransferBurnHeight(heightVersion1_12_0);
+            // v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
+            ConverterContext.PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = heightVersion1_12_0;
+            ConverterContext.protocolHeightMap.put(12, heightVersion1_12_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_12_0", e);
         }
         try {
             long heightVersion1_13_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_13_0"));
-            converterConfig.setProtocol13NewValidationOfErc20(heightVersion1_13_0);
+            // v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
+            ConverterContext.PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = heightVersion1_13_0;
+            ConverterContext.PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = heightVersion1_13_0;
+            ConverterContext.PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT = heightVersion1_13_0;
+            ConverterContext.PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT = heightVersion1_13_0;
+            ConverterContext.protocolHeightMap.put(13, heightVersion1_13_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_13_0", e);
         }
         try {
             long heightVersion1_14_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_14_0"));
-            converterConfig.setProtocol14Height(heightVersion1_14_0);
+            // v1.14.0 协议升级高度
+            ConverterContext.PROTOCOL_1_14_0 = heightVersion1_14_0;
+            ConverterContext.protocolHeightMap.put(14, heightVersion1_14_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_14_0", e);
         }
         try {
             long heightVersion1_15_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_15_0"));
-            converterConfig.setProtocol15TrxCrossChainHeight(heightVersion1_15_0);
+            // v1.15.0 协议升级高度 支持波场生态链跨链
+            ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = heightVersion1_15_0;
+            ConverterContext.protocolHeightMap.put(15, heightVersion1_15_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_15_0", e);
+        }
+        try {
+            long heightVersion1_16_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_16_0"));
+            // v1.16.0 协议升级高度
+            ConverterContext.PROTOCOL_1_16_0 = heightVersion1_16_0;
+            ConverterContext.protocolHeightMap.put(16, heightVersion1_16_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_16_0", e);
         }
     }
 
@@ -320,26 +347,8 @@ public class ConverterBootstrap extends RpcModule {
         ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST = converterConfig.getFeeEffectiveHeightFirst();
         // 第二次协议升级高度 异构链交易手续费补贴
         ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND = converterConfig.getFeeEffectiveHeightSecond();
-        // 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
-        ConverterContext.FEE_ADDITIONAL_HEIGHT = converterConfig.getFeeAdditionalHeight();
-        // 协议升级高度 修改提现和充值交易协议,增加异构链id
-        ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = converterConfig.getWithdrawalRechargeChainHeight();
-        // v1.8.0 协议升级高度 支持火币生态链跨链
-        ConverterContext.PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol8HuobiCrossChainHeight();
-        // v1.11.0 协议升级高度 支持欧科生态链跨链
-        ConverterContext.PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol11OktCrossChainHeight();
-        // v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
-        ConverterContext.PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = converterConfig.getProtocol12Erc20OfTransferBurnHeight();
-        // v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
-        ConverterContext.PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = converterConfig.getProtocol13NewValidationOfErc20();
-        ConverterContext.PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
-        ConverterContext.PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
-        ConverterContext.PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol13NewValidationOfErc20();
-        // v1.14.0 协议升级高度
-        ConverterContext.PROTOCOL_1_14_0 = converterConfig.getProtocol14Height();
-        // v1.15.0 协议升级高度 支持波场生态链跨链
-        ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = converterConfig.getProtocol15TrxCrossChainHeight();
-
+        // 设置NVT价格key, 通过喂价模块获取价格
+        ConverterContext.priceKeyMap.put(AssetName.NVT.name(), ORACLE_KEY_NVT_PRICE);
         // 初始化虚拟银行公钥(异构链版本2开始)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));
         for(String pubKey : seedPubKeyList) {

@@ -6,9 +6,11 @@ import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
+import io.nuls.provider.model.dto.CoinDto;
 import io.nuls.provider.rpctools.vo.AccountBalance;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,12 +104,63 @@ public class LegderTools implements CallRpc {
 
     public Result<Map> getAssetInfo(int chainId, int assetChainId, int assetId) {
         Map<String, Object> params = new HashMap(2);
-        params.put("chainId",chainId);
-        params.put("assetChainId",assetChainId);
-        params.put("assetId",assetId);
+        params.put("chainId", chainId);
+        params.put("assetChainId", assetChainId);
+        params.put("assetId", assetId);
 
-        return callRpc(ModuleE.LG.abbr,"lg_get_asset",params,(Function<Map<String, Object>, Result<Map>>) map -> {
+        return callRpc(ModuleE.LG.abbr, "lg_get_asset", params, (Function<Map<String, Object>, Result<Map>>) map -> {
             return new Result<>(map);
         });
+    }
+
+    /**
+     * 批量查询用户余额
+     *
+     * @param chainId
+     * @param coinDtoList
+     * @return
+     */
+    public Result<List<AccountBalance>> getBalanceList(int chainId, List<Map> coinDtoList, String address) {
+        Map<String, Object> params = new HashMap(2);
+        params.put(Constants.CHAIN_ID, chainId + "");
+        params.put("address", address);
+        List<String> list = new ArrayList<>();
+        for (Map map : coinDtoList) {
+            int assetChainId = (int) map.get("chainId");
+            int assetId = (int) map.get("assetId");
+            list.add(assetChainId + "-" + assetId);
+        }
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("assetKeyList", list);
+
+        try {
+            return callRpc(ModuleE.LG.abbr, "getBalanceList", params, (Function<Map<String, Object>, Result<List<AccountBalance>>>) resultMap -> {
+                if (resultMap == null) {
+                    return null;
+                }
+                List<AccountBalance> accountBalanceList = new ArrayList<>();
+                List<Map> mapList = (List<Map>) resultMap.get("list");
+                for (int i = 0; i < mapList.size(); i++) {
+                    Map map = mapList.get(i);
+                    AccountBalance balanceInfo = new AccountBalance();
+                    balanceInfo.setAssetChainId((int) map.get("assetChainId"));
+                    balanceInfo.setAssetId((int) map.get("assetId"));
+                    balanceInfo.setBalance(map.get("available").toString());
+                    balanceInfo.setTimeLock(map.get("timeHeightLocked").toString());
+                    balanceInfo.setConsensusLock(map.get("permanentLocked").toString());
+                    balanceInfo.setFreeze(map.get("freeze").toString());
+                    balanceInfo.setNonce((String) map.get("nonce"));
+                    balanceInfo.setTotalBalance(new BigInteger(balanceInfo.getBalance())
+                            .add(new BigInteger(balanceInfo.getConsensusLock()))
+                            .add(new BigInteger(balanceInfo.getTimeLock())).toString());
+                    balanceInfo.setNonceType((Integer) map.get("nonceType"));
+                    accountBalanceList.add(balanceInfo);
+                }
+
+                return new Result<List<AccountBalance>>(accountBalanceList);
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
     }
 }

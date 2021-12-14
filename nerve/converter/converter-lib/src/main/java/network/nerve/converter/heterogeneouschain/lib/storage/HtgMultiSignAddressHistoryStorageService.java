@@ -39,4 +39,8 @@ public interface HtgMultiSignAddressHistoryStorageService {
     void deleteByAddress(String address) throws Exception;
 
     Set<String> findAll();
+
+    void saveVersion(byte version) throws Exception;
+
+    byte getVersion();
 }

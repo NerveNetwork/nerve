@@ -50,6 +50,9 @@ public interface TrxConstant {
     String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0x00719226";
     String METHOD_HASH_CREATEORSIGNUPGRADE = "0x408e8b7a";
     String METHOD_HASH_CROSS_OUT = "0x0889d1f0";
+    String METHOD_HASH_CROSS_OUT_II = "0x38615bb0";
+    String METHOD_HASH_TRANSFER = "0xa9059cbb";
+    String METHOD_HASH_TRANSFER_FROM = "0x23b872dd";
 
     String METHOD_CREATE_OR_SIGN_WITHDRAW = "createOrSignWithdraw";
     String METHOD_CREATE_OR_SIGN_MANAGERCHANGE = "createOrSignManagerChange";
@@ -72,6 +75,7 @@ public interface TrxConstant {
     String EVENT_HASH_TRANSACTION_MANAGER_CHANGE_COMPLETED = "0xac9b82db4e104d515319a481096bfd91a4f40ee10837d5a2c8d51b9a03dc48ae";
     String EVENT_HASH_TRANSACTION_UPGRADE_COMPLETED = "0x5e06c4b22547d430736ce834764dbfee08f1c4cf7ae3d53178aa56effa593ed0";
     String EVENT_HASH_CROSS_OUT_FUNDS = "0x5ddf9724d8fe5d9e12499be2867f93d41a582733dcd65f74a486ad7e30667146";
+    String EVENT_HASH_CROSS_OUT_II_FUNDS = "0x692e6a6e27573f2a2a757e34cb16ae101c5fca8834f9b8a6cdbcf64b8450d870";
 
     List<TypeReference<Type>> INPUT_WITHDRAW = Utils.convert(
             List.of(
@@ -110,8 +114,24 @@ public interface TrxConstant {
             )
     );
 
+    List<TypeReference<Type>> INPUT_CROSS_OUT_II = Utils.convert(
+            List.of(
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Address>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
     List<TypeReference<Type>> INPUT_TRC20_TRANSFER = Utils.convert(
             List.of(
+                    new TypeReference<Address>(){},
+                    new TypeReference<Uint256>(){}
+            )
+    );
+    List<TypeReference<Type>> INPUT_TRC20_TRANSFER_FROM = Utils.convert(
+            List.of(
+                    new TypeReference<Address>(){},
                     new TypeReference<Address>(){},
                     new TypeReference<Uint256>(){}
             )
@@ -131,29 +151,41 @@ public interface TrxConstant {
             ));
     Event EVENT_CROSS_OUT_FUNDS = new Event("CrossOutFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
-                    new TypeReference<Utf8String>(true) {},
-                    new TypeReference<Uint>(true) {},
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Utf8String>(false) {},
+                    new TypeReference<Uint>(false) {},
                     new TypeReference<Address>(false) {}
+            ));
+
+    Event EVENT_CROSS_OUT_II_FUNDS = new Event("CrossOutIIFunds",
+            Arrays.<TypeReference<?>>asList(
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Utf8String>(false) {},
+                    new TypeReference<Uint>(false) {},
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Uint>(false) {},
+                    new TypeReference<DynamicBytes>(false) {}
             ));
 
     Event EVENT_DEPOSIT_FUNDS = new Event("DepositFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
+                    new TypeReference<Address>(false) {},
                     new TypeReference<Uint>(false) {}
             ));
     Event EVENT_TRANSFER_FUNDS = new Event("TransferFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
+                    new TypeReference<Address>(false) {},
                     new TypeReference<Uint>(false) {}
                     //new TypeReference<Uint>(false) {}
             ));
 
-    BigInteger FEE_LIMIT_OF_WITHDRAW = BigInteger.valueOf(20_000000L);
-    BigInteger FEE_LIMIT_OF_CHANGE = BigInteger.valueOf(100_000000L);
+    BigInteger FEE_LIMIT_OF_WITHDRAW = BigInteger.valueOf(40_000000L);
+    BigInteger FEE_LIMIT_OF_CHANGE = BigInteger.valueOf(200_000000L);
     BigInteger TRX_1 = BigInteger.valueOf(1_000000L);
+    BigInteger TRX_2 = BigInteger.valueOf(2_000000L);
     BigInteger TRX_10 = BigInteger.valueOf(10_000000L);
+    BigInteger TRX_20 = BigInteger.valueOf(20_000000L);
     BigInteger TRX_100 = BigInteger.valueOf(100_000000L);
-    BigInteger SUN_PER_ENERGY = BigInteger.valueOf(140);
+    BigInteger SUN_PER_ENERGY = BigInteger.valueOf(280);
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
 }

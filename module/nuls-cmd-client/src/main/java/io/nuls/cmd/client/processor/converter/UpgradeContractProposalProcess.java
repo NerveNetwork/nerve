@@ -66,32 +66,34 @@ public class UpgradeContractProposalProcess implements CommandProcessor {
         builder.newLine(getCommandDescription())
                 .newLine("\t<heterogeneousId> \t\theterogeneous chainId - Required")
                 .newLine("\t<newContractAddress> \t\tthe new Contract address - Required")
+                .newLine("\t<signVersion> \t\told and new version of signature, eg. 2-3 - Required")
                 .newLine("\t<address> \t\tcreator address - Required");
         return builder.toString();
     }
 
     @Override
     public String getCommandDescription() {
-        return "upgradeProposal <heterogeneousId> <newContractAddress> <address>";
+        return "upgradeProposal <heterogeneousId> <newContractAddress> <signVersion> <address>";
     }
 
     @Override
     public boolean argsValidate(String[] args) {
-        checkArgsNumber(args,3);
+        checkArgsNumber(args,4);
         checkIsNumeric(args[1],"heterogeneousId");
-        checkAddress(config.getChainId(),args[3]);
+        checkAddress(config.getChainId(),args[4]);
         return true;
     }
 
     private UpgradeContractReq buildUpgradeContractReq(String[] args) {
         int heterogeneousChainId = Integer.parseInt(args[1]);
         String newContractAddress = args[2];
-        String creator = args[3];
+        String signVersion = args[3];
+        String creator = args[4];
         UpgradeContractReq req = new UpgradeContractReq(
                 heterogeneousChainId,
                 newContractAddress,
                 7,
-                "UpgradeNewContract:" + newContractAddress,
+                signVersion,
                 creator);
         req.setPassword(getPwd("\nEnter your account password:"));
 

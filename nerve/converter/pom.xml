@@ -25,6 +25,10 @@
         <module>converter-matic</module>
         <module>converter-kcs</module>
         <module>converter-trx</module>
+        <module>converter-cro</module>
+        <module>converter-avax</module>
+        <module>converter-ftm</module>
+        <module>converter-arbitrum</module>
 
     </modules>
 

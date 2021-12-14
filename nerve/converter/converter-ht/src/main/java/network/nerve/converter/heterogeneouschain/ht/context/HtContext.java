@@ -44,62 +44,62 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_1;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_3;
 
 /**
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class HtContext implements Serializable, HtgContext {
+public class HtContext extends HtgContext implements Serializable {
 
-    public static int HTG_CHAIN_ID = 103;
-    public static int HTG_ASSET_ID = 1;
-    public static byte VERSION = 2;
-    public static HtgDocking DOCKING;
+    public final int HTG_CHAIN_ID = 103;
+    public final int HTG_ASSET_ID = 1;
+    public byte VERSION = 2;
+    public HtgDocking DOCKING;
     /**
      * 当 importAccountByPriKey 或者 importAccountByKeystore 被调用时，覆写这个地址作为虚拟银行管理员地址
      */
-    public static String ADMIN_ADDRESS;
-    public static String ADMIN_ADDRESS_PASSWORD;
-    public static String ADMIN_ADDRESS_PUBLIC_KEY;
+    public String ADMIN_ADDRESS;
+    public String ADMIN_ADDRESS_PASSWORD;
+    public String ADMIN_ADDRESS_PUBLIC_KEY;
 
     /**
      * 待确认交易队列
      */
-    public static LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
-    public static CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
+    public LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
+    public CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
     // 初始化配置地址
-    public static Set<String> FILTER_ACCOUNT_SET = new HashSet<>();
+    public Set<String> FILTER_ACCOUNT_SET = new HashSet<>();
 
     /**
      * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
      */
-    public static LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
-    public static CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
+    public LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
+    public CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
 
-    public static int NERVE_CHAINID;
-    public static String MULTY_SIGN_ADDRESS;
-    public static List<String> RPC_ADDRESS_LIST = new ArrayList<>();
-    public static List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
+    public int NERVE_CHAINID;
+    public String MULTY_SIGN_ADDRESS;
+    public List<String> RPC_ADDRESS_LIST = new ArrayList<>();
+    public List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
      * 日志实例
      */
-    public static NulsLogger logger;
-    public static HeterogeneousCfg config;
-    public static IConverterCoreApi converterCoreApi;
+    public NulsLogger logger;
+    public HeterogeneousCfg config;
+    public IConverterCoreApi converterCoreApi;
 
-    public static Integer intervalWaitting;
+    public Integer intervalWaitting;
 
-    public static void setConverterCoreApi(IConverterCoreApi converterCoreApi) {
-        HtContext.converterCoreApi = converterCoreApi;
+    public void setConverterCoreApi(IConverterCoreApi converterCoreApi) {
+        this.converterCoreApi = converterCoreApi;
     }
 
-    public static void setConfig(HeterogeneousCfg config) {
-        HtContext.config = config;
+    public void setConfig(HeterogeneousCfg config) {
+        this.config = config;
     }
 
-    public static int getIntervalWaitting() {
+    public int getIntervalWaitting() {
         if (intervalWaitting != null) {
             return intervalWaitting;
         }
@@ -112,13 +112,13 @@ public class HtContext implements Serializable, HtgContext {
         return intervalWaitting;
     }
 
-    public static void setLogger(NulsLogger logger) {
-        HtContext.logger = logger;
+    public void setLogger(NulsLogger logger) {
+        this.logger = logger;
     }
 
-    private static BigInteger HTG_GAS_PRICE;
+    private BigInteger HTG_GAS_PRICE;
 
-    public static BigInteger[] gasPriceOrders = new BigInteger[6];
+    public BigInteger[] gasPriceOrders = new BigInteger[6];
 
     @Override
     public IConverterCoreApi getConverterCoreApi() {
@@ -150,7 +150,7 @@ public class HtContext implements Serializable, HtgContext {
             }
         }
         if (HTG_GAS_PRICE == null) {
-            HTG_GAS_PRICE = GWEI_1;
+            HTG_GAS_PRICE = GWEI_3;
         }
         return HTG_GAS_PRICE;
     }
@@ -158,7 +158,7 @@ public class HtContext implements Serializable, HtgContext {
     @Override
     public void setEthGasPrice(BigInteger ethGasPrice) {
         if (HTG_GAS_PRICE == null) {
-            HTG_GAS_PRICE = GWEI_1;
+            HTG_GAS_PRICE = GWEI_3;
         }
         HTG_GAS_PRICE = calcGasPrice(ethGasPrice, HTG_GAS_PRICE);
     }
@@ -263,7 +263,7 @@ public class HtContext implements Serializable, HtgContext {
         return AssetName.HT;
     }
 
-    private static volatile boolean availableRPC = true;
+    private volatile boolean availableRPC = true;
 
     @Override
     public void setAvailableRPC(boolean available) {
@@ -278,5 +278,20 @@ public class HtContext implements Serializable, HtgContext {
     @Override
     public boolean supportPendingCall() {
         return true;
+    }
+
+    @Override
+    public void SET_VERSION(byte version) {
+        VERSION = version;
+    }
+
+    @Override
+    public int HTG_CHAIN_ID() {
+        return HTG_CHAIN_ID;
+    }
+
+    @Override
+    public void SET_DOCKING(HtgDocking docking) {
+        DOCKING = docking;
     }
 }

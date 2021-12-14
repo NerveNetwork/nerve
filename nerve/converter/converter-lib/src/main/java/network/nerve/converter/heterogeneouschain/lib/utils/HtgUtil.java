@@ -26,11 +26,26 @@ package network.nerve.converter.heterogeneouschain.lib.utils;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.AssetName;
+import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
+import network.nerve.converter.heterogeneouschain.lib.helper.*;
+import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
+import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.Token20TransferDTO;
+import network.nerve.converter.heterogeneouschain.lib.storage.*;
+import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.ethereum.crypto.ECKey;
 import org.springframework.beans.BeanUtils;
@@ -52,8 +67,11 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.BD_20K;
 
 /**
  * @author: Mimi
@@ -101,6 +119,9 @@ public class HtgUtil {
 
     public static String covertNerveAddressByEthTx(Transaction tx, int nerveChainId) {
         BigInteger ethPublicKey = extractEthPublicKey(tx);
+        if (ethPublicKey == null) {
+            return null;
+        }
         return covertNerveAddress(ethPublicKey, nerveChainId);
     }
 
@@ -125,6 +146,69 @@ public class HtgUtil {
         inputData = HtgConstant.HEX_PREFIX + inputData.substring(10);
         List<Type> typeList = FunctionReturnDecoder.decode(inputData, parameters);
         return typeList.stream().map(type -> type.getValue()).collect(Collectors.toList());
+    }
+
+    public static List<Object> parseERC20TransferInput(String inputData) {
+        if(StringUtils.isBlank(inputData)) {
+            return null;
+        }
+        inputData = Numeric.cleanHexPrefix(inputData);
+        if(inputData.length() < 8) {
+            return null;
+        }
+        List<Object> result = new ArrayList<>();
+        inputData = inputData.substring(8);
+        String toAddress;
+        BigInteger value;
+        if (inputData.length() < 64) {
+            toAddress = HtgConstant.HEX_PREFIX + rightPadding(inputData, "0", 64).substring(24, 64);
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 128) {
+            toAddress = HtgConstant.HEX_PREFIX + inputData.substring(24, 64);
+            value = new BigInteger(rightPadding(inputData, "0", 128).substring(64, 128), 16);
+        } else {
+            toAddress = HtgConstant.HEX_PREFIX + inputData.substring(24, 64);
+            value = new BigInteger(inputData.substring(64, 128), 16);
+        }
+        result.add(toAddress);
+        result.add(value);
+        return result;
+    }
+
+    public static List<Object> parseERC20TransferFromInput(String inputData) {
+        if(StringUtils.isBlank(inputData)) {
+            return null;
+        }
+        inputData = Numeric.cleanHexPrefix(inputData);
+        if(inputData.length() < 8) {
+            return null;
+        }
+        List<Object> result = new ArrayList<>();
+        inputData = inputData.substring(8);
+        String fromAddress;
+        String toAddress;
+        BigInteger value;
+        if (inputData.length() < 64) {
+            fromAddress = HtgConstant.HEX_PREFIX + rightPadding(inputData, "0", 64).substring(24, 64);
+            toAddress = HtgConstant.ZERO_ADDRESS;
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 128) {
+            fromAddress = HtgConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = HtgConstant.HEX_PREFIX + rightPadding(inputData, "0", 128).substring(88, 128);
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 192) {
+            fromAddress = HtgConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = HtgConstant.HEX_PREFIX + inputData.substring(88, 128);
+            value = new BigInteger(rightPadding(inputData, "0", 192).substring(128, 192), 16);
+        } else {
+            fromAddress = HtgConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = HtgConstant.HEX_PREFIX + inputData.substring(88, 128);
+            value = new BigInteger(inputData.substring(128, 192), 16);
+        }
+        result.add(fromAddress);
+        result.add(toAddress);
+        result.add(value);
+        return result;
     }
 
     public static <T>  T[] list2array(List<T> list) {
@@ -224,6 +308,9 @@ public class HtgUtil {
         return padding.repeat(total - orgin.length()) + orgin;
     }
 
+    public static String rightPadding(String orgin, String padding, int total) {
+        return orgin + padding.repeat(total - orgin.length());
+    }
 
     public static Function getCreateOrSignWithdrawFunction(String nerveTxHash, String toAddress, BigInteger value, boolean isContractAsset, String contractAddressERC20, String signatureHexData) {
         return new Function(
@@ -283,19 +370,24 @@ public class HtgUtil {
         );
     }
 
-    public static String encoderWithdraw(String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) {
+    public static String encoderWithdraw(HtgContext htgContext, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(toAddress));
         sb.append(leftPadding(value.toString(16), "0", 64));
         sb.append(isContractAsset ? "01" : "00");
         sb.append(Numeric.cleanHexPrefix(erc20));
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
 
-    public static String encoderChange(String txKey, String[] adds, int count, String[] removes, byte version) {
+    public static String encoderChange(HtgContext htgContext, String txKey, String[] adds, int count, String[] removes, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         for (String add : adds) {
@@ -305,16 +397,26 @@ public class HtgUtil {
         for (String remove : removes) {
             sb.append(leftPadding(Numeric.cleanHexPrefix(remove), "0", 64));
         }
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
 
-    public static String encoderUpgrade(String txKey, String upgradeContract, byte version) {
+    public static String encoderUpgrade(HtgContext htgContext, String txKey, String upgradeContract, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(upgradeContract));
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
@@ -361,11 +463,11 @@ public class HtgUtil {
      * 在网络平均价格和用户提供的价格之间，取一个合适的值
      */
     public static BigDecimal calcNiceGasPriceOfWithdraw(AssetName currentNetworkAssetName, BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
-        // 非以太网络，用户给多少手续费，就花费多少手续费
-        if (currentNetworkAssetName != AssetName.ETH) {
+        // OKT网络，用户给多少手续费，就花费多少手续费
+        if (currentNetworkAssetName == AssetName.OKT) {
             return gasPriceSupport;
         }
-        // 以太网络，最大花费当前网络平均手续费的1.5倍
+        // 其他以太系异构网络，最大花费当前网络平均手续费的1.5倍
         BigDecimal maximumPrice;
         if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
             return maximumPrice;
@@ -384,15 +486,13 @@ public class HtgUtil {
         }*/
     }
 
-    public static BigDecimal calcGasPriceOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal otherMainAssetAmount, BigDecimal currentMainAssetUSD, int hAssetId) {
+    public static BigDecimal calcGasPriceOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal otherMainAssetAmount, BigDecimal currentMainAssetUSD, int hAssetId, BigInteger gasLimitBase) {
         if (hAssetId == 0) {
             return null;
         }
-        BigDecimal gasLimit;
-        if (hAssetId > 1) {
-            gasLimit = BigDecimal.valueOf(210000L);
-        } else {
-            gasLimit = BigDecimal.valueOf(190000L);
+        BigDecimal gasLimit = new BigDecimal(gasLimitBase);
+        if (hAssetId <= 1) {
+            gasLimit = gasLimit.subtract(BD_20K);
         }
         BigDecimal otherMainAssetNumber = otherMainAssetAmount.movePointLeft(otherMainAsset.decimals());
         BigDecimal gasPrice = calcGasPriceByOtherMainAsset(otherMainAssetUSD, otherMainAssetNumber, currentMainAssetUSD, gasLimit);
@@ -404,15 +504,13 @@ public class HtgUtil {
         return gasPrice;
     }
 
-    public static BigDecimal calcOtherMainAssetOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal gasPrice, BigDecimal currentMainAssetUSD, int hAssetId) {
+    public static BigDecimal calcOtherMainAssetOfWithdraw(AssetName otherMainAsset, BigDecimal otherMainAssetUSD, BigDecimal gasPrice, BigDecimal currentMainAssetUSD, int hAssetId, BigInteger gasLimitBase) {
         if (hAssetId == 0) {
             return null;
         }
-        BigDecimal gasLimit;
-        if (hAssetId > 1) {
-            gasLimit = BigDecimal.valueOf(210000L);
-        } else {
-            gasLimit = BigDecimal.valueOf(190000L);
+        BigDecimal gasLimit = new BigDecimal(gasLimitBase);
+        if (hAssetId <= 1) {
+            gasLimit = gasLimit.subtract(BD_20K);
         }
         BigDecimal otherMainAssetAmount = calcOtherMainAssetByGasPrice(otherMainAsset, otherMainAssetUSD, gasPrice, currentMainAssetUSD, gasLimit);
         // 当NVT作为手续费时，向上取整
@@ -427,29 +525,25 @@ public class HtgUtil {
         return otherMainAssetAmount;
     }
 
-    public static BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
+    public static BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId, BigInteger gasLimitBase) {
         if (hAssetId == 0) {
             return null;
         }
-        BigDecimal gasLimit;
-        if (hAssetId > 1) {
-            gasLimit = BigDecimal.valueOf(210000L);
-        } else {
-            gasLimit = BigDecimal.valueOf(190000L);
+        BigDecimal gasLimit = new BigDecimal(gasLimitBase);
+        if (hAssetId <= 1) {
+            gasLimit = gasLimit.subtract(BD_20K);
         }
         BigDecimal gasPrice = amount.divide(gasLimit, 0, RoundingMode.DOWN);
         return gasPrice;
     }
 
-    public static BigDecimal calcMainAssetOfWithdrawProtocol15(BigDecimal gasPrice, int hAssetId) {
+    public static BigDecimal calcMainAssetOfWithdrawProtocol15(BigDecimal gasPrice, int hAssetId, BigInteger gasLimitBase) {
         if (hAssetId == 0) {
             return null;
         }
-        BigDecimal gasLimit;
-        if (hAssetId > 1) {
-            gasLimit = BigDecimal.valueOf(210000L);
-        } else {
-            gasLimit = BigDecimal.valueOf(190000L);
+        BigDecimal gasLimit = new BigDecimal(gasLimitBase);
+        if (hAssetId <= 1) {
+            gasLimit = gasLimit.subtract(BD_20K);
         }
         return gasPrice.multiply(gasLimit);
     }
@@ -571,5 +665,58 @@ public class HtgUtil {
             }
         }
         return resultList;
+    }
+
+    public static BeanMap initBeanV2(HtgContext htgContext, ConverterConfig converterConfig,
+                               HtgCallBackManager htgCallBackManager, String dbName) {
+        try {
+            BeanMap beanMap = new BeanMap();
+            HtgDocking docking = new HtgDocking();
+            htgContext.SET_DOCKING(docking);
+            beanMap.add(HtgDocking.class, docking);
+            beanMap.add(HtgContext.class, htgContext);
+            beanMap.add(HtgListener.class, new HtgListener());
+
+            beanMap.add(ConverterConfig.class, converterConfig);
+            beanMap.add(HtgCallBackManager.class, htgCallBackManager);
+
+            beanMap.add(HtgWalletApi.class);
+            beanMap.add(HtgBlockHandler.class);
+            beanMap.add(HtgConfirmTxHandler.class);
+            beanMap.add(HtgWaitingTxInvokeDataHandler.class);
+            beanMap.add(HtgRpcAvailableHandler.class);
+            beanMap.add(HtgAccountHelper.class);
+            beanMap.add(HtgAnalysisTxHelper.class);
+            beanMap.add(HtgBlockAnalysisHelper.class);
+            beanMap.add(HtgCommonHelper.class);
+            beanMap.add(HtgERC20Helper.class);
+            beanMap.add(HtgInvokeTxHelper.class);
+            beanMap.add(HtgLocalBlockHelper.class);
+            beanMap.add(HtgParseTxHelper.class);
+            beanMap.add(HtgPendingTxHelper.class);
+            beanMap.add(HtgResendHelper.class);
+            beanMap.add(HtgStorageHelper.class);
+            beanMap.add(HtgUpgradeContractSwitchHelper.class);
+
+            beanMap.add(HtgAccountStorageService.class, new HtgAccountStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgBlockHeaderStorageService.class, new HtgBlockHeaderStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgERC20StorageService.class, new HtgERC20StorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgMultiSignAddressHistoryStorageService.class, new HtgMultiSignAddressHistoryStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgTxInvokeInfoStorageService.class, new HtgTxInvokeInfoStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgTxRelationStorageService.class, new HtgTxRelationStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgTxStorageService.class, new HtgTxStorageServiceImpl(htgContext, dbName));
+            beanMap.add(HtgUnconfirmedTxStorageService.class, new HtgUnconfirmedTxStorageServiceImpl(htgContext, dbName));
+
+            Collection<Object> values = beanMap.values();
+            for (Object value : values) {
+                if (value instanceof BeanInitial) {
+                    BeanInitial beanInitial = (BeanInitial) value;
+                    beanInitial.init(beanMap);
+                }
+            }
+            return beanMap;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

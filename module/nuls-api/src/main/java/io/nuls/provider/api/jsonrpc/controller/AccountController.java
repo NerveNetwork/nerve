@@ -38,7 +38,9 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.model.*;
 import io.nuls.provider.model.dto.AccountBalanceDto;
 import io.nuls.provider.model.dto.AccountKeyStoreDto;
+import io.nuls.provider.model.dto.CoinDto;
 import io.nuls.provider.model.form.PriKeyForm;
+import io.nuls.provider.model.jsonrpc.RpcErrorCode;
 import io.nuls.provider.model.jsonrpc.RpcResult;
 import io.nuls.provider.model.jsonrpc.RpcResultError;
 import io.nuls.provider.rpctools.AccountTools;
@@ -74,6 +76,8 @@ public class AccountController {
     private AccountTools accountTools;
     @Autowired
     private Config config;
+
+    private long time;
 
     AccountService accountService = ServiceManager.get(AccountService.class);
 
@@ -164,6 +168,10 @@ public class AccountController {
         if (!FormatValidUtils.validPassword(newPassword)) {
             return RpcResult.paramError("[newPassword] is inValid");
         }
+        if (System.currentTimeMillis() - time < 3000) {
+            return RpcResult.paramError("Access frequency limit");
+        }
+        time = System.currentTimeMillis();
         UpdatePasswordReq req = new UpdatePasswordReq(address, oldPassword, newPassword);
         req.setChainId(chainId);
         Result<Boolean> result = accountService.updatePassword(req);
@@ -176,6 +184,8 @@ public class AccountController {
         return rpcResult;
     }
 
+    private long lastTime;
+
     @RpcMethod("getPriKey")
     @ApiOperation(description = "导出账户私钥", order = 103, detailDesc = "只能导出本地钱包已存在账户的私钥")
     @Parameters({
@@ -187,6 +197,10 @@ public class AccountController {
             @Key(name = "value", description = "私钥")
     }))
     public RpcResult getPriKey(List<Object> params) {
+        //增加一个频率限制
+        if (System.currentTimeMillis() - lastTime < 2000) {
+            return RpcResult.failed(RpcErrorCode.ExceedingFrequencyLimit);
+        }
         int chainId;
         String address, password;
         try {
@@ -211,6 +225,10 @@ public class AccountController {
             return RpcResult.paramError("[password] is inValid");
         }
 
+        if (System.currentTimeMillis() - time < 3000) {
+            return RpcResult.paramError("Access frequency limit");
+        }
+        time = System.currentTimeMillis();
         GetAccountPrivateKeyByAddressReq req = new GetAccountPrivateKeyByAddressReq(password, address);
         req.setChainId(chainId);
         Result<String> result = accountService.getAccountPrivateKey(req);
@@ -329,6 +347,11 @@ public class AccountController {
             @Key(name = "result", description = "keystore")
     }))
     public RpcResult exportKeystore(List<Object> params) {
+        //增加一个频率限制
+        if (System.currentTimeMillis() - lastTime < 2000) {
+            return RpcResult.failed(RpcErrorCode.ExceedingFrequencyLimit);
+        }
+
         VerifyUtils.verifyParams(params, 3);
         int chainId;
         String address, password;
@@ -353,6 +376,10 @@ public class AccountController {
         if (!FormatValidUtils.validPassword(password)) {
             return RpcResult.paramError("[password] is inValid");
         }
+        if (System.currentTimeMillis() - time < 3000) {
+            return RpcResult.paramError("Access frequency limit");
+        }
+        time = System.currentTimeMillis();
         KeyStoreReq req = new KeyStoreReq(password, address);
         req.setChainId(chainId);
         Result<String> result = accountService.getAccountKeyStore(req);
@@ -417,6 +444,53 @@ public class AccountController {
         }
         return rpcResult.setResult(balanceResult.getData());
     }
+
+    /**
+     * 查询用户资产合计
+     * @param params
+     * @return
+     */
+    @RpcMethod("getBalanceList")
+    @ApiOperation(description = "查询账户余额", order = 107, detailDesc = "根据资产链ID和资产ID，查询本链账户对应资产的余额与nonce值集合")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址"),
+            @Parameter(parameterName = "assetIdList", requestType = @TypeDescriptor(value = List.class), parameterDes = "资产的ID集合")
+    })
+    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = AccountBalance.class))
+    public RpcResult getBalanceList(List<Object> params) {
+        VerifyUtils.verifyParams(params, 3);
+        String address;
+        int chainId;
+        List<Map> coinDtoList;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            address = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        try {
+            coinDtoList = (List<Map> ) params.get(2);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+
+        if (!AddressTool.validAddress(chainId, address)) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        RpcResult rpcResult = new RpcResult();
+        Result<List<AccountBalance>> balanceResult = legderTools.getBalanceList(chainId, coinDtoList, address);
+        if (balanceResult.isFailed()) {
+            return rpcResult.setError(new RpcResultError(balanceResult.getStatus(), balanceResult.getMessage(), null));
+        }
+        return rpcResult.setResult(balanceResult.getData());
+    }
+
+
 
     @RpcMethod("setAlias")
     @ApiOperation(description = "设置账户别名", order = 108, detailDesc = "别名格式为1-20位小写字母和数字的组合，设置别名会销毁1个NULS")

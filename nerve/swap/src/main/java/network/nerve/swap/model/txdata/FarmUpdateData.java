@@ -19,6 +19,7 @@ public class FarmUpdateData extends BaseNulsData {
     private short changeType;//0：增加，1：减少
     private BigInteger changeTotalSyrupAmount;
     private long withdrawLockTime;
+    private long stopHeight;
 
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
@@ -27,6 +28,9 @@ public class FarmUpdateData extends BaseNulsData {
         stream.writeUint8(changeType);
         stream.writeBigInteger(changeTotalSyrupAmount);
         stream.writeInt64(withdrawLockTime);
+        if(stopHeight>=0) {
+            stream.writeInt64(stopHeight);
+        }
     }
 
     @Override
@@ -36,6 +40,9 @@ public class FarmUpdateData extends BaseNulsData {
         this.changeType = byteBuffer.readUint8();
         this.changeTotalSyrupAmount = byteBuffer.readBigInteger();
         this.withdrawLockTime = byteBuffer.readInt64();
+        if(!byteBuffer.isFinished()) {
+            this.stopHeight = byteBuffer.readInt64();
+        }
     }
 
     @Override
@@ -45,6 +52,9 @@ public class FarmUpdateData extends BaseNulsData {
         size += SerializeUtils.sizeOfUint8();
         size += SerializeUtils.sizeOfBigInteger();
         size += SerializeUtils.sizeOfInt64();
+        if(stopHeight>0){
+            size += SerializeUtils.sizeOfInt64();
+        }
         return size;
     }
 
@@ -86,5 +96,13 @@ public class FarmUpdateData extends BaseNulsData {
 
     public void setChangeType(short changeType) {
         this.changeType = changeType;
+    }
+
+    public long getStopHeight() {
+        return stopHeight;
+    }
+
+    public void setStopHeight(long stopHeight) {
+        this.stopHeight = stopHeight;
     }
 }

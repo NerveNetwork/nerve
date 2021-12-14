@@ -321,7 +321,14 @@ public class DepositServiceImpl implements DepositService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         Map<String, Object> resultMap = new HashMap<>(4);
-        resultMap.put(PARAM_LIST, chainManager.getStackingAssetList());
+        List<StackingAsset> resultList = new ArrayList<>();
+        for (StackingAsset item : chainManager.getStackingAssetList()) {
+            if (null != chain.getBestHeader() && item.getStopHeight() > 0 && item.getStopHeight() <= chain.getBestHeader().getHeight()) {
+                continue;
+            }
+            resultList.add(item);
+        }
+        resultMap.put(PARAM_LIST, resultList);
         return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(resultMap);
     }
 

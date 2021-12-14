@@ -826,8 +826,10 @@ public class HeterogeneousChainCmd extends BaseCmd {
     })
     )
     public Response getRegisterNetwork(Map params) {
+        Chain chain = null;
         Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
         try {
+            chain = chainManager.getChain(converterConfig.getChainId());
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
             List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
@@ -836,22 +838,33 @@ public class HeterogeneousChainCmd extends BaseCmd {
             }
             int resultChainId = 0;
             for (HeterogeneousAssetInfo assetInfo : assetInfos) {
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
-                if (docking == null) {
-                    return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
-                }
                 if (StringUtils.isBlank(assetInfo.getContractAddress())) {
-                    resultChainId = docking.getChainId();
-                    break;
-                }
-                if (!docking.isMinterERC20(assetInfo.getContractAddress())) {
-                    resultChainId = docking.getChainId();
+                    resultChainId = assetInfo.getChainId();
                     break;
                 }
             }
+            if (resultChainId == 0) {
+                for (HeterogeneousAssetInfo assetInfo : assetInfos) {
+                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());
+                    if (docking == null) {
+                        return failed(ConverterErrorCode.PARAMETER_ERROR, "invalid heterogeneous asset");
+                    }
+                    try {
+                        if (!docking.isMinterERC20(assetInfo.getContractAddress())) {
+                            resultChainId = docking.getChainId();
+                            break;
+                        }
+                    } catch (Exception e) {
+                        //skip it
+                    }
+                }
+            }
+            if (resultChainId == 0) {
+                return failed(ConverterErrorCode.DATA_NOT_FOUND);
+            }
             rtMap.put("heterogeneousChainId", resultChainId);
-
         } catch (Exception e) {
+            errorLogProcess(chain, e);
             return failed(e.getMessage());
         }
         return success(rtMap);

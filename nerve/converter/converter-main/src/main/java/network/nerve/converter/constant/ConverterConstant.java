@@ -88,15 +88,7 @@ public interface ConverterConstant {
     /**
      * 通过喂价模块获取价格
      */
-    String ORACLE_KEY_ETH_PRICE = "ETH_PRICE";
     String ORACLE_KEY_NVT_PRICE = "NERVE_PRICE";
-    String ORACLE_KEY_BNB_PRICE = "BNB_PRICE";
-    String ORACLE_KEY_HT_PRICE = "HT_PRICE";
-    String ORACLE_KEY_OKT_PRICE = "OKT_PRICE";
-    String ORACLE_KEY_ONE_PRICE = "ONE_PRICE";
-    String ORACLE_KEY_MATIC_PRICE = "MATIC_PRICE";
-    String ORACLE_KEY_KCS_PRICE = "KCS_PRICE";
-    String ORACLE_KEY_TRX_PRICE = "TRX_PRICE";
 
     int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
     byte[] ZERO_BYTES = new byte[]{0};

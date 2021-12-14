@@ -144,7 +144,7 @@ public class OktWalletApiTest extends Base {
     }
 
     public void init() {
-        context.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -199,7 +199,7 @@ public class OktWalletApiTest extends Base {
      */
     @Test
     public void transferMainAssetAndERC20() throws Exception {
-        BigInteger gasPrice = context.getEthGasPrice();
+        BigInteger gasPrice = htgContext.getEthGasPrice();
         // 初始化 账户
         setAccount_EFa1();
         // MainAsset数量
@@ -247,7 +247,7 @@ public class OktWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        context.setEthGasPrice(BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9)));
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
@@ -360,6 +360,7 @@ public class OktWalletApiTest extends Base {
     }
 
     protected void setMainData() {
+        setMain();
         // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
@@ -376,11 +377,10 @@ public class OktWalletApiTest extends Base {
     @Test
     public void managerAdd() throws Exception {
         // 正式网环境数据
-        setMain();
         setMainData();
         // GasPrice准备
         long gasPriceGwei = 1L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
                 "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
@@ -471,7 +471,7 @@ public class OktWalletApiTest extends Base {
         setUpgradeMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
         String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
         String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
@@ -644,7 +644,7 @@ public class OktWalletApiTest extends Base {
         BigInteger value = BigInteger.valueOf(10000000000000000L);
         Boolean isContractAsset = false;
         String erc20 = "0x0000000000000000000000000000000000000000";
-        String hash = this.encoderWithdraw(txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
+        String hash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
@@ -654,7 +654,7 @@ public class OktWalletApiTest extends Base {
         String[] adds = new String[]{"0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
         int count = 1;
         String[] removes = new String[]{};
-        String hash = this.encoderChange(txKey, adds, count, removes, (byte) 2);
+        String hash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
@@ -782,7 +782,7 @@ public class OktWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
@@ -846,7 +846,7 @@ public class OktWalletApiTest extends Base {
     public void approveTest() throws Exception {
         // erc20授权
         //BigInteger approveAmount = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
-        context.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
+        htgContext.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
         setMain();
         String from = "";
         String fromPriKey = "";
@@ -856,6 +856,17 @@ public class OktWalletApiTest extends Base {
         Function approveFunction = this.getERC20ApproveFunction(to, approveAmount);
         String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20);
         System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+    }
+
+    @Test
+    public void isMinterERC20() throws Exception {
+        String multy = "0xab34b1f41da5a32fde53850efb3e54423e93483e";
+        //String erc20 = "0x2785f6458c3bab956ccb1542f602c69d1188b28f";//TRX
+        String erc20 = "0xd8eb69948e214da7fd8da6815c9945f175a4fce7";//NULS
+        Function isMinterERC20Function = HtgUtil.getIsMinterERC20Function(erc20);
+        List<Type> valueTypes = htgWalletApi.callViewFunction(multy, isMinterERC20Function, true);
+        boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
+        System.out.println(isMinterERC20);
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

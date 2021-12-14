@@ -74,6 +74,7 @@ public class QuotationContext {
     public static long oktKeyHeight = 0L;
     public static long oneMaticKcsHeight = 0L;
     public static long trxKeyHeight = 0L;
+    public static long protocol16Height = 0L;
 
     /**
      * 日志实例

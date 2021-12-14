@@ -27,22 +27,17 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
-import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
-import network.nerve.converter.heterogeneouschain.kcs.context.KcsContext;
-import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
-import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
-import network.nerve.converter.heterogeneouschain.one.context.OneContext;
-import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.dto.SignAccountDTO;
 import network.nerve.converter.rpc.call.AccountCall;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static network.nerve.converter.config.ConverterContext.*;
+import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 
 /**
  * @author: Mimi
@@ -56,22 +51,11 @@ public class HeterogeneousDockingManager {
      */
     private Map<Integer, IHeterogeneousChainDocking> heterogeneousDockingMap = new ConcurrentHashMap<>();
 
-    private boolean huobiCrossChainAvailable = false;
-    private boolean oktCrossChainAvailable = false;
-    private boolean oneCrossChainAvailable = false;
-    private boolean polygonCrossChainAvailable = false;
-    private boolean kucoinCrossChainAvailable = false;
-    private boolean trxCrossChainAvailable = false;
-
     public void registerHeterogeneousDocking(int heterogeneousChainId, IHeterogeneousChainDocking docking) {
         heterogeneousDockingMap.put(heterogeneousChainId, docking);
     }
 
     public IHeterogeneousChainDocking getHeterogeneousDocking(int heterogeneousChainId) throws NulsException {
-        // 增加HT跨链的生效高度
-        /*if (LATEST_BLOCK_HEIGHT < HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousChainId == HtConstant.HT_CHAIN_ID) {
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR, String.format("error heterogeneousChainId: %s", heterogeneousChainId));
-        }*/
         IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         if (docking == null) {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR, String.format("error heterogeneousChainId: %s", heterogeneousChainId));
@@ -79,70 +63,44 @@ public class HeterogeneousDockingManager {
         return docking;
     }
 
+    // 装填新增异构链的协议生效数据
+    private Map<Integer, DockingProtocolInfo> protocolEffectiveInformation = new LinkedHashMap<>();
+
+    public void addProtocol(Integer heterogeneousChainId, Long effectiveHeight, String symbol) {
+        protocolEffectiveInformation.put(heterogeneousChainId, new DockingProtocolInfo(effectiveHeight, false, symbol));
+    }
+
     public Collection<IHeterogeneousChainDocking> getAllHeterogeneousDocking() {
         Map<Integer, IHeterogeneousChainDocking> result = new HashMap<>();
         result.putAll(heterogeneousDockingMap);
-        // 增加HT跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(HtContext.HTG_CHAIN_ID)) {
-            result.remove(HtContext.HTG_CHAIN_ID);
-        }
-        // 增加OKT跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OktContext.HTG_CHAIN_ID)) {
-            result.remove(OktContext.HTG_CHAIN_ID);
-        }
-        // 增加ONE跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(OneContext.HTG_CHAIN_ID)) {
-            result.remove(OneContext.HTG_CHAIN_ID);
-        }
-        // 增加POLYGON跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(MaticContext.HTG_CHAIN_ID)) {
-            result.remove(MaticContext.HTG_CHAIN_ID);
-        }
-        // 增加KUCOIN跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(KcsContext.HTG_CHAIN_ID)) {
-            result.remove(KcsContext.HTG_CHAIN_ID);
-        }
-        // 增加TRX跨链的生效高度
-        if (LATEST_BLOCK_HEIGHT < PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT && heterogeneousDockingMap.containsKey(TrxContext.HTG_CHAIN_ID)) {
-            result.remove(TrxContext.HTG_CHAIN_ID);
-        }
+
+        protocolEffectiveInformation.entrySet().forEach(e -> {
+            long crossChainHeight = e.getValue().getEffectiveHeight();
+            int htgChainId = e.getKey();
+            if (LATEST_BLOCK_HEIGHT < crossChainHeight && heterogeneousDockingMap.containsKey(htgChainId)) {
+                result.remove(htgChainId);
+            }
+        });
         return result.values();
     }
 
     public void checkAccountImportedInDocking(Chain chain, SignAccountDTO signAccountDTO) {
-        if (!huobiCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT) {
-            // 向HT异构链组件,注册地址签名信息
-            this.registerAccount(HtContext.config.getSymbol(), chain, signAccountDTO, HtContext.HTG_CHAIN_ID);
-            huobiCrossChainAvailable = true;
-        }
-        if (!oktCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT) {
-            // 向OKT异构链组件,注册地址签名信息
-            this.registerAccount(OktContext.config.getSymbol(), chain, signAccountDTO, OktContext.HTG_CHAIN_ID);
-            oktCrossChainAvailable = true;
-        }
-        if (!oneCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT) {
-            // 向ONE异构链组件,注册地址签名信息
-            this.registerAccount(OneContext.config.getSymbol(), chain, signAccountDTO, OneContext.HTG_CHAIN_ID);
-            oneCrossChainAvailable = true;
-        }
-        if (!polygonCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT) {
-            // 向MATIC异构链组件,注册地址签名信息
-            this.registerAccount(MaticContext.config.getSymbol(), chain, signAccountDTO, MaticContext.HTG_CHAIN_ID);
-            polygonCrossChainAvailable = true;
-        }
-        if (!kucoinCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT) {
-            // 向KCS异构链组件,注册地址签名信息
-            this.registerAccount(KcsContext.config.getSymbol(), chain, signAccountDTO, KcsContext.HTG_CHAIN_ID);
-            kucoinCrossChainAvailable = true;
-        }
-        if (!trxCrossChainAvailable && LATEST_BLOCK_HEIGHT >= PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT) {
-            // 向TRX异构链组件,注册地址签名信息
-            this.registerAccount(TrxContext.config.getSymbol(), chain, signAccountDTO, TrxContext.HTG_CHAIN_ID);
-            trxCrossChainAvailable = true;
-        }
+        protocolEffectiveInformation.entrySet().forEach(e -> {
+            int htgChainId = e.getKey();
+            DockingProtocolInfo protocolInfo = e.getValue();
+            long crossChainHeight = protocolInfo.getEffectiveHeight();
+            boolean crossChainAvailable = protocolInfo.isCrossChainAvailable();
+            if (!crossChainAvailable && LATEST_BLOCK_HEIGHT >= crossChainHeight) {
+                // 向HTG异构链组件,注册地址签名信息
+                this.registerAccount(protocolInfo.getSymbol(), chain, signAccountDTO, htgChainId);
+                protocolInfo.setCrossChainAvailable(true);
+            }
+        });
     }
 
-    private void registerAccount(String chainSymbol, Chain chain, SignAccountDTO signAccountDTO, int htgChainId) {
+    private void registerAccount(String symbol, Chain chain, SignAccountDTO signAccountDTO, int htgChainId) {
+        if (symbol == null)
+            return;
         try {
             // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
             if (null != signAccountDTO) {
@@ -155,7 +113,7 @@ public class HeterogeneousDockingManager {
                 }
             }
         } catch (NulsException e) {
-            chain.getLogger().warn("向异构链组件[{}]注册地址签名信息异常, 错误: {}", chainSymbol, e.format());
+            chain.getLogger().warn("向异构链组件[{}]注册地址签名信息异常, 错误: {}", symbol, e.format());
         }
     }
 }

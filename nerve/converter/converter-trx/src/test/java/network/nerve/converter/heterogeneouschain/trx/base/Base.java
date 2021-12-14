@@ -70,7 +70,7 @@ public class Base {
     protected String address = "";
     protected String priKey = "";
     protected String multySignContractAddress = "";
-    protected byte VERSION = 2;
+    protected byte VERSION = 3;
     protected List<String> list;
     protected ApiWrapper wrapper;
     protected TrxWalletApi walletApi;
@@ -88,11 +88,12 @@ public class Base {
     @Before
     public void setUp() throws Exception {
         walletApi = new TrxWalletApi();
-        TrxContext.setLogger(Log.BASIC_LOGGER);
         context = new TrxContext();
+        context.setLogger(Log.BASIC_LOGGER);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
+        cfg.setChainIdOnHtgNetwork(100000001);
         cfg.setSymbol("TRX");
-        TrxContext.setConfig(cfg);
+        context.setConfig(cfg);
         BeanUtilTest.setBean(walletApi, "htgContext", context);
         wrapper = ApiWrapper.ofShasta("3333333333333333333333333333333333333333333333333333333333333333");
         walletApi.setWrapper(wrapper);
@@ -103,9 +104,11 @@ public class Base {
         if (walletApi.getWrapper() != null) {
             walletApi.getWrapper().close();
         }
+        //wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
         wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
         walletApi.setWrapper(wrapper);
-        walletApi.setRpcAddress("76f3c2b5-357a-4e6c-aced-9e1c42179717");
+        walletApi.setRpcAddress("endpoint:tron.nerve.network");
+        context.config.setChainIdOnHtgNetwork(100000002);
     }
 
     protected void setNile() {
@@ -119,7 +122,7 @@ public class Base {
 
     protected String sendMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(6)).toBigInteger();
-        String vHash = TrxUtil.encoderWithdraw(txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, VERSION);
+        String vHash = TrxUtil.encoderWithdraw(context, txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, VERSION);
         String signData = this.ethSign(vHash, signCount);
         Function function = getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
@@ -127,14 +130,14 @@ public class Base {
 
     protected String sendTRC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
-        String vHash = TrxUtil.encoderWithdraw(txKey, toAddress, bValue, true, erc20, VERSION);
+        String vHash = TrxUtil.encoderWithdraw(context, txKey, toAddress, bValue, true, erc20, VERSION);
         String signData = this.ethSign(vHash, signCount);
         Function function =  TrxUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
-        String vHash = TrxUtil.encoderChange(txKey, adds, count, removes, VERSION);
+        String vHash = TrxUtil.encoderChange(context, txKey, adds, count, removes, VERSION);
         String signData = this.ethSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());

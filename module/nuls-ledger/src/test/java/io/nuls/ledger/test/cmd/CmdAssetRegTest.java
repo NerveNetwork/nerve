@@ -34,14 +34,12 @@ public class CmdAssetRegTest {
     public void chainAssetTxRegTest() throws Exception {
         // Build params map
         Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","BNB");
-        params.put("assetName","BNB");
-//        params.put("assetSymbol","Cake-LP");
-//        params.put("assetName","Cake-LP");
-        params.put("initNumber",1000000000);
+        params.put("assetSymbol","VET");
+        params.put("assetName","VET");
+        params.put("initNumber",5000000);
         params.put("decimalPlace",8);
-        params.put("txCreatorAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
-        params.put("assetOwnerAddress","TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+        params.put("txCreatorAddress","NERVEepb686tCEBDEWSvoifp8swRK6WDMu7TPE");
+        params.put("assetOwnerAddress","NERVEepb686tCEBDEWSvoifp8swRK6WDMu7TPE");
         params.put("password","nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
         Log.debug("response {}", JSONUtils.obj2json(response));

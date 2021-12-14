@@ -46,7 +46,9 @@ import network.nerve.swap.model.vo.RouteVO;
 import network.nerve.swap.model.vo.SwapPairVO;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashSet;
@@ -497,8 +499,8 @@ public class SwapUtils {
     }
 
     private static List<RouteVO> bestTradeExactIn(int chainId, IPairFactory iPairFactory, List<SwapPairVO> pairs, TokenAmount tokenAmountIn,
-                                                 NerveToken out, LinkedHashSet<SwapPairVO> currentPath,
-                                                 List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int depth, int maxPairSize) {
+                                                  NerveToken out, LinkedHashSet<SwapPairVO> currentPath,
+                                                  List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int depth, int maxPairSize) {
         int length = pairs.size();
         for (int i = 0; i < length; i++) {
             SwapPairVO pair = pairs.get(i);
@@ -514,7 +516,7 @@ public class SwapUtils {
             if (tokenOut.equals(out)) {
                 currentPath.add(pair);
                 bestTrade.add(new RouteVO(currentPath.stream().collect(Collectors.toList()), orginTokenAmountIn, new TokenAmount(tokenOut, amountOut)));
-            } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
+            } else if (depth < (maxPairSize - 1) && pairs.size() > 1) {
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 cloneLinkedHashSet.add(pair);
                 List<SwapPairVO> subList = subList(pairs, 0, i);
@@ -604,7 +606,7 @@ public class SwapUtils {
      *
      * @param tx 交易
      */
-    public static byte[] getSingleAddressFromTX(Transaction tx, int chainId,boolean verifySign) throws NulsException {
+    public static byte[] getSingleAddressFromTX(Transaction tx, int chainId, boolean verifySign) throws NulsException {
 
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
             return null;
@@ -616,7 +618,7 @@ public class SwapUtils {
                 List<String> pubkeyList = new ArrayList<>();
 
 
-                if(verifySign){
+                if (verifySign) {
                     if ((txSignature.getP2PHKSignatures() == null || txSignature.getP2PHKSignatures().size() == 0)) {
                         throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                     }
@@ -625,7 +627,7 @@ public class SwapUtils {
                     for (P2PHKSignature signature : validSignatures) {
                         if (ECKey.verify(tx.getHash().getBytes(), signature.getSignData().getSignBytes(), signature.getPublicKey())) {
                             validCount++;
-                        }else {
+                        } else {
                             throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                         }
                     }
@@ -638,7 +640,7 @@ public class SwapUtils {
                 for (byte[] pub : txSignature.getPubKeyList()) {
                     pubkeyList.add(HexUtil.encode(pub));
                 }
-                Address address ;
+                Address address;
                 try {
                     address = new Address(chainId, BaseConstant.P2SH_ADDRESS_TYPE, SerializeUtils.sha256hash160(AddressTool.createMultiSigAccountOriginBytes(chainId, txSignature.getM(), pubkeyList)));
                 } catch (Exception e) {
@@ -653,9 +655,9 @@ public class SwapUtils {
                 if (p2PHKSignatures.size() > 1) {
                     throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                 }
-                if(verifySign){
-                    boolean r = ECKey.verify(tx.getHash().getBytes(),p2PHKSignatures.get(0).getSignData().getSignBytes(),p2PHKSignatures.get(0).getPublicKey());
-                    if(!r){
+                if (verifySign) {
+                    boolean r = ECKey.verify(tx.getHash().getBytes(), p2PHKSignatures.get(0).getSignData().getSignBytes(), p2PHKSignatures.get(0).getPublicKey());
+                    if (!r) {
                         throw new NulsException(SwapErrorCode.SIGNATURE_ERROR);
                     }
                 }
@@ -677,12 +679,23 @@ public class SwapUtils {
             farm.setLastRewardBlock(blockHeight);
             return;
         }
-        BigInteger syrupReward = BigInteger.valueOf(blockHeight - farm.getLastRewardBlock()).multiply(farm.getSyrupPerBlock());
+        long realEnd = blockHeight;
+        if (blockHeight > SwapContext.PROTOCOL_1_16_0) {
+            if (farm.getStopHeight() != null && farm.getStopHeight() > 0 && farm.getStopHeight() < blockHeight) {
+                realEnd = farm.getStopHeight();
+            }
+        }
+        long height = realEnd - farm.getLastRewardBlock();
+        if (height < 0) {
+            height = 0;
+        }
+        BigInteger syrupReward = BigInteger.valueOf(height).multiply(farm.getSyrupPerBlock());
         BigInteger accSyrupPerShare = farm.getAccSyrupPerShare();
 //        pool.accSushiPerShare.add(sushiReward.mul(1e12).div(lpSupply));  // 计算每个lp可分到的sushi数量
         accSyrupPerShare = accSyrupPerShare.add(syrupReward.multiply(SwapConstant.BI_1E12).divide(lpSupply));
+
         farm.setAccSyrupPerShare(accSyrupPerShare);
-        farm.setLastRewardBlock(blockHeight);
+        farm.setLastRewardBlock(realEnd);
     }
 
     public static NerveToken parseTokenStr(String str) {

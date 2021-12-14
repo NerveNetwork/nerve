@@ -91,7 +91,7 @@ public class ConfigStorageServiceImpl implements ConfigStorageService {
             }
             return configBeanMap;
         } catch (Exception e) {
-            Log.error(e);
+            Log.warn(e.getMessage());
             return null;
         }
     }

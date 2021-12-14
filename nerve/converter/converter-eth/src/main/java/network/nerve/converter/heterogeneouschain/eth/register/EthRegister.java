@@ -54,6 +54,7 @@ import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -234,7 +235,13 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     private void initUnconfirmedTxQueue() {
-        List<EthUnconfirmedTxPo> list = ethUnconfirmedTxStorageService.findAll();
+        List<EthUnconfirmedTxPo> list;
+        try {
+            list = ethUnconfirmedTxStorageService.findAll();
+        } catch (Exception e) {
+            logger().warn("初始化ETH未确认交易队列异常，忽略旧流程队列");
+            list = Collections.EMPTY_LIST;
+        }
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {

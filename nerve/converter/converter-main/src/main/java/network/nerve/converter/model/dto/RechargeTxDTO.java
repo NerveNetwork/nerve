@@ -37,6 +37,19 @@ public class RechargeTxDTO {
 
     long txtime;
 
+    // 同时充值token和main，main金额放入新增字段mainAmount中
+    boolean depositII;
+    BigInteger mainAmount;
+    String extend;
+
+    public String getExtend() {
+        return extend;
+    }
+
+    public void setExtend(String extend) {
+        this.extend = extend;
+    }
+
     public String getHeterogeneousFromAddress() {
         return heterogeneousFromAddress;
     }
@@ -91,5 +104,21 @@ public class RechargeTxDTO {
 
     public void setTxtime(long txtime) {
         this.txtime = txtime;
+    }
+
+    public boolean isDepositII() {
+        return depositII;
+    }
+
+    public void setDepositII(boolean depositII) {
+        this.depositII = depositII;
+    }
+
+    public BigInteger getMainAmount() {
+        return mainAmount;
+    }
+
+    public void setMainAmount(BigInteger mainAmount) {
+        this.mainAmount = mainAmount;
     }
 }

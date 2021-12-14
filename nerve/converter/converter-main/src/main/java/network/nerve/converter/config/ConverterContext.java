@@ -29,7 +29,9 @@ import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 默认配置项
@@ -144,6 +146,19 @@ public class ConverterContext {
      * v1.15.0 协议升级高度 支持波场生态链跨链
      */
     public static long PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = 0L;
+    /**
+     * v1.16.0 协议升级高度
+     */
+    public static long PROTOCOL_1_16_0 = 0L;
+
+    /**
+     * 协议升级对应的高度
+     */
+    public static Map<Integer, Long> protocolHeightMap = new HashMap<>();
+    /**
+     * 价格key
+     */
+    public static Map<String, String> priceKeyMap = new HashMap<>();
 
     /**
      * 初始化虚拟银行公钥

@@ -30,6 +30,7 @@ import network.nerve.quotation.rpc.querier.Querier;
 import network.nerve.quotation.util.HttpRequestUtil;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +40,7 @@ import java.util.Map;
 @Component
 public class MxcQuerier implements Querier {
 
-    private final String CMD = "/open/api/v1/data/ticker?market=";
+    private final String CMD = "/open/api/v2/market/ticker?symbol=";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
@@ -50,12 +51,11 @@ public class MxcQuerier implements Querier {
             if (null == map) {
                 return null;
             }
-            Map<String, Object> data = (Map<String, Object>) map.get("data");
-            Long code = Long.parseLong(map.get("code").toString());
-            if (code != 200L) {
-                chain.getLogger().error("调用{}接口, MXC获取价格失败", url);
+            List<Object> list = (List<Object>) map.get("data");
+            if(list.isEmpty()){
                 return null;
             }
+            Map<String,Object> data = (Map<String, Object>) list.get(0);
             chain.getLogger().info("MXC 获取到交易对[{}]价格:{}", symbol.toUpperCase(), data.get("last"));
             return new BigDecimal(data.get("last").toString());
         } catch (Throwable e) {

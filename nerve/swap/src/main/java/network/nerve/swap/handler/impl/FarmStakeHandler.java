@@ -36,6 +36,7 @@ import io.nuls.core.model.ArraysTool;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.manager.ChainManager;
@@ -214,6 +215,9 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         bus.setLastRewardBlockOld(farm.getLastRewardBlock());
         bus.setStakingBalanceOld(farm.getStakeTokenBalance());
         bus.setSyrupBalanceOld(farm.getSyrupTokenBalance());
+        if (blockHeight >= SwapContext.PROTOCOL_1_16_0) {
+            bus.setStopHeightOld(farm.getStopHeight());
+        }
         SwapUtils.updatePool(farm, blockHeight);
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
@@ -284,12 +288,20 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
             user.setRewardDebt(user.getRewardDebt().subtract(value));
         }
 
+        if (blockHeight >= SwapContext.PROTOCOL_1_16_0 && bus.getStakingBalanceOld().compareTo(BigInteger.ZERO) == 0 && farm.getStakeTokenBalance().compareTo(BigInteger.ZERO) > 0) {
+            BigInteger allHeight = farm.getSyrupTokenBalance().divide(farm.getSyrupPerBlock());
+            farm.setStopHeight(blockHeight + allHeight.longValue());
+        }
+
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
         bus.setLastRewardBlockNew(farm.getLastRewardBlock());
         bus.setStakingBalanceNew(farm.getStakeTokenBalance());
         bus.setSyrupBalanceNew(farm.getSyrupTokenBalance());
         bus.setUserAmountNew(user.getAmount());
         bus.setUserRewardDebtNew(user.getRewardDebt());
+        if (blockHeight >= SwapContext.PROTOCOL_1_16_0) {
+            bus.setStopHeightNew(farm.getStopHeight());
+        }
         result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
         batchInfo.getFarmUserTempManager().putUserInfo(user);
     }

@@ -53,9 +53,46 @@ import java.util.Map;
 public class QuotationCall {
 
 
+    public static Map<String, Object> getSwapPairByTokenLP(Chain chain, int lpChainId, int lpAssetId) {
+        try {
+            Map<String, Object> params = new HashMap(QuotationConstant.INIT_CAPACITY_4);
+            params.put(Constants.VERSION_KEY_STR, QuotationConstant.RPC_VERSION);
+            params.put(Constants.CHAIN_ID, chain.getChainId());
+            params.put("tokenLPStr", lpChainId + "-" + lpAssetId);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.SW.abbr, "sw_swap_pair_info_by_lp", params);
+            if (!cmdResp.isSuccess()) {
+                chain.getLogger().error("Packing state failed to send!");
+                return null;
+            }
+            return (HashMap) ((HashMap) cmdResp.getResponseData()).get("sw_swap_pair_info_by_lp");
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
+    }
+
+    public static Map<String, Object> getSwapPrice(Chain chain,String amountIn,String[] tokenPath){
+
+        try {
+            Map<String, Object> params = new HashMap(QuotationConstant.INIT_CAPACITY_4);
+            params.put(Constants.CHAIN_ID, chain.getChainId());
+            params.put("amountIn", amountIn);
+            params.put("tokenPath", tokenPath);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.SW.abbr, "sw_swap_min_amount_token_trade", params);
+            if (!cmdResp.isSuccess()) {
+                chain.getLogger().error("Packing state failed to send!");
+                return null;
+            }
+            return (HashMap) ((HashMap) cmdResp.getResponseData()).get("sw_swap_min_amount_token_trade");
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
+    }
+
     /**
      * 区块最新高度
-     * */
+     */
     public static boolean subscriptionNewBlockHeight(Chain chain) {
         try {
             Map<String, Object> params = new HashMap<>(QuotationConstant.INIT_CAPACITY_4);
@@ -63,7 +100,7 @@ public class QuotationCall {
             params.put(Constants.CHAIN_ID, chain.getChainId());
             String messageId = ResponseMessageProcessor.requestAndInvoke(ModuleE.BL.abbr, "latestHeight",
                     params, "0", "1", new NewBlockHeightInvoke(chain));
-            if(null != messageId){
+            if (null != messageId) {
                 return true;
             }
             return false;
@@ -84,7 +121,7 @@ public class QuotationCall {
             params.put("password", password);
             params.put("data", RPCUtil.encode(data));
             HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_signDigest", params);
-            String signatureStr = (String)result.get("signature");
+            String signatureStr = (String) result.get("signature");
             return CommonUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
         } catch (NulsException e) {
             LoggerUtil.LOG.error("QuotationCall signDigest fail - address:{}", address);
@@ -99,7 +136,7 @@ public class QuotationCall {
     /**
      * 查询本节点是不是共识节点，如果是则返回，共识账户和密码
      * Query whether the node is a consensus node, if so, return, consensus account and password
-     * */
+     */
     public static Map<String, String> getPackerInfo(Chain chain) {
         try {
             Map<String, Object> params = new HashMap(QuotationConstant.INIT_CAPACITY_4);
@@ -117,14 +154,14 @@ public class QuotationCall {
         }
     }
 
-    public static boolean isConfirmed(Chain chain, String txhash ) throws NulsException {
+    public static boolean isConfirmed(Chain chain, String txhash) throws NulsException {
         try {
             Map<String, Object> params = new HashMap<>(QuotationConstant.INIT_CAPACITY_8);
             params.put(Constants.VERSION_KEY_STR, QuotationConstant.RPC_VERSION);
             params.put(Constants.CHAIN_ID, chain.getChainId());
             params.put("txHash", txhash);
             HashMap result = (HashMap) requestAndResponse(ModuleE.TX.abbr, "tx_isConfirmed", params);
-            return (boolean)result.get("value");
+            return (boolean) result.get("value");
         } catch (RuntimeException e) {
             LoggerUtil.LOG.error(e);
             throw new NulsException(QuotationErrorCode.RPC_REQUEST_FAILD);
@@ -160,15 +197,15 @@ public class QuotationCall {
             Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_isConsensusAgent", params);
             if (!cmdResp.isSuccess()) {
                 String errorCode = cmdResp.getResponseErrorCode();
-                chain.getLogger().error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", "cs_isConsensusAgent", errorCode,  cmdResp.getResponseComment());
+                chain.getLogger().error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", "cs_isConsensusAgent", errorCode, cmdResp.getResponseComment());
                 throw new NulsException(QuotationErrorCode.RPC_REQUEST_FAILD);
             }
             HashMap map = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cs_isConsensusAgent");
-            if(null == map){
+            if (null == map) {
                 throw new NulsException(QuotationErrorCode.REMOTE_RESPONSE_DATA_NOT_FOUND);
             }
             Boolean rs = (Boolean) map.get("value");
-            if(null == rs){
+            if (null == rs) {
                 throw new NulsException(QuotationErrorCode.REMOTE_RESPONSE_DATA_NOT_FOUND);
             }
             return rs;
@@ -185,6 +222,7 @@ public class QuotationCall {
     public static Object requestAndResponse(String moduleCode, String cmd, Map params) throws NulsException {
         return requestAndResponse(moduleCode, cmd, params, null);
     }
+
     /**
      * 调用其他模块接口
      * Call other module interfaces
@@ -194,9 +232,9 @@ public class QuotationCall {
             params.put(Constants.VERSION_KEY_STR, QuotationConstant.RPC_VERSION);
             Response response = null;
             try {
-                if(null == timeout) {
+                if (null == timeout) {
                     response = ResponseMessageProcessor.requestAndResponse(moduleCode, cmd, params);
-                }else{
+                } else {
                     response = ResponseMessageProcessor.requestAndResponse(moduleCode, cmd, params, timeout);
                 }
             } catch (Exception e) {
@@ -208,7 +246,7 @@ public class QuotationCall {
                 LoggerUtil.LOG.error("Call interface [{}] error, ErrorCode is {}, ResponseComment:{}", cmd, errorCode, response.getResponseComment());
                 throw new NulsException(ErrorCode.init(errorCode));
             }
-            Map data = (Map)response.getResponseData();
+            Map data = (Map) response.getResponseData();
             return data.get(cmd);
         } catch (RuntimeException e) {
             LoggerUtil.LOG.error(e);

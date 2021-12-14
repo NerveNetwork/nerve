@@ -75,6 +75,7 @@ import static network.nerve.converter.constant.ConverterConstant.HETEROGENEOUS_V
 public class CfmTxSubsequentProcessTask implements Runnable {
     private Chain chain;
 
+
     public CfmTxSubsequentProcessTask(Chain chain) {
         this.chain = chain;
     }
@@ -88,9 +89,9 @@ public class CfmTxSubsequentProcessTask implements Runnable {
     private VirtualBankAllHistoryStorageService virtualBankAllHistoryStorageService = SpringLiteContext.getBean(VirtualBankAllHistoryStorageService.class);
     private VirtualBankService virtualBankService = SpringLiteContext.getBean(VirtualBankService.class);
     private HeterogeneousService heterogeneousService = SpringLiteContext.getBean(HeterogeneousService.class);
-    private HeterogeneousAssetHelper heterogeneousAssetHelper =
-            SpringLiteContext.getBean(HeterogeneousAssetHelper.class);
+    private HeterogeneousAssetHelper heterogeneousAssetHelper = SpringLiteContext.getBean(HeterogeneousAssetHelper.class);
     private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
+    private ConverterCoreApi converterCoreApi = SpringLiteContext.getBean(ConverterCoreApi.class);
 
     @Override
     public void run() {
@@ -101,6 +102,16 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 // 只取出,不移除头部元素
                 TxSubsequentProcessPO pendingPO = pendingTxQueue.peekFirst();
                 Transaction tx = pendingPO.getTx();
+                if (converterCoreApi.skippedTransaction(tx.getHash().toHex())) {
+                    // 判断是否问题交易, 从队列中移除, 并从持久库中移除
+                    chain.getLogger().info("[异构链待处理队列] 历史遗留的问题数据, 移除交易, hash:{}", tx.getHash().toHex());
+                    // 并且从持久化库中移除
+                    txSubsequentProcessStorageService.delete(chain, tx.getHash().toHex());
+                    componentSignStorageService.delete(chain, tx.getHash().toHex());
+                    // 执行成功移除队列头部元素
+                    pendingTxQueue.remove();
+                    continue;
+                }
                 if (!pendingPO.getRetry() && null != asyncProcessedTxStorageService.getComponentCall(chain, tx.getHash().toHex())) {
                     // 判断已执行过, 从队列中移除, 并从持久库中移除
                     chain.getLogger().info("[异构链待处理队列] 已执行过,移除交易, hash:{}", tx.getHash().toHex());

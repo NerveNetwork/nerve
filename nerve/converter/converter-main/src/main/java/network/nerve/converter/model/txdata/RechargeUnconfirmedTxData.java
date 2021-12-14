@@ -77,6 +77,10 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
      * 充值金额
      */
     private BigInteger amount;
+    // 同时充值token和main，记录main
+    private BigInteger mainAssetAmount;
+    private int mainAssetChainId;
+    private int mainAssetId;
 
 
     @Override
@@ -88,6 +92,11 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
         stream.writeUint16(this.assetChainId);
         stream.writeUint16(this.assetId);
         stream.writeBigInteger(this.amount);
+        if (this.mainAssetAmount != null) {
+            stream.writeBigInteger(this.mainAssetAmount);
+            stream.writeUint16(this.mainAssetChainId);
+            stream.writeUint16(this.mainAssetId);
+        }
 
     }
 
@@ -100,6 +109,11 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
         this.assetChainId = byteBuffer.readUint16();
         this.assetId = byteBuffer.readUint16();
         this.amount = byteBuffer.readBigInteger();
+        if (!byteBuffer.isFinished()) {
+            this.mainAssetAmount = byteBuffer.readBigInteger();
+            this.mainAssetChainId = byteBuffer.readUint16();
+            this.mainAssetId = byteBuffer.readUint16();
+        }
     }
 
     @Override
@@ -112,6 +126,11 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
         size += SerializeUtils.sizeOfInt16();
         size += SerializeUtils.sizeOfInt16();
         size += SerializeUtils.sizeOfBigInteger();
+        if (this.mainAssetAmount != null) {
+            size += SerializeUtils.sizeOfBigInteger();
+            size += SerializeUtils.sizeOfInt16();
+            size += SerializeUtils.sizeOfInt16();
+        }
         return size;
     }
 
@@ -127,6 +146,11 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
         builder.append(String.format("\tassetChainId: %s", this.assetChainId)).append(lineSeparator);
         builder.append(String.format("\tassetId: %s", this.assetId)).append(lineSeparator);
         builder.append(String.format("\tamount: %s", this.amount.toString())).append(lineSeparator);
+        if (this.mainAssetAmount != null) {
+            builder.append(String.format("\tmainAssetAmount: %s", this.mainAssetAmount.toString())).append(lineSeparator);
+            builder.append(String.format("\tmainAssetChainId: %s", this.mainAssetChainId)).append(lineSeparator);
+            builder.append(String.format("\tmainAssetId: %s", this.mainAssetId)).append(lineSeparator);
+        }
         return builder.toString();
     }
 
@@ -184,5 +208,29 @@ public class RechargeUnconfirmedTxData extends BaseNulsData {
 
     public void setAmount(BigInteger amount) {
         this.amount = amount;
+    }
+
+    public BigInteger getMainAssetAmount() {
+        return mainAssetAmount;
+    }
+
+    public void setMainAssetAmount(BigInteger mainAssetAmount) {
+        this.mainAssetAmount = mainAssetAmount;
+    }
+
+    public int getMainAssetChainId() {
+        return mainAssetChainId;
+    }
+
+    public void setMainAssetChainId(int mainAssetChainId) {
+        this.mainAssetChainId = mainAssetChainId;
+    }
+
+    public int getMainAssetId() {
+        return mainAssetId;
+    }
+
+    public void setMainAssetId(int mainAssetId) {
+        this.mainAssetId = mainAssetId;
     }
 }

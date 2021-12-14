@@ -275,18 +275,35 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         }
         try {
             // 回调充值交易
-            String nerveTxHash = htgCallBackManager.getDepositTxSubmitter().txSubmit(
-                    htgTxHash,
-                    po.getBlockHeight(),
-                    po.getFrom(),
-                    po.getTo(),
-                    po.getValue(),
-                    po.getTxTime(),
-                    po.getDecimals(),
-                    po.isIfContractAsset(),
-                    po.getContractAddress(),
-                    po.getAssetId(),
-                    po.getNerveAddress());
+            String nerveTxHash;
+            if (po.isDepositIIMainAndToken()) {
+                // 同时充值两种资产的充值交易
+                nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmit(
+                        htgTxHash,
+                        po.getBlockHeight(),
+                        po.getFrom(),
+                        po.getTo(),
+                        po.getValue(),
+                        po.getTxTime(),
+                        po.getDecimals(),
+                        po.getContractAddress(),
+                        po.getAssetId(),
+                        po.getNerveAddress(),
+                        po.getDepositIIMainAssetValue(), po.getDepositIIExtend());
+            } else {
+                nerveTxHash = htgCallBackManager.getDepositTxSubmitter().txSubmit(
+                        htgTxHash,
+                        po.getBlockHeight(),
+                        po.getFrom(),
+                        po.getTo(),
+                        po.getValue(),
+                        po.getTxTime(),
+                        po.getDecimals(),
+                        po.isIfContractAsset(),
+                        po.getContractAddress(),
+                        po.getAssetId(),
+                        po.getNerveAddress(), po.getDepositIIExtend());
+            }
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
             // 当未确认交易数据产生变化时，更新DB数据

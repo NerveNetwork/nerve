@@ -45,7 +45,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * @author: Mimi
  * @date: 2020-02-26
  */
-public class EthIIContext implements Serializable, HtgContext {
+public class EthIIContext extends HtgContext implements Serializable {
 
     public static int HTG_CHAIN_ID = 101;
     public static int HTG_ASSET_ID = 1;
@@ -76,10 +76,6 @@ public class EthIIContext implements Serializable, HtgContext {
         return EthContext.getConfig();
     }
 
-    public static void setLogger(NulsLogger logger) {
-        EthContext.setLogger(logger);
-    }
-
     public static NulsLogger getLogger() {
         return EthContext.logger();
     }
@@ -94,6 +90,15 @@ public class EthIIContext implements Serializable, HtgContext {
 
     public static void setEthGasPriceStatic(BigInteger ethGasPrice) {
         EthContext.setEthGasPrice(ethGasPrice);
+    }
+
+    public void setLogger(NulsLogger logger) {
+        EthContext.setLogger(logger);
+    }
+
+    @Override
+    public void setConfig(HeterogeneousCfg config) {
+        EthContext.setConfig(config);
     }
 
     @Override
@@ -236,5 +241,20 @@ public class EthIIContext implements Serializable, HtgContext {
     @Override
     public boolean supportPendingCall() {
         return true;
+    }
+
+    @Override
+    public void SET_VERSION(byte version) {
+        VERSION = version;
+    }
+
+    @Override
+    public int HTG_CHAIN_ID() {
+        return HTG_CHAIN_ID;
+    }
+
+    @Override
+    public void SET_DOCKING(HtgDocking docking) {
+        DOCKING = docking;
     }
 }

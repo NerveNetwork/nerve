@@ -314,6 +314,7 @@ public class AccountStateCmd extends BaseLedgerCmd {
         return response;
     }
 
+
     @CmdAnnotation(cmd = CmdConstant.CMD_GET_BALANCE_LIST, version = 1.0,
             description = "获取账户资产的集合")
     @Parameters(value = {
@@ -336,31 +337,46 @@ public class AccountStateCmd extends BaseLedgerCmd {
         if (!chainHanlder(chainId)) {
             return failed(LedgerErrorCode.CHAIN_INIT_FAIL);
         }
-        List<AccountAssetDto> resultList = new ArrayList<>();
+        List<Map> resultList = new ArrayList<>();
         Map<String, Object> resultMap = new HashMap<>();
         for (String assetKey : assetKeyList) {
             assetKey = assetKey.trim();
             String[] assetInfo = assetKey.split("-");
+
+            Map<String, Object> rtMap = new HashMap<>(10);
             int assetChainId = Integer.parseInt(assetInfo[0].trim());
             int assetId = Integer.parseInt(assetInfo[1].trim());
+            rtMap.put("assetChainId", assetChainId);
+            rtMap.put("assetId", assetId);
 
             AccountState accountState = accountStateService.getAccountStateReCal(address, chainId, assetChainId, assetId);
-            if (accountState == null) {
-                continue;
-            }
-            AccountAssetDto dto = new AccountAssetDto();
-            dto.setAssetChainId(assetChainId);
-            dto.setAssetId(assetId);
+
             AccountStateUnconfirmed accountStateUnconfirmed = unconfirmedStateService.getUnconfirmedInfo(address, chainId, assetChainId, assetId, accountState);
-            if (null == accountStateUnconfirmed) {
-                dto.setAvailable(accountState.getAvailableAmount());
-                dto.setConfirmed(true);
+            if ( null == accountStateUnconfirmed) {
+                rtMap.put("nonce", RPCUtil.encode(accountState.getNonce()));
+                rtMap.put("nonceType", LedgerConstant.CONFIRMED_NONCE);
+                rtMap.put("available", accountState.getAvailableAmount());
             } else {
-                dto.setAvailable(accountState.getAvailableAmount().subtract(accountStateUnconfirmed.getAmount()));
-                dto.setConfirmed(false);
+                rtMap.put("available", accountState.getAvailableAmount().subtract(accountStateUnconfirmed.getAmount()));
+                rtMap.put("nonce", RPCUtil.encode(accountStateUnconfirmed.getNonce()));
+                rtMap.put("nonceType", LedgerConstant.UNCONFIRMED_NONCE);
             }
-            dto.setFreeze(accountState.getFreezeTotal());
-            resultList.add(dto);
+            rtMap.put("freeze", accountState.getFreezeTotal());
+            BigInteger permanentLocked = BigInteger.ZERO;
+            BigInteger timeHeightLocked = BigInteger.ZERO;
+            for (FreezeLockTimeState freezeLockTimeState : accountState.getFreezeLockTimeStates()) {
+                timeHeightLocked = timeHeightLocked.add(freezeLockTimeState.getAmount());
+            }
+            for (FreezeHeightState freezeHeightState : accountState.getFreezeHeightStates()) {
+                timeHeightLocked = timeHeightLocked.add(freezeHeightState.getAmount());
+            }
+            for (FreezeLockTimeState timeState : accountState.getPermanentLockMap().values()) {
+                permanentLocked = permanentLocked.add(timeState.getAmount());
+            }
+            rtMap.put("permanentLocked", permanentLocked);
+            rtMap.put("timeHeightLocked", timeHeightLocked);
+
+            resultList.add(rtMap);
         }
         resultMap.put("list", resultList);
         Response response = success(resultMap);

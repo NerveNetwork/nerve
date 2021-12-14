@@ -27,6 +27,7 @@ import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
+import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
 import org.tron.trident.proto.Chain;
 import org.tron.trident.proto.Response;
 import org.tron.trident.utils.Numeric;
@@ -56,7 +57,11 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
             long txTime = header.getTimestamp();
             for (int i = 0; i < size; i++) {
                 Response.TransactionExtention tx = list.get(i);
-                analysisTx.analysisTx(tx.getTransaction(), txTime, blockHeight);
+                try {
+                    analysisTx.analysisTx(tx.getTransaction(), txTime, blockHeight);
+                } catch (Exception e) {
+                    htgContext.logger().error(String.format("[%s]网络交易解析失败: %s", htgContext.getConfig().getSymbol(), TrxUtil.calcTxHash(tx.getTransaction())), e);
+                }
             }
         }
         // 保存本地区块
@@ -69,11 +74,12 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
         // 只保留最近的三个区块
         htgLocalBlockHelper.deleteByHeight(blockHeight - 3);
 
-        if (blockHeight % 50 == 0) {
+        htgContext.logger().info("TRON同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
+        /*if (blockHeight % 50 == 0) {
             htgContext.logger().info("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
         } else {
             htgContext.logger().debug("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
-        }
+        }*/
     }
 
 

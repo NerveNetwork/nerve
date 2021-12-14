@@ -95,9 +95,9 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     private HtgUpgradeContractSwitchHelper htgUpgradeContractSwitchHelper;
 
     private ScheduledThreadPoolExecutor blockSyncExecutor;
-    private ScheduledThreadPoolExecutor confirmTxExecutor;
-    private ScheduledThreadPoolExecutor waitingTxExecutor;
-    private ScheduledThreadPoolExecutor rpcAvailableExecutor;
+    //private ScheduledThreadPoolExecutor confirmTxExecutor;
+    //private ScheduledThreadPoolExecutor waitingTxExecutor;
+    //private ScheduledThreadPoolExecutor rpcAvailableExecutor;
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
@@ -231,7 +231,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
         // 合约未升级，返回旧的实例
-        if (!isUpgradeContract()) {
+        if (!isUpgradeContract() && !converterConfig.isNewProcessorMode()) {
             return EthDocking.getInstance();
         }
         return EthIIContext.DOCKING;
@@ -248,24 +248,6 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
             htgUpgradeContractSwitchHelper.switchProcessor(EthContext.MULTY_SIGN_ADDRESS);
         }
         EthIIContext.getLogger().info("ETH II 注册完成.");
-    }
-
-    /**
-     * 停止当前区块解析任务与待确认交易任务
-     */
-    public void shutDownScheduled() {
-        if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {
-            blockSyncExecutor.shutdown();
-        }
-        if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
-            confirmTxExecutor.shutdown();
-        }
-        if (waitingTxExecutor != null && !waitingTxExecutor.isShutdown()) {
-            waitingTxExecutor.shutdown();
-        }
-        if (rpcAvailableExecutor != null && !rpcAvailableExecutor.isShutdown()) {
-            rpcAvailableExecutor.shutdown();
-        }
     }
 
     private void initDefualtAPI() throws Exception {
@@ -320,14 +302,17 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-block-sync"));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, 20, TimeUnit.SECONDS);
 
-        confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-confirm-tx"));
-        confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 20, TimeUnit.SECONDS);
-
-        waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-waiting-tx"));
-        waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 20, TimeUnit.SECONDS);
-
-        rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-rpcavailable-tx"));
-        rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 20, TimeUnit.SECONDS);
+        ethIIContext.getConverterCoreApi().addHtgConfirmTxHandler((Runnable) beanMap.get(HtgConfirmTxHandler.class));
+        ethIIContext.getConverterCoreApi().addHtgWaitingTxInvokeDataHandler((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class));
+        ethIIContext.getConverterCoreApi().addHtgRpcAvailableHandler((Runnable) beanMap.get(HtgRpcAvailableHandler.class));
+        //confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-confirm-tx"));
+        //confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 20, TimeUnit.SECONDS);
+        //
+        //waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-waiting-tx"));
+        //waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 20, TimeUnit.SECONDS);
+        //
+        //rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ethII-rpcavailable-tx"));
+        //rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 20, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {

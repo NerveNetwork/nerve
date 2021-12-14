@@ -357,4 +357,5 @@ public class TxType {
      * farm信息更新
      */
     public static final int FARM_UPDATE = 75;
+    public static final int RESET_CHAIN_INFO = 76;
 }

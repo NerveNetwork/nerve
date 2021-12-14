@@ -46,6 +46,20 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
+     * 查询资产的异构链注册网络
+     */
+    public Result getHeterogeneousRegisterNetwork(int chainId, int assetId) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("assetId", assetId);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_get_heterogeneous_register_network", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
      * 重新将异构链提现交易放入task, 重发消息
      */
     public Result retryWithdrawalMsg(int chainId, String hash) {

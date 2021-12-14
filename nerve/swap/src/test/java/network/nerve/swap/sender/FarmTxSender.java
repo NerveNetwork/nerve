@@ -28,19 +28,20 @@ public class FarmTxSender extends ApiTxSender {
     private static final int chainId = 5;
 
     public static void main(String[] args) throws Exception {
-        NulsHash farmHash = NulsHash.fromHex("aa74bc44fc55e86e9a905006cbce4caf4f8cd4ef7b8cedb3dea96766b02d5652");
+        NulsHash farmHash = NulsHash.fromHex("ab6bd7e6a15b023cf8670fe5ecf5776d47053e3133795338d118fbf6fca384b8");
 //        new FarmTxSender().sendUpdateTx(farmHash, BigInteger.valueOf(100000000), 0, BigInteger.ZERO, 10000, 5, 1);
-        new FarmTxSender().sendUpdateTx(farmHash, BigInteger.valueOf(100000000), 0, BigInteger.valueOf(50000000000L), 10000, 5, 1);
+        new FarmTxSender().sendUpdateTx(farmHash, BigInteger.valueOf(10000000), 0, BigInteger.valueOf(100000000000L), 0,11791530, 5, 1);
 
     }
 
-    private void sendUpdateTx(NulsHash farmHash, BigInteger newSyrupPerBlock, int changeType, BigInteger changeTotalSyrupAmount, long withdrawLockTime, int syrupAssetChainId, int syrupAssetId) throws Exception {
+    private void sendUpdateTx(NulsHash farmHash, BigInteger newSyrupPerBlock, int changeType, BigInteger changeTotalSyrupAmount, long withdrawLockTime, long stopHeight,int syrupAssetChainId, int syrupAssetId) throws Exception {
         FarmUpdateData txData = new FarmUpdateData();
         txData.setFarmHash(farmHash);
         txData.setNewSyrupPerBlock(newSyrupPerBlock);
         txData.setChangeType((short) changeType);
         txData.setChangeTotalSyrupAmount(changeTotalSyrupAmount);
         txData.setWithdrawLockTime(withdrawLockTime);
+        txData.setStopHeight(stopHeight);
         AssembleTransaction aTx = new AssembleTransaction(txData.serialize());
 
         aTx.setTime(System.currentTimeMillis() / 1000L);

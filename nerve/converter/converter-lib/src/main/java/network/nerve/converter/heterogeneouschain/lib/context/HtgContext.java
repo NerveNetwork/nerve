@@ -45,43 +45,55 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  * @author: PierreLuo
  * @date: 2021-03-22
  */
-public interface HtgContext {
+public abstract class HtgContext {
 
-    HeterogeneousCfg getConfig();
-    NulsLogger logger();
-    IConverterCoreApi getConverterCoreApi();
-    List<String> RPC_ADDRESS_LIST();
-    List<String> STANDBY_RPC_ADDRESS_LIST();
-    String ADMIN_ADDRESS_PUBLIC_KEY();
-    String ADMIN_ADDRESS();
-    String ADMIN_ADDRESS_PASSWORD();
-    String MULTY_SIGN_ADDRESS();
-    void SET_ADMIN_ADDRESS_PUBLIC_KEY(String s);
-    void SET_ADMIN_ADDRESS(String s);
-    void SET_ADMIN_ADDRESS_PASSWORD(String s);
-    void SET_MULTY_SIGN_ADDRESS(String s);
-    int NERVE_CHAINID();
-    int HTG_ASSET_ID();
-    byte VERSION();
-    LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE();
-    LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE();
-    CountDownLatch INIT_WAITING_TX_QUEUE_LATCH();
-    CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH();
-    Set<String> FILTER_ACCOUNT_SET();
-    HtgDocking DOCKING();
-    BigInteger getEthGasPrice();
-    void setEthGasPrice(BigInteger b);
-    AssetName ASSET_NAME();
-    void setAvailableRPC(boolean available);
-    boolean isAvailableRPC();
+    private static final BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(210000L);
+    private static final BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(400000L);
+    private static final BigInteger GAS_LIMIT_OF_MAIN_ASSET = BigInteger.valueOf(21000L);
+    private static final BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(60000L);
+    private static final BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
+    private static final BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
+
+    public abstract int HTG_CHAIN_ID();
+    public abstract HeterogeneousCfg getConfig();
+    public abstract NulsLogger logger();
+    public abstract IConverterCoreApi getConverterCoreApi();
+    public abstract List<String> RPC_ADDRESS_LIST();
+    public abstract List<String> STANDBY_RPC_ADDRESS_LIST();
+    public abstract String ADMIN_ADDRESS_PUBLIC_KEY();
+    public abstract String ADMIN_ADDRESS();
+    public abstract String ADMIN_ADDRESS_PASSWORD();
+    public abstract String MULTY_SIGN_ADDRESS();
+    public abstract void SET_ADMIN_ADDRESS_PUBLIC_KEY(String s);
+    public abstract void SET_ADMIN_ADDRESS(String s);
+    public abstract void SET_ADMIN_ADDRESS_PASSWORD(String s);
+    public abstract void SET_MULTY_SIGN_ADDRESS(String s);
+    public abstract void SET_DOCKING(HtgDocking docking);
+    public abstract int NERVE_CHAINID();
+    public abstract int HTG_ASSET_ID();
+    public abstract byte VERSION();
+    public abstract LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE();
+    public abstract LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE();
+    public abstract CountDownLatch INIT_WAITING_TX_QUEUE_LATCH();
+    public abstract CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH();
+    public abstract Set<String> FILTER_ACCOUNT_SET();
+    public abstract HtgDocking DOCKING();
+    public abstract BigInteger getEthGasPrice();
+    public abstract void setEthGasPrice(BigInteger b);
+    public abstract AssetName ASSET_NAME();
+    public abstract void setAvailableRPC(boolean available);
+    public abstract boolean isAvailableRPC();
+    public abstract void SET_VERSION(byte version);
+    public abstract void setLogger(NulsLogger logger);
+    public abstract void setConfig(HeterogeneousCfg config);
     /**
      * 当前异构链是否支持合约的pending查询
      */
-    default boolean supportPendingCall() {
+    public boolean supportPendingCall() {
         return true;
     }
 
-    default BigInteger calcGasPrice(BigInteger ethGasPrice, BigInteger currentGasPrice) {
+    public BigInteger calcGasPrice(BigInteger ethGasPrice, BigInteger currentGasPrice) {
         if (ethGasPrice == null) {
             return currentGasPrice;
         }
@@ -93,7 +105,7 @@ public interface HtgContext {
         }
         return ethGasPrice;
         /*
-        回滚异构网络打包价格，稳定6次后再更新的机制，原因是造成前后端price不一致
+        回滚异构网络打包价格稳定6次后再更新的机制，原因是造成前后端price不一致
         if (HTG_GAS_PRICE == null || HTG_GAS_PRICE.compareTo(ethGasPrice) <= 0) {
             HTG_GAS_PRICE = ethGasPrice;
         } else {
@@ -102,5 +114,28 @@ public interface HtgContext {
                 HTG_GAS_PRICE = gasPriceOrders[0];
             }
         }*/
+    }
+
+    public long hashSalt() {
+        return getConfig().getChainIdOnHtgNetwork() * 2 + VERSION();
+    }
+
+    public BigInteger GAS_LIMIT_OF_WITHDRAW() {
+        return GAS_LIMIT_OF_WITHDRAW;
+    }
+    public BigInteger GAS_LIMIT_OF_CHANGE() {
+        return GAS_LIMIT_OF_CHANGE;
+    }
+    public BigInteger GAS_LIMIT_OF_MAIN_ASSET() {
+        return GAS_LIMIT_OF_MAIN_ASSET;
+    }
+    public BigInteger GAS_LIMIT_OF_ERC20() {
+        return GAS_LIMIT_OF_ERC20;
+    }
+    public BigInteger HTG_ESTIMATE_GAS() {
+        return HTG_ESTIMATE_GAS;
+    }
+    public BigInteger BASE_GAS_LIMIT() {
+        return BASE_GAS_LIMIT;
     }
 }

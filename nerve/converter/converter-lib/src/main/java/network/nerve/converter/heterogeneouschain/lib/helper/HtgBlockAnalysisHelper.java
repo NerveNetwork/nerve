@@ -57,7 +57,11 @@ public class HtgBlockAnalysisHelper implements BeanInitial {
             long txTime = block.getTimestamp().longValue();
             for (int i = 0; i < size; i++) {
                 org.web3j.protocol.core.methods.response.Transaction tx = (org.web3j.protocol.core.methods.response.Transaction) ethTransactionResults.get(i).get();
-                ethAnalysisTx.analysisTx(tx, txTime, blockHeight);
+                try {
+                    ethAnalysisTx.analysisTx(tx, txTime, blockHeight);
+                } catch (Exception e) {
+                    htgContext.logger().error(String.format("[%s]网络交易解析失败: %s", htgContext.getConfig().getSymbol(), tx.getHash()), e);
+                }
             }
         }
         // 保存本地区块

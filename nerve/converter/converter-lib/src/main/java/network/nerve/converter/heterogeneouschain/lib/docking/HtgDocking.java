@@ -279,6 +279,14 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
+    public void updateMultySignAddressProtocol16(String multySignAddress, byte version) throws Exception {
+        updateMultySignAddress(multySignAddress);
+        htgContext.SET_VERSION(version);
+        htgMultiSignAddressHistoryStorageService.saveVersion(version);
+        logger().info("更新签名版本号: {}", version);
+    }
+
+    @Override
     public void txConfirmedRollback(String txHash) throws Exception {
         HtgUnconfirmedTxPo txPo = htgUnconfirmedTxStorageService.findByTxHash(txHash);
         if (txPo != null) {
@@ -751,7 +759,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
         // 把地址转换成小写
         toAddress = toAddress.toLowerCase();
-        String vHash = HtgUtil.encoderWithdraw(txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
         return HtgUtil.dataSign(vHash, priKey);
@@ -791,7 +799,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        String vHash = HtgUtil.encoderChange(nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        String vHash = HtgUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
         logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
         return HtgUtil.dataSign(vHash, priKey);
     }
@@ -804,7 +812,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         // 把地址转换成小写
         upgradeContract = upgradeContract.toLowerCase();
-        String vHash = HtgUtil.encoderUpgrade(nerveTxHash, upgradeContract, htgContext.VERSION());
+        String vHash = HtgUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
         logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
         return HtgUtil.dataSign(vHash, priKey);
     }
@@ -820,7 +828,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
         // 把地址转换成小写
         toAddress = toAddress.toLowerCase();
-        String vHash = HtgUtil.encoderWithdraw(txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现vHash: {}", vHash);
         return HtgUtil.verifySign(signAddress, vHash, signed);
@@ -845,7 +853,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             remove = remove.toLowerCase();
             removeAddresses[r] = remove;
         }
-        String vHash = HtgUtil.encoderChange(nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        String vHash = HtgUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
         return HtgUtil.verifySign(signAddress, vHash, signed);
     }
 
@@ -853,7 +861,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     public Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
         // 把地址转换成小写
         upgradeContract = upgradeContract.toLowerCase();
-        String vHash = HtgUtil.encoderUpgrade(txHash, upgradeContract, htgContext.VERSION());
+        String vHash = HtgUtil.encoderUpgrade(htgContext, txHash, upgradeContract, htgContext.VERSION());
         return HtgUtil.verifySign(signAddress, vHash, signed);
     }
 
@@ -892,10 +900,19 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 priKey,
                 fromAddress,
                 BigDecimal.ZERO,
-                HtgConstant.GAS_LIMIT_OF_MAIN_ASSET,
+                htgContext.GAS_LIMIT_OF_MAIN_ASSET(),
                 gasPrice,
                 new BigInteger(nonce)
         );
+    }
+
+    @Override
+    public void initialSignatureVersion() {
+        byte version = htgMultiSignAddressHistoryStorageService.getVersion();
+        if (version > 0) {
+            htgContext.SET_VERSION(version);
+        }
+        logger().info("[{}]网络当前签名版本号: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
@@ -1148,7 +1165,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         if (logger().isDebugEnabled()) {
             logger().debug("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         }
-        BigInteger gasLimit = estimateGas.add(HtgConstant.BASE_GAS_LIMIT);
+        BigInteger gasLimit = estimateGas.add(htgContext.BASE_GAS_LIMIT());
         BigInteger nonce = null;
         // 是重试交易时，使用最新nonce值，而非pending nonce
         if (resend) {
@@ -1349,7 +1366,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             logger().error("[{}][withdraw] 提现手续费计算,没有获取到完整的报价. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
-        BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdraw(otherMainAssetName, otherMainAssetUSD, otherMainAssetAmount, htgUSD, hAssetId);
+        BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdraw(otherMainAssetName, otherMainAssetUSD, otherMainAssetAmount, htgUSD, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         String gasPriceStr = gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString();
         if (gasPrice != null && gasPrice.toBigInteger().compareTo(htgContext.getEthGasPrice()) >= 0) {
             logger().info("[{}]提现手续费足够，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei",
@@ -1358,7 +1375,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                     gasPriceStr);
             return gasPrice;
         }
-        BigDecimal otherMainAssetAmountCalc = HtgUtil.calcOtherMainAssetOfWithdraw(otherMainAssetName, otherMainAssetUSD, new BigDecimal(htgContext.getEthGasPrice()), htgUSD, hAssetId);
+        BigDecimal otherMainAssetAmountCalc = HtgUtil.calcOtherMainAssetOfWithdraw(otherMainAssetName, otherMainAssetUSD, new BigDecimal(htgContext.getEthGasPrice()), htgUSD, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         logger().warn("[{}]提现手续费不足，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei, 总共需要的{}: {}, 用户提供的{}: {}, 需要追加的{}: {}",
                 htgContext.getConfig().getSymbol(),
                 new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
@@ -1373,7 +1390,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     private BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
-        BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdrawByMainAssetProtocol15(amount, hAssetId);
+        BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdrawByMainAssetProtocol15(amount, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         String gasPriceStr = gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString();
         if (gasPrice != null && gasPrice.toBigInteger().compareTo(htgContext.getEthGasPrice()) >= 0) {
             logger().info("[{}]提现手续费足够，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei",
@@ -1382,7 +1399,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                     gasPriceStr);
             return gasPrice;
         }
-        BigDecimal amountCalc = HtgUtil.calcMainAssetOfWithdrawProtocol15(new BigDecimal(htgContext.getEthGasPrice()), hAssetId);
+        BigDecimal amountCalc = HtgUtil.calcMainAssetOfWithdrawProtocol15(new BigDecimal(htgContext.getEthGasPrice()), hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         int decimals = htgContext.getConfig().getDecimals();
         String symbol = htgContext.getConfig().getSymbol();
         logger().warn("[{}]提现手续费不足，当前网络需要的GasPrice: {} Gwei, 实际计算出的GasPrice: {} Gwei, 总共需要的{}: {}, 用户提供的{}: {}, 需要追加的{}: {}",

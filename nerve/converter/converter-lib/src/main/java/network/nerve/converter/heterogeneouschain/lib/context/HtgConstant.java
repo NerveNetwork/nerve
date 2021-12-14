@@ -55,6 +55,9 @@ public interface HtgConstant {
     String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0x00719226";
     String METHOD_HASH_CREATEORSIGNUPGRADE = "0x408e8b7a";
     String METHOD_HASH_CROSS_OUT = "0x0889d1f0";
+    String METHOD_HASH_CROSS_OUT_II = "0x38615bb0";
+    String METHOD_HASH_TRANSFER = "0xa9059cbb";
+    String METHOD_HASH_TRANSFER_FROM = "0x23b872dd";
 
     String METHOD_CREATE_OR_SIGN_WITHDRAW = "createOrSignWithdraw";
     String METHOD_CREATE_OR_SIGN_MANAGERCHANGE = "createOrSignManagerChange";
@@ -78,6 +81,7 @@ public interface HtgConstant {
     String EVENT_HASH_TRANSACTION_MANAGER_CHANGE_COMPLETED = "0xac9b82db4e104d515319a481096bfd91a4f40ee10837d5a2c8d51b9a03dc48ae";
     String EVENT_HASH_TRANSACTION_UPGRADE_COMPLETED = "0x5e06c4b22547d430736ce834764dbfee08f1c4cf7ae3d53178aa56effa593ed0";
     String EVENT_HASH_CROSS_OUT_FUNDS = "0x5ddf9724d8fe5d9e12499be2867f93d41a582733dcd65f74a486ad7e30667146";
+    String EVENT_HASH_CROSS_OUT_II_FUNDS = "0x692e6a6e27573f2a2a757e34cb16ae101c5fca8834f9b8a6cdbcf64b8450d870";
     String EVENT_HASH_UNKNOWN_ON_POLYGON = "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63";
 
 
@@ -118,6 +122,29 @@ public interface HtgConstant {
             )
     );
 
+    List<TypeReference<Type>> INPUT_CROSS_OUT_II = Utils.convert(
+            List.of(
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Address>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
+    List<TypeReference<Type>> INPUT_ERC20_TRANSFER = Utils.convert(
+            List.of(
+                    new TypeReference<Address>(){},
+                    new TypeReference<Uint256>(){}
+            )
+    );
+    List<TypeReference<Type>> INPUT_ERC20_TRANSFER_FROM = Utils.convert(
+            List.of(
+                    new TypeReference<Address>(){},
+                    new TypeReference<Address>(){},
+                    new TypeReference<Uint256>(){}
+            )
+    );
+
     Event EVENT_TRANSACTION_WITHDRAW_COMPLETED = new Event("TxWithdrawCompleted",
             Arrays.<TypeReference<?>>asList(
                     new TypeReference<Utf8String>(false) {}
@@ -132,20 +159,29 @@ public interface HtgConstant {
             ));
     Event EVENT_CROSS_OUT_FUNDS = new Event("CrossOutFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
-                    new TypeReference<Utf8String>(true) {},
-                    new TypeReference<Uint>(true) {},
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Utf8String>(false) {},
+                    new TypeReference<Uint>(false) {},
                     new TypeReference<Address>(false) {}
+            ));
+    Event EVENT_CROSS_OUT_II_FUNDS = new Event("CrossOutIIFunds",
+            Arrays.<TypeReference<?>>asList(
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Utf8String>(false) {},
+                    new TypeReference<Uint>(false) {},
+                    new TypeReference<Address>(false) {},
+                    new TypeReference<Uint>(false) {},
+                    new TypeReference<DynamicBytes>(false) {}
             ));
 
     Event EVENT_DEPOSIT_FUNDS = new Event("DepositFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
+                    new TypeReference<Address>(false) {},
                     new TypeReference<Uint>(false) {}
             ));
     Event EVENT_TRANSFER_FUNDS = new Event("TransferFunds",
             Arrays.<TypeReference<?>>asList(
-                    new TypeReference<Address>(true) {},
+                    new TypeReference<Address>(false) {},
                     new TypeReference<Uint>(false) {}
                     //new TypeReference<Uint>(false) {}
             ));
@@ -164,16 +200,12 @@ public interface HtgConstant {
     long SECOND_10 = 10 * 1000L;
     long WAITING_MINUTES = MINUTES_2;
 
-    BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(230000L);
-    BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(400000L);
-    BigInteger GAS_LIMIT_OF_MAIN_ASSET = BigInteger.valueOf(21000L);
-    BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(60000L);
-    BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     BigDecimal NUMBER_1_DOT_1 = new BigDecimal("1.1");
-    BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
+    BigDecimal BD_20K = BigDecimal.valueOf(20000L);
 
     Long ROLLBACK_NUMER = 100L;
 
+    BigInteger GWEI_DOT_01 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(7));
     BigInteger GWEI_DOT_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(8));
     BigInteger GWEI_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_2 = BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9));
@@ -181,10 +213,13 @@ public interface HtgConstant {
     BigInteger GWEI_5 = BigInteger.valueOf(5L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_10 = BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_20 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_30 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_300 = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_5000 = BigInteger.valueOf(5000L).multiply(BigInteger.TEN.pow(9));
     BigInteger HIGH_GAS_PRICE = GWEI_200;
-    BigInteger MAX_HTG_GAS_PRICE = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
+    BigInteger MAX_HTG_GAS_PRICE = GWEI_300;
 
     ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
     ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");

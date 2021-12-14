@@ -10,7 +10,7 @@
     </parent>
     <artifactId>nuls-transaction</artifactId>
 
-    <dependencies>
+    <dependencies> 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

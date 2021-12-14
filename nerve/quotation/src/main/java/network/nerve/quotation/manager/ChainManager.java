@@ -324,6 +324,5 @@ public class ChainManager {
         ScheduledThreadPoolExecutor calculatorExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory(QuotationConstant.QU_CALCULATOR_THREAD));
         calculatorExecutor.scheduleWithFixedDelay(new CalculatorTask(chain),
                 QuotationConstant.QU_TASK_INITIALDELAY, QuotationConstant.QUTASK_PERIOD, TimeUnit.MINUTES);
-
     }
 }

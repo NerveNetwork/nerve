@@ -49,11 +49,15 @@ public class DepositValidator extends BaseValidator {
             chain.getLogger().error("The asset cannot participate in staking");
             return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
         }
+        if (stackingAsset.getStopHeight() > 0 && stackingAsset.getStopHeight() <= chain.getBestHeader().getHeight()) {
+            chain.getLogger().error("The asset is stoped to staking");
+            return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
+        }
 
 
         //如果为存定期则验证定期类型是否存在
         if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
-            if(!stackingAsset.isCanBePeriodically()){
+            if (!stackingAsset.isCanBePeriodically()) {
                 chain.getLogger().error("The asset cannot participate in periodic staking");
                 return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_REGULAR_STACKING);
             }
@@ -66,7 +70,7 @@ public class DepositValidator extends BaseValidator {
         }
 
         //验证委托金额是否是否小于最小委托金额
-        BigInteger realAmount = ConsensusAwardUtil.getRealAmount(chain.getChainId(), deposit.getDeposit(),stackingAsset, tx.getTime() * 1000L);
+        BigInteger realAmount = ConsensusAwardUtil.getRealAmount(chain.getChainId(), deposit.getDeposit(), stackingAsset, tx.getTime() * 1000L);
         boolean pass = tx.getBlockHeight() > 0 && tx.getBlockHeight() < chain.getConfig().getDepositVerifyHeight();
 
         BigInteger minStakingAmount = chain.getConfig().getEntrustMin();

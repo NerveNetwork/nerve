@@ -179,10 +179,10 @@ public class TextMessageHandler implements Runnable, Comparable<TextMessageHandl
         } catch (Exception e) {
             Log.error(e);
         } finally {
-            if (ModuleInfo.name == "consensus" && request != null && request.getRequestMethods() != null) {
-                long use = System.currentTimeMillis() - startTime;
-                Log.info("text: {}, use mills:{}", request.getRequestMethods().keySet(), use);
-            }
+//            if (ModuleInfo.name == "consensus" && request != null && request.getRequestMethods() != null) {
+//                long use = System.currentTimeMillis() - startTime;
+//                Log.info("text: {}, use mills:{}", request.getRequestMethods().keySet(), use);
+//            }
         }
     }
 

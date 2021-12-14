@@ -24,7 +24,6 @@ import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
-import org.web3j.protocol.core.Request;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.ClientConnectionException;
 import org.web3j.protocol.http.HttpService;
@@ -341,7 +340,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             getLog().error("账户私钥不存在!");
         }
         try {
-            result = sendMainAsset(fromAddress, secretKey, toAddress, amount, HtgConstant.GAS_LIMIT_OF_MAIN_ASSET, htgContext.getEthGasPrice());
+            result = sendMainAsset(fromAddress, secretKey, toAddress, amount, htgContext.GAS_LIMIT_OF_MAIN_ASSET(), htgContext.getEthGasPrice());
         } catch (Exception e) {
             getLog().error("send fail", e);
         }
@@ -519,7 +518,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,
                 htgContext.getEthGasPrice(),
-                HtgConstant.GAS_LIMIT_OF_ERC20,
+                htgContext.GAS_LIMIT_OF_ERC20(),
                 contractAddress, encodedFunction
         );
         //签名Transaction，这里要对交易做签名
@@ -941,6 +940,17 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             }
         }
 
+    }
+
+    public EthSendTransaction ethSendRawTransaction(String hexValue) throws Exception {
+        EthSendTransaction ethSendTransaction = this.timeOutWrapperFunction("getNonce", hexValue, args -> {
+            EthSendTransaction send = web3j.ethSendRawTransaction(args).sendAsync().get();
+            if (send == null) {
+                throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, String.format("%s request error", symbol()));
+            }
+            return send;
+        });
+        return ethSendTransaction;
     }
 
 }

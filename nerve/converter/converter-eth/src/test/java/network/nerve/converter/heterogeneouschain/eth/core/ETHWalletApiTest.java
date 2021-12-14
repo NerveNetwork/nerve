@@ -77,10 +77,12 @@ public class ETHWalletApiTest extends Base {
     }
 
     @Test
-    public void txDecoder() throws SignatureException {
-        String txHex = "0xf8aa7f84ae57f54082fc1b94a71edc38d189767582c38a3145b5873052c3e47a80b844a9059cbb00000000000000000000000021decdab7af693437e77936e081c2f4d4391094a0000000000000000000000000000000000000000000000004563918244f40000820124a0e710734bf6444159f3ba41c923553abc07c9d82fecbe80dd7fdaec12b11a50bea0656b35509a6f75d5bc85c734a3d755fd36cd682c1bc0aef4cac652d7dcc0b516";
+    public void txDecoder() throws Exception {
+        String txHex = "0xf86d448502cb4178008255f0943083f7ed267dca41338de3401c4e054db2a1cd2f880de0b6b3a76400008081e5a0776e84c8663674b643643e2e0efe2291c73bb04fff093102cedb2d499dd98519a01f4340e6f65a99c066fe438ea6cb362411c27d2cb90d963c86f5754e78e75839";
         Transaction tx = HtgUtil.genEthTransaction("", txHex);
-        converPublicKey(tx);
+        tx.setTransactionIndex("0x0");
+        System.out.println(JSONUtils.obj2PrettyJson(tx));
+        //converPublicKey(tx);
         //RawTransaction decode = TransactionDecoder.decode(txHex);
         //System.out.println();
     }
@@ -1384,9 +1386,9 @@ public class ETHWalletApiTest extends Base {
         System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // eth的usdt价格
-        ethUsdt = new BigDecimal("3210.29");
+        ethUsdt = new BigDecimal("4401.29");
         // gas Gwei
-        price = 83L;
+        price = 90L;
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
         gasCost(1200000);
         gasCost(800000);
@@ -1395,6 +1397,7 @@ public class ETHWalletApiTest extends Base {
         gasCost(380000);
         gasCost(350000);
         gasCost(300000);
+        gasCost(274881);
         gasCost(260000);
         gasCost(250000);
         gasCost(220000);

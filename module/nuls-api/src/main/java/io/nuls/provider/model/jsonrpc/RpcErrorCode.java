@@ -45,8 +45,10 @@ public enum RpcErrorCode {
     //脚本执行错误
     TX_SHELL_ERROR("755", "Shell execute error!"),
 
+    ExceedingFrequencyLimit("996", "The access frequency exceeds the limit!"),
+
     //系统未知错误
-    SYS_UNKNOWN_EXCEPTION("10002", "System unknown error!");
+    SYS_UNKNOWN_EXCEPTION("10002","System unknown error!");
 
     private String code;
 
@@ -71,4 +73,5 @@ public enum RpcErrorCode {
 
     public void setMessage(String message) {
         this.message = message;
-    }}
+    }
+}

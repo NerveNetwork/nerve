@@ -290,7 +290,7 @@ public class EthConfirmTxScheduled implements Runnable {
                     po.isIfContractAsset(),
                     po.getContractAddress(),
                     po.getAssetId(),
-                    po.getNerveAddress());
+                    po.getNerveAddress(), null);
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
             // 当未确认交易数据产生变化时，更新DB数据

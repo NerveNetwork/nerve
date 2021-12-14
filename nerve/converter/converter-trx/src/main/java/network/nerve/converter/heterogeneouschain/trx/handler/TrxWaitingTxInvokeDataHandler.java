@@ -121,7 +121,7 @@ public class TrxWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 long waitingEndTime = po.getWaitingEndTime();
                 long maxWaitingEndTime = po.getMaxWaitingEndTime();
                 int currentNodeSendOrder = po.getCurrentNodeSendOrder();
-                logger().info("hash: {}, now: {}, waiting: {}, maxWaiting: {}, order: {}, isSend: {}", nerveTxHash, now, waitingEndTime, maxWaitingEndTime, currentNodeSendOrder, po.isInvokeResend());
+                logger().info("[TRX] hash: {}, now: {}, waiting: {}, maxWaiting: {}, order: {}, isSend: {}", nerveTxHash, now, waitingEndTime, maxWaitingEndTime, currentNodeSendOrder, po.isInvokeResend());
                 // 检查若所有管理员均发送交易失败，则返回从第一顺位继续发交易
                 if (now >= maxWaitingEndTime) {
                     logger().info("最大等待时间已结束，从第一顺位开始重发交易, nerveHash: {}", nerveTxHash);

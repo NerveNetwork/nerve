@@ -47,6 +47,8 @@ public class AccountAssetDto {
     @ApiModelProperty(description = "是否已确认")
     private boolean isConfirmed;
 
+    private String nonce;
+
     public Integer getAssetChainId() {
         return assetChainId;
     }

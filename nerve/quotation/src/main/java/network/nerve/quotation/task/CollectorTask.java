@@ -43,6 +43,7 @@ import network.nerve.quotation.rpc.call.QuotationCall;
 import network.nerve.quotation.service.QuotationService;
 import network.nerve.quotation.storage.QuotationIntradayStorageService;
 import network.nerve.quotation.util.CommonUtil;
+import network.nerve.quotation.util.NerveSwapUtil;
 import network.nerve.quotation.util.TimeUtil;
 
 import java.math.BigDecimal;
@@ -121,9 +122,9 @@ public class CollectorTask implements Runnable {
                         continue;
                     }
                 }/* else if (ANCHOR_TOKEN_OKT.equals(anchorToken)) {
-                    *//**
-                     * 2021-03-29 新增OKT报价，使用OKB报价结果。
-                     *//*
+                 *//**
+                 * 2021-03-29 新增OKT报价，使用OKB报价结果。
+                 *//*
                     if (blockHeight < oktKeyHeight) {
                         continue;
                     }
@@ -136,7 +137,8 @@ public class CollectorTask implements Runnable {
                         Collector collector = getCollector(qa.getCollector());
                         price = collector.enquiry(chain, ANCHOR_TOKEN_OKB);
                     }
-                }*/ else {
+                }*/
+                else {
                     if (ANCHOR_TOKEN_DAI.equals(anchorToken)
                             || ANCHOR_TOKEN_USDC.equals(anchorToken)
                             || ANCHOR_TOKEN_PAX.equals(anchorToken)) {
@@ -162,8 +164,8 @@ public class CollectorTask implements Runnable {
                         }
                     }
 
-                    if(ANCHOR_TOKEN_ONE.equals(anchorToken)
-                        || ANCHOR_TOKEN_MATIC.equals(anchorToken)
+                    if (ANCHOR_TOKEN_ONE.equals(anchorToken)
+                            || ANCHOR_TOKEN_MATIC.equals(anchorToken)
                             || ANCHOR_TOKEN_KCS.equals(anchorToken)) {
                         if (blockHeight < oneMaticKcsHeight) {
                             continue;
@@ -172,6 +174,14 @@ public class CollectorTask implements Runnable {
 
                     if (ANCHOR_TOKEN_TRX.equals(anchorToken)) {
                         if (blockHeight < trxKeyHeight) {
+                            continue;
+                        }
+                    }
+
+                    if (ANCHOR_TOKEN_CRO.equals(anchorToken)
+                            || ANCHOR_TOKEN_AVAX.equals(anchorToken)
+                            || ANCHOR_TOKEN_FTM.equals(anchorToken)) {
+                        if (blockHeight < protocol16Height) {
                             continue;
                         }
                     }
@@ -213,7 +223,7 @@ public class CollectorTask implements Runnable {
                 }
                 String baseAnchorToken = quContractCfg.getBaseAnchorToken();
                 Double unitPrice = pricesMap.get(baseAnchorToken);
-                if (null == unitPrice) {
+                if (null == unitPrice && !quContractCfg.getChain().equals("NERVE")) {
                     chain.getLogger().error("[CollectorTask] {}不能进行合约SWAP报价, [{}]没有获取到第三方报价", quContractCfg.getKey(), baseAnchorToken);
                     continue;
                 }
@@ -233,6 +243,9 @@ public class CollectorTask implements Runnable {
                         resultPrice = hecoContractQuote(quContractCfg.getSwapTokenContractAddress(),
                                 quContractCfg.getBaseTokenContractAddress(),
                                 unitPrice.toString());
+                        break;
+                    case "NERVE":
+                        resultPrice = nerveSwapQuote(quContractCfg);
                         break;
                     default:
                 }
@@ -407,6 +420,15 @@ public class CollectorTask implements Runnable {
             BigDecimal cakeLpPrice = husdPrice.divide(cakeLpCount, 6, RoundingMode.DOWN);
             chain.getLogger().debug("HSwapLpPrice:" + cakeLpPrice);
             return cakeLpPrice.doubleValue();
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return null;
+        }
+    }
+
+    public Double nerveSwapQuote(QuotationContractCfg quContractCfg) {
+        try {
+            return NerveSwapUtil.getPrice(chain, quContractCfg);
         } catch (Exception e) {
             chain.getLogger().error(e);
             return null;

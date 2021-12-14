@@ -66,11 +66,11 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
     public void switchDocking(IHeterogeneousChainDocking newDocking) {
         nerveChain.getLogger().info("合约升级，调用流程切换");
         this.heterogeneousDockingManager.registerHeterogeneousDocking(hChainId, newDocking);
-        virtualBankUpgradeProcess(newDocking.version());
+        virtualBankUpgradeProcess();
     }
 
-    private void virtualBankUpgradeProcess(int version){
-        nerveChain.setCurrentHeterogeneousVersion(version);
+    private void virtualBankUpgradeProcess(){
+        nerveChain.setCurrentHeterogeneousVersion(2);
         ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT = INIT_VIRTUAL_BANK_PUBKEY_LIST.size();
         ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED =
                 ConverterContext.VIRTUAL_BANK_AGENT_TOTAL - ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT;
@@ -104,7 +104,7 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
         VirtualBankUtil.virtualBankRemove(nerveChain, nerveChain.getMapVirtualBank(), listOutDirector, virtualBankStorageService);
         try {
             nerveChain.getLogger().info("异构链组件版本切换完成, 当前异构链版本:{}, 当前虚拟银行成员:{}",
-                    version, JSONUtils.obj2json(nerveChain.getMapVirtualBank()));
+                    2, JSONUtils.obj2json(nerveChain.getMapVirtualBank()));
         } catch (JsonProcessingException e) {
             nerveChain.getLogger().warn("MapVirtualBank log print error ");
         }

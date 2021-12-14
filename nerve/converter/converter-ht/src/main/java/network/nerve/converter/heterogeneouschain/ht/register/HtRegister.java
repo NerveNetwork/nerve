@@ -36,27 +36,23 @@ import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogen
 import network.nerve.converter.heterogeneouschain.ht.callback.HtCallBackManager;
 import network.nerve.converter.heterogeneouschain.ht.constant.HtDBConstant;
 import network.nerve.converter.heterogeneouschain.ht.context.HtContext;
-import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
-import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
-import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
-import network.nerve.converter.heterogeneouschain.lib.storage.*;
-import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddressHistoryStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxInvokeInfoStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -76,16 +72,16 @@ public class HtRegister implements IHeterogeneousChainRegister {
     @Autowired
     private HtCallBackManager htCallBackManager;
 
-    private HtContext htContext;
+    private HtContext htContext = new HtContext();
     private HtgListener htgListener;
     private HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
     private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
     private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
 
     private ScheduledThreadPoolExecutor blockSyncExecutor;
-    private ScheduledThreadPoolExecutor confirmTxExecutor;
-    private ScheduledThreadPoolExecutor waitingTxExecutor;
-    private ScheduledThreadPoolExecutor rpcAvailableExecutor;
+    //private ScheduledThreadPoolExecutor confirmTxExecutor;
+    //private ScheduledThreadPoolExecutor waitingTxExecutor;
+    //private ScheduledThreadPoolExecutor rpcAvailableExecutor;
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
@@ -97,17 +93,17 @@ public class HtRegister implements IHeterogeneousChainRegister {
 
     @Override
     public int getChainId() {
-        return HtContext.HTG_CHAIN_ID;
+        return htContext.HTG_CHAIN_ID;
     }
 
     @Override
     public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // 存放日志实例
-            HtContext.setLogger(logger);
+            htContext.setLogger(logger);
             isInitial = true;
             // 存放配置实例
-            HtContext.setConfig(config);
+            htContext.setConfig(config);
             // 初始化实例
             initBean();
             // 初始化默认API
@@ -115,7 +111,7 @@ public class HtRegister implements IHeterogeneousChainRegister {
             // 解析HT API URL
             initEthWalletRPC();
             // 存放nerveChainId
-            HtContext.NERVE_CHAINID = converterConfig.getChainId();
+            htContext.NERVE_CHAINID = converterConfig.getChainId();
             RocksDBService.createTable(HtDBConstant.DB_HT);
             // 初始化待确认任务队列
             initUnconfirmedTxQueue();
@@ -125,65 +121,25 @@ public class HtRegister implements IHeterogeneousChainRegister {
     }
 
     private void initBean() {
-        try {
-            beanMap.add(HtgDocking.class, (HtContext.DOCKING = new HtgDocking()));
-            beanMap.add(HtgContext.class, (htContext = new HtContext()));
-            beanMap.add(HtgListener.class, (htgListener = new HtgListener()));
-
-            beanMap.add(ConverterConfig.class, converterConfig);
-            beanMap.add(HtgCallBackManager.class, htCallBackManager);
-
-            beanMap.add(HtgWalletApi.class);
-            beanMap.add(HtgBlockHandler.class);
-            beanMap.add(HtgConfirmTxHandler.class);
-            beanMap.add(HtgWaitingTxInvokeDataHandler.class);
-            beanMap.add(HtgRpcAvailableHandler.class);
-            beanMap.add(HtgAccountHelper.class);
-            beanMap.add(HtgAnalysisTxHelper.class);
-            beanMap.add(HtgBlockAnalysisHelper.class);
-            beanMap.add(HtgCommonHelper.class);
-            beanMap.add(HtgERC20Helper.class);
-            beanMap.add(HtgInvokeTxHelper.class);
-            beanMap.add(HtgLocalBlockHelper.class);
-            beanMap.add(HtgParseTxHelper.class);
-            beanMap.add(HtgPendingTxHelper.class);
-            beanMap.add(HtgResendHelper.class);
-            beanMap.add(HtgStorageHelper.class);
-            beanMap.add(HtgUpgradeContractSwitchHelper.class);
-
-            beanMap.add(HtgAccountStorageService.class, new HtgAccountStorageServiceImpl(htContext, HtDBConstant.DB_HT));
-            beanMap.add(HtgBlockHeaderStorageService.class, new HtgBlockHeaderStorageServiceImpl(htContext, HtDBConstant.DB_HT));
-            beanMap.add(HtgERC20StorageService.class, new HtgERC20StorageServiceImpl(htContext, HtDBConstant.DB_HT));
-            beanMap.add(HtgMultiSignAddressHistoryStorageService.class, (htgMultiSignAddressHistoryStorageService = new HtgMultiSignAddressHistoryStorageServiceImpl(htContext, HtDBConstant.DB_HT)));
-            beanMap.add(HtgTxInvokeInfoStorageService.class, (htgTxInvokeInfoStorageService = new HtgTxInvokeInfoStorageServiceImpl(htContext, HtDBConstant.DB_HT)));
-            beanMap.add(HtgTxRelationStorageService.class, new HtgTxRelationStorageServiceImpl(htContext, HtDBConstant.DB_HT));
-            beanMap.add(HtgTxStorageService.class, new HtgTxStorageServiceImpl(htContext, HtDBConstant.DB_HT));
-            beanMap.add(HtgUnconfirmedTxStorageService.class, (htgUnconfirmedTxStorageService = new HtgUnconfirmedTxStorageServiceImpl(htContext, HtDBConstant.DB_HT)));
-
-            Collection<Object> values = beanMap.values();
-            for (Object value : values) {
-                if (value instanceof BeanInitial) {
-                    BeanInitial beanInitial = (BeanInitial) value;
-                    beanInitial.init(beanMap);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        beanMap = HtgUtil.initBeanV2(htContext, converterConfig, htCallBackManager, HtDBConstant.DB_HT);
+        htgListener = (HtgListener) beanMap.get(HtgListener.class);
+        htgMultiSignAddressHistoryStorageService = (HtgMultiSignAddressHistoryStorageService) beanMap.get(HtgMultiSignAddressHistoryStorageService.class);
+        htgTxInvokeInfoStorageService = (HtgTxInvokeInfoStorageService) beanMap.get(HtgTxInvokeInfoStorageService.class);
+        htgUnconfirmedTxStorageService = (HtgUnconfirmedTxStorageService) beanMap.get(HtgUnconfirmedTxStorageService.class);
     }
 
     @Override
     public HeterogeneousChainInfo getChainInfo() {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
-        info.setChainId(HtContext.config.getChainId());
-        info.setChainName(HtContext.config.getSymbol());
-        info.setMultySignAddress(HtContext.config.getMultySignAddress().toLowerCase());
+        info.setChainId(htContext.config.getChainId());
+        info.setChainName(htContext.config.getSymbol());
+        info.setMultySignAddress(htContext.config.getMultySignAddress().toLowerCase());
         return info;
     }
 
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
-        return HtContext.DOCKING;
+        return htContext.DOCKING;
     }
 
     @Override
@@ -197,9 +153,9 @@ public class HtRegister implements IHeterogeneousChainRegister {
             htCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
             htCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
             // 存放CORE查询API实例
-            HtContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
+            htContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
             // 更新多签地址
-            HtContext.MULTY_SIGN_ADDRESS = multiSigAddress;
+            htContext.MULTY_SIGN_ADDRESS = multiSigAddress;
             // 保存当前多签地址到多签地址历史列表中
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
             // 初始化交易等待任务队列
@@ -209,45 +165,27 @@ public class HtRegister implements IHeterogeneousChainRegister {
             // 设置新流程切换标志
             this.newProcessActivated = true;
         }
-        HtContext.logger.info("{} 注册完成.", HtContext.config.getSymbol());
-    }
-
-    /**
-     * 停止当前区块解析任务与待确认交易任务
-     */
-    public void shutDownScheduled() {
-        if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {
-            blockSyncExecutor.shutdown();
-        }
-        if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
-            confirmTxExecutor.shutdown();
-        }
-        if (waitingTxExecutor != null && !waitingTxExecutor.isShutdown()) {
-            waitingTxExecutor.shutdown();
-        }
-        if (rpcAvailableExecutor != null && !rpcAvailableExecutor.isShutdown()) {
-            rpcAvailableExecutor.shutdown();
-        }
+        htContext.logger.info("{} 注册完成.", htContext.config.getSymbol());
     }
 
     private void initDefualtAPI() throws Exception {
         HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
-        htgWalletApi.init(ethWalletRpcProcessing(HtContext.config.getCommonRpcAddress()));
+        htgWalletApi.init(ethWalletRpcProcessing(htContext.config.getCommonRpcAddress()));
     }
 
     private void initEthWalletRPC() {
-        String orderRpcAddresses = HtContext.config.getOrderRpcAddresses();
+        String orderRpcAddresses = htContext.config.getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                HtContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                htContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
-        String standbyRpcAddresses = HtContext.config.getStandbyRpcAddresses();
+        String standbyRpcAddresses = htContext.config.getStandbyRpcAddresses();
         if(StringUtils.isNotBlank(standbyRpcAddresses)) {
             String[] rpcArray = standbyRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                HtContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                htContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
     }
@@ -261,12 +199,12 @@ public class HtRegister implements IHeterogeneousChainRegister {
     }
 
     private void initFilterAddresses() {
-        String filterAddresses = HtContext.config.getFilterAddresses();
+        String filterAddresses = htContext.config.getFilterAddresses();
         if(StringUtils.isNotBlank(filterAddresses)) {
             String[] filterArray = filterAddresses.split(",");
             for(String address : filterArray) {
                 address = address.trim().toLowerCase();
-                HtContext.FILTER_ACCOUNT_SET.add(address);
+                htContext.FILTER_ACCOUNT_SET.add(address);
             }
         }
     }
@@ -277,27 +215,31 @@ public class HtRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    HtContext.UNCONFIRMED_TX_QUEUE.offer(po);
+                    htContext.UNCONFIRMED_TX_QUEUE.offer(po);
                     // 把待确认的交易加入到监听交易hash列表中
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
         }
-        HtContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
+        htContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
     }
 
     private void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-block-sync"));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, 5, TimeUnit.SECONDS);
 
-        confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-confirm-tx"));
-        confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        htContext.getConverterCoreApi().addHtgConfirmTxHandler((Runnable) beanMap.get(HtgConfirmTxHandler.class));
+        htContext.getConverterCoreApi().addHtgWaitingTxInvokeDataHandler((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class));
+        htContext.getConverterCoreApi().addHtgRpcAvailableHandler((Runnable) beanMap.get(HtgRpcAvailableHandler.class));
 
-        waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-waiting-tx"));
-        waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
-
-        rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-rpcavailable-tx"));
-        rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
+        //confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-confirm-tx"));
+        //confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-waiting-tx"));
+        //waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("ht-rpcavailable-tx"));
+        //rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {
@@ -306,11 +248,11 @@ public class HtRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    HtContext.WAITING_TX_QUEUE.offer(po);
+                    htContext.WAITING_TX_QUEUE.offer(po);
                 }
             });
         }
-        HtContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
+        htContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
     }
 
 }

@@ -58,7 +58,6 @@ import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.HeterogeneousUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
-import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -146,6 +145,14 @@ public class ExeProposalProcessTask implements Runnable {
                         break;
                     case TRANSFER:
                         // 转到其他账户
+                        NulsHash rechargeHash;
+                        if(null != (rechargeHash = rechargeStorageService.find(chain, hash.toHex()))) {
+                            chain.getLogger().info("[提案-{}] 已执行, proposalHash:{}, rechargeHash:{}",
+                                    ProposalTypeEnum.TRANSFER,
+                                    hash.toHex(),
+                                    rechargeHash.toHex());
+                            break;
+                        }
                         transfer(pendingPO, proposalPO);
                         asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash());
                         break;
@@ -410,7 +417,6 @@ public class ExeProposalProcessTask implements Runnable {
         String txHash = hash.toHex();
         // 新的合约多签地址
         int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
-        String newMultySignAddress = Numeric.toHexString(proposalPO.getAddress());
         if (pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
             return true;
         }
@@ -429,6 +435,8 @@ public class ExeProposalProcessTask implements Runnable {
         }
         if (sign) {
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            // 兼容非以太系地址 update by pierre at 2021/11/16
+            String newMultySignAddress = docking.getAddressString(proposalPO.getAddress());
             // 如果当前节点还没签名则触发当前节点签名,存储 并广播
             String signStrData = docking.signUpgradeII(txHash, newMultySignAddress);
             String currentHaddress = docking.getCurrentSignAddress();
@@ -707,6 +715,12 @@ public class ExeProposalProcessTask implements Runnable {
         rechargeTxDTO.setAmount(info.getValue());
         rechargeTxDTO.setToAddress(AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
         rechargeTxDTO.setTxtime(pendingPO.getTime());
+        rechargeTxDTO.setExtend(info.getDepositIIExtend());
+        if (info.isDepositIIMainAndToken()) {
+            // 支持同时转入token和main
+            rechargeTxDTO.setDepositII(true);
+            rechargeTxDTO.setMainAmount(info.getDepositIIMainAssetValue());
+        }
         Transaction tx = assembleTxService.createRechargeTx(chain, rechargeTxDTO);
         proposalPO.setNerveHash(tx.getHash().getBytes());
         // 存储提案执行的链内hash

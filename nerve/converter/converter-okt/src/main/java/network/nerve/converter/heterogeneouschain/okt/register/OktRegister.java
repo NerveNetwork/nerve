@@ -33,22 +33,19 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
-import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
-import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
-import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
-import network.nerve.converter.heterogeneouschain.lib.storage.*;
-import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddressHistoryStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxInvokeInfoStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.okt.callback.OktCallBackManager;
 import network.nerve.converter.heterogeneouschain.okt.constant.OktDBConstant;
 import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
@@ -56,7 +53,6 @@ import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -77,16 +73,16 @@ public class OktRegister implements IHeterogeneousChainRegister {
     @Autowired
     private OktCallBackManager oktCallBackManager;
 
-    private OktContext oktContext;
+    private OktContext oktContext = new OktContext();
     private HtgListener htgListener;
     private HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
     private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
     private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
 
     private ScheduledThreadPoolExecutor blockSyncExecutor;
-    private ScheduledThreadPoolExecutor confirmTxExecutor;
-    private ScheduledThreadPoolExecutor waitingTxExecutor;
-    private ScheduledThreadPoolExecutor rpcAvailableExecutor;
+    //private ScheduledThreadPoolExecutor confirmTxExecutor;
+    //private ScheduledThreadPoolExecutor waitingTxExecutor;
+    //private ScheduledThreadPoolExecutor rpcAvailableExecutor;
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
@@ -98,17 +94,17 @@ public class OktRegister implements IHeterogeneousChainRegister {
 
     @Override
     public int getChainId() {
-        return OktContext.HTG_CHAIN_ID;
+        return oktContext.HTG_CHAIN_ID;
     }
 
     @Override
     public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // 存放日志实例
-            OktContext.setLogger(logger);
+            oktContext.setLogger(logger);
             isInitial = true;
             // 存放配置实例
-            OktContext.setConfig(config);
+            oktContext.setConfig(config);
             // 初始化实例
             initBean();
             // 初始化默认API
@@ -116,7 +112,7 @@ public class OktRegister implements IHeterogeneousChainRegister {
             // 解析HT API URL
             initEthWalletRPC();
             // 存放nerveChainId
-            OktContext.NERVE_CHAINID = converterConfig.getChainId();
+            oktContext.NERVE_CHAINID = converterConfig.getChainId();
             RocksDBService.createTable(OktDBConstant.DB_OKT);
             // 初始化待确认任务队列
             initUnconfirmedTxQueue();
@@ -126,65 +122,25 @@ public class OktRegister implements IHeterogeneousChainRegister {
     }
 
     private void initBean() {
-        try {
-            beanMap.add(HtgDocking.class, (OktContext.DOCKING = new HtgDocking()));
-            beanMap.add(HtgContext.class, (oktContext = new OktContext()));
-            beanMap.add(HtgListener.class, (htgListener = new HtgListener()));
-
-            beanMap.add(ConverterConfig.class, converterConfig);
-            beanMap.add(HtgCallBackManager.class, oktCallBackManager);
-
-            beanMap.add(HtgWalletApi.class);
-            beanMap.add(HtgBlockHandler.class);
-            beanMap.add(HtgConfirmTxHandler.class);
-            beanMap.add(HtgWaitingTxInvokeDataHandler.class);
-            beanMap.add(HtgRpcAvailableHandler.class);
-            beanMap.add(HtgAccountHelper.class);
-            beanMap.add(HtgAnalysisTxHelper.class);
-            beanMap.add(HtgBlockAnalysisHelper.class);
-            beanMap.add(HtgCommonHelper.class);
-            beanMap.add(HtgERC20Helper.class);
-            beanMap.add(HtgInvokeTxHelper.class);
-            beanMap.add(HtgLocalBlockHelper.class);
-            beanMap.add(HtgParseTxHelper.class);
-            beanMap.add(HtgPendingTxHelper.class);
-            beanMap.add(HtgResendHelper.class);
-            beanMap.add(HtgStorageHelper.class);
-            beanMap.add(HtgUpgradeContractSwitchHelper.class);
-
-            beanMap.add(HtgAccountStorageService.class, new HtgAccountStorageServiceImpl(oktContext, OktDBConstant.DB_OKT));
-            beanMap.add(HtgBlockHeaderStorageService.class, new HtgBlockHeaderStorageServiceImpl(oktContext, OktDBConstant.DB_OKT));
-            beanMap.add(HtgERC20StorageService.class, new HtgERC20StorageServiceImpl(oktContext, OktDBConstant.DB_OKT));
-            beanMap.add(HtgMultiSignAddressHistoryStorageService.class, (htgMultiSignAddressHistoryStorageService = new HtgMultiSignAddressHistoryStorageServiceImpl(oktContext, OktDBConstant.DB_OKT)));
-            beanMap.add(HtgTxInvokeInfoStorageService.class, (htgTxInvokeInfoStorageService = new HtgTxInvokeInfoStorageServiceImpl(oktContext, OktDBConstant.DB_OKT)));
-            beanMap.add(HtgTxRelationStorageService.class, new HtgTxRelationStorageServiceImpl(oktContext, OktDBConstant.DB_OKT));
-            beanMap.add(HtgTxStorageService.class, new HtgTxStorageServiceImpl(oktContext, OktDBConstant.DB_OKT));
-            beanMap.add(HtgUnconfirmedTxStorageService.class, (htgUnconfirmedTxStorageService = new HtgUnconfirmedTxStorageServiceImpl(oktContext, OktDBConstant.DB_OKT)));
-
-            Collection<Object> values = beanMap.values();
-            for (Object value : values) {
-                if (value instanceof BeanInitial) {
-                    BeanInitial beanInitial = (BeanInitial) value;
-                    beanInitial.init(beanMap);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        beanMap = HtgUtil.initBeanV2(oktContext, converterConfig, oktCallBackManager, OktDBConstant.DB_OKT);
+        htgListener = (HtgListener) beanMap.get(HtgListener.class);
+        htgMultiSignAddressHistoryStorageService = (HtgMultiSignAddressHistoryStorageService) beanMap.get(HtgMultiSignAddressHistoryStorageService.class);
+        htgTxInvokeInfoStorageService = (HtgTxInvokeInfoStorageService) beanMap.get(HtgTxInvokeInfoStorageService.class);
+        htgUnconfirmedTxStorageService = (HtgUnconfirmedTxStorageService) beanMap.get(HtgUnconfirmedTxStorageService.class);
     }
 
     @Override
     public HeterogeneousChainInfo getChainInfo() {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
-        info.setChainId(OktContext.config.getChainId());
-        info.setChainName(OktContext.config.getSymbol());
-        info.setMultySignAddress(OktContext.config.getMultySignAddress().toLowerCase());
+        info.setChainId(oktContext.config.getChainId());
+        info.setChainName(oktContext.config.getSymbol());
+        info.setMultySignAddress(oktContext.config.getMultySignAddress().toLowerCase());
         return info;
     }
 
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
-        return OktContext.DOCKING;
+        return oktContext.DOCKING;
     }
 
     @Override
@@ -198,9 +154,9 @@ public class OktRegister implements IHeterogeneousChainRegister {
             oktCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
             oktCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
             // 存放CORE查询API实例
-            OktContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
+            oktContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
             // 更新多签地址
-            OktContext.MULTY_SIGN_ADDRESS = multiSigAddress;
+            oktContext.MULTY_SIGN_ADDRESS = multiSigAddress;
             // 保存当前多签地址到多签地址历史列表中
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
             // 初始化交易等待任务队列
@@ -210,45 +166,27 @@ public class OktRegister implements IHeterogeneousChainRegister {
             // 设置新流程切换标志
             this.newProcessActivated = true;
         }
-        OktContext.logger.info("{} 注册完成.", OktContext.config.getSymbol());
-    }
-
-    /**
-     * 停止当前区块解析任务与待确认交易任务
-     */
-    public void shutDownScheduled() {
-        if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {
-            blockSyncExecutor.shutdown();
-        }
-        if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
-            confirmTxExecutor.shutdown();
-        }
-        if (waitingTxExecutor != null && !waitingTxExecutor.isShutdown()) {
-            waitingTxExecutor.shutdown();
-        }
-        if (rpcAvailableExecutor != null && !rpcAvailableExecutor.isShutdown()) {
-            rpcAvailableExecutor.shutdown();
-        }
+        oktContext.logger.info("{} 注册完成.", oktContext.config.getSymbol());
     }
 
     private void initDefualtAPI() throws Exception {
         HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
-        htgWalletApi.init(ethWalletRpcProcessing(OktContext.config.getCommonRpcAddress()));
+        htgWalletApi.init(ethWalletRpcProcessing(oktContext.config.getCommonRpcAddress()));
     }
 
     private void initEthWalletRPC() {
-        String orderRpcAddresses = OktContext.config.getOrderRpcAddresses();
+        String orderRpcAddresses = oktContext.config.getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                OktContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                oktContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
-        String standbyRpcAddresses = OktContext.config.getStandbyRpcAddresses();
+        String standbyRpcAddresses = oktContext.config.getStandbyRpcAddresses();
         if(StringUtils.isNotBlank(standbyRpcAddresses)) {
             String[] rpcArray = standbyRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                OktContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                oktContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
     }
@@ -262,12 +200,12 @@ public class OktRegister implements IHeterogeneousChainRegister {
     }
 
     private void initFilterAddresses() {
-        String filterAddresses = OktContext.config.getFilterAddresses();
+        String filterAddresses = oktContext.config.getFilterAddresses();
         if(StringUtils.isNotBlank(filterAddresses)) {
             String[] filterArray = filterAddresses.split(",");
             for(String address : filterArray) {
                 address = address.trim().toLowerCase();
-                OktContext.FILTER_ACCOUNT_SET.add(address);
+                oktContext.FILTER_ACCOUNT_SET.add(address);
             }
         }
     }
@@ -278,27 +216,31 @@ public class OktRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    OktContext.UNCONFIRMED_TX_QUEUE.offer(po);
+                    oktContext.UNCONFIRMED_TX_QUEUE.offer(po);
                     // 把待确认的交易加入到监听交易hash列表中
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
         }
-        OktContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
+        oktContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
     }
 
     private void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-block-sync"));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, 5, TimeUnit.SECONDS);
 
-        confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-confirm-tx"));
-        confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        oktContext.getConverterCoreApi().addHtgConfirmTxHandler((Runnable) beanMap.get(HtgConfirmTxHandler.class));
+        oktContext.getConverterCoreApi().addHtgWaitingTxInvokeDataHandler((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class));
+        oktContext.getConverterCoreApi().addHtgRpcAvailableHandler((Runnable) beanMap.get(HtgRpcAvailableHandler.class));
 
-        waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-waiting-tx"));
-        waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
-
-        rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-rpcavailable-tx"));
-        rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
+        //confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-confirm-tx"));
+        //confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-waiting-tx"));
+        //waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("okt-rpcavailable-tx"));
+        //rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {
@@ -307,11 +249,11 @@ public class OktRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    OktContext.WAITING_TX_QUEUE.offer(po);
+                    oktContext.WAITING_TX_QUEUE.offer(po);
                 }
             });
         }
-        OktContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
+        oktContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
     }
 
 }

@@ -43,6 +43,8 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
+import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.core.validator.*;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.ProposalTypeEnum;
@@ -90,6 +92,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Autowired
     private HeterogeneousChainManager heterogeneousChainManager;
+    @Autowired
+    private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private network.nerve.converter.core.business.HeterogeneousService HeterogeneousService;
     @Autowired
@@ -203,13 +207,13 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createRechargeTx(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException {
+        // 支持同时转入token和main
         Transaction tx = this.createRechargeTxWithoutSign(chain, rechargeTxDTO);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
 
         // 调验证器验证
         rechargeVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
-
 
         List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
         heterogeneousHashList.add(new HeterogeneousHash(rechargeTxDTO.getHeterogeneousChainId(), rechargeTxDTO.getOriginalTxHash()));
@@ -226,6 +230,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
             txData.setHeterogeneousChainId(rechargeTxDTO.getHeterogeneousChainId());
         }
+        if (rechargeTxDTO.getExtend() != null) {
+            txData.setExtend(rechargeTxDTO.getExtend());
+        }
+        List<CoinTo> tos = new ArrayList<>();
         byte[] toAddress = AddressTool.getAddress(rechargeTxDTO.getToAddress());
         NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(
                 rechargeTxDTO.getHeterogeneousChainId(),
@@ -235,12 +243,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 nerveAssetInfo.getAssetChainId(),
                 nerveAssetInfo.getAssetId(),
                 rechargeTxDTO.getAmount());
-        List<CoinTo> tos = new ArrayList<>();
         tos.add(coinTo);
+        // 同时充值token和main，增加main的支持
+        if (rechargeTxDTO.isDepositII()) {
+            NerveAssetInfo mainInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(rechargeTxDTO.getHeterogeneousChainId(), 1);
+            CoinTo mainTo = new CoinTo(
+                    toAddress,
+                    mainInfo.getAssetChainId(),
+                    mainInfo.getAssetId(),
+                    rechargeTxDTO.getMainAmount());
+            tos.add(mainTo);
+        }
+
         CoinData coinData = new CoinData();
         coinData.setTo(tos);
-        byte[] coinDataBytes = null;
-        byte[] txDataBytes = null;
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
         try {
             txDataBytes = txData.serialize();
             coinDataBytes = coinData.serialize();
@@ -259,7 +277,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction rechargeUnconfirmedTx(Chain chain, RechargeUnconfirmedTxData txData, long txTime) throws NulsException {
         Transaction tx = rechargeUnconfirmedTxWithoutSign(chain, txData, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调验证器验证
+        // 调用验证器验证
         rechargeUnconfirmedVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -448,10 +466,16 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         String businessAddress = proposalTxDTO.getBusinessAddress();
         if (StringUtils.isNotBlank(businessAddress)) {
-            if (Numeric.containsHexPrefix(businessAddress)) {
-                txData.setAddress(Numeric.hexStringToByteArray(businessAddress));
+            // 兼容非以太系地址 update by pierre at 2021/11/16
+            if (ProposalTypeEnum.getEnum(proposalTxDTO.getType()) == ProposalTypeEnum.UPGRADE) {
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(proposalTxDTO.getHeterogeneousChainId());
+                txData.setAddress(docking.getAddressBytes(businessAddress));
             } else {
-                txData.setAddress(AddressTool.getAddress(proposalTxDTO.getBusinessAddress()));
+                if (Numeric.containsHexPrefix(businessAddress)) {
+                    txData.setAddress(Numeric.hexStringToByteArray(businessAddress));
+                } else {
+                    txData.setAddress(AddressTool.getAddress(proposalTxDTO.getBusinessAddress()));
+                }
             }
         }
 
@@ -460,7 +484,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             txData.setHash(HexUtil.decode(proposalTxDTO.getHash()));
         }
 
-        byte[] txDataBytes = null;
+        byte[] txDataBytes;
         try {
             txDataBytes = txData.serialize();
         } catch (IOException e) {

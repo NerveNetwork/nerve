@@ -258,6 +258,14 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
+    public void updateMultySignAddressProtocol16(String multySignAddress, byte version) throws Exception {
+        updateMultySignAddress(multySignAddress);
+        htgContext.SET_VERSION(version);
+        htgMultiSignAddressHistoryStorageService.saveVersion(version);
+        logger().info("更新签名版本号: {}", version);
+    }
+
+    @Override
     public void txConfirmedRollback(String txHash) throws Exception {
         HtgUnconfirmedTxPo txPo = htgUnconfirmedTxStorageService.findByTxHash(txHash);
         if (txPo != null) {
@@ -680,7 +688,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
         // 把地址转换成小写
         //toAddress = toAddress.toLowerCase();
-        String vHash = TrxUtil.encoderWithdraw(txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
         return TrxUtil.dataSign(vHash, priKey);
@@ -720,7 +728,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        String vHash = TrxUtil.encoderChange(nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
         logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
         return TrxUtil.dataSign(vHash, priKey);
     }
@@ -733,7 +741,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         // 把地址转换成小写
         //upgradeContract = upgradeContract.toLowerCase();
-        String vHash = TrxUtil.encoderUpgrade(nerveTxHash, upgradeContract, htgContext.VERSION());
+        String vHash = TrxUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
         logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
         return TrxUtil.dataSign(vHash, priKey);
     }
@@ -749,7 +757,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
         // 把地址转换成小写
         //toAddress = toAddress.toLowerCase();
-        String vHash = TrxUtil.encoderWithdraw(txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现vHash: {}", vHash);
         return TrxUtil.verifySign(signAddress, vHash, signed);
@@ -774,7 +782,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             //remove = remove.toLowerCase();
             removeAddresses[r] = remove;
         }
-        String vHash = TrxUtil.encoderChange(nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
         return TrxUtil.verifySign(signAddress, vHash, signed);
     }
 
@@ -782,7 +790,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     public Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
         // 把地址转换成小写
         //upgradeContract = upgradeContract.toLowerCase();
-        String vHash = TrxUtil.encoderUpgrade(txHash, upgradeContract, htgContext.VERSION());
+        String vHash = TrxUtil.encoderUpgrade(htgContext, txHash, upgradeContract, htgContext.VERSION());
         return TrxUtil.verifySign(signAddress, vHash, signed);
     }
 
@@ -809,6 +817,25 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public String cancelHtgTx(String nonce, String priceGWei) throws Exception {
         return EMPTY_STRING;
+    }
+
+    @Override
+    public String getAddressString(byte[] addressBytes) {
+        return TrxUtil.ethAddress2trx(addressBytes);
+    }
+
+    @Override
+    public byte[] getAddressBytes(String addressString) {
+        return TrxUtil.address2Bytes(addressString);
+    }
+
+    @Override
+    public void initialSignatureVersion() {
+        byte version = htgMultiSignAddressHistoryStorageService.getVersion();
+        if (version > 0) {
+            htgContext.SET_VERSION(version);
+        }
+        logger().info("[{}]网络当前签名版本号: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.handler.codec.base64.Base64Decoder;
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
@@ -16,23 +14,22 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.v2.SDKContext;
 import io.nuls.v2.model.dto.RestFulResult;
 import io.nuls.v2.model.dto.RpcResult;
-import io.nuls.v2.util.HttpClientUtil;
 import io.nuls.v2.util.JsonRpcUtil;
 import io.nuls.v2.util.RestFulUtil;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.heterogeneouschain.eth.model.EthERC20Po;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
-import network.nerve.converter.model.txdata.*;
+import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.model.txdata.RechargeUnconfirmedTxData;
+import network.nerve.converter.model.txdata.WithdrawalHeterogeneousSendTxData;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
 import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
 import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstant.ETH_ERC20_STANDARD_FILE;
 
@@ -45,6 +42,7 @@ public class LoadJsonFileTest {
         objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
+
 
     @Test
     public void erc20FileTest() throws IOException {
@@ -247,4 +245,5 @@ public class LoadJsonFileTest {
         System.out.println(divide.toByteArray().length);
 
     }
+
 }

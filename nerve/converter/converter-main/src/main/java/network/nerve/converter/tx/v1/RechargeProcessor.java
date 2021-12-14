@@ -24,7 +24,9 @@
 
 package network.nerve.converter.tx.v1;
 
-import io.nuls.base.data.*;
+import io.nuls.base.data.BlockHeader;
+import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
@@ -40,7 +42,6 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
@@ -159,10 +160,7 @@ public class RechargeProcessor implements TransactionProcessor {
             // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
-                CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
-                CoinTo coinTo = coinData.getTo().get(0);
-                HeterogeneousAssetInfo info = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(info.getChainId());
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                 NulsHash hash = tx.getHash();
                 boolean rs = rechargeStorageService.save(chain, txData.getOriginalTxHash(), hash);
                 if (!rs) {
@@ -233,10 +231,7 @@ public class RechargeProcessor implements TransactionProcessor {
             // 回滚异构链组件交易状态 // add by Mimi at 2020-03-13
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
-                CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
-                CoinTo coinTo = coinData.getTo().get(0);
-                HeterogeneousAssetInfo info = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(info.getChainId());
+                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                 ProposalPO proposalPO = null;
                 if(!Numeric.containsHexPrefix(txData.getOriginalTxHash())) {
                     // 表明不是异构链交易hash 可能为提案

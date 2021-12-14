@@ -87,21 +87,6 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     private long feeEffectiveHeightSecond;
 
     /**
-     * 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
-     */
-    private long feeAdditionalHeight;
-
-    /**
-     * 协议升级高度 修改提现和充值交易协议,增加异构链id
-     */
-    private long withdrawalRechargeChainHeight;
-
-    /**
-     * v1.8.0 协议升级高度 支持火币生态链跨链
-     */
-    private long protocol8HuobiCrossChainHeight;
-
-    /**
      * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
      */
     private String multySignAddressSet;
@@ -118,39 +103,6 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
      * 异构链版本2开始初始化虚拟银行公钥
      */
     private String initVirtualBankPubKeyList;
-
-    /**
-     * v1.11.0 协议升级高度 支持欧科生态链跨链
-     */
-    private long protocol11OktCrossChainHeight;
-
-    /**
-     * v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
-     */
-    private long protocol12Erc20OfTransferBurnHeight;
-
-    /**
-     * v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式
-     */
-    private long protocol13NewValidationOfErc20;
-
-    /**
-     * v1.14.0 协议升级高度
-     */
-    private long protocol14Height;
-
-    /**
-     * v1.15.0 协议升级高度 支持波场生态链跨链
-     */
-    private long protocol15TrxCrossChainHeight;
-
-    public long getProtocol14Height() {
-        return protocol14Height;
-    }
-
-    public void setProtocol14Height(long protocol14Height) {
-        this.protocol14Height = protocol14Height;
-    }
 
     public boolean isHeterogeneousMainNet() {
         return heterogeneousMainNet;
@@ -314,61 +266,5 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     public void setVirtualBankAgentCountWithoutSeed(int virtualBankAgentCountWithoutSeed) {
         this.virtualBankAgentCountWithoutSeed = virtualBankAgentCountWithoutSeed;
-    }
-
-    public long getFeeAdditionalHeight() {
-        return feeAdditionalHeight;
-    }
-
-    public void setFeeAdditionalHeight(long feeAdditionalHeight) {
-        this.feeAdditionalHeight = feeAdditionalHeight;
-    }
-
-    public long getWithdrawalRechargeChainHeight() {
-        return withdrawalRechargeChainHeight;
-    }
-
-    public void setWithdrawalRechargeChainHeight(long withdrawalRechargeChainHeight) {
-        this.withdrawalRechargeChainHeight = withdrawalRechargeChainHeight;
-    }
-
-    public long getProtocol8HuobiCrossChainHeight() {
-        return protocol8HuobiCrossChainHeight;
-    }
-
-    public void setProtocol8HuobiCrossChainHeight(long protocol8HuobiCrossChainHeight) {
-        this.protocol8HuobiCrossChainHeight = protocol8HuobiCrossChainHeight;
-    }
-
-    public long getProtocol11OktCrossChainHeight() {
-        return protocol11OktCrossChainHeight;
-    }
-
-    public void setProtocol11OktCrossChainHeight(long protocol11OktCrossChainHeight) {
-        this.protocol11OktCrossChainHeight = protocol11OktCrossChainHeight;
-    }
-
-    public long getProtocol12Erc20OfTransferBurnHeight() {
-        return protocol12Erc20OfTransferBurnHeight;
-    }
-
-    public void setProtocol12Erc20OfTransferBurnHeight(long protocol12Erc20OfTransferBurnHeight) {
-        this.protocol12Erc20OfTransferBurnHeight = protocol12Erc20OfTransferBurnHeight;
-    }
-
-    public long getProtocol13NewValidationOfErc20() {
-        return protocol13NewValidationOfErc20;
-    }
-
-    public void setProtocol13NewValidationOfErc20(long protocol13NewValidationOfErc20) {
-        this.protocol13NewValidationOfErc20 = protocol13NewValidationOfErc20;
-    }
-
-    public long getProtocol15TrxCrossChainHeight() {
-        return protocol15TrxCrossChainHeight;
-    }
-
-    public void setProtocol15TrxCrossChainHeight(long protocol15TrxCrossChainHeight) {
-        this.protocol15TrxCrossChainHeight = protocol15TrxCrossChainHeight;
     }
 }

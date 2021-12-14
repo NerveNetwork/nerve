@@ -42,7 +42,6 @@ import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.Hash;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.EthCall;
@@ -52,13 +51,10 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil.leftPadding;
 
 
 /**
@@ -73,7 +69,7 @@ public class Base {
     protected byte VERSION = 2;
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
-    protected HtContext context;
+    protected HtContext htgContext;
 
     @BeforeClass
     public static void initClass() {
@@ -84,16 +80,16 @@ public class Base {
     public void setUp() throws Exception {
         String ethRpcAddress = "https://http-testnet.hecochain.com/";
         htgWalletApi = new HtgWalletApi();
-        HtContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
-        context = new HtContext();
+        htgContext = new HtContext();
+        htgContext.setLogger(Log.BASIC_LOGGER);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
         cfg.setChainIdOnHtgNetwork(256);
         cfg.setDecimals(18);
-        HtContext.setConfig(cfg);
-        BeanUtilTest.setBean(htgWalletApi, "htgContext", context);
+        htgContext.setConfig(cfg);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
     }
 
     protected void setMain() {
@@ -106,7 +102,7 @@ public class Base {
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
-        HtContext.config.setChainIdOnHtgNetwork(128);
+        htgContext.config.setChainIdOnHtgNetwork(128);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
@@ -138,7 +134,7 @@ public class Base {
 
     protected String sendMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
-        String vHash = this.encoderWithdraw(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, VERSION);
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, VERSION);
         String signData = this.ethSign(vHash, signCount);
         //signData += "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
         Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
@@ -147,13 +143,13 @@ public class Base {
 
     protected String sendERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
-        String vHash = this.encoderWithdraw(txKey, toAddress, bValue, true, erc20, VERSION);
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, VERSION);
         String signData = this.ethSign(vHash, signCount);
         Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
-        String vHash = this.encoderChange(txKey, adds, count, removes, VERSION);
+        String vHash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, VERSION);
         String signData = this.ethSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
@@ -162,52 +158,10 @@ public class Base {
     }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
-        String vHash = this.encoderUpgrade(txKey, upgradeContract, VERSION);
+        String vHash = HtgUtil.encoderUpgrade(htgContext, txKey, upgradeContract, VERSION);
         String signData = this.ethSign(vHash, signCount);
         Function function =  HtgUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.UPGRADE);
-    }
-
-    protected String encoderWithdraw(String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
-        sb.append(Numeric.cleanHexPrefix(toAddress));
-        sb.append(leftPadding(value.toString(16), "0", 64));
-        sb.append(isContractAsset ? "01" : "00");
-        sb.append(Numeric.cleanHexPrefix(erc20));
-        sb.append(String.format("%02x", version & 255));
-        byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
-        System.out.println(String.format("data: %s", sb.toString()));
-        System.out.println(String.format("vHash: %s", Numeric.toHexString(hash)));
-        return Numeric.toHexString(hash);
-    }
-
-    protected String encoderChange(String txKey, String[] adds, int count, String[] removes, byte version) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
-        for (String add : adds) {
-            sb.append(leftPadding(Numeric.cleanHexPrefix(add), "0", 64));
-        }
-        sb.append(leftPadding(Integer.toHexString(count), "0", 2));
-        for (String remove : removes) {
-            sb.append(leftPadding(Numeric.cleanHexPrefix(remove), "0", 64));
-        }
-        sb.append(String.format("%02x", version & 255));
-        byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
-        System.out.println(String.format("data: %s", sb.toString()));
-        System.out.println(String.format("vHash: %s", Numeric.toHexString(hash)));
-        return Numeric.toHexString(hash);
-    }
-
-    protected String encoderUpgrade(String txKey, String upgradeContract, byte version) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
-        sb.append(Numeric.cleanHexPrefix(upgradeContract));
-        sb.append(String.format("%02x", version & 255));
-        byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
-        System.out.println(String.format("data: %s", sb.toString()));
-        System.out.println(String.format("vHash: %s", Numeric.toHexString(hash)));
-        return Numeric.toHexString(hash);
     }
 
     protected String ethSign(String hashStr, int signCount) {

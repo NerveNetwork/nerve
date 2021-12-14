@@ -8,6 +8,7 @@ public class StackingAsset {
     private int decimal;
     private Integer weight;
     private String simple;
+    private Long stopHeight;
 
     public StackingAsset() {
     }
@@ -17,7 +18,7 @@ public class StackingAsset {
                          String oracleKey,
                          boolean canBePeriodically,
                          int decimal,
-                         String simple, Integer weight
+                         String simple, Integer weight,Long stopHeight
     ) {
         this.chainId = chainId;
         this.assetId = assetId;
@@ -26,6 +27,7 @@ public class StackingAsset {
         this.decimal = decimal;
         this.simple = simple;
         this.weight = weight;
+        this.stopHeight = stopHeight;
     }
 
     public boolean isCanBePeriodically() {
@@ -82,5 +84,13 @@ public class StackingAsset {
 
     public void setWeight(Integer weight) {
         this.weight = weight;
+    }
+
+    public Long getStopHeight() {
+        return stopHeight;
+    }
+
+    public void setStopHeight(Long stopHeight) {
+        this.stopHeight = stopHeight;
     }
 }

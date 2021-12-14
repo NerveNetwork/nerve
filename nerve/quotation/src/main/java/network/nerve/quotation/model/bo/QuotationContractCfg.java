@@ -62,6 +62,9 @@ public class QuotationContractCfg {
 
     private String calculator;
 
+    private String tokenInfo;
+    private String baseTokenInfo;
+
     public String getChain() {
         return chain;
     }
@@ -132,5 +135,21 @@ public class QuotationContractCfg {
 
     public void setCalculator(String calculator) {
         this.calculator = calculator;
+    }
+
+    public String getTokenInfo() {
+        return tokenInfo;
+    }
+
+    public void setTokenInfo(String tokenInfo) {
+        this.tokenInfo = tokenInfo;
+    }
+
+    public String getBaseTokenInfo() {
+        return baseTokenInfo;
+    }
+
+    public void setBaseTokenInfo(String baseTokenInfo) {
+        this.baseTokenInfo = baseTokenInfo;
     }
 }

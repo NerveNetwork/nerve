@@ -23,11 +23,13 @@
  */
 package network.nerve.converter.heterogeneouschain.lib.helper;
 
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgERC20StorageService;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import org.web3j.protocol.core.methods.response.Log;
@@ -155,6 +157,39 @@ public class HtgERC20Helper implements BeanInitial {
                 }
             }
 
+        }
+        return false;
+    }
+
+    public boolean hasERC20WithListeningAddress(String input, Predicate<String> isListening) {
+        if(StringUtils.isBlank(input)) {
+            return false;
+        }
+        if (input.length() < 10) {
+            return false;
+        }
+        String methodHash;
+        if ((methodHash = input.substring(0, 10)).equals(HtgConstant.METHOD_HASH_TRANSFER)) {
+            List<Object> objects = HtgUtil.parseERC20TransferInput(input);
+            if (objects.isEmpty() || objects.size() != 2)
+                return false;
+            String toAddress = objects.get(0).toString();
+            // 接收地址不是监听的多签地址
+            if (!isListening.test(toAddress)) {
+                return false;
+            }
+            return true;
+        }
+        if (methodHash.equals(HtgConstant.METHOD_HASH_TRANSFER_FROM)) {
+            List<Object> objects = HtgUtil.parseERC20TransferFromInput(input);
+            if (objects.isEmpty() || objects.size() != 3)
+                return false;
+            String toAddress = objects.get(1).toString();
+            // 接收地址不是监听的多签地址
+            if (!isListening.test(toAddress)) {
+                return false;
+            }
+            return true;
         }
         return false;
     }

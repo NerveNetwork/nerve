@@ -46,9 +46,15 @@ public interface IDepositTxSubmitter {
      * @param contractAddress 合约地址
      * @param assetId         资产ID
      * @param nerveAddress    Nerve充值地址
+     * @param extend
      */
     String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
-                  Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
+                  Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress, String extend) throws Exception;
+
+    String depositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                                    Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, String extend) throws Exception;
+
+
     /**
      * @param txHash          交易hash
      * @param blockHeight     交易确认高度
@@ -64,6 +70,9 @@ public interface IDepositTxSubmitter {
      */
     String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
+
+    String pendingDepositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                  Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue) throws Exception;
 
     /**
      * 验证是否充值交易

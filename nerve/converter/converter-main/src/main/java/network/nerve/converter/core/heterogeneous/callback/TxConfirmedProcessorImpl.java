@@ -32,6 +32,7 @@ import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirmedProcessor;
 import network.nerve.converter.core.heterogeneous.callback.management.CallBackBeanManager;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.enums.ProposalTypeEnum;
@@ -283,9 +284,10 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         businessData.setHeterogeneousChainId(hChainId);
         businessData.setHeterogeneousTxHash(heterogeneousTxHash);
         businessData.setAddress(address);
-        businessData.setOldAddress(Numeric.hexStringToByteArray(multiSignAddress));
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        // 兼容非以太系地址 update by pierre at 2021/11/16
+        businessData.setOldAddress(docking.getAddressBytes(multiSignAddress));
         businessData.setListDistributionFee(signers);
-
         ConfirmProposalTxData txData = new ConfirmProposalTxData();
         txData.setType(ProposalTypeEnum.UPGRADE.value());
         try {

@@ -39,7 +39,11 @@ public enum AssetName {
     ONE(105, 18),
     MATIC(106, 18),
     KCS(107, 18),
-    TRX(108, 6);
+    TRX(108, 6),
+    CRO(109, 18),
+    AVAX(110, 18),
+    AETH(111, 18),
+    FTM(112, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

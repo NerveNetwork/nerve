@@ -458,7 +458,7 @@ public class ConsensusAwardUtil {
         //获取有效的委托金权重
         totalDeposit = depositManager.getDepositByHeight(chain, startHeight, endHeight, depositMap, totalDeposit, date);
 
-        if (totalDeposit.equals(BigDecimal.ZERO)) {
+        if (totalDeposit.compareTo(BigDecimal.ZERO) == 0) {
             return weightDetails;
         }
 

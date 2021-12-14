@@ -40,4 +40,8 @@ public interface HtgBlockHeaderStorageService {
     HtgSimpleBlockHeader findByHeight(Long height);
 
     void deleteByHeight(Long localBlockHeight) throws Exception;
+
+    int saveSynced(long height) throws Exception;
+
+    boolean isSynced(long height);
 }

@@ -28,6 +28,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
 import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
@@ -63,6 +64,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -110,6 +112,9 @@ public class TrxUtil {
             return null;
         }
         BigInteger ethPublicKey = extractPublicKey(from, tx);
+        if (ethPublicKey == null) {
+            return null;
+        }
         return covertNerveAddress(ethPublicKey, nerveChainId);
     }
 
@@ -163,6 +168,69 @@ public class TrxUtil {
         return typeList.stream().map(type -> type.getValue()).collect(Collectors.toList());
     }
 
+    public static List<Object> parseTRC20TransferInput(String inputData) {
+        if(StringUtils.isBlank(inputData)) {
+            return null;
+        }
+        inputData = Numeric.cleanHexPrefix(inputData);
+        if(inputData.length() < 8) {
+            return null;
+        }
+        List<Object> result = new ArrayList<>();
+        inputData = inputData.substring(8);
+        String toAddress;
+        BigInteger value;
+        if (inputData.length() < 64) {
+            toAddress = TrxConstant.HEX_PREFIX + rightPadding(inputData, "0", 64).substring(24, 64);
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 128) {
+            toAddress = TrxConstant.HEX_PREFIX + inputData.substring(24, 64);
+            value = new BigInteger(rightPadding(inputData, "0", 128).substring(64, 128), 16);
+        } else {
+            toAddress = TrxConstant.HEX_PREFIX + inputData.substring(24, 64);
+            value = new BigInteger(inputData.substring(64, 128), 16);
+        }
+        result.add(ethAddress2trx(toAddress));
+        result.add(value);
+        return result;
+    }
+
+    public static List<Object> parseTRC20TransferFromInput(String inputData) {
+        if(StringUtils.isBlank(inputData)) {
+            return null;
+        }
+        inputData = Numeric.cleanHexPrefix(inputData);
+        if(inputData.length() < 8) {
+            return null;
+        }
+        List<Object> result = new ArrayList<>();
+        inputData = inputData.substring(8);
+        String fromAddress;
+        String toAddress;
+        BigInteger value;
+        if (inputData.length() < 64) {
+            fromAddress = TrxConstant.HEX_PREFIX + rightPadding(inputData, "0", 64).substring(24, 64);
+            toAddress = TrxConstant.ZERO_ADDRESS;
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 128) {
+            fromAddress = TrxConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = TrxConstant.HEX_PREFIX + rightPadding(inputData, "0", 128).substring(88, 128);
+            value = BigInteger.ZERO;
+        } else if (inputData.length() < 192) {
+            fromAddress = TrxConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = TrxConstant.HEX_PREFIX + inputData.substring(88, 128);
+            value = new BigInteger(rightPadding(inputData, "0", 192).substring(128, 192), 16);
+        } else {
+            fromAddress = TrxConstant.HEX_PREFIX + inputData.substring(24, 64);
+            toAddress = TrxConstant.HEX_PREFIX + inputData.substring(88, 128);
+            value = new BigInteger(inputData.substring(128, 192), 16);
+        }
+        result.add(ethAddress2trx(fromAddress));
+        result.add(ethAddress2trx(toAddress));
+        result.add(value);
+        return result;
+    }
+
     public static <T>  T[] list2array(List<T> list) {
         if(list == null || list.isEmpty()) {
             return null;
@@ -211,6 +279,10 @@ public class TrxUtil {
 
     public static String leftPadding(String orgin, String padding, int total) {
         return padding.repeat(total - orgin.length()) + orgin;
+    }
+
+    public static String rightPadding(String orgin, String padding, int total) {
+        return orgin + padding.repeat(total - orgin.length());
     }
 
     public static Function getCreateOrSignWithdrawFunction(String nerveTxHash, String toAddress, BigInteger value, boolean isContractAsset, String contractAddressERC20, String signatureHexData) {
@@ -271,19 +343,24 @@ public class TrxUtil {
         );
     }
 
-    public static String encoderWithdraw(String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) {
+    public static String encoderWithdraw(HtgContext htgContext, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(toAddress)));
         sb.append(leftPadding(value.toString(16), "0", 64));
         sb.append(isContractAsset ? "01" : "00");
         sb.append(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(erc20)));
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
 
-    public static String encoderChange(String txKey, String[] adds, int count, String[] removes, byte version) {
+    public static String encoderChange(HtgContext htgContext, String txKey, String[] adds, int count, String[] removes, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         for (String add : adds) {
@@ -293,16 +370,26 @@ public class TrxUtil {
         for (String remove : removes) {
             sb.append(leftPadding(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(remove)), "0", 64));
         }
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
 
-    public static String encoderUpgrade(String txKey, String upgradeContract, byte version) {
+    public static String encoderUpgrade(HtgContext htgContext, String txKey, String upgradeContract, byte version) {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(upgradeContract)));
-        sb.append(String.format("%02x", version & 255));
+        // hash加盐 update by pierre at 2021/11/18
+        if (version <= 2) {
+            sb.append(String.format("%02x", version & 255));
+        } else {
+            sb.append(leftPadding(BigInteger.valueOf(htgContext.hashSalt()).toString(16), "0", 64));
+        }
         byte[] hash = Hash.sha3(Numeric.hexStringToByteArray(sb.toString()));
         return Numeric.toHexString(hash);
     }
@@ -401,6 +488,24 @@ public class TrxUtil {
             result[0] = 65;
             System.arraycopy(address, 0, result, 1, 20);
             return Base58Check.bytesToBase58(result);
+        } else {
+            return null;
+        }
+    }
+
+    public static byte[] address2Bytes(String address) {
+        if (StringUtils.isBlank(address)) {
+            return null;
+        }
+        byte[] bytes = ApiWrapper.parseAddress(address).toByteArray();
+        int length = bytes.length;
+        if (length == 21) {
+            return bytes;
+        } else if (length == 20) {
+            byte[] result = new byte[21];
+            result[0] = 65;
+            System.arraycopy(address, 0, result, 1, 20);
+            return result;
         } else {
             return null;
         }

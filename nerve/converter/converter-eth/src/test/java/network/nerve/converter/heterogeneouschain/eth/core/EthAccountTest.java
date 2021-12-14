@@ -266,7 +266,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void ETHAddressByPubkeySet() {
-        String pubkeySet = "037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df";
+        String pubkeySet = "0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260,03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5,02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");

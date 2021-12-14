@@ -16,10 +16,10 @@ public class FarmBus extends BaseBus {
     private long lastRewardBlockOld;
     private BigInteger accSyrupPerShareNew;
     private BigInteger accSyrupPerShareOld;
-    private BigInteger syrupBalanceNew ;
-    private BigInteger syrupBalanceOld ;
-    private BigInteger stakingBalanceNew ;
-    private BigInteger stakingBalanceOld ;
+    private BigInteger syrupBalanceNew;
+    private BigInteger syrupBalanceOld;
+    private BigInteger stakingBalanceNew;
+    private BigInteger stakingBalanceOld;
 
     private BigInteger userAmountNew;
     private BigInteger userAmountOld;
@@ -31,6 +31,8 @@ public class FarmBus extends BaseBus {
     private BigInteger totalSyrupAmountOld;
     private Long withdrawLockTimeNew;
     private Long withdrawLockTimeOld;
+    private Long stopHeightOld;
+    private Long stopHeightNew;
 
     public long getLastRewardBlockNew() {
         return lastRewardBlockNew;
@@ -190,5 +192,21 @@ public class FarmBus extends BaseBus {
 
     public void setWithdrawLockTimeOld(Long withdrawLockTimeOld) {
         this.withdrawLockTimeOld = withdrawLockTimeOld;
+    }
+
+    public Long getStopHeightOld() {
+        return stopHeightOld;
+    }
+
+    public void setStopHeightOld(Long stopHeightOld) {
+        this.stopHeightOld = stopHeightOld;
+    }
+
+    public Long getStopHeightNew() {
+        return stopHeightNew;
+    }
+
+    public void setStopHeightNew(Long stopHeightNew) {
+        this.stopHeightNew = stopHeightNew;
     }
 }

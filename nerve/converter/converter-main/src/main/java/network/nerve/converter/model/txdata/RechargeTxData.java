@@ -28,6 +28,7 @@ import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
 
 import java.io.IOException;
@@ -50,6 +51,8 @@ public class RechargeTxData extends BaseNulsData {
 
     private int heterogeneousChainId;
 
+    private String extend;
+
     public RechargeTxData() {
     }
 
@@ -68,6 +71,9 @@ public class RechargeTxData extends BaseNulsData {
         if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
             stream.writeUint16(this.heterogeneousChainId);
         }
+        if (StringUtils.isNotBlank(extend)) {
+            stream.writeString(extend);
+        }
     }
 
     @Override
@@ -75,6 +81,9 @@ public class RechargeTxData extends BaseNulsData {
         this.originalTxHash = byteBuffer.readString();
         if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
             this.heterogeneousChainId = byteBuffer.readUint16();
+        }
+        if (!byteBuffer.isFinished()) {
+            this.extend = byteBuffer.readString();
         }
     }
 
@@ -84,6 +93,9 @@ public class RechargeTxData extends BaseNulsData {
         size += SerializeUtils.sizeOfString(this.originalTxHash);
         if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
             size += SerializeUtils.sizeOfUint16();
+        }
+        if (StringUtils.isNotBlank(extend)) {
+            size += SerializeUtils.sizeOfString(extend);
         }
         return size;
     }
@@ -104,6 +116,14 @@ public class RechargeTxData extends BaseNulsData {
         this.heterogeneousChainId = heterogeneousChainId;
     }
 
+    public String getExtend() {
+        return extend;
+    }
+
+    public void setExtend(String extend) {
+        this.extend = extend;
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -111,6 +131,9 @@ public class RechargeTxData extends BaseNulsData {
         builder.append(String.format("\toriginalTxHash: %s", originalTxHash)).append(lineSeparator);
         if (LATEST_BLOCK_HEIGHT >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
             builder.append(String.format("\theterogeneousChainId: %s", heterogeneousChainId)).append(lineSeparator);
+        }
+        if (StringUtils.isNotBlank(extend)) {
+            builder.append(String.format("\textend: %s", extend)).append(lineSeparator);
         }
         return builder.toString();
     }

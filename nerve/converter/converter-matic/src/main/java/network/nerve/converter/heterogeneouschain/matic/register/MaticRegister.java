@@ -33,22 +33,19 @@ import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
-import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
-import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgBlockHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
 import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
-import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
-import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
-import network.nerve.converter.heterogeneouschain.lib.storage.*;
-import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgMultiSignAddressHistoryStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxInvokeInfoStorageService;
+import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.matic.callback.MaticCallBackManager;
 import network.nerve.converter.heterogeneouschain.matic.constant.MaticDBConstant;
 import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
@@ -56,7 +53,6 @@ import network.nerve.converter.model.bo.HeterogeneousCfg;
 import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -76,16 +72,16 @@ public class MaticRegister implements IHeterogeneousChainRegister {
     @Autowired
     private MaticCallBackManager maticCallBackManager;
 
-    private MaticContext maticContext;
+    private MaticContext maticContext = new MaticContext();
     private HtgListener htgListener;
     private HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
     private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
     private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
 
     private ScheduledThreadPoolExecutor blockSyncExecutor;
-    private ScheduledThreadPoolExecutor confirmTxExecutor;
-    private ScheduledThreadPoolExecutor waitingTxExecutor;
-    private ScheduledThreadPoolExecutor rpcAvailableExecutor;
+    //private ScheduledThreadPoolExecutor confirmTxExecutor;
+    //private ScheduledThreadPoolExecutor waitingTxExecutor;
+    //private ScheduledThreadPoolExecutor rpcAvailableExecutor;
     private boolean isInitial = false;
     private boolean newProcessActivated = false;
     private BeanMap beanMap = new BeanMap();
@@ -97,17 +93,17 @@ public class MaticRegister implements IHeterogeneousChainRegister {
 
     @Override
     public int getChainId() {
-        return MaticContext.HTG_CHAIN_ID;
+        return maticContext.HTG_CHAIN_ID;
     }
 
     @Override
     public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // 存放日志实例
-            MaticContext.setLogger(logger);
+            maticContext.setLogger(logger);
             isInitial = true;
             // 存放配置实例
-            MaticContext.setConfig(config);
+            maticContext.setConfig(config);
             // 初始化实例
             initBean();
             // 初始化默认API
@@ -115,7 +111,7 @@ public class MaticRegister implements IHeterogeneousChainRegister {
             // 解析HT API URL
             initEthWalletRPC();
             // 存放nerveChainId
-            MaticContext.NERVE_CHAINID = converterConfig.getChainId();
+            maticContext.NERVE_CHAINID = converterConfig.getChainId();
             RocksDBService.createTable(MaticDBConstant.DB_MATIC);
             // 初始化待确认任务队列
             initUnconfirmedTxQueue();
@@ -125,65 +121,25 @@ public class MaticRegister implements IHeterogeneousChainRegister {
     }
 
     private void initBean() {
-        try {
-            beanMap.add(HtgDocking.class, (MaticContext.DOCKING = new HtgDocking()));
-            beanMap.add(HtgContext.class, (maticContext = new MaticContext()));
-            beanMap.add(HtgListener.class, (htgListener = new HtgListener()));
-
-            beanMap.add(ConverterConfig.class, converterConfig);
-            beanMap.add(HtgCallBackManager.class, maticCallBackManager);
-
-            beanMap.add(HtgWalletApi.class);
-            beanMap.add(HtgBlockHandler.class);
-            beanMap.add(HtgConfirmTxHandler.class);
-            beanMap.add(HtgWaitingTxInvokeDataHandler.class);
-            beanMap.add(HtgRpcAvailableHandler.class);
-            beanMap.add(HtgAccountHelper.class);
-            beanMap.add(HtgAnalysisTxHelper.class);
-            beanMap.add(HtgBlockAnalysisHelper.class);
-            beanMap.add(HtgCommonHelper.class);
-            beanMap.add(HtgERC20Helper.class);
-            beanMap.add(HtgInvokeTxHelper.class);
-            beanMap.add(HtgLocalBlockHelper.class);
-            beanMap.add(HtgParseTxHelper.class);
-            beanMap.add(HtgPendingTxHelper.class);
-            beanMap.add(HtgResendHelper.class);
-            beanMap.add(HtgStorageHelper.class);
-            beanMap.add(HtgUpgradeContractSwitchHelper.class);
-
-            beanMap.add(HtgAccountStorageService.class, new HtgAccountStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC));
-            beanMap.add(HtgBlockHeaderStorageService.class, new HtgBlockHeaderStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC));
-            beanMap.add(HtgERC20StorageService.class, new HtgERC20StorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC));
-            beanMap.add(HtgMultiSignAddressHistoryStorageService.class, (htgMultiSignAddressHistoryStorageService = new HtgMultiSignAddressHistoryStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC)));
-            beanMap.add(HtgTxInvokeInfoStorageService.class, (htgTxInvokeInfoStorageService = new HtgTxInvokeInfoStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC)));
-            beanMap.add(HtgTxRelationStorageService.class, new HtgTxRelationStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC));
-            beanMap.add(HtgTxStorageService.class, new HtgTxStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC));
-            beanMap.add(HtgUnconfirmedTxStorageService.class, (htgUnconfirmedTxStorageService = new HtgUnconfirmedTxStorageServiceImpl(maticContext, MaticDBConstant.DB_MATIC)));
-
-            Collection<Object> values = beanMap.values();
-            for (Object value : values) {
-                if (value instanceof BeanInitial) {
-                    BeanInitial beanInitial = (BeanInitial) value;
-                    beanInitial.init(beanMap);
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        beanMap = HtgUtil.initBeanV2(maticContext, converterConfig, maticCallBackManager, MaticDBConstant.DB_MATIC);
+        htgListener = (HtgListener) beanMap.get(HtgListener.class);
+        htgMultiSignAddressHistoryStorageService = (HtgMultiSignAddressHistoryStorageService) beanMap.get(HtgMultiSignAddressHistoryStorageService.class);
+        htgTxInvokeInfoStorageService = (HtgTxInvokeInfoStorageService) beanMap.get(HtgTxInvokeInfoStorageService.class);
+        htgUnconfirmedTxStorageService = (HtgUnconfirmedTxStorageService) beanMap.get(HtgUnconfirmedTxStorageService.class);
     }
 
     @Override
     public HeterogeneousChainInfo getChainInfo() {
         HeterogeneousChainInfo info = new HeterogeneousChainInfo();
-        info.setChainId(MaticContext.config.getChainId());
-        info.setChainName(MaticContext.config.getSymbol());
-        info.setMultySignAddress(MaticContext.config.getMultySignAddress().toLowerCase());
+        info.setChainId(maticContext.config.getChainId());
+        info.setChainName(maticContext.config.getSymbol());
+        info.setMultySignAddress(maticContext.config.getMultySignAddress().toLowerCase());
         return info;
     }
 
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
-        return MaticContext.DOCKING;
+        return maticContext.DOCKING;
     }
 
     @Override
@@ -197,9 +153,9 @@ public class MaticRegister implements IHeterogeneousChainRegister {
             maticCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
             maticCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
             // 存放CORE查询API实例
-            MaticContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
+            maticContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
             // 更新多签地址
-            MaticContext.MULTY_SIGN_ADDRESS = multiSigAddress;
+            maticContext.MULTY_SIGN_ADDRESS = multiSigAddress;
             // 保存当前多签地址到多签地址历史列表中
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
             // 初始化交易等待任务队列
@@ -209,45 +165,27 @@ public class MaticRegister implements IHeterogeneousChainRegister {
             // 设置新流程切换标志
             this.newProcessActivated = true;
         }
-        MaticContext.logger.info("{} 注册完成.", MaticContext.config.getSymbol());
-    }
-
-    /**
-     * 停止当前区块解析任务与待确认交易任务
-     */
-    public void shutDownScheduled() {
-        if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {
-            blockSyncExecutor.shutdown();
-        }
-        if (confirmTxExecutor != null && !confirmTxExecutor.isShutdown()) {
-            confirmTxExecutor.shutdown();
-        }
-        if (waitingTxExecutor != null && !waitingTxExecutor.isShutdown()) {
-            waitingTxExecutor.shutdown();
-        }
-        if (rpcAvailableExecutor != null && !rpcAvailableExecutor.isShutdown()) {
-            rpcAvailableExecutor.shutdown();
-        }
+        maticContext.logger.info("{} 注册完成.", maticContext.config.getSymbol());
     }
 
     private void initDefualtAPI() throws Exception {
         HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
-        htgWalletApi.init(ethWalletRpcProcessing(MaticContext.config.getCommonRpcAddress()));
+        htgWalletApi.init(ethWalletRpcProcessing(maticContext.config.getCommonRpcAddress()));
     }
 
     private void initEthWalletRPC() {
-        String orderRpcAddresses = MaticContext.config.getOrderRpcAddresses();
+        String orderRpcAddresses = maticContext.config.getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                MaticContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                maticContext.RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
-        String standbyRpcAddresses = MaticContext.config.getStandbyRpcAddresses();
+        String standbyRpcAddresses = maticContext.config.getStandbyRpcAddresses();
         if(StringUtils.isNotBlank(standbyRpcAddresses)) {
             String[] rpcArray = standbyRpcAddresses.split(",");
             for(String rpc : rpcArray) {
-                MaticContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
+                maticContext.STANDBY_RPC_ADDRESS_LIST.add(ethWalletRpcProcessing(rpc));
             }
         }
     }
@@ -261,12 +199,12 @@ public class MaticRegister implements IHeterogeneousChainRegister {
     }
 
     private void initFilterAddresses() {
-        String filterAddresses = MaticContext.config.getFilterAddresses();
+        String filterAddresses = maticContext.config.getFilterAddresses();
         if(StringUtils.isNotBlank(filterAddresses)) {
             String[] filterArray = filterAddresses.split(",");
             for(String address : filterArray) {
                 address = address.trim().toLowerCase();
-                MaticContext.FILTER_ACCOUNT_SET.add(address);
+                maticContext.FILTER_ACCOUNT_SET.add(address);
             }
         }
     }
@@ -277,27 +215,31 @@ public class MaticRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    MaticContext.UNCONFIRMED_TX_QUEUE.offer(po);
+                    maticContext.UNCONFIRMED_TX_QUEUE.offer(po);
                     // 把待确认的交易加入到监听交易hash列表中
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
         }
-        MaticContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
+        maticContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.countDown();
     }
 
     private void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-block-sync"));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, 5, TimeUnit.SECONDS);
 
-        confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-confirm-tx"));
-        confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        maticContext.getConverterCoreApi().addHtgConfirmTxHandler((Runnable) beanMap.get(HtgConfirmTxHandler.class));
+        maticContext.getConverterCoreApi().addHtgWaitingTxInvokeDataHandler((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class));
+        maticContext.getConverterCoreApi().addHtgRpcAvailableHandler((Runnable) beanMap.get(HtgRpcAvailableHandler.class));
 
-        waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-waiting-tx"));
-        waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
-
-        rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-rpcavailable-tx"));
-        rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
+        //confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-confirm-tx"));
+        //confirmTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgConfirmTxHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-waiting-tx"));
+        //waitingTxExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgWaitingTxInvokeDataHandler.class), 60, 10, TimeUnit.SECONDS);
+        //
+        //rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("matic-rpcavailable-tx"));
+        //rpcAvailableExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgRpcAvailableHandler.class), 60, 10, TimeUnit.SECONDS);
     }
 
     private void initWaitingTxQueue() {
@@ -306,11 +248,11 @@ public class MaticRegister implements IHeterogeneousChainRegister {
             list.stream().forEach(po -> {
                 if(po != null) {
                     // 初始化缓存列表
-                    MaticContext.WAITING_TX_QUEUE.offer(po);
+                    maticContext.WAITING_TX_QUEUE.offer(po);
                 }
             });
         }
-        MaticContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
+        maticContext.INIT_WAITING_TX_QUEUE_LATCH.countDown();
     }
 
 }

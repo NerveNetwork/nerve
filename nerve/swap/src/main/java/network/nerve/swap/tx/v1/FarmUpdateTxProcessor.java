@@ -111,6 +111,7 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                 farm.setStakeTokenBalance(bus.getStakingBalanceNew());
                 farm.setSyrupPerBlock(bus.getSyrupPerBlockNew());
                 farm.setTotalSyrupAmount(bus.getTotalSyrupAmountNew());
+                farm.setStopHeight(bus.getStopHeightNew());
                 farm.setWithdrawLockTime(bus.getWithdrawLockTimeNew() == null ? 0L : bus.getWithdrawLockTimeNew().longValue());
 
                 farmCache.put(bus.getFarmHash(), farm);
@@ -147,6 +148,7 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                 farm.setStakeTokenBalance(bus.getStakingBalanceOld());
                 farm.setSyrupPerBlock(bus.getSyrupPerBlockOld());
                 farm.setTotalSyrupAmount(bus.getTotalSyrupAmountOld());
+                farm.setStopHeight(bus.getStopHeightOld());
                 farm.setWithdrawLockTime(bus.getWithdrawLockTimeOld()==null?0L: bus.getWithdrawLockTimeOld().longValue());
 
                 farmCache.put(bus.getFarmHash(), farm);

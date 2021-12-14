@@ -79,4 +79,5 @@ public class SwapContext {
      * v1.15.0 协议升级高度
      */
     public static long PROTOCOL_1_15_0 = 0L;
+    public static long PROTOCOL_1_16_0 = 0L;
 }

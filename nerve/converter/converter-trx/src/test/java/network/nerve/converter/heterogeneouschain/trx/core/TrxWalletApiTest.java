@@ -1,6 +1,9 @@
 package network.nerve.converter.heterogeneouschain.trx.core;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.UnknownFieldSet;
+import io.nuls.base.basic.AddressTool;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.trx.base.Base;
@@ -8,16 +11,19 @@ import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
 import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.trx.model.TrxTransaction;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.tron.trident.abi.FunctionReturnDecoder;
 import org.tron.trident.abi.TypeReference;
 import org.tron.trident.abi.datatypes.Address;
+import org.tron.trident.abi.datatypes.Bool;
 import org.tron.trident.abi.datatypes.Function;
 import org.tron.trident.abi.datatypes.Type;
 import org.tron.trident.abi.datatypes.generated.Uint256;
 import org.tron.trident.api.GrpcAPI;
+import org.tron.trident.core.ApiWrapper;
 import org.tron.trident.core.key.KeyPair;
 import org.tron.trident.crypto.SECP256K1;
 import org.tron.trident.crypto.tuwenitypes.Bytes32;
@@ -38,8 +44,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
-import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.TRX_10;
-import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.TRX_100;
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.*;
 import static network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil.*;
 
 
@@ -52,6 +57,12 @@ public class TrxWalletApiTest extends Base {
     protected SECP256K1.KeyPair keyPair;
     protected int nerveChainId = 5;
 
+    protected void setErc20USDTMain() {
+        // 0x370dd53139e0d8923f9feaf1989344ec64f6ff6d
+        erc20Address = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        erc20Decimals = 6;
+    }
+
     protected void setErc20DX() {
         // 0x370dd53139e0d8923f9feaf1989344ec64f6ff6d
         erc20Address = "TEzJjjC4NrLrYFthGFHzQon5zrErNw1JN9";
@@ -62,6 +73,11 @@ public class TrxWalletApiTest extends Base {
         // 0xe10095ee56d7181d59b49f3cbdd596945fd2d68d
         erc20Address = "TWUujuxBNCGPZNiyySfYuBJgFumrvS2iRd";
         erc20Decimals = 18;
+    }
+
+    protected void setErc20USDT() {
+        erc20Address = "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ";
+        erc20Decimals = 6;
     }
 
     /** FortuneCai (FCI) */
@@ -138,22 +154,6 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 主资产充值
-     */
-    @Test
-    public void mainCrossOutTest() throws Exception {
-        setUX();
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        String value = "100";
-        BigInteger valueBig = TrxUtil.convertTrxToSun(new BigDecimal(value));
-        String erc20 = TrxConstant.ZERO_ADDRESS_TRX;
-        Function function = getCrossOutFunction(to, valueBig, erc20);
-        BigInteger feeLimit = TRX_100;
-        TrxSendTransactionPo callContract = walletApi.callContract(from, fromPriKey, multySignContractAddress, feeLimit, function, valueBig);
-        System.out.println(callContract.toString());
-    }
-
-    /**
      * 主资产提现
      */
     @Test
@@ -181,15 +181,54 @@ public class TrxWalletApiTest extends Base {
         System.out.println(String.format("TRC20授权清零, 授权hash: %s", authHash));
 
     }
+
+    @Test
+    public void upgradeFunctionTest() {
+        String nerveTxHash = "aaa";
+        String upgradeContract = "TVAhzC3rBLy6XLceHfha3ddiVHTUpUovyY";
+        String signatureData = "ccc";
+        Function function = getCreateOrSignUpgradeFunction(nerveTxHash, upgradeContract, signatureData);
+        System.out.println(function);
+
+        ByteString address0 = ApiWrapper.parseAddress("0x41d2972934f5cdcf9beef75e5884ab61ab2dfdf533");
+        ByteString address1 = ApiWrapper.parseAddress("TVAhzC3rBLy6XLceHfha3ddiVHTUpUovyY");
+        System.out.println(Numeric.toHexString(address0.toByteArray()));
+        System.out.println(Numeric.toHexString(address1.toByteArray()));
+        System.out.println();
+        System.out.println(address0.toString());
+        System.out.println(address1.toString());
+        System.out.println();
+        System.out.println(address0.toStringUtf8());
+        System.out.println(address1.toStringUtf8());
+    }
+
+    /**
+     * 主资产充值
+     */
+    @Test
+    public void depositTRXByCrossOut() throws Exception {
+        this.multySignContractAddress = "TQeQaQiXnBFRnW2HYxPFjE5FMkkCxaa7eL";
+        setUX();
+        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String value = "2.2";
+        BigInteger valueBig = TrxUtil.convertTrxToSun(new BigDecimal(value));
+        String erc20 = TrxConstant.ZERO_ADDRESS_TRX;
+        Function function = getCrossOutFunction(to, valueBig, erc20);
+        BigInteger feeLimit = TRX_100;
+        TrxSendTransactionPo callContract = walletApi.callContract(from, fromPriKey, multySignContractAddress, feeLimit, function, valueBig);
+        System.out.println(callContract.toString());
+    }
     /**
      * TRC20充值
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
+        this.multySignContractAddress = "TQeQaQiXnBFRnW2HYxPFjE5FMkkCxaa7eL";
         setUX();
-        setErc20DX();
+        setErc20USDT();
+        //setErc20DX();
         // ERC20 转账数量
-        String sendAmount = "200";
+        String sendAmount = "3.3";
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
@@ -230,7 +269,10 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void trc20Withdraw() throws Exception {
-        setErc20DX();
+        //setErc20DX();
+        setMain();
+        erc20Address = "TPZddNpQJHu8UtKPY1PYDBv2J5p5QpJ6XW";
+        erc20Decimals = 6;
         String txKey = "fff0000000000000000000000000000000000000000000000000000000000000";
         String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
         String value = "20";
@@ -273,14 +315,14 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void transferTRC20() throws Exception {
-        setM2();
-        //setUX();
+        //setM2();
+        setUX();
 
         //setErc20FCI();
         //setErc20DX();
-        setErc20K18N();
-        String to = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
-        String value = "90000000";
+        setErc20USDT();
+        String to = "TFzEXjcejyAdfLSEANordcppsxeGW9jEm2";
+        String value = "1";
         // 估算feeLimit
         Function function = new Function(
                 "transfer",
@@ -292,7 +334,7 @@ public class TrxWalletApiTest extends Base {
             return;
         }
 
-        BigInteger feeLimit = TRX_10;
+        BigInteger feeLimit = TRX_20;
         if (estimateSun.getSunUsed() > 0) {
             feeLimit = BigInteger.valueOf(estimateSun.getSunUsed());
         }
@@ -307,14 +349,16 @@ public class TrxWalletApiTest extends Base {
     @Test
     public void estimateSun() throws Exception {
         //setNile();
-        setM2();
+        //setM2();
         //setErc20FCI();
         //setErc20DX();
-        setErc20QOP();
-        String to = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
-        String value = "33000";
+        setMain();
+        from = "TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm";
+        setErc20USDTMain();
+        String to = "THmbMWg4XrFpPWQKUojF1Hh9KjVmjXQTNX";
+        String value = "1324.98";
 
-        Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)))), Arrays.asList(new TypeReference<Type>() {}));
+        Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
 
         //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
 
@@ -344,19 +388,103 @@ public class TrxWalletApiTest extends Base {
         System.out.println(String.format("energyUsed: %s", energyUsed));
     }
 
+    /**
+     * 估算feeLimit
+     */
+    @Test
+    public void viewFunctionCall() throws Exception {
+        setMain();
+        from = "TMLMSuyygN1fL5HpUt1oQp3RjvdEsHZffG";
+        String erc20Address = "TPZddNpQJHu8UtKPY1PYDBv2J5p5QpJ6XW";
+        int erc20Decimals = 6;
+        String to = "TMZBDFxu5WE8VwYSj2p3vVuBxxKMSqZDc8";
+        String value = "0.018";
 
+        Function function = new Function("transfer",
+                Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())),
+                Arrays.asList(new TypeReference<Bool>() {}));
+
+        List<Type> valueTypes = walletApi.callViewFunction(erc20Address, function);
+        System.out.println(valueTypes.get(0).getValue().toString());
+        //System.out.println(String.format("valueTypes: %s", Arrays.deepToString(valueTypes.toArray())));
+    }
+
+    @Test
+    public void withdrawEstimateSun() throws Exception {
+        //setNile();
+        //setM2();
+        //setErc20FCI();
+        //setErc20DX();
+        setMain();
+        from = "TVXoMStg9Cmh2gMU4eBcZyS2Cr8Py99Wiz";
+        //setErc20USDTMain();
+        //String to = "THmbMWg4XrFpPWQKUojF1Hh9KjVmjXQTNX";
+        //String value = "1324.98";
+
+        //Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
+
+        Function function = TrxUtil.getCreateOrSignWithdrawFunction(
+                "b0a3f4e0f7f28b6d55ced8f333e63f0844c25f061b8a843f8c49c6a0612ccd8d",
+                "THmbMWg4XrFpPWQKUojF1Hh9KjVmjXQTNX",
+                new BigInteger("1324980000"),
+                true,
+                "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+                "44121a15536b8263820367883a3d96db2b1786e4de0987b501fa0ae1f60e2f4810c85d069be066f2816947a0134ce3cefdf1b4745fa1639c247532e11ab619fa1cb4f57f7a9fdf21ac45b74da672c2a8c774ac3fc34f76cabbd2a20ba3a69d3c9969187ae20f0e70004b206b86425d2594d83981e4b46eb28a32ce0d0bb8ddb8b51cdb270b34c92e2ac68c448d317db325202f222a7540ac59457893fcc725b0e65a4cdc23a8411c320faf59225e0ee83dda1af056ad075c7e1a5fafd9a89d30a5231b221b2850d3b8bf5c2f2c6f8efd4e6b2818c2840d84d704f3fa115b9d9d7f64306c66e85dba76272f90691db548da39b1e9b60b5090da4c48b916dc683f2b85991b1052d2954d0a7d40507ec1e530cd7a50e0834ac821f58b5e7d3e9e7f26df99bc65e1e479141b13c526d59b60a41c8205a74c1a29c58adbbcb4aa13de1313ccd01c02c57e6bc78a3830e9e11604474b6b1cb052c556610ada6ac2c961564202d7a74d51a5f0e81cd0e190b0e9eaa916850cfd43a8cdb76b014803888120a375a8351bfbaaace456e1e2a39c8b65f06ad5c8202f0fc50f03f7a243abbc9a1ad10af34d1ae14eb7ebdd0b3e6a1044c0394bfdff4261610b468eb5805ea39311a4070e1c1b0b1475fa000496a9cd5203119860b5bc9e70df850a75e9f43bdbeaa4d7c0e24b39fccee6e31d4ce4274c1d5161796a13abde394f0194817b6264bde59e09757f1c609d2ff527c7979df1d6129e183c38dee5ca950a2a62718b26f4468f55c5d64275b310ee6ae586a5883170f6e4cb1c4d9e65f7758055897f8290a79ff96e99881cef896c030af54afed95dbe111effd44408fa597d06eb674889972b07058743a76e3d48a0410fcf50e4757bd78fbc9e20f2d8b628bc01b97de77213f98a8036631b"
+        );
+        //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
+
+        Response.TransactionExtention call = wrapper.constantCall(from, "TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm", function);
+        System.out.println(call.toString());
+        System.out.println("====================================================================================");
+        String resultValue = Numeric.toHexString(call.getConstantResult(0).toByteArray());
+        System.out.println(TrxUtil.getRevertReason(resultValue));
+        System.out.println("====================================================================================");
+        System.out.println(call.getResult());
+        long energyUsed = 0;
+        do {
+            Map<Integer, UnknownFieldSet.Field> fieldMap = call.getUnknownFields().asMap();
+            if (fieldMap == null || fieldMap.size() == 0) {
+                break;
+            }
+            UnknownFieldSet.Field field = fieldMap.get(5);
+            if (field == null) {
+                break;
+            }
+            List<Long> longList = field.getVarintList();
+            if (longList == null || longList.isEmpty()) {
+                break;
+            }
+            energyUsed = longList.get(0);
+        } while (false);
+        System.out.println(String.format("energyUsed: %s", energyUsed));
+    }
+
+    protected void setMainTest() {
+        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
+        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
+        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
+        list = new ArrayList<>();
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+
+        this.multySignContractAddress = "TYVxuksybZdbyQwoR25V2YUgXYAHikcLro";
+        this.priKey = list.get(0);
+        this.address = new KeyPair(priKey).toBase58CheckAddress();
+    }
     /**
      * 管理员变更
      */
     @Test
     public void managerChange() throws Exception {
-        setBeta();
-        String txKey = "aaa0000000000000000000000000000000000000000000000000000000000000";
-        //String[] adds = new String[]{"0x847772e7773061c93d0967c56f2e4b83145c8cb2","0x4273e90fbfe5fca32704c02987d938714947a937","0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
-        String[] adds = new String[]{"0xae00574bdc6bbd40612ec024e2536cc0784f73e4"};
+        //setMain();
+        setMainTest();
+        String txKey = "aaa1024000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{"0x595d5364e5eb77e3707ce2710215db97a835a82d"};
         String[] removes = new String[]{};
         int txCount = 1;
         int signCount = list.size();
+        context.SET_VERSION((byte) 3);
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
@@ -366,6 +494,8 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void allManagers() {
+        setMain();
+        setMainTest();
         Function function = getAllManagersFunction();
         Response.TransactionExtention call = wrapper.constantCall(from, multySignContractAddress, function);
         byte[] bytes = call.getConstantResult(0).toByteArray();
@@ -416,15 +546,50 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
-        String txHash = "a066a8e18cfcb464069bba2a31dabc15d03ef4fb9fd5971d8e0367f3d71d0173";
+        setMain();
+        String txHash = "12c56780bb77f11ac7299e28dc6514a55eb02a2be22303b49a44bef6664c8e2f";
         Chain.Transaction tx = wrapper.getTransactionById(txHash);
+        System.out.println(tx.getRet(0).getContractRet());
         System.out.println(tx.toString());
         System.out.println(TrxUtil.calcTxHash(tx));
+        System.out.println(tx.getRet(0).getContractRet() == Chain.Transaction.Result.contractResult.SUCCESS);
+
+        TrxTransaction txInfo = TrxUtil.generateTxInfo(tx);
+        String trxTxHash = txInfo.getHash();
+        String from = txInfo.getFrom(), to = txInfo.getTo(), input = txInfo.getInput();
+        BigInteger value = txInfo.getValue();
+        Chain.Transaction.Contract.ContractType type = txInfo.getType();
+        if(StringUtils.isBlank(input)) {
+            return;
+        }
+        input = Numeric.cleanHexPrefix(input);
+        if (input.length() < 8) {
+            return;
+        }
+        String methodHash;
+        if ((methodHash = HEX_PREFIX + input.substring(0, 8)).equals(TrxConstant.METHOD_HASH_TRANSFER)) {
+            try {
+                List<Object> objects = TrxUtil.parseTRC20TransferInput(input);
+                if (objects.isEmpty() || objects.size() != 2)
+                    return;
+                String toAddress = objects.get(0).toString();
+                System.out.println(String.format("input: %s", input));
+                // 接收地址不是监听的多签地址
+                System.out.println(Arrays.toString(TrxUtil.parseInput(input, INPUT_TRC20_TRANSFER).toArray()));
+                System.out.println(Arrays.toString(objects.toArray()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println(String.format("hash: %s, data: %s, old", trxTxHash, "error"));
+                System.out.println(String.format("hash: %s, data: %s, new", trxTxHash, Arrays.toString(TrxUtil.parseTRC20TransferInput(input).toArray())));
+                System.out.println();
+            }
+
+        }
     }
 
     @Test
-    public void getTxReceipt() throws Exception {
-        String txHash = "66c91f96f8d05ab36091fe38cc3b76b167b574329a7cc5d1b928971dc1d2f277";
+    public void getTxReceiptAndRevertReason() throws Exception {
+        String txHash = "dc1a63a5762a85befa8de4d243bb46cce42d41fcfb735413f2dbc0ead6405d3f";
         Response.TransactionInfo txInfo = wrapper.getTransactionInfoById(txHash);
         String s = Numeric.toHexString(txInfo.getContractResult(0).toByteArray());
         System.out.println(TrxUtil.getRevertReason(s));
@@ -466,8 +631,101 @@ public class TrxWalletApiTest extends Base {
     }
 
     @Test
+    public void blockAnalysisTest() throws Exception {
+        setMain();
+        // 34882992L 34903358L
+        Response.BlockExtention block = walletApi.getBlockByHeight(34903591L);
+        List<Response.TransactionExtention> list = block.getTransactionsList();
+        Chain.BlockHeader.rawOrBuilder header = block.getBlockHeader().getRawDataOrBuilder();
+        long blockHeight = header.getNumber();
+        int size;
+        if (list != null && (size = list.size()) > 0) {
+            String trxTxHash;
+            long txTime = header.getTimestamp();
+            for (int i = 0; i < size; i++) {
+                Response.TransactionExtention txe = list.get(i);
+                Chain.Transaction tx = txe.getTransaction();
+                Chain.Transaction.raw txRawData = tx.getRawData();
+                if (txRawData.getContractCount() == 0) {
+                    continue;
+                }
+
+                TrxTransaction txInfo = TrxUtil.generateTxInfo(tx);
+                // 过滤 非TRX转账和调用合约交易
+                if (txInfo == null) {
+                    continue;
+                }
+                trxTxHash = txInfo.getHash();
+                String from = txInfo.getFrom(), to = txInfo.getTo(), input = txInfo.getInput();
+                BigInteger value = txInfo.getValue();
+                Chain.Transaction.Contract.ContractType type = txInfo.getType();
+                //if ("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t".equals(to)) {
+                    if(StringUtils.isBlank(input)) {
+                        continue;
+                    }
+                    input = Numeric.cleanHexPrefix(input);
+                    if (input.length() < 8) {
+                        continue;
+                    }
+                    String methodHash;
+                    if ((methodHash = HEX_PREFIX + input.substring(0, 8)).equals(TrxConstant.METHOD_HASH_TRANSFER)) {
+                        try {
+                            List<Object> objects = TrxUtil.parseTRC20TransferInput(input);
+                            if (objects.isEmpty() || objects.size() != 2)
+                                continue;
+                            String toAddress = objects.get(0).toString();
+                            BigInteger newValue = (BigInteger) objects.get(1);
+                            List<Object> oldObjs = parseInput(input, INPUT_TRC20_TRANSFER);
+                            BigInteger oldValue = (BigInteger) oldObjs.get(1);
+                            System.out.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, Arrays.toString(oldObjs.toArray())));
+                            System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(objects.toArray())));
+                            if (newValue.compareTo(oldValue) == 0) {
+                                System.out.println("success");
+                            } else {
+                                System.err.println("===============================error===============================");
+                            }
+                            System.out.println();
+                        } catch (Exception e) {
+                            //e.printStackTrace();
+                            System.err.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, "error"));
+                            System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(TrxUtil.parseTRC20TransferInput(input).toArray())));
+                            System.out.println();
+                        }
+
+                    }
+                if (methodHash.equals(TrxConstant.METHOD_HASH_TRANSFER_FROM)) {
+                    try {
+                        List<Object> objects = TrxUtil.parseTRC20TransferFromInput(input);
+                        if (objects.isEmpty() || objects.size() != 3)
+                            continue;
+                        BigInteger newValue = (BigInteger) objects.get(2);
+                        List<Object> oldObjs = parseInput(input, INPUT_TRC20_TRANSFER_FROM);
+                        BigInteger oldValue = (BigInteger) oldObjs.get(2);
+                        System.out.println(String.format("[transferFrom] hash: %s, contract: %s, data: %s, old", trxTxHash, to, Arrays.toString(oldObjs.toArray())));
+                        System.out.println(String.format("[transferFrom] hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(objects.toArray())));
+                        if (newValue.compareTo(oldValue) == 0) {
+                            System.out.println("success");
+                        } else {
+                            System.err.println("===============================error===============================");
+                        }
+                        System.out.println();
+                    } catch (Exception e) {
+                        System.err.println(String.format("[transferFrom] hash: %s, contract: %s, data: %s, old", trxTxHash, to, "error"));
+                        System.out.println(String.format("[transferFrom] hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(TrxUtil.parseTRC20TransferFromInput(input).toArray())));
+                        System.out.println();
+                    }
+
+
+                }
+                //}
+            }
+        }
+    }
+
+    @Test
     public void getBlock() throws Exception {
-        Chain.Block block = wrapper.getBlockByNum(16869801);
+        setMain();
+        Chain.Block block = wrapper.getBlockByNum(34882992L);
         System.out.println(block.getTransactionsCount());
         /**
          SHA256.Digest digest = new SHA256.Digest();
@@ -551,6 +809,7 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getHeight() {
+        setMain();
         Response.BlockExtention block = wrapper.blockingStub.getNowBlock2(GrpcAPI.EmptyMessage.newBuilder().build());
         System.out.println(block.getBlockHeader());
     }
@@ -565,14 +824,30 @@ public class TrxWalletApiTest extends Base {
     @Test
     public void addressTest() {
         List<String> list = new ArrayList<>();
-        list.add("0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd");
-        list.add("0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac");
-        list.add("0x3c2ff003ff996836d39601ca22394a58ca9c473b");
-        list.add("0xae00574bdc6bbd40612ec024e2536cc0784f73e4");
+        //list.add("TSbGkbX6ZjQZM9eco3JLzfFCR1yxbKxwsy");
+        //list.add("TVAhzC3rBLy6XLceHfha3ddiVHTUpUovyY");
+        list.add("0x595d5364e5eb77e3707ce2710215db97a835a82d");
+        //list.add("0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac");
+        //list.add("0x3c2ff003ff996836d39601ca22394a58ca9c473b");
+        //list.add("0xae00574bdc6bbd40612ec024e2536cc0784f73e4");
         for (String address : list) {
+            System.out.println("-------");
             System.out.println(TrxUtil.ethAddress2trx(address));
-            //System.out.println(TrxUtil.trxAddress2eth(address));
+            System.out.println(TrxUtil.trxAddress2eth(address));
+            System.out.println("-------");
         }
+    }
+
+    @Test
+    public void isMinterERC20() throws Exception {
+        //setMain();
+        //String multy = "TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm";
+        String multy = "0x41d2972934f5cdcf9beef75e5884ab61ab2dfdf533";
+        String erc20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";//USDT
+        Function isMinterERC20Function = TrxUtil.getIsMinterERC20Function(erc20);
+        List<Type> valueTypes = walletApi.callViewFunction(multy, isMinterERC20Function);
+        boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
+        System.out.println(isMinterERC20);
     }
 
     public static SECP256K1.KeyPair createPair(String prikey) {

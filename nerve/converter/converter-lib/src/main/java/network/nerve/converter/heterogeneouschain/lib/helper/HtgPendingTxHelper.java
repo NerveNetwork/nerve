@@ -54,18 +54,33 @@ public class HtgPendingTxHelper implements BeanInitial {
     public void commitNervePendingDepositTx(HtgUnconfirmedTxPo po) {
         String htTxHash = po.getTxHash();
         try {
-            htgCallBackManager.getDepositTxSubmitter().pendingTxSubmit(
-                    htTxHash,
-                    po.getBlockHeight(),
-                    po.getFrom(),
-                    po.getTo(),
-                    po.getValue(),
-                    po.getTxTime(),
-                    po.getDecimals(),
-                    po.isIfContractAsset(),
-                    po.getContractAddress(),
-                    po.getAssetId(),
-                    po.getNerveAddress());
+            if (po.isDepositIIMainAndToken()) {
+                htgCallBackManager.getDepositTxSubmitter().pendingDepositIITxSubmit(
+                        htTxHash,
+                        po.getBlockHeight(),
+                        po.getFrom(),
+                        po.getTo(),
+                        po.getValue(),
+                        po.getTxTime(),
+                        po.getDecimals(),
+                        po.getContractAddress(),
+                        po.getAssetId(),
+                        po.getNerveAddress(),
+                        po.getDepositIIMainAssetValue());
+            } else {
+                htgCallBackManager.getDepositTxSubmitter().pendingTxSubmit(
+                        htTxHash,
+                        po.getBlockHeight(),
+                        po.getFrom(),
+                        po.getTo(),
+                        po.getValue(),
+                        po.getTxTime(),
+                        po.getDecimals(),
+                        po.isIfContractAsset(),
+                        po.getContractAddress(),
+                        po.getAssetId(),
+                        po.getNerveAddress());
+            }
         } catch (Exception e) {
             // 交易已存在，移除队列
             if (e instanceof NulsException &&

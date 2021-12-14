@@ -112,6 +112,9 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_KCS = "KCS-USDT";
     //TRON
     String ANCHOR_TOKEN_TRX = "TRX-USDT";
+    String ANCHOR_TOKEN_CRO = "CRO-USDT";
+    String ANCHOR_TOKEN_AVAX = "AVAX-USDT";
+    String ANCHOR_TOKEN_FTM = "FTM-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

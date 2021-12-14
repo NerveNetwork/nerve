@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.lib.handler;
 
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgInvokeTxHelper;
@@ -69,23 +70,25 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
     }
 
     public void run() {
+        IConverterCoreApi converterCoreApi = htgContext.getConverterCoreApi();
+        String symbol = htgContext.getConfig().getSymbol();
         LinkedBlockingDeque<HtgWaitingTxPo> queue = htgContext.WAITING_TX_QUEUE();
         HtgWaitingTxPo po = null;
         try {
-            if (!htgContext.getConverterCoreApi().isRunning()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+            if (!converterCoreApi.isRunning()) {
+                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", symbol);
                 return;
             }
-            if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+            if (!converterCoreApi.isVirtualBankByCurrentNode()) {
+                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", symbol);
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", symbol);
                 return;
             }
-            LoggerUtil.LOG.debug("[{}交易调用数据等待任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getWaitingTxQueuePeriod());
-            htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
+            LoggerUtil.LOG.debug("[{}交易调用数据等待任务] - 每隔{}秒执行一次。", symbol, htgContext.getConfig().getWaitingTxQueuePeriod());
+            htgWalletApi.checkApi(converterCoreApi.getVirtualBankOrder());
             // 等待重启应用时，加载的持久化任务
             htgContext.INIT_WAITING_TX_QUEUE_LATCH().await();
             int size = queue.size();
@@ -93,14 +96,20 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 po = queue.poll();
                 if (po == null) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("移除empty对象");
+                        logger().debug("[{}]移除empty对象", symbol);
                     }
                     continue;
                 }
                 String nerveTxHash = po.getNerveTxHash();
+                // 查询nerve交易是否理事遗留的问题交易
+                if (converterCoreApi.skippedTransaction(nerveTxHash)) {
+                    logger().info("[{}][交易调用数据等待队列] 历史遗留的问题数据, 移除交易, hash:{}", symbol, nerveTxHash);
+                    this.clearDB(nerveTxHash);
+                    continue;
+                }
                 // 查询nerve交易对应的eth交易是否成功
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("Nerve tx 在NERVE网络已确认, 成功移除队列, nerveHash: {}", nerveTxHash);
+                    logger().info("[{}]Nerve tx 在NERVE网络已确认, 成功移除队列, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
@@ -112,7 +121,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
                     if (htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
-                        logger().info("Nerve tx 在{}网络已确认, 成功移除队列, nerveHash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
+                        logger().info("Nerve tx 在{}网络已确认, 成功移除队列, nerveHash: {}", symbol, nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;
                     }
@@ -120,7 +129,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 po.setValidateHeight(validateHeight);
 
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, RESEND_TIME);
+                    logger().warn("[{}]Nerve交易[{}]重发超过{}次，丢弃交易", symbol, nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
@@ -129,13 +138,13 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 long waitingEndTime = po.getWaitingEndTime();
                 long maxWaitingEndTime = po.getMaxWaitingEndTime();
                 int currentNodeSendOrder = po.getCurrentNodeSendOrder();
-                logger().info("hash: {}, now: {}, waiting: {}, maxWaiting: {}, order: {}, isSend: {}", nerveTxHash, now, waitingEndTime, maxWaitingEndTime, currentNodeSendOrder, po.isInvokeResend());
+                logger().info("[{}]hash: {}, now: {}, waiting: {}, maxWaiting: {}, order: {}, isSend: {}", symbol, nerveTxHash, now, waitingEndTime, maxWaitingEndTime, currentNodeSendOrder, po.isInvokeResend());
                 // 检查若所有管理员均发送交易失败，则返回从第一顺位继续发交易
                 if (now >= maxWaitingEndTime) {
-                    logger().info("最大等待时间已结束，从第一顺位开始重发交易, nerveHash: {}", nerveTxHash);
+                    logger().info("[{}]最大等待时间已结束，从第一顺位开始重发交易, nerveHash: {}", symbol, nerveTxHash);
                     htgInvokeTxHelper.clearRecordOfCurrentNodeSentEthTx(nerveTxHash, po);
                     if (currentNodeSendOrder == 1) {
-                        logger().info("第一顺位重发交易, nerveHash: {}", nerveTxHash);
+                        logger().info("[{}]第一顺位重发交易, nerveHash: {}", symbol, nerveTxHash);
                         // 发起交易
                         htgResendHelper.reSend(po);
                         // 记录已调用重发函数的标志
@@ -147,7 +156,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 }
                 // nerve交易未完成，[非首位节点] 检查等待时间是否结束，结束后，检查是否已发起交易，否则发起交易
                 if (now >= waitingEndTime && currentNodeSendOrder != 1 && !po.isInvokeResend()) {
-                    logger().info("等待时间已结束，重发交易, nerveHash: {}", nerveTxHash);
+                    logger().info("[{}]等待时间已结束，重发交易, nerveHash: {}", symbol, nerveTxHash);
                     // 发起交易
                     htgResendHelper.reSend(po);
                     // 记录已调用重发函数的标志

@@ -53,6 +53,7 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
 
     private boolean firstSync = true;
     private boolean clearDB = false;
+    private boolean managerChangeSync = false;
 
     private HtgContext htgContext;
 
@@ -89,6 +90,25 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                 htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
             }
             trxWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
+            // + 由于区块解析失败的生产问题，期间产生了一个虚拟银行变更，主网必须同步波场高度 34899400
+            if (!managerChangeSync) {
+                long managerChangeHeight = 34899400L;
+                managerChangeSync = htgLocalBlockHelper.isSynced(managerChangeHeight);
+                if (htgContext.NERVE_CHAINID() == 9 && !managerChangeSync) {
+                    Response.BlockExtention block = trxWalletApi.getBlockByHeight(managerChangeHeight);
+                    if(block == null) {
+                        htgContext.logger().info("获取不到{}区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                        return;
+                    }
+                    htgLocalBlockHelper.deleteAllLocalBlockHeader();
+                    trxBlockAnalysisHelper.analysisEthBlock(block, trxAnalysisTxHelper);
+                    htgLocalBlockHelper.saveSynced(managerChangeHeight);
+                    managerChangeSync = true;
+                    return;
+                }
+            }
+            // -
+
             // 当前HTG网络最新的区块
             long blockHeightFromEth = trxWalletApi.getBlockHeight();
             // 本地最新的区块

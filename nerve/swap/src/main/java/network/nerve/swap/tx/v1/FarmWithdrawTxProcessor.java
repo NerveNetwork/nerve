@@ -78,7 +78,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                 errorCode = SwapErrorCode.DATA_ERROR.getCode();
                 continue;
             }
-            ValidaterResult result = helper.validate(chain, tx, blockHeader==null?0:blockHeader.getTime());
+            ValidaterResult result = helper.validate(chain, tx, blockHeader == null ? 0 : blockHeader.getTime());
             if (result.isFailed()) {
                 failsList.add(tx);
                 errorCode = result.getErrorCode().getCode();
@@ -102,7 +102,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
-                this.swapExecuteResultStorageService.save(chainId,tx.getHash(),result);
+                this.swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
@@ -113,6 +113,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareNew());
                 farm.setSyrupTokenBalance(bus.getSyrupBalanceNew());
                 farm.setStakeTokenBalance(bus.getStakingBalanceNew());
+                farm.setStopHeight(bus.getStopHeightNew());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
                 //更新User
@@ -155,6 +156,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareOld());
                 farm.setSyrupTokenBalance(bus.getSyrupBalanceOld());
                 farm.setStakeTokenBalance(bus.getStakingBalanceOld());
+                farm.setStopHeight(bus.getStopHeightOld());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
                 //更新User

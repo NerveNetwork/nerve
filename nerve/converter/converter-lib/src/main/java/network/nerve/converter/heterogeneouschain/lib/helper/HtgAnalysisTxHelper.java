@@ -108,6 +108,14 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     }
                     break;
                 }
+                // 新的充值交易方式，调用多签合约的crossOutII函数
+                if (htInput.isDepositIITx()) {
+                    isDepositTx = this.parseNewDepositII(tx, po);
+                    if (isDepositTx) {
+                        txType = HeterogeneousChainTxType.DEPOSIT;
+                    }
+                    break;
+                }
                 // 广播的交易
                 if (htInput.isBroadcastTx()) {
                     isBroadcastTx = true;
@@ -140,7 +148,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                 break;
             }
             // ERC20充值交易
-            if (htgERC20Helper.isERC20(tx.getTo(), po)) {
+            if (htgERC20Helper.isERC20(tx.getTo(), po) && htgERC20Helper.hasERC20WithListeningAddress(tx.getInput(), toAddress -> htListener.isListeningAddress(toAddress))) {
                 TransactionReceipt txReceipt = htWalletApi.getTxReceipt(htTxHash);
                 if (htgERC20Helper.hasERC20WithListeningAddress(txReceipt, po, toAddress -> htListener.isListeningAddress(toAddress))) {
                     // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
@@ -221,6 +229,36 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
         }
+        return true;
+    }
+
+    private boolean parseNewDepositII(Transaction tx, HtgUnconfirmedTxPo po) throws Exception {
+        String htTxHash = tx.getHash();
+        // 调用多签合约的crossOutII函数的充值方式
+        if (!htgParseTxHelper.validationEthDepositByCrossOutII(tx, null, po)) {
+            htgContext.logger().error("[{}]不合法的{}网络的充值II交易[0]", htTxHash, htgContext.getConfig().getSymbol());
+            return false;
+        }
+        // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+        if (po.isIfContractAsset() && htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
+                && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
+            htgContext.logger().warn("[{}]不合法的{}网络的充值II交易[0], ERC20[{}]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+            return false;
+        }
+        if (po.isDepositIIMainAndToken()) {
+            htgContext.logger().info("监听到{}网络的ERC20/{}同时充值II交易[0][{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
+                    htgContext.getConfig().getSymbol(), htgContext.getConfig().getSymbol(), tx.getHash(),
+                    tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals(), po.getDepositIIMainAssetValue());
+        } else if (po.isIfContractAsset()) {
+            htgContext.logger().info("监听到{}网络的ERC20充值II交易[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+                    htgContext.getConfig().getSymbol(), tx.getHash(),
+                    tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
+        } else {
+            htgContext.logger().info("监听到{}网络的MainAsset充值II交易[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+                    htgContext.getConfig().getSymbol(), tx.getHash(),
+                    tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
+        }
+
         return true;
     }
 

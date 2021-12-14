@@ -65,6 +65,8 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private long oneMaticKcsHeight;
     /** TRX 协议升级配置高度 */
     private long trxKeyHeight;
+    /** p16 协议升级配置高度 */
+    private long protocol16Height;
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;
@@ -180,5 +182,13 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     public void setTrxKeyHeight(long trxKeyHeight) {
         this.trxKeyHeight = trxKeyHeight;
+    }
+
+    public long getProtocol16Height() {
+        return protocol16Height;
+    }
+
+    public void setProtocol16Height(long protocol16Height) {
+        this.protocol16Height = protocol16Height;
     }
 }

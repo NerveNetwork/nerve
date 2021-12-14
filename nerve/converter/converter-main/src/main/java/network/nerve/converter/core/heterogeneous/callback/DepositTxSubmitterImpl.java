@@ -90,10 +90,11 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
      * @param contractAddress 合约地址
      * @param assetId         资产ID
      * @param nerveAddress    Nerve充值地址
+     * @param extend
      */
     @Override
     public String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
-                           Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
+                           Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress, String extend) throws Exception {
         // 组装Nerve充值交易
         RechargeTxDTO dto = new RechargeTxDTO();
         dto.setOriginalTxHash(txHash);
@@ -103,6 +104,7 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         dto.setHeterogeneousChainId(hChainId);
         dto.setHeterogeneousAssetId(assetId);
         dto.setTxtime(txTime);
+        dto.setExtend(extend);
         Transaction tx = assembleTxService.createRechargeTx(nerveChain, dto);
         if(tx == null) {
             return null;
@@ -111,7 +113,29 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     }
 
     @Override
-    public String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime, Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
+    public String depositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime, Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, String extend) throws Exception {
+        // 同时充值两种资产的组装交易
+        RechargeTxDTO dto = new RechargeTxDTO();
+        dto.setOriginalTxHash(txHash);
+        dto.setHeterogeneousFromAddress(from);
+        dto.setToAddress(nerveAddress);
+        dto.setAmount(erc20Value);
+        dto.setHeterogeneousChainId(hChainId);
+        dto.setHeterogeneousAssetId(erc20AssetId);
+        dto.setTxtime(txTime);
+        dto.setDepositII(true);
+        dto.setMainAmount(mainAssetValue);
+        dto.setExtend(extend);
+        Transaction tx = assembleTxService.createRechargeTx(nerveChain, dto);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
+                                  Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
         if (!converterCoreApi.isSupportNewMechanismOfWithdrawalFee()) {
             return null;
         }
@@ -125,6 +149,35 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         txData.setAssetChainId(nerveAssetInfo.getAssetChainId());
         txData.setAssetId(nerveAssetInfo.getAssetId());
         txData.setAmount(value);
+        Transaction tx = assembleTxService.rechargeUnconfirmedTx(nerveChain, txData, txTime);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String pendingDepositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                                           Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue) throws Exception {
+        // tip: 若只存在token充值 或者 main充值，则走旧流程即可
+        // 充值pending交易增加同时转入eth和erc20的数据
+        // 充值待确认交易组装并发出
+        RechargeUnconfirmedTxData txData = new RechargeUnconfirmedTxData();
+        txData.setOriginalTxHash(new HeterogeneousHash(hChainId, txHash));
+        txData.setHeterogeneousHeight(blockHeight);
+        txData.setHeterogeneousFromAddress(from);
+        txData.setNerveToAddress(AddressTool.getAddress(nerveAddress));
+        // 同时有token充值和主资产充值，原txdata字段存放token资产，扩展字段存放主资产
+        // 记录token充值数据
+        NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
+        txData.setAssetChainId(tokenAsset.getAssetChainId());
+        txData.setAssetId(tokenAsset.getAssetId());
+        txData.setAmount(erc20Value);
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        txData.setMainAssetAmount(mainAssetValue);
+        txData.setMainAssetChainId(mainAsset.getAssetChainId());
+        txData.setMainAssetId(mainAsset.getAssetId());
         Transaction tx = assembleTxService.rechargeUnconfirmedTx(nerveChain, txData, txTime);
         if(tx == null) {
             return null;
@@ -148,6 +201,12 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
             dto.setHeterogeneousChainId(hChainId);
             dto.setHeterogeneousAssetId(depositTx.getAssetId());
             dto.setTxtime(depositTx.getTxTime());
+            dto.setExtend(depositTx.getDepositIIExtend());
+            if (depositTx.isDepositIIMainAndToken()) {
+                // 支持同时转入token和main
+                dto.setDepositII(true);
+                dto.setMainAmount(depositTx.getDepositIIMainAssetValue());
+            }
             Transaction tx = assembleTxService.createRechargeTxWithoutSign(nerveChain, dto);
             Transaction confirmedTx = TransactionCall.getConfirmedTx(nerveChain, tx.getHash());
             if (confirmedTx != null) {

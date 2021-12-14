@@ -807,4 +807,32 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = SWAP_PAIR_INFO_BY_LP, version = 1.0, description = "根据LP资产查询交易信息")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
+    })
+    @ResponseData(description = "交易对地址")
+    public Response getPairInfoByTokenLP(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String tokenLPStr = (String) params.get("tokenLPStr");
+            Result<String> result = swapService.getPairAddressByTokenLP(chainId, tokenLPStr);
+            if (result.isFailed()) {
+                return wrapperFailed(result);
+            }
+            String pairAddress = result.getData();
+            SwapPairDTO pairDTO = swapPairCache.get(pairAddress);
+            if (pairDTO == null) {
+                return failed(SwapErrorCode.DATA_NOT_FOUND);
+            }
+
+            Map<String, Object> resultData = JSONUtils.jsonToMap(pairDTO.toString());
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
 }

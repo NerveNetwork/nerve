@@ -159,7 +159,6 @@ public class ConverterController {
         Result<Map<String, Object>> result = converterTools.getHeterogeneousMainAsset(chainId);
         return ResultUtil.getJsonRpcResult(result);
     }
-
     @RpcMethod("getProposalInfo")
     @ApiOperation(description = "查询提案信息（序列化字符串）", order = 606)
     @Parameters({
@@ -255,6 +254,33 @@ public class ConverterController {
             return RpcResult.paramError("[txHash] is incorrect");
         }
         Result<Map<String, Object>> result = converterTools.findByWithdrawalTxHash(chainId, txHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getHeterogeneousRegisterNetwork")
+    @ApiOperation(description = "查询资产的异构链注册网络", order = 609)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID")
+    })
+    )
+    public RpcResult getHeterogeneousRegisterNetwork(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId, assetId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            assetId = (int) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[assetId] is inValid");
+        }
+        Result<Map<String, Object>> result = converterTools.getHeterogeneousRegisterNetwork(chainId, assetId);
         return ResultUtil.getJsonRpcResult(result);
     }
 

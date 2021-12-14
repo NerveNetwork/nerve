@@ -30,6 +30,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
@@ -64,8 +65,18 @@ public class RechargeUnconfirmedVerifier {
     private HeterogeneousAssetHelper heterogeneousAssetHelper;
     @Autowired
     private RechargeStorageService rechargeStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     public void validate(Chain chain, Transaction tx) throws NulsException {
+        if (converterCoreApi.isProtocol16()) {
+            this.validateProtocol16(chain, tx);
+        } else {
+            this._validate(chain, tx);
+        }
+    }
+
+    public void _validate(Chain chain, Transaction tx) throws NulsException {
         RechargeUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeUnconfirmedTxData.class);
         if(null == txData){
             throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
@@ -99,6 +110,58 @@ public class RechargeUnconfirmedVerifier {
         heterogeneousRechargeValid(info, amount, nerveToAddress, heterogeneousAssetInfo);
     }
 
+    public void validateProtocol16(Chain chain, Transaction tx) throws NulsException {
+        RechargeUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeUnconfirmedTxData.class);
+        if(null == txData){
+            throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
+        }
+        HeterogeneousHash originalTxHash = txData.getOriginalTxHash();
+        String heterogeneousHash = originalTxHash.getHeterogeneousHash();
+        int htgChainId = originalTxHash.getHeterogeneousChainId();
+        if(null != rechargeStorageService.find(chain, heterogeneousHash)){
+            // 该原始交易已执行过充值
+            chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
+                    tx.getHash().toHex(), txData.getOriginalTxHash());
+            throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
+        }
+
+        HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
+                htgChainId,
+                heterogeneousHash,
+                HeterogeneousTxTypeEnum.DEPOSIT,
+                this.heterogeneousDockingManager);
+        if (null == info) {
+            chain.getLogger().error("Heterogeneous Transaction Info is null txHash:{}, heterogeneousHash:{}",
+                    tx.getHash().toHex(), heterogeneousHash);
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
+        }
+        String nerveToAddress = AddressTool.getStringAddressByBytes(txData.getNerveToAddress());
+        if (info.isDepositIIMainAndToken()) {
+            // 校验同时充值token和main
+            BigInteger mainAmount = txData.getMainAssetAmount();
+            if (mainAmount == null) {
+                throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+            }
+            int mainAssetChainId = txData.getMainAssetChainId();
+            int mainAssetId = txData.getMainAssetId();
+            HeterogeneousAssetInfo mainInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, mainAssetChainId, mainAssetId);
+
+            int tokenAssetChainId = txData.getAssetChainId();
+            int tokenAssetId = txData.getAssetId();
+            BigInteger tokenAmount = txData.getAmount();
+            HeterogeneousAssetInfo tokenInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, tokenAssetChainId, tokenAssetId);
+            heterogeneousRechargeValidForCrossOutII(info, tokenAmount, nerveToAddress, tokenInfo, mainAmount, mainInfo);
+        } else {
+            // 校验只充值token 或者 只充值 main
+            int assetChainId = txData.getAssetChainId();
+            int assetId = txData.getAssetId();
+            // 通过链内资产id 获取异构链信息
+            HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, assetChainId, assetId);
+            BigInteger amount = txData.getAmount();
+            heterogeneousRechargeValid(info, amount, nerveToAddress, heterogeneousAssetInfo);
+        }
+    }
+
     /**
      * 验证异构链充值交易
      *
@@ -111,6 +174,34 @@ public class RechargeUnconfirmedVerifier {
         }
         if (info.getValue().compareTo(amount) != 0) {
             // 充值金额错误
+            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+        }
+        if (!info.getNerveAddress().equals(toAddress)) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+        }
+    }
+
+    /**
+     * 验证异构链充值交易 - CrossOutII
+     *
+     * @throws NulsException
+     */
+    private void heterogeneousRechargeValidForCrossOutII(HeterogeneousTransactionInfo info, BigInteger tokenAmount, String toAddress, HeterogeneousAssetInfo tokenInfo, BigInteger mainAmount, HeterogeneousAssetInfo mainInfo) throws NulsException {
+        if (info.getAssetId() != tokenInfo.getAssetId()) {
+            // 充值token资产错误
+            throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+        }
+        if (info.getValue().compareTo(tokenAmount) != 0) {
+            // 充值token金额错误
+            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+        }
+
+        if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
+            // 充值主资产错误
+            throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
+        }
+        if (info.getDepositIIMainAssetValue().compareTo(mainAmount) != 0) {
+            // 充值主金额错误
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(toAddress)) {

@@ -1,6 +1,7 @@
 package network.nerve.pocbft.utils.validator;
 
 import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.model.bo.StackingAsset;
 import network.nerve.pocbft.model.bo.tx.txdata.CancelDeposit;
 import network.nerve.pocbft.model.po.DepositPo;
 import network.nerve.pocbft.rpc.call.CallMethodUtils;
@@ -16,6 +17,7 @@ import network.nerve.pocbft.constant.ConsensusErrorCode;
 import network.nerve.pocbft.storage.DepositStorageService;
 import network.nerve.pocbft.utils.enumeration.DepositTimeType;
 import network.nerve.pocbft.utils.enumeration.DepositType;
+import network.nerve.pocbft.utils.manager.ChainManager;
 import network.nerve.pocbft.utils.validator.base.BaseValidator;
 
 import java.io.IOException;
@@ -28,6 +30,8 @@ import java.util.Arrays;
  */
 @Component
 public class WithdrawValidator extends BaseValidator {
+    @Autowired
+    private ChainManager chainManager;
     @Autowired
     private DepositStorageService depositStorageService;
 
@@ -48,7 +52,14 @@ public class WithdrawValidator extends BaseValidator {
         }
 
         //如果为定期委托则验证委托是否到期
-        if (depositPo.getDepositType() == DepositType.REGULAR.getCode()) {
+        StackingAsset stackingAsset = chainManager.assetStackingVerify(depositPo.getAssetChainId(), depositPo.getAssetId());
+        if (null == stackingAsset) {
+            chain.getLogger().error("The asset cannot participate in staking");
+            return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
+        }
+        boolean stoped = stackingAsset.getStopHeight() > 0 && stackingAsset.getStopHeight() <= chain.getBestHeader().getHeight();
+
+        if (!stoped && depositPo.getDepositType() == DepositType.REGULAR.getCode()) {
             DepositTimeType depositTimeType = DepositTimeType.getValue(depositPo.getTimeType());
             if (depositTimeType == null) {
                 chain.getLogger().error("Recurring delegation type does not exist");
@@ -65,7 +76,7 @@ public class WithdrawValidator extends BaseValidator {
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(), 0);
         long realLockTime = 0;
-        if (chain.getChainId() == depositPo.getAssetChainId() && chain.getAssetId() == depositPo.getAssetId() &&chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
+        if (chain.getChainId() == depositPo.getAssetChainId() && chain.getAssetId() == depositPo.getAssetId() && chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
             realLockTime = tx.getTime() + chain.getConfig().getExitStakingLockHours() * 3600;
         }
         Result rs = reduceDepositCoinDataValid(chain, depositPo.getDeposit(), coinData, depositPo.getAddress(), realLockTime, depositPo.getAssetChainId(), depositPo.getAssetId());

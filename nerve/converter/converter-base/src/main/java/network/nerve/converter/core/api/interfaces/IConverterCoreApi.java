@@ -140,4 +140,19 @@ public interface IConverterCoreApi {
      * 是否支持波场跨链 v1.15.0
      */
     boolean isSupportProtocol15TrxCrossChain();
+
+    /**
+     * 是否支持协议16 v1.16.0
+     */
+    boolean isProtocol16();
+
+
+    /**
+     * 添加任务
+     */
+    void addHtgConfirmTxHandler(Runnable runnable);
+    void addHtgRpcAvailableHandler(Runnable runnable);
+    void addHtgWaitingTxInvokeDataHandler(Runnable runnable);
+
+    boolean skippedTransaction(String nerveTxHash);
 }

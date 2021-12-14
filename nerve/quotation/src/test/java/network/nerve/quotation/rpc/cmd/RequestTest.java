@@ -61,65 +61,65 @@ public class RequestTest {
         String key = NVT_USDT;
         int i = 0;
         while (i < 1) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier1 = new AexQuerier();
-                    querier1.tickerPrice(chain, "https://api.aex.zone/v3/ticker.php", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("aex", runnable);
-            runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier3 = new BitzQuerier();
-                    querier3.tickerPrice(chain, "https://api.bitzspeed.com/", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("bitz", runnable);
-            runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier4 = new DexQuerier();
-                    querier4.tickerPrice(chain, "http://beta.nervedex.com", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("nvt", runnable);
-            runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier5 = new HuobiQuerier();
-                    querier5.tickerPrice(chain, "https://api-aws.huobi.pro", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("huobi", runnable);
-            runnable = new Runnable() {
+//            Runnable runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier1 = new AexQuerier();
+//                    querier1.tickerPrice(chain, "https://api.aex.zone/v3/ticker.php", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("aex", runnable);
+//            runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier3 = new BitzQuerier();
+//                    querier3.tickerPrice(chain, "https://api.bitzspeed.com/", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("bitz", runnable);
+//            runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier4 = new DexQuerier();
+//                    querier4.tickerPrice(chain, "http://beta.nervedex.com", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("nvt", runnable);
+//            runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier5 = new HuobiQuerier();
+//                    querier5.tickerPrice(chain, "https://api-aws.huobi.pro", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("huobi", runnable);
+            Runnable  runnable = new Runnable() {
                 @Override
                 public void run() {
                     Querier querier6 = new MxcQuerier();
-                    querier6.tickerPrice(chain, "https://www.mxc.io", key);
+                    querier6.tickerPrice(chain, "https://www.mxc.com", key);
                 }
             };
             ThreadUtils.createAndRunThread("mx", runnable);
-            runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier7 = new OkexQuerier();
-                    querier7.tickerPrice(chain, "https://aws.okex.com", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("ok", runnable);
-
-
-            runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Querier querier2 = new BinanceQuerier();
-                    querier2.tickerPrice(chain, "https://api.binance.com", key);
-//                    querier2.tickerPrice(chain, "http://binanceapi.zhoulijun.top", key);
-                }
-            };
-            ThreadUtils.createAndRunThread("ok", runnable);
+//            runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier7 = new OkexQuerier();
+//                    querier7.tickerPrice(chain, "https://aws.okex.com", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("ok", runnable);
+//
+//
+//            runnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    Querier querier2 = new BinanceQuerier();
+//                    querier2.tickerPrice(chain, "https://api.binance.com", key);
+////                    querier2.tickerPrice(chain, "http://binanceapi.zhoulijun.top", key);
+//                }
+//            };
+//            ThreadUtils.createAndRunThread("ok", runnable);
             i++;
         }
 

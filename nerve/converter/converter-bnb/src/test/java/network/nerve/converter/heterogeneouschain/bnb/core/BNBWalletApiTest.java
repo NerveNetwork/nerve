@@ -47,6 +47,7 @@ public class BnbWalletApiTest extends Base {
 
     static String USDX_BNB_MAIN_TEST = "0x7dce26DFad3bb82B0605073480352B6FECEa169a";
     static String USDX_BNB = "0xb6D685346106B697E6b2BbA09bc343caFC930cA3";
+    static String BUG_BNB_18 = "0x90C89b9f9c4605a887540FaD286E02B71f03D70d";
 
     static String DXA_BNB_8 = "0x3139dbe1bf7feb917cf8e978b72b6ead764b0e6c";
     static String GOAT_BNB_9 = "0xba0147e9c99b0467efe7a9c51a2db140f1881db5";
@@ -87,6 +88,11 @@ public class BnbWalletApiTest extends Base {
     protected void setErc20USDX() {
         erc20Address = USDX_BNB;
         erc20Decimals = 6;
+    }
+
+    protected void setErc20BUG() {
+        erc20Address = BUG_BNB_18;
+        erc20Decimals = 18;
     }
 
     protected void setErc20USDXMainTest() {
@@ -181,7 +187,7 @@ public class BnbWalletApiTest extends Base {
     }
 
     public void init() {
-        context.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -236,7 +242,7 @@ public class BnbWalletApiTest extends Base {
      */
     @Test
     public void transferBNBAndERC20() throws Exception {
-        BigInteger gasPrice = context.getEthGasPrice();
+        BigInteger gasPrice = htgContext.getEthGasPrice();
         // 初始化 账户
         setAccount_EFa1();
         // BNB数量
@@ -257,6 +263,7 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void depositBNBByCrossOut() throws Exception {
         setLocalTest();
+        this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         // 初始化 账户
         setAccount_EFa1();
         // BNB数量
@@ -275,15 +282,18 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        context.setEthGasPrice(BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "200";
+        String sendAmount = "30";
         // 初始化 ERC20 地址信息
+        setErc20BUG();
         //setErc20EthMinter();
         //setErc20UsdiMinter();
 
+        //setErc20BUG();
         //setErc20USDX();
         //setErc20DXA();
         //setErc20GOAT();
@@ -291,7 +301,7 @@ public class BnbWalletApiTest extends Base {
         //setErc20BUSD();
 
 
-        setErc20NVT();
+        //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
@@ -426,20 +436,29 @@ public class BnbWalletApiTest extends Base {
         init();
     }
 
+    protected void setMainData() {
+        setMain();
+        list = new ArrayList<>();
+        // 把CC的私钥放在首位
+        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
+        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
+        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
+        list.add("");// ???
+        list.add("");// ???
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        init();
+    }
+
     /**
      * 添加 N 个管理员
      */
     @Test
     public void managerAdd() throws Exception {
         // 正式网环境数据
-        //setUpgradeMain();
-        setLocalTest();
-        //setBeta();
-        //setBnbMainTest();
-        //setMain();
+        setMainData();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa4000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{};
         String[] removes = new String[]{"0x018fc24ec7a4a69c83884d93b3b8f87b670c0ef5"};
@@ -463,28 +482,15 @@ public class BnbWalletApiTest extends Base {
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setUpgradeMain() {
-        setMain();
-        list = new ArrayList<>();
-        // 把CC的私钥放在首位
-        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
-        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
-        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
-        list.add("");// ???
-        list.add("");// ???
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
-        init();
-    }
-
     /**
      * 顶替一个管理员，10个签名
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
-        setUpgradeMain();
+        setMainData();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
         String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
         String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
@@ -645,6 +651,14 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void txInputCrossOutIIDecoderTest() throws JsonProcessingException {
+        String input = "0x38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000001312d00000000000000000000000000b6d685346106b697e6b2bba09bc343cafc930ca300000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e5535417843397351410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT_II);
+        System.out.println(JSONUtils.obj2PrettyJson(typeList));
+
+    }
+
+    @Test
     public void txInputWithdrawDecoderTest() throws JsonProcessingException {
         String input = "0xab6c2b1000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000003250dabb584f7fea1bafaff6000ffbbd2f419a1500000000000000000000000000000000000000000000000000000574fbde600000000000000000000000000000000000000000000000000000000000000000010000000000000000000000007b6f71c8b123b38aa8099e0098bec7fbc35b8a130000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000004066333561313030303464636638663432396261633562663633353665346363343562306163393332363131363130653937613334633664643334393330656336000000000000000000000000000000000000000000000000000000000000028a8dab1935f885ece286c5b779282232f4658c687aac415e27b8f0645b1dcffa294013227e9540245b96ede384d0728343570d01fee23941bf78de62368396f2de1c55e9b073b832f6744f79bf1a8a50fd1c058c1c7c08c7cfc61c7d0f251cfb47ac2b5e69335b4a36a5ca3365bfb5ae92409c8f988c71ecb1e88baeb0653173ca5b1be2ec1ec9dfcc9eef5f9c31deed9a81836a8d2ed3557355b4827f9de4bfb5d7bf6e1c2c9e69eb781cc85e0698c016a9925eb48b30fc7f91a5abb7c48a07c7304c1bab13e934d17f1a56d1fe385c1b71941fba3b1bd4f8eabfcd28b190a8ab38f69f66de77fefa68d592b3449ba6df08b8de2bdf22cd7ca2027c0c1a59479f453e821cb0fa933c9ef8ad0e4a8c47a617ef9e9a2c8ca287f7afbf16192638cd5e80c66d2bf7ac16595774531806123b75fe52677f11523430d813ebf5340e71fff05b171b6836245f2eaebe5c03a45fa4a341816aeceabf3f7f4372fc1c2c73cdff7b9a3436bf83233ee2c73b52842b22ce907b691fa41f91c9ab2245599631acd0b7b8791ca69172dd536325187f486eec65d19e0da949ddd3e25a84aa0f0a0b312c32b7fa136ae567be43733eb1976cdfb5679ae2f674d420eb7dd22a4e01d63bdc6c87cd1b8bd1554af7adc6eed10410789260e4fa4832b39e17f209064a64db9d1982910d0e84ceb6065be2fa41c03238ae31dcd72cabc623c723dffb719865a1bbdf5d451b4aa0ebe27103c19e3b44a0361676d264646531f4891f6d64e25ca27609cfbbbf09e2d88a4bff0b51dad3dfeea201eb3ae449094b1f5bd0a2d2a5efc8c12bc99d1b0067fb46208a3fb9000ab8988be48e64bde7e1545639f9c40bd99ff3e628d191426ac99e706c02da81a431ac60d3e752c0faaaf6c6981711d12af3bcab6057671c00000000000000000000000000000000000000000000";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_WITHDRAW);
@@ -670,7 +684,7 @@ public class BnbWalletApiTest extends Base {
         BigInteger value = BigInteger.valueOf(10000000000000000L);
         Boolean isContractAsset = false;
         String erc20 = "0x0000000000000000000000000000000000000000";
-        String hash = this.encoderWithdraw(txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
+        String hash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
@@ -680,15 +694,27 @@ public class BnbWalletApiTest extends Base {
         String[] adds = new String[]{"0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
         int count = 1;
         String[] removes = new String[]{};
-        String hash = this.encoderChange(txKey, adds, count, removes, (byte) 2);
+        String hash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
     @Test
-    public void changeEventTest() throws Exception {
+    public void crossOutEventTest() throws Exception {
         String data = "0x000000000000000000000000742e9290053f63f38270b64b1a8daf52c91e6a510000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000271000000000000000000000000080b47d949b4bbd09bb48300c81e2c30df243310c00000000000000000000000000000000000000000000000000000000000000264e4552564565706236426b3765474b776e33546e6e373534633244674b65784b4c5467325a720000000000000000000000000000000000000000000000000000";
         List<Object> eventResult = HtgUtil.parseEvent(data, HtgConstant.EVENT_CROSS_OUT_FUNDS);
         System.out.println(JSONUtils.obj2PrettyJson(eventResult));
+    }
+
+    @Test
+    public void crossOutIIEventTest() throws Exception {
+        String txHash = "0xf79ab90e54716d2201246008321121e014047c0430194290028ec8974571a978";
+        TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(txHash);
+        org.web3j.protocol.core.methods.response.Log log = txReceipt.getLogs().get(1);
+        String data = log.getData();
+        List<Object> eventResult = HtgUtil.parseEvent(data, HtgConstant.EVENT_CROSS_OUT_II_FUNDS);
+        System.out.println(JSONUtils.obj2PrettyJson(eventResult));
+        System.out.println(Numeric.toHexString((byte[]) eventResult.get(5)));
+        System.out.println(new String((byte[]) eventResult.get(5), "UTF8"));
     }
 
     @Test
@@ -804,11 +830,11 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void calGasPriceTest() {
-        BigDecimal nvtUsd = new BigDecimal("0.16");
-        BigDecimal nvtAmount = new BigDecimal(21_00000000L);
-        BigDecimal ethUsd = new BigDecimal("360.16");
+        BigDecimal nvtUsd = new BigDecimal("0.09");
+        BigDecimal nvtAmount = new BigDecimal(8_00000000L);
+        BigDecimal ethUsd = new BigDecimal("606.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
@@ -821,20 +847,21 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
-        setMain();
+        //setMain();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
     @Test
     public void getTestNetTxReceipt() throws Exception {
         // 直接调用erc20合约
-        String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
+        String directTxHash = "0xf79ab90e54716d2201246008321121e014047c0430194290028ec8974571a978";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
 
     @Test
     public void getCurrentGasPrice() throws IOException {
+        setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -885,16 +912,17 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void crossOutEstimateGasTest() throws Exception {
-        //setMain();
-        String contractAddress = "0xf7915d4de86b856F3e51b894134816680bf09EEE";
-        BigInteger convertAmount = BigInteger.valueOf(100000000L);
-        Function function = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x477fe38678c166ccf0e2d6cfa755216e2a09118e");
+        setMain();
+        String contractAddress = "0x23dcfd1edf572204c7aee9680a9d853ec2c993ae";
+        //BigInteger convertAmount = BigInteger.valueOf(100000000L);
+        //Function function = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x477fe38678c166ccf0e2d6cfa755216e2a09118e");
 
-        String encodedFunction = FunctionEncoder.encode(function);
+        //String encodedFunction = FunctionEncoder.encode(function);
+        String encodedFunction = "0x95ca26fd000000000000000000000000d248e509c1aacbfe79ac161c3f531643ecbdc34600000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000";
 
         BigInteger value = null;
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                "0xd248e509c1aacbfe79ac161c3f531643ecbdc346",//364151
                 null,
                 null,
                 null,
@@ -913,10 +941,10 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void erc20TransferEstimateGasTest() throws Exception {
-        //setMain();
-        String contractAddress = "0x477fe38678c166ccf0e2d6cfa755216e2a09118e";
-        BigInteger convertAmount = BigInteger.valueOf(100000000L);
-        String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        setMain();
+        String contractAddress = "0x96429570433Ba609069664df731CCb9bb2752220";
+        BigInteger convertAmount = BigInteger.valueOf(7102313600000L);
+        String to = "0xb50aDD16FFc830Ef8e2Cf0012f70712997E53839";
 
         Function function = new Function(
                 "transfer",
@@ -928,7 +956,7 @@ public class BnbWalletApiTest extends Base {
 
         BigInteger value = null;
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xc11D9943805e56b630A401D4bd9A29550353EFa1",//364151
+                "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5",//364151
                 null,
                 null,
                 null,
@@ -1054,7 +1082,7 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void newParseWithdrawTxReceiptTest() throws Exception {
         setBeta();
-        context.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
+        htgContext.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
         List<String> list = new ArrayList<>();
         list.add("0x0e8fd08fe94371d7cf15db7cbd1695cb36b46724566fb9d3ab0527231398ffec");
         for (String directTxHash : list) {
@@ -1062,7 +1090,7 @@ public class BnbWalletApiTest extends Base {
             TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
             HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
             HtgParseTxHelper helper = new HtgParseTxHelper();
-            BeanUtilTest.setBean(helper, "htgContext", context);
+            BeanUtilTest.setBean(helper, "htgContext", htgContext);
             Method method = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceipt", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
             method.setAccessible(true);
             Object invoke = method.invoke(helper, tx, txReceipt, po);
@@ -1142,6 +1170,60 @@ public class BnbWalletApiTest extends Base {
                 )
         ));
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
+    }
+
+    @Test
+    public void encodeTest() throws JsonProcessingException {
+        String from = "0x0cba7a8324c9b7355cef30b4429ddc5eb45e9a00";
+        Function function = new Function("bidderClaim",
+                Arrays.asList(new Address(from), new DynamicBytes(new byte[]{})),
+                Arrays.asList(new TypeReference<Uint256>() {
+                }));
+        System.out.println(FunctionEncoder.encode(function));
+    }
+
+    @Test
+    public void dodoTx() throws Exception {
+        // 正式网数据
+        setMain();
+        // GasPrice准备
+        long gasPriceGwei = 5L;
+        BigInteger gasPrice = BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9));
+        // 钱包账户，加载凭证，用私钥
+        Credentials credentials = Credentials.create("");
+        // 合约地址
+        String contractAddress = "0x23dcfd1edf572204c7aee9680a9d853ec2c993ae";
+        String from = credentials.getAddress();
+
+        EthGetTransactionCount transactionCount = htgWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
+        BigInteger nonce = transactionCount.getTransactionCount();
+        //创建RawTransaction交易对象
+        Function function = new Function("bidderClaim",
+                Arrays.asList(new Address(from), new DynamicBytes(new byte[]{})),
+                Arrays.asList(new TypeReference<Uint256>() {
+                }));
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        RawTransaction rawTransaction = RawTransaction.createTransaction(
+                nonce,
+                gasPrice,
+                BigInteger.valueOf(200000L),
+                contractAddress, encodedFunction
+        );
+        //签名Transaction，这里要对交易做签名
+        byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
+        String hexValue = Numeric.toHexString(signMessage);
+        //发送交易
+        EthSendTransaction ethSendTransaction = htgWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
+        if (ethSendTransaction == null || ethSendTransaction.getResult() == null) {
+            if (ethSendTransaction != null && ethSendTransaction.getError() != null) {
+                System.err.println(String.format("Failed, error: %s", ethSendTransaction.getError().getMessage()));
+            } else {
+                System.err.println("Failed");
+            }
+            return;
+        }
+        System.out.println(ethSendTransaction.getTransactionHash());
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

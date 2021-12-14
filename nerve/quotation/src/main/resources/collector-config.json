@@ -18,8 +18,14 @@
     "weight": "0.30"
   },
   {
+    "name": "Dex",
+    "baseurl": "https://api.nervedex.com",
+    "collector": "network.nerve.quotation.rpc.querier.impl.DexQuerier",
+    "weight": "0.30"
+  },
+  {
     "name": "MXC",
-    "baseurl": "https://www.mxc.io",
+    "baseurl": "https://www.mxc.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.MxcQuerier",
     "weight": "0.10"
   },

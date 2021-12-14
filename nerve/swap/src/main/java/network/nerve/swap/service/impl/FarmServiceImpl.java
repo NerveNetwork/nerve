@@ -39,6 +39,7 @@ import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
@@ -63,6 +64,8 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import static network.nerve.swap.constant.SwapConstant.BI_1E12;
 
 /**
  * @author: PierreLuo
@@ -386,33 +389,46 @@ public class FarmServiceImpl implements FarmService {
         }
         int chainId = AddressTool.getChainIdByAddress(userAddress);
 
+        Chain chain = chainManager.getChain(chainId);
+        FarmUserInfoDTO dto = new FarmUserInfoDTO();
+        dto.setFarmHash(farmHash);
+        dto.setUserAddress(userAddress);
+
+
         FarmUserInfoPO user = userInfoStorageService.load(chainId, farm.getFarmHash(), AddressTool.getAddress(userAddress));
         if (user == null) {
             return Result.getFailed(SwapErrorCode.FARM_NERVE_STAKE_ERROR);
         }
         LedgerAssetDTO stakeLedgerAssetDTO = ledgerService.getNerveAsset(chainId, farm.getStakeToken().getChainId(), farm.getStakeToken().getAssetId());
         LedgerAssetDTO syrupLedgerAssetDTO = ledgerService.getNerveAsset(chainId, farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId());
-
-        Chain chain = chainManager.getChain(chainId);
-
-        FarmUserInfoDTO dto = new FarmUserInfoDTO();
-        dto.setFarmHash(farmHash);
-        dto.setUserAddress(userAddress);
         dto.setAmount(new BigDecimal(user.getAmount()).movePointLeft(stakeLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
+
+        if (farm.getStartBlockHeight() - chain.getBestHeight() >= 0) {
+            dto.setReward(0);
+            return Result.getSuccess(dto);
+        }
+
         if (user.getAmount().compareTo(BigInteger.ZERO) == 0) {
             dto.setReward(0);
             return Result.getSuccess(dto);
         }
+
         BigInteger accSyrupPerShare;
         if (null != chain.getBestHeight()) {
-            accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(chain.getBestHeight() - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
+            long realEnd = chain.getBestHeight();
+            if (chain.getBestHeight() > SwapContext.PROTOCOL_1_16_0) {
+                if (farm.getStopHeight() != null && farm.getStopHeight() > 0 && farm.getStopHeight() < chain.getBestHeight()) {
+                    realEnd = farm.getStopHeight();
+                }
+            }
+            accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(realEnd - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
         } else {
             accSyrupPerShare = farm.getAccSyrupPerShare();
         }
 
         BigInteger reward = user.getAmount().multiply(accSyrupPerShare).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
         dto.setReward(new BigDecimal(reward).movePointLeft(syrupLedgerAssetDTO.getDecimalPlace()).setScale(2, RoundingMode.DOWN).doubleValue());
-        if(dto.getReward()<0){
+        if (dto.getReward() < 0) {
             dto.setReward(0d);
         }
         return Result.getSuccess(dto);
@@ -475,12 +491,27 @@ public class FarmServiceImpl implements FarmService {
         dto.setUserAddress(userAddress);
         dto.setAmount(user.getAmount().toString());
         BigInteger accSyrupPerShare;
+        if (farm.getStartBlockHeight() - chain.getBestHeight() >= 0) {
+            dto.setReward("0");
+            return Result.getSuccess(dto);
+        }
+
+        if (user.getAmount().compareTo(BigInteger.ZERO) == 0) {
+            dto.setReward("0");
+            return Result.getSuccess(dto);
+        }
+
         if (null != chain.getBestHeight()) {
-            accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(chain.getBestHeight() - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
+            long realEnd = chain.getBestHeight();
+            if (chain.getBestHeight() > SwapContext.PROTOCOL_1_16_0) {
+                if (farm.getStopHeight() != null && farm.getStopHeight() > 0 && farm.getStopHeight() < chain.getBestHeight()) {
+                    realEnd = farm.getStopHeight();
+                }
+            }
+            accSyrupPerShare = farm.getAccSyrupPerShare().add((farm.getSyrupPerBlock().multiply(BigInteger.valueOf(realEnd - farm.getLastRewardBlock()))).multiply(SwapConstant.BI_1E12).divide(farm.getStakeTokenBalance()));
         } else {
             accSyrupPerShare = farm.getAccSyrupPerShare();
         }
-
         BigInteger reward = user.getAmount().multiply(accSyrupPerShare).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
         dto.setReward(reward.toString());
 

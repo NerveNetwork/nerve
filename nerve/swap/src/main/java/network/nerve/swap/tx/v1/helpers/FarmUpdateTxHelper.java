@@ -87,7 +87,8 @@ public class FarmUpdateTxHelper {
             logger.warn("Farm not exist.");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_NOT_EXIST);
         }
-        if(!farm.isModifiable()){
+        //既不能修改，也不是追加糖果的交易，不通过
+        if (!farm.isModifiable() && !onlyAddSyrup(farm, txData)) {
             logger.warn("The user does not have farm management permission");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_PERMISSION_ERROR);
         }
@@ -142,6 +143,19 @@ public class FarmUpdateTxHelper {
         }
 
         return ValidaterResult.getSuccess();
+    }
+
+    private boolean onlyAddSyrup(FarmPoolPO farm, FarmUpdateData txData) {
+        if (txData.getChangeType() != 0) {
+            return false;
+        }
+        if (null != txData.getNewSyrupPerBlock() && farm.getSyrupPerBlock().compareTo(txData.getNewSyrupPerBlock()) != 0) {
+            return false;
+        }
+        if (txData.getWithdrawLockTime() != farm.getWithdrawLockTime()) {
+            return false;
+        }
+        return true;
     }
 
     public void setFarmCacher(FarmCacheImpl farmCacher) {

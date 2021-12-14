@@ -106,4 +106,12 @@ public class HtgLocalBlockHelper implements BeanInitial {
             localBlockHeader = this.getLatestLocalBlockHeader();
         }
     }
+
+    public int saveSynced(long height) throws Exception {
+        return htgBlockHeaderStorageService.saveSynced(height);
+    }
+
+    public boolean isSynced(long height) {
+        return htgBlockHeaderStorageService.isSynced(height);
+    }
 }

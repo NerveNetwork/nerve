@@ -125,7 +125,7 @@ public class KcsWalletApiTest extends Base {
     }
 
     public void init() {
-        context.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
         this.priKey = list.get(0);
     }
@@ -180,7 +180,7 @@ public class KcsWalletApiTest extends Base {
      */
     @Test
     public void transferMainAssetAndERC20() throws Exception {
-        BigInteger gasPrice = context.getEthGasPrice();
+        BigInteger gasPrice = htgContext.getEthGasPrice();
         // 初始化 账户
         setAccount_EFa1();
         // MainAsset数量
@@ -228,7 +228,7 @@ public class KcsWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        context.setEthGasPrice(new BigDecimal("1").scaleByPowerOfTen(9).toBigInteger());
+        htgContext.setEthGasPrice(new BigDecimal("1").scaleByPowerOfTen(9).toBigInteger());
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
@@ -377,7 +377,7 @@ public class KcsWalletApiTest extends Base {
         setMainData();
         // GasPrice准备
         long gasPriceGwei = 1L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa1000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
                 "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
@@ -468,7 +468,7 @@ public class KcsWalletApiTest extends Base {
         setUpgradeMain();
         // GasPrice准备
         long gasPriceGwei = 20L;
-        context.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
         String[] adds = new String[]{"0xaff68cd458539a16b932748cf4bdd53bf196789f"};
         String[] removes = new String[]{"0xf08877ba2b11f9f7d3912bba36cc2b21447b1b42"};
@@ -641,7 +641,7 @@ public class KcsWalletApiTest extends Base {
         BigInteger value = BigInteger.valueOf(10000000000000000L);
         Boolean isContractAsset = false;
         String erc20 = "0x0000000000000000000000000000000000000000";
-        String hash = this.encoderWithdraw(txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
+        String hash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, value, isContractAsset, erc20, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
@@ -651,7 +651,7 @@ public class KcsWalletApiTest extends Base {
         String[] adds = new String[]{"0x9f14432b86db285c76589d995aab7e7f88b709df", "0x42868061f6659e84414e0c52fb7c32c084ce2051", "0x26ac58d3253cbe767ad8c14f0572d7844b7ef5af", "0x9dc0ec60c89be3e5530ddbd9cf73430e21237565", "0x6392c7ed994f7458d60528ed49c2f525dab69c9a", "0xfa27c84ec062b2ff89eb297c24aaed366079c684", "0xc11d9943805e56b630a401d4bd9a29550353efa1", "0x3091e329908da52496cc72f5d5bbfba985bccb1f", "0x49467643f1b6459caf316866ecef9213edc4fdf2", "0x5e57d62ab168cd69e0808a73813fbf64622b3dfd"};
         int count = 1;
         String[] removes = new String[]{};
-        String hash = this.encoderChange(txKey, adds, count, removes, (byte) 2);
+        String hash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, (byte) 2);
         System.out.println(String.format("hash: %s", hash));
     }
 
@@ -779,7 +779,7 @@ public class KcsWalletApiTest extends Base {
         BigDecimal nvtAmount = new BigDecimal(21_00000000L);
         BigDecimal ethUsd = new BigDecimal("360.16");
         int assetId = 2;
-        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId);
+        BigDecimal price = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, nvtUsd, nvtAmount, ethUsd, assetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         System.out.println(price.movePointLeft(9).toPlainString());
     }
 
@@ -856,7 +856,7 @@ public class KcsWalletApiTest extends Base {
     public void approveTest() throws Exception {
         // erc20授权
         //BigInteger approveAmount = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
-        context.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
+        htgContext.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
         setMain();
         String from = "";
         String fromPriKey = "";

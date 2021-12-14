@@ -23,9 +23,11 @@
  */
 package network.nerve.converter.core.heterogeneous.docking.interfaces;
 
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.bo.*;
+import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -125,6 +127,10 @@ public interface IHeterogeneousChainDocking {
      * @return 多签地址
      */
     void updateMultySignAddress(String multySignAddress) throws Exception;
+
+    default void updateMultySignAddressProtocol16(String multySignAddress, byte version) throws Exception {
+        updateMultySignAddress(multySignAddress);
+    };
 
     /**
      * 确认异构链的交易状态
@@ -328,4 +334,19 @@ public interface IHeterogeneousChainDocking {
     default String cancelHtgTx(String nonce, String priceGWei) throws Exception {
         return EMPTY_STRING;
     }
+
+    default String getAddressString(byte[] addressBytes) {
+        return "0x" + HexUtil.encode(addressBytes);
+    }
+
+    default byte[] getAddressBytes(String addressString) {
+        String cleanInput = ConverterUtil.cleanHexPrefix(addressString);
+        int len = cleanInput.length();
+        if (len == 0) {
+            return new byte[0];
+        }
+        return HexUtil.decode(cleanInput);
+    }
+
+    default void initialSignatureVersion() {}
 }

@@ -40,18 +40,18 @@ import org.junit.Test;
  */
 public class DbTest {
 
-    HtgContext htContext = new BnbContext();
+    static BnbContext context = new BnbContext();
 
     @BeforeClass
     public static void before() {
         Log.info("init");
-        BnbContext.logger = Log.BASIC_LOGGER;
+        context.setLogger(Log.BASIC_LOGGER);
         RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/nerve/converter/converter-htn/src/test/resources/data/converter/");
     }
 
     @Test
     public void testAccountDB() throws Exception {
-        HtgAccountStorageServiceImpl accoutDb = new HtgAccountStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgAccountStorageServiceImpl accoutDb = new HtgAccountStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         HtgAccount account = accoutDb.findByAddress("0xdd7cbedde731e78e8b8e4b2c212bc42fa7c09d03");
         System.out.println(JSONUtils.obj2PrettyJson(account));
 
@@ -66,44 +66,44 @@ public class DbTest {
 
     @Test
     public void testBlockDB() throws Exception {
-        HtgBlockHeaderStorageServiceImpl blockDB = new HtgBlockHeaderStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgBlockHeaderStorageServiceImpl blockDB = new HtgBlockHeaderStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(blockDB.findLatest()));
     }
 
     @Test
     public void testERC20DB() throws Exception {
-        HtgERC20StorageServiceImpl _erc20DB = new HtgERC20StorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgERC20StorageServiceImpl _erc20DB = new HtgERC20StorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(_erc20DB.getMaxAssetId());
         System.out.println(JSONUtils.obj2PrettyJson(_erc20DB.findByAddress("0x04f535663110a392a6504839beed34e019fdb4e0")));
     }
 
     @Test
     public void testMultySignAddressDB() throws Exception {
-        HtgMultiSignAddressHistoryStorageServiceImpl multyDB = new HtgMultiSignAddressHistoryStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgMultiSignAddressHistoryStorageServiceImpl multyDB = new HtgMultiSignAddressHistoryStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(multyDB.findAll()));
     }
 
     @Test
     public void testTxInvokeInfoDB() throws Exception {
-        HtgTxInvokeInfoStorageServiceImpl txInvokeInfoDB = new HtgTxInvokeInfoStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgTxInvokeInfoStorageServiceImpl txInvokeInfoDB = new HtgTxInvokeInfoStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(txInvokeInfoDB.findAllWaitingTxPo()));
     }
 
     @Test
     public void testTxRelationDB() throws Exception {
-        HtgTxRelationStorageServiceImpl txRelationDB = new HtgTxRelationStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgTxRelationStorageServiceImpl txRelationDB = new HtgTxRelationStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(txRelationDB.findEthSendTxPo("0xfac20bde3a1134006504180bc76efece3924dc58b11e0d1bb491c42ce3a394da")));
     }
 
     @Test
     public void testTxDB() throws Exception {
-        HtgTxStorageServiceImpl txDB = new HtgTxStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgTxStorageServiceImpl txDB = new HtgTxStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(txDB.findByTxHash("0xfac20bde3a1134006504180bc76efece3924dc58b11e0d1bb491c42ce3a394da")));
     }
 
     @Test
     public void testUnconfirmedTxDB() throws Exception {
-        HtgUnconfirmedTxStorageServiceImpl unconfirmedTxDB = new HtgUnconfirmedTxStorageServiceImpl(htContext, BnbDBConstant.DB_BNB);
+        HtgUnconfirmedTxStorageServiceImpl unconfirmedTxDB = new HtgUnconfirmedTxStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(unconfirmedTxDB.findAll()));
     }
 }

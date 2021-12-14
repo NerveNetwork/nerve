@@ -7,6 +7,7 @@ import io.nuls.core.rpc.model.ModuleE;
 import network.nerve.model.bo.config.ConfigBean;
 
 import java.io.File;
+import java.util.Set;
 
 /**
  * 跨链模块配置类
@@ -40,6 +41,10 @@ public class NulsCrossChainConfig extends ConfigBean implements ModuleConfig {
 
     /**默认链接到的跨链节点*/
     private String crossSeedIps;
+    /**
+     * 本链种子节点地址
+     */
+    private Set<String> seedNodeSet;
 
     private Long version1_6_0_height;
 
@@ -125,5 +130,13 @@ public class NulsCrossChainConfig extends ConfigBean implements ModuleConfig {
 
     public void setCrossSeedIps(String crossSeedIps) {
         this.crossSeedIps = crossSeedIps;
+    }
+
+    public Set<String> getSeedNodeSet() {
+        return seedNodeSet;
+    }
+
+    public void setSeedNodeSet(Set<String> seedNodeSet) {
+        this.seedNodeSet = seedNodeSet;
     }
 }

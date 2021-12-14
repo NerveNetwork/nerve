@@ -47,8 +47,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
-import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.TRX_1;
-import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.TRX_10;
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.*;
 import static org.tron.trident.core.ApiWrapper.parseAddress;
 import static org.tron.trident.core.ApiWrapper.parseHex;
 
@@ -68,6 +67,7 @@ public class TrxWalletApi implements BeanInitial {
 
     protected String rpcAddress;
     int switchStatus = 0;
+    String tempKey = "3333333333333333333333333333333333333333333333333333333333333333";
     private boolean inited = false;
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
@@ -228,9 +228,13 @@ public class TrxWalletApi implements BeanInitial {
 
     private ApiWrapper newInstanceApiWrapper(String rpcAddress) throws NulsException {
         if (StringUtils.isBlank(rpcAddress)) {
-            return ApiWrapper.ofShasta("3333333333333333333333333333333333333333333333333333333333333333");
+            return ApiWrapper.ofShasta(tempKey);
+        } else if (rpcAddress.startsWith("endpoint")) {
+            String[] split = rpcAddress.split(":");
+            String rpc = split[1].trim();
+            return new ApiWrapper(rpc + ":50051", rpc + ":50061", tempKey);
         } else {
-            return ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", rpcAddress);
+            return ApiWrapper.ofMainnet(tempKey, rpcAddress);
         }
     }
 
@@ -535,7 +539,7 @@ public class TrxWalletApi implements BeanInitial {
     }
 
     public TrxSendTransactionPo transferTRC20Token(String from, String to, BigInteger value, String privateKey, String contractAddress, BigInteger feeLimit) throws Exception {
-        feeLimit = feeLimit == null ? TRX_10 : feeLimit;
+        feeLimit = feeLimit == null ? TRX_20 : feeLimit;
         //创建RawTransaction交易对象
         Function function = new Function(
                 "transfer",
@@ -550,7 +554,7 @@ public class TrxWalletApi implements BeanInitial {
             Response.TransactionExtention txnExt = wrapper.transfer(from, to, value.longValue());
 
             TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
-            builder.setFeeLimit(TRX_1.longValue());
+            builder.setFeeLimit(TRX_2.longValue());
 
             Chain.Transaction signedTxn = wrapper.signTransaction(builder.build(), new KeyPair(privateKey));
             Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
@@ -558,7 +562,7 @@ public class TrxWalletApi implements BeanInitial {
                 getLog().error("[{}]转账交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
                 return null;
             }
-            return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), from, to, value, null, TRX_1);
+            return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), from, to, value, null, TRX_2);
         });
         return transferTrx;
     }

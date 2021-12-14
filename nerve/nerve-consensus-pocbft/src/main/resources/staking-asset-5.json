@@ -5,7 +5,8 @@
     "canBePeriodically": true,
     "decimal": 8,
     "simple": "NVT",
-    "weight": 2
+    "weight": 2,
+    "stopHeight": 0
   },
   {
     "assetId": "1",
@@ -14,7 +15,8 @@
     "canBePeriodically": true,
     "decimal": 8,
     "simple": "NULS",
-    "weight": 2
+    "weight": 2,
+    "stopHeight": 11240000
   },
   {
     "assetId": "10",
@@ -22,7 +24,8 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "HMDX",
-    "weight": 25
+    "weight": 25,
+    "stopHeight": 11240000
   },
   {
     "assetId": "9",
@@ -30,7 +33,8 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "HT",
-    "weight": 1
+    "weight": 1,
+    "stopHeight": 11240000
   },
   {
     "assetId": "11",
@@ -38,7 +42,8 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "HT",
-    "weight": 1
+    "weight": 1,
+    "stopHeight": 11240000
   },
   {
     "assetId": "12",
@@ -46,6 +51,16 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "OKT",
-    "weight": 1
+    "weight": 1,
+    "stopHeight": 11240000
+  },
+  {
+    "assetId": "92",
+    "oracleKey": "NVTUSDTNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT_USDTN_LP",
+    "weight": 200,
+    "stopHeight": 0
   }
 ]

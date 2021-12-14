@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.trx.helper;
 
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
@@ -32,7 +33,6 @@ import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
-import org.tron.trident.proto.Chain;
 import org.tron.trident.proto.Response;
 import org.tron.trident.utils.Numeric;
 
@@ -40,6 +40,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.HEX_PREFIX;
 
 /**
  * @author: Mimi
@@ -85,7 +87,7 @@ public class TrxERC20Helper implements BeanInitial {
                     BigInteger amount = trc20Event.getValue();
                     // 接收地址不是监听的多签地址
                     if (!isListening.test(toAddress)) {
-                        return false;
+                        continue;
                     }
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setTo(toAddress);
@@ -95,6 +97,40 @@ public class TrxERC20Helper implements BeanInitial {
                     return false;
                 }
             }
+        }
+        return false;
+    }
+
+    public boolean hasERC20WithListeningAddress(String input, Predicate<String> isListening) {
+        if(StringUtils.isBlank(input)) {
+            return false;
+        }
+        input = Numeric.cleanHexPrefix(input);
+        if (input.length() < 8) {
+            return false;
+        }
+        String methodHash;
+        if ((methodHash = HEX_PREFIX + input.substring(0, 8)).equals(TrxConstant.METHOD_HASH_TRANSFER)) {
+            List<Object> objects = TrxUtil.parseTRC20TransferInput(input);
+            if (objects.isEmpty() || objects.size() != 2)
+                return false;
+            String toAddress = objects.get(0).toString();
+            // 接收地址不是监听的多签地址
+            if (!isListening.test(toAddress)) {
+                return false;
+            }
+            return true;
+        }
+        if (methodHash.equals(TrxConstant.METHOD_HASH_TRANSFER_FROM)) {
+            List<Object> objects = TrxUtil.parseTRC20TransferFromInput(input);
+            if (objects.isEmpty() || objects.size() != 3)
+                return false;
+            String toAddress = objects.get(1).toString();
+            // 接收地址不是监听的多签地址
+            if (!isListening.test(toAddress)) {
+                return false;
+            }
+            return true;
         }
         return false;
     }

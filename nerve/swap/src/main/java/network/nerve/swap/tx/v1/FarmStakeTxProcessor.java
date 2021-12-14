@@ -114,6 +114,7 @@ public class FarmStakeTxProcessor implements TransactionProcessor {
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareNew());
                 farm.setSyrupTokenBalance(bus.getSyrupBalanceNew());
                 farm.setStakeTokenBalance(bus.getStakingBalanceNew());
+                farm.setStopHeight(bus.getStopHeightNew());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
                 //更新User
@@ -156,6 +157,7 @@ public class FarmStakeTxProcessor implements TransactionProcessor {
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareOld());
                 farm.setSyrupTokenBalance(bus.getSyrupBalanceOld());
                 farm.setStakeTokenBalance(bus.getStakingBalanceOld());
+                farm.setStopHeight(bus.getStopHeightOld());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
                 //更新User

@@ -25,6 +25,7 @@
 package network.nerve.converter.heterogeneouschain.lib.storage.impl;
 
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgBlockHeaderStorageService;
@@ -40,12 +41,25 @@ public class HtgBlockHeaderStorageServiceImpl implements HtgBlockHeaderStorageSe
 
     private final String baseArea;
     private final String KEY_PREFIX = "HEADER-";
+    private final String SYNCED_KEY_PREFIX = "SYNCED_HEADER-";
     private final byte[] LOCAL_LATEST_HEADER_KEY = stringToBytes("HEADER-LOCAL_LATEST_HEADER");
 
     private final HtgContext htgContext;
     public HtgBlockHeaderStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+    }
+
+    @Override
+    public int saveSynced(long height) throws Exception {
+        boolean result = RocksDBService.put(baseArea, stringToBytes(SYNCED_KEY_PREFIX + height), HtgConstant.EMPTY_BYTE);
+        return result ? 1 : 0;
+    }
+
+    @Override
+    public boolean isSynced(long height) {
+        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(SYNCED_KEY_PREFIX + height));
+        return bytes != null;
     }
 
     @Override

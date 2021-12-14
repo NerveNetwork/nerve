@@ -31,5 +31,57 @@
     "rpcAddress": "https://http-mainnet.hecochain.com",
     "effectiveHeight": 9090000,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "nerve",
+    "key": "NVTUSDTNLP",
+    "anchorToken": "NVTUSDTNLP-USDT",
+    "swapTokenContractAddress": "9-1-8",
+    "baseTokenContractAddress": "9-220-18",
+    "baseAnchorToken": "USDT-USDT",
+    "tokenInfo": "9-252-18",
+    "baseTokenInfo": "9-220-18",
+    "rpcAddress": "9-1,9-220",
+    "effectiveHeight": 22174600,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "nerve",
+    "key": "NULSNVTLP",
+    "anchorToken": "NULSNVTLP-USDT",
+    "swapTokenContractAddress": "9-1-8",
+    "baseTokenContractAddress": "1-1-8",
+    "baseAnchorToken": "USDT-USDT",
+    "tokenInfo": "9-232-18",
+    "baseTokenInfo": "9-220-18",
+    "rpcAddress": "9-1,9-220",
+    "effectiveHeight": 22174600,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "nerve",
+    "key": "NVTETHLP",
+    "anchorToken": "NVTETHLP-USDT",
+    "swapTokenContractAddress": "9-1-8",
+    "baseTokenContractAddress": "9-2-18",
+    "baseAnchorToken": "USDT-USDT",
+    "tokenInfo": "9-250-18",
+    "baseTokenInfo": "9-220-18",
+    "rpcAddress": "9-1,9-220",
+    "effectiveHeight": 22174600,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "nerve",
+    "key": "NVTBNBLP",
+    "anchorToken": "NVTBNBLP-USDT",
+    "swapTokenContractAddress": "9-1-8",
+    "baseTokenContractAddress": "9-25-18",
+    "baseAnchorToken": "USDT-USDT",
+    "tokenInfo": "9-251-18",
+    "baseTokenInfo": "9-220-18",
+    "rpcAddress": "9-1,9-220",
+    "effectiveHeight": 22174600,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   }
 ]

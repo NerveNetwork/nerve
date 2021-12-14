@@ -41,11 +41,17 @@ import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.core.api.ConverterCoreApi;
+import network.nerve.converter.core.heterogeneous.task.HtgConfirmTxTask;
+import network.nerve.converter.core.heterogeneous.task.HtgRpcAvailableHandlerTask;
+import network.nerve.converter.core.heterogeneous.task.HtgWaitingTxInvokeDataHandlerTask;
 import network.nerve.converter.core.thread.handler.SignMessageByzantineHandler;
 import network.nerve.converter.core.thread.task.CfmTxSubsequentProcessTask;
 import network.nerve.converter.core.thread.task.ExeProposalProcessTask;
 import network.nerve.converter.core.thread.task.TxCheckAndCreateProcessTask;
 import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgConfirmTxHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgRpcAvailableHandler;
+import network.nerve.converter.heterogeneouschain.lib.handler.HtgWaitingTxInvokeDataHandler;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.ConfigBean;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
@@ -329,6 +335,15 @@ public class ChainManager {
                 new NulsThreadFactory(ConverterConstant.CV_HTG_BALANCE_THREAD));
         htgBalanceExecutor.scheduleAtFixedRate(new VirtualBankDirectorBalanceTask(chain),
                 ConverterConstant.CV_HTG_BALANCE_TASK_INITIALDELAY, ConverterConstant.CV_HTG_BALANCE_TASK_PERIOD, TimeUnit.SECONDS);
+
+        ScheduledThreadPoolExecutor confirmTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("htg-confirm-tx"));
+        confirmTxExecutor.scheduleWithFixedDelay(new HtgConfirmTxTask(converterCoreApi), 60, 10, TimeUnit.SECONDS);
+
+        ScheduledThreadPoolExecutor waitingTxExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("htg-waiting-tx"));
+        waitingTxExecutor.scheduleWithFixedDelay(new HtgWaitingTxInvokeDataHandlerTask(converterCoreApi), 60, 10, TimeUnit.SECONDS);
+
+        ScheduledThreadPoolExecutor rpcAvailableExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("htg-rpcavailable-tx"));
+        rpcAvailableExecutor.scheduleWithFixedDelay(new HtgRpcAvailableHandlerTask(converterCoreApi), 60, 10, TimeUnit.SECONDS);
     }
 
 

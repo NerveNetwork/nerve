@@ -30,17 +30,16 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.core.heterogeneous.register.HeterogeneousChainRegister;
 import network.nerve.converter.core.heterogeneous.register.interfaces.IHeterogeneousChainRegister;
+import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
-import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
-import network.nerve.converter.model.bo.HeterogeneousChainInfo;
-import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
+import network.nerve.converter.model.bo.*;
 import network.nerve.converter.storage.HeterogeneousChainInfoStorageService;
 
 import java.util.*;
@@ -127,7 +126,11 @@ public class HeterogeneousChainManager {
             isInited = true;
             List<HeterogeneousChainInfo> storageList = heterogeneousChainInfoStorageService.getAllHeterogeneousChainInfoList();
             if (storageList != null && !storageList.isEmpty()) {
-                storageList.stream().forEach(info -> heterogeneousChainMap.put(info.getChainId(), info));
+                storageList.stream().forEach(info -> {
+                    if (info.getChainId() != 108 || !"T".equals(info.getMultySignAddress())) {
+                        heterogeneousChainMap.put(info.getChainId(), info);
+                    }
+                });
             }
 
             Collection<Object> list = SpringLiteContext.getAllBeanList();
@@ -151,8 +154,11 @@ public class HeterogeneousChainManager {
             });
             for (IHeterogeneousChainRegister register : registerList) {
                 int chainId = register.getChainId();
+                HeterogeneousCfg heterogeneousCfg = chain.getHeterogeneousCfg(chainId, 1);
+                if (heterogeneousCfg == null)
+                    continue;
                 // 执行异构链的初始化函数
-                register.init(chain.getHeterogeneousCfg(chainId, 1), chain.getLogger());
+                register.init(heterogeneousCfg, chain.getLogger());
                 HeterogeneousChainInfo chainInfo = register.getChainInfo();
                 // 保存异构链symbol和chainId的关系
                 heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
@@ -166,10 +172,29 @@ public class HeterogeneousChainManager {
                     }
                     heterogeneousChainMap.put(chainId, chainInfo);
                 }
+                IHeterogeneousChainDocking docking = register.getDockingImpl();
                 // 执行异构链注册
-                HeterogeneousChainRegisterInfo registerInfo = heterogeneousChainRegister.register(converterConfig.getChainId(), chainId, register.getDockingImpl());
+                HeterogeneousChainRegisterInfo registerInfo = heterogeneousChainRegister.register(converterConfig.getChainId(), chainId, docking);
                 // 向异构链组件返回注册信息
                 register.registerCallBack(registerInfo);
+                // 读取最新的docking contract signature version
+                docking.initialSignatureVersion();
+                // 设置价格Key, 通过喂价模块获取价格
+                AssetName assetName = AssetName.getEnum(chainId);
+                if (assetName == null) {
+                    throw new RuntimeException("Empty AssetName!");
+                }
+                ConverterContext.priceKeyMap.put(assetName.name(), heterogeneousCfg.getPriceKey());
+                // 设置协议生效数据
+                int protocolVersion = heterogeneousCfg.getProtocolVersion();
+                if (protocolVersion == 0) {
+                    continue;
+                }
+                Long protocolHeight = ConverterContext.protocolHeightMap.get(protocolVersion);
+                if (protocolHeight == null) {
+                    throw new RuntimeException("Empty protocolHeight!");
+                }
+                heterogeneousDockingManager.addProtocol(chainId, protocolHeight, heterogeneousCfg.getSymbol());
             }
         }
 

@@ -35,6 +35,8 @@ public class HtgInput {
     private boolean isDepositTx;
     private HeterogeneousChainTxType txType;
     private String nerveTxHash;
+    private transient boolean isDepositIITx;
+
 
     public HtgInput(boolean isBroadcastTx, HeterogeneousChainTxType txType, String nerveTxHash) {
         this.isBroadcastTx = isBroadcastTx;
@@ -45,6 +47,11 @@ public class HtgInput {
     public HtgInput(boolean isDepositTx, HeterogeneousChainTxType txType) {
         this.isDepositTx = isDepositTx;
         this.txType = txType;
+    }
+
+    public HtgInput(boolean isDepositIITx) {
+        this.isDepositIITx = isDepositIITx;
+        this.txType = HeterogeneousChainTxType.DEPOSIT;
     }
 
     public static HtgInput empty() {
@@ -81,5 +88,13 @@ public class HtgInput {
 
     public void setNerveTxHash(String nerveTxHash) {
         this.nerveTxHash = nerveTxHash;
+    }
+
+    public boolean isDepositIITx() {
+        return isDepositIITx;
+    }
+
+    public void setDepositIITx(boolean depositIITx) {
+        isDepositIITx = depositIITx;
     }
 }

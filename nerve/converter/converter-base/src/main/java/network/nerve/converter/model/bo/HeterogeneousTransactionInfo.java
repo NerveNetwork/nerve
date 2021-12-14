@@ -25,6 +25,7 @@ package network.nerve.converter.model.bo;
 
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -47,6 +48,35 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
     private String[] removeAddresses;
     private int orginTxCount;
     private transient int depositErrorTimes;
+
+    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段-addAddresses 作为`crossOutII`中充值主资产的字段
+    public void setDepositIIMainAsset(BigInteger value, Integer decimals, Integer assetId) {
+        this.setAddAddresses(new String[]{value.toString(), decimals.toString(), assetId.toString()});
+    }
+    public void setDepositIIExtend(String extend) {
+        this.setRemoveAddresses(new String[]{extend});
+    }
+
+    public String getDepositIIExtend() {
+        return getTxType() == HeterogeneousChainTxType.DEPOSIT && getRemoveAddresses() != null && getRemoveAddresses().length > 0 ? getRemoveAddresses()[0] : null;
+    }
+
+    // true代表同时充值了token和main asset
+    public boolean isDepositIIMainAndToken() {
+        return getTxType() == HeterogeneousChainTxType.DEPOSIT && getAddAddresses() != null && getAddAddresses().length == 3;
+    }
+
+    public BigInteger getDepositIIMainAssetValue() {
+        return isDepositIIMainAndToken() ? new BigInteger(getAddAddresses()[0]) : null;
+    }
+
+    public Integer getDepositIIMainAssetDecimals() {
+        return isDepositIIMainAndToken() ? Integer.parseInt(getAddAddresses()[1]) : null;
+    }
+
+    public Integer getDepositIIMainAssetAssetId() {
+        return isDepositIIMainAndToken() ? Integer.parseInt(getAddAddresses()[2]) : null;
+    }
 
     public void increaseDepositErrorTime() {
         this.depositErrorTimes++;

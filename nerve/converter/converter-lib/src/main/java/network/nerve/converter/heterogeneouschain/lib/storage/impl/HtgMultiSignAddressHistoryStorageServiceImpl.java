@@ -43,12 +43,26 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
 
     private final String baseArea;
     private final String KEY_PREFIX = "MSADDRESS-";
+    private final String VERSION_KEY_PREFIX = "VMSADDRESS";
     private final byte[] ALL_KEY = ConverterDBUtil.stringToBytes("MSADDRESS-ALL");
 
     private final HtgContext htgContext;
     public HtgMultiSignAddressHistoryStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+    }
+
+    public void saveVersion(byte version) throws Exception {
+        RocksDBService.put(baseArea, ConverterDBUtil.stringToBytes(VERSION_KEY_PREFIX), new byte[]{version});
+    }
+
+    public byte getVersion() {
+        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(VERSION_KEY_PREFIX));
+        if (bytes == null || bytes.length == 0) {
+            return 0;
+        } else {
+            return bytes[0];
+        }
     }
 
     @Override

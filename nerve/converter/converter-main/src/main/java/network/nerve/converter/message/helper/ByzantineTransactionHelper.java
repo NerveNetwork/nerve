@@ -37,6 +37,7 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.ProposalTypeEnum;
+import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.dto.RechargeTxDTO;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
@@ -47,7 +48,6 @@ import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
-import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,6 +70,8 @@ public class ByzantineTransactionHelper {
     private HeterogeneousConfirmedChangeVBStorageService heterogeneousConfirmedChangeVBStorageService;
     @Autowired
     private ProposalStorageService proposalStorageService;
+    @Autowired
+    private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
 
     @Autowired
     private HeterogeneousAssetConverterStorageService heterogeneousAssetConverterStorageService;
@@ -169,12 +171,15 @@ public class ByzantineTransactionHelper {
     }
 
     private ConfirmProposalTxData createUpgradeConfirmProposalTx(NulsHash nerveProposalHash, HeterogeneousHash heterogeneousTxHash, byte[] address, String multiSignAddress, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
+        int htgChainId = heterogeneousTxHash.getHeterogeneousChainId();
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
         ConfirmUpgradeTxData businessData = new ConfirmUpgradeTxData();
         businessData.setNerveTxHash(nerveProposalHash);
-        businessData.setHeterogeneousChainId(heterogeneousTxHash.getHeterogeneousChainId());
+        businessData.setHeterogeneousChainId(htgChainId);
         businessData.setHeterogeneousTxHash(heterogeneousTxHash.getHeterogeneousHash());
         businessData.setAddress(address);
-        businessData.setOldAddress(Numeric.hexStringToByteArray(multiSignAddress));
+        // 兼容非以太系地址 update by pierre at 2021/11/16
+        businessData.setOldAddress(docking.getAddressBytes(multiSignAddress));
         businessData.setListDistributionFee(signers);
 
         ConfirmProposalTxData txData = new ConfirmProposalTxData();
@@ -199,6 +204,12 @@ public class ByzantineTransactionHelper {
         dto.setHeterogeneousChainId(hChainId);
         dto.setHeterogeneousAssetId(depositTx.getAssetId());
         dto.setTxtime(depositTx.getTxTime());
+        dto.setExtend(depositTx.getDepositIIExtend());
+        if (depositTx.isDepositIIMainAndToken()) {
+            // 支持同时转入token和main
+            dto.setDepositII(true);
+            dto.setMainAmount(depositTx.getDepositIIMainAssetValue());
+        }
         Transaction tx = assembleTxService.createRechargeTxWithoutSign(nerveChain, dto);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
             nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));
@@ -223,6 +234,13 @@ public class ByzantineTransactionHelper {
                 depositTx.getAssetId());
         dto.setAssetChainId(nerveAssetInfo.getAssetChainId());
         dto.setAssetId(nerveAssetInfo.getAssetId());
+        if (depositTx.isDepositIIMainAndToken()) {
+            // 同时充值token和main，记录主资产充值数据
+            NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+            dto.setMainAssetAmount(depositTx.getDepositIIMainAssetValue());
+            dto.setMainAssetChainId(mainAsset.getAssetChainId());
+            dto.setMainAssetId(mainAsset.getAssetId());
+        }
         Transaction tx = assembleTxService.rechargeUnconfirmedTxWithoutSign(nerveChain, dto, depositTx.getTxTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
             nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));

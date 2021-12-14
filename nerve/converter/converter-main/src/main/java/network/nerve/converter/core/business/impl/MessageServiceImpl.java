@@ -351,7 +351,7 @@ public class MessageServiceImpl implements MessageService {
                     signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
                 }
                 LoggerUtil.LOG.error("[异构链地址签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
-                        nodeId, tx.getHash().toHex(), ids, signAddress);
+                        nodeId, hash.toHex(), ids, signAddress);
                 return;
             }
             switch (tx.getType()) {
@@ -820,9 +820,10 @@ public class MessageServiceImpl implements MessageService {
             int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
             LoggerUtil.LOG.info("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
                     nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress);
-            // 新合约多签地址
-            String newMultySignAddress = Numeric.toHexString(proposalPO.getAddress());
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+            // 新合约多签地址
+            // 兼容非以太系地址 update by pierre at 2021/11/16
+            String newMultySignAddress = docking.getAddressString(proposalPO.getAddress());
             Boolean msgPass = docking.verifySignUpgradeII(
                     signAddress,
                     txHash,

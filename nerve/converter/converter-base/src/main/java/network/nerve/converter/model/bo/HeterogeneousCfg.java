@@ -100,6 +100,30 @@ public class HeterogeneousCfg {
      * 异构链网络内部chainId
      */
     private long chainIdOnHtgNetwork;
+    /**
+     * 协议生效高度
+     */
+    private int protocolVersion;
+    /**
+     * 价格KEY
+     */
+    private String priceKey;
+
+    public String getPriceKey() {
+        return priceKey;
+    }
+
+    public void setPriceKey(String priceKey) {
+        this.priceKey = priceKey;
+    }
+
+    public int getProtocolVersion() {
+        return protocolVersion;
+    }
+
+    public void setProtocolVersion(int protocolVersion) {
+        this.protocolVersion = protocolVersion;
+    }
 
     public long getChainIdOnHtgNetwork() {
         return chainIdOnHtgNetwork;

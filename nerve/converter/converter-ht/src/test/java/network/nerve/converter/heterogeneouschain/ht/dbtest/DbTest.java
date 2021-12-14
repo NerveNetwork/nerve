@@ -40,12 +40,12 @@ import org.junit.Test;
  */
 public class DbTest {
 
-    HtgContext htContext = new HtContext();
+    static HtContext htContext = new HtContext();
 
     @BeforeClass
     public static void before() {
         Log.info("init");
-        HtContext.logger = Log.BASIC_LOGGER;
+        htContext.setLogger(Log.BASIC_LOGGER);
         RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/nerve/converter/converter-htn/src/test/resources/data/converter/");
     }
 
