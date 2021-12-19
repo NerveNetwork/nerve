@@ -20,12 +20,17 @@ public class NerveSwapUtil {
         }
         String totalLP = (String) pairInfoMap.get("totalLP");
         BigInteger lpTotalCount = new BigInteger(totalLP);
+        Map<String, Object> po = (Map<String, Object>) pairInfoMap.get("po");
+        String key0 = (String) po.get("token0");
+        String cfgKey0 = getTokenKey(cfg.getaAssetChainId(), cfg.getaAssetId());
         String reserve0 = (String) pairInfoMap.get("reserve0");
         BigInteger aCount = new BigInteger(reserve0);
         String reserve1 = (String) pairInfoMap.get("reserve1");
         BigInteger bCount = new BigInteger(reserve1);
-
-
+        if (!cfgKey0.equals(key0)) {
+            aCount = new BigInteger(reserve1);
+            bCount = new BigInteger(reserve0);
+        }
         //三种情况
         BigDecimal lpValue = new BigDecimal(lpTotalCount, cfg.getLpAssetDecimals());
         if (cfg.getaAssetChainId() == cfg.getBaseAssetChainId() && cfg.getaAssetId() == cfg.getBaseAssetId()) {
