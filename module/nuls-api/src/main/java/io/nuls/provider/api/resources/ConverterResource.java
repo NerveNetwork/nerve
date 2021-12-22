@@ -17,6 +17,7 @@ import io.nuls.v2.model.annotation.ApiOperation;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -142,5 +143,22 @@ public class ConverterResource {
         RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
         return clientResult;
     }
+
+    /*@GET
+    @Path("/heterogeneous/test/{params}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(description = "测试", order = 607)
+    @Parameters({
+            @Parameter(parameterName = "params", requestType = @TypeDescriptor(value = String.class), parameterDes = "测试")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class)
+    )
+    public RpcClientResult test(@PathParam("params") String params) {
+        Map map = new HashMap();
+        map.put("params", params);
+        Result result = converterTools.commonRequest("cv_test", map);
+        RpcClientResult clientResult = ResultUtil.getRpcClientResult(result);
+        return clientResult;
+    }*/
 
 }

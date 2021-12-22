@@ -20,6 +20,12 @@
 
         <dependency>
             <groupId>network.nerve</groupId>
+            <artifactId>converter-lib</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>network.nerve</groupId>
             <artifactId>nuls-base-protocol-update</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>

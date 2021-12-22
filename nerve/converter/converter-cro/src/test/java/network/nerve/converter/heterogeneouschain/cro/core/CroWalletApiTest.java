@@ -796,13 +796,24 @@ public class CroWalletApiTest extends Base {
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(1560320);
+        setMain();
+        Long height = Long.valueOf(632805);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
     }
 
     @Test
+    public void getBlockByHeight() throws Exception {
+        setMain();
+        // 630542
+        Long height = Long.valueOf(643362);
+        EthBlock.Block block = htgWalletApi.getBlockByHeight(height);
+        System.out.println(block.getHash());
+    }
+
+    @Test
     public void getBlockHeight() throws Exception {
+        setMain();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
@@ -814,8 +825,9 @@ public class CroWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
+        setMain();
         // 直接调用erc20合约
-        String directTxHash = "0xa5f29b055b2bb244d323a85c06b5db389684eb6ee2b029ff833d250601e24928";
+        String directTxHash = "0xa34dbd6721c98cc14df29d2f0be2d30c1e3c904482a72c175b3185d7408f29c3";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }

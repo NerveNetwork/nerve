@@ -10,6 +10,8 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import io.nuls.v2.model.dto.RpcResult;
+import io.nuls.v2.util.JsonRpcUtil;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.TxSubsequentProcessKeyListPO;
@@ -176,6 +178,12 @@ public class VirtualBankUtilTest {
     }
 
     @Test
+    public void nonceTest() {
+        RpcResult result = JsonRpcUtil.request("https://public.nerve.network/", "getAccountBalance", List.of(9, 9, 1, "NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk"));
+        System.out.println(result);
+    }
+
+    @Test
     public void serializeTxTest() throws Exception {
 //        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
 //        String address = "NERVEepb6exLKu4eJkHCekXicn7YpDa3hzHGvt";
@@ -217,48 +225,74 @@ public class VirtualBankUtilTest {
 //        }
 //        String nonce = "75c643fb277e8077";
 //
-        NulsHash proposalTxHash = NulsHash.fromHex("11560840cc33331f745ed0d62cda6420bbceeb55c1ca6888102c62069a2a5463");
-        String address = "NERVEepb6bt22V1LgaWavLNPEyTKbayCD58xo4";
-        List<byte[]> pubKeyList = new ArrayList<>();
-        String pubkeys = "03501d23db2f62863d89631168d427d3cc5f8b4a28fbb643e26695ae6cd5fdcc4b,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38";
-        String arr[] = pubkeys.split(",");
-        for(String pub:arr){
-            pubKeyList.add(HexUtil.decode(pub));
+        List<String[]> proposalTxHashList = new ArrayList<>();
+        //proposalTxHashList.add(new String[]{"ETH", "645a7f10e4f28167ed2af4022c6945d976e4b02e3308d19f551b013505500067"});
+        //proposalTxHashList.add(new String[]{"BSC", "780c9de8b993e5d2149ba8945f9851b135da9193a12ae342da2ee2e25891dc32"});
+        //proposalTxHashList.add(new String[]{"HECO", "cc15c4dfe6e2f3f3c5cb9dc8cd2832cd89927318e02eef080a1cf703ce446d2e"});
+        //proposalTxHashList.add(new String[]{"OKex", "8d2be22369dff4728b1720b296f2bcd3c6c5b1a9fd6e512fa11ef0b240e3c177"});
+        //proposalTxHashList.add(new String[]{"Harmony", "b44bda7c75603c5713a42cf3ea766f719cc5c2d2b6777c3c8b9eb50f3038cf2b"});
+        //proposalTxHashList.add(new String[]{"Polygon", "c038a8ceaf4f758cd7343305f5e39735495f0b4f5c4a91144cf3a29668178921"});
+        //proposalTxHashList.add(new String[]{"KCC", "cbffd4d8ecd0ef843e1a79678f545e52aebec568e770d586d77462882be1c463"});
+        proposalTxHashList.add(new String[]{"TRON", "28e640e10bfdd1b4d1b73585776dd4d3c91e802192ad851cf6ab167acd3e103b"});
+
+        List<String[]> list = new ArrayList<>();
+        list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
+        list.add(new String[]{"NERVEepb6gVC8TBCioYHK6PPLKYk9aoXH8eGbV", "02212597815691c838d864c65fb09ba6af5c191ff795bcf0320cebda33dd3c62ae,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
+        list.add(new String[]{"NERVEepb6bT6dAfEtY9Z4c38Khawdr4LKZNais", "027d1ae118dd1d5ab0c416dc78ee0268d38f3a8c8cee2641a03f1d851b1c8405b9,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
+        list.add(new String[]{"NERVEepb6eKxoK6ZmKhhDK4oZkuXnUMxZfCta4", "035b6fef36e032382a06ededf20ec7c522215cb114e46e6c828617680d7d376b00,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
+        list.add(new String[]{"NERVEepb6exLKu4eJkHCekXicn7YpDa3hzHGvt", "02aeddccc442bb3b4cd1a50efbf41aa4681d213b998e68295675e9dd149cdb72b4,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
+
+        for (String[] proposalInfo : proposalTxHashList) {
+            String chainName = proposalInfo[0];
+            String proposalHash = proposalInfo[1];
+            NulsHash proposalTxHash = NulsHash.fromHex(proposalHash);
+            for (String[] multiAddress : list) {
+                String address = multiAddress[0];
+                String pubkeys = multiAddress[1];
+                List<byte[]> pubKeyList = new ArrayList<>();
+                String arr[] = pubkeys.split(",");
+                for(String pub:arr){
+                    pubKeyList.add(HexUtil.decode(pub));
+                }
+                RpcResult result = JsonRpcUtil.request("https://public.nerve.network/", "getAccountBalance", List.of(9, 9, 1, address));
+                String nonce = ((Map)result.getResult()).get("nonce").toString();
+
+                VoteProposalTxData voteProposalTxData = new VoteProposalTxData(proposalTxHash, (byte)1);
+                Transaction tx = new Transaction(TxType.VOTE_PROPOSAL);
+                tx.setTxData(voteProposalTxData.serialize());
+                tx.setTime(System.currentTimeMillis() / 1000);
+
+                CoinFrom coinFrom = new CoinFrom(
+                        AddressTool.getAddress(address),
+                        9,
+                        1,
+                        TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES,
+                        HexUtil.decode(nonce),
+                        (byte) 0);
+                CoinData coinData = new CoinData();
+                List<CoinFrom> froms = new ArrayList<>();
+                froms.add(coinFrom);
+
+                List<CoinTo> tos = new ArrayList<>();
+                CoinTo coinTo = new CoinTo(
+                        AddressTool.getAddress(address),
+                        9,
+                        1,
+                        BigInteger.ZERO);
+                tos.add(coinTo);
+
+                coinData.setFrom(froms);
+                coinData.setTo(tos);
+                tx.setCoinData(coinData.serialize());
+
+                MultiSignTxSignature signature = new MultiSignTxSignature();
+                signature.setM((byte)3);
+                signature.setPubKeyList(pubKeyList);
+                tx.setTransactionSignature(signature.serialize());
+                System.out.println(String.format("发起链: %s, 多签地址: %s, 交易hash: %s, 交易Hex: %s", chainName, address, tx.getHash().toHex(), HexUtil.encode(tx.serialize())));
+                System.out.println();
+            }
         }
-        String nonce = "dd41c40a11f0e927";
 
-        VoteProposalTxData voteProposalTxData = new VoteProposalTxData(proposalTxHash, (byte)1);
-        Transaction tx = new Transaction(TxType.VOTE_PROPOSAL);
-        tx.setTxData(voteProposalTxData.serialize());
-        tx.setTime(System.currentTimeMillis() / 1000);
-
-        CoinFrom coinFrom = new CoinFrom(
-                AddressTool.getAddress(address),
-                9,
-                1,
-                TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES,
-                HexUtil.decode(nonce),
-                (byte) 0);
-        CoinData coinData = new CoinData();
-        List<CoinFrom> froms = new ArrayList<>();
-        froms.add(coinFrom);
-
-        List<CoinTo> tos = new ArrayList<>();
-        CoinTo coinTo = new CoinTo(
-                AddressTool.getAddress(address),
-                9,
-                1,
-                BigInteger.ZERO);
-        tos.add(coinTo);
-
-        coinData.setFrom(froms);
-        coinData.setTo(tos);
-        tx.setCoinData(coinData.serialize());
-
-        MultiSignTxSignature signature = new MultiSignTxSignature();
-        signature.setM((byte)3);
-        signature.setPubKeyList(pubKeyList);
-        tx.setTransactionSignature(signature.serialize());
-        System.out.println(HexUtil.encode(tx.serialize()));
     }
 }

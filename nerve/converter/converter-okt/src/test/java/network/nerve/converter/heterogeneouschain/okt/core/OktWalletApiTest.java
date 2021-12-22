@@ -2,11 +2,14 @@ package network.nerve.converter.heterogeneouschain.okt.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
@@ -33,6 +36,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 
@@ -867,6 +871,50 @@ public class OktWalletApiTest extends Base {
         List<Type> valueTypes = htgWalletApi.callViewFunction(multy, isMinterERC20Function, true);
         boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
         System.out.println(isMinterERC20);
+    }
+
+    @Test
+    public void broadcastTest() throws Exception {
+        String hexValue = "0xf8ab198504a817c8008301044494d8eb69948e214da7fd8da6815c9945f175a4fce780b844095ea7b3000000000000000000000000b490f2a3ec0b90e5faa1636be046d82ab7cdac74ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81a5a00b18f7ea819578ff55b25b8d29d9fe49e2404f515e9021cc5ef54a6a4de0cb41a0064f4731345d1262e2d3b5e4005c67e0c74a07f25f4bbbbf36ef464fc2014836";
+        EthSendTransaction send = htgWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
+        if (send == null) {
+            throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, String.format("%s request error", "OKT"));
+        }
+        if (send.hasError()) {
+            System.err.println(send.getError().getMessage());
+            return;
+        }
+        System.out.println(send.getTransactionHash());
+    }
+
+    @Test
+    public void nonceTest() throws Exception {
+        System.out.println(htgWalletApi.getLatestNonce("0x3083f7ed267dca41338de3401c4e054db2a1cd2f"));
+    }
+
+    @Test
+    public void broadcastTxTest() throws Exception {
+        String _privateKey = "7ce617815b0e2f570d0c7eb77339d85fbdaf132f389ee5a2d1f9a30c05861b45";
+        String _toAddress = "0xd8eb69948e214da7fd8da6815c9945f175a4fce7";
+        BigInteger _nonce = new BigInteger("25");
+        BigInteger _gasPrice = new BigInteger("20000000000");
+        BigInteger _gasLimit = new BigInteger("66628");
+        BigInteger bigIntegerValue = new BigInteger("0");
+        String _data = "095ea7b3000000000000000000000000b490f2a3ec0b90e5faa1636be046d82ab7cdac74ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+        RawTransaction etherTransaction = RawTransaction.createTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue, _data);
+        //交易签名
+        Credentials credentials = Credentials.create(_privateKey);
+        byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, 65, credentials);
+        String hexValue = Numeric.toHexString(signedMessage);
+        System.out.println(hexValue);
+        Transaction tx = HtgUtil.genEthTransaction("", hexValue);
+        tx.setTransactionIndex("0x0");
+        System.out.println(JSONUtils.obj2PrettyJson(tx));
+
+        String txHex = "0xf8ab198504a817c8008301044494d8eb69948e214da7fd8da6815c9945f175a4fce780b844095ea7b3000000000000000000000000b490f2a3ec0b90e5faa1636be046d82ab7cdac74ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81a5a00b18f7ea819578ff55b25b8d29d9fe49e2404f515e9021cc5ef54a6a4de0cb41a0064f4731345d1262e2d3b5e4005c67e0c74a07f25f4bbbbf36ef464fc2014836";
+        Transaction tx1 = HtgUtil.genEthTransaction("", txHex);
+        tx1.setTransactionIndex("0x0");
+        System.out.println(JSONUtils.obj2PrettyJson(tx1));
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

@@ -418,17 +418,91 @@ public class HtWalletApiTest extends Base {
         init();
     }
 
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        // "0x23023c99dcede393d6d18ca7fb08541b3364fa90", "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f"
+        setMain();
+        String contractAddress = "0x67bab912ee30074cf9a94826e2e02d9936842781";
+        // 14550138673597867996454
+        BigInteger convertAmount = new BigInteger("5000000000000000000000");
+        String to = "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0x23023c99dcede393d6d18ca7fb08541b3364fa90",//364151
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
     protected void setMainData() {
         setMain();
         list = new ArrayList<>();
-        // 把CC的私钥放在首位
-        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
-        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
-        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
-        list.add("");// ???
-        list.add("");// ???
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        // 把有OKT余额的私钥放在首位
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0x23023c99dcede393d6d18ca7fb08541b3364fa90";
         init();
+    }
+
+    /**
+     * 5个签名
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "bbb2049000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f";
+        // 提币数量
+        String value = "5000000000000";
+        // dogmoon
+        String erc20 = "0x67bab912ee30074cf9a94826e2e02d9936842781";
+        int tokenDecimals = 9;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * 根据已有的签名数据 发送交易 - erc20提现
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        String txKey = "bbb2049000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f";
+        // 提币数量
+        String value = "5000000000000";
+        // dogmoon
+        String erc20 = "0x67bab912ee30074cf9a94826e2e02d9936842781";
+        int tokenDecimals = 9;
+        String signData = "???";
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
     }
 
     /**

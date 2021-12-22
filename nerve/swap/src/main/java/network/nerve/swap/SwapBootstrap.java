@@ -124,7 +124,14 @@ public class SwapBootstrap extends RpcModule {
             long heightVersion1_16_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_16_0"));
             SwapContext.PROTOCOL_1_16_0 = heightVersion1_16_0;
         } catch (Exception e) {
-            Log.error("Failed to get height_1_15_0", e);
+            Log.error("Failed to get height_1_16_0", e);
+            throw new RuntimeException(e);
+        }
+        try {
+//            long heightVersion1_17_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_17_0"));
+            SwapContext.PROTOCOL_1_17_0 = 1000000000L;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_17_0", e);
             throw new RuntimeException(e);
         }
     }

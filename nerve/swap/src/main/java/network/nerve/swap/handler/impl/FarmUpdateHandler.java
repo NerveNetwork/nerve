@@ -36,6 +36,7 @@ import io.nuls.core.model.ArraysTool;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.cache.impl.FarmCacheImpl;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.manager.ChainManager;
@@ -159,9 +160,12 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
         bus.setUserAddress(address);
-
-        BigInteger oldBalance = bus.getSyrupPerBlockOld().multiply(BigInteger.valueOf(bus.getStopHeightOld()).subtract(BigInteger.valueOf(bus.getLastRewardBlockOld())));
-        BigInteger calcBalance = BigInteger.ZERO;
+        BigInteger oldBalance = null;
+        BigInteger calcBalance = null;
+        if (SwapContext.PROTOCOL_1_17_0 > blockHeight) {
+            oldBalance = bus.getSyrupPerBlockOld().multiply(BigInteger.valueOf(bus.getStopHeightOld()).subtract(BigInteger.valueOf(bus.getLastRewardBlockOld())));
+            calcBalance = BigInteger.ZERO;
+        }
 
         if (txData.getNewSyrupPerBlock() != null) {
             farm.setSyrupPerBlock(txData.getNewSyrupPerBlock());
@@ -169,7 +173,9 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         if (txData.getChangeType() == 0) {
             farm.setTotalSyrupAmount(farm.getTotalSyrupAmount().add(txData.getChangeTotalSyrupAmount()));
             farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().add(txData.getChangeTotalSyrupAmount()));
-            calcBalance = oldBalance.add(txData.getChangeTotalSyrupAmount());
+            if (SwapContext.PROTOCOL_1_17_0 > blockHeight) {
+                calcBalance = oldBalance.add(txData.getChangeTotalSyrupAmount());
+            }
         } else if (txData.getChangeType() == 1) {
             do {
                 if (BigInteger.ZERO.compareTo(txData.getChangeTotalSyrupAmount()) >= 0) {
@@ -192,14 +198,16 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
                 } catch (IOException e) {
                     throw new NulsException(SwapErrorCode.IO_ERROR, e);
                 }
-                calcBalance = oldBalance.subtract(txData.getChangeTotalSyrupAmount());
+                if (SwapContext.PROTOCOL_1_17_0 > blockHeight) {
+                    calcBalance = oldBalance.subtract(txData.getChangeTotalSyrupAmount());
+                }
             } while (false);
         }
         if (txData.getStopHeight() > 0) {
             farm.setStopHeight(txData.getStopHeight());
         } else if (farm.getStakeTokenBalance().compareTo(BigInteger.ZERO) == 0) {
             farm.setStopHeight(0L);
-        } else {
+        } else if (SwapContext.PROTOCOL_1_17_0 > blockHeight) {
             long stopHeight = calcBalance.divide(farm.getSyrupPerBlock()).longValue() - farm.getLastRewardBlock();
             if (stopHeight <= blockHeight) {
                 stopHeight = blockHeight;

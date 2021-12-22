@@ -78,13 +78,13 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void txDecoder() throws Exception {
-        String txHex = "0xf86d448502cb4178008255f0943083f7ed267dca41338de3401c4e054db2a1cd2f880de0b6b3a76400008081e5a0776e84c8663674b643643e2e0efe2291c73bb04fff093102cedb2d499dd98519a01f4340e6f65a99c066fe438ea6cb362411c27d2cb90d963c86f5754e78e75839";
-        Transaction tx = HtgUtil.genEthTransaction("", txHex);
-        tx.setTransactionIndex("0x0");
-        System.out.println(JSONUtils.obj2PrettyJson(tx));
+        String txHex = "0xf8ab198504a817c8008301044494d8eb69948e214da7fd8da6815c9945f175a4fce780b844095ea7b3000000000000000000000000b490f2a3ec0b90e5faa1636be046d82ab7cdac74ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff81a5a00b18f7ea819578ff55b25b8d29d9fe49e2404f515e9021cc5ef54a6a4de0cb41a0064f4731345d1262e2d3b5e4005c67e0c74a07f25f4bbbbf36ef464fc2014836";
+        //Transaction tx = HtgUtil.genEthTransaction("", txHex);
+        //tx.setTransactionIndex("0x0");
+        //System.out.println(JSONUtils.obj2PrettyJson(tx));
         //converPublicKey(tx);
-        //RawTransaction decode = TransactionDecoder.decode(txHex);
-        //System.out.println();
+        RawTransaction decode = TransactionDecoder.decode(txHex);
+        System.out.println(JSONUtils.obj2PrettyJson(decode));
     }
 
     @Test

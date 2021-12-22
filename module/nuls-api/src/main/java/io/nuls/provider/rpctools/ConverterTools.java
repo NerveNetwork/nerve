@@ -191,4 +191,17 @@ public class ConverterTools implements CallRpc {
             return Result.fail(e.getCode(), e.getMessage());
         }
     }
+
+    public Result commonRequest(String cmd, Map params) {
+        try {
+            return callRpc(ModuleE.CV.abbr, cmd, params, (Function<Object, Result<Object>>) res -> {
+                if(res == null){
+                    return new Result();
+                }
+                return new Result(res);
+            });
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
 }

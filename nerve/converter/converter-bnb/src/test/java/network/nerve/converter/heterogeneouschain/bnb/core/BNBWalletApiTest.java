@@ -439,14 +439,66 @@ public class BnbWalletApiTest extends Base {
     protected void setMainData() {
         setMain();
         list = new ArrayList<>();
-        // 把CC的私钥放在首位
-        list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
-        list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
-        list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
-        list.add("");// ???
-        list.add("");// ???
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        // 把有BNB余额的私钥放在首位
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
         init();
+    }
+
+    /**
+     * 5个签名
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        /*
+         0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610,
+         0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5,
+         0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d,
+         0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444,
+         0x10c17be7b6d3e1f424111c8bddf221c9557728b0, 0x15cb37aa4d55d5a0090966bef534c89904841065, 0x17e61e0176ad8a88cac5f786ca0779de87b3043b address[]
+
+
+         0xaff68cd458539a16b932748cf4bdd53bf196789f, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444,
+         0x1f13e90daa9548defae45cd80c135c183558db1f, 0xb12a6716624431730c3ef55f80c458371954fa52
+         0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610,
+         0x17e61e0176ad8a88cac5f786ca0779de87b3043b, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88
+         */
+        setMainData();
+        String txKey = "bbb2048000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
+        // 造币数量
+        String value = "5001";
+        // NFTC token合约
+        String erc20 = "0x2efcdd1383eae3af14d785dcc65d6b865b562312";
+        int tokenDecimals = 2;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * 根据已有的签名数据 发送交易 - erc20提现
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        String txKey = "bbb2048000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
+        // 造币数量
+        String value = "5001";
+        // NFTC token合约
+        String erc20 = "0x2efcdd1383eae3af14d785dcc65d6b865b562312";
+        int tokenDecimals = 2;
+        String signData = "";
+
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
     }
 
     /**
@@ -941,10 +993,11 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void erc20TransferEstimateGasTest() throws Exception {
+        // 0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"
         setMain();
-        String contractAddress = "0x96429570433Ba609069664df731CCb9bb2752220";
-        BigInteger convertAmount = BigInteger.valueOf(7102313600000L);
-        String to = "0xb50aDD16FFc830Ef8e2Cf0012f70712997E53839";
+        String contractAddress = "0x822f73C2Ba95080490579e631434061EDbD00215";
+        BigInteger convertAmount = new BigInteger("13677970000000000000000000");
+        String to = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
 
         Function function = new Function(
                 "transfer",
@@ -1180,6 +1233,15 @@ public class BnbWalletApiTest extends Base {
                 Arrays.asList(new TypeReference<Uint256>() {
                 }));
         System.out.println(FunctionEncoder.encode(function));
+    }
+
+    @Test
+    public void getTx() throws Exception {
+        setMain();
+        // 直接调用erc20合约
+        String directTxHash = "0x03f27803ecccebcd647e4e28579004ad9ee01b01c43476c9beef467babff453a";
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        System.out.println(JSONUtils.obj2PrettyJson(tx));
     }
 
     @Test

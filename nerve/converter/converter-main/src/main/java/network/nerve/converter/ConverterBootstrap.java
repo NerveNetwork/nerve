@@ -87,7 +87,7 @@ public class ConverterBootstrap extends RpcModule {
     @Autowired
     private HeterogeneousChainManager heterogeneousChainManager;
 
-    public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
+    public static void main(String[] args) throws Exception {
         initSys();
         NulsRpcModuleBootstrap.run("io.nuls,network.nerve.converter", args);
     }
@@ -284,8 +284,9 @@ public class ConverterBootstrap extends RpcModule {
     /**
      * 初始化系统编码
      */
-    private static void initSys() throws NoSuchFieldException, IllegalAccessException {
+    private static void initSys() throws Exception {
         try {
+            Class.forName("org.web3j.protocol.core.methods.response.Transaction");
             System.setProperty(ConverterConstant.SYS_ALLOW_NULL_ARRAY_ELEMENT, "true");
             System.setProperty(ConverterConstant.SYS_FILE_ENCODING, UTF_8.name());
             Field charset = Charset.class.getDeclaredField("defaultCharset");

@@ -68,21 +68,21 @@ import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstan
 
 public class Protocol16Test {
 
+    // 设置环境
+    static boolean MAIN = true;
+
     @BeforeClass
     public static void beforeClass() {
         ObjectMapper objectMapper = JSONUtils.getInstance();
         objectMapper.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-
     Map<Integer, HtgContext> contextMap = contextMap();
     Map<Integer, String[]> multyUpgradeMap = multyUpgradeMap();
     Map<Integer, HeterogeneousCfg> cfgMap = cfgMap();
     Map<Integer, HtgWalletApi> htgWalletApiMap = new HashMap<>();
     TrxWalletApi trxWalletApi;
     String contractForCreateERC20Minter;
-    // 设置环境
-    boolean MAIN = false;
 
     @Before
     public void before() {
@@ -173,21 +173,31 @@ public class Protocol16Test {
      * 主网: 配置每个链的新旧多签合约
      */
     private Map<Integer, String[]> multyUpgradeMapMainnet() {
+        /*
+            0xc707e0854da2d72c90a7453f8dc224dd937d7e82  eth
+            0x75ab1d50bedbd32b6113941fcf5359787a4bbef4  bsc
+            0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f  heco
+            0xe096d12d6cb61e11bce3755f938b9259b386523a  oec
+            0x32fae32961474e6d19b7a6346524b8a6a6fd1d9c  Harmony
+            0x9ddc2fb726cf243305349587ae2a33dd7c91460e  Polygon
+            0xdb442dff8ff9fd10245406da9a32528c30c10c92  kcc
+            TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN   TRON
+         */
         // 配置每个链的新旧多签合约
         Map<Integer, String[]> map = new HashMap<>();
         // 前旧后新
-        map.put(101, new String[]{"0x6758d4c4734ac7811358395a8e0c3832ba6ac624", "0xxx"});
-        map.put(102, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0xxx"});
-        map.put(103, new String[]{"0x23023c99dcede393d6d18ca7fb08541b3364fa90", "0xxx"});
-        map.put(104, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0xxx"});
-        map.put(105, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0xxx"});
-        map.put(106, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0xxx"});
-        map.put(107, new String[]{"0xf0e406c49c63abf358030a299c0e00118c4c6ba5", "0xxx"});
-        map.put(108, new String[]{"TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm", "Txxx"});
-        map.put(109, new String[]{"0xxxx", "0xxx"});
-        map.put(110, new String[]{"0xxxx", "0xxx"});
-        map.put(111, new String[]{"0xxxx", "0xxx"});
-        map.put(112, new String[]{"0xxxx", "0xxx"});
+        map.put(101, new String[]{"0x6758d4c4734ac7811358395a8e0c3832ba6ac624", "0xc707e0854da2d72c90a7453f8dc224dd937d7e82"});
+        map.put(102, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"});
+        map.put(103, new String[]{"0x23023c99dcede393d6d18ca7fb08541b3364fa90", "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f"});
+        map.put(104, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0xe096d12d6cb61e11bce3755f938b9259b386523a"});
+        map.put(105, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x32fae32961474e6d19b7a6346524b8a6a6fd1d9c"});
+        map.put(106, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x9ddc2fb726cf243305349587ae2a33dd7c91460e"});
+        map.put(107, new String[]{"0xf0e406c49c63abf358030a299c0e00118c4c6ba5", "0xdb442dff8ff9fd10245406da9a32528c30c10c92"});
+        map.put(108, new String[]{"TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm", "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN"});
+        map.put(109, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"});
+        map.put(110, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
+        map.put(111, new String[]{"0xf0e406c49c63abf358030a299c0e00118c4c6ba5", "0xf0e406c49c63abf358030a299c0e00118c4c6ba5"});
+        map.put(112, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
         return map;
     }
 
@@ -218,13 +228,12 @@ public class Protocol16Test {
             } else {
                 outFileName = "nerve_assets_group_by_ps_testnet.json";
             }
-            String path = String.format("/Users/pierreluo/Nuls/%s", outFileName);
             String json = null;
             try {
-                json = IoUtils.readBytesToString(new File(path), StandardCharsets.UTF_8.toString());
+                json = IoUtils.read(outFileName);
             } catch (Exception e) {
                 // skip it
-                Log.error("init ERC20Standard error.", e);
+                Log.error("load file error.", e);
             }
             if (json == null) {
                 return null;
@@ -256,8 +265,8 @@ public class Protocol16Test {
             if (htgList == null || htgList.isEmpty()) continue;
             String id = info.get("assetKey").toString();
             Integer registerChainId = (Integer) info.get("registerChainId");
-            boolean bind = true;
             for (Map htgInfo : htgList) {
+                boolean bind = true;
                 Boolean isToken = (Boolean) htgInfo.get("isToken");
                 Integer htgChainId = (Integer) htgInfo.get("heterogeneousChainId");
                 String contractAddress = (String) htgInfo.get("contractAddress");
@@ -338,7 +347,18 @@ public class Protocol16Test {
             htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
             String txKey = "aaa1024000000000000000000000000000000000000000000000000000000000";
             String[] adds = new String[]{
-                    "0x595d5364e5eb77e3707ce2710215db97a835a82d"
+                    "0xb12a6716624431730c3ef55f80c458371954fa52",
+                    "0x1f13e90daa9548defae45cd80c135c183558db1f",
+                    "0x66fb6d6df71bbbf1c247769ba955390710da40a5",
+                    "0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88",
+                    "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1",
+                    "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
+                    "0xaff68cd458539a16b932748cf4bdd53bf196789f",
+                    "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
+                    "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444",
+                    "0x10c17be7b6d3e1f424111c8bddf221c9557728b0",
+                    "0x15cb37aa4d55d5a0090966bef534c89904841065",
+                    "0x17e61e0176ad8a88cac5f786ca0779de87b3043b"
             };
             String[] removes = new String[]{};
             byte oldVersion = htgContext.VERSION();
@@ -651,6 +671,18 @@ public class Protocol16Test {
     protected void upgradeS1(String prikey, boolean check) throws Exception {
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
+            // 只处理 eth
+            if (htgChainId != 101) {
+                continue;
+            }
+            /*// 只处理heco
+            if (htgChainId != 103) {
+                continue;
+            }*/
+            /*// eth 和 heco单独处理
+            if (htgChainId == 101 || htgChainId == 103) {
+                continue;
+            }*/
             HeterogeneousCfg cfg = cfgMap.get(htgChainId);
             long networkChainId = cfg.getChainIdOnHtgNetwork();
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
@@ -705,6 +737,18 @@ public class Protocol16Test {
         // 遍历所有异构链，除了trx和新增4条链
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
+            // 只处理 eth
+            if (htgChainId != 101) {
+                continue;
+            }
+            /*// 只处理heco
+            if (htgChainId != 103) {
+                continue;
+            }*/
+            /*// eth 和 heco单独处理
+            if (htgChainId == 101 || htgChainId == 103) {
+                continue;
+            }*/
             HeterogeneousCfg cfg = cfgMap.get(htgChainId);
             long networkChainId = cfg.getChainIdOnHtgNetwork();
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
@@ -784,6 +828,18 @@ public class Protocol16Test {
         // 遍历所有异构链，除了trx和新增4条链
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
+            // 只处理 eth
+            if (htgChainId != 101) {
+                continue;
+            }
+            /*// 只处理heco
+            if (htgChainId != 103) {
+                continue;
+            }*/
+            /*// eth 和 heco单独处理
+            if (htgChainId == 101 || htgChainId == 103) {
+                continue;
+            }*/
             HeterogeneousCfg cfg = cfgMap.get(htgChainId);
             long networkChainId = cfg.getChainIdOnHtgNetwork();
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);

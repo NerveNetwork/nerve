@@ -460,15 +460,12 @@ public class TrxWalletApiTest extends Base {
     }
 
     protected void setMainTest() {
-        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
-        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
-        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        list.add("???");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
 
-        this.multySignContractAddress = "TYVxuksybZdbyQwoR25V2YUgXYAHikcLro";
+        this.multySignContractAddress = "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN";
         this.priKey = list.get(0);
         this.address = new KeyPair(priKey).toBase58CheckAddress();
     }
@@ -477,10 +474,23 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void managerChange() throws Exception {
-        //setMain();
+        setMain();
         setMainTest();
         String txKey = "aaa1024000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0x595d5364e5eb77e3707ce2710215db97a835a82d"};
+        String[] adds = new String[]{
+                "0xb12a6716624431730c3ef55f80c458371954fa52",
+                "0x1f13e90daa9548defae45cd80c135c183558db1f",
+                "0x66fb6d6df71bbbf1c247769ba955390710da40a5",
+                "0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88",
+                "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1",
+                "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
+                "0xaff68cd458539a16b932748cf4bdd53bf196789f",
+                "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
+                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444",
+                "0x10c17be7b6d3e1f424111c8bddf221c9557728b0",
+                "0x15cb37aa4d55d5a0090966bef534c89904841065",
+                "0x17e61e0176ad8a88cac5f786ca0779de87b3043b"
+        };
         String[] removes = new String[]{};
         int txCount = 1;
         int signCount = list.size();

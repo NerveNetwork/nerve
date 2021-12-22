@@ -30,6 +30,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.ObjectUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
@@ -46,12 +47,18 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
+import network.nerve.converter.heterogeneouschain.cro.context.CroContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.utils.LoggerUtil;
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.http.HttpService;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -738,6 +745,19 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetType <= 4) {
                 throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
             }
+            Map checkMap = new HashMap();
+            checkMap.put("chainId", nerveAssetChainId);
+            checkMap.put("assetId", nerveAssetId);
+            Response registerNetwork = this.getRegisterNetwork(checkMap);
+            if (!registerNetwork.isSuccess()) {
+                throw new Exception(registerNetwork.getResponseComment());
+            }
+            Map checkResult = (Map) registerNetwork.getResponseData();
+            int registerHeterogeneousChainId = Integer.parseInt(checkResult.get("heterogeneousChainId").toString());
+            if (registerHeterogeneousChainId == heterogeneousChainId) {
+                throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
+
             Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,
                     heterogeneousChainId,
                     assetInfo.getDecimals(),
@@ -954,6 +974,19 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetType != 4) {
                 throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH);
             }
+            Map checkMap = new HashMap();
+            checkMap.put("chainId", nerveAssetChainId);
+            checkMap.put("assetId", nerveAssetId);
+            Response registerNetwork = this.getRegisterNetwork(checkMap);
+            if (!registerNetwork.isSuccess()) {
+                throw new Exception(registerNetwork.getResponseComment());
+            }
+            Map checkResult = (Map) registerNetwork.getResponseData();
+            int registerHeterogeneousChainId = Integer.parseInt(checkResult.get("heterogeneousChainId").toString());
+            if (registerHeterogeneousChainId != heterogeneousChainId) {
+                throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH);
+            }
+
             Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,
                     heterogeneousChainId,
                     assetInfo.getDecimals(),
@@ -974,6 +1007,50 @@ public class HeterogeneousChainCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+
+    /*@CmdAnnotation(cmd = "cv_test", version = 1.0, description = "测试")
+    @Parameters(value = {
+            @Parameter(parameterName = "params", requestType = @TypeDescriptor(value = String.class), parameterDes = "测试参数")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    public Response test(Map params) {
+        Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+        try {
+            String ethRpcAddress = "https://evm-cronos.crypto.org";
+            HtgWalletApi htgWalletApi = new HtgWalletApi();
+            Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+            htgWalletApi.setWeb3j(web3j);
+            htgWalletApi.setEthRpcAddress(ethRpcAddress);
+            CroContext htgContext = new CroContext();
+            htgContext.setLogger(Log.BASIC_LOGGER);
+            HeterogeneousCfg cfg = new HeterogeneousCfg();
+            cfg.setChainIdOnHtgNetwork(25);
+            htgContext.setConfig(cfg);
+            Field field = htgWalletApi.getClass().getDeclaredField("htgContext");
+            field.setAccessible(true);
+            field.set(htgWalletApi, htgContext);
+
+            Chain chain = chainManager.getChain(9);
+            if (null == chain) {
+                chain = chainManager.getChain(5);
+                if (null == chain) {
+                    throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+                }
+            }
+
+            String param = params.get("params").toString();
+            EthBlock.Block block = htgWalletApi.getBlockByHeight(Long.parseLong(param));
+
+            chain.getLogger().info("cronos block[{}] hash: {}, tx count: {}", param, block.getHash(), block.getTransactions().size());
+            rtMap.put("blockHeight", param);
+            rtMap.put("blockHash", block.getHash());
+            rtMap.put("txCount", block.getTransactions().size());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return failed(e.getMessage());
+        }
+        return success(rtMap);
+    }*/
 
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {
