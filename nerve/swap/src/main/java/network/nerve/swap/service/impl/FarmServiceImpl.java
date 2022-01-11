@@ -28,16 +28,21 @@ import io.nuls.base.data.CoinData;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
+import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.ArraysTool;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rockdb.model.Entry;
+import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.swap.cache.FarmCache;
 import network.nerve.swap.constant.SwapConstant;
+import network.nerve.swap.constant.SwapDBConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.manager.ChainManager;
@@ -55,6 +60,7 @@ import network.nerve.swap.service.FarmService;
 import network.nerve.swap.storage.FarmUserInfoStorageService;
 import network.nerve.swap.tx.v1.helpers.converter.LedgerService;
 import network.nerve.swap.utils.CoinDataMaker;
+import network.nerve.swap.utils.SwapDBUtil;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.io.IOException;
@@ -368,6 +374,9 @@ public class FarmServiceImpl implements FarmService {
         if (null == farm) {
             return Result.getFailed(SwapErrorCode.FARM_NOT_EXIST);
         }
+//        if (farmHash.equals("83b5cb94ab35fdece398686a53c42f775c70366a1440567c9b40586bdb10cf12")) {
+//            return Result.getSuccess(getAllUsers(farm));
+//        }
         int chainId = AddressTool.getChainIdByAddress(farm.getCreatorAddress());
         LedgerAssetDTO stakeLedgerAssetDTO = ledgerService.getNerveAsset(chainId, farm.getStakeToken().getChainId(), farm.getStakeToken().getAssetId());
         LedgerAssetDTO syrupLedgerAssetDTO = ledgerService.getNerveAsset(chainId, farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId());
@@ -380,6 +389,32 @@ public class FarmServiceImpl implements FarmService {
 
         return Result.getSuccess(dto);
     }
+
+//    private ErrorCode getAllUsers(FarmPoolPO farm) {
+//
+//        List<Entry<byte[], byte[]>> list = RocksDBService.entryList(SwapDBConstant.DB_NAME_FARM_USER + 9);
+//        BigInteger total = BigInteger.ZERO;
+//        SwapUtils.updatePool(farm,22438000);
+//        for (Entry<byte[], byte[]> entry : list) {
+//            byte[] key = entry.getKey();
+//            byte[] farmHash = new byte[32];
+//            System.arraycopy(key, 0, farmHash, 0, 32);
+//            if (!ArraysTool.arrayEquals(farm.getFarmHash().getBytes(), farmHash)) {
+//                continue;
+//            }
+//            byte[] address = new byte[23];
+//            System.arraycopy(key, 32, address, 0, 23);
+//            String addr = AddressTool.getStringAddressByBytes(address);
+//
+//            FarmUserInfoPO user = SwapDBUtil.getModel(entry.getValue(), FarmUserInfoPO.class);
+//
+//            BigInteger expectedReward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
+//            System.out.println(addr + " :: " + expectedReward.toString());
+//            total = total.add(expectedReward);
+//        }
+//        System.out.println(new BigDecimal(total,18).toString());
+//        return null;
+//    }
 
     @Override
     public Result<FarmUserInfoDTO> farmUserInfo(String farmHash, String userAddress) {

@@ -20,7 +20,6 @@ import network.nerve.converter.heterogeneouschain.arbitrum.context.ArbitrumConte
 import network.nerve.converter.heterogeneouschain.avax.context.AvaxContext;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.cro.context.CroContext;
-import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
 import network.nerve.converter.heterogeneouschain.ftm.context.FtmContext;
@@ -371,18 +370,19 @@ public class TxSendTest {
     @Test
     public void getBalance() throws Exception {
         getBalanceByAddress("address31-用户地址", address31);
-        getBalanceByAddress("address20-用户地址", address20);
+        //getBalanceByAddress("address20-用户地址", address20);
+        //getBalanceByAddress("address32-用户地址", address32);
     }
 
     protected void getBalanceByAddress(String title, String address) throws Exception {
         System.out.println();
         System.out.println(String.format("%s address: %s", title, address));
 
-        this.balanceInfoPrint("　主资产NVT", new NerveAssetInfo(chainId, assetId), address);
+        this.balanceInfoPrint("　主资产NVT", new NerveAssetInfo(chainId, assetId), address, 8);
 
-        this.balanceInfoPrint("Tron-资产TRX", this.findAssetIdByHeterogeneousId(trxChainId, heterogeneousAssetId), address);
-        this.balanceInfoPrint("Tron-资产DX", this.findAssetIdByAddress(trxChainId, DX_TRX_6), address);
-        this.balanceInfoPrint("Tron-资产USDT", this.findAssetIdByAddress(trxChainId, USDT_TRX_6), address);
+        //this.balanceInfoPrint("Tron-资产TRX", this.findAssetIdByHeterogeneousId(trxChainId, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("Tron-资产DX", this.findAssetIdByAddress(trxChainId, DX_TRX_6), address);
+        //this.balanceInfoPrint("Tron-资产USDT", this.findAssetIdByAddress(trxChainId, USDT_TRX_6), address);
 
         //this.balanceInfoPrint("Harmony-资产ONE", this.findAssetIdByHeterogeneousId(oneChainId, heterogeneousAssetId), address);
         //this.balanceInfoPrint("Harmony-资产USDT", this.findAssetIdByAddress(oneChainId, USDT_ONE), address);
@@ -390,42 +390,62 @@ public class TxSendTest {
         //this.balanceInfoPrint("Polygon-资产USDT", this.findAssetIdByAddress(maticChainId, USDT_MATIC), address);
         //this.balanceInfoPrint("Kucoin-资产KCS", this.findAssetIdByHeterogeneousId(kcsChainId, heterogeneousAssetId), address);
         //this.balanceInfoPrint("Kucoin-资产USDT", this.findAssetIdByAddress(kcsChainId, USDT_KCS), address);
-        this.balanceInfoPrint("Cro-资产CRO", this.findAssetIdByHeterogeneousId(croContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
-        this.balanceInfoPrint("Cro-资产USDT", this.findAssetIdByAddress(croContext.HTG_CHAIN_ID, USDT_CRO), address);
-        this.balanceInfoPrint("Cro-资产USD18", this.findAssetIdByAddress(croContext.HTG_CHAIN_ID, USD18_CRO), address);
 
-        this.balanceInfoPrint("Avax-资产AVAX", this.findAssetIdByHeterogeneousId(avaxContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
-        this.balanceInfoPrint("Avax-资产USDT", this.findAssetIdByAddress(avaxContext.HTG_CHAIN_ID, USDT_AVAX), address);
-        this.balanceInfoPrint("Avax-资产USD18", this.findAssetIdByAddress(avaxContext.HTG_CHAIN_ID, USD18_AVAX), address);
+        //this.balanceInfoPrint("Cro-资产CRO", this.findAssetIdByHeterogeneousId(croContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("Cro-资产USDT", this.findAssetIdByAddress(croContext.HTG_CHAIN_ID, USDT_CRO), address);
+        //this.balanceInfoPrint("Cro-资产USD18", this.findAssetIdByAddress(croContext.HTG_CHAIN_ID, USD18_CRO), address);
+        //
+        //this.balanceInfoPrint("Avax-资产AVAX", this.findAssetIdByHeterogeneousId(avaxContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("Avax-资产USDT", this.findAssetIdByAddress(avaxContext.HTG_CHAIN_ID, USDT_AVAX), address);
+        //this.balanceInfoPrint("Avax-资产USD18", this.findAssetIdByAddress(avaxContext.HTG_CHAIN_ID, USD18_AVAX), address);
+        //
+        //this.balanceInfoPrint("Arbitrum-资产AETH", this.findAssetIdByHeterogeneousId(arbitrumContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("Arbitrum-资产USDT", this.findAssetIdByAddress(arbitrumContext.HTG_CHAIN_ID, USDT_ARBI), address);
+        //this.balanceInfoPrint("Arbitrum-资产USD18", this.findAssetIdByAddress(arbitrumContext.HTG_CHAIN_ID, USD18_ARBI), address);
+        //
+        //this.balanceInfoPrint("Ftm-资产FTM", this.findAssetIdByHeterogeneousId(ftmContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("Ftm-资产USDT", this.findAssetIdByAddress(ftmContext.HTG_CHAIN_ID, USDT_FTM), address);
+        //this.balanceInfoPrint("Ftm-资产USD18", this.findAssetIdByAddress(ftmContext.HTG_CHAIN_ID, USD18_FTM), address);
 
-        this.balanceInfoPrint("Arbitrum-资产AETH", this.findAssetIdByHeterogeneousId(arbitrumContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
-        this.balanceInfoPrint("Arbitrum-资产USDT", this.findAssetIdByAddress(arbitrumContext.HTG_CHAIN_ID, USDT_ARBI), address);
-        this.balanceInfoPrint("Arbitrum-资产USD18", this.findAssetIdByAddress(arbitrumContext.HTG_CHAIN_ID, USD18_ARBI), address);
-
-        this.balanceInfoPrint("Ftm-资产FTM", this.findAssetIdByHeterogeneousId(ftmContext.HTG_CHAIN_ID, heterogeneousAssetId), address);
-        this.balanceInfoPrint("Ftm-资产USDT", this.findAssetIdByAddress(ftmContext.HTG_CHAIN_ID, USDT_FTM), address);
-        this.balanceInfoPrint("Ftm-资产USD18", this.findAssetIdByAddress(ftmContext.HTG_CHAIN_ID, USD18_FTM), address);
-
-        this.balanceInfoPrint("Ethereum-资产ETH", this.findAssetIdByHeterogeneousId(EthConstant.ETH_CHAIN_ID, EthConstant.ETH_ASSET_ID), address);
-        this.balanceInfoPrint("Ethereum-资产USDX", this.findAssetIdByAddress(ethChainId, USDX), address);
+        //this.balanceInfoPrint("Ethereum-资产ETH", this.findAssetIdByHeterogeneousId(EthConstant.ETH_CHAIN_ID, EthConstant.ETH_ASSET_ID), address);
+        //this.balanceInfoPrint("Ethereum-资产USDX", this.findAssetIdByAddress(ethChainId, USDX), address, 6);
         //this.balanceInfoPrint("Ethereum-资产USDI", this.findAssetIdByAddress(ethChainId, USDI), address);
-        this.balanceInfoPrint("BSC-资产BNB", this.findAssetIdByHeterogeneousId(bnbChainId, heterogeneousAssetId), address);
-        this.balanceInfoPrint("BSC-资产USDX", this.findAssetIdByAddress(bnbChainId, USDX_BNB), address);
-        this.balanceInfoPrint("BSC-资产BUG", this.findAssetIdByAddress(bnbChainId, BUG_BNB_18), address);
-        //this.balanceInfoPrint("BSC-资产BUSD", this.findAssetIdByAddress(bnbChainId, BUSD_BNB_18), address);
-        this.balanceInfoPrint("HT-资产HT", this.findAssetIdByHeterogeneousId(htChainId, heterogeneousAssetId), address);
-        this.balanceInfoPrint("HT-资产USDX", this.findAssetIdByAddress(htChainId, USDX_HT), address);
+        //this.balanceInfoPrint("BSC-资产BNB", this.findAssetIdByHeterogeneousId(bnbChainId, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("BSC-资产USDX", this.findAssetIdByAddress(bnbChainId, USDX_BNB), address);
+        //this.balanceInfoPrint("BSC-资产BUG", this.findAssetIdByAddress(bnbChainId, BUG_BNB_18), address);
+        //this.balanceInfoPrint("BSC-资产BUSD", this.findAssetIdByAddress(bnbChainId, BUSD_BNB_18), address, 18);
+        //this.balanceInfoPrint("HT-资产HT", this.findAssetIdByHeterogeneousId(htChainId, heterogeneousAssetId), address);
+        //this.balanceInfoPrint("HT-资产USDX", this.findAssetIdByAddress(htChainId, USDX_HT), address);
+        //this.balanceInfoPrint("HT-资产HUSD", this.findAssetIdByAddress(htChainId, HUSD_HT_18), address, 18);
         //this.balanceInfoPrint("OKT-资产OKT", this.findAssetIdByHeterogeneousId(oktChainId, heterogeneousAssetId), address);
         //this.balanceInfoPrint("OKT-资产USDX", this.findAssetIdByAddress(oktChainId, USDX_OKT), address);
         //this.balanceInfoPrint("OKT-资产USDT", this.findAssetIdByAddress(oktChainId, USDT_OKT), address);
-
+        //this.balanceInfoPrint("OKT-资产OKUSD", this.findAssetIdByAddress(oktChainId, OKUSD_OKT_8), address, 8);
+        //
         //this.balanceInfoPrint("平行资产NULS", new NerveAssetInfo(1, 1), address);
-
+        this.balanceInfoPrint("资产 USDX6", new NerveAssetInfo(5, 3), address, 6);
+        this.balanceInfoPrint("资产 BUSD18", new NerveAssetInfo(5, 4), address, 18);
+        this.balanceInfoPrint("资产 HUSD18", new NerveAssetInfo(5, 5), address, 18);
+        this.balanceInfoPrint("资产 OKUSD8", new NerveAssetInfo(5, 6), address, 8);
+        this.balanceInfoPrint("资产 KXT", new NerveAssetInfo(5, 7), address, 8);
+        this.balanceInfoPrint("资产 KBT", new NerveAssetInfo(5, 8), address, 8);
+        this.balanceInfoPrint("资产 KHT", new NerveAssetInfo(5, 9), address, 8);
+        this.balanceInfoPrint("资产 KOT", new NerveAssetInfo(5, 10), address, 8);
+        //this.balanceInfoPrint("资产 USDTN", new NerveAssetInfo(5, 14), address, 18);
     }
 
     private void balanceInfoPrint(String desc, NerveAssetInfo token, String address) {
+        this.balanceInfoPrint(desc, token, address, -1);
+    }
+    private void balanceInfoPrint(String desc, NerveAssetInfo token, String address, int decimals) {
         BigInteger balance = LedgerCall.getBalance(chain, token.getAssetChainId(), token.getAssetId(), address);
-        System.out.println(String.format("%s %s-%s: %s", desc, token.getAssetChainId(), token.getAssetId(), balance));
+        String balanceStr;
+        if (decimals >= 0) {
+            balanceStr = new BigDecimal(balance).movePointLeft(decimals).stripTrailingZeros().toPlainString();
+        } else {
+            balanceStr = balance.toString();
+        }
+        System.out.println(String.format("%s %s-%s: %s", desc, token.getAssetChainId(), token.getAssetId(), balanceStr));
     }
 
     @Test
@@ -840,9 +860,9 @@ public class TxSendTest {
         //regERC20(bnbChainId, "DXA", DXA_BNB_8, 8);
         //regERC20(bnbChainId, "SAFEMOON", SAFEMOON_BNB_9, 9);
         //regERC20(bnbChainId, "GOAT", GOAT_BNB_9, 9);
-        //regERC20(bnbChainId, "BUSD", BUSD_BNB_18, 18);
-        //regERC20(htChainId, "HUSD", HUSD_HT_18, 18);
-        //regERC20(oktChainId, "OKUSD", OKUSD_OKT_8, 8);
+        regERC20(bnbChainId, "BUSD", BUSD_BNB_18, 18);
+        regERC20(htChainId, "HUSD", HUSD_HT_18, 18);
+        regERC20(oktChainId, "OKUSD", OKUSD_OKT_8, 8);
 
         /*regERC20(oneChainId, "USDT", USDT_ONE, 6);
         regERC20(maticChainId, "USDT", USDT_MATIC, 6);
@@ -1018,18 +1038,45 @@ public class TxSendTest {
     }
 
     @Test
+    public void combiningDataInit() throws Exception {
+        chainAssetTxRegister("USDX6", 6);
+        chainAssetTxRegister("BUSD18", 18);
+        chainAssetTxRegister("HUSD18", 18);
+        chainAssetTxRegister("OKUSD8", 8);
+        chainAssetTxRegister("KXT", 8);
+        chainAssetTxRegister("KBT", 8);
+        chainAssetTxRegister("KHT", 8);
+        chainAssetTxRegister("KOT", 8);
+    }
+
+    @Test
     public void chainAssetTxRegisterTest() throws Exception {
+        chainAssetTxRegister("T1", 8);
+        chainAssetTxRegister("T2", 8);
+        chainAssetTxRegister("T3", 8);
+        chainAssetTxRegister("T4", 8);
+        chainAssetTxRegister("T5", 8);
+    }
+
+    private void chainAssetTxRegister(String asset, int decimals) throws Exception {
         // Build params map
-        Map<String,Object> params = new HashMap<>();
-        params.put("assetSymbol","DXA_ETH_MINTER");
-        params.put("assetName","DXA_ETH_MINTER");
-        params.put("initNumber",100000000);
-        params.put("decimalPlace",8);
-        params.put("txCreatorAddress", address22);
-        params.put("assetOwnerAddress", address22);
-        params.put("password","nuls123456");
+        Map<String, Object> params = new HashMap<>();
+        params.put("assetSymbol", asset);
+        params.put("assetName", asset);
+        params.put("initNumber", 100000000);
+        params.put("decimalPlace", decimals);
+        params.put("txCreatorAddress", address31);
+        params.put("assetOwnerAddress", address31);
+        params.put("password", "nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
-        Log.debug("response {}", JSONUtils.obj2PrettyJson(response));
+        if (!response.isSuccess()) {
+            Log.error("资产[{}-{}]创建失败, error: {}", asset, decimals, JSONUtils.obj2PrettyJson(response));
+        } else {
+            Map chainAssetTxReg = (Map)((Map) response.getResponseData()).get("chainAssetTxReg");
+            String txHash = (String) chainAssetTxReg.get("txHash");
+            Log.info("资产[{}-{}]创建成功, txHash: {}", asset, decimals, txHash);
+            TimeUnit.MILLISECONDS.sleep(6000);
+        }
     }
 
     @Test
@@ -1213,21 +1260,29 @@ public class TxSendTest {
 
     @Test
     public void transferOne() throws Exception {
-        String from = address20;
-        String to = address22;
-        String value = "1510000";
+        String from = address32;
+        String to = address31;
+        String value = "30000";
+        int assetChainId = 5;
+        int assetId = 14;
+        int decimals = 18;
 
         Map transferMap = new HashMap();
         transferMap.put("chainId", chainId);
         transferMap.put("remark", "abc");
         List<CoinDTO> inputs = new ArrayList<>();
         List<CoinDTO> outputs = new ArrayList<>();
-        outputs.add(new CoinDTO(to, chainId, 1, new BigDecimal(value).scaleByPowerOfTen(8).toBigInteger(), password, 0));
-        BigInteger inAmount = BigInteger.valueOf(10_0000L);
+        outputs.add(new CoinDTO(to, assetChainId, assetId, new BigDecimal(value).movePointRight(decimals).toBigInteger(), password, 0));
+        BigInteger inAmount = BigInteger.ZERO;
+        if (assetChainId == chainId && assetId == 1) {
+            inAmount = BigInteger.valueOf(10_0000L);
+        } else {
+            inputs.add(new CoinDTO(from, chainId, 1, BigInteger.valueOf(10_0000L), password, 0));
+        }
         for (CoinDTO dto : outputs) {
             inAmount = inAmount.add(dto.getAmount());
         }
-        inputs.add(new CoinDTO(from, chainId, 1, inAmount, password, 0));
+        inputs.add(new CoinDTO(from, assetChainId, assetId, inAmount, password, 0));
         transferMap.put("inputs", inputs);
         transferMap.put("outputs", outputs);
         //调用接口
@@ -1572,7 +1627,22 @@ public class TxSendTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "lg_get_all_asset", params);
-        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        if (!cmdResp.isSuccess()) {
+            System.err.println(JSONUtils.obj2PrettyJson(cmdResp));
+        } else {
+            Map map = (Map) (((Map) cmdResp.getResponseData()).get("lg_get_all_asset"));
+            List<Map> assets = (List<Map>) map.get("assets");
+            for (Map asset : assets) {
+                System.out.println(
+                        String.format("%s[%s-%s] decimals: %s, initNumber: %s",
+                                asset.get("assetSymbol"),
+                                asset.get("assetChainId"),
+                                asset.get("assetId"),
+                                asset.get("decimalPlace"),
+                                asset.get("initNumber")));
+            }
+
+        }
     }
 
     @Test
@@ -1699,7 +1769,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "a1fd96ce22b7e033e4ed161ecd01b6a6773153e39880ac4c335d5f6fa94ea694");
+        params.put("proposalTxHash", "da18156fbee5086b694720edf13034efba124fdcf07c6f916af42d2c31eec022");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", agentAddress);

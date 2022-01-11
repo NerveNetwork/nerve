@@ -143,6 +143,7 @@ height_1_13_0=16420000
 height_1_14_0=18150000
 height_1_15_0=19790000
 height_1_16_0=22180000
+height_1_17_0=23373200
 
 [nuls-api]
 #httpServer的启动ip
@@ -214,6 +215,12 @@ feeEffectiveHeightSecond=2260000
 [swap]
 #手续费开发团队接收地址
 awardFeeSystemAddressPublicKey=03be1113ebf617fe8f6e482c507cf82276f753795eabe48d9b284173edb3c03dfd
+#手续费开发团队接收地址(协议17生效)-NERVEepb6BRQcoN7sshV9tkNsGAFbxNYV15Wj3
+awardFeeSystemAddressPublicKeyProtocol17=02c3e88e1c593ed354f0cbff6814a825df9d53436dedfa98e1476f7ab200f7d08e
 #手续费销毁地址
 awardFeeDestructionAddressPublicKey=02f8146b1090e7111edb34d5ac7f01bb6f1d3eb8ad15faccc532e276262eda5615
+#初始交易对地址[聚合stableCombining]
+stablePairAddressInitialSet=NERVEepb7WDfEU4ZKsEFmwCfGwCaYWgdHgk5tW,NERVEepb7XXViheVZG7tgAxhjr47KpSGi9cNbY
+#读取文件的网络[重新保存所有交易对地址的关系]
+allPairRelationMainNet=true
 

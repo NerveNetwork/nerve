@@ -34,6 +34,7 @@ import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.TokenAmount;
+import network.nerve.swap.model.bo.StableCoinGroup;
 import network.nerve.swap.model.business.RemoveLiquidityBus;
 import network.nerve.swap.model.business.stable.StableAddLiquidityBus;
 import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
@@ -57,6 +58,7 @@ import java.util.stream.Collectors;
 
 import static network.nerve.swap.constant.SwapConstant.*;
 import static network.nerve.swap.constant.SwapErrorCode.*;
+import static network.nerve.swap.context.SwapContext.stableCoinGroup;
 
 /**
  * @author Niels
@@ -93,12 +95,6 @@ public class SwapUtils {
         byte[] stablePairAddressBytes = AddressTool.getAddress(HexUtil.decode(hash), chainId, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         return stablePairAddress;
-    }
-
-    public static void main(String[] args) {
-        String hash = "9094b0935304b897ac138ec32c3c0e8fe5f194078c0e5bb89b1a6c6834f78db5";
-        int chainId = 9;
-        System.out.println(getStableSwapAddress(chainId, hash));
     }
 
     public static byte[] getFarmAddress(int chainId) {
@@ -179,6 +175,63 @@ public class SwapUtils {
         BigInteger reserveIn, reserveOut;
         for (int i = 0; i < pathLength - 1; i++) {
             BigInteger[] reserves = getReserves(chainId, pairFactory, path[i], path[i + 1]);
+            reserveIn = reserves[0];
+            reserveOut = reserves[1];
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+        }
+        return amounts;
+    }
+
+    public static boolean groupCombining(NerveToken token1, NerveToken token2) {
+        return stableCoinGroup.groupIndex(token1, token2) != -1;
+    }
+
+    // 根据 stablePairFactory 余额校验、精度转换
+    public static BigInteger getStableOutAmountByGroupIndex(int groupIndex, NerveToken tokenIn, BigInteger amountIn, NerveToken tokenOut, IPairFactory stablePairFactory, StableCoinGroup stableCoinGroup) throws NulsException {
+        String stableAddress = stableCoinGroup.getAddressByIndex(groupIndex);
+        IStablePair stablePair = stablePairFactory.getStablePair(stableAddress);
+        StableSwapPairPo po = stablePair.getPair();
+        NerveToken[] coins = po.getCoins();
+        int tokenInIndex = 0, tokenOutIndex = 0, length = coins.length;
+        for (int k = 0; k < length; k++) {
+            NerveToken token = coins[k];
+            if (token.equals(tokenIn)) {
+                tokenInIndex = k;
+            } else if (token.equals(tokenOut)) {
+                tokenOutIndex = k;
+            }
+        }
+        // 精度转换
+        int[] decimalsOfCoins = po.getDecimalsOfCoins();
+        // 计算 tokenOutAmount
+        BigInteger tokenOutAmount = new BigDecimal(amountIn).movePointLeft(decimalsOfCoins[tokenInIndex]).movePointRight(decimalsOfCoins[tokenOutIndex]).toBigInteger();
+        // 余额校验
+        BigInteger[] balances = stablePair.getBalances();
+        if (balances[tokenOutIndex].compareTo(tokenOutAmount) < 0) {
+            throw new NulsException(SwapErrorCode.INSUFFICIENT_OUTPUT_AMOUNT);
+        }
+        return tokenOutAmount;
+    }
+
+    public static BigInteger[] getAmountsOutByCombining(int chainId, IPairFactory pairFactory, BigInteger amountIn, NerveToken[] path, StableCoinGroup stableCoinGroup) throws NulsException {
+        int pathLength = path.length;
+        if (pathLength < 2 || pathLength > 100) {
+            throw new NulsRuntimeException(INVALID_PATH);
+        }
+        BigInteger[] amounts = new BigInteger[pathLength];
+        amounts[0] = amountIn;
+        BigInteger reserveIn, reserveOut;
+        NerveToken tokenIn, tokenOut;
+        for (int i = 0; i < pathLength - 1; i++) {
+            tokenIn = path[i];
+            tokenOut = path[i + 1];
+            // 整合稳定币币池后，稳定币币种1:1兑换
+            int groupIndex;
+            if ((groupIndex = stableCoinGroup.groupIndex(tokenIn, tokenOut)) != -1) {
+                amounts[i + 1] = getStableOutAmountByGroupIndex(groupIndex, tokenIn, amounts[i], tokenOut, pairFactory, stableCoinGroup);
+                continue;
+            }
+            BigInteger[] reserves = getReserves(chainId, pairFactory, tokenIn, tokenOut);
             reserveIn = reserves[0];
             reserveOut = reserves[1];
             amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
@@ -505,7 +558,6 @@ public class SwapUtils {
         for (int i = 0; i < length; i++) {
             SwapPairVO pair = pairs.get(i);
             NerveToken tokenIn = tokenAmountIn.getToken();
-            //TODO pierre swap和稳定swap结合，这里的token比较，要加入稳定币池的元素，即稳定币池的token之间视为相同token，比如: T1 == T2 == T3
             if (!pair.getToken0().equals(tokenIn) && !pair.getToken1().equals(tokenIn)) continue;
             NerveToken tokenOut = pair.getToken0().equals(tokenIn) ? pair.getToken1() : pair.getToken0();
             if (containsCurrency(currentPath, tokenOut)) continue;
@@ -798,6 +850,19 @@ public class SwapUtils {
             }
         }
         return amounts;
+    }
+
+    public static BigInteger[] cloneBigIntegerArray(BigInteger[] array) {
+        if (array == null) {
+            return null;
+        }
+        int length = array.length;
+        BigInteger[] result = new BigInteger[length];
+        // 填充
+        for (int i = 0; i < length; i++) {
+            result[i] = array[i];
+        }
+        return result;
     }
 
     public static ErrorCode extractErrorCode(Exception e) {

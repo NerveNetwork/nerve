@@ -219,6 +219,9 @@ public class EthParseTxHelper {
         }
         for (Log log : logs) {
             List<String> topics = log.getTopics();
+            if (topics.size() == 0) {
+                continue;
+            }
             String eventHash = topics.get(0);
             if (!EthConstant.EVENT_HASH_ETH_DEPOSIT_FUNDS.equals(eventHash)) {
                 continue;
@@ -332,6 +335,9 @@ public class EthParseTxHelper {
         }
         Log log = logs.get(logs.size() - 1);
         List<String> topics = log.getTopics();
+        if (topics.size() == 0) {
+            return null;
+        }
         String eventHash = topics.get(0);
         // topics 解析事件名, 签名完成会触发的事件
         // 解析事件数据，获得交易的签名列表
@@ -358,6 +364,9 @@ public class EthParseTxHelper {
         if (logs != null && logs.size() > 0) {
             for (Log log : logs) {
                 List<String> topics = log.getTopics();
+                if (topics.size() == 0) {
+                    continue;
+                }
                 // 为ERC20提现
                 if (topics.get(0).equals(EthConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     String toAddress = EthConstant.HEX_PREFIX + topics.get(2).substring(26, topics.get(1).length()).toString();

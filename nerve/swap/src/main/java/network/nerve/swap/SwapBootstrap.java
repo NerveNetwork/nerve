@@ -39,6 +39,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.ModuleE;
@@ -48,13 +49,16 @@ import io.nuls.core.rpc.modulebootstrap.RpcModule;
 import io.nuls.core.rpc.modulebootstrap.RpcModuleState;
 import io.nuls.core.rpc.util.AddressPrefixDatas;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.config.SwapConfig;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
+import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.rpc.call.BlockCall;
 import network.nerve.swap.rpc.call.TransactionCall;
+import network.nerve.swap.storage.SwapStablePairStorageService;
 import network.nerve.swap.tx.common.TransactionCommitAdvice;
 import network.nerve.swap.tx.common.TransactionRollbackAdvice;
 import network.nerve.swap.tx.common.TransactionValidatorAdvice;
@@ -81,6 +85,10 @@ public class SwapBootstrap extends RpcModule {
     private ChainManager chainManager;
     @Autowired
     private AddressPrefixDatas addressPrefixDatas;
+    @Autowired
+    private StableSwapPairCache stableSwapPairCache;
+    @Autowired
+    private SwapStablePairStorageService swapStablePairStorageService;
 
     public static void main(String[] args) throws NoSuchFieldException, IllegalAccessException {
         initSys();
@@ -128,8 +136,8 @@ public class SwapBootstrap extends RpcModule {
             throw new RuntimeException(e);
         }
         try {
-//            long heightVersion1_17_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_17_0"));
-            SwapContext.PROTOCOL_1_17_0 = 1000000000L;
+            long heightVersion1_17_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_17_0"));
+            SwapContext.PROTOCOL_1_17_0 = heightVersion1_17_0;
         } catch (Exception e) {
             Log.error("Failed to get height_1_17_0", e);
             throw new RuntimeException(e);
@@ -250,7 +258,43 @@ public class SwapBootstrap extends RpcModule {
         SwapContext.BLACKHOLE_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getBlackHolePublicKey(), swapConfig.getChainId());
         // 手续费奖励的系统接收地址
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKey(), swapConfig.getChainId());
+        SwapContext.AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0 = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKeyProtocol17(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeDestructionAddressPublicKey(), swapConfig.getChainId());
+        // 聚合stableCombining
+        try {
+            String stablePairAddressSetStr = swapConfig.getStablePairAddressInitialSet();
+            if (StringUtils.isNotBlank(stablePairAddressSetStr)) {
+                String[] array = stablePairAddressSetStr.split(",");
+                if (array.length == 0) {
+                    return;
+                }
+                // 缓存: 添加稳定币交易对-用于Swap交易
+                boolean initialDBDone = swapStablePairStorageService.existPairForSwapTrade(array[0].trim());
+                if (!initialDBDone) {
+                    for (String stable : array) {
+                        stable = stable.trim();
+                        StableSwapPairDTO dto = stableSwapPairCache.get(stable);
+                        if (dto == null) {
+                            throw new RuntimeException(String.format("stable pair [%s] not exist!", stable));
+                        }
+                        SwapContext.stableCoinGroup.add(stable, dto.getPo().getCoins());
+                        swapStablePairStorageService.savePairForSwapTrade(stable);
+                    }
+                } else {
+                    List<String> allForSwapTrade = swapStablePairStorageService.findAllForSwapTrade(swapConfig.getChainId());
+                    for (String stable : allForSwapTrade) {
+                        stable = stable.trim();
+                        StableSwapPairDTO dto = stableSwapPairCache.get(stable);
+                        if (dto == null) {
+                            throw new RuntimeException(String.format("stable pair [%s] not exist!", stable));
+                        }
+                        SwapContext.stableCoinGroup.add(stable, dto.getPo().getCoins());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void setSwapGenerateTxTypes(int currentChainId) {

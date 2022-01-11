@@ -32,9 +32,9 @@ import io.nuls.base.protocol.ProtocolLoader;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
-import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
 import io.nuls.core.rpc.modulebootstrap.NulsRpcModuleBootstrap;
@@ -94,6 +94,7 @@ public class LedgerBootstrap extends RpcModule {
             LedgerConstant.UNCONFIRM_NONCE_EXPIRED_TIME = ledgerConfig.getUnconfirmedTxExpired();
             LedgerConstant.DEFAULT_ENCODING = ledgerConfig.getEncoding();
             LedgerConstant.blackHolePublicKey = HexUtil.decode(ledgerConfig.getBlackHolePublicKey());
+            initProtocolUpdate();
             LedgerChainManager ledgerChainManager = SpringLiteContext.getBean(LedgerChainManager.class);
             ledgerChainManager.initChains();
             ModuleHelper.init(this);
@@ -104,6 +105,17 @@ public class LedgerBootstrap extends RpcModule {
             System.exit(-1);
         }
 
+    }
+
+    private void initProtocolUpdate() {
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        try {
+            long heightVersion1_17_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_17_0"));
+            // v1.17.0 协议升级高度
+            LedgerConstant.PROTOCOL_1_17_0 = heightVersion1_17_0;
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.warn("Failed to get height_1_17_0", e);
+        }
     }
 
     @Override

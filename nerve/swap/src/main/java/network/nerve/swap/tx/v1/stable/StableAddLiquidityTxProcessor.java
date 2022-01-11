@@ -111,7 +111,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
             NulsLogger logger = chain.getLogger();
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
-                logger.info("[commit] Stable Swap Add Liquidity, hash: {}", tx.getHash().toHex());
+                logger.info("[{}][commit] Stable Swap Add Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
@@ -121,8 +121,9 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                 StableAddLiquidityDTO dto = stableAddLiquidityHandler.getStableAddLiquidityInfo(chainId, tx.getCoinDataInstance(), iPairFactory);
                 IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
                 StableAddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableAddLiquidityBus.class);
+                //logger.info("[{}]processor add bus: {}", blockHeader.getHeight(), bus.toString());
                 // 更新Pair的资金池和发行总量
-                stablePair.update(bus.getFrom(), bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
+                stablePair.update(bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -152,9 +153,9 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                 IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
                 StableAddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableAddLiquidityBus.class);
                 // 回滚Pair的资金池
-                stablePair.rollback(bus.getFrom(), bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
+                stablePair.rollback(bus.getLiquidity(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
-                logger.info("[rollback] Stable Swap Add Liquidity, hash: {}", tx.getHash().toHex());
+                logger.info("[{}][rollback] Stable Swap Add Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

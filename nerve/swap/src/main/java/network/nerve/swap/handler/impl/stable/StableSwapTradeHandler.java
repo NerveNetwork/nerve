@@ -34,12 +34,14 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
 import network.nerve.swap.model.NerveToken;
@@ -74,6 +76,10 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
     private IPairFactory iPairFactory;
     @Autowired
     private ChainManager chainManager;
+    @Autowired
+    private SwapHelper swapHelper;
+    @Autowired
+    private StableSwapPairCache stableSwapPairCache;
 
     @Override
     public Integer txType() {
@@ -119,7 +125,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             // 更新临时余额
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
             // 更新临时数据
-            stablePair.update(dto.getUserAddress(), BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeight, blockTime);
+            stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeight, blockTime);
         } catch (Exception e) {
             Log.error(e);
             // 装填失败的执行结果
@@ -171,6 +177,12 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
 
     private Transaction makeSystemDealTx(StableSwapTradeBus bus, NerveToken[] coins, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo) {
         SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
+        this.makeSystemDealTxInner(sysDeal, bus, coins, tempBalanceManager, feeTo);
+        Transaction sysDealTx = sysDeal.build();
+        return sysDealTx;
+    }
+
+    private void makeSystemDealTxInner(SwapSystemDealTransaction sysDeal, StableSwapTradeBus bus, NerveToken[] coins, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo) {
         byte tokenOutIndex = bus.getTokenOutIndex();
         BigInteger amountOut = bus.getAmountOut();
         int length = coins.length;
@@ -189,6 +201,13 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
                 .setToAssetsId(outCoin.getAssetId())
                 .setToAmount(amountOut).endTo();
         /** 计算手续费分配 */
+        // 协议17: 使用新的手续费接收地址
+        byte[] awardFeeSystemAddress;
+        if (swapHelper.isSupportProtocol17()) {
+            awardFeeSystemAddress = SwapContext.AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0;
+        } else {
+            awardFeeSystemAddress = SwapContext.AWARD_FEE_SYSTEM_ADDRESS;
+        }
         // 从池子中转移手续费到指定接收地址(`非`流动性提供者可奖励的交易手续费)
         for (int i = 0; i < length; i++) {
             BigInteger fee = unLiquidityAwardFees[i];
@@ -207,7 +226,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
                 // 交易未指定手续费奖励地址，则这部分手续费奖励分发给系统地址
                 systemAwardFee = fee;
                 sysDeal.newTo()
-                        .setToAddress(SwapContext.AWARD_FEE_SYSTEM_ADDRESS)
+                        .setToAddress(awardFeeSystemAddress)
                         .setToAssetsChainId(coin.getChainId())
                         .setToAssetsId(coin.getAssetId())
                         .setToAmount(systemAwardFee).endTo();
@@ -217,7 +236,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
                 // 其中奖励给当前交易指定地址的交易手续费
                 assignAddrAwardFee = fee.subtract(systemAwardFee);
                 sysDeal.newTo()
-                        .setToAddress(SwapContext.AWARD_FEE_SYSTEM_ADDRESS)
+                        .setToAddress(awardFeeSystemAddress)
                         .setToAssetsChainId(coin.getChainId())
                         .setToAssetsId(coin.getAssetId())
                         .setToAmount(systemAwardFee).endTo()
@@ -228,8 +247,6 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
                         .setToAmount(assignAddrAwardFee).endTo();
             }
         }
-        Transaction sysDealTx = sysDeal.build();
-        return sysDealTx;
     }
 
     public StableSwapTradeDTO getStableSwapTradeInfo(int chainId, CoinData coinData, IPairFactory iPairFactory, byte tokenOutIndex) throws NulsException {
@@ -242,6 +259,9 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
         }
         byte[] pairAddressBytes = tos.get(0).getAddress();
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        if (!stableSwapPairCache.isExist(pairAddress)) {
+            throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+        }
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
         NerveToken[] coins = pairPo.getCoins();
@@ -290,6 +310,35 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             throw new NulsException(SwapErrorCode.SWAP_TRADE_FROMS_ERROR);
         }
         return new StableSwapTradeDTO(_from, pairAddressBytes, amountsIn);
+    }
+
+    // 整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    public StableSwapTradeBus tradeByCombining(int chainId, IPairFactory iPairFactory, byte[] pairAddressBytes, byte[] to, LedgerTempBalanceManager tempBalanceManager, NerveToken tokenIn, BigInteger amountIn, NerveToken tokenOut, SwapSystemDealTransaction sysDeal) throws Exception {
+        String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        NerveToken[] coins = pairPo.getCoins();
+        int tokenInIndex = 0, tokenOutIndex = 0, length = coins.length;
+        for (int i = 0; i < length; i++) {
+            NerveToken token = coins[i];
+            if (token.equals(tokenIn)) {
+                tokenInIndex = i;
+            } else if (token.equals(tokenOut)) {
+                tokenOutIndex = i;
+            }
+        }
+        BigInteger[] amountsIn = SwapUtils.emptyFillZero(new BigInteger[length]);
+        amountsIn[tokenInIndex] = amountIn;
+        StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(chainId, iPairFactory, amountsIn, (byte) tokenOutIndex, pairAddressBytes, to, null);
+        this.makeSystemDealTxInner(sysDeal, bus, coins, tempBalanceManager, null);
+        return bus;
+    }
+
+    // 临时缓存更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    public void updateCacheByCombining(IPairFactory iPairFactory, StableSwapTradeBus bus, long blockHeight, long blockTime) throws Exception {
+        String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeight, blockTime);
     }
 
 }

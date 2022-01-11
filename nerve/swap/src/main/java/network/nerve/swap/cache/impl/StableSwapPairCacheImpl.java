@@ -6,12 +6,14 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.model.NerveToken;
+import network.nerve.swap.model.dto.SwapPairDTO;
 import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.model.po.stable.StableSwapPairBalancesPo;
 import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.storage.SwapStablePairBalancesStorageService;
 import network.nerve.swap.storage.SwapStablePairStorageService;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,7 +62,16 @@ public class StableSwapPairCacheImpl implements StableSwapPairCache {
 
     @Override
     public StableSwapPairDTO remove(String address) {
-        return CACHE_MAP.remove(address);
+        StableSwapPairDTO remove = CACHE_MAP.remove(address);
+        if (remove != null) {
+            LP_CACHE_MAP.remove(remove.getPo().getTokenLP().str());
+        }
+        return remove;
+    }
+
+    @Override
+    public Collection<StableSwapPairDTO> getList() {
+        return CACHE_MAP.values();
     }
 
     @Override

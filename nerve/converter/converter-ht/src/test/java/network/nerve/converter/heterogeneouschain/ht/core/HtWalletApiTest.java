@@ -1009,10 +1009,11 @@ public class HtWalletApiTest extends Base {
 
     @Test
     public void covertNerveAddressByEthTxTest() throws Exception {
-        setMain();
-        String txHash = "0x2f05ab966e9f98e67a099ec0886331e93bb386e2c0d119d34affbb50b34c981e";
+        //setMain();
+        String txHash = "0x0cbb212442d0884b1b5f664bc005073b3b2c7a5e42cf0a7f7e211ecb20ee996d";
         Transaction tx = htgWalletApi.getTransactionByHash(txHash);
-        System.out.println(HtgUtil.covertNerveAddressByEthTx(tx, 9));
+        System.out.println();
+        System.out.println(HtgUtil.covertNerveAddressByEthTx(tx, 5));
     }
 
     @Test

@@ -24,22 +24,31 @@
  */
 package network.nerve.swap.manager;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.protocol.ProtocolLoader;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.constant.DBErrorCode;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.swap.cache.StableSwapPairCache;
+import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.cache.impl.FarmCacheImpl;
 import network.nerve.swap.config.ConfigBean;
 import network.nerve.swap.config.SwapConfig;
+import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapDBConstant;
 import network.nerve.swap.context.SwapContext;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.model.Chain;
+import network.nerve.swap.model.dto.PairsP17Info;
+import network.nerve.swap.storage.SwapPairStorageService;
+import network.nerve.swap.storage.SwapStablePairStorageService;
 import network.nerve.swap.utils.ChainLoggerUtil;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 
@@ -55,6 +64,16 @@ public class ChainManager {
 
     @Autowired
     private SwapConfig swapConfig;
+    @Autowired
+    private SwapPairStorageService swapPairStorageService;
+    @Autowired
+    private SwapStablePairStorageService swapStablePairStorageService;
+    @Autowired
+    private SwapPairCache swapPairCache;
+    @Autowired
+    private StableSwapPairCache stableSwapPairCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
@@ -73,10 +92,14 @@ public class ChainManager {
             chain.setConfig(entry.getValue());
             initLogger(chain);
             initTable(chain);
+            loadPairsCache(chain);
             initCache(chain);
             chainMap.put(chainId, chain);
             chain.getLogger().debug("Chain:{} init success..", chainId);
             ProtocolLoader.load(chainId);
+            if(chainId == swapConfig.getChainId()) {
+                swapHelper.setNerveChain(chain);
+            }
         }
     }
 
@@ -95,6 +118,37 @@ public class ChainManager {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {
                 chain.getLogger().error(e);
             }
+        }
+    }
+
+    private void loadPairsCache(Chain chain) throws Exception {
+        String configJson;
+        if (swapConfig.isAllPairRelationMainNet()) {
+            configJson = IoUtils.read(SwapConstant.PAIRS_MAINNET);
+        } else {
+            configJson = IoUtils.read(SwapConstant.PAIRS_TESTNET);
+        }
+        PairsP17Info info = JSONUtils.json2pojo(configJson, PairsP17Info.class);
+        Collection<String> pairs = swapPairStorageService.findAllPairs(chain.getChainId());
+        Collection<String> stablePairs = swapStablePairStorageService.findAllPairs(chain.getChainId());
+        Set<String> pairsSet = new HashSet<>();
+        pairsSet.addAll(pairs);
+        pairsSet.addAll(info.getSwap());
+        for (String pair : pairsSet) {
+            swapPairCache.get(pair);
+        }
+
+        Set<String> stablePairsSet = new HashSet<>();
+        stablePairsSet.addAll(stablePairs);
+        stablePairsSet.addAll(info.getStable());
+        for (String stablePair : stablePairsSet) {
+            stableSwapPairCache.get(stablePair);
+        }
+
+        try {
+            chain.getLogger().info("PairsP17Info : {}", JSONUtils.obj2json(info));
+        } catch (JsonProcessingException e) {
+            chain.getLogger().warn("PairsP17Info log print error ");
         }
     }
 

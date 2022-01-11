@@ -83,6 +83,15 @@ public class StableSwapHelper {
         return true;
     }
 
+    public boolean isLegalStable(int chainId, String stablePairAddress) throws NulsException {
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            SwapContext.logger.error("交易对不存在. {}", stablePairAddress);
+            return false;
+        }
+        return true;
+    }
+
     public boolean addCoinForStable(int chainId, String stablePairAddress, int assetChainId, int assetId) throws Exception {
         byte[] address = AddressTool.getAddress(stablePairAddress);
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
@@ -110,6 +119,28 @@ public class StableSwapHelper {
 
         // 更新缓存
         stableSwapPairCache.remove(stablePairAddress);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins);
+        return true;
+    }
+
+    public boolean addStableForSwapTrade(int chainId, String stablePairAddress) throws Exception {
+        // DB持久化
+        swapStablePairStorageService.savePairForSwapTrade(stablePairAddress);
+        // 更新缓存
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            return false;
+        }
+        NerveToken[] coins = pairPo.getCoins();
+        SwapContext.stableCoinGroup.add(stablePairAddress, coins);
+        return true;
+    }
+
+    public boolean removeStableForSwapTrade(int chainId, String stablePairAddress) throws Exception {
+        // DB持久化
+        swapStablePairStorageService.delelePairForSwapTrade(stablePairAddress);
+        // 更新缓存
+        SwapContext.stableCoinGroup.remove(stablePairAddress);
         return true;
     }
 }

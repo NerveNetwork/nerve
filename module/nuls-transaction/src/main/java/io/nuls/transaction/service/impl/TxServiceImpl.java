@@ -639,6 +639,8 @@ public class TxServiceImpl implements TxService {
                         && type != TxType.SWAP_ADD_LIQUIDITY_STABLE_COIN
                         && type != TxType.SWAP_REMOVE_LIQUIDITY_STABLE_COIN
                         && type != TxType.SWAP_SYSTEM_DEAL
+                        && type != TxType.SWAP_TRADE
+                        && type != TxType.SWAP_STABLE_LP_SWAP_TRADE
                 ) {
                     chain.getLogger().error("stable-swap data error: The stable-swap pair address does not accept transfers of this type{} of transaction.", type);
                     throw new NulsException(TxErrorCode.TX_DATA_PAIR_ADDRESS_VALIDATION_ERROR);

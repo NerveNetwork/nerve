@@ -1,10 +1,8 @@
 package network.nerve.swap.model.dto.stable;
 
-import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.po.stable.StableSwapPairPo;
 
 import java.math.BigInteger;
-import java.util.Arrays;
 
 /**
  * @author Niels

@@ -77,6 +77,7 @@ public interface SwapErrorCode extends CommonCodeConstanst {
     ErrorCode FEE_RECEIVE_ADDRESS_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_0036");
     ErrorCode COIN_DECIMAL_EXCEEDED = ErrorCode.init(ModuleE.SW.getPrefix() + "_0037");
     ErrorCode INVALID_SYMBOL = ErrorCode.init(ModuleE.SW.getPrefix() + "_0038");
+    ErrorCode INVALID_FROM = ErrorCode.init(ModuleE.SW.getPrefix() + "_0039");
     //todo 以下是Farm部分
     ErrorCode FARM_SYRUP_PER_BLOCK_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1001");
     ErrorCode FARM_SIGNER_COUNT_ERROR = ErrorCode.init(ModuleE.SW.getPrefix() + "_1002");

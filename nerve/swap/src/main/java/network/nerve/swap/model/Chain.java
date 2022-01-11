@@ -6,6 +6,7 @@ import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.enums.BlockType;
 import network.nerve.swap.model.bo.BatchInfo;
 import network.nerve.swap.model.bo.LatestBasicBlock;
+import network.nerve.swap.model.dto.PairsP17Info;
 
 /**
  * 链的基础数据和运行状态数据
@@ -42,6 +43,15 @@ public class Chain {
      * 验证区块时批量执行信息
      */
     private BatchInfo verifyBatchInfo;
+    private PairsP17Info pairsP17Info;
+
+    public PairsP17Info getPairsP17Info() {
+        return pairsP17Info;
+    }
+
+    public void setPairsP17Info(PairsP17Info pairsP17Info) {
+        this.pairsP17Info = pairsP17Info;
+    }
 
     public BatchInfo getBatchInfo() {
         Integer blockType = currentThreadBlockType.get();

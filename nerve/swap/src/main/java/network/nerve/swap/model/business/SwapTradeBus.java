@@ -35,12 +35,21 @@ public class SwapTradeBus {
      * 交易对的变化数据
      */
     private List<TradePairBus> tradePairBuses;
+    private transient boolean existStablePair;
 
     public SwapTradeBus() {
     }
 
     public SwapTradeBus(List<TradePairBus> tradePairBuses) {
         this.tradePairBuses = tradePairBuses;
+    }
+
+    public boolean isExistStablePair() {
+        return existStablePair;
+    }
+
+    public void setExistStablePair(boolean existStablePair) {
+        this.existStablePair = existStablePair;
     }
 
     public List<TradePairBus> getTradePairBuses() {

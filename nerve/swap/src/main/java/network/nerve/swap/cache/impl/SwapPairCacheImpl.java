@@ -65,7 +65,11 @@ public class SwapPairCacheImpl implements SwapPairCache {
 
     @Override
     public SwapPairDTO remove(String address) {
-        return CACHE_MAP.remove(address);
+        SwapPairDTO remove = CACHE_MAP.remove(address);
+        if (remove != null) {
+            LP_CACHE_MAP.remove(remove.getPo().getTokenLP().str());
+        }
+        return remove;
     }
 
     @Override

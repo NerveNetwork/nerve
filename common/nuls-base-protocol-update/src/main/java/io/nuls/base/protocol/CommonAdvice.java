@@ -38,10 +38,16 @@ public interface CommonAdvice {
     default void begin(int chainId, List<Transaction> txList, BlockHeader blockHeader, int syncStatus) {
     }
 
+    default boolean handle(int chainId, List<Transaction> txList, BlockHeader blockHeader, int syncStatus, Map<String, Boolean> resultMap, List<TransactionProcessor> processors) {
+        return false;
+    }
+
     default void end(int chainId, List<Transaction> txList, BlockHeader blockHeader) {
     }
 
     default Map<String, Object> validates(int chainId, List<Transaction> txList, BlockHeader blockHeader) {
         return null;
     }
+
+
 }

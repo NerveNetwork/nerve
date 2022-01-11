@@ -77,6 +77,9 @@ public class EthERC20Helper {
         if (logs != null && logs.size() > 0) {
             for(Log log : logs) {
                 List<String> topics = log.getTopics();
+                if (topics.size() == 0) {
+                    continue;
+                }
                 // ERC20 topics 解析事件名
                 if (topics.get(0).equals(EthConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     // 为转账

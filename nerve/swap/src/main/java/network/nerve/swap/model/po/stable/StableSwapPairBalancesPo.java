@@ -1,8 +1,10 @@
 package network.nerve.swap.model.po.stable;
 
+import io.nuls.base.basic.AddressTool;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * @author Niels
@@ -71,5 +73,22 @@ public class StableSwapPairBalancesPo {
 
     public void setTotalLP(BigInteger totalLP) {
         this.totalLP = totalLP;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"address\":")
+                .append(AddressTool.getStringAddressByBytes(address));
+        sb.append(",\"totalLP\":")
+                .append(totalLP);
+        sb.append(",\"balances\":")
+                .append(Arrays.toString(balances));
+        sb.append(",\"blockTimeLast\":")
+                .append(blockTimeLast);
+        sb.append(",\"blockHeightLast\":")
+                .append(blockHeightLast);
+        sb.append('}');
+        return sb.toString();
     }
 }

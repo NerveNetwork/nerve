@@ -25,6 +25,7 @@
 package network.nerve.swap.context;
 
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.swap.model.bo.StableCoinGroup;
 
 import java.math.BigInteger;
 
@@ -58,6 +59,10 @@ public class SwapContext {
      */
     public static byte[] AWARD_FEE_SYSTEM_ADDRESS;
     /**
+     * 手续费奖励的系统接收地址(协议17生效)
+     */
+    public static byte[] AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0;
+    /**
      * 手续费奖励的销毁地址
      */
     public static byte[] AWARD_FEE_DESTRUCTION_ADDRESS;
@@ -81,4 +86,6 @@ public class SwapContext {
     public static long PROTOCOL_1_15_0 = 0L;
     public static long PROTOCOL_1_16_0 = 0L;
     public static long PROTOCOL_1_17_0 = 0L;
+
+    public static StableCoinGroup stableCoinGroup = new StableCoinGroup();
 }

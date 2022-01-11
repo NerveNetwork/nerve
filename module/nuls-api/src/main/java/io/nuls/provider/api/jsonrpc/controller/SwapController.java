@@ -65,6 +65,48 @@ public class SwapController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+    @RpcMethod("getAllSwapPairsInfo")
+    @ApiOperation(description = "查询所有Swap交易对地址", order = 710)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+    })
+    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    public RpcResult getAllSwapPairsInfo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<List<String>> result = swapTools.getAllSwapPairsInfo(chainId);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getAllStableSwapPairsInfo")
+    @ApiOperation(description = "查询所有Stable-Swap交易对地址", order = 711)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+    })
+    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    public RpcResult getAllStableSwapPairsInfo(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<List<String>> result = swapTools.getAllStableSwapPairsInfo(chainId);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
     @RpcMethod("getSwapPairInfoByPairAddress")
     @ApiOperation(description = "根据交易对地址 查询Swap交易对信息", order = 702)
     @Parameters({
@@ -392,6 +434,27 @@ public class SwapController {
             return RpcResult.dataNotFound();
         }
         Result<Map<String, Object>> result = swapTools.calMinAmountOnSwapRemoveLiquidity(chainId, amountLP, tokenAStr, tokenBStr);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("getStablePairListForSwapTrade")
+    @ApiOperation(description = "查询可用于Swap交易的稳定币交易对", order = 710)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    })
+    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
+    public RpcResult getStablePairListForSwapTrade(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<List<Map>> result = swapTools.getStablePairListForSwapTrade(chainId);
         return ResultUtil.getJsonRpcResult(result);
     }
 

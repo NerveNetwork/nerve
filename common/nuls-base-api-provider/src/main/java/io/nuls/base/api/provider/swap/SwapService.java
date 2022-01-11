@@ -26,6 +26,7 @@ package io.nuls.base.api.provider.swap;
 
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.swap.facade.StableAddCoinReq;
+import io.nuls.base.api.provider.swap.facade.StableAddPairReq;
 
 /**
  * @author: PierreLuo
@@ -39,5 +40,12 @@ public interface SwapService {
      * @return
      */
     Result<String> stableAddCoin(StableAddCoinReq req);
+
+    /**
+     * 添加稳定币交易对，用于swap路径结合
+     * @param req
+     * @return
+     */
+    Result<String> stableAddPair(StableAddPairReq req);
 
 }

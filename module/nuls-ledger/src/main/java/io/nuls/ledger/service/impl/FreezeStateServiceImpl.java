@@ -93,9 +93,29 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         return addToAmount;
     }
 
-    private BigInteger unFreezeLockHeightState(int addressChainId, List<FreezeHeightState> heightList, AccountState accountState) {
-        //此处高度可以做个时间缓存
-        long nowHeight = repository.getBlockHeight(addressChainId);
+    private BigInteger unFreezeLockTimeStateV17(List<FreezeLockTimeState> timeList) {
+        long nowTime = NulsDateUtils.getCurrentTimeSeconds();
+        long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
+        //可移除的时间锁列表
+        List<FreezeLockTimeState> timeRemove = new ArrayList<>();
+        timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
+        for (FreezeLockTimeState freezeLockTimeState : timeList) {
+            if ((freezeLockTimeState.getLockTime() <= nowTime) ||
+                    (freezeLockTimeState.getLockTime() > LedgerConstant.LOCKED_ML_TIME_VALUE && freezeLockTimeState.getLockTime() <= nowTimeMl)) {
+                timeRemove.add(freezeLockTimeState);
+            } else {
+                continue;
+            }
+        }
+        BigInteger addToAmount = BigInteger.ZERO;
+        for (FreezeLockTimeState freezeLockTimeState : timeRemove) {
+            timeList.remove(freezeLockTimeState);
+            addToAmount = addToAmount.add(freezeLockTimeState.getAmount());
+        }
+        return addToAmount;
+    }
+
+    private BigInteger unFreezeLockHeightState(int addressChainId, List<FreezeHeightState> heightList, AccountState accountState, long nowHeight) {
         //可移除的高度锁列表
         List<FreezeHeightState> heightRemove = new ArrayList<>();
         heightList.sort((x, y) -> Long.compare(x.getHeight(), y.getHeight()));
@@ -130,9 +150,15 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         if (timeList.size() == 0 && heightList.size() == 0) {
             return true;
         }
-        BigInteger addTimeAmount = unFreezeLockTimeStateV2(timeList);
-
-        BigInteger addHeightAmount = unFreezeLockHeightState(addressChainId, heightList, accountState);
+        long nowHeight = repository.getBlockHeight(addressChainId);
+        BigInteger addTimeAmount;
+        // protocol17 协议升级
+        if (nowHeight < LedgerConstant.PROTOCOL_1_17_0) {
+            addTimeAmount = unFreezeLockTimeStateV2(timeList);
+        } else {
+            addTimeAmount = unFreezeLockTimeStateV17(timeList);
+        }
+        BigInteger addHeightAmount = unFreezeLockHeightState(addressChainId, heightList, accountState, nowHeight);
         accountState.addTotalToAmount(addTimeAmount);
         accountState.addTotalToAmount(addHeightAmount);
         return true;

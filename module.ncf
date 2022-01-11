@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/niels/workspace/nerve-network/logs
+logPath=logs
 logLevel=INFO
-dataPath=/Users/niels/workspace/nerve-network/data
+dataPath=data
 #默认本链ID
 chainId=9
 #地址前缀
@@ -27,7 +27,6 @@ serviceManagerPort=8771
 packageVersion=%PACKAGE_VERSION%
 
 [network]
-reverseCheck=0
 port=7001
 crossPort=7002
 #魔法参数
@@ -144,6 +143,7 @@ height_1_13_0=16420000
 height_1_14_0=18150000
 height_1_15_0=19790000
 height_1_16_0=22180000
+height_1_17_0=122180000
 
 [nuls-api]
 #httpServer的启动ip
@@ -215,6 +215,12 @@ feeEffectiveHeightSecond=2260000
 [swap]
 #手续费开发团队接收地址
 awardFeeSystemAddressPublicKey=03be1113ebf617fe8f6e482c507cf82276f753795eabe48d9b284173edb3c03dfd
+#手续费开发团队接收地址(协议17生效)-TNVTdTSPUr48Mp8MTfhtGMT8Q9XdAiWZ9536e
+awardFeeSystemAddressPublicKeyProtocol17=02d0b400dfd6dd9ecdf81a068e8311c3cd4f873162389901d793d41e2043128635
 #手续费销毁地址
 awardFeeDestructionAddressPublicKey=02f8146b1090e7111edb34d5ac7f01bb6f1d3eb8ad15faccc532e276262eda5615
+#初始交易对地址[聚合stableCombining]
+stablePairAddressInitialSet=NERVEepb7WDfEU4ZKsEFmwCfGwCaYWgdHgk5tW,NERVEepb7XXViheVZG7tgAxhjr47KpSGi9cNbY
+#读取文件的网络[重新保存所有交易对地址的关系]
+allPairRelationMainNet=true
 

@@ -57,47 +57,23 @@ public class PersistenceStablePair extends AbstractStablePair {
     }
 
     @Override
-    public void _update(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
+    public void _update(BigInteger liquidityChange, BigInteger[] newBalances, long blockHeight, long blockTime) throws Exception {
         stableSwapPairDTO.setTotalLP(stableSwapPairDTO.getTotalLP().add(liquidityChange));
         stableSwapPairDTO.setBalances(newBalances);
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, newBalances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
-        /*// 更新用户LP
-        StableSwapUserLiquidityPo liquidityPo = swapStableUserLiquidityStorageService.get(userAddress);
-        if (liquidityPo == null) {
-            //_TODO pierre 添加高度为保存的版本号，防止无限回滚
-            liquidityPo = new StableSwapUserLiquidityPo(userAddress, liquidityChange, changeBalances);
-        } else {
-            liquidityPo.addLiquidity(liquidityChange);
-            liquidityPo.addAmounts(changeBalances);
-        }
-        swapStableUserLiquidityStorageService.save(userAddress, liquidityPo);*/
-
         // 更新缓存
         stableSwapPairCache.remove(pairAddress);
     }
 
     @Override
-    public void _rollback(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
+    public void _rollback(BigInteger liquidityChange, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
         stableSwapPairDTO.setTotalLP(stableSwapPairDTO.getTotalLP().subtract(liquidityChange));
         stableSwapPairDTO.setBalances(balances);
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, balances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
-        /*// 更新用户LP
-        StableSwapUserLiquidityPo liquidityPo = swapStableUserLiquidityStorageService.get(userAddress);
-        if (liquidityPo != null) {
-            //_TODO pierre 验证高度版本号，防止无限回滚
-            liquidityPo.addLiquidity(liquidityChange.negate());
-            BigInteger[] changeBalancesNagate = new BigInteger[changeBalances.length];
-            int i = 0;
-            for (BigInteger c : changeBalances) {
-                changeBalancesNagate[i++] = c.negate();
-            }
-            liquidityPo.addAmounts(changeBalancesNagate);
-        }
-        swapStableUserLiquidityStorageService.save(userAddress, liquidityPo);*/
         // 更新缓存
         stableSwapPairCache.remove(pairAddress);
     }
@@ -125,7 +101,9 @@ public class PersistenceStablePair extends AbstractStablePair {
         pairBalancesPo.setTotalLP(totalLP);
         pairBalancesPo.setBlockTimeLast(blockTime);
         pairBalancesPo.setBlockHeightLast(blockHeight);
+        //SwapContext.logger.info("[{}]pairAddress: {}, stable info: {}", blockHeight, pairAddress, pairBalancesPo.toString());
         swapStablePairBalancesStorageService.savePairBalances(pairAddress, pairBalancesPo);
+        //SwapContext.logger.info("[{}]pairAddress: {}, save done: {}", blockHeight, pairAddress, bool);
     }
 
 }

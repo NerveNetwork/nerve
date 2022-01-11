@@ -282,6 +282,9 @@ public class HtgParseTxHelper implements BeanInitial {
         }
         for (Log log : logs) {
             List<String> topics = log.getTopics();
+            if (log.getTopics().size() == 0) {
+                continue;
+            }
             String eventHash = topics.get(0);
             if (!HtgConstant.EVENT_HASH_HT_DEPOSIT_FUNDS.equals(eventHash)) {
                 continue;
@@ -332,6 +335,10 @@ public class HtgParseTxHelper implements BeanInitial {
             // HTG充值交易
             Log log = logs.get(0);
             List<String> topics = log.getTopics();
+            if (log.getTopics().size() == 0) {
+                logger().warn("交易[{}]log未知", txHash);
+                return false;
+            }
             String eventHash = topics.get(0);
             if (!HtgConstant.EVENT_HASH_CROSS_OUT_FUNDS.equals(eventHash)) {
                 logger().warn("交易[{}]事件未知", txHash);
@@ -568,6 +575,9 @@ public class HtgParseTxHelper implements BeanInitial {
         }
         Log log = logs.get(logs.size() - 1);
         List<String> topics = log.getTopics();
+        if (log.getTopics().size() == 0) {
+            return null;
+        }
         String eventHash = topics.get(0);
         // Polygon链，存在erc20转账的合约交易中，会在末尾多出一个未知事件
         if (htgContext.getConfig().getChainId() == 106) {
@@ -603,6 +613,9 @@ public class HtgParseTxHelper implements BeanInitial {
         if (logs != null && logs.size() > 0) {
             for (Log log : logs) {
                 List<String> topics = log.getTopics();
+                if (topics.size() == 0) {
+                    continue;
+                }
                 // 为ERC20提现
                 if (topics.get(0).equals(HtgConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     String toAddress = HtgConstant.HEX_PREFIX + topics.get(2).substring(26, topics.get(1).length()).toString();
@@ -690,6 +703,9 @@ public class HtgParseTxHelper implements BeanInitial {
             // 主资产充值交易
             for (Log log : logs) {
                 List<String> topics = log.getTopics();
+                if (log.getTopics().size() == 0) {
+                    continue;
+                }
                 String eventHash = topics.get(0);
                 String eventContract = log.getAddress().toLowerCase();
                 if (!HtgConstant.EVENT_HASH_CROSS_OUT_FUNDS.equals(eventHash)) {
@@ -735,6 +751,9 @@ public class HtgParseTxHelper implements BeanInitial {
             BigInteger calcAmount = BigInteger.ZERO;
             for (Log log : logs) {
                 List<String> topics = log.getTopics();
+                if (topics.size() == 0) {
+                    continue;
+                }
                 String eventHash = topics.get(0);
                 String eventContract = log.getAddress().toLowerCase();
                 if (HtgConstant.EVENT_HASH_ERC20_TRANSFER.equals(eventHash)) {
@@ -855,6 +874,9 @@ public class HtgParseTxHelper implements BeanInitial {
             BigInteger amount = BigInteger.ZERO;
             for (Log log : logs) {
                 topics = log.getTopics();
+                if (topics.size() == 0) {
+                    continue;
+                }
                 eventHash = topics.get(0);
                 contract = log.getAddress().toLowerCase();
                 // 为ERC20提现

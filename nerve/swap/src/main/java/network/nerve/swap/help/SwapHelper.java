@@ -29,6 +29,8 @@ import io.nuls.core.exception.NulsException;
 import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.context.SwapContext;
+import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.TokenAmount;
 import network.nerve.swap.model.dto.SwapPairDTO;
@@ -47,12 +49,17 @@ import java.util.List;
 @Component
 public class SwapHelper {
 
+    private Chain nerveChain;
     @Autowired
     private SwapPairCache swapPairCache;
     @Autowired("PersistencePairFactory")
     private IPairFactory iPairFactory;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+
+    public void setNerveChain(Chain nerveChain) {
+        this.nerveChain = nerveChain;
+    }
 
     public List<RouteVO> bestTradeExactIn(int chainId, List<String> pairs, TokenAmount tokenAmountIn, NerveToken out, int maxPairSize) throws NulsException {
         if (ledgerAssetCache.getLedgerAsset(chainId, tokenAmountIn.getToken()) == null || ledgerAssetCache.getLedgerAsset(chainId, out) == null) {
@@ -68,6 +75,10 @@ public class SwapHelper {
         }
         List<RouteVO> routes = SwapUtils.bestTradeExactIn(chainId, iPairFactory, swapPairs, tokenAmountIn, out, new LinkedHashSet<>(), new ArrayList<>(), tokenAmountIn, maxPairSize);
         return routes;
+    }
+
+    public boolean isSupportProtocol17() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_17_0;
     }
 
 }

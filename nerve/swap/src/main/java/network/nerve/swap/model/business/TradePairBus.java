@@ -24,6 +24,7 @@
 package network.nerve.swap.model.business;
 
 import network.nerve.swap.model.NerveToken;
+import network.nerve.swap.model.business.stable.StableSwapTradeBus;
 
 import java.math.BigInteger;
 
@@ -58,6 +59,7 @@ public class TradePairBus extends BaseBus {
     private NerveToken tokenOut;
     private BigInteger amountOut;
     private byte[] to;
+    private transient StableSwapTradeBus stableSwapTradeBus;// 用于普通swap结合稳定币swap的缓存更新
 
     public TradePairBus(byte[] pairAddress, BigInteger balance0, BigInteger balance1, BigInteger reserve0, BigInteger reserve1, NerveToken tokenIn, BigInteger amountIn, BigInteger unLiquidityAwardFee, NerveToken tokenOut, BigInteger amountOut, byte[] to) {
         this.pairAddress = pairAddress;
@@ -71,6 +73,14 @@ public class TradePairBus extends BaseBus {
         this.tokenOut = tokenOut;
         this.amountOut = amountOut;
         this.to = to;
+    }
+
+    public StableSwapTradeBus getStableSwapTradeBus() {
+        return stableSwapTradeBus;
+    }
+
+    public void setStableSwapTradeBus(StableSwapTradeBus stableSwapTradeBus) {
+        this.stableSwapTradeBus = stableSwapTradeBus;
     }
 
     public byte[] getPairAddress() {

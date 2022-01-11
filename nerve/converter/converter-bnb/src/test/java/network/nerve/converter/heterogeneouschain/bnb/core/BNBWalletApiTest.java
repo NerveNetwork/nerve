@@ -12,6 +12,7 @@ import network.nerve.converter.heterogeneouschain.bnb.model.BnbUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgERC20Helper;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
@@ -125,9 +126,24 @@ public class BnbWalletApiTest extends Base {
         fromPriKey = "b36097415f57fe0ac1665858e3d007ba066a7c022ec712928d2372b27e8513ff";
     }
 
+    protected void setAccount_024F() {
+        from = "0xd29E172537A3FB133f790EBE57aCe8221CB8024F";
+        fromPriKey = "0935e3d8c87c2ea5c90e3e3a0509d06eb8496655db63745fae4ff01eb2467e85";
+    }
+
     protected void setAccount_EFa1() {
         from = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         fromPriKey = "4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39";
+    }
+
+    protected void setAccount_2501() {
+        from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
+        fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
+    }
+
+    protected void setAccount_7B65() {
+        from = "0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65";
+        fromPriKey = "43da7c269917207a3cbb564b692cd57e9c72f9fcfdb17ef2190dd15546c4ed9d";
     }
 
     @Before
@@ -285,9 +301,12 @@ public class BnbWalletApiTest extends Base {
         htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         // 初始化 账户
-        setAccount_EFa1();
+        //setAccount_2501();
+        setAccount_024F();
+        //setAccount_7B65();
+        //setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "30";
+        String sendAmount = "2000";
         // 初始化 ERC20 地址信息
         setErc20BUG();
         //setErc20EthMinter();
@@ -298,7 +317,7 @@ public class BnbWalletApiTest extends Base {
         //setErc20DXA();
         //setErc20GOAT();
         //setErc20SAFEMOON();
-        //setErc20BUSD();
+        setErc20BUSD();
 
 
         //setErc20NVT();
@@ -320,14 +339,14 @@ public class BnbWalletApiTest extends Base {
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
             System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
-                System.out.println("等待8秒查询[ERC20授权]交易打包结果");
-                TimeUnit.SECONDS.sleep(8);
+                System.out.println("等待3秒查询[ERC20授权]交易打包结果");
+                TimeUnit.SECONDS.sleep(3);
             }
-            TimeUnit.SECONDS.sleep(8);
+            TimeUnit.SECONDS.sleep(3);
             BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("等待8秒查询[ERC20授权]交易额度");
-                TimeUnit.SECONDS.sleep(8);
+                System.out.println("等待3秒查询[ERC20授权]交易额度");
+                TimeUnit.SECONDS.sleep(3);
                 tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
@@ -336,6 +355,31 @@ public class BnbWalletApiTest extends Base {
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
         System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+    }
+
+    @Test
+    public void depositPoolTest() throws Exception {
+        setLocalTest();
+        setAccount_EFa1();
+        setErc20BUSD();
+        BigInteger gasLimit = BigInteger.valueOf(250000L);
+        String poolContract = "0x6912762E5F1281F54B4248fF78D6dbe50A6511c9";
+        long poolId = 0;
+        BigInteger value = new BigDecimal("1230").movePointRight(erc20Decimals).toBigInteger();
+        Function depositFunction = new Function("deposit",
+                Arrays.asList(new Uint256(poolId), new Uint256(value)),
+                Arrays.asList(new TypeReference<Type>() {}));
+        for (int i = 0; i < 30; i++) {
+            try {
+                HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(from, fromPriKey, poolContract, gasLimit, depositFunction, null, null, null);
+                String ethTxHash = htSendTransactionPo.getTxHash();
+                System.out.println(ethTxHash);
+                // 休眠15个区块，发下一个交易
+                TimeUnit.SECONDS.sleep(45);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Test
@@ -903,6 +947,33 @@ public class BnbWalletApiTest extends Base {
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
+    public static void main(String[] args) {
+        // 锁10天，每天240个区块
+        long lockBlockPerDay = 4 * 60;
+        calcLockDay(lockBlockPerDay, 262);
+        calcLockDay(lockBlockPerDay, 282);
+        calcLockDay(lockBlockPerDay, 382);
+        calcLockDay(lockBlockPerDay, 392);
+        calcLockDay(lockBlockPerDay, 412);
+        calcLockDay(lockBlockPerDay, 456);
+        calcLockDay(lockBlockPerDay, 556);
+        calcLockDay(lockBlockPerDay, 656);
+        calcLockDay(lockBlockPerDay, 756);
+        calcLockDay(lockBlockPerDay, 856);
+        calcLockDay(lockBlockPerDay, 999);
+        calcLockDay(lockBlockPerDay, 1999);
+    }
+
+    private static void calcLockDay(long lockBlockPerDay, long currentBlock) {
+        long realUnlockBlock = currentBlock + lockBlockPerDay * 10;
+        long unlockBlock = realUnlockBlock / lockBlockPerDay * lockBlockPerDay;
+        System.out.println(String.format("number: %s, realUnlockBlock: %s, unlockBlock: %s, currentBlock: %s",
+                realUnlockBlock / lockBlockPerDay,
+                realUnlockBlock,
+                unlockBlock,
+                currentBlock));
+    }
+
     @Test
     public void getTestNetTxReceipt() throws Exception {
         // 直接调用erc20合约
@@ -965,16 +1036,16 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void crossOutEstimateGasTest() throws Exception {
         setMain();
-        String contractAddress = "0x23dcfd1edf572204c7aee9680a9d853ec2c993ae";
-        //BigInteger convertAmount = BigInteger.valueOf(100000000L);
-        //Function function = HtgUtil.getCrossOutFunction("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", convertAmount, "0x477fe38678c166ccf0e2d6cfa755216e2a09118e");
-
-        //String encodedFunction = FunctionEncoder.encode(function);
-        String encodedFunction = "0x95ca26fd000000000000000000000000d248e509c1aacbfe79ac161c3f531643ecbdc34600000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000";
+        // 0x42981d0bfbaf196529376ee702f2a9eb9092fcb5
+        String contractAddress = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
+        BigInteger convertAmount = new BigDecimal("30000").movePointRight(9).toBigInteger();
+        Function function = HtgUtil.getCrossOutFunction("NERVEepb67fJhLqNrA5KGZXvKvjxMmJp7vJrLX", convertAmount, "0x42981d0bfbaf196529376ee702f2a9eb9092fcb5");
+        String encodedFunction = FunctionEncoder.encode(function);
+        //String encodedFunction = "0x95ca26fd000000000000000000000000d248e509c1aacbfe79ac161c3f531643ecbdc34600000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000";
 
         BigInteger value = null;
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xd248e509c1aacbfe79ac161c3f531643ecbdc346",//364151
+                "0xa803fc1c1e83d6389865e1248dc924ed4c6953de",
                 null,
                 null,
                 null,
@@ -992,11 +1063,24 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void withdrawEstimateGasTest() throws Exception {
+        setMain();
+        String txKey = "f79ab90e54716d2201246008321121e014047c0430194290028ec8974571a978";
+        String toAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        BigInteger value = new BigDecimal("30000").movePointRight(9).toBigInteger();
+        String erc20 = "0x42981d0bfbaf196529376ee702f2a9eb9092fcb5";
+        //Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, value, true, erc20, signData);
+        //// 估算GasLimit
+        //EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
+        //BigInteger estimateGas = estimateGasObj.getAmountUsed();
+    }
+
+    @Test
     public void erc20TransferEstimateGasTest() throws Exception {
         // 0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"
         setMain();
-        String contractAddress = "0x822f73C2Ba95080490579e631434061EDbD00215";
-        BigInteger convertAmount = new BigInteger("13677970000000000000000000");
+        String contractAddress = "0x42981d0bfbaf196529376ee702f2a9eb9092fcb5";
+        BigInteger convertAmount = new BigDecimal("30000").movePointRight(9).toBigInteger();
         String to = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
 
         Function function = new Function(
@@ -1009,7 +1093,7 @@ public class BnbWalletApiTest extends Base {
 
         BigInteger value = null;
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5",//364151
+                "0xa803fc1c1e83d6389865e1248dc924ed4c6953de",
                 null,
                 null,
                 null,
@@ -1294,4 +1378,5 @@ public class BnbWalletApiTest extends Base {
             return true;
         }
     }
+
 }

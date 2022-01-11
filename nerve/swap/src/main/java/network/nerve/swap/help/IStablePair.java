@@ -44,15 +44,12 @@ public interface IStablePair {
 
     long getBlockHeightLast();
 
-    void update(byte[] userAddress,
-                BigInteger liquidityChange,
+    void update(BigInteger liquidityChange,
                 BigInteger[] changeBalances,
                 BigInteger[] balances,
                 long blockHeight, long blockTime) throws Exception;
 
-    void rollback(byte[] userAddress,
-                  BigInteger liquidityChange,
-                  BigInteger[] changeBalances,
+    void rollback(BigInteger liquidityChange,
                   BigInteger[] balances,
                   long blockHeight, long blockTime) throws Exception;
 }

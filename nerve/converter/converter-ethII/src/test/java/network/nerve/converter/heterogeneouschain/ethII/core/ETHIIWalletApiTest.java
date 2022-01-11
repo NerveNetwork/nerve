@@ -905,6 +905,15 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     @Test
+    public void getBlockByHeight() throws Exception {
+        setMain();
+        // 13950563 13950568
+        Long height = Long.valueOf(13950568);
+        EthBlock.Block block = htgWalletApi.getBlockByHeight(height);
+        System.out.println(block.getHash());
+    }
+
+    @Test
     public void getBlockHeight() throws Exception {
         setMain();
         System.out.println(htgWalletApi.getBlockHeight());

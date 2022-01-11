@@ -23,9 +23,11 @@
  */
 package network.nerve.swap.model.business.stable;
 
+import io.nuls.base.basic.AddressTool;
 import network.nerve.swap.model.business.BaseBus;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * @author: PierreLuo
@@ -103,5 +105,22 @@ public class StableRemoveLiquidityBus extends BaseBus {
 
     public void setBalances(BigInteger[] balances) {
         this.balances = balances;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"amounts\":")
+                .append(Arrays.toString(amounts));
+        sb.append(",\"balances\":")
+                .append(Arrays.toString(balances));
+        sb.append(",\"liquidity\":")
+                .append(liquidity);
+        sb.append(",\"pairAddress\":")
+                .append(pairAddress == null ? "" : AddressTool.getStringAddressByBytes(pairAddress));
+        sb.append(",\"to\":")
+                .append(to == null ? "" : AddressTool.getStringAddressByBytes(to));
+        sb.append('}');
+        return sb.toString();
     }
 }

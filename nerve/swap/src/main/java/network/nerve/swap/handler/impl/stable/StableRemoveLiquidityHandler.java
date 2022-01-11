@@ -116,7 +116,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
 
             // 整合计算数据
             StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
-
+            //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
             // 装填执行结果
             result.setTxType(txType());
             result.setSuccess(true);
@@ -132,7 +132,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             // 更新临时余额
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
             // 更新临时数据
-            stablePair.update(dto.getUserAddress(), liquidity.negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeight, blockTime);
+            stablePair.update(liquidity.negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeight, blockTime);
         } catch (Exception e) {
             Log.error(e);
             // 装填失败的执行结果

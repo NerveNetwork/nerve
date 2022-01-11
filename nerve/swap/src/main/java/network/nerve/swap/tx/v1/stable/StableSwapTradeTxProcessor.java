@@ -19,7 +19,9 @@ import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
+import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.SwapResult;
+import network.nerve.swap.model.business.TradePairBus;
 import network.nerve.swap.model.business.stable.StableSwapTradeBus;
 import network.nerve.swap.model.dto.stable.StableSwapTradeDTO;
 import network.nerve.swap.model.txdata.stable.StableSwapTradeData;
@@ -125,12 +127,10 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
-                CoinData coinData = tx.getCoinDataInstance();
-                StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, bus.getTokenOutIndex());
-                String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 // 更新Pair的资金池和发行总量
-                stablePair.update(dto.getUserAddress(), BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
+                stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -157,12 +157,10 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
-                CoinData coinData = tx.getCoinDataInstance();
-                StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, bus.getTokenOutIndex());
-                String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 // 回滚Pair的资金池
-                stablePair.rollback(dto.getUserAddress(), BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
+                stablePair.rollback(BigInteger.ZERO, bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[rollback] Stable Swap Trade, hash: {}", tx.getHash().toHex());
             }
@@ -171,6 +169,37 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
             return false;
         }
         return true;
+    }
+
+    // 持久化更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    public void updatePersistence(StableSwapTradeBus bus, long height, long time) throws Exception {
+        String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        // 更新Pair的资金池和发行总量
+        stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), height, time);
+    }
+
+    // 回滚持久化更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    public void rollbackPersistence(TradePairBus tradePairBus) throws Exception {
+        String pairAddress = AddressTool.getStringAddressByBytes(tradePairBus.getPairAddress());
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        BigInteger[] balances = stablePair.getBalances();
+        NerveToken[] coins = stablePair.getPair().getCoins();
+        NerveToken tokenIn = tradePairBus.getTokenIn();
+        NerveToken tokenOut = tradePairBus.getTokenOut();
+        int tokenInIndex = 0, tokenOutIndex = 0, length = coins.length;
+        for (int i = 0; i < length; i++) {
+            NerveToken token = coins[i];
+            if (token.equals(tokenIn)) {
+                tokenInIndex = i;
+            } else if (token.equals(tokenOut)) {
+                tokenOutIndex = i;
+            }
+        }
+        BigInteger[] oldBalances = SwapUtils.cloneBigIntegerArray(balances);
+        oldBalances[tokenInIndex] = oldBalances[tokenInIndex].subtract(tradePairBus.getAmountIn());
+        oldBalances[tokenOutIndex] = oldBalances[tokenOutIndex].add(tradePairBus.getAmountOut());
+        stablePair.rollback(BigInteger.ZERO, oldBalances, tradePairBus.getPreBlockHeight(), tradePairBus.getPreBlockTime());
     }
 
 }

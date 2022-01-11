@@ -23,11 +23,8 @@
  */
 package network.nerve.swap.help.impl.stable;
 
-import network.nerve.swap.help.IPair;
 import network.nerve.swap.help.IStablePair;
-import network.nerve.swap.model.dto.SwapPairDTO;
 import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
-import network.nerve.swap.model.po.SwapPairPO;
 import network.nerve.swap.model.po.stable.StableSwapPairPo;
 
 import java.math.BigInteger;
@@ -66,28 +63,22 @@ public abstract class AbstractStablePair implements IStablePair {
     }
 
     @Override
-    public void update(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
+    public void update(BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
         int length = balances.length;
         BigInteger[] realAmounts = changeBalances;
         BigInteger[] newBalances = new BigInteger[length];
         for (int i = 0; i < length; i++) {
             newBalances[i] = balances[i].add(realAmounts[i]);
         }
-        _update(userAddress, liquidityChange, changeBalances, newBalances, balances, blockHeight, blockTime);
+        _update(liquidityChange, newBalances, blockHeight, blockTime);
     }
 
-    public abstract void _update(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception;
+    public abstract void _update(BigInteger liquidityChange, BigInteger[] newBalances, long blockHeight, long blockTime) throws Exception;
 
     @Override
-    public void rollback(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
-        int length = balances.length;
-        BigInteger[] realAmounts = changeBalances;
-        BigInteger[] newBalances = new BigInteger[length];
-        for (int i = 0; i < length; i++) {
-            newBalances[i] = balances[i].add(realAmounts[i]);
-        }
-        _rollback(userAddress, liquidityChange, changeBalances, newBalances, balances, blockHeight, blockTime);
+    public void rollback(BigInteger liquidityChange, BigInteger[] balances, long blockHeight, long blockTime) throws Exception {
+        _rollback(liquidityChange, balances, blockHeight, blockTime);
     }
 
-    public abstract void _rollback(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) throws Exception;
+    public abstract void _rollback(BigInteger liquidityChange, BigInteger[] balances, long blockHeight, long blockTime) throws Exception;
 }

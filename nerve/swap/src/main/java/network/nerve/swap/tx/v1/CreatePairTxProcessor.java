@@ -10,6 +10,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.swap.cache.LedgerAssetCache;
+import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.help.LedgerAssetRegisterHelper;
@@ -46,6 +47,8 @@ public class CreatePairTxProcessor implements TransactionProcessor {
     private SwapExecuteResultStorageService swapExecuteResultStorageService;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+    @Autowired
+    private SwapPairCache swapPairCache;
 
     @Override
     public int getType() {
@@ -137,6 +140,8 @@ public class CreatePairTxProcessor implements TransactionProcessor {
                 txData.parse(tx.getTxData(), 0);
                 LedgerAssetDTO dto = ledgerAssetRegisterHelper.lpAssetReg(chainId, txData.getToken0(), txData.getToken1());
                 logger.info("[commit] Create Pair Info: {}-{}, symbol: {}, decimals: {}", dto.getChainId(), dto.getAssetId(), dto.getAssetSymbol(), dto.getDecimalPlace());
+                // load cache
+                swapPairCache.get(SwapUtils.getStringPairAddress(chainId, txData.getToken0(), txData.getToken1()));
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -167,6 +172,8 @@ public class CreatePairTxProcessor implements TransactionProcessor {
                 SwapPairPO pairPO = ledgerAssetRegisterHelper.deleteLpAsset(chainId, txData.getToken0(), txData.getToken1());
                 logger.info("[rollback] Remove Pair: {}-{}", pairPO.getTokenLP().getChainId(), pairPO.getTokenLP().getAssetId());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
+                // remove cache
+                swapPairCache.remove(SwapUtils.getStringPairAddress(chainId, txData.getToken0(), txData.getToken1()));
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

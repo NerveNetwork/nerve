@@ -358,4 +358,8 @@ public class TxType {
      */
     public static final int FARM_UPDATE = 75;
     public static final int RESET_CHAIN_INFO = 76;
+    /**
+     * 稳定币流动性资产聚合swap交易
+     */
+    public static final int SWAP_STABLE_LP_SWAP_TRADE = 77;
 }

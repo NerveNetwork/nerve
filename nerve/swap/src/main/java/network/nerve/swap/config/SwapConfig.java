@@ -46,9 +46,42 @@ public class SwapConfig extends ConfigBean implements ModuleConfig {
      */
     private String awardFeeSystemAddressPublicKey;
     /**
+     * 手续费奖励的系统接收地址公钥(协议17生效)
+     */
+    private String awardFeeSystemAddressPublicKeyProtocol17;
+    /**
      * 手续费奖励的销毁地址公钥
      */
     private String awardFeeDestructionAddressPublicKey;
+    /**
+     * 聚合stableCombining
+     */
+    private String stablePairAddressInitialSet;
+
+    public String getAwardFeeSystemAddressPublicKeyProtocol17() {
+        return awardFeeSystemAddressPublicKeyProtocol17;
+    }
+
+    public void setAwardFeeSystemAddressPublicKeyProtocol17(String awardFeeSystemAddressPublicKeyProtocol17) {
+        this.awardFeeSystemAddressPublicKeyProtocol17 = awardFeeSystemAddressPublicKeyProtocol17;
+    }
+
+    public String getStablePairAddressInitialSet() {
+        return stablePairAddressInitialSet;
+    }
+
+    public void setStablePairAddressInitialSet(String stablePairAddressInitialSet) {
+        this.stablePairAddressInitialSet = stablePairAddressInitialSet;
+    }
+
+    /**
+     * 读取文件的网络[重新保存所有交易对地址的关系]
+     */
+    private boolean allPairRelationMainNet;
+
+    public boolean isAllPairRelationMainNet() {
+        return allPairRelationMainNet;
+    }
 
     public String getAwardFeeDestructionAddressPublicKey() {
         return awardFeeDestructionAddressPublicKey;

@@ -24,6 +24,7 @@
 package network.nerve.swap.model.bo;
 
 import io.nuls.base.data.Transaction;
+import network.nerve.swap.model.business.SwapTradeBus;
 
 /**
  * @author: PierreLuo
@@ -40,6 +41,15 @@ public class SwapResult {
     private String business;
     private String subTxStr;
     private transient Transaction subTx;
+    private transient SwapTradeBus swapTradeBus;
+
+    public SwapTradeBus getSwapTradeBus() {
+        return swapTradeBus;
+    }
+
+    public void setSwapTradeBus(SwapTradeBus swapTradeBus) {
+        this.swapTradeBus = swapTradeBus;
+    }
 
     public boolean isSuccess() {
         return success;

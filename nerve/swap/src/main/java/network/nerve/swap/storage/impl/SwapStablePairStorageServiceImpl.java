@@ -27,11 +27,16 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapDBConstant;
 import network.nerve.swap.model.NerveToken;
+import network.nerve.swap.model.po.StringSetPo;
 import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.storage.SwapStablePairStorageService;
 import network.nerve.swap.utils.SwapDBUtil;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: PierreLuo
@@ -41,8 +46,11 @@ import network.nerve.swap.utils.SwapDBUtil;
 public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageService {
 
     private final String baseArea = SwapDBConstant.DB_NAME_SWAP;
+    private final byte[] SPAIR_ALL_KEY = SwapDBUtil.stringToBytes("SPAIR-ALL");
     private final String KEY_PREFIX = "SPAIR-";
     private final String KEY_PREFIX_LP = "SPAIRLP-";
+    private final String KEY_TRADE_PREFIX = "SPAIRTRADE-";
+    private final byte[] SPAIRTRADE_ALL_KEY = SwapDBUtil.stringToBytes("SPAIRTRADE-ALL");
 
     @Override
     public boolean savePair(byte[] address, StableSwapPairPo po) throws Exception {
@@ -53,7 +61,22 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
         String addressStr = AddressTool.getStringAddressByBytes(address);
         NerveToken tokenLP = po.getTokenLP();
         RocksDBService.put(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX_LP + tokenLP.str()), address);
-        return SwapDBUtil.putModel(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + addressStr), po);
+        SwapDBUtil.putModel(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + addressStr), po);
+
+        StringSetPo pairSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIR_ALL_KEY, StringSetPo.class);
+        if (pairSetPo == null) {
+            pairSetPo = new StringSetPo();
+            Set<String> set = new HashSet<>();
+            set.add(addressStr);
+            pairSetPo.setCollection(set);
+            SwapDBUtil.putModel(baseArea + chainId, SPAIR_ALL_KEY, pairSetPo);
+        } else {
+            boolean add = pairSetPo.getCollection().add(addressStr);
+            if (add) {
+                SwapDBUtil.putModel(baseArea + chainId, SPAIR_ALL_KEY, pairSetPo);
+            }
+        }
+        return true;
     }
 
     @Override
@@ -75,12 +98,35 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
     }
 
     @Override
+    public Collection<String> findAllPairs(int chainId) {
+        StringSetPo addressSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIR_ALL_KEY, StringSetPo.class);
+        if (addressSetPo == null) {
+            return Collections.EMPTY_LIST;
+        }
+        Set<String> addressSet = addressSetPo.getCollection();
+        return addressSet;
+    }
+
+    @Override
     public boolean delelePair(String address) throws Exception {
         if (StringUtils.isBlank(address)) {
             return false;
         }
         int chainId = AddressTool.getChainIdByAddress(address);
-        return RocksDBService.delete(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + address));
+        StableSwapPairPo pair = this.getPair(address);
+        if (pair != null) {
+            StringSetPo pairSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIR_ALL_KEY, StringSetPo.class);
+            if(pairSetPo != null) {
+                boolean remove = pairSetPo.getCollection().remove(address);
+                if (remove) {
+                    SwapDBUtil.putModel(baseArea + chainId, SPAIR_ALL_KEY, pairSetPo);
+                }
+            }
+            NerveToken tokenLP = pair.getTokenLP();
+            RocksDBService.delete(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX_LP + tokenLP.str()));
+            RocksDBService.delete(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + address));
+        }
+        return true;
     }
 
     @Override
@@ -93,5 +139,59 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
             return null;
         }
         return AddressTool.getStringAddressByBytes(bytes);
+    }
+
+    @Override
+    public boolean savePairForSwapTrade(String address) throws Exception {
+        int chainId = AddressTool.getChainIdByAddress(address);
+        RocksDBService.put(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_TRADE_PREFIX + address), SwapConstant.ZERO_BYTES);
+        StringSetPo pairSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, StringSetPo.class);
+        if (pairSetPo == null) {
+            pairSetPo = new StringSetPo();
+            Set<String> set = new HashSet<>();
+            set.add(address);
+            pairSetPo.setCollection(set);
+            SwapDBUtil.putModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, pairSetPo);
+        } else {
+            boolean add = pairSetPo.getCollection().add(address);
+            if (add) {
+                SwapDBUtil.putModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, pairSetPo);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public boolean existPairForSwapTrade(String address) {
+        int chainId = AddressTool.getChainIdByAddress(address);
+        byte[] bytes = RocksDBService.get(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_TRADE_PREFIX + address));
+        if (bytes == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean delelePairForSwapTrade(String address) throws Exception {
+        int chainId = AddressTool.getChainIdByAddress(address);
+        RocksDBService.delete(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_TRADE_PREFIX + address));
+        StringSetPo pairSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, StringSetPo.class);
+        if(pairSetPo != null) {
+            boolean remove = pairSetPo.getCollection().remove(address);
+            if (remove) {
+                SwapDBUtil.putModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, pairSetPo);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public List<String> findAllForSwapTrade(int chainId) throws Exception {
+        StringSetPo pairSetPo = SwapDBUtil.getModel(baseArea + chainId, SPAIRTRADE_ALL_KEY, StringSetPo.class);
+        if (pairSetPo == null) {
+            return Collections.EMPTY_LIST;
+        }
+        Set<String> pairs = pairSetPo.getCollection();
+        return pairs.stream().sorted().collect(Collectors.toList());
     }
 }

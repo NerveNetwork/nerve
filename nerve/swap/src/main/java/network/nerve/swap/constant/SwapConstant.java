@@ -18,6 +18,9 @@ public interface SwapConstant {
     String SYS_ALLOW_NULL_ARRAY_ELEMENT = "protostuff.runtime.allow_null_array_element";
     String SYS_FILE_ENCODING = "file.encoding";
 
+    String PAIRS_MAINNET = "pairs_p17_mainnet.json";
+    String PAIRS_TESTNET = "pairs_p17_testnet.json";
+
     String RPC_VERSION = "1.0";
 
     /** nonce值初始值 */

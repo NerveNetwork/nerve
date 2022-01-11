@@ -1,11 +1,13 @@
 package network.nerve.swap.rpc.cmd;
 
 import io.nuls.base.RPCUtil;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.parse.JSONUtils;
@@ -21,14 +23,17 @@ import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.StableSwapHelper;
 import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
+import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.TokenAmount;
+import network.nerve.swap.model.bo.StableCoin;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.business.RemoveLiquidityBus;
 import network.nerve.swap.model.dto.RealAddLiquidityOrderDTO;
 import network.nerve.swap.model.dto.SwapPairDTO;
 import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.model.vo.RouteVO;
+import network.nerve.swap.model.vo.StableCoinVo;
 import network.nerve.swap.model.vo.SwapPairVO;
 import network.nerve.swap.model.vo.TokenAmountVo;
 import network.nerve.swap.service.SwapService;
@@ -36,10 +41,8 @@ import network.nerve.swap.storage.SwapExecuteResultStorageService;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static network.nerve.swap.constant.SwapCmdConstant.*;
 import static network.nerve.swap.utils.SwapUtils.wrapperFailed;
@@ -197,6 +200,29 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = IS_LEGAL_STABLE, version = 1.0, description = "检查稳定币交易对是否合法")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response checkLegalStable(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            logger().debug("chainId: {}, stablePairAddress: {}", chainId, stablePairAddress);
+            boolean legalCoin = stableSwapHelper.isLegalStable(chainId, stablePairAddress);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
     @CmdAnnotation(cmd = ADD_COIN_FOR_STABLE, version = 1.0, description = "在稳定币兑换池中添加币种")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
@@ -216,6 +242,50 @@ public class SwapCmd extends BaseCmd {
             boolean legalCoin = stableSwapHelper.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
             Map<String, Object> resultData = new HashMap<>();
             resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = ADD_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "添加稳定币交易对-用于Swap交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response addStableForSwapTrade(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            boolean success = stableSwapHelper.addStableForSwapTrade(chainId, stablePairAddress);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", success);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = REMOVE_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "[回滚]移除稳定币交易对-用于Swap交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response removeStableForSwapTrade(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            boolean success = stableSwapHelper.removeStableForSwapTrade(chainId, stablePairAddress);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", success);
             return success(resultData);
         } catch (Exception e) {
             logger().error(e);
@@ -707,7 +777,7 @@ public class SwapCmd extends BaseCmd {
             Map<String, Object> resultData = JSONUtils.jsonToMap(pairDTO.toString());
             return success(resultData);
         } catch (Exception e) {
-            logger().error(e);
+            //logger().error(e);
             return failed(e.getMessage());
         }
     }
@@ -831,6 +901,52 @@ public class SwapCmd extends BaseCmd {
             return success(resultData);
         } catch (Exception e) {
             logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = SWAP_PAIRS_ALL, version = 1.0, description = "查询所有交易对地址")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+    })
+    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    public Response getAllSwapPairs(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            return success(swapPairCache.getList().stream().map(s -> AddressTool.getStringAddressByBytes(s.getPo().getAddress())).collect(Collectors.toList()));
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = STABLE_SWAP_PAIRS_ALL, version = 1.0, description = "查询所有稳定币交易对地址")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+    })
+    @ResponseData(description = "所有稳定币交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    public Response getAllStableSwapPairs(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            return success(stableSwapPairCache.getList().stream().map(s -> AddressTool.getStringAddressByBytes(s.getPo().getAddress())).collect(Collectors.toList()));
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = SWAP_GET_STABLE_PAIR_LIST_FOR_SWAP_TRADE, version = 1.0, description = "查询可用于Swap交易的稳定币交易对")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoin.class))
+    public Response getStablePairListForSwapTrade(Map params) {
+        try {
+            Integer chainId = Integer.parseInt(params.get("chainId").toString());
+            List<StableCoin> groupList = SwapContext.stableCoinGroup.getGroupList();
+            List<StableCoinVo> collect = groupList.stream().map(s -> new StableCoinVo(s.getAddress(), s.getGroupCoin())).collect(Collectors.toList());
+            return success(collect);
+        } catch (Exception e) {
             return failed(e.getMessage());
         }
     }

@@ -59,8 +59,6 @@ public class AddressTool {
     static {
         BLOCK_HOLE_ADDRESS_SET.add("NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L");
         BLOCK_HOLE_ADDRESS_SET1.add("NERVEepb6F8oM9SQYJfbCnK11BuhYQ4LAxFcpy");
-        BLOCK_HOLE_ADDRESS_SET1.add("TNVTdTSPVtySemdyntG2UHCbTGWyHycn2aHET");
-        BLOCK_HOLE_ADDRESS_SET2.add("TNVTdTSPQvEngihwxqwCNPq3keQL1PwrcLbtj");
     }
 
     /**

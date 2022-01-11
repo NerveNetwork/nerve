@@ -9,7 +9,6 @@ import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.swap.constant.SwapConstant;
@@ -105,7 +104,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
             NulsLogger logger = chain.getLogger();
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
-                logger.info("[commit] Stable Swap Remove Liquidity, hash: {}", tx.getHash().toHex());
+                logger.info("[{}][commit] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
@@ -117,8 +116,9 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                 String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
+                //logger.info("[{}]remove bus: {}", blockHeader.getHeight(), bus.toString());
                 // 更新Pair的资金池和发行总量
-                stablePair.update(dto.getUserAddress(), bus.getLiquidity().negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
+                stablePair.update(bus.getLiquidity().negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -150,9 +150,9 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
                 // 回滚Pair的资金池
-                stablePair.rollback(dto.getUserAddress(), bus.getLiquidity().negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
+                stablePair.rollback(bus.getLiquidity().negate(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
-                logger.info("[rollback] Stable Swap Remove Liquidity, hash: {}", tx.getHash().toHex());
+                logger.info("[{}][rollback] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

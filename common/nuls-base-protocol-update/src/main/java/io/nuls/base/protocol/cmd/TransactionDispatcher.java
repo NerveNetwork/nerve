@@ -244,29 +244,32 @@ public final class TransactionDispatcher extends BaseCmd {
         }
         int syncStatus = (int) params.get("syncStatus");
         commitAdvice.begin(chainId, txs, blockHeader, syncStatus);
-        Map<Integer, List<Transaction>> map = new HashMap<>();
-        for (TransactionProcessor processor : processors) {
-            for (Transaction tx : txs) {
-                List<Transaction> transactions = map.computeIfAbsent(processor.getType(), k -> new ArrayList<>());
-                if (tx.getType() == processor.getType()) {
-                    transactions.add(tx);
+        Map<String, Boolean> resultMap = new HashMap<>(2);
+        boolean handle = commitAdvice.handle(chainId, txs, blockHeader, syncStatus, resultMap, processors);
+        if (!handle) {
+            Map<Integer, List<Transaction>> map = new HashMap<>();
+            for (TransactionProcessor processor : processors) {
+                for (Transaction tx : txs) {
+                    List<Transaction> transactions = map.computeIfAbsent(processor.getType(), k -> new ArrayList<>());
+                    if (tx.getType() == processor.getType()) {
+                        transactions.add(tx);
+                    }
                 }
             }
-        }
-
-        Map<String, Boolean> resultMap = new HashMap<>(2);
-        List<TransactionProcessor> completedProcessors = new ArrayList<>();
-        for (TransactionProcessor processor : processors) {
-            boolean commit = processor.commit(chainId, map.get(processor.getType()), blockHeader, syncStatus);
-            if (!commit) {
-                completedProcessors.forEach(e -> e.rollback(chainId, map.get(e.getType()), blockHeader));
-                resultMap.put("value", commit);
-                return success(resultMap);
-            } else {
-                completedProcessors.add(processor);
+            List<TransactionProcessor> completedProcessors = new ArrayList<>();
+            for (TransactionProcessor processor : processors) {
+                //Log.info("[{}]type: {}, processor: {}", blockHeader.getHeight(), processor.getType(), processor.getClass().getSimpleName());
+                boolean commit = processor.commit(chainId, map.get(processor.getType()), blockHeader, syncStatus);
+                if (!commit) {
+                    completedProcessors.forEach(e -> e.rollback(chainId, map.get(e.getType()), blockHeader));
+                    resultMap.put("value", commit);
+                    return success(resultMap);
+                } else {
+                    completedProcessors.add(processor);
+                }
             }
+            resultMap.put("value", true);
         }
-        resultMap.put("value", true);
         commitAdvice.end(chainId, txs, blockHeader);
         return success(resultMap);
     }

@@ -34,6 +34,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
@@ -71,6 +72,8 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
     private IPairFactory iPairFactory;
     @Autowired
     private ChainManager chainManager;
+    @Autowired
+    private StableSwapPairCache stableSwapPairCache;
 
     @Override
     public Integer txType() {
@@ -99,7 +102,7 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
             StableSwapPairPo pairPo = stablePair.getPair();
             // 整合计算数据
             StableAddLiquidityBus bus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), txData.getTo());
-
+            //SwapContext.logger.info("[{}]handler add bus: {}", blockHeight, bus.toString());
             // 装填执行结果
             result.setTxType(txType());
             result.setSuccess(true);
@@ -115,7 +118,7 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
             // 更新临时余额
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
             // 更新临时数据
-            stablePair.update(bus.getFrom(), bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeight, blockTime);
+            stablePair.update(bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeight, blockTime);
 
         } catch (Exception e) {
             Log.error(e);
@@ -167,7 +170,7 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
         return result;
     }
 
-    private Transaction makeSystemDealTx(StableAddLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
+    public Transaction makeSystemDealTx(StableAddLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
         SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
         sysDeal.newTo()
                 .setToAddress(bus.getTo())
@@ -205,6 +208,9 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
         }
         byte[] pairAddressBytes = tos.get(0).getAddress();
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        if (!stableSwapPairCache.isExist(pairAddress)) {
+            throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+        }
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
         NerveToken[] coins = pairPo.getCoins();

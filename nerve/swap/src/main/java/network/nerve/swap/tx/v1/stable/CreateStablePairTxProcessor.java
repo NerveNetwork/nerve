@@ -152,6 +152,8 @@ public class CreateStablePairTxProcessor implements TransactionProcessor {
                 txData.parse(tx.getTxData(), 0);
                 LedgerAssetDTO dto = ledgerAssetRegisterHelper.lpAssetRegForStable(chainId, stablePairAddress, txData.getCoins(), txData.getSymbol());
                 logger.info("[commit] Swap Stable Create Pair Info: {}-{}, symbol: {}, decimals: {}", dto.getChainId(), dto.getAssetId(), dto.getAssetSymbol(), dto.getDecimalPlace());
+                // load cache
+                stableSwapPairCache.get(stablePairAddress);
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -184,6 +186,8 @@ public class CreateStablePairTxProcessor implements TransactionProcessor {
                 StableSwapPairPo pairPO = ledgerAssetRegisterHelper.deleteLpAssetForStable(chainId, stablePairAddress);
                 logger.info("[rollback] Remove Stable Pair: {}-{}", pairPO.getTokenLP().getChainId(), pairPO.getTokenLP().getAssetId());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
+                // remove cache
+                stableSwapPairCache.remove(stablePairAddress);
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

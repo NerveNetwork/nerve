@@ -367,6 +367,10 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         int assetId = Integer.parseInt(split[1].trim());
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
                         SwapCall.addCoinForAddStable(chainId, stablePairAddress, assetChainId, assetId);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.ADD_STABLE_PAIR_FOR_SWAP_TRADE) {
+                        // 执行添加稳定币交易对-用于Swap交易
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.addStablePairForSwapTrade(chainId, stablePairAddress);
                     }
                 }
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
@@ -444,6 +448,10 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                     if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
                         // 重置执行撤银行节点提案标志
                         heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, true);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.ADD_STABLE_PAIR_FOR_SWAP_TRADE) {
+                        // 执行回滚 移除稳定币交易对-用于Swap交易
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.removeStablePairForSwapTrade(chainId, stablePairAddress);
                     }
                 }
                 if (isCurrentDirector) {

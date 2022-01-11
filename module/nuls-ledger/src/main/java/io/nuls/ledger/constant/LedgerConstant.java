@@ -157,4 +157,9 @@ public class LedgerConstant {
         // 12-链内SWAP资产绑定多异构链资产 ==> 11-链内SWAP资产绑定异构链资产
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_SWAP_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
     };
+
+    /**
+     * v1.17.0 协议升级高度
+     */
+    public static long PROTOCOL_1_17_0 = 0L;
 }

@@ -22,10 +22,9 @@
 
 package io.nuls.block.rpc;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.data.Block;
-import io.nuls.base.data.BlockHeader;
-import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.*;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
@@ -38,6 +37,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +49,7 @@ import static io.nuls.block.constant.CommandConstant.*;
  */
 public class BlockResourceTest {
 
-    private int chainId = 2;
+    private int chainId = 5;
 
     @BeforeClass
     public static void start() throws Exception {
@@ -174,6 +174,53 @@ public class BlockResourceTest {
         block100.parse(new NulsByteBuffer(HexUtil.decode(hex)));
         Log.info("block: {}", JSONUtils.obj2PrettyJson(block100));
         Assert.assertEquals(blockHeight, block100.getHeader().getHeight());
+    }
+
+    @Test
+    public void loopBlockByHeight() throws Exception {
+        byte[] key = AddressTool.getAddress("TNVTdTSQB7k8gZpt5YmjuRjWz6LNyrT8MCQgX");
+        for (int i = 22000; i< 38400; i++) {
+            Map<String,Object> params = new HashMap<>();
+            long blockHeight = i;
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("height", blockHeight);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.BL.abbr, GET_BLOCK_BY_HEIGHT, params);
+            Map data = (Map) cmdResp.getResponseData();
+            Map result = (Map) data.get(GET_BLOCK_BY_HEIGHT);
+            String hex = (String) result.get("value");
+            Block block = new Block();
+            block.parse(new NulsByteBuffer(HexUtil.decode(hex)));
+            List<Transaction> txs = block.getTxs();
+            if (txs != null) {
+                for (Transaction tx : txs) {
+                    CoinData coinData = tx.getCoinDataInstance();
+                    boolean hasKey = false;
+                    List<CoinFrom> froms = coinData.getFrom();
+                    for (Coin coin : froms) {
+                        if (Arrays.equals(key, coin.getAddress())) {
+                            hasKey = true;
+                            break;
+                        }
+                    }
+                    if (hasKey) {
+                        System.out.println(tx.format());
+                        continue;
+                    }
+                    List<CoinTo> tos = coinData.getTo();
+                    for (Coin coin : tos) {
+                        if (Arrays.equals(key, coin.getAddress())) {
+                            hasKey = true;
+                            break;
+                        }
+                    }
+                    if (hasKey) {
+                        System.out.println(tx.format());
+                        continue;
+                    }
+                }
+            }
+        }
+
     }
 
     @Test

@@ -151,6 +151,19 @@ public class MaticWalletApiTest extends Base {
         System.out.println(String.format("name: %s, hash: %s", crossOutFunction.getName(), FunctionEncoder.encode(crossOutFunction)));
     }
 
+    @Test
+    public void erc20Info() throws Exception {
+        setMain();
+        String erc20 = "0x3BA4c387f786bFEE076A58914F5Bd38d668B42c3";
+        int decimals = 18;
+        address = "0x5c4a4e39542bedf97e827f4601e66706cfc5b662";
+        BigInteger erc20Balance = htgWalletApi.getERC20Balance(address, erc20);
+        String result = new BigDecimal(erc20Balance).movePointLeft(decimals).toPlainString();
+        System.out.println(String.format("address: %s, erc20 balance: %s", address, result));
+
+        List<Type> types = htgWalletApi.callViewFunction("0xD6DF932A45C0f255f85145f286eA0b292B21C90B", HtgUtil.getSymbolERC20Function());
+        System.out.println(types.toString());
+    }
 
     @Test
     public void erc20TotalSupplyTest() throws Exception {

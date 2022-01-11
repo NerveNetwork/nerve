@@ -63,6 +63,8 @@ public class SwapTokenTradeRouteTest {
         pairs.add(new PairTest(sortTokens('D', 'E')));
         pairs.add(new PairTest(sortTokens('F', 'C')));
         pairs.add(new PairTest(sortTokens('C', 'H')));*/
+
+
         pairs.add(new PairTest(sortTokens('A', 'C')));
         pairs.add(new PairTest(sortTokens('B', 'C')));
         pairs.add(new PairTest(sortTokens('D', 'E')));
@@ -77,53 +79,6 @@ public class SwapTokenTradeRouteTest {
         group1.add('V');
         group1.add('W');
         group1.add('X');
-    }
-
-    @Test
-    public void testSubList() {
-        List<Integer> list = new ArrayList<>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-        list.add(4);
-        list.add(5);
-        list.add(6);
-        List<Integer> subList0 = subList(list, 0, 2);
-        subList0.addAll(subList(list, 3, list.size()));
-        System.out.println(subList0);
-    }
-
-    @Test
-    public void sortRouteVOTest() {
-        List<RouteVO> routes = new ArrayList<>();
-        int k0 = 5;
-        routes.add(new RouteVO(List.of(
-                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)), 
-                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
-                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
-                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(800))));
-        k0 = 6;
-        routes.add(new RouteVO(List.of(
-                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
-                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
-                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
-                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(600))));
-        k0 = 7;
-        routes.add(new RouteVO(List.of(
-                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
-                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
-                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
-                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(700))));
-        k0 = 8;
-        routes.add(new RouteVO(List.of(
-                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
-                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
-                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
-                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(900))));
-
-        routes.sort(RouteVOSort.INSTANCE);
-
-        System.out.println(Arrays.deepToString(routes.toArray()));
     }
 
     @Test
@@ -146,6 +101,7 @@ public class SwapTokenTradeRouteTest {
             bestRouteTest.add(new RouteTest(List.of(remove), 0));
         }
         List<RouteTest> routeTests = calPathsV2(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
+        //List<RouteTest> routeTests = calPathsOrigin(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
         //System.out.println(Arrays.deepToString(routeTests.toArray()));
         routeTests.stream().forEach(r -> System.out.println(r.toString()));
         /*
@@ -162,9 +118,8 @@ public class SwapTokenTradeRouteTest {
         int length = pairs.size();
         for (int i = 0; i < length; i++) {
             PairTest pair = pairs.get(i);
-            // pierre 改造
-            //if (!pairCheck(pair, in, currentPath)) continue;
-            //if (pair.token0 != in && pair.token1 != in) continue;
+            //if (pair.token0 != in && pair.token1 != in) continue;// 被替换为以下代码段
+            // add for link +
             PairTest pairTest = null;
             char currentIn = in;
             if (pair.token0 != in && pair.token1 != in) {
@@ -179,19 +134,20 @@ public class SwapTokenTradeRouteTest {
                     continue;
                 }
             }
+            // add for link -
 
             char tokenOut = pair.token0 == currentIn ? pair.token1 : pair.token0;
             if (currentIn == orginIn && tokenOut == out) continue;
             if (containsCurrency(currentPath, tokenOut)) continue;
 
             if (tokenOut == out) {
-                if (pairTest != null) currentPath.add(pairTest);
+                if (pairTest != null) currentPath.add(pairTest);// add for link
                 currentPath.add(pair);
                 bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
                 break;
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
-                if (pairTest != null) cloneLinkedHashSet.add(pairTest);
+                if (pairTest != null) cloneLinkedHashSet.add(pairTest);// add for link
                 cloneLinkedHashSet.add(pair);
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));
@@ -218,6 +174,7 @@ public class SwapTokenTradeRouteTest {
             if (tokenOut == out) {
                 currentPath.add(pair);
                 bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
+                break;
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 cloneLinkedHashSet.add(pair);
@@ -229,6 +186,53 @@ public class SwapTokenTradeRouteTest {
             }
         }
         return bestRouteTest;
+    }
+
+    @Test
+    public void testSubList() {
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+        list.add(3);
+        list.add(4);
+        list.add(5);
+        list.add(6);
+        List<Integer> subList0 = subList(list, 0, 2);
+        subList0.addAll(subList(list, 3, list.size()));
+        System.out.println(subList0);
+    }
+
+    @Test
+    public void sortRouteVOTest() {
+        List<RouteVO> routes = new ArrayList<>();
+        int k0 = 5;
+        routes.add(new RouteVO(List.of(
+                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
+                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
+                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
+                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(800))));
+        k0 = 6;
+        routes.add(new RouteVO(List.of(
+                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
+                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
+                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
+                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(600))));
+        k0 = 7;
+        routes.add(new RouteVO(List.of(
+                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
+                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
+                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
+                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(700))));
+        k0 = 8;
+        routes.add(new RouteVO(List.of(
+                new SwapPairVO(new NerveToken(k0, 1), new NerveToken(k0, 2)),
+                new SwapPairVO(new NerveToken(k0, 2), new NerveToken(k0, 3)),
+                new SwapPairVO(new NerveToken(k0, 3), new NerveToken(k0, 4))),
+                new TokenAmount(new NerveToken(k0, 1), BigInteger.valueOf(200)), new TokenAmount(new NerveToken(k0, 4), BigInteger.valueOf(900))));
+
+        routes.sort(RouteVOSort.INSTANCE);
+
+        System.out.println(Arrays.deepToString(routes.toArray()));
     }
 
     private boolean group(char token1, char token2) {

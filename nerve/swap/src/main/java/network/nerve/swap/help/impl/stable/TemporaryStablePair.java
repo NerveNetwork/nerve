@@ -45,13 +45,14 @@ public class TemporaryStablePair extends AbstractStablePair {
     }
 
     @Override
-    public void _update(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) {
+    public void _update(BigInteger liquidityChange, BigInteger[] newBalances, long blockHeight, long blockTime) {
         stableSwapPairDTO.setTotalLP(stableSwapPairDTO.getTotalLP().add(liquidityChange));
         stableSwapPairDTO.setBalances(newBalances);
+        //SwapContext.logger.info("[{}]Temporary pairAddress: {}, stable info: {}", blockHeight, AddressTool.getStringAddressByBytes(stableSwapPairDTO.getPo().getAddress()), stableSwapPairDTO.toString());
     }
 
     @Override
-    public void _rollback(byte[] userAddress, BigInteger liquidityChange, BigInteger[] changeBalances, BigInteger[] newBalances, BigInteger[] balances, long blockHeight, long blockTime) {
+    public void _rollback(BigInteger liquidityChange, BigInteger[] balances, long blockHeight, long blockTime) {
         stableSwapPairDTO.setTotalLP(stableSwapPairDTO.getTotalLP().subtract(liquidityChange));
         stableSwapPairDTO.setBalances(balances);
     }

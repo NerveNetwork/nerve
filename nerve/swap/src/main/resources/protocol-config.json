@@ -105,6 +105,13 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "FarmUpdateTxProcessorV1"
+      },{
+        "type": "77",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "StableLpSwapTradeTxProcessorV1"
       }
     ],
     "validMsgs": [

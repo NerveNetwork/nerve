@@ -6,6 +6,7 @@ import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.rpc.model.ModuleE;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -23,6 +24,32 @@ public class SwapTools implements CallRpc {
         params.put("tokenBStr", tokenBStr);
         try {
             return callRpc(ModuleE.SW.abbr, "sw_swap_pair_info", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 查询所有Swap交易对信息
+     */
+    public Result<List<String>> getAllSwapPairsInfo(int chainId) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_get_all_swap_pairs", params, (Function<List<String>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 查询所有Stable-Swap交易对信息
+     */
+    public Result<List<String>> getAllStableSwapPairsInfo(int chainId) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_get_all_stable_swap_pairs", params, (Function<List<String>, Result>) res -> new Result(res));
         } catch (NulsRuntimeException e) {
             return Result.fail(e.getCode(), e.getMessage());
         }
@@ -148,6 +175,19 @@ public class SwapTools implements CallRpc {
         params.put("tokenBStr", tokenBStr);
         try {
             return callRpc(ModuleE.SW.abbr, "sw_swap_min_amount_remove_liquidity", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 查询可用于Swap交易的稳定币交易对
+     */
+    public Result<List<Map>> getStablePairListForSwapTrade(int chainId) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_get_stable_pair_list_for_swap_trade", params, (Function<List<Map>, Result>) res -> new Result(res));
         } catch (NulsRuntimeException e) {
             return Result.fail(e.getCode(), e.getMessage());
         }

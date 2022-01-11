@@ -255,7 +255,7 @@ public class OktWalletApiTest extends Base {
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "1200";
+        String sendAmount = "3200";
         // 初始化 ERC20 地址信息
         //setErc20EthMinter();
         //setErc20UsdiMinter();
