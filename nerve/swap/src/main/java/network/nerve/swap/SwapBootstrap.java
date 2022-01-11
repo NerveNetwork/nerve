@@ -103,8 +103,8 @@ public class SwapBootstrap extends RpcModule {
             AddressTool.init(addressPrefixDatas);
             initDB();
             initProtocolUpdate();
-            initContext();
             chainManager.initChain();
+            initContext();
             ModuleHelper.init(this);
         } catch (Exception e) {
             Log.error("module init error!", e);
@@ -260,40 +260,18 @@ public class SwapBootstrap extends RpcModule {
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKey(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0 = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKeyProtocol17(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeDestructionAddressPublicKey(), swapConfig.getChainId());
-        // 聚合stableCombining
-        try {
-            String stablePairAddressSetStr = swapConfig.getStablePairAddressInitialSet();
-            if (StringUtils.isNotBlank(stablePairAddressSetStr)) {
-                String[] array = stablePairAddressSetStr.split(",");
-                if (array.length == 0) {
-                    return;
-                }
-                // 缓存: 添加稳定币交易对-用于Swap交易
-                boolean initialDBDone = swapStablePairStorageService.existPairForSwapTrade(array[0].trim());
-                if (!initialDBDone) {
-                    for (String stable : array) {
-                        stable = stable.trim();
-                        StableSwapPairDTO dto = stableSwapPairCache.get(stable);
-                        if (dto == null) {
-                            throw new RuntimeException(String.format("stable pair [%s] not exist!", stable));
-                        }
-                        SwapContext.stableCoinGroup.add(stable, dto.getPo().getCoins());
-                        swapStablePairStorageService.savePairForSwapTrade(stable);
-                    }
-                } else {
-                    List<String> allForSwapTrade = swapStablePairStorageService.findAllForSwapTrade(swapConfig.getChainId());
-                    for (String stable : allForSwapTrade) {
-                        stable = stable.trim();
-                        StableSwapPairDTO dto = stableSwapPairCache.get(stable);
-                        if (dto == null) {
-                            throw new RuntimeException(String.format("stable pair [%s] not exist!", stable));
-                        }
-                        SwapContext.stableCoinGroup.add(stable, dto.getPo().getCoins());
-                    }
-                }
+        // 初始化聚合stableCombining
+        String stablePairAddressSetStr = swapConfig.getStablePairAddressInitialSet();
+        if (StringUtils.isNotBlank(stablePairAddressSetStr)) {
+            String[] array = stablePairAddressSetStr.split(",");
+            if (array.length == 0) {
+                return;
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            // 延迟缓存: 管理稳定币交易对-用于Swap交易
+            for (String stable : array) {
+                stable = stable.trim();
+                SwapContext.stableCoinGroup.addAddress(stable, stableSwapPairCache, swapStablePairStorageService, swapConfig);
+            }
         }
     }
 
