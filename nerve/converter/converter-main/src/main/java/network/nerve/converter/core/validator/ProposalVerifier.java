@@ -47,7 +47,6 @@ import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.ProposalTxData;
-import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
@@ -152,7 +151,7 @@ public class ProposalVerifier {
                 validBankVoteRange(chain, rangeType);
                 validCoinForSwap(chain, txData.getContent(), txData.getAddress());
                 break;
-            case ADD_STABLE_PAIR_FOR_SWAP_TRADE:
+            case MANAGE_STABLE_PAIR_FOR_SWAP_TRADE:
                 validBankVoteRange(chain, rangeType);
                 validStableSwap(chain, txData.getAddress());
                 break;
@@ -200,7 +199,7 @@ public class ProposalVerifier {
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         boolean legalStable = SwapCall.isLegalStable(chain.getChainId(), stablePairAddress);
         if (!legalStable) {
-            chain.getLogger().error("[提案添加稳定币交易对] 交易对不合法. stablePairAddress: {}", stablePairAddress);
+            chain.getLogger().error("[提案管理稳定币交易对] 交易对不合法. stablePairAddress: {}", stablePairAddress);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

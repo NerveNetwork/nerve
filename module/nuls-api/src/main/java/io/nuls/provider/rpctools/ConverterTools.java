@@ -60,6 +60,20 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
+     * 查询资产的异构链资产信息
+     */
+    public Result getHeterogeneousAssetInfo(int chainId, int assetId) {
+        Map<String, Object> params = new HashMap<>(2);
+        params.put("chainId", chainId);
+        params.put("assetId", assetId);
+        try {
+            return callRpc(ModuleE.CV.abbr, "cv_get_heterogeneous_chain_asset_info", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
      * 重新将异构链提现交易放入task, 重发消息
      */
     public Result retryWithdrawalMsg(int chainId, String hash) {

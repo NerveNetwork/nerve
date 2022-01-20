@@ -14,6 +14,8 @@ public interface SwapPairCache {
 
     SwapPairDTO put(String address, SwapPairDTO dto);
 
+    SwapPairDTO reload(String address);
+
     SwapPairDTO remove(String address);
 
     Collection<SwapPairDTO> getList();

@@ -118,7 +118,7 @@ public class StableSwapHelper {
         swapStablePairBalancesStorageService.savePairBalances(stablePairAddress, pairBalancesPo);
 
         // 更新缓存
-        stableSwapPairCache.remove(stablePairAddress);
+        stableSwapPairCache.reload(stablePairAddress);
         SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins);
         return true;
     }

@@ -33,10 +33,12 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.transaction.constant.TxConfig;
 import io.nuls.transaction.constant.TxConstant;
+import io.nuls.transaction.constant.TxContext;
 import io.nuls.transaction.constant.TxErrorCode;
 import io.nuls.transaction.manager.TxManager;
 import io.nuls.transaction.model.bo.Chain;
 import io.nuls.transaction.model.bo.TxRegister;
+import io.nuls.transaction.rpc.call.AccountCall;
 
 import java.util.*;
 
@@ -359,4 +361,19 @@ public class TxUtil {
         }
         return AddressTool.BLOCK_HOLE_ADDRESS_SET.contains(AddressTool.getStringAddressByBytes(address));
     }
+
+
+    public static boolean isBlockAddress(Chain chain, byte[] address) {
+        // add by pierre at 2022-01-28 协议升级锁定地址
+        if(address == null) {
+            return false;
+        }
+        if (chain.getBestBlockHeight() < TxContext.PROTOCOL_1_18_0) {
+            return false;
+        }
+        String addressStr = AddressTool.getStringAddressByBytes(address);
+        return AccountCall.isBlockAccount(chain.getChainId(), addressStr);
+        // end code by pierre
+    }
+
 }

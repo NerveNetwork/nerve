@@ -42,6 +42,7 @@ maxOutCount=50
 reverseCheck=0
 
 [account]
+blockAccountManager=TNVTdTSQ32SVZvkY4tM5WHgM1mzRznkiqm2is
 keystoreFolder=/keystore/backup
 
 [block]
@@ -148,6 +149,7 @@ height_1_14_0=8830000
 height_1_15_0=10570939
 height_1_16_0=11000000
 height_1_17_0=12430000
+height_1_18_0=13499700
 
 [nuls-api]
 #httpServer的启动ip

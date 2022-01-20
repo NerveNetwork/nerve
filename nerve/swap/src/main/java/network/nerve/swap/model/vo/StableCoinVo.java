@@ -39,10 +39,12 @@ import static io.protostuff.ByteString.EMPTY_STRING;
 public class StableCoinVo {
 
     private String address;
+    private String lpToken;
     private Map<String, Integer> groupCoin;
 
-    public StableCoinVo(String address, Set<NerveToken> groupCoinSet) {
+    public StableCoinVo(String address, NerveToken lpToken, Set<NerveToken> groupCoinSet) {
         this.address = address;
+        this.lpToken = lpToken.str();
         this.groupCoin = new HashMap<>();
         for (NerveToken token : groupCoinSet) {
             this.groupCoin.put(token.str(), 1);
@@ -55,6 +57,14 @@ public class StableCoinVo {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getLpToken() {
+        return lpToken;
+    }
+
+    public void setLpToken(String lpToken) {
+        this.lpToken = lpToken;
     }
 
     public Map<String, Integer> getGroupCoin() {

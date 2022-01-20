@@ -26,7 +26,6 @@ package network.nerve.swap.model.bo;
 import io.nuls.core.model.StringUtils;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.config.SwapConfig;
-import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.storage.SwapStablePairStorageService;
@@ -141,7 +140,7 @@ public class StableCoinGroup {
         // 缓存: 管理稳定币交易对-用于Swap交易
         try {
             if (addressList.size() > 0) {
-                boolean initialDBDone = swapStablePairStorageService.existPairForSwapTrade(addressList.iterator().next().trim());
+                boolean initialDBDone = swapStablePairStorageService.hadInitialDonePairForSwapTrade(swapConfig.getChainId());
                 if (!initialDBDone) {
                     cacheCompleted = true;
                     for (String stable : addressList) {
@@ -153,6 +152,9 @@ public class StableCoinGroup {
                         }
                         this._add(stable, dto.getPo().getCoins());
                         swapStablePairStorageService.savePairForSwapTrade(stable);
+                    }
+                    if (cacheCompleted) {
+                        swapStablePairStorageService.initialDonePairForSwapTrade(swapConfig.getChainId());
                     }
                 } else {
                     loadFromDB();

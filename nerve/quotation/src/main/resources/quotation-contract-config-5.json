@@ -36,12 +36,12 @@
     "chain": "nerve",
     "key": "NVTUSDTNLPKEY",
     "anchorToken": "NVTUSDTNLP-USDT",
-    "tokenInfo": "5-92-18",
-    "baseTokenInfo": "5-75-18",
+    "tokenInfo": "5-103-18",
+    "baseTokenInfo": "5-102-18",
     "swapTokenContractAddress": "5-1-8",
-    "baseTokenContractAddress": "5-75-18",
+    "baseTokenContractAddress": "5-102-18",
     "baseAnchorToken": "usdtn-usdt",
-    "rpcAddress": "5-1,5-75",
+    "rpcAddress": "5-1,5-102",
     "effectiveHeight": 11760000,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   }

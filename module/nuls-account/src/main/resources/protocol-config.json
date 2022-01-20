@@ -18,6 +18,22 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "AliasProcessorV1"
+      },
+      {
+        "type": "78",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AccountLockProcessorV1"
+      },
+      {
+        "type": "79",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "AccountUnlockProcessorV1"
       }
     ],
     "validMsgs": [],

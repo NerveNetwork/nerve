@@ -95,7 +95,7 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[提案添加稳定币交易对-用于Swap交易] 添加失败. stablePairAddress: {}", stablePairAddress);
+                LoggerUtil.LOG.error("[提案管理稳定币交易对-用于Swap交易] 添加失败. stablePairAddress: {}", stablePairAddress);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
@@ -113,7 +113,7 @@ public class SwapCall extends BaseCall {
 
             params.put("stablePairAddress", stablePairAddress);
             boolean success;
-            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_remove_stable_pair_for_swap_trade", params);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_remove_stable_for_swap_trade", params);
             if (result == null || result.get("value") == null) {
                 success = false;
             } else {
@@ -124,7 +124,7 @@ public class SwapCall extends BaseCall {
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
-            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_remove_stable_pair_for_swap_trade");
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_remove_stable_for_swap_trade");
             LoggerUtil.LOG.error(msg, e);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }

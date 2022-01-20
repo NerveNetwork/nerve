@@ -44,6 +44,15 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
     /** coinTo 支持金额等于0, 只禁止金额为0的锁定 的协议生效高度*/
     private long coinToPtlHeightSecond;
 
+    private String blackListPath;
+
+    public String getBlackListPath() {
+        return blackListPath;
+    }
+
+    public void setBlackListPath(String blackListPath) {
+        this.blackListPath = blackListPath;
+    }
 
     public String getBlackHolePublicKey() {
         return blackHolePublicKey;

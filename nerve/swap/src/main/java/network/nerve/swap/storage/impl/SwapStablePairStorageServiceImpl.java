@@ -51,6 +51,7 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
     private final String KEY_PREFIX_LP = "SPAIRLP-";
     private final String KEY_TRADE_PREFIX = "SPAIRTRADE-";
     private final byte[] SPAIRTRADE_ALL_KEY = SwapDBUtil.stringToBytes("SPAIRTRADE-ALL");
+    private final byte[] SPAIRTRADE_INITIAL_DONE_KEY = SwapDBUtil.stringToBytes("SPAIRTRADE-INITIAL-DONE");
 
     @Override
     public boolean savePair(byte[] address, StableSwapPairPo po) throws Exception {
@@ -172,6 +173,16 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
     }
 
     @Override
+    public void initialDonePairForSwapTrade(int chainId) throws Exception {
+        RocksDBService.put(baseArea + chainId, SPAIRTRADE_INITIAL_DONE_KEY, SwapConstant.ZERO_BYTES);
+    }
+
+    @Override
+    public boolean hadInitialDonePairForSwapTrade(int chainId) {
+        return RocksDBService.get(baseArea + chainId, SPAIRTRADE_INITIAL_DONE_KEY) != null;
+    }
+
+    @Override
     public boolean delelePairForSwapTrade(String address) throws Exception {
         int chainId = AddressTool.getChainIdByAddress(address);
         RocksDBService.delete(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_TRADE_PREFIX + address));
@@ -192,6 +203,9 @@ public class SwapStablePairStorageServiceImpl implements SwapStablePairStorageSe
             return Collections.EMPTY_LIST;
         }
         Set<String> pairs = pairSetPo.getCollection();
+        if (pairs == null) {
+            return Collections.EMPTY_LIST;
+        }
         return pairs.stream().sorted().collect(Collectors.toList());
     }
 }

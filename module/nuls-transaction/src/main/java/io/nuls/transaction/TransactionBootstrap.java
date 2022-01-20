@@ -30,6 +30,8 @@ import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
@@ -86,6 +88,7 @@ public class TransactionBootstrap extends RpcModule {
             initDB();
             initModuleProtocolCfg();
             initTransactionContext();
+            initProtocolUpdate();
             chainManager.initChain();
             TxUtil.blackHolePublicKey = HexUtil.decode(txConfig.getBlackHolePublicKey());
             ModuleHelper.init(this);
@@ -209,6 +212,17 @@ public class TransactionBootstrap extends RpcModule {
         TxContext.UNCONFIRMED_TX_EXPIRE_SEC = txConfig.getUnconfirmedTxExpireSec();
         TxContext.COINTO_PTL_HEIGHT_FIRST = txConfig.getCoinToPtlHeightFirst();
         TxContext.COINTO_PTL_HEIGHT_SECOND = txConfig.getCoinToPtlHeightSecond();
+    }
+
+    private void initProtocolUpdate() {
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        try {
+            long heightVersion1_18_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_18_0"));
+            TxContext.PROTOCOL_1_18_0 = heightVersion1_18_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_18_0", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

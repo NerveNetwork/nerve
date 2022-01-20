@@ -35,6 +35,13 @@ public interface SwapStablePairStorageService {
         return false;
     };
 
+    default void initialDonePairForSwapTrade(int chainId) throws Exception {
+    };
+
+    default boolean hadInitialDonePairForSwapTrade(int chainId) {
+        return false;
+    };
+
     default boolean delelePairForSwapTrade(String address) throws Exception {
         return false;
     };

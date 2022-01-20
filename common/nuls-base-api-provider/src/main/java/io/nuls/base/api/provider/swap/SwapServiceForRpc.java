@@ -28,7 +28,7 @@ import io.nuls.base.api.provider.BaseRpcService;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.swap.facade.StableAddCoinReq;
-import io.nuls.base.api.provider.swap.facade.StableAddPairReq;
+import io.nuls.base.api.provider.swap.facade.StableManagePairReq;
 import io.nuls.core.rpc.model.ModuleE;
 
 import java.util.Map;
@@ -57,7 +57,7 @@ public class SwapServiceForRpc extends BaseRpcService implements SwapService {
     }
 
     @Override
-    public Result<String> stableAddPair(StableAddPairReq req) {
+    public Result<String> stableManagePair(StableManagePairReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
             return success(data);

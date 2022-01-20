@@ -47,4 +47,6 @@ public class TxContext {
     /** coinTo 支持金额等于0, 只禁止金额为0的锁定 的协议生效高度*/
     public static long COINTO_PTL_HEIGHT_SECOND = 0L;
 
+    public static long PROTOCOL_1_18_0 = 0L;
+
 }

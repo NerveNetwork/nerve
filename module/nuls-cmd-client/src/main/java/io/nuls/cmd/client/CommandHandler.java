@@ -44,6 +44,7 @@ import io.nuls.cmd.client.processor.ledger.GetLocalCrossAssetProcessor;
 import io.nuls.cmd.client.processor.network.GetNetworkProcessor;
 import io.nuls.cmd.client.processor.swap.StableAddCoinProposalProcess;
 import io.nuls.cmd.client.processor.swap.StableAddPairProposalProcess;
+import io.nuls.cmd.client.processor.swap.StableRemovePairProposalProcess;
 import io.nuls.cmd.client.processor.system.EvalProcessor;
 import io.nuls.cmd.client.processor.system.ExitProcessor;
 import io.nuls.cmd.client.processor.system.HelpProcessor;
@@ -250,6 +251,7 @@ public class CommandHandler implements InitializingBean {
         //swap
         register(getBean(StableAddCoinProposalProcess.class));
         register(getBean(StableAddPairProposalProcess.class));
+        register(getBean(StableRemovePairProposalProcess.class));
     }
 
     public void start() {

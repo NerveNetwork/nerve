@@ -745,17 +745,20 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetType <= 4) {
                 throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
             }
-            Map checkMap = new HashMap();
-            checkMap.put("chainId", nerveAssetChainId);
-            checkMap.put("assetId", nerveAssetId);
-            Response registerNetwork = this.getRegisterNetwork(checkMap);
-            if (!registerNetwork.isSuccess()) {
-                throw new Exception(registerNetwork.getResponseComment());
-            }
-            Map checkResult = (Map) registerNetwork.getResponseData();
-            int registerHeterogeneousChainId = Integer.parseInt(checkResult.get("heterogeneousChainId").toString());
-            if (registerHeterogeneousChainId == heterogeneousChainId) {
-                throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
+            // 非Nerve链ID的资产，一定是异构链的绑定资产
+            if (nerveAssetChainId == chainId) {
+                Map checkMap = new HashMap();
+                checkMap.put("chainId", nerveAssetChainId);
+                checkMap.put("assetId", nerveAssetId);
+                Response registerNetwork = this.getRegisterNetwork(checkMap);
+                if (!registerNetwork.isSuccess()) {
+                    throw new Exception(registerNetwork.getResponseComment());
+                }
+                Map checkResult = (Map) registerNetwork.getResponseData();
+                int registerHeterogeneousChainId = Integer.parseInt(checkResult.get("heterogeneousChainId").toString());
+                if (registerHeterogeneousChainId == heterogeneousChainId) {
+                    throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
+                }
             }
 
             Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,

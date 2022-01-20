@@ -65,6 +65,6 @@ public interface TxErrorCode extends CommonCodeConstanst {
     ErrorCode SWAP_VERIFY_GENERATE_TXS_FAIL = ErrorCode.init(ModuleE.TX.getPrefix() + "_0045");
     ErrorCode TX_DATA_PAIR_ADDRESS_VALIDATION_ERROR = ErrorCode.init(ModuleE.TX.getPrefix() + "_0046");
     ErrorCode TX_DATA_FARM_ADDRESS_VALIDATION_ERROR = ErrorCode.init(ModuleE.TX.getPrefix() + "_0047");
-
+    ErrorCode BLOCK_ADDRESS = ErrorCode.init(ModuleE.TX.getPrefix() + "_0048");
 
 }

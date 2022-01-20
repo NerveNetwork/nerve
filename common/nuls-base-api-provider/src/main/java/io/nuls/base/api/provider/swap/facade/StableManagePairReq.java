@@ -30,7 +30,7 @@ import io.nuls.base.api.provider.BaseReq;
  * @author: PierreLuo
  * @date: 2021/7/1
  */
-public class StableAddPairReq extends BaseReq {
+public class StableManagePairReq extends BaseReq {
 
     /**
      * 提案类型
@@ -44,10 +44,10 @@ public class StableAddPairReq extends BaseReq {
     private String address;
     private String password;
 
-    public StableAddPairReq() {
+    public StableManagePairReq() {
     }
 
-    public StableAddPairReq(int type, String businessAddress, String content, String address) {
+    public StableManagePairReq(int type, String businessAddress, String content, String address) {
         this.type = type;
         this.businessAddress = businessAddress;
         this.content = content;

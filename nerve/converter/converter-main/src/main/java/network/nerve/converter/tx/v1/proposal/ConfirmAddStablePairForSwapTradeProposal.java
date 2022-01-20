@@ -61,7 +61,7 @@ public class ConfirmAddStablePairForSwapTradeProposal implements IConfirmProposa
 
     @Override
     public Byte proposalType() {
-        return ProposalTypeEnum.ADD_STABLE_PAIR_FOR_SWAP_TRADE.value();
+        return ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE.value();
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ConfirmAddStablePairForSwapTradeProposal implements IConfirmProposa
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         boolean legalStable = SwapCall.isLegalStable(chain.getChainId(), stablePairAddress);
         if (!legalStable) {
-            chain.getLogger().error("[提案添加稳定币交易对] 交易对不合法. stablePairAddress: {}", stablePairAddress);
+            chain.getLogger().error("[提案管理稳定币交易对] 交易对不合法. stablePairAddress: {}", stablePairAddress);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

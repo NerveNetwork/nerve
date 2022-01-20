@@ -65,7 +65,7 @@ public class PersistencePair extends AbstractPair {
         SwapPairReservesPO po = new SwapPairReservesPO(getPair().getAddress(), balance0, balance1, swapPairDTO.getTotalLP(), blockTime, blockHeight);
         swapPairReservesStorageService.savePairReserves(pairAddress, po);
         // 更新缓存
-        swapPairCache.remove(pairAddress);
+        swapPairCache.reload(pairAddress);
     }
 
     @Override
@@ -80,6 +80,6 @@ public class PersistencePair extends AbstractPair {
         SwapPairReservesPO po = new SwapPairReservesPO(getPair().getAddress(), reserve0, reserve1, swapPairDTO.getTotalLP(), blockTime, blockHeight);
         swapPairReservesStorageService.savePairReserves(pairAddress, po);
         // 更新缓存
-        swapPairCache.remove(pairAddress);
+        swapPairCache.reload(pairAddress);
     }
 }

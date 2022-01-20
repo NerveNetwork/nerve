@@ -41,7 +41,7 @@ import io.nuls.core.core.annotation.Component;
  * @date: 2020/9/15
  */
 @Component
-public class StableAddPairProposalProcess implements CommandProcessor {
+public class StableRemovePairProposalProcess implements CommandProcessor {
 
     @Autowired
     Config config;
@@ -56,7 +56,7 @@ public class StableAddPairProposalProcess implements CommandProcessor {
 
     @Override
     public String getCommand() {
-        return "stableaddpair";
+        return "stableremovepair";
     }
 
 
@@ -71,7 +71,7 @@ public class StableAddPairProposalProcess implements CommandProcessor {
 
     @Override
     public String getCommandDescription() {
-        return "stableaddpair <sender> <stablePairAddress>";
+        return "stableremovepair <sender> <stablePairAddress>";
     }
 
     @Override
@@ -88,7 +88,7 @@ public class StableAddPairProposalProcess implements CommandProcessor {
         StableManagePairReq req = new StableManagePairReq(
                 10,
                 stablePairAddress,
-                "ADD",
+                "REMOVE",
                 sender);
         req.setPassword(getPwd("\nEnter your account password:"));
         return req;

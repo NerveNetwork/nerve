@@ -2,12 +2,15 @@ package network.nerve.swap.utils;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import network.nerve.swap.JunitUtils;
 import network.nerve.swap.JunitCase;
 import network.nerve.swap.JunitExecuter;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.model.NerveToken;
+import network.nerve.swap.model.txdata.linkswap.StableLpSwapTradeData;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -79,7 +82,7 @@ public class SwapUtilsTest {
 
     @Test
     public void calcStablePairAddress() {
-        NulsHash txHash = NulsHash.fromHex("4b45261c47d11b628a140547a73b2ff8113f81976ae242c3792e749a2f085c4d");
+        NulsHash txHash = NulsHash.fromHex("f3fea55eebb6d0b262a30504de69833ff9dacf6253a31a3ec0bca776b6c7b33c");
         byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         System.out.println(stablePairAddress);
@@ -105,5 +108,13 @@ public class SwapUtilsTest {
                         new NerveToken(5, 1),
                         new NerveToken(5, 5)
                 )));
+    }
+
+    @Test
+    public void test() throws Exception {
+        String data = "0000000000000000000000000000000000000000000000000000000000000000050001b9978dbea4abebb613b6be2d0d66b4179d2511cb00faefdb6103050048000500660005000100";
+        StableLpSwapTradeData txData = new StableLpSwapTradeData();
+        txData.parse(HexUtil.decode(data), 0);
+        System.out.println();
     }
 }

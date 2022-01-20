@@ -8,6 +8,7 @@ import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.dto.SwapPairDTO;
+import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.model.po.SwapPairPO;
 import network.nerve.swap.model.po.SwapPairReservesPO;
 import network.nerve.swap.storage.SwapPairReservesStorageService;
@@ -61,6 +62,13 @@ public class SwapPairCacheImpl implements SwapPairCache {
     @Override
     public SwapPairDTO put(String address, SwapPairDTO dto) {
         return CACHE_MAP.put(address, dto);
+    }
+
+    @Override
+    public SwapPairDTO reload(String address) {
+        CACHE_MAP.remove(address);
+        SwapPairDTO dto = this.get(address);
+        return dto;
     }
 
     @Override

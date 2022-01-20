@@ -33,6 +33,42 @@
             <version>2019.01.27</version>
             <scope>test</scope>
         </dependency>-->
+        <dependency>
+            <groupId>io.nuls.v2</groupId>
+            <artifactId>sdk4j</artifactId>
+            <version>1.1.6.RELEASE</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>nuls-base-api-provider</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.nuls.v2</groupId>
+                    <artifactId>nuls-core-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.nuls.v2</groupId>
+                    <artifactId>nuls-core-rockdb</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-core</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-base</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-core-h2</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mybatis</groupId>
+                    <artifactId>mybatis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
     <build>
         <finalName>nuls-module-account</finalName>

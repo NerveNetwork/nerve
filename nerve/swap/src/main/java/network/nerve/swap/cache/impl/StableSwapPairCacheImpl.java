@@ -61,6 +61,13 @@ public class StableSwapPairCacheImpl implements StableSwapPairCache {
     }
 
     @Override
+    public StableSwapPairDTO reload(String address) {
+        CACHE_MAP.remove(address);
+        StableSwapPairDTO dto = this.get(address);
+        return dto;
+    }
+
+    @Override
     public StableSwapPairDTO remove(String address) {
         StableSwapPairDTO remove = CACHE_MAP.remove(address);
         if (remove != null) {

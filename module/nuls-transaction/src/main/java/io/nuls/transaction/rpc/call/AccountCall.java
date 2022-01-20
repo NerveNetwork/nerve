@@ -4,6 +4,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.MultiSigAccount;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.transaction.constant.TxConstant;
@@ -42,6 +43,23 @@ public class AccountCall {
         } catch (RuntimeException e){
             Log.error(e);
             throw new NulsException(TxErrorCode.RPC_REQUEST_FAILD);
+        }
+    }
+
+    public static boolean isBlockAccount(int chainId, String address) {
+        try {
+            if (StringUtils.isBlank(address)) {
+                return false;
+            }
+            Map<String, Object> params = new HashMap<>(4);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            Map resultMap = (Map) TransactionCall.requestAndResponse(ModuleE.AC.abbr, "ac_isBlockAccount", params);
+            boolean isBlock = (boolean) resultMap.get("value");
+            return isBlock;
+        } catch (Exception e) {
+            Log.error(e);
+            return false;
         }
     }
 

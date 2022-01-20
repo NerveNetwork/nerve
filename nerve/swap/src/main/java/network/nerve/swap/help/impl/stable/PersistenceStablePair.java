@@ -64,7 +64,7 @@ public class PersistenceStablePair extends AbstractStablePair {
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, newBalances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
         // 更新缓存
-        stableSwapPairCache.remove(pairAddress);
+        stableSwapPairCache.reload(pairAddress);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class PersistenceStablePair extends AbstractStablePair {
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, balances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
         // 更新缓存
-        stableSwapPairCache.remove(pairAddress);
+        stableSwapPairCache.reload(pairAddress);
     }
 
     private void savePairBalances(String pairAddress, BigInteger[] balancesCurrent, BigInteger totalLP, Long blockTime, Long blockHeight) throws Exception {

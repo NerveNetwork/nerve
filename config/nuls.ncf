@@ -41,6 +41,7 @@ maxInCount=300
 maxOutCount=50
 
 [account]
+blockAccountManager=NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt
 keystoreFolder=/keystore/backup
 
 [block]
@@ -144,6 +145,7 @@ height_1_14_0=18150000
 height_1_15_0=19790000
 height_1_16_0=22180000
 height_1_17_0=23373200
+height_1_18_0=23684100
 
 [nuls-api]
 #httpServer的启动ip

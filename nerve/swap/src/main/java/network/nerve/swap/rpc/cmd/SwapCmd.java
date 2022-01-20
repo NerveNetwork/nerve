@@ -10,6 +10,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
@@ -271,7 +272,7 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = REMOVE_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "[回滚]移除稳定币交易对-用于Swap交易")
+    @CmdAnnotation(cmd = REMOVE_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "移除稳定币交易对-用于Swap交易")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
             @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
@@ -944,7 +945,7 @@ public class SwapCmd extends BaseCmd {
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
             List<StableCoin> groupList = SwapContext.stableCoinGroup.getGroupList();
-            List<StableCoinVo> collect = groupList.stream().map(s -> new StableCoinVo(s.getAddress(), s.getGroupCoin())).collect(Collectors.toList());
+            List<StableCoinVo> collect = groupList.stream().filter(s -> StringUtils.isNotBlank(s.getAddress())).map(s -> new StableCoinVo(s.getAddress(), stableSwapPairCache.get(s.getAddress()).getPo().getTokenLP(), s.getGroupCoin())).collect(Collectors.toList());
             return success(collect);
         } catch (Exception e) {
             return failed(e.getMessage());

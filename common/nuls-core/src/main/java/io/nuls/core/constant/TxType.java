@@ -362,4 +362,10 @@ public class TxType {
      * 稳定币流动性资产聚合swap交易
      */
     public static final int SWAP_STABLE_LP_SWAP_TRADE = 77;
+
+    public static final int BLOCK_ACCOUNT = 78;
+
+    public static final int UNBLOCK_ACCOUNT = 79;
+
+
 }

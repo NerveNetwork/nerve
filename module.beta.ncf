@@ -103,6 +103,9 @@ deflationHeightInterval=4320000
 dataPath=../../../../data
 logPath=../../../../Logs
 
+[transaction]
+blackListPath=blacklist
+
 [public-service]
 #public-service模块对外的rpc端口号
 rpcPort=17003
