@@ -23,6 +23,9 @@
  */
 package io.nuls.transaction.constant;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author: Charlie
  * @date: 2020/06/25
@@ -48,5 +51,9 @@ public class TxContext {
     public static long COINTO_PTL_HEIGHT_SECOND = 0L;
 
     public static long PROTOCOL_1_18_0 = 0L;
+    public static long PROTOCOL_1_19_0 = 0L;
+    public static Set<String> ACCOUNT_BLOCK_MANAGER_ADDRESS_SET = new HashSet<>();
+    // 最小签名数
+    public static int ACCOUNT_BLOCK_MIN_SIGN_COUNT = 0;
 
 }

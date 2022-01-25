@@ -93,7 +93,7 @@ public class StopAgentProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, stopAgentTx);
+                rs = validator.validate(chain, stopAgentTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(stopAgentTx);
                     chain.getLogger().info("Intelligent Contract Exit Node Trading Verification Failed");
@@ -200,11 +200,11 @@ public class StopAgentProcessor implements TransactionProcessor {
             return false;
         }
         agent.setDelHeight(blockHeader.getHeight());
-        if(!agentManager.updateAgent(chain, agent)){
+        if (!agentManager.updateAgent(chain, agent)) {
             chain.getLogger().error("Stop agent tx commit error");
             return false;
         }
-        if(!AgentDepositNonceManager.unLockTxCommit(chain,stopAgent.getCreateTxHash() , transaction, true)){
+        if (!AgentDepositNonceManager.unLockTxCommit(chain, stopAgent.getCreateTxHash(), transaction, true)) {
             agent.setDelHeight(-1);
             agentManager.updateAgent(chain, agent);
             chain.getLogger().error("Stop agent tx update nonce data commit error");
@@ -223,7 +223,7 @@ public class StopAgentProcessor implements TransactionProcessor {
             return false;
         }
 
-        if(!AgentDepositNonceManager.unLockTxRollback(chain, stopAgent.getCreateTxHash(), transaction, true)){
+        if (!AgentDepositNonceManager.unLockTxRollback(chain, stopAgent.getCreateTxHash(), transaction, true)) {
             chain.getLogger().error("Stop agent tx failed to rollback the reduce margin nonce record");
             return false;
         }
@@ -231,7 +231,7 @@ public class StopAgentProcessor implements TransactionProcessor {
         Agent agent = agentManager.getAgentByHash(chain, stopAgent.getCreateTxHash());
         agent.setDelHeight(-1);
         //保存数据库和缓存
-        if(!agentManager.updateAgent(chain, agent)){
+        if (!agentManager.updateAgent(chain, agent)) {
             AgentDepositNonceManager.unLockTxCommit(chain, stopAgent.getCreateTxHash(), transaction, true);
             chain.getLogger().error("Stop agent tx rollback error");
             return false;

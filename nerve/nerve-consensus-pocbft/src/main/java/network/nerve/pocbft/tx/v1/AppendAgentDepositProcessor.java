@@ -96,7 +96,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
         Result rs;
         for (Transaction tx : txs) {
             try {
-                rs = validator.validate(chain, tx);
+                rs = validator.validate(chain, tx,blockHeader);
                 if(rs.isFailed()){
                     invalidTxList.add(tx);
                     errorCode = rs.getErrorCode().getCode();

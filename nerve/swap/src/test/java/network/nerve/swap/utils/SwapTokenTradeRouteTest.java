@@ -65,6 +65,17 @@ public class SwapTokenTradeRouteTest {
         pairs.add(new PairTest(sortTokens('C', 'H')));*/
 
 
+        //pairs.add(new PairTest(sortTokens('A', 'T')));
+        //pairs.add(new PairTest(sortTokens('B', 'T')));
+        //pairs.add(new PairTest(sortTokens('B', 'T')));
+        pairs.add(new PairTest(sortTokens('A', 'T')));
+        pairs.add(new PairTest(sortTokens('B', 'U')));
+        pairs.add(new PairTest(sortTokens('B', 'V')));
+
+        group1.add('T');
+        group1.add('U');
+        group1.add('V');
+/*
         pairs.add(new PairTest(sortTokens('A', 'C')));
         pairs.add(new PairTest(sortTokens('B', 'C')));
         pairs.add(new PairTest(sortTokens('D', 'E')));
@@ -79,12 +90,13 @@ public class SwapTokenTradeRouteTest {
         group1.add('V');
         group1.add('W');
         group1.add('X');
+*/
     }
 
     @Test
     public void testCalPaths() {
         char in = 'A';
-        char out = 'E';
+        char out = 'B';
         char[] tokens = this.sortTokens(in, out);
         int length = pairs.size();
         int subIndex = -1;
@@ -100,6 +112,8 @@ public class SwapTokenTradeRouteTest {
             PairTest remove = pairs.remove(subIndex);
             bestRouteTest.add(new RouteTest(List.of(remove), 0));
         }
+        // pair去重，检查交易对中是否有多个相同组下的普通token和稳定币token
+        pairs = deduplicationGroupPair(pairs);
         List<RouteTest> routeTests = calPathsV2(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
         //List<RouteTest> routeTests = calPathsOrigin(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
         //System.out.println(Arrays.deepToString(routeTests.toArray()));
@@ -114,10 +128,42 @@ public class SwapTokenTradeRouteTest {
          */
     }
 
+    private List<PairTest> deduplicationGroupPair(List<PairTest> pairs) {
+        List<PairTest> resultPair = new ArrayList<>();
+        Map<String, List> map = new HashMap<>();
+        for (PairTest pair : pairs) {
+            if (isGroupToken(pair.token0)) {
+                List list = map.computeIfAbsent("G-token-C-" + pair.token1, k -> new ArrayList());
+                list.add(pair);
+            } else if (isGroupToken(pair.token1)){
+                List list = map.computeIfAbsent("G-token-C-" + pair.token0, k -> new ArrayList());
+                list.add(pair);
+            } else {
+                // 普通pair
+                resultPair.add(pair);
+            }
+        }
+        if (!map.isEmpty()) {
+            Collection<List> values = map.values();
+            for (List<PairTest> list : values) {
+                if (list.isEmpty()) continue;
+                if (list.size() == 1) {
+                    resultPair.add(list.get(0));
+                } else {
+                    // 筛选机制，留下一个，留下稳定币token在Pair池中数量最多的
+                    resultPair.add(list.get(0));
+                }
+            }
+        }
+        return resultPair;
+    }
+
     public List<RouteTest> calPathsV2(List<PairTest> pairs, char in, char out, LinkedHashSet<PairTest> currentPath, List<RouteTest> bestRouteTest, char orginIn, int depth, int maxPairSize) {
+        System.out.println(String.format("depth: %s, in: %s, out: %s, pairs: %s", depth, in, out, Arrays.deepToString(pairs.toArray())));
         int length = pairs.size();
         for (int i = 0; i < length; i++) {
             PairTest pair = pairs.get(i);
+            //System.out.println(String.format("depth: %s, i: %s, pair: %s", depth, i, pair.toString()));
             //if (pair.token0 != in && pair.token1 != in) continue;// 被替换为以下代码段
             // add for link +
             PairTest pairTest = null;
@@ -131,24 +177,35 @@ public class SwapTokenTradeRouteTest {
                     pairTest = new PairTest(sortTokens(pair.token1, in));
                     currentIn = pair.token1;
                 } else {
+                    //System.out.println("ZZZZZ");
                     continue;
                 }
             }
             // add for link -
 
             char tokenOut = pair.token0 == currentIn ? pair.token1 : pair.token0;
-            if (currentIn == orginIn && tokenOut == out) continue;
-            if (containsCurrency(currentPath, tokenOut)) continue;
+            if (currentIn == orginIn && tokenOut == out) {
+                //System.out.println("XXXXX");
+                continue;
+            }
+            if (containsCurrency(currentPath, tokenOut)) {
+                //System.out.println("YYYYY");
+                continue;
+            }
+            //System.out.println(String.format("depth: %s, i: %s[b]", depth, i));
 
+            //System.out.println(String.format("depth: %s, 选中的Pair: %s, 选中的tokenOut: %s", depth, pair.toString(), tokenOut));
             if (tokenOut == out) {
                 if (pairTest != null) currentPath.add(pairTest);// add for link
                 currentPath.add(pair);
                 bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
-                break;
+                //break;
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 if (pairTest != null) cloneLinkedHashSet.add(pairTest);// add for link
                 cloneLinkedHashSet.add(pair);
+                //System.out.println(String.format("depth: %s, 移除的Pair: %s", depth, pair.toString()));
+                //System.out.println();
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));
                 calPathsV2(subList, tokenOut, out, cloneLinkedHashSet, bestRouteTest, orginIn, depth + 1, maxPairSize);
@@ -237,6 +294,13 @@ public class SwapTokenTradeRouteTest {
 
     private boolean group(char token1, char token2) {
         if (group1.contains(token1) && group1.contains(token2)) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isGroupToken(char token) {
+        if (group1.contains(token)) {
             return true;
         }
         return false;

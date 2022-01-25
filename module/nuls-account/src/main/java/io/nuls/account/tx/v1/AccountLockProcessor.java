@@ -1,10 +1,15 @@
 package io.nuls.account.tx.v1;
 
 import io.nuls.account.constant.AccountConstant;
+import io.nuls.account.constant.AccountContext;
 import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.helper.AccountBlockHelper;
+import io.nuls.account.model.bo.Account;
 import io.nuls.account.model.bo.Chain;
+import io.nuls.account.model.bo.tx.AccountBlockExtend;
+import io.nuls.account.model.bo.tx.AccountBlockInfo;
 import io.nuls.account.model.bo.tx.txdata.AccountBlockData;
+import io.nuls.account.model.dto.AccountBlockDTO;
 import io.nuls.account.model.po.AccountBlockPO;
 import io.nuls.account.service.AliasService;
 import io.nuls.account.storage.AccountBlockStorageService;
@@ -88,6 +93,91 @@ public class AccountLockProcessor implements TransactionProcessor {
 
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
+        Chain chain = chainManager.getChain(chainId);
+        if (chain.getLatestBasicBlock().getHeight() >= AccountContext.PROTOCOL_1_19_0) {
+            return _commitProtocol19(chainId, txs, blockHeader, syncStatus);
+        } else {
+            return _commit(chainId, txs, blockHeader, syncStatus);
+        }
+    }
+
+    @Override
+    public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
+        Chain chain = chainManager.getChain(chainId);
+        if (chain.getLatestBasicBlock().getHeight() >= AccountContext.PROTOCOL_1_19_0) {
+            return _rollbackProtocol19(chainId, txs, blockHeader);
+        } else {
+            return _rollback(chainId, txs, blockHeader);
+        }
+    }
+
+    public boolean _commitProtocol19(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
+        boolean result = true;
+        Chain chain = chainManager.getChain(chainId);
+        List<Transaction> commitSucTxList = new ArrayList<>();
+        for (Transaction tx : txs) {
+            AccountBlockData data = new AccountBlockData();
+            try {
+                data.parse(new NulsByteBuffer(tx.getTxData()));
+                String[] addresses = data.getAddresses();
+                List<AccountBlockDTO> list = Arrays.asList(addresses).stream().map(a -> new AccountBlockDTO(AddressTool.getAddress(a))).collect(Collectors.toList());
+                byte[] extend = data.getExtend();
+                if (extend != null) {
+                    AccountBlockExtend abExtend = new AccountBlockExtend();
+                    abExtend.parse(extend, 0);
+                    AccountBlockInfo[] infos = abExtend.getInfos();
+                    int i = 0;
+                    for (AccountBlockDTO dto : list) {
+                        dto.setInfo(infos[i++]);
+                    }
+                }
+                result = accountBlockStorageService.operateAccountList(list);
+            } catch (Exception e) {
+                LoggerUtil.LOG.error("ac_commitTx block_account tx commit error", e);
+                result = false;
+            }
+            if (!result) {
+                LoggerUtil.LOG.warn("ac_commitTx block_account tx commit error");
+                break;
+            }
+            commitSucTxList.add(tx);
+        }
+        try {
+            //如果提交失败，将已经提交成功的交易回滚
+            if (!result) {
+                boolean rollback = true;
+                for (Transaction tx : commitSucTxList) {
+                    AccountBlockData data = new AccountBlockData();
+                    data.parse(new NulsByteBuffer(tx.getTxData()));
+                    String[] addresses = data.getAddresses();
+                    List<AccountBlockDTO> list = Arrays.asList(addresses).stream().map(a -> new AccountBlockDTO(AddressTool.getAddress(a))).collect(Collectors.toList());
+                    byte[] extend = data.getExtend();
+                    if (extend != null) {
+                        AccountBlockExtend abExtend = new AccountBlockExtend();
+                        abExtend.parse(extend, 0);
+                        AccountBlockInfo[] infos = abExtend.getInfos();
+                        int i = 0;
+                        for (AccountBlockDTO dto : list) {
+                            dto.setInfo(infos[i++]);
+                        }
+                    }
+                    rollback = accountBlockStorageService.cancelOperateAccountList(list);
+                }
+                //回滚失败，抛异常
+                if (!rollback) {
+                    LoggerUtil.LOG.error("ac_commitTx block_account tx rollback error");
+                    throw new NulsException(AccountErrorCode.ALIAS_ROLLBACK_ERROR);
+                }
+            }
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            result = false;
+        }
+
+        return result;
+    }
+
+    public boolean _commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
         boolean result = true;
         Chain chain = chainManager.getChain(chainId);
         List<Transaction> commitSucTxList = new ArrayList<>();
@@ -131,8 +221,73 @@ public class AccountLockProcessor implements TransactionProcessor {
         return result;
     }
 
-    @Override
-    public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
+    public boolean _rollbackProtocol19(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
+        boolean result = true;
+        Chain chain = chainManager.getChain(chainId);
+        List<Transaction> rollbackSucTxList = new ArrayList<>();
+        for (Transaction tx : txs) {
+            AccountBlockData data = new AccountBlockData();
+            try {
+                data.parse(new NulsByteBuffer(tx.getTxData()));
+                String[] addresses = data.getAddresses();
+                List<AccountBlockDTO> list = Arrays.asList(addresses).stream().map(a -> new AccountBlockDTO(AddressTool.getAddress(a))).collect(Collectors.toList());
+                byte[] extend = data.getExtend();
+                if (extend != null) {
+                    AccountBlockExtend abExtend = new AccountBlockExtend();
+                    abExtend.parse(extend, 0);
+                    AccountBlockInfo[] infos = abExtend.getInfos();
+                    int i = 0;
+                    for (AccountBlockDTO dto : list) {
+                        dto.setInfo(infos[i++]);
+                    }
+                }
+                result = accountBlockStorageService.cancelOperateAccountList(list);
+            } catch (Exception e) {
+                LoggerUtil.LOG.error("ac_rollbackTx block_account tx rollback error", e);
+                result = false;
+            }
+            if (!result) {
+                LoggerUtil.LOG.warn("ac_rollbackTx block_account tx rollback error");
+                break;
+            }
+            rollbackSucTxList.add(tx);
+        }
+        //交易提交
+        try {
+            //如果回滚失败，将已经回滚成功的交易重新保存
+            if (!result) {
+                boolean commit = true;
+                for (Transaction tx : rollbackSucTxList) {
+                    AccountBlockData data = new AccountBlockData();
+                    data.parse(new NulsByteBuffer(tx.getTxData()));
+                    String[] addresses = data.getAddresses();
+                    List<AccountBlockDTO> list = Arrays.asList(addresses).stream().map(a -> new AccountBlockDTO(AddressTool.getAddress(a))).collect(Collectors.toList());
+                    byte[] extend = data.getExtend();
+                    if (extend != null) {
+                        AccountBlockExtend abExtend = new AccountBlockExtend();
+                        abExtend.parse(extend, 0);
+                        AccountBlockInfo[] infos = abExtend.getInfos();
+                        int i = 0;
+                        for (AccountBlockDTO dto : list) {
+                            dto.setInfo(infos[i++]);
+                        }
+                    }
+                    commit = accountBlockStorageService.operateAccountList(list);
+                }
+                //保存失败，抛异常
+                if (!commit) {
+                    LoggerUtil.LOG.error("ac_rollbackTx block_account tx commit error");
+                    throw new NulsException(AccountErrorCode.ALIAS_SAVE_ERROR);
+                }
+            }
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            result = false;
+        }
+        return result;
+    }
+
+    public boolean _rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
         boolean result = true;
         Chain chain = chainManager.getChain(chainId);
         List<Transaction> rollbackSucTxList = new ArrayList<>();

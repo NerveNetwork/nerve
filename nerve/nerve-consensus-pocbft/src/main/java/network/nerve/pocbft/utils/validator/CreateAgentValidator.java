@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils.validator;
 
+import io.nuls.base.data.BlockHeader;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.tx.txdata.Agent;
 import network.nerve.pocbft.utils.ConsensusNetUtil;
@@ -34,7 +35,7 @@ public class CreateAgentValidator extends BaseValidator {
     @Autowired
     private AgentManager agentManager;
     @Override
-    public Result validate(Chain chain, Transaction tx){
+    public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader){
         try {
             if (tx.getTxData() == null) {
                 chain.getLogger().error("CreateAgent -- TxData is null");

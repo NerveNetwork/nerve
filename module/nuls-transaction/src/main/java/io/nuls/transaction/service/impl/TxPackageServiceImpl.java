@@ -355,14 +355,17 @@ public class TxPackageServiceImpl implements TxPackageService {
                         if (isSwapTx) {
                             // 出现SWAP交易,且通知标识为false,则先调用通知
                             if (!swapNotify) {
+                                log.info("[{}]开始Swap模块-打包, {}, {}", blockHeight, blockTime, preStateRoot);
                                 SwapCall.swapBatchBegin(chain, blockHeight, blockTime, preStateRoot, 0);
                                 swapNotify = true;
                             }
                             try {
                                 // 调用执行SWAP交易
+                                log.info("[{}]处理Swap交易-打包, {}, {}", blockHeight, blockTime, txPackageWrapper.getTxHex());
                                 Map<String, Object> invokeContractRs = SwapCall.invoke(chain, txPackageWrapper.getTxHex(), blockHeight, blockTime, 0);
                                 List<String> txList = (List<String>) invokeContractRs.get("txList");
                                 if (txList != null && !txList.isEmpty()) {
+                                    log.info("[{}]得到生成交易_Swap模块-打包, {}, {}", blockHeight, blockTime, Arrays.toString(txList.toArray()));
                                     swapGenerateTxs.addAll(txList);
                                     String txHash = transaction.getHash().toString();
                                     for (int i = 0, size = txList.size(); i < size; i++) {
@@ -406,6 +409,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             Log.info("收集交易");
             Map<String, Object> batchEnd = SwapCall.swapBatchEnd(chain, blockHeight, 0);
             newStateRoot = (String) batchEnd.get("stateRoot");
+            log.info("[{}]结束Swap模块-打包, {}, {}", blockHeight, blockTime, newStateRoot);
         }
         if (log.isDebugEnabled()) {
             log.debug("收集交易 -count:{} - data size:{}",
@@ -536,6 +540,7 @@ public class TxPackageServiceImpl implements TxPackageService {
         List<String> swapGenerateTxs = new ArrayList<>();
         List<String> swapGenerateTxsByVerify = new ArrayList<>();
 
+        log.info("区块交易列表-验证: {}", Arrays.toString(txStrList.toArray()));
         for (String txStr : txStrList) {
             Transaction tx = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
             int type = tx.getType();
@@ -544,13 +549,16 @@ public class TxPackageServiceImpl implements TxPackageService {
             if (isUnSystemSwapTx) {
                 // 出现SWAP交易,且通知标识为false,则先调用通知
                 if (!swapNotify) {
+                    log.info("[{}]开始Swap模块-验证, {}, {}", blockHeight, blockTime, preStateRoot);
                     SwapCall.swapBatchBegin(chain, blockHeight, blockTime, preStateRoot, 1);
                     swapNotify = true;
                 }
                 // 调用执行SWAP交易
+                log.info("[{}]处理Swap交易-验证, {}, {}", blockHeight, blockTime, txStr);
                 Map<String, Object> invokeContractRs = SwapCall.invoke(chain, txStr, blockHeight, blockTime, 1);
                 List<String> swapTxList = (List<String>) invokeContractRs.get("txList");
                 if (swapTxList != null && !swapTxList.isEmpty()) {
+                    log.info("[{}]得到生成交易_Swap模块-验证, {}, {}", blockHeight, blockTime, Arrays.toString(swapTxList.toArray()));
                     swapGenerateTxsByVerify.addAll(swapTxList);
                 }
             } else if (TxManager.isSystemSwap(txRegister)) {
@@ -615,6 +623,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             Log.info("验证区块");
             Map<String, Object> batchEnd = SwapCall.swapBatchEnd(chain, blockHeight, 1);
             verifyStateRoot = (String) batchEnd.get("stateRoot");
+            log.info("[{}]结束Swap模块-验证, {}, {}", blockHeight, blockTime, verifyStateRoot);
         }
         // 打包的stateRoot
         String stateRoot = RPCUtil.encode(blockHeader.getExtendsData().getStateRoot());
@@ -626,7 +635,7 @@ public class TxPackageServiceImpl implements TxPackageService {
                 throw new NulsException(TxErrorCode.SWAP_VERIFY_STATE_ROOT_FAIL);
             }
         } else if (!stateRoot.equals(verifyStateRoot)) {
-            log.warn("swap stateRoot error.");
+            log.warn("swap stateRoot error. Package: {}, Verify: {}", stateRoot, verifyStateRoot);
             throw new NulsException(TxErrorCode.SWAP_VERIFY_STATE_ROOT_FAIL);
         }
         if (!this.swapGenerateTxConsistency(swapGenerateTxs, swapGenerateTxsByVerify)) {

@@ -76,7 +76,7 @@ public class BatchWithdrawProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, batchWithdrawTx);
+                rs = validator.validate(chain, batchWithdrawTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(batchWithdrawTx);
                     chain.getLogger().error("Intelligent contract withdrawal delegation transaction verification failed");
@@ -185,11 +185,11 @@ public class BatchWithdrawProcessor implements TransactionProcessor {
             deposit.setDelHeight(header.getHeight());
 
             boolean result = depositManager.updateDeposit(chain, deposit);
-            if(result){
-                result = this.stakingLimitService.sub(chain,chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId()),deposit.getDeposit());
-                if(!result){
+            if (result) {
+                result = this.stakingLimitService.sub(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+                if (!result) {
                     deposit.setDelHeight(-1L);
-                    depositManager.updateDeposit(chain,deposit);
+                    depositManager.updateDeposit(chain, deposit);
                 }
             }
             if (!result) {
@@ -197,7 +197,7 @@ public class BatchWithdrawProcessor implements TransactionProcessor {
                     deposit = depositManager.getDeposit(chain, rbHash);
                     deposit.setDelHeight(-1L);
                     depositManager.updateDeposit(chain, deposit);
-                    this.stakingLimitService.add(chain,chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId()),deposit.getDeposit());
+                    this.stakingLimitService.add(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
                 }
                 return false;
             }
@@ -229,11 +229,11 @@ public class BatchWithdrawProcessor implements TransactionProcessor {
             }
             deposit.setDelHeight(-1L);
             boolean result = depositManager.updateDeposit(chain, deposit);
-            if(result){
-                result = this.stakingLimitService.add(chain,chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId()),deposit.getDeposit());
-                if(!result){
+            if (result) {
+                result = this.stakingLimitService.add(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
+                if (!result) {
                     deposit.setDelHeight(header.getHeight());
-                    depositManager.updateDeposit(chain,deposit);
+                    depositManager.updateDeposit(chain, deposit);
                 }
             }
             if (!result) {
@@ -241,7 +241,7 @@ public class BatchWithdrawProcessor implements TransactionProcessor {
                     deposit = depositManager.getDeposit(chain, rbHash);
                     deposit.setDelHeight(header.getHeight());
                     depositManager.updateDeposit(chain, deposit);
-                    this.stakingLimitService.sub(chain,chainManager.getAssetByAsset(deposit.getAssetChainId(),deposit.getAssetId()),deposit.getDeposit());
+                    this.stakingLimitService.sub(chain, chainManager.getAssetByAsset(deposit.getAssetChainId(), deposit.getAssetId()), deposit.getDeposit());
                 }
                 return false;
             }

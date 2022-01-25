@@ -20,6 +20,7 @@ import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.config.SwapConfig;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.context.SwapContext;
+import network.nerve.swap.enums.BlockType;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.StableSwapHelper;
 import network.nerve.swap.help.SwapHelper;
@@ -97,6 +98,8 @@ public class SwapCmd extends BaseCmd {
             Long blockHeight = Long.parseLong(params.get("blockHeight").toString());
             Long blockTime = Long.parseLong(params.get("blockTime").toString());
             String preStateRoot = (String) params.get("preStateRoot");
+            logger().info("[{}]Swap模块[{}]开始, chainId: {}, blockTime: {}, preStateRoot: {}",
+                    blockHeight, BlockType.getType(blockType).name(), chainId, blockTime, preStateRoot);
             swapService.begin(chainId, blockHeight, blockTime, preStateRoot);
             return success();
         } catch (Exception e) {
@@ -127,8 +130,11 @@ public class SwapCmd extends BaseCmd {
             String txData = (String) params.get("tx");
             Transaction tx = new Transaction();
             tx.parse(RPCUtil.decode(txData), 0);
+            logger().info("[{}]Swap模块[{}]处理, chainId: {}, blockTime: {}, txStr: {}",
+                    blockHeight, BlockType.getType(blockType).name(), chainId, blockTime, txData);
             Result result = swapService.invokeOneByOne(chainId, blockHeight, blockTime, tx);
             if (result.isFailed()) {
+                logger().error("处理失败: {}", result.toString());
                 return wrapperFailed(result);
             }
             if (result.getData() == null) {
@@ -167,6 +173,9 @@ public class SwapCmd extends BaseCmd {
             Map<String, Object> dataMap = (Map<String, Object>) result.getData();
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("stateRoot", dataMap.get("stateRoot"));
+
+            logger().info("[{}]Swap模块[{}]结束, chainId: {}, stateRoot: {}",
+                    blockHeight, BlockType.getType(blockType).name(), chainId, dataMap.get("stateRoot"));
             return success(resultMap);
         } catch (Exception e) {
             Log.error(e);
@@ -940,7 +949,7 @@ public class SwapCmd extends BaseCmd {
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoin.class))
+    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
     public Response getStablePairListForSwapTrade(Map params) {
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());

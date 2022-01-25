@@ -1,7 +1,7 @@
 /**
  * MIT License
  * <p>
- * Copyright (c) 2017-2018 nuls.io
+ * Copyright (c) 2019-2020 nerve.network
  * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,55 +21,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package network.nerve.swap.model.vo;
 
-import network.nerve.swap.model.NerveToken;
+package io.nuls.account.rpc.call;
+
+import io.nuls.account.constant.AccountConstant;
+import io.nuls.account.model.bo.Chain;
+import io.nuls.account.rpc.callback.NewBlockHeightInvoke;
+import io.nuls.core.rpc.info.Constants;
+import io.nuls.core.rpc.model.ModuleE;
+import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author: PierreLuo
- * @date: 2021/10/28
+ * @date: 2022/1/24
  */
-public class StableCoinVo {
+public class BlockCall {
 
-    private String address;
-    private String lpToken;
-    private Map<String, Integer> groupCoin;
 
-    public StableCoinVo(String address, NerveToken lpToken, Set<NerveToken> groupCoinSet) {
-        this.address = address;
-        this.lpToken = lpToken.str();
-        this.groupCoin = new HashMap<>();
-        for (NerveToken token : groupCoinSet) {
-            this.groupCoin.put(token.str(), 1);
+    /**
+     * 区块最新高度
+     * */
+    public static boolean subscriptionNewBlockHeight(Chain chain) {
+        try {
+            Map<String, Object> params = new HashMap<>(AccountConstant.INIT_CAPACITY_4);
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chain.getChainId());
+            String messageId = ResponseMessageProcessor.requestAndInvoke(ModuleE.BL.abbr, "latestHeight",
+                    params, "0", "1", new NewBlockHeightInvoke(chain));
+            if(null != messageId){
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            return false;
         }
     }
 
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public String getLpToken() {
-        return lpToken;
-    }
-
-    public void setLpToken(String lpToken) {
-        this.lpToken = lpToken;
-    }
-
-    public Map<String, Integer> getGroupCoin() {
-        return groupCoin;
-    }
-
-    public void setGroupCoin(Map<String, Integer> groupCoin) {
-        this.groupCoin = groupCoin;
-    }
 
 }

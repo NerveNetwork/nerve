@@ -33,6 +33,19 @@ public class Chain {
      */
     private ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
 
+    /**
+     * 最新区块高度等简略信息
+     */
+    private LatestBasicBlock latestBasicBlock = new LatestBasicBlock();
+
+    public LatestBasicBlock getLatestBasicBlock() {
+        return latestBasicBlock;
+    }
+
+    public void setLatestBasicBlock(LatestBasicBlock latestBasicBlock) {
+        this.latestBasicBlock = latestBasicBlock;
+    }
+
     public Chain() {
         this.accountStatus = AccountStatus.INITING;
     }

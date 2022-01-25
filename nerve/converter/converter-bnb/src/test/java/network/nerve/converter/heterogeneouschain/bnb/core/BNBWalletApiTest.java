@@ -512,14 +512,14 @@ public class BnbWalletApiTest extends Base {
          0x17e61e0176ad8a88cac5f786ca0779de87b3043b, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88
          */
         setMainData();
-        String txKey = "bbb2048000000000000000000000000000000000000000000000000000000000";
+        String txKey = "ddd1024000000000000000000000000000000000000000000000000000000000";
         // 接收者地址
         String toAddress = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
         // 造币数量
-        String value = "5001";
-        // NFTC token合约
-        String erc20 = "0x2efcdd1383eae3af14d785dcc65d6b865b562312";
-        int tokenDecimals = 2;
+        String value = "53334857.539598";
+        // FISU token合约
+        String erc20 = "0x0d12197EeD5f4C867Af1528ABbE1837C5c40902e";
+        int tokenDecimals = 18;
         int signCount = 5;
         String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
         System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", value, signCount, signData));
@@ -531,14 +531,14 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void sendERC20WithdrawBySignDataTest() throws Exception {
         setMainData();
-        String txKey = "bbb2048000000000000000000000000000000000000000000000000000000000";
+        String txKey = "ddd1024000000000000000000000000000000000000000000000000000000000";
         // 接收者地址
         String toAddress = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
         // 造币数量
-        String value = "5001";
-        // NFTC token合约
-        String erc20 = "0x2efcdd1383eae3af14d785dcc65d6b865b562312";
-        int tokenDecimals = 2;
+        String value = "53334857.539598";
+        // FISU token合约
+        String erc20 = "0x0d12197EeD5f4C867Af1528ABbE1837C5c40902e";
+        int tokenDecimals = 18;
         String signData = "";
 
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);

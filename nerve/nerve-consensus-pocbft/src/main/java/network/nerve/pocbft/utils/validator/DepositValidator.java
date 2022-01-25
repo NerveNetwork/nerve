@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils.validator;
 
+import io.nuls.base.data.BlockHeader;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.StackingAsset;
 import network.nerve.pocbft.model.bo.tx.txdata.Deposit;
@@ -35,7 +36,7 @@ public class DepositValidator extends BaseValidator {
     private StakingLimitService stakingLimitService;
 
     @Override
-    public Result validate(Chain chain, Transaction tx) throws NulsException, IOException {
+    public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
         if (null == tx || null == tx.getTxData() || tx.getCoinData() == null) {
             chain.getLogger().error("Deposit -- Transaction data error");
             return Result.getFailed(ConsensusErrorCode.TX_DATA_VALIDATION_ERROR);

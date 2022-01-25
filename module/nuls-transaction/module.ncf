@@ -10,6 +10,5 @@ JOPT_XMX=512
 Managed=1
 
 [transaction]
-blackListPath=blacklist
 moduleDynamicDependent=protocol-update
 

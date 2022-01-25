@@ -32,6 +32,7 @@ import java.util.*;
 
 /**
  * CoinBase交易处理器
+ *
  * @author tag
  * @date 2019/10/22
  */
@@ -55,7 +56,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
         Chain chain = chainManager.getChainMap().get(chainId);
         Map<String, Object> result = new HashMap<>(2);
-        if(chain == null){
+        if (chain == null) {
             LoggerUtil.commonLog.error("Chains do not exist.");
             result.put("txList", txs);
             result.put("errorCode", ConsensusErrorCode.CHAIN_NOT_EXIST.getCode());
@@ -66,27 +67,27 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
 
         Set<String> invalidAgentSet = new HashSet<>();
         List<Transaction> redPunishTxList = txMap.get(TxType.RED_PUNISH);
-        if(redPunishTxList != null && redPunishTxList.size() >0){
-            for (Transaction redPunishTx:redPunishTxList) {
+        if (redPunishTxList != null && redPunishTxList.size() > 0) {
+            for (Transaction redPunishTx : redPunishTxList) {
                 RedPunishData redPunishData = new RedPunishData();
                 try {
                     redPunishData.parse(redPunishTx.getTxData(), 0);
                     String redPunishAddress = AddressTool.getStringAddressByBytes(redPunishData.getAddress());
                     invalidAgentSet.add(redPunishAddress);
-                }catch (NulsException e){
+                } catch (NulsException e) {
                     chain.getLogger().error(e);
                 }
             }
         }
         List<Transaction> stopAgentTxList = txMap.get(TxType.STOP_AGENT);
-        if(stopAgentTxList != null &&  !stopAgentTxList.isEmpty()){
+        if (stopAgentTxList != null && !stopAgentTxList.isEmpty()) {
             for (Transaction stopAgentTx : stopAgentTxList) {
                 StopAgent stopAgent = new StopAgent();
                 try {
-                    stopAgent.parse(stopAgentTx.getTxData(),0);
+                    stopAgent.parse(stopAgentTx.getTxData(), 0);
                     String stopAgentAddress = AddressTool.getStringAddressByBytes(stopAgent.getAddress());
                     invalidAgentSet.add(stopAgentAddress);
-                }catch (NulsException e){
+                } catch (NulsException e) {
                     chain.getLogger().error(e);
                 }
             }
@@ -102,22 +103,22 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
                 }
-                if (tx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || tx.getTime()  < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT) {
+                if (tx.getTime() > time + ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT || tx.getTime() < time - ConsensusConstant.UNLOCK_TIME_DIFFERENCE_LIMIT) {
                     invalidTxList.add(tx);
-                    chain.getLogger().error("Trading time error,txTime:{},time:{}", tx.getTime() , time);
+                    chain.getLogger().error("Trading time error,txTime:{},time:{}", tx.getTime(), time);
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, tx);
-                if(rs.isFailed()){
+                rs = validator.validate(chain, tx, blockHeader);
+                if (rs.isFailed()) {
                     invalidTxList.add(tx);
                     errorCode = rs.getErrorCode().getCode();
                     chain.getLogger().info("Failure to create node transaction validation");
                     continue;
                 }
                 ChangeAgentDepositData txData = new ChangeAgentDepositData();
-                txData.parse(tx.getTxData(),0);
-                if(invalidAgentSet.contains(AddressTool.getStringAddressByBytes(txData.getAddress()))){
+                txData.parse(tx.getTxData(), 0);
+                if (invalidAgentSet.contains(AddressTool.getStringAddressByBytes(txData.getAddress()))) {
                     invalidTxList.add(tx);
                     chain.getLogger().info("Error in conflict detection of additional margin");
                     errorCode = ConsensusErrorCode.CONFLICT_ERROR.getCode();
@@ -125,25 +126,25 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
 
                 //委托金额超出节点最大委托金额
                 NulsHash agentHash = txData.getAgentHash();
-                if(appendTotalAmountMap.containsKey(agentHash)){
+                if (appendTotalAmountMap.containsKey(agentHash)) {
                     BigInteger totalDeposit = appendTotalAmountMap.get(agentHash).subtract(txData.getAmount());
-                    if(totalDeposit.compareTo(chain.getConfig().getDepositMin())<0){
+                    if (totalDeposit.compareTo(chain.getConfig().getDepositMin()) < 0) {
                         invalidTxList.add(tx);
                         chain.getLogger().info("Exit amount is greater than the current maximum amount allowed");
                         errorCode = ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE.getCode();
-                    }else{
+                    } else {
                         appendTotalAmountMap.put(agentHash, totalDeposit);
                     }
-                }else{
-                    Agent agent = agentManager.getAgentByHash(chain , agentHash);
+                } else {
+                    Agent agent = agentManager.getAgentByHash(chain, agentHash);
                     appendTotalAmountMap.put(agentHash, agent.getDeposit().subtract(txData.getAmount()));
                 }
-            }catch (NulsException e){
+            } catch (NulsException e) {
                 invalidTxList.add(tx);
                 chain.getLogger().error("Conflict calibration error");
                 chain.getLogger().error(e);
                 errorCode = e.getErrorCode().getCode();
-            }catch (IOException io){
+            } catch (IOException io) {
                 invalidTxList.add(tx);
                 chain.getLogger().error("Conflict calibration error");
                 chain.getLogger().error(io);
@@ -159,14 +160,14 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
         Chain chain = chainManager.getChainMap().get(chainId);
-        if(chain == null){
+        if (chain == null) {
             LoggerUtil.commonLog.error("Chains do not exist.");
             return false;
         }
         List<Transaction> commitSuccessList = new ArrayList<>();
         boolean commitResult = true;
         for (Transaction tx : txs) {
-            if (reduceDepositCommit(tx, blockHeader ,chain)) {
+            if (reduceDepositCommit(tx, blockHeader, chain)) {
                 commitSuccessList.add(tx);
             } else {
                 commitResult = false;
@@ -185,14 +186,14 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
     @Override
     public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
         Chain chain = chainManager.getChainMap().get(chainId);
-        if(chain == null){
+        if (chain == null) {
             LoggerUtil.commonLog.error("Chains do not exist.");
             return false;
         }
         List<Transaction> rollbackSuccessList = new ArrayList<>();
         boolean rollbackResult = true;
         for (Transaction tx : txs) {
-            if (reduceDepositRollback(tx, blockHeader ,chain)) {
+            if (reduceDepositRollback(tx, blockHeader, chain)) {
                 rollbackSuccessList.add(tx);
             } else {
                 rollbackResult = false;
@@ -208,18 +209,18 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
         return rollbackResult;
     }
 
-    private boolean reduceDepositCommit(Transaction tx, BlockHeader blockHeader, Chain chain){
+    private boolean reduceDepositCommit(Transaction tx, BlockHeader blockHeader, Chain chain) {
         long height = blockHeader.getHeight();
         ChangeAgentDepositData data = new ChangeAgentDepositData();
         try {
-            data.parse(tx.getTxData(),0);
-        }catch (NulsException e){
+            data.parse(tx.getTxData(), 0);
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return false;
         }
         ChangeAgentDepositPo po = new ChangeAgentDepositPo(data, tx.getTime(), tx.getHash(), height);
         //保存追加记录
-        if(!agentDepositManager.saveReduceDeposit(chain, po)){
+        if (!agentDepositManager.saveReduceDeposit(chain, po)) {
             chain.getLogger().error("Failed to save the reduce agent deposit record");
             return false;
         }
@@ -229,14 +230,14 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
         BigInteger oldDeposit = agent.getDeposit();
         BigInteger newDeposit = oldDeposit.subtract(po.getAmount());
         agent.setDeposit(newDeposit);
-        if(!agentManager.updateAgent(chain, agent)){
+        if (!agentManager.updateAgent(chain, agent)) {
             agentDepositManager.removeReduceDeposit(chain, po.getTxHash());
             chain.getLogger().error("Agent deposit modification failed");
             return false;
         }
 
         //节点保证金nonce信息变更
-        if(!AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false)){
+        if (!AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false)) {
             agent.setDeposit(oldDeposit);
             agentManager.updateAgent(chain, agent);
             agentDepositManager.removeReduceDeposit(chain, po.getTxHash());
@@ -246,12 +247,12 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
         return true;
     }
 
-    private boolean reduceDepositRollback(Transaction tx, BlockHeader blockHeader, Chain chain){
+    private boolean reduceDepositRollback(Transaction tx, BlockHeader blockHeader, Chain chain) {
         long height = blockHeader.getHeight();
         ChangeAgentDepositData data = new ChangeAgentDepositData();
         try {
-            data.parse(tx.getTxData(),0);
-        }catch (NulsException e){
+            data.parse(tx.getTxData(), 0);
+        } catch (NulsException e) {
             chain.getLogger().error(e);
             return false;
         }
@@ -261,17 +262,17 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
         BigInteger newDeposit = agent.getDeposit();
         BigInteger oldDeposit = newDeposit.add(po.getAmount());
         agent.setDeposit(oldDeposit);
-        if(!AgentDepositNonceManager.unLockTxRollback(chain, po.getAgentHash(), tx, false)){
+        if (!AgentDepositNonceManager.unLockTxRollback(chain, po.getAgentHash(), tx, false)) {
             chain.getLogger().error("Failed to rollback the reduce margin nonce record");
             return false;
         }
-        if(!agentManager.updateAgent(chain, agent)){
+        if (!agentManager.updateAgent(chain, agent)) {
             AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false);
             chain.getLogger().error("Agent deposit modification failed");
             return false;
         }
         //删除追加记录
-        if(!agentDepositManager.removeReduceDeposit(chain, po.getTxHash())){
+        if (!agentDepositManager.removeReduceDeposit(chain, po.getTxHash())) {
             AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false);
             agent.setDeposit(oldDeposit.subtract(po.getAmount()));
             agentManager.updateAgent(chain, agent);

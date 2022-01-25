@@ -7,6 +7,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.ArraysTool;
 import network.nerve.pocbft.constant.ConsensusErrorCode;
+import network.nerve.pocbft.constant.PocbftConstant;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.tx.txdata.BatchWithdraw;
 import network.nerve.pocbft.model.bo.tx.txdata.CancelDeposit;
@@ -31,7 +32,7 @@ public class BatchWithdrawValidator extends BaseValidator {
     private DepositStorageService depositStorageService;
 
     @Override
-    public Result validate(Chain chain, Transaction tx) {
+    public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) {
         BatchWithdraw txData = new BatchWithdraw();
         try {
             txData.parse(tx.getTxData(), 0);
@@ -49,7 +50,7 @@ public class BatchWithdrawValidator extends BaseValidator {
                     feeIncluded = true;
                 }
             }
-            validateCoinData(chain, tx, list, txData.getAddress(), feeIncluded);
+            validateCoinData(chain, tx, list, txData.getAddress(), feeIncluded, blockHeader);
         } catch (NulsException e) {
             chain.getLogger().error(e);
             return Result.getFailed(e.getErrorCode());
@@ -58,7 +59,7 @@ public class BatchWithdrawValidator extends BaseValidator {
 
     }
 
-    private void validateCoinData(Chain chain, Transaction tx, List<ResultData> list, byte[] address, boolean feeIncluded) throws NulsException {
+    private void validateCoinData(Chain chain, Transaction tx, List<ResultData> list, byte[] address, boolean feeIncluded, BlockHeader blockHeader) throws NulsException {
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(), 0);
         if (feeIncluded && coinData.getFrom().size() != list.size()) {
@@ -83,6 +84,14 @@ public class BatchWithdrawValidator extends BaseValidator {
                 amount = amount.add(from.getAmount());
             }
             toMap.put(key, amount);
+        }
+        if (null == blockHeader || PocbftConstant.VERSION_1_19_0_HEIGHT < blockHeader.getHeight()) {
+            for (int i = list.size(); i < coinData.getFrom().size(); i++) {
+                CoinFrom from = coinData.getFrom().get(i);
+                if (from.getLocked() != 0) {
+                    throw new NulsException(ConsensusErrorCode.COIN_DATA_VALID_ERROR);
+                }
+            }
         }
         if (coinData.getTo().size() != toMap.size()) {
             throw new NulsException(ConsensusErrorCode.COIN_DATA_VALID_ERROR);

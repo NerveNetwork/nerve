@@ -1,14 +1,11 @@
 package network.nerve.pocbft.utils.validator.base;
 
+import io.nuls.base.data.*;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.ChargeResult;
 import network.nerve.pocbft.utils.ConsensusNetUtil;
 import network.nerve.pocbft.utils.manager.ConsensusManager;
 import io.nuls.base.basic.TransactionFeeCalculator;
-import io.nuls.base.data.CoinData;
-import io.nuls.base.data.CoinFrom;
-import io.nuls.base.data.CoinTo;
-import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
@@ -34,7 +31,7 @@ public abstract class BaseValidator {
      * @throws NulsException 数据错误
      * @throws IOException   数据序列化错误
      */
-    public abstract Result validate(Chain chain, Transaction tx) throws NulsException, IOException;
+    public abstract Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException;
 
     /**
      * 创建节点和追加保证金交易CoinData验证

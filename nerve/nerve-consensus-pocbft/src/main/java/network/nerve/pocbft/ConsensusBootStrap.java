@@ -6,6 +6,8 @@ import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.log.Log;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.ModuleE;
@@ -16,6 +18,7 @@ import io.nuls.core.rpc.modulebootstrap.RpcModuleState;
 import io.nuls.core.rpc.util.AddressPrefixDatas;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.pocbft.constant.ConsensusConstant;
+import network.nerve.pocbft.constant.PocbftConstant;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.config.ConsensusChainConfig;
 import network.nerve.pocbft.utils.enumeration.ConsensusStatus;
@@ -58,13 +61,24 @@ public class ConsensusBootStrap extends RpcModule {
             initSys();
             AddressTool.init(addressPrefixDatas);
             initDB();
+            initProtocolUpdate();
             chainManager.initChain();
             ModuleHelper.init(this);
         } catch (Exception e) {
             Log.error(e);
         }
     }
+    private void initProtocolUpdate() {
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
 
+        try {
+            long heightVersion1_19_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_19_0"));
+            PocbftConstant.VERSION_1_19_0_HEIGHT = heightVersion1_19_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_19_0", e);
+            throw new RuntimeException(e);
+        }
+    }
     @Override
     public Module[] declareDependent() {
         return new Module[]{

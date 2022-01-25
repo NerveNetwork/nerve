@@ -35,6 +35,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.model.ModuleE;
@@ -52,6 +53,8 @@ import io.nuls.transaction.manager.ChainManager;
 import io.nuls.transaction.model.bo.Chain;
 import io.nuls.transaction.utils.TxUtil;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 import java.util.Set;
 
@@ -212,6 +215,16 @@ public class TransactionBootstrap extends RpcModule {
         TxContext.UNCONFIRMED_TX_EXPIRE_SEC = txConfig.getUnconfirmedTxExpireSec();
         TxContext.COINTO_PTL_HEIGHT_FIRST = txConfig.getCoinToPtlHeightFirst();
         TxContext.COINTO_PTL_HEIGHT_SECOND = txConfig.getCoinToPtlHeightSecond();
+        String accountBlockManagerPublicKeys = txConfig.getAccountBlockManagerPublicKeys();
+        if (StringUtils.isNotBlank(accountBlockManagerPublicKeys)) {
+            String[] split = accountBlockManagerPublicKeys.split(",");
+            for (String pubkey : split) {
+                TxContext.ACCOUNT_BLOCK_MANAGER_ADDRESS_SET.add(AddressTool.getAddressString(HexUtil.decode(pubkey.trim()), txConfig.getChainId()));
+            }
+            int size = TxContext.ACCOUNT_BLOCK_MANAGER_ADDRESS_SET.size();
+            TxContext.ACCOUNT_BLOCK_MIN_SIGN_COUNT = BigDecimal.valueOf(size).multiply(BigDecimal.valueOf(6)).divide(BigDecimal.TEN, 0, RoundingMode.UP).intValue();
+        }
+
     }
 
     private void initProtocolUpdate() {
@@ -221,6 +234,13 @@ public class TransactionBootstrap extends RpcModule {
             TxContext.PROTOCOL_1_18_0 = heightVersion1_18_0;
         } catch (Exception e) {
             Log.error("Failed to get height_1_18_0", e);
+            throw new RuntimeException(e);
+        }
+        try {
+            long heightVersion1_19_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_19_0"));
+            TxContext.PROTOCOL_1_19_0 = heightVersion1_19_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_19_0", e);
             throw new RuntimeException(e);
         }
     }

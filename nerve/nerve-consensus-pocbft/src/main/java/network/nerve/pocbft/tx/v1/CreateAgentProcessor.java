@@ -76,7 +76,7 @@ public class CreateAgentProcessor implements TransactionProcessor {
         Result rs;
         for (Transaction createAgentTx : txs) {
             try {
-                rs = validator.validate(chain, createAgentTx);
+                rs = validator.validate(chain, createAgentTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(createAgentTx);
                     chain.getLogger().info("Failure to create node transaction validation");
@@ -184,11 +184,11 @@ public class CreateAgentProcessor implements TransactionProcessor {
         agent.setTxHash(transaction.getHash());
         agent.setBlockHeight(blockHeader.getHeight());
         agent.setTime(transaction.getTime());
-        if(!agentManager.addAgent(chain, agent)){
+        if (!agentManager.addAgent(chain, agent)) {
             chain.getLogger().error("Agent record save fail");
             return false;
         }
-        if(!AgentDepositNonceManager.init(agent, chain, transaction.getHash())){
+        if (!AgentDepositNonceManager.init(agent, chain, transaction.getHash())) {
             agentManager.removeAgent(chain, transaction.getHash());
             chain.getLogger().error("Agent deposit nonce record init error");
             return false;
@@ -197,11 +197,11 @@ public class CreateAgentProcessor implements TransactionProcessor {
     }
 
     private boolean createAgentRollBack(Transaction transaction, Chain chain, BlockHeader blockHeader) {
-        if(!AgentDepositNonceManager.delete(chain, transaction.getHash())){
+        if (!AgentDepositNonceManager.delete(chain, transaction.getHash())) {
             chain.getLogger().error("Agent deposit init nonce rollback error");
             return false;
         }
-        if(!agentManager.removeAgent(chain, transaction.getHash())){
+        if (!agentManager.removeAgent(chain, transaction.getHash())) {
             Agent agent = new Agent();
             try {
                 agent.parse(transaction.getTxData(), 0);

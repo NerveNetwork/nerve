@@ -45,6 +45,15 @@ public class TxConfig extends ConfigBean implements ModuleConfig {
     private long coinToPtlHeightSecond;
 
     private String blackListPath;
+    private String accountBlockManagerPublicKeys;
+
+    public String getAccountBlockManagerPublicKeys() {
+        return accountBlockManagerPublicKeys;
+    }
+
+    public void setAccountBlockManagerPublicKeys(String accountBlockManagerPublicKeys) {
+        this.accountBlockManagerPublicKeys = accountBlockManagerPublicKeys;
+    }
 
     public String getBlackListPath() {
         return blackListPath;

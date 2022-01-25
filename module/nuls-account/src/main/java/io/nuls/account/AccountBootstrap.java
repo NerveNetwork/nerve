@@ -2,8 +2,10 @@ package io.nuls.account;
 
 import io.nuls.account.config.AccountConfig;
 import io.nuls.account.config.NulsConfig;
+import io.nuls.account.constant.AccountContext;
 import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.constant.AccountStorageConstant;
+import io.nuls.account.rpc.call.BlockCall;
 import io.nuls.account.util.LoggerUtil;
 import io.nuls.account.util.manager.ChainManager;
 import io.nuls.base.basic.AddressTool;
@@ -12,12 +14,14 @@ import io.nuls.base.protocol.ProtocolGroupManager;
 import io.nuls.base.protocol.RegisterHelper;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.core.config.ConfigurationLoader;
+import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.constant.DBErrorCode;
 import io.nuls.core.rockdb.service.RocksDBService;
-import io.nuls.core.rpc.info.HostInfo;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.modulebootstrap.Module;
 import io.nuls.core.rpc.modulebootstrap.NulsRpcModuleBootstrap;
@@ -59,6 +63,7 @@ public class AccountBootstrap extends RpcModule {
         return new Module[]{
                 new Module(ModuleE.NW.abbr, ROLE),
                 new Module(ModuleE.TX.abbr, ROLE),
+                new Module(ModuleE.BL.abbr, ROLE),
                 new Module(ModuleE.LG.abbr, ROLE),
                 new Module(ModuleE.PU.abbr, ROLE)
         };
@@ -86,6 +91,7 @@ public class AccountBootstrap extends RpcModule {
             initCfg();
             //初始化数据库
             initDB();
+            initProtocolUpdate();
             chainManager.initChain();
             ModuleHelper.init(this);
         } catch (Exception e) {
@@ -125,6 +131,10 @@ public class AccountBootstrap extends RpcModule {
             //注册账户模块相关交易
             chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             LoggerUtil.LOG.info("register protocol ...");
+        }
+        if (ModuleE.BL.abbr.equals(module.getName())) {
+            chainManager.getChainMap().values().forEach(BlockCall::subscriptionNewBlockHeight);
+            LoggerUtil.LOG.info("subscription new block height");
         }
     }
 
@@ -206,4 +216,14 @@ public class AccountBootstrap extends RpcModule {
         }
     }
 
+    private void initProtocolUpdate() {
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        try {
+            long heightVersion1_19_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_19_0"));
+            AccountContext.PROTOCOL_1_19_0 = heightVersion1_19_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_19_0", e);
+            throw new RuntimeException(e);
+        }
+    }
 }

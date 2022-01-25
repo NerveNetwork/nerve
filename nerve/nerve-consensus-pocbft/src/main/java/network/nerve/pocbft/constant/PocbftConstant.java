@@ -7,6 +7,8 @@ import network.nerve.pocbft.model.bo.Chain;
  */
 public class PocbftConstant {
 
+    public static long VERSION_1_19_0_HEIGHT = Long.MAX_VALUE;
+
     /**
      * unit:round of consensus
      * 用于计算信誉值（表示只用最近这么多轮的轮次信息来计算信誉值）

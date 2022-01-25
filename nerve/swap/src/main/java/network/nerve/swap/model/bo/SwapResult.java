@@ -123,5 +123,28 @@ public class SwapResult {
         this.subTx = subTx;
     }
 
-
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"success\":")
+                .append(success);
+        sb.append(",\"errorMessage\":")
+                .append('\"').append(errorMessage).append('\"');
+        sb.append(",\"hash\":")
+                .append('\"').append(hash).append('\"');
+        sb.append(",\"txType\":")
+                .append(txType);
+        sb.append(",\"txTime\":")
+                .append(txTime);
+        sb.append(",\"blockHeight\":")
+                .append(blockHeight);
+        sb.append(",\"business\":")
+                .append('\"').append(business).append('\"');
+        sb.append(",\"subTxStr\":")
+                .append('\"').append(subTxStr).append('\"');
+        sb.append(",\"swapTradeBus\":")
+                .append('\"').append(swapTradeBus).append('\"');
+        sb.append('}');
+        return sb.toString();
+    }
 }

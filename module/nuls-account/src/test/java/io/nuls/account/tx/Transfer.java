@@ -25,11 +25,12 @@
 package io.nuls.account.tx;
 
 import io.nuls.account.constant.AccountConstant;
-import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.constant.RpcConstant;
 import io.nuls.account.model.bo.Account;
 import io.nuls.account.model.bo.Chain;
 import io.nuls.account.model.bo.config.ConfigBean;
+import io.nuls.account.model.bo.tx.AccountBlockExtend;
+import io.nuls.account.model.bo.tx.AccountBlockInfo;
 import io.nuls.account.model.bo.tx.txdata.AccountBlockData;
 import io.nuls.account.model.dto.CoinDTO;
 import io.nuls.account.util.AccountTool;
@@ -37,7 +38,6 @@ import io.nuls.account.util.LoggerUtil;
 import io.nuls.account.util.TxUtil;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.*;
 import io.nuls.base.signture.MultiSignTxSignature;
 import io.nuls.base.signture.P2PHKSignature;
@@ -47,8 +47,9 @@ import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
-import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.io.IoUtils;
+import io.nuls.core.log.Log;
+import io.nuls.core.parse.I18nUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.info.HostInfo;
@@ -57,15 +58,14 @@ import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import io.nuls.v2.model.dto.RpcResult;
-import io.nuls.v2.util.HttpClientUtil;
 import io.nuls.v2.util.JsonRpcUtil;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -110,11 +110,17 @@ public class Transfer implements Runnable {
     //    this.addressTo = addressTo;
     //}
 
+    @BeforeClass
+    public static void initClass() {
+        Log.info("init log.");
+        I18nUtils.loadLanguage(Transfer.class, "languages", "en");
+    }
+
     @Before
     public void before() throws Exception {
         AddressTool.addPrefix(5, "TNVT");
-        NoUse.mockModule();
-        ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
+        //NoUse.mockModule();
+        //ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
     }
 
     @Test
@@ -158,11 +164,37 @@ public class Transfer implements Runnable {
         assertEquals(pubKeys.size(),3);
     }
 
+    String fromStr,rpcAddress;
+    String fromKey;
+    private void setDev() {
+        chainId = 5;
+        assetChainId = 5;
+        assetId = 1;
+        fromKey = "4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a";
+        // TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg
+        byte[] addressByPrikey = AddressTool.getAddressByPrikey(HexUtil.decode(fromKey), chainId, (byte) 1);
+        fromStr = AddressTool.getStringAddressByBytes(addressByPrikey);
+    }
+
+    private void setTest() {
+        chainId = 5;
+        assetChainId = 5;
+        assetId = 1;
+        fromStr = "TNVTdTSQ32SVZvkY4tM5WHgM1mzRznkiqm2is";
+        rpcAddress = "http://beta.api.nerve.network/jsonrpc";
+    }
+
+    private void setMain() {
+        chainId = 9;
+        assetChainId = 9;
+        assetId = 1;
+        fromStr = "NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt";
+        rpcAddress = "https://api.nerve.network/jsonrpc";
+    }
+
     @Test
     public void accountBlockMultiSignTest() throws Exception {
-        chainId = 1;
-        assetChainId = 1;
-        assetId = 1;
+        setMain();
         Chain chain = new Chain();
         ConfigBean configBean = new ConfigBean();
         configBean.setChainId(chainId);
@@ -173,11 +205,10 @@ public class Transfer implements Runnable {
         tx.setType(TxType.BLOCK_ACCOUNT);
         CoinData coinData = new CoinData();
 
-        String fromStr = "NULSd6Hh5e4o3N3y6FnHeGhECFXrETqSzbapx";
         byte[] from = AddressTool.getAddress(fromStr);
 
         byte[] nonce;
-        RpcResult request = JsonRpcUtil.request("https://api.nerve.network/jsonrpc", "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
+        RpcResult request = JsonRpcUtil.request(rpcAddress, "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
         Map result = (Map) request.getResult();
         String nonceStr = (String) result.get("nonce");
         if(null == nonceStr){
@@ -185,30 +216,17 @@ public class Transfer implements Runnable {
         } else {
             nonce = HexUtil.decode(nonceStr);
         }
-        coinData.addFrom(new CoinFrom(
-                from,
-                assetChainId,
-                assetId,
-                new BigDecimal("0.05").movePointRight(8).toBigInteger(),
-                nonce,
-                (byte) 0
-        ));
-        coinData.addTo(new CoinTo(
-                from,
-                assetChainId,
-                assetId,
-                BigInteger.ZERO,
-                (byte) 0
-        ));
+        coinData.addFrom(new CoinFrom(from, assetChainId, assetId, new BigDecimal("0").movePointRight(8).toBigInteger(), nonce, (byte) 0));
+        coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
-        //File file = new File("/Users/pierreluo/Nuls/address_block_finally");
-        //List<String> list = IOUtils.readLines(new FileInputStream(file), StandardCharsets.UTF_8.name());
-        //System.out.println("read length: " + list.size());
-        //Set<String> set = list.stream().map(a -> a.trim()).collect(Collectors.toSet());
-        //System.out.println("deduplication length: " + set.size());
-        //data.setAddresses(set.toArray(new String[set.size()]));
-        data.setAddresses(new String[]{"NULSd6HgicLJuKk3kmPfJeFPMHzwHWpwm5zJT"});
+        File file = new File("/Users/pierreluo/Nuls/account_new_nerve");
+        List<String> list = IOUtils.readLines(new FileInputStream(file), StandardCharsets.UTF_8.name());
+        System.out.println("read length: " + list.size());
+        Set<String> set = list.stream().map(a -> a.trim()).collect(Collectors.toSet());
+        System.out.println("deduplication length: " + set.size());
+        data.setAddresses(set.toArray(new String[set.size()]));
+        //data.setAddresses(new String[]{"NULSd6HgicLJuKk3kmPfJeFPMHzwHWpwm5zJT"});
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
@@ -238,48 +256,77 @@ public class Transfer implements Runnable {
         }
         tx.setTransactionSignature(transactionSignature.serialize());
         System.out.println(HexUtil.encode(tx.serialize()));
-        //Response response = this.newTx(tx);
-        //System.out.println(JSONUtils.obj2PrettyJson(response));
     }
 
     @Test
-    public void txMultiSignTest() throws Exception {
-        String pri = "???";
-        String filePath = "???";
-        String txHex = IoUtils.readBytesToString(new File(filePath));
+    public void accountBlockMultiSignProtocol19Test() throws Exception {
+        setTest();
+        Chain chain = new Chain();
+        ConfigBean configBean = new ConfigBean();
+        configBean.setChainId(chainId);
+        configBean.setAssetId(assetId);
+        chain.setConfig(configBean);
+
         Transaction tx = new Transaction();
-        tx.parse(HexUtil.decode(txHex), 0);
+        tx.setType(TxType.BLOCK_ACCOUNT);
+        CoinData coinData = new CoinData();
 
+        byte[] from = AddressTool.getAddress(fromStr);
+
+        byte[] nonce;
+        RpcResult request = JsonRpcUtil.request(rpcAddress, "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
+        Map result = (Map) request.getResult();
+        String nonceStr = (String) result.get("nonce");
+        if(null == nonceStr){
+            nonce = HexUtil.decode("0000000000000000");
+        } else {
+            nonce = HexUtil.decode(nonceStr);
+        }
+        coinData.addFrom(new CoinFrom(from, assetChainId, assetId, new BigDecimal("0").movePointRight(8).toBigInteger(), nonce, (byte) 0));
+        coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
+        tx.setCoinData(coinData.serialize());
+        List<Object[]> blockDatas = new ArrayList<>();
+        // 锁定列表: 地址，操作类型(1-加入白名单 2-移除白名单)，白名单交易类型清单
+        blockDatas.add(new Object[]{"TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw", 1, List.of(2, 3)});
+        blockDatas.add(new Object[]{"TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv", 1, List.of(61)});
+        blockDatas.add(new Object[]{"TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD", 1, List.of(71)});
+        blockDatas.add(new Object[]{"TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5", 1, List.of()});
+        AccountBlockData data = this.makeTxData(blockDatas);
+
+        tx.setTxData(data.serialize());
+        tx.setTime(System.currentTimeMillis() / 1000);
+        tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
+        System.out.println(String.format("交易大小: %s", tx.size()));
+
+        String[] pubkeys = new String[]{
+                "0225a6a872a4110c9b9c9a71bfdbe896e04bc83bb9fe38e27f3e18957d9b2a25ad",
+                "029f8ab66d157ddfd12d89986833eb2a8d6dc0d92c87da12225d02690583ae1020",
+                "02784d89575c16f9407c7218f8ca6c6a80d44023cd37796fc5458cbce1ede88adb",
+                "020aee2c9cde73f50c5e2eef756b92aeb138bc3cda3438b31a68b56f16004bebf8",
+                "02b2e32f94116d2364af6f06ae9af7f58824b0d3a57fca9170b1a36b665aa93195"};
+        List<String> pubkeyList = Arrays.asList(pubkeys);
+        List<byte[]> collect = pubkeyList.stream().map(p -> HexUtil.decode(p)).collect(Collectors.toList());
         MultiSignTxSignature transactionSignature = new MultiSignTxSignature();
-        transactionSignature.parse(tx.getTransactionSignature(), 0);
+        transactionSignature.setM((byte) 3);
+        transactionSignature.setPubKeyList(collect);
+        tx.setTransactionSignature(transactionSignature.serialize());
 
-        List<P2PHKSignature> p2PHKSignatures = transactionSignature.getP2PHKSignatures();
-
-        ECKey eckey = ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(pri)));
-        P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByEckey(tx, eckey);
-        p2PHKSignatures.add(p2PHKSignature);
-        transactionSignature.setP2PHKSignatures(p2PHKSignatures);
+        List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
+        List<String> priKeyList = new ArrayList<>();
+        priKeyList.add("???");
+        for (String pri : priKeyList) {
+            ECKey eckey = ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(pri)));
+            P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByEckey(tx, eckey);
+            p2PHKSignatures.add(p2PHKSignature);
+            transactionSignature.setP2PHKSignatures(p2PHKSignatures);
+        }
         tx.setTransactionSignature(transactionSignature.serialize());
         System.out.println(HexUtil.encode(tx.serialize()));
     }
 
     @Test
-    public void getAllBlockAccount() throws Exception {
-        // ac_getAllBlockAccount
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constants.VERSION_KEY_STR, "1.0");
-        params.put(Constants.CHAIN_ID, chainId);
-        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_getAllBlockAccount", params);
-        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
-    }
-
-
-
-    @Test
     public void accountUnBlockMultiSignTest() throws Exception {
-        chainId = 1;
-        assetChainId = 1;
-        assetId = 1;
+        setMain();
         Chain chain = new Chain();
         ConfigBean configBean = new ConfigBean();
         configBean.setChainId(chainId);
@@ -289,11 +336,10 @@ public class Transfer implements Runnable {
         Transaction tx = new Transaction();
         tx.setType(TxType.UNBLOCK_ACCOUNT);
         CoinData coinData = new CoinData();
-        String fromStr = "NULSd6Hh5e4o3N3y6FnHeGhECFXrETqSzbapx";
         byte[] from = AddressTool.getAddress(fromStr);
 
         byte[] nonce;
-        RpcResult request = JsonRpcUtil.request("https://api.nerve.network/jsonrpc", "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
+        RpcResult request = JsonRpcUtil.request(rpcAddress, "getAccountBalance", List.of(chainId, assetChainId, assetId, fromStr));
         Map result = (Map) request.getResult();
         String nonceStr = (String) result.get("nonce");
         if(null == nonceStr){
@@ -301,25 +347,14 @@ public class Transfer implements Runnable {
         } else {
             nonce = HexUtil.decode(nonceStr);
         }
-        coinData.addFrom(new CoinFrom(
-                from,
-                assetChainId,
-                assetId,
-                new BigDecimal("0.1").movePointRight(8).toBigInteger(),
-                nonce,
-                (byte) 0
-        ));
-        coinData.addTo(new CoinTo(
-                from,
-                assetChainId,
-                assetId,
-                BigInteger.ZERO,
-                (byte) 0
-        ));
+        coinData.addFrom(new CoinFrom(from, assetChainId, assetId, new BigDecimal("0").movePointRight(8).toBigInteger(), nonce, (byte) 0));
+        coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
         data.setAddresses(new String[]{
-                "NULSd6HgV3H5FecBPdXiY7r9d9cQa79KhaezY"
+                "NERVEepb63kZAEfTW8ATHPzVWBp3JjnK5qxkvc",
+                "NERVEepb63bxmjYTvphE9L4njaP2ZycssxHjeC",
+                "NERVEepb66A8LmCYJywkwGtDYyAZU7Gudmt7CZ"
         });
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
@@ -351,13 +386,74 @@ public class Transfer implements Runnable {
         System.out.println(HexUtil.encode(tx.serialize()));
     }
 
+    @Test
+    public void appendSignature() throws Exception {
+        setTest();
+        String pri = fromKey;
+        String txHex = "02007c95ef6103616263008c0117050001e45dc2d5ea7c4216baa277e5a7cee4ef6eb70c3405000100a0b6f07dba020000000000000000000000000000000000000000000000000000082fb49ecf9fd58fc4000117050001b9978dbea4abebb613b6be2d0d66b4179d2511cb050001000030ef7dba02000000000000000000000000000000000000000000000000000000000000000000006921020e19418ed26700b0dba720dcc95483cb4adb1b5f8a103818dab17d5b052318544630440220378c8235b9277bfab4be5d5216198143d2fc3759e4a002184e9463b303c3261b022012bac6e85b2601570cb66f8e2f4d2abb8cb099eb2db6a9aeb34c784af6288d25";
+        Transaction tx = new Transaction();
+        tx.parse(HexUtil.decode(txHex), 0);
+        TransactionSignature transactionSignature = new TransactionSignature();
+        transactionSignature.parse(tx.getTransactionSignature(), 0);
+        List<P2PHKSignature> p2PHKSignatures = transactionSignature.getP2PHKSignatures();
+        ECKey eckey = ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(pri)));
+        P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByEckey(tx, eckey);
+        p2PHKSignatures.add(p2PHKSignature);
+        tx.setTransactionSignature(transactionSignature.serialize());
+        System.out.println(HexUtil.encode(tx.serialize()));
+    }
+
+    @Test
+    public void txMultiSignTest() throws Exception {
+        String pri = "???";
+        String filePath = "???";
+        String txHex = IoUtils.readBytesToString(new File(filePath));
+        Transaction tx = new Transaction();
+        tx.parse(HexUtil.decode(txHex), 0);
+
+        MultiSignTxSignature transactionSignature = new MultiSignTxSignature();
+        transactionSignature.parse(tx.getTransactionSignature(), 0);
+
+        List<P2PHKSignature> p2PHKSignatures = transactionSignature.getP2PHKSignatures();
+
+        ECKey eckey = ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(pri)));
+        P2PHKSignature p2PHKSignature = SignatureUtil.createSignatureByEckey(tx, eckey);
+        p2PHKSignatures.add(p2PHKSignature);
+        transactionSignature.setP2PHKSignatures(p2PHKSignatures);
+        tx.setTransactionSignature(transactionSignature.serialize());
+        System.out.println(HexUtil.encode(tx.serialize()));
+    }
+
+    @Test
+    public void getAllBlockAccount() throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_getAllBlockAccount", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+    }
+
+    @Test
+    public void getBlockAccountInfo() throws Exception {
+        List<String> list = new ArrayList<>();
+        list.add("TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw");
+        list.add("TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv");
+        list.add("TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD");
+        list.add("TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5");
+
+        for (String address : list) {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_getBlockAccountInfo", params);
+            System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        }
+    }
 
     @Test
     public void accountBlockTest() throws Exception {
-        chainId = 5;
-        assetChainId = 5;
-        assetId = 1;
-
+        setDev();
         Chain chain = new Chain();
         ConfigBean configBean = new ConfigBean();
         configBean.setChainId(chainId);
@@ -367,36 +463,20 @@ public class Transfer implements Runnable {
         Transaction tx = new Transaction();
         tx.setType(TxType.BLOCK_ACCOUNT);
         CoinData coinData = new CoinData();
-        String fromKey = "477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75";
-        byte[] from = AddressTool.getAddress("TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz");
-        //String fromKey = "9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b";
-        //byte[] from = AddressTool.getAddress("TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5");
+        byte[] from = AddressTool.getAddress(fromStr);
         byte[] nonce = TxUtil.getBalanceNonce(chain, assetChainId, assetId, from).getNonce();
         if(null == nonce){
             nonce = HexUtil.decode("0000000000000000");
         }
-        coinData.addFrom(new CoinFrom(
-                from,
-                assetChainId,
-                assetId,
-                new BigDecimal("0.001").movePointRight(8).toBigInteger(),
-                nonce,
-                (byte) 0
-        ));
-        coinData.addTo(new CoinTo(
-                from,
-                assetChainId,
-                assetId,
-                BigInteger.ZERO,
-                (byte) 0
-        ));
+        coinData.addFrom(new CoinFrom(from, assetChainId, assetId, new BigDecimal("0.001").movePointRight(8).toBigInteger(), nonce, (byte) 0));
+        coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
-        AccountBlockData data = new AccountBlockData();
-        data.setAddresses(new String[]{
-                "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw",
-                "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv",
-                "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD"
-        });
+        List<Object[]> blockDatas = new ArrayList<>();
+        blockDatas.add(new Object[]{"TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw", 1, List.of(2, 3)});
+        blockDatas.add(new Object[]{"TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv", 1, List.of(61)});
+        blockDatas.add(new Object[]{"TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD", 1, List.of(71)});
+        blockDatas.add(new Object[]{"TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5", 1, List.of()});
+        AccountBlockData data = this.makeTxData(blockDatas);
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
 
@@ -415,6 +495,35 @@ public class Transfer implements Runnable {
         System.out.println(JSONUtils.obj2PrettyJson(response));
     }
 
+    private int[] list2array(List<Integer> list) {
+        int[] result = new int[list.size()];
+        int i = 0;
+        for(Integer a : list) {
+            result[i++] = a.intValue();
+        }
+        return result;
+    }
+    private AccountBlockData makeTxData(List<Object[]> list) throws Exception {
+        List<AccountBlockInfo> infoList = new ArrayList<>();
+        String[] addresses = new String[list.size()];
+        int i = 0;
+        for (Object[] objs : list) {
+            String address = (String) objs[0];
+            Integer operationType = (Integer) objs[1];
+            List<Integer> types = (List<Integer>) objs[2];
+            addresses[i++] = address;
+            AccountBlockInfo info = new AccountBlockInfo();
+            info.setOperationType(operationType);
+            info.setTypes(this.list2array(types));
+            infoList.add(info);
+        }
+        AccountBlockData data = new AccountBlockData();
+        data.setAddresses(addresses);
+        AccountBlockExtend extend = new AccountBlockExtend();
+        extend.setInfos(infoList.toArray(new AccountBlockInfo[infoList.size()]));
+        data.setExtend(extend.serialize());
+        return data;
+    }
 
     @Test
     public void accountUnBlockTest() throws Exception {
@@ -433,21 +542,8 @@ public class Transfer implements Runnable {
         if(null == nonce){
             nonce = HexUtil.decode("0000000000000000");
         }
-        coinData.addFrom(new CoinFrom(
-                from,
-                assetChainId,
-                assetId,
-                new BigDecimal("0.001").movePointRight(8).toBigInteger(),
-                nonce,
-                (byte) 0
-        ));
-        coinData.addTo(new CoinTo(
-                from,
-                assetChainId,
-                assetId,
-                BigInteger.ZERO,
-                (byte) 0
-        ));
+        coinData.addFrom(new CoinFrom(from, assetChainId, assetId, new BigDecimal("0.001").movePointRight(8).toBigInteger(), nonce, (byte) 0));
+        coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
         data.setAddresses(new String[]{

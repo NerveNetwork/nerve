@@ -137,6 +137,7 @@ public class SwapServiceImpl implements SwapService {
     public Result invokeOneByOne(int chainId, long blockHeight, long blockTime, Transaction tx) {
         try {
             SwapResult swapResult = swapInvoker.invoke(chainId, tx, blockHeight, blockTime);
+            SwapContext.logger.info("[{}]调用结果: {}", blockHeight, swapResult.toString());
             Map<String, Object> _result = new HashMap<>();
             _result.put("success", swapResult.isSuccess());
             if (null != swapResult.getSubTxStr()) {

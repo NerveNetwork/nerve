@@ -69,7 +69,7 @@ public class BatchMergeProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, batchMergeTx);
+                rs = validator.validate(chain, batchMergeTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(batchMergeTx);
                     chain.getLogger().error("Intelligent contract withdrawal delegation transaction verification failed");

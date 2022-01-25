@@ -1,4 +1,5 @@
 package network.nerve.pocbft.utils.validator;
+import io.nuls.base.data.BlockHeader;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.tx.txdata.ChangeAgentDepositData;
 import network.nerve.pocbft.model.po.AgentPo;
@@ -27,7 +28,7 @@ public class ReduceAgentDepositValidator extends BaseValidator {
     private AgentManager agentManager;
 
     @Override
-    public Result validate(Chain chain, Transaction tx) throws NulsException, IOException {
+    public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
         //txData验证
         if (tx.getTxData() == null) {
             chain.getLogger().error("CreateAgent -- TxData is null");

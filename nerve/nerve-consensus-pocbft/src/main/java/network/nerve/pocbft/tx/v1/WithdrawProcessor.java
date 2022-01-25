@@ -74,7 +74,7 @@ public class WithdrawProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, withdrawTx);
+                rs = validator.validate(chain, withdrawTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(withdrawTx);
                     chain.getLogger().error("Intelligent contract withdrawal delegation transaction verification failed");

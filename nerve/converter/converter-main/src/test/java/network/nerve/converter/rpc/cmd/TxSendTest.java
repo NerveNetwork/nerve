@@ -68,16 +68,16 @@ public class TxSendTest {
     static String address30 = "tNULSeBaMfQ6VnRxrCwdU6aPqdiPii9Ks8ofUQ";
     */
 
-    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
-    static String address21 = "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz";
-    static String address22 = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";
-    static String address23 = "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv";
-    static String address24 = "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD";
-    static String address25 = "TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5";
-    static String address26 = "TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg";
-    static String address27 = "TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n";
-    static String address28 = "TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu";
-    static String address29 = "TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf";
+    static String address20 = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";// 9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b
+    static String address21 = "TNVTdTSPNEpLq2wnbsBcD8UDTVMsArtkfxWgz";// 477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75
+    static String address22 = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";// 8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78
+    static String address23 = "TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv";// 4100e2f88c3dba08e5000ed3e8da1ae4f1e0041b856c09d35a26fb399550f530
+    static String address24 = "TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD";// bec819ef7d5beeb1593790254583e077e00f481982bce1a43ea2830a2dc4fdf7
+    static String address25 = "TNVTdTSPT5KdmW1RLzRZCa5yc7sQCznp6fES5";// ddddb7cb859a467fbe05d5034735de9e62ad06db6557b64d7c139b6db856b200
+    static String address26 = "TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg";// 4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a
+    static String address27 = "TNVTdTSPLqKoNh2uiLAVB76Jyq3D6h3oAR22n";// 3dadac00b523736f38f8c57deb81aa7ec612b68448995856038bd26addd80ec1
+    static String address28 = "TNVTdTSPNkjaFbabm5P73m7VHBRQef4NDsgYu";// 27dbdcd1f2d6166001e5a722afbbb86a845ef590433ab4fcd13b9a433af6e66e
+    static String address29 = "TNVTdTSPRMtpGNYRx98WkoqKnExU9pWDQjNPf";// 76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b
     static String address30 = "TNVTdTSPEn3kK94RqiMffiKkXTQ2anRwhN1J9";
     /**
      * 0xc11D9943805e56b630A401D4bd9A29550353EFa1 [Account 9]
@@ -469,12 +469,12 @@ public class TxSendTest {
 
     @Test
     public void getTx() throws Exception {
-        String txStr = (String)(getTxCfmClient("3039d958fab9359427691c444478ebb78a5fce2e99bd1bf4d773c612b346dd2d").get("tx"));
+        String txStr = (String)(getTxCfmClient("ee86c4f13eadf5aeec5c6a3f0908ff114888f0dda600918be6896c889bb21bf9").get("tx"));
         System.out.println(txStr);
         Transaction tx = ConverterUtil.getInstance(txStr, Transaction.class);//最后一条
         //System.out.println(tx.format(WithdrawalHeterogeneousSendTxData.class));
         //System.out.println(tx.format(WithdrawalTxData.class));
-        System.out.println(tx.format(ConfirmWithdrawalTxData.class));
+        //System.out.println(tx.format(ConfirmWithdrawalTxData.class));
         //System.out.println(tx.format(RechargeUnconfirmedTxData.class));
         //System.out.println(tx.format(RechargeTxData.class));
     }
@@ -1260,12 +1260,12 @@ public class TxSendTest {
 
     @Test
     public void transferOne() throws Exception {
-        String from = address32;
+        String from = "TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw";
         String to = address31;
         String value = "30000";
         int assetChainId = 5;
-        int assetId = 14;
-        int decimals = 18;
+        int assetId = 1;
+        int decimals = 8;
 
         Map transferMap = new HashMap();
         transferMap.put("chainId", chainId);

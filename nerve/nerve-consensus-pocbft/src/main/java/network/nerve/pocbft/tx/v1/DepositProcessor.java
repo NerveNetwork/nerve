@@ -74,7 +74,7 @@ public class DepositProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.ERROR_UNLOCK_TIME.getCode();
                     continue;
                 }
-                rs = validator.validate(chain, depositTx);
+                rs = validator.validate(chain, depositTx, blockHeader);
                 if (rs.isFailed()) {
                     invalidTxList.add(depositTx);
                     chain.getLogger().info("Transaction basis validation error");

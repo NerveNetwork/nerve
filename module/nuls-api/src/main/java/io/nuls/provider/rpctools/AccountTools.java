@@ -7,11 +7,14 @@ import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.MapUtils;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
+import io.nuls.provider.model.dto.AccountBlockDTO;
 import io.nuls.provider.rpctools.vo.Account;
+import io.nuls.provider.utils.Log;
 import io.nuls.v2.error.AccountErrorCode;
 import io.nuls.v2.util.AccountTool;
 import org.bouncycastle.util.encoders.Hex;
@@ -112,5 +115,55 @@ public class AccountTools implements CallRpc {
         multiSigAccount.setPubKeyList(list);
         return multiSigAccount;
     }
+
+    public boolean isBlockAccount(int chainId, String address) {
+        try {
+            if (StringUtils.isBlank(address)) {
+                return false;
+            }
+            Map<String, Object> params = new HashMap<>(4);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            boolean isBlock = callRpc(ModuleE.AC.abbr, "ac_isBlockAccount", params, (Function<Map<String, Object>, Boolean>) res -> {
+                if (res == null) {
+                    return false;
+                }
+                return (boolean) res.get("value");
+
+            });
+            return isBlock;
+        } catch (Exception e) {
+            Log.error(e);
+            return false;
+        }
+    }
+
+    public AccountBlockDTO getBlockAccountInfo(int chainId, String address) {
+        try {
+            if (StringUtils.isBlank(address)) {
+                return null;
+            }
+            Map<String, Object> params = new HashMap<>(4);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            AccountBlockDTO dto = callRpc(ModuleE.AC.abbr, "ac_getBlockAccountInfo", params, (Function<Map<String, Object>, AccountBlockDTO>) res -> {
+                if (res == null) {
+                    return null;
+                }
+                AccountBlockDTO result = new AccountBlockDTO();
+                result.setAddress((String) res.get("address"));
+                Object obj = res.get("types");
+                if (obj != null) {
+                    result.setTypes((List<Integer>) obj);
+                }
+                return result;
+            });
+            return dto;
+        } catch (Exception e) {
+            Log.error(e);
+            return null;
+        }
+    }
+
 
 }

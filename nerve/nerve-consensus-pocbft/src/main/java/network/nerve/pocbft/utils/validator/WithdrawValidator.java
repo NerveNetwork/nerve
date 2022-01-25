@@ -1,5 +1,6 @@
 package network.nerve.pocbft.utils.validator;
 
+import io.nuls.base.data.BlockHeader;
 import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.model.bo.StackingAsset;
 import network.nerve.pocbft.model.bo.tx.txdata.CancelDeposit;
@@ -36,7 +37,7 @@ public class WithdrawValidator extends BaseValidator {
     private DepositStorageService depositStorageService;
 
     @Override
-    public Result validate(Chain chain, Transaction tx) throws NulsException, IOException {
+    public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
         CancelDeposit txData = new CancelDeposit();
         txData.parse(tx.getTxData(), 0);
         DepositPo depositPo = depositStorageService.get(txData.getJoinTxHash(), chain.getConfig().getChainId());
