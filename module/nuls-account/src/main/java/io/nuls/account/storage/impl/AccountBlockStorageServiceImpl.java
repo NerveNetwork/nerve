@@ -196,7 +196,9 @@ public class AccountBlockStorageServiceImpl implements AccountBlockStorageServic
                 }
             }
         }
-        RocksDBService.deleteKeys(AccountStorageConstant.DB_NAME_ACCOUNT_BLOCK, accountRemoveList);
+        if (!accountRemoveList.isEmpty()) {
+            RocksDBService.deleteKeys(AccountStorageConstant.DB_NAME_ACCOUNT_BLOCK, accountRemoveList);
+        }
         return this.saveAccountList(poList);
     }
 
