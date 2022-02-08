@@ -438,6 +438,73 @@ public class Protocol16Test {
         }
     }
 
+    /**
+     * 开通同时充值主资产和token资产的功能，异构链101~112
+     */
+    @Test
+    public void openCrossOutIITest() {
+        // 开通同时充值主资产和token资产的功能，异构链101~112
+        String prikey = "???";
+        // 遍历所有异构链，除了trx
+        for (int i = 101; i <= 112; i++) {
+            if (i == 108) {
+                continue;
+            }
+            Integer htgChainId = i;
+            HeterogeneousCfg cfg = cfgMap.get(htgChainId);
+            long networkChainId = cfg.getChainIdOnHtgNetwork();
+            HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
+            String[] multyUpgrades = multyUpgradeMap.get(htgChainId);
+            String newMulty = multyUpgrades[1];
+
+            try {
+                // 检查权限是否已开通
+                Function openCrossOutII = new Function("openCrossOutII", List.of(), Arrays.asList(new TypeReference<Bool>() {}));
+                List<Type> types = htgWalletApi.callViewFunction(newMulty, openCrossOutII);
+                Boolean open = (Boolean) types.get(0).getValue();
+                if (open) {
+                    // 权限已开通
+                    System.out.println(String.format("权限已开通[openCrossOutII], HtgChainId: %s, newMultyContract: %s", htgChainId, newMulty));
+                    continue;
+                }
+
+                Function setCrossOutII = new Function("setCrossOutII", Arrays.asList(new Bool(true)), List.of());
+                Credentials credentials = Credentials.create(prikey);
+                String from = credentials.getAddress();
+                EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, newMulty, setCrossOutII);
+                if (ethEstimateGas.getError() != null) {
+                    System.err.println(String.format("验证失败[setCrossOutII] - HtgChainId: %s, newMultyContract: %s, Failed to open, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
+                    continue;
+                }
+                BigInteger nonce = htgWalletApi.getNonce(from);
+                String data = FunctionEncoder.encode(setCrossOutII);
+                BigInteger gasLimit = ethEstimateGas.getAmountUsed().add(BigInteger.valueOf(10000L));
+                BigInteger gasPrice = htgWalletApi.getCurrentGasPrice();
+                RawTransaction rawTransaction = RawTransaction.createTransaction(
+                        nonce,
+                        gasPrice, gasLimit, newMulty, BigInteger.ZERO, data);
+                //签名Transaction，这里要对交易做签名
+                byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
+                String hexValue = Numeric.toHexString(signMessage);
+                //发送交易
+                EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
+                if (send.hasError()) {
+                    System.err.println(String.format("广播失败[setCrossOutII] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                            htgChainId, newMulty,
+                            send.getError().getMessage(),
+                            send.getError().getCode(),
+                            send.getError().getData()
+                    ));
+                } else {
+                    System.out.println(String.format("广播成功[setCrossOutII] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
+                }
+                TimeUnit.MILLISECONDS.sleep(500);
+            } catch (Exception e) {
+                System.err.println(String.format("Failed to [setCrossOutII], HtgChainId: %s, multyContract: %s, error: %s", htgChainId, newMulty, e.getMessage()));
+            }
+        }
+    }
+
 
     protected String sendChange(HtgWalletApi htgWalletApi, HtgContext htgContext, List<String> seedList, String multySignContractAddress, String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
         String vHash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, htgContext.VERSION());

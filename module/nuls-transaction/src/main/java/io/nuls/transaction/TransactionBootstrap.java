@@ -105,7 +105,7 @@ public class TransactionBootstrap extends RpcModule {
     public boolean doStart() {
         try {
             chainManager.runChain();
-            while (!isDependencieReady(ModuleE.NW.abbr)){
+            while (!isDependencieReady(ModuleE.NW.abbr)) {
                 LOG.debug("wait depend modules ready");
                 Thread.sleep(2000L);
             }
@@ -138,12 +138,12 @@ public class TransactionBootstrap extends RpcModule {
     @Override
     public RpcModuleState onDependenciesLoss(Module module) {
         if (ModuleE.BL.abbr.equals(module.getName())) {
-            for(Chain chain : chainManager.getChainMap().values()) {
+            for (Chain chain : chainManager.getChainMap().values()) {
                 chain.getProcessTxStatus().set(false);
             }
         }
         if (ModuleE.CS.abbr.equals(module.getName())) {
-            for(Chain chain : chainManager.getChainMap().values()) {
+            for (Chain chain : chainManager.getChainMap().values()) {
                 chain.getPackaging().set(false);
             }
         }
@@ -208,7 +208,7 @@ public class TransactionBootstrap extends RpcModule {
         }
     }
 
-    private void initTransactionContext(){
+    private void initTransactionContext() {
         TxContext.TX_MAX_SIZE = txConfig.getTxMaxSize();
         TxContext.ORPHAN_LIFE_TIME_SEC = txConfig.getOrphanLifeTimeSec();
         TxContext.BLOCK_TX_TIME_RANGE_SEC = txConfig.getBlockTxTimeRangeSec();
@@ -241,6 +241,13 @@ public class TransactionBootstrap extends RpcModule {
             TxContext.PROTOCOL_1_19_0 = heightVersion1_19_0;
         } catch (Exception e) {
             Log.error("Failed to get height_1_19_0", e);
+            throw new RuntimeException(e);
+        }
+        try {
+            long heightVersion1_20_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_20_0"));
+            TxContext.PROTOCOL_1_20_0 = heightVersion1_20_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_20_0", e);
             throw new RuntimeException(e);
         }
     }

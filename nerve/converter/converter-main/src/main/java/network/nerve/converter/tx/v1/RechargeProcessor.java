@@ -160,7 +160,6 @@ public class RechargeProcessor implements TransactionProcessor {
             // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                 NulsHash hash = tx.getHash();
                 boolean rs = rechargeStorageService.save(chain, txData.getOriginalTxHash(), hash);
                 if (!rs) {
@@ -175,6 +174,7 @@ public class RechargeProcessor implements TransactionProcessor {
 
                 // 节点正常运行状态下 并且不是提案执行的充值交易，才执行异构链交易确认函数
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector && null == proposalPO) {
+                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                     docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex());
                 }
                 if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
@@ -231,7 +231,6 @@ public class RechargeProcessor implements TransactionProcessor {
             // 回滚异构链组件交易状态 // add by Mimi at 2020-03-13
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                 ProposalPO proposalPO = null;
                 if(!Numeric.containsHexPrefix(txData.getOriginalTxHash())) {
                     // 表明不是异构链交易hash 可能为提案
@@ -239,7 +238,10 @@ public class RechargeProcessor implements TransactionProcessor {
                 }
                 // 不是提案执行的充值交易，才执行异构链交易确认回滚
                 if (null == proposalPO) {
-                    docking.txConfirmedRollback(txData.getOriginalTxHash());
+                    if (txData.getHeterogeneousChainId() > 0) {
+                        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
+                        docking.txConfirmedRollback(txData.getOriginalTxHash());
+                    }
                 }
                 boolean rs = this.rechargeStorageService.delete(chain, txData.getOriginalTxHash());
                 if (!rs) {
