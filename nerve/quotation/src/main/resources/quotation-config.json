@@ -136,6 +136,34 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "FTM-USDT",
           "desc": "FTM相对USDT价格"
+        },
+        {
+          "key": "METIS_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "METIS-USDT",
+          "desc": "METIS相对USDT价格"
+        },
+        {
+          "key": "IOTX_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "IOTX-USDT",
+          "desc": "IOTX相对USDT价格"
+        },
+        {
+          "key": "KLAY_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "KLAY-USDT",
+          "desc": "KLAY相对USDT价格"
+        },
+        {
+          "key": "BCH_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "BCH-USDT",
+          "desc": "BCH相对USDT价格"
         }
       ]
     }

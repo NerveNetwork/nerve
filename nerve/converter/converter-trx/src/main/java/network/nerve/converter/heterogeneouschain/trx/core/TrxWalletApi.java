@@ -10,6 +10,7 @@ import io.nuls.core.model.StringUtils;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.ExceptionFunction;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
@@ -55,7 +56,7 @@ import static org.tron.trident.core.ApiWrapper.parseHex;
  * @author: Mimi
  * @date: 2021/7/27
  */
-public class TrxWalletApi implements BeanInitial {
+public class TrxWalletApi implements WalletApi, BeanInitial {
 
     private HtgContext htgContext;
 
@@ -69,6 +70,7 @@ public class TrxWalletApi implements BeanInitial {
     int switchStatus = 0;
     String tempKey = "3333333333333333333333333333333333333333333333333333333333333333";
     private boolean inited = false;
+    private boolean urlFromThirdParty = false;
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
 
@@ -100,6 +102,12 @@ public class TrxWalletApi implements BeanInitial {
             if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                }
+                return;
+            }
+            if (urlFromThirdParty) {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                 }
                 return;
             }
@@ -285,6 +293,13 @@ public class TrxWalletApi implements BeanInitial {
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
+            String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
+            if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
+                clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
+                urlFromThirdParty = true;
+                changeApi(availableRpc);
+                throw e;
+            }
             // 当API连接异常时，重置API连接，使用备用API
             if (e instanceof StatusException || e instanceof StatusRuntimeException) {
                 getLog().warn("API连接异常时，重置API连接，使用备用API");
@@ -397,7 +412,7 @@ public class TrxWalletApi implements BeanInitial {
             if (energyUsed != 0) {
                 sunUsed = BigInteger.valueOf(energyUsed).multiply(TrxConstant.SUN_PER_ENERGY).longValue();
             }
-            return TrxEstimateSun.SUCCESS(sunUsed);
+            return TrxEstimateSun.SUCCESS(sunUsed, energyUsed);
         });
         return estimateEnergy;
     }

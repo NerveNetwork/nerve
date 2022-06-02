@@ -67,6 +67,16 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
     private long trxKeyHeight;
     /** p16 协议升级配置高度 */
     private long protocol16Height;
+    /** p21 协议升级配置高度 */
+    private long protocol21Height;
+
+    public long getProtocol21Height() {
+        return protocol21Height;
+    }
+
+    public void setProtocol21Height(long protocol21Height) {
+        this.protocol21Height = protocol21Height;
+    }
 
     public String getDataRoot() {
         return dataPath + File.separator + ModuleE.QU.name;

@@ -129,5 +129,11 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode PROPOSAL_CONFIRMED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0101");
     ErrorCode HTG_RPC_UNAVAILABLE = ErrorCode.init(ModuleE.CV.getPrefix() + "_0102");
     ErrorCode WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0103");
+    ErrorCode ONE_CLICK_CROSS_CHAIN_DES_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0104");
+    ErrorCode ONE_CLICK_CROSS_CHAIN_FEE_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0105");
+    ErrorCode ONE_CLICK_CROSS_CHAIN_TX_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0106");
+    ErrorCode ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0107");
+    ErrorCode ADD_FEE_CROSS_CHAIN_FEE_ADDRESS_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0108");
+    ErrorCode ADD_FEE_CROSS_CHAIN_COIN_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0109");
 
 }

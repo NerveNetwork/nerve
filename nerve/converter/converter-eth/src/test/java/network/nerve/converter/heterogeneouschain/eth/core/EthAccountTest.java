@@ -85,7 +85,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
+        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -112,6 +112,8 @@ public class EthAccountTest extends Base {
         System.out.println(String.format("NULS ECKey pubkey: %s", Numeric.toHexString(nEckey.getPubKeyPoint().getEncoded(true))));
         Address address = new Address(chainId, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(nEckey.getPubKey()));
         System.out.println(String.format("NULS address: %s", address.toString()));
+        Address testAddress = new Address(2, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(nEckey.getPubKey()));
+        System.out.println(String.format("Test NULS address: %s", testAddress.toString()));
         System.out.println();
 
 
@@ -214,7 +216,7 @@ public class EthAccountTest extends Base {
         // 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
         AddressTool.addPrefix(18, "BBAI");
         List<String> pubList = new ArrayList<>();
-        pubList.add("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d");
+        pubList.add("020e19418ed26700b0dba720dcc95483cb4adb1b5f8a103818dab17d5b05231854");
         chainId = 1;
         for (String pubkey : pubList) {
             System.out.println("------");
@@ -222,6 +224,7 @@ public class EthAccountTest extends Base {
             System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, chainId)));
             System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
             System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 5)));
         }
 
     }

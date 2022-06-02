@@ -16,6 +16,7 @@ import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.impl.stable.StableRemoveLiquidityHandler;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.bo.SwapResult;
@@ -45,6 +46,8 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
     private SwapExecuteResultStorageService swapExecuteResultStorageService;
     @Autowired
     private StableRemoveLiquidityHandler stableRemoveLiquidityHandler;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public int getType() {
@@ -53,44 +56,11 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        if (txs.isEmpty()) {
-            return null;
+        if (swapHelper.isSupportProtocol21()) {
+            return this.validateP21(chainId, txs, txMap, blockHeader);
+        } else {
+            return this.validateP0(chainId, txs, txMap, blockHeader);
         }
-        Chain chain = chainManager.getChain(chainId);
-
-        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
-        if (chain == null) {
-            Log.error("Chains do not exist.");
-            resultMap.put("txList", txs);
-            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
-            return resultMap;
-        }
-        NulsLogger logger = chain.getLogger();
-        List<Transaction> failsList = new ArrayList<>();
-        String errorCode = SwapErrorCode.SUCCESS.getCode();
-        for (Transaction tx : txs) {
-            try {
-                if (tx.getType() != getType()) {
-                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
-                    failsList.add(tx);
-                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
-                    continue;
-                }
-                StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
-                txData.parse(tx.getTxData(), 0);
-                CoinData coinData = tx.getCoinDataInstance();
-                StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
-                SwapUtils.calStableRemoveLiquidityBusiness(chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
-            } catch (Exception e) {
-                Log.error(e);
-                failsList.add(tx);
-                errorCode = SwapUtils.extractErrorCode(e).getCode();
-                continue;
-            }
-        }
-        resultMap.put("txList", failsList);
-        resultMap.put("errorCode", errorCode);
-        return resultMap;
     }
 
     @Override
@@ -159,6 +129,94 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
             return false;
         }
         return true;
+    }
+
+    private Map<String, Object> validateP0(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        if (txs.isEmpty()) {
+            return null;
+        }
+        Chain chain = chainManager.getChain(chainId);
+
+        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
+        if (chain == null) {
+            Log.error("Chains do not exist.");
+            resultMap.put("txList", txs);
+            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
+            return resultMap;
+        }
+        NulsLogger logger = chain.getLogger();
+        List<Transaction> failsList = new ArrayList<>();
+        String errorCode = SwapErrorCode.SUCCESS.getCode();
+        for (Transaction tx : txs) {
+            try {
+                if (tx.getType() != getType()) {
+                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
+                    continue;
+                }
+                StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
+                txData.parse(tx.getTxData(), 0);
+                CoinData coinData = tx.getCoinDataInstance();
+                StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
+                SwapUtils.calStableRemoveLiquidityBusiness(chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
+            } catch (Exception e) {
+                Log.error(e);
+                failsList.add(tx);
+                errorCode = SwapUtils.extractErrorCode(e).getCode();
+                continue;
+            }
+        }
+        resultMap.put("txList", failsList);
+        resultMap.put("errorCode", errorCode);
+        return resultMap;
+    }
+
+    private Map<String, Object> validateP21(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        if (txs.isEmpty()) {
+            return null;
+        }
+        Chain chain = chainManager.getChain(chainId);
+
+        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
+        if (chain == null) {
+            Log.error("Chains do not exist.");
+            resultMap.put("txList", txs);
+            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
+            return resultMap;
+        }
+        NulsLogger logger = chain.getLogger();
+        List<Transaction> failsList = new ArrayList<>();
+        String errorCode = SwapErrorCode.SUCCESS.getCode();
+        for (Transaction tx : txs) {
+            try {
+                if (tx.getType() != getType()) {
+                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
+                    continue;
+                }
+                StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
+                txData.parse(tx.getTxData(), 0);
+                CoinData coinData = tx.getCoinDataInstance();
+                StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
+                if (chainId == 9 && SwapConstant.UNAVAILABLE_STABLE_PAIR.equals(dto.getPairAddress())) {
+                    logger.error("UNAVAILABLE_STABLE_PAIR! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
+                    continue;
+                }
+                SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
+            } catch (Exception e) {
+                Log.error(e);
+                failsList.add(tx);
+                errorCode = SwapUtils.extractErrorCode(e).getCode();
+                continue;
+            }
+        }
+        resultMap.put("txList", failsList);
+        resultMap.put("errorCode", errorCode);
+        return resultMap;
     }
 
 }

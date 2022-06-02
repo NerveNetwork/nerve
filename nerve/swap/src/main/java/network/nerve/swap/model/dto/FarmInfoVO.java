@@ -22,6 +22,15 @@ public class FarmInfoVO {
     private String totalSyrupAmount;
     private boolean modifiable; //0不可以修改，1可以修改
     private long withdrawLockTime;
+    private long stopHeight;
+
+    public long getStopHeight() {
+        return stopHeight;
+    }
+
+    public void setStopHeight(long stopHeight) {
+        this.stopHeight = stopHeight;
+    }
 
     public String getFarmHash() {
         return farmHash;

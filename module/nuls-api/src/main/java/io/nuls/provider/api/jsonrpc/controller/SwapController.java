@@ -206,7 +206,7 @@ public class SwapController {
     @ApiOperation(description = "根据LP资产查询交易对地址", order = 705)
     @Parameters({
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tokenLPStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash")
+            @Parameter(parameterName = "tokenLPStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产LP的类型，示例：1-1")
     })
     @ResponseData(name = "返回值", description = "交易对地址")
     public RpcResult getPairAddressByTokenLP(List<Object> params) {
@@ -241,7 +241,8 @@ public class SwapController {
             @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产数量"),
             @Parameter(parameterName = "tokenOutStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "买进资产的类型，示例：1-1"),
             @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易最深路径"),
-            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表")
+            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表"),
+            @Parameter(parameterName = "resultRule", requestType = @TypeDescriptor(value = String.class), parameterDes = "`bestPrice`, `impactPrice`. 按[最优价格]和[价格影响]因素来取结果，默认使用[价格影响]因素来取结果")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "tokenPath", valueType = List.class, description = "最佳交易路径"),
@@ -297,7 +298,11 @@ public class SwapController {
         if (StringUtils.isBlank(tokenOutStr)) {
             return RpcResult.paramError("[tokenOutStr] is incorrect");
         }
-        Result<Map<String, Object>> result = swapTools.getBestTradeExactIn(chainId, tokenInStr, tokenInAmount, tokenOutStr, maxPairSize, pairs);
+        String resultRule = null;
+        if (params.size() > 6) {
+            resultRule = (String) params.get(6);
+        }
+        Result<Map<String, Object>> result = swapTools.getBestTradeExactIn(chainId, tokenInStr, tokenInAmount, tokenOutStr, maxPairSize, pairs, resultRule);
         return ResultUtil.getJsonRpcResult(result);
     }
 

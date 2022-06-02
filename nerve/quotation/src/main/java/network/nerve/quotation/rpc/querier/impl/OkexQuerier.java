@@ -30,6 +30,7 @@ import network.nerve.quotation.rpc.querier.Querier;
 import network.nerve.quotation.util.HttpRequestUtil;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,12 +40,12 @@ import java.util.Map;
 @Component
 public class OkexQuerier implements Querier {
 
-    private String CMD_FORMAT ="/api/spot/v3/instruments/%s/ticker";
+    private String CMD_FORMAT = "/api/v5/market/ticker?instId=";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
         String symbol = anchorToken.toUpperCase();
-        String url = String.format(baseurl + CMD_FORMAT, symbol);
+        String url = baseurl + CMD_FORMAT + symbol;
 
         try {
 //            HttpClient client = HttpClient.newBuilder()
@@ -60,11 +61,16 @@ public class OkexQuerier implements Querier {
 //                    client.send(request, HttpResponse.BodyHandlers.ofString());
 //            Map<String, Object> responseData = JSONUtils.json2map(response.body());
             Map<String, Object> data = HttpRequestUtil.httpRequest(chain, url);
-            if(null == data){
+            if (null == data) {
                 return null;
             }
-            BigDecimal res = new BigDecimal((String) data.get("last"));
-            chain.getLogger().info("Okex 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            List realData = (List) data.get("data");
+            if(null==realData||realData.isEmpty()){
+                return null;
+            }
+            Map<String, Object> obj = (Map<String, Object>) realData.get(0);
+            BigDecimal res = new BigDecimal((String) obj.get("last"));
+            chain.getLogger().info("Okex 获取到交易对[{}]价格:{}", symbol, res);
             return res;
         } catch (Throwable e) {
             chain.getLogger().error("Okex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);

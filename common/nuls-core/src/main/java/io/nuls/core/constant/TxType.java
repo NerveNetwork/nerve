@@ -366,6 +366,17 @@ public class TxType {
     public static final int BLOCK_ACCOUNT = 78;
 
     public static final int UNBLOCK_ACCOUNT = 79;
-
+    /**
+     * 一键跨链待确认交易
+     */
+    public static final int ONE_CLICK_CROSS_CHAIN_UNCONFIRMED = 80;
+    /**
+     * 一键跨链
+     */
+    public static final int ONE_CLICK_CROSS_CHAIN = 81;
+    /**
+     * 跨链追加跨链手续费交易
+     */
+    public static final int ADD_FEE_OF_CROSS_CHAIN_BY_CROSS_CHAIN = 82;
 
 }

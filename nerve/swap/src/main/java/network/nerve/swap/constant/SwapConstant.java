@@ -54,6 +54,8 @@ public interface SwapConstant {
     BigInteger BI_50 = BigInteger.valueOf(50);
     BigInteger BI_7 = BigInteger.valueOf(7);
     BigInteger BI_10 = BigInteger.valueOf(10);
-
+    String BEST_PRICE = "bestPrice";
+    String IMPACT_PRICE = "impactPrice";
+    String UNAVAILABLE_STABLE_PAIR = "NERVEepb7SSeFvC7wpx3k6HuGQPJzYFqbP62am";
 
 }

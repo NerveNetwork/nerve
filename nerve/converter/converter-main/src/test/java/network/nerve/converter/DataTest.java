@@ -33,12 +33,16 @@ import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.HtgERC20StorageServiceImpl;
+import network.nerve.converter.model.po.ComponentCallParm;
+import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.utils.ConverterDBUtil;
 import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -69,6 +73,28 @@ public class DataTest {
         Transaction tx = new Transaction();
         tx.parse(bytes, 0);
         System.out.println(tx.format(ConfirmWithdrawalTxData.class));
+    }
+
+    @Test
+    public void testSignTableTx() throws Exception {
+        String hash = "4e7864181e774271a799c2ae99ee6bfd17547edeaa5b370daf7991d45cc8d41e";
+        RocksDBService.init("/Users/pierreluo/Nuls/NERVE/data_converter_aa_0331");
+        byte[] bytes = RocksDBService.get("cv_component_sign_9", ConverterDBUtil.stringToBytes(hash));
+        ComponentSignByzantinePO po = ConverterDBUtil.getModel(bytes, ComponentSignByzantinePO.class);
+        List<ComponentCallParm> callParms = po.getCallParms();
+        ComponentCallParm c = null;
+        ComponentCallParm trxParm = null;
+        for (ComponentCallParm p : callParms) {
+            if (p.getHeterogeneousId() == 108) {
+                trxParm = p;
+            } else {
+                c = p;
+            }
+            System.out.println(String.format("list.add(new Object[]{%s, \"%s\"});", p.getHeterogeneousId(), p.getSigned()));
+        }
+        System.out.println(String.format("add: %s, remove: %s", Arrays.toString(c.getInAddress()), Arrays.toString(c.getOutAddress())));
+        System.out.println(String.format("add: %s, remove: %s", Arrays.toString(trxParm.getInAddress()), Arrays.toString(trxParm.getOutAddress())));
+        System.out.println(po.getHash().toHex());
     }
 
     public static void main(String[] args) {

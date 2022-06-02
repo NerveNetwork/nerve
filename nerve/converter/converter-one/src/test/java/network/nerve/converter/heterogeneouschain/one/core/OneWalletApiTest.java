@@ -807,13 +807,15 @@ public class OneWalletApiTest extends Base {
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(1560320);
+        setMain();
+        Long height = Long.valueOf(630542);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
     }
 
     @Test
     public void getBlockHeight() throws Exception {
+        setMain();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 

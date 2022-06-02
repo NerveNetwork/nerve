@@ -131,7 +131,7 @@ public class SwapTxSendTest {
     //int swapLpAssetId_goat9usdx_bnb;
     //int swapLpAssetId_nvt8safemoon9;
     //int swapLpAssetId_goat9safemoon9;
-    int stableLpAssetId = 19;
+    int stableLpAssetId = 7;
     protected NerveToken nvt = new NerveToken(chainId, 1);
     protected NerveToken usdx_eth;
     protected NerveToken usdx_bnb;
@@ -153,8 +153,12 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQg3efAdkXb3T7Q8AbTa6DsxYuQXa8f";
+    protected String stablePairAddress = "TNVTdTSQhiHZGM4SLHbTzBacW4AAcTCsWDr1j";
 
+    protected NerveToken U1D = new NerveToken(5, 3);
+    protected NerveToken U2D = new NerveToken(5, 4);
+    protected NerveToken U3D = new NerveToken(5, 5);
+    protected NerveToken U4D = new NerveToken(5, 6);
     protected NerveToken USDX6 = new NerveToken(5, 3);
     protected NerveToken BUSD18 = new NerveToken(5, 4);
     protected NerveToken HUSD18 = new NerveToken(5, 5);
@@ -552,8 +556,8 @@ public class SwapTxSendTest {
         Map<String, Object> params = new HashMap<>();
         //params.put("coins", new String[]{"5-3","5-4"});
         //params.put("symbol", "T12COIN");
-        params.put("coins", new String[]{"5-1","5-5"});
-        params.put("symbol", "N15COIN");
+        params.put("coins", new String[]{"5-3","5-4","5-5","5-6"});
+        params.put("symbol", "USDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
     }
 
@@ -655,7 +659,9 @@ public class SwapTxSendTest {
             @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费取出一部分给指定的接收地址"),
             @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
             @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址"),
+            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "手续费资产类型，示例：1-1"),
+            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "交易手续费")
     })
     @Test
     public void stableSwapTokenTrade() throws Exception {
@@ -664,13 +670,15 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountsIn", new String[]{"500000000"});
-        params.put("tokensIn", new String[]{usdx_eth.str()});
+        params.put("amountsIn", new String[]{new BigDecimal("6").movePointRight(18).toPlainString()});
+        params.put("tokensIn", new String[]{U3D.str()});
         params.put("tokenOutIndex", 1);
-        params.put("feeTo", address51);
+        //params.put("feeTo", address51);
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address32);
+        //params.put("feeToken", U3D.str());
+        //params.put("feeAmount", new BigDecimal("0.29").movePointRight(18).toPlainString());
         this.sendTx(from, STABLE_SWAP_TOKEN_TRADE, params);
     }
 
@@ -692,7 +700,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getResult() throws Exception {
-        String hash = "05e310975c23979a5bb8af587412c2b3c5006216e3eedc72756e2baac693ac94";
+        String hash = "ad7ee6b67e771ee04c3d7d6dc39f52311da26e7f6e4ed0607e36f077d093eb1a";
         Map map = this.getSwapResultInfo(hash);
         System.out.println(JSONUtils.obj2PrettyJson(map));
         System.out.println();
@@ -960,10 +968,10 @@ public class SwapTxSendTest {
     @Test
     public void getBalance() throws Exception {
         getBalanceByAddress("address31-用户地址", address31);
-        getBalanceByAddress("address32-接收地址", address32);
-        getBalanceByAddress("Swap-pair地址", SwapUtils.getStringPairAddress(chainId, dxa8_bnb, usdx_bnb));
+        //getBalanceByAddress("address32-接收地址", address32);
+        //getBalanceByAddress("Swap-pair地址", SwapUtils.getStringPairAddress(chainId, dxa8_bnb, usdx_bnb));
         getBalanceByAddress("Stable-Swap-pair地址", stablePairAddress);
-        getBalanceByAddress("接收手续费的系统地址", awardFeeSystemAddress);
+        //getBalanceByAddress("接收手续费的系统地址", awardFeeSystemAddress);
         getBalanceByAddress("address51-接收手续费的交易指定地址", address51);
     }
 
@@ -977,25 +985,29 @@ public class SwapTxSendTest {
 
         this.balanceInfoPrint("　主资产NVT", nvt, address);
 
-        this.balanceInfoPrint("Ethereum-资产USDX", usdx_eth, address);
-        this.balanceInfoPrint("BSC-资产USDX", usdx_bnb, address);
-        this.balanceInfoPrint("BSC-资产DXA", dxa8_bnb, address);
-        this.balanceInfoPrint("BSC-资产GOAT", goat9_bnb, address);
-        this.balanceInfoPrint("BSC-资产SAFEMOON", safemoon9_bnb, address);
-        this.balanceInfoPrint("HT-资产USDX", usdx_ht, address);
-        this.balanceInfoPrint("OKT-资产USDX", usdx_okt, address);
-        this.balanceInfoPrint("BSC-资产BUSD", busd_18, address);
-        this.balanceInfoPrint("HT-资产HUSD", husd_18, address);
-        this.balanceInfoPrint("OKT-资产OKUSD", okusd_8, address);
+        //this.balanceInfoPrint("Ethereum-资产USDX", usdx_eth, address);
+        //this.balanceInfoPrint("BSC-资产USDX", usdx_bnb, address);
+        //this.balanceInfoPrint("BSC-资产DXA", dxa8_bnb, address);
+        //this.balanceInfoPrint("BSC-资产GOAT", goat9_bnb, address);
+        //this.balanceInfoPrint("BSC-资产SAFEMOON", safemoon9_bnb, address);
+        //this.balanceInfoPrint("HT-资产USDX", usdx_ht, address);
+        //this.balanceInfoPrint("OKT-资产USDX", usdx_okt, address);
+        //this.balanceInfoPrint("BSC-资产BUSD", busd_18, address);
+        //this.balanceInfoPrint("HT-资产HUSD", husd_18, address);
+        //this.balanceInfoPrint("OKT-资产OKUSD", okusd_8, address);
 
+        this.balanceInfoPrint("U1D资产", U1D, address);
+        this.balanceInfoPrint("U2D资产", U2D, address);
+        this.balanceInfoPrint("U3D资产", U3D, address);
+        this.balanceInfoPrint("U4D资产", U4D, address);
         this.balanceInfoPrint("Stable-LP资产", stable_swap_lp, address);
 
-        this.balanceInfoPrint("Swap-LP资产(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
-        this.balanceInfoPrint("Swap-LP资产(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);
-        this.balanceInfoPrint("Swap-LP资产(dxa8usdx_bnb)", swap_lp_dxa8usdx_bnb, address);
-        this.balanceInfoPrint("Swap-LP资产(goat9usdx_bnb)", swap_lp_goat9usdx_bnb, address);
-        this.balanceInfoPrint("Swap-LP资产(nvt8safemoon9)", swap_lp_nvt8safemoon9, address);
-        this.balanceInfoPrint("Swap-LP资产(goat9safemoon9)", swap_lp_goat9safemoon9, address);
+        //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);
+        //this.balanceInfoPrint("Swap-LP资产(dxa8usdx_bnb)", swap_lp_dxa8usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LP资产(goat9usdx_bnb)", swap_lp_goat9usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LP资产(nvt8safemoon9)", swap_lp_nvt8safemoon9, address);
+        //this.balanceInfoPrint("Swap-LP资产(goat9safemoon9)", swap_lp_goat9safemoon9, address);
     }
 
     private void balanceInfoPrint(String desc, NerveToken token, String address) {
@@ -1046,7 +1058,23 @@ public class SwapTxSendTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "lg_get_all_asset", params);
-        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        if (!cmdResp.isSuccess()) {
+            System.err.println(JSONUtils.obj2PrettyJson(cmdResp));
+        } else {
+            Map map = (Map) (((Map) cmdResp.getResponseData()).get("lg_get_all_asset"));
+            List<Map> assets = (List<Map>) map.get("assets");
+            for (Map asset : assets) {
+                System.out.println(
+                        String.format("%s[%s-%s] decimals: %s, initNumber: %s, type: %s",
+                                asset.get("assetSymbol"),
+                                asset.get("assetChainId"),
+                                asset.get("assetId"),
+                                asset.get("decimalPlace"),
+                                asset.get("initNumber"),
+                                asset.get("assetType")));
+            }
+
+        }
     }
 
     @Test

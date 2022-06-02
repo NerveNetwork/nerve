@@ -116,6 +116,11 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_AVAX = "AVAX-USDT";
     String ANCHOR_TOKEN_FTM = "FTM-USDT";
 
+    String ANCHOR_TOKEN_METIS = "METIS-USDT";
+    String ANCHOR_TOKEN_IOTX = "IOTX-USDT";
+    String ANCHOR_TOKEN_KLAY = "KLAY-USDT";
+    String ANCHOR_TOKEN_BCH = "BCH-USDT";
+
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";
 }

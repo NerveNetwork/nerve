@@ -146,6 +146,30 @@
         "verifySignature": false,
         "verifyFee": false,
         "handler": "HeterogeneousMainAssetRegV1"
+      },
+      {
+        "type": "80",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "OneClickCrossChainUnconfirmedV1"
+      },
+      {
+        "type": "81",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "OneClickCrossChainV1"
+      },
+      {
+        "type": "82",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "WithdrawalAddFeeByCrossChainV1"
       }
     ],
     "validMsgs": [
@@ -178,6 +202,11 @@
         "name": "network.nerve.converter.message.CancelHtgTxMessage",
         "protocolCmd": "cancelHtgTx",
         "handlers": "CancelHtgTxHandlerV1"
+      },
+      {
+        "name": "network.nerve.converter.message.VirtualBankSignMessage",
+        "protocolCmd": "retryBank",
+        "handlers": "RetryVirtualBankHandlerV1"
       }
     ],
     "invalidTxs": "",

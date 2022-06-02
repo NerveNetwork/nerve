@@ -45,6 +45,7 @@ public interface TrxConstant {
     String PUBLIC_KEY_UNCOMPRESSED_PREFIX = "04";
     String HEX_PREFIX = "0x";
     String TRX_PREFIX = "41";
+    String EMPTY_STRING = "";
 
     String METHOD_HASH_CREATEORSIGNWITHDRAW = "0xab6c2b10";
     String METHOD_HASH_CREATEORSIGNMANAGERCHANGE = "0x00719226";
@@ -53,12 +54,17 @@ public interface TrxConstant {
     String METHOD_HASH_CROSS_OUT_II = "0x38615bb0";
     String METHOD_HASH_TRANSFER = "0xa9059cbb";
     String METHOD_HASH_TRANSFER_FROM = "0x23b872dd";
+    String METHOD_HASH_ONE_CLICK_CROSS_CHAIN = "0x7d02ce34";
+    String METHOD_HASH_ADD_FEE_CROSS_CHAIN = "0x0929f4c6";
 
     String METHOD_CREATE_OR_SIGN_WITHDRAW = "createOrSignWithdraw";
     String METHOD_CREATE_OR_SIGN_MANAGERCHANGE = "createOrSignManagerChange";
     String METHOD_CREATE_OR_SIGN_UPGRADE = "createOrSignUpgrade";
     String METHOD_CROSS_OUT = "crossOut";
+    String METHOD_CROSS_OUT_II = "crossOutII";
     String METHOD_VIEW_IS_MINTER_ERC20 = "isMinterERC20";
+    String METHOD_ONE_CLICK_CROSS_CHAIN = "oneClickCrossChain";
+    String METHOD_ADD_FEE_CROSS_CHAIN = "addFeeCrossChain";
 
     String METHOD_VIEW_ALL_MANAGERS_TRANSACTION = "allManagers";
     String METHOD_VIEW_IS_COMPLETED_TRANSACTION = "isCompletedTx";
@@ -137,6 +143,24 @@ public interface TrxConstant {
             )
     );
 
+    List<TypeReference<Type>> INPUT_ONE_CLICK_CROSS_CHAIN = Utils.convert(
+            List.of(
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
+    List<TypeReference<Type>> INPUT_ADD_FEE_CROSS_CHAIN = Utils.convert(
+            List.of(
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
     Event EVENT_TRANSACTION_WITHDRAW_COMPLETED = new Event("TxWithdrawCompleted",
             Arrays.<TypeReference<?>>asList(
                     new TypeReference<Utf8String>(false) {}
@@ -188,4 +212,6 @@ public interface TrxConstant {
     BigInteger TRX_100 = BigInteger.valueOf(100_000000L);
     BigInteger SUN_PER_ENERGY = BigInteger.valueOf(280);
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
+    BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");
+
 }

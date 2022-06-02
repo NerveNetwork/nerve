@@ -496,6 +496,7 @@ public class FarmServiceImpl implements FarmService {
         vo.setStartBlockHeight(po.getStartBlockHeight());
         vo.setTotalSyrupAmount(po.getTotalSyrupAmount().toString());
         vo.setWithdrawLockTime(po.getWithdrawLockTime());
+        vo.setStopHeight(po.getStopHeight());
         return vo;
     }
 

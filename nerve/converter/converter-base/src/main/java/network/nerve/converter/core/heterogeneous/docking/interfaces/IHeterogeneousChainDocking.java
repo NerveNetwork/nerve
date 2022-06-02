@@ -228,6 +228,11 @@ public interface IHeterogeneousChainDocking {
     Boolean reAnalysisDepositTx(String ethTxHash) throws Exception;
 
     /**
+     * 重新解析交易（当前节点遗漏了异构链交易解析）
+     */
+    Boolean reAnalysisTx(String ethTxHash) throws Exception;
+
+    /**
      * 异构链网络内部chainId
      */
     long getHeterogeneousNetworkChainId();
@@ -349,4 +354,11 @@ public interface IHeterogeneousChainDocking {
     }
 
     default void initialSignatureVersion() {}
+
+    default HeterogeneousOneClickCrossChainData parseOneClickCrossChainData(String extend) {
+        return null;
+    }
+    default HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend) {
+        return null;
+    }
 }

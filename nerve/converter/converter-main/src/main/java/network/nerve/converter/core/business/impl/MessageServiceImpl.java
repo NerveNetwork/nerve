@@ -25,7 +25,10 @@
 package network.nerve.converter.core.business.impl;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.*;
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinTo;
+import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.TxType;
@@ -57,6 +60,7 @@ import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.TransactionPO;
 import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
+import network.nerve.converter.model.txdata.OneClickCrossChainTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.NetWorkCall;
@@ -66,12 +70,11 @@ import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.TxStorageService;
 import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.utils.*;
-import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author: Loki
@@ -159,7 +162,7 @@ public class MessageServiceImpl implements MessageService {
         }
         try {
             Transaction tx = txPO.getTx();
-            if (tx.getType() == TxType.RECHARGE) {
+            if (tx.getType() == TxType.RECHARGE || tx.getType() == TxType.ONE_CLICK_CROSS_CHAIN || tx.getType() == TxType.ADD_FEE_OF_CROSS_CHAIN_BY_CROSS_CHAIN) {
                 CoinData coinData = tx.getCoinDataInstance();
                 List<CoinTo> tos = coinData.getTo();
                 if (tos == null || tos.isEmpty()) {
@@ -335,6 +338,14 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public void componentSign(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate) {
+        if (converterCoreApi.isProtocol21()) {
+            this.componentSignV21(chain, nodeId, message, isCreate);
+        } else {
+            this.componentSignV0(chain, nodeId, message, isCreate);
+        }
+    }
+
+    private void componentSignV0(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate) {
         NulsHash hash = message.getHash();
         List<HeterogeneousSign> listSign = message.getListSign();
         if (null == hash || null == listSign || listSign.size() == 0) {
@@ -384,6 +395,93 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
+    /**
+     * 协议v21 支持一键跨链
+     */
+    private void componentSignV21(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate) {
+        NulsHash hash = message.getHash();
+        List<HeterogeneousSign> listSign = message.getListSign();
+        if (null == hash || null == listSign || listSign.size() == 0) {
+            chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
+        }
+        // 获取交易
+        try {
+            Transaction tx = TransactionCall.getConfirmedTx(chain, hash);
+            if (null == tx) {
+                String ids = "";
+                String signAddress = "";
+                for (HeterogeneousSign sign : listSign) {
+                    ids += sign.getHeterogeneousAddress().getChainId() + " ";
+                    signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
+                }
+                LoggerUtil.LOG.error("[异构链地址签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
+                        nodeId, hash.toHex(), ids, signAddress);
+                return;
+            }
+            switch (tx.getType()) {
+                case TxType.CHANGE_VIRTUAL_BANK:
+                    changeVirtualBankMessageProcess(chain, nodeId, tx, message, isCreate);
+                    break;
+                case TxType.WITHDRAWAL:
+                case TxType.ONE_CLICK_CROSS_CHAIN:
+                    withdrawMessageProcess(chain, nodeId, tx, message);
+                    break;
+                case TxType.PROPOSAL:
+                    ProposalPO proposalPO = proposalStorageService.find(chain, hash);
+                    ProposalTypeEnum proposalTypeEnum = ProposalTypeEnum.getEnum(proposalPO.getType());
+                    switch (proposalTypeEnum) {
+                        case REFUND:
+                            refundMessageProcess(chain, nodeId, tx, proposalPO, message);
+                            break;
+                        case UPGRADE:
+                            // 判断提案类型是合约升级, 广播的是对应的提案交易hash 和对该hash的签名
+                            upgradeMessageProcess(chain, nodeId, tx, proposalPO, message);
+                            break;
+                        default:
+                    }
+                    break;
+                default:
+            }
+        } catch (NulsException e) {
+            chain.getLogger().error(e);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+        }
+    }
+
+    @Override
+    public void retryVirtualBankSign(Chain chain, String nodeId, VirtualBankSignMessage message, boolean isCreate) {
+        NulsHash hash = message.getHash();
+        List<HeterogeneousSign> listSign = message.getListSign();
+        if (null == hash || null == listSign || listSign.size() == 0) {
+            chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
+        }
+        // 获取交易
+        try {
+            Transaction tx = TransactionCall.getConfirmedTx(chain, hash);
+            if (null == tx) {
+                String ids = "";
+                String signAddress = "";
+                for (HeterogeneousSign sign : listSign) {
+                    ids += sign.getHeterogeneousAddress().getChainId() + " ";
+                    signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
+                }
+                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
+                        nodeId, hash.toHex(), ids, signAddress);
+                return;
+            }
+            if (tx.getType() != TxType.CHANGE_VIRTUAL_BANK) {
+                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-交易类型错误]-{}", tx.getType());
+                return;
+            }
+            this.retryVirtualBankMessageProcess(chain, nodeId, tx, message, isCreate);
+        } catch (NulsException e) {
+            chain.getLogger().error(e);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+        }
+    }
+
 
     /**
      * 处理虚拟银行变更交易的消息
@@ -402,26 +500,80 @@ public class MessageServiceImpl implements MessageService {
             String txHash = hash.toHex();
             // 判断是否收到过该消息
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
-            if (isExistMessage(compSignPO, message)) {
-                return;
-            }
+            boolean existMessage = isExistMessage(compSignPO, message);
+            //if (isExistMessage(compSignPO, message)) {
+            //    return;
+            //}
             compSignPO = initCompSignPO(compSignPO, hash);
             LoggerUtil.LOG.info("[异构链地址签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
-            List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
-            if (null == hInterfaces || hInterfaces.isEmpty()) {
+            List<IHeterogeneousChainDocking> chainDockings = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
+            if (null == chainDockings || chainDockings.isEmpty()) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
             }
+            int htgChainSize = chainDockings.size();
             // 验证
             ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
             int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
             int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
-            List<HeterogeneousSign> currentSignList = null;
-            if (!compSignPO.getCurrentSigned()) {
-                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
-                currentSignList = new ArrayList<>();
-            }
-            ComponentSignMessage currentMessage = null;
+            // 缓存变更的虚拟银行在各条链对应的地址
+            Map<Integer, String[][]> addressCache = new HashMap<>();
+            for (IHeterogeneousChainDocking docking : chainDockings) {
+                int hChainId = docking.getChainId();
+                // 组装加入参数
+                String[] inAddress = new String[inSize];
+                if (null != txData.getInAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents());
+                }
 
+                String[] outAddress = new String[outSize];
+                if (null != txData.getOutAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
+                }
+                addressCache.put(hChainId, new String[][]{inAddress, outAddress});
+            }
+            // 验证收到的消息的正确性
+            Map<Integer, IHeterogeneousChainDocking> chainDockingMap = chainDockings.stream().collect(Collectors.toMap(IHeterogeneousChainDocking::getChainId, Function.identity()));
+            do {
+                if (existMessage) {
+                    break;
+                }
+                boolean verifySignManagerChangesII = true;
+                for (HeterogeneousSign sign : message.getListSign()) {
+                    String signAddress = sign.getHeterogeneousAddress().getAddress();
+                    IHeterogeneousChainDocking docking = chainDockingMap.get(sign.getHeterogeneousAddress().getChainId());
+                    if (docking == null) {
+                        LoggerUtil.LOG.error("[虚拟银行变更签名消息-异构链ID错误], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                                nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress, HexUtil.encode(sign.getSignature()));
+                        break;
+                    }
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    // 验证消息签名
+                    Boolean msgPass = docking.verifySignManagerChangesII(
+                            signAddress,
+                            txHash,
+                            inAddress,
+                            outAddress,
+                            1,
+                            HexUtil.encode(sign.getSignature()));
+                    if (!msgPass) {
+                        verifySignManagerChangesII = false;
+                        LoggerUtil.LOG.error("[虚拟银行变更签名消息-签名验证失败-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                                nodeId, txHash, hChainId, signAddress, HexUtil.encode(sign.getSignature()));
+                        break;
+                    }
+                }
+                if (verifySignManagerChangesII) {
+                    // 添加本次收到的消息
+                    compSignPO.getListMsg().add(message);
+                    // 验证通过, 转发消息
+                    NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
+                }
+            } while (false);
+            ComponentSignMessage currentMessage = null;
             /**
              * (签名针对变更交易,为多组件统一业务)
              * 多组件统一标识, 单个组件完成必然多个组件同时完成.
@@ -429,8 +581,148 @@ public class MessageServiceImpl implements MessageService {
             boolean signed = false;
             boolean completed = false;
             boolean bztPass = false;
+            // 当前节点签名
+            do {
+                if (compSignPO.getCurrentSigned()){
+                    break;
+                }
+                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                List<HeterogeneousSign> currentSignList = new ArrayList<>();
+                // 检查当前节点是否新加入的 则不用签名
+                boolean currentJoin = false;
+                SignAccountDTO packerInfo = ConsensusCall.getPackerInfo(chain);
+                VirtualBankDirector director = chain.getMapVirtualBank().get(packerInfo.getAddress());
+                List<byte[]> inAgents = txData.getInAgents();
+                if (inAgents != null) {
+                    for (int i = 0, size = inAgents.size(); i < size; i++) {
+                        byte[] bytes = inAgents.get(i);
+                        String agentAddress = AddressTool.getStringAddressByBytes(bytes);
+                        if (agentAddress.equals(director.getAgentAddress())) {
+                            currentJoin = true;
+                        }
+                    }
+                }
+                // 当前节点是否新加入的 则不用签名
+                if (currentJoin) {
+                    break;
+                }
+                // 消息签名
+                for (IHeterogeneousChainDocking docking : chainDockings) {
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    /**
+                     * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
+                     * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
+                     * 并且加入到一个消息中广播.
+                     */
+                    String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
+                    String currentHaddress = docking.getCurrentSignAddress();
+                    if (StringUtils.isBlank(currentHaddress)) {
+                        throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+                    }
+                    HeterogeneousSign currentSign = new HeterogeneousSign(
+                            new HeterogeneousAddress(hChainId, currentHaddress),
+                            HexUtil.decode(signStrData));
+                    currentSignList.add(currentSign);
+                    if (null == currentMessage) {
+                        currentMessage = new ComponentSignMessage(message.getVirtualBankTotal(),
+                                hash, currentSignList);
+                    }
+                    if (currentSignList.size() == htgChainSize) {
+                        compSignPO.getListMsg().add(currentMessage);
+                        signed = true;
+                    }
+                }
+            } while (false);
+            // 检查是否收集到足够的节点签名
+            do {
+                boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
+                if (!byzantinePass) {
+                    // 未达到足够的签名
+                    break;
+                }
+                if (compSignPO.getByzantinePass()) {
+                    // 已执行过此流程
+                    break;
+                }
+                List<Map<Integer, HeterogeneousSign>> list = compSignPO.getListMsg().stream().map(m -> m.getListSign().stream().collect(Collectors.toMap(hSign -> hSign.getHeterogeneousAddress().getChainId(), Function.identity()))).collect(Collectors.toList());
+                int byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
+                List<ComponentCallParm> callParmsList = new ArrayList<>();
+                for (IHeterogeneousChainDocking docking : chainDockings) {
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    // 处理消息并拜占庭验证, 更新compSignPO等
+                    if (isCreate) {
+                        // 创建异构链交易
+                        StringBuilder signatureDataBuilder = new StringBuilder();
+                        int count = 0;
+                        for (Map<Integer, HeterogeneousSign> map : list) {
+                            HeterogeneousSign heterogeneousSign = map.get(hChainId);
+                            if (heterogeneousSign == null) {
+                                LoggerUtil.LOG.warn("[虚拟银行变更签名消息-签名信息不完整-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}", nodeId, txHash, hChainId);
+                                continue;
+                            }
+                            signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
+                            count++;
+                        }
+                        // 达到最小签名数才是有效的调用数据
+                        if (count >= byzantineMinPassCount) {
+                            ComponentCallParm callParm = new ComponentCallParm(
+                                    hChainId,
+                                    tx.getType(),
+                                    txHash,
+                                    inAddress,
+                                    outAddress,
+                                    1,
+                                    signatureDataBuilder.toString());
+                            callParmsList.add(callParm);
+                            chain.getLogger().info("[虚拟银行变更签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
+                        }
+                    } else {
+                        completed = true;
+                    }
+                }
+                if (callParmsList.size() == htgChainSize) {
+                    compSignPO.setCallParms(callParmsList);
+                    bztPass = true;
+                }
+            } while (false);
+            if (bztPass) {
+                compSignPO.setByzantinePass(true);
+            }
+            if (completed) {
+                compSignPO.setCompleted(true);
+            }
+            if (signed) {
+                compSignPO.setCurrentSigned(true);
+                // 广播当前节点签名消息
+                NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
+            }
+            // 存储更新后的 compSignPO
+            componentSignStorageService.save(chain, compSignPO);
+
+            /*List<HeterogeneousSign> currentSignList = null;
+            if (!compSignPO.getCurrentSigned()) {
+                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                currentSignList = new ArrayList<>();
+            }
+            ComponentSignMessage currentMessage = null;
+
+            *//**
+             * (签名针对变更交易,为多组件统一业务)
+             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             *//*
+            boolean signed = false;
+            boolean completed = false;
+            boolean bztPass = false;
             boolean addedMsg = false;
-            for (IHeterogeneousChainDocking hInterface : hInterfaces) {
+            for (IHeterogeneousChainDocking hInterface : chainDockings) {
                 for (HeterogeneousSign sign : message.getListSign()) {
                     if (hInterface.getChainId() == sign.getHeterogeneousAddress().getChainId()) {
                         int hChainId = hInterface.getChainId();
@@ -482,11 +774,11 @@ public class MessageServiceImpl implements MessageService {
                             }
                             // 当前节点是新加入的 则不用签名
                             if (!currentJoin) {
-                                /**
+                                *//**
                                  * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
                                  * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
                                  * 并且加入到一个消息中广播.
-                                 */
+                                 *//*
                                 String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                                 String currentHaddress = docking.getCurrentSignAddress();
                                 if (StringUtils.isBlank(currentHaddress)) {
@@ -550,7 +842,7 @@ public class MessageServiceImpl implements MessageService {
                 NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
             }
             // 存储更新后的 compSignPO
-            componentSignStorageService.save(chain, compSignPO);
+            componentSignStorageService.save(chain, compSignPO);*/
         }
     }
 
@@ -604,14 +896,24 @@ public class MessageServiceImpl implements MessageService {
             LoggerUtil.LOG.debug("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
                     nodeId, txHash, signAddressChainId, signAddress);
             // 验证
-            WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+            int htgChainId = 0;
+            String toAddress = null;
+            if (TxType.WITHDRAWAL == tx.getType()) {
+                WithdrawalTxData txData1 = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+                htgChainId = txData1.getHeterogeneousChainId();
+                toAddress = txData1.getHeterogeneousAddress();
+            } else if (TxType.ONE_CLICK_CROSS_CHAIN == tx.getType()) {
+                OneClickCrossChainTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainTxData.class);
+                htgChainId = txData.getDesChainId();
+                toAddress = txData.getDesToAddress();
+            }
             CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
             HeterogeneousAssetInfo assetInfo = null;
             CoinTo withdrawCoinTo = null;
             byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
             for (CoinTo coinTo : coinData.getTo()) {
                 if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     if (assetInfo != null) {
                         withdrawCoinTo = coinTo;
                         break;
@@ -624,7 +926,6 @@ public class MessageServiceImpl implements MessageService {
             }
             int heterogeneousChainId = assetInfo.getChainId();
             BigInteger amount = withdrawCoinTo.getAmount();
-            String toAddress = txData.getHeterogeneousAddress();
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
             // 根据交易验证签名正确性
             Boolean msgPass = docking.verifySignWithdrawII(
@@ -903,6 +1204,235 @@ public class MessageServiceImpl implements MessageService {
         LoggerUtil.LOG.info("[异构链地址签名消息 - 暂时未达到拜占庭签名数], txhash: {}, 拜占庭需达到的签名数:{}, 当前签名数:{}, ",
                 message.getHash().toHex(), byzantineMinPassCount, list.size());
         return false;
+    }
+
+    private void retryVirtualBankMessageProcess(Chain chain, String nodeId, Transaction tx, VirtualBankSignMessage _message, boolean isCreate) throws NulsException {
+        synchronized (objectBankLock) {
+            NulsHash hash = tx.getHash();
+            String txHash = hash.toHex();
+            LoggerUtil.LOG.info("[重发虚拟银行变更签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
+            ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
+            // 准备阶段，重置compSignPO
+            if (_message.getPrepare() == 1) {
+                // 判断是否收到过该消息
+                if (compSignPO != null) {
+                    componentSignStorageService.delete(chain, hash.toHex());
+                    NetWorkCall.broadcast(chain, _message, nodeId, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
+                    LoggerUtil.LOG.info("[重发虚拟银行变更签名消息 - 重置本节点状态], 收到节点[{}]  hash:{}", nodeId, txHash);
+                }
+                return;
+            } else if (_message.getPrepare() != 2) {
+                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息 - 消息类型错误], prepareID: {}, 收到节点[{}]  hash:{}", _message.getPrepare(), nodeId, txHash);
+                return;
+            }
+
+            compSignPO = initCompSignPO(compSignPO, hash);
+            ComponentSignMessage message = _message.toComponentSignMessage();
+            boolean existMessage = isExistMessage(compSignPO, message);
+
+            List<IHeterogeneousChainDocking> chainDockings = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
+            if (null == chainDockings || chainDockings.isEmpty()) {
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
+            }
+            int htgChainSize = chainDockings.size();
+            // 验证
+            ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
+            int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
+            int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
+            // 缓存变更的虚拟银行在各条链对应的地址
+            Map<Integer, String[][]> addressCache = new HashMap<>();
+            for (IHeterogeneousChainDocking docking : chainDockings) {
+                int hChainId = docking.getChainId();
+                // 组装加入参数
+                String[] inAddress = new String[inSize];
+                if (null != txData.getInAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents());
+                }
+
+                String[] outAddress = new String[outSize];
+                if (null != txData.getOutAgents()) {
+                    getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
+                }
+                addressCache.put(hChainId, new String[][]{inAddress, outAddress});
+            }
+            // 验证收到的消息的正确性
+            Map<Integer, IHeterogeneousChainDocking> chainDockingMap = chainDockings.stream().collect(Collectors.toMap(IHeterogeneousChainDocking::getChainId, Function.identity()));
+            do {
+                if (existMessage) {
+                    break;
+                }
+                boolean verifySignManagerChangesII = true;
+                for (HeterogeneousSign sign : message.getListSign()) {
+                    String signAddress = sign.getHeterogeneousAddress().getAddress();
+                    IHeterogeneousChainDocking docking = chainDockingMap.get(sign.getHeterogeneousAddress().getChainId());
+                    if (docking == null) {
+                        LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-异构链ID错误], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                                nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress, HexUtil.encode(sign.getSignature()));
+                        break;
+                    }
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    // 验证消息签名
+                    Boolean msgPass = docking.verifySignManagerChangesII(
+                            signAddress,
+                            txHash,
+                            inAddress,
+                            outAddress,
+                            1,
+                            HexUtil.encode(sign.getSignature()));
+                    if (!msgPass) {
+                        verifySignManagerChangesII = false;
+                        LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-签名验证失败-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                                nodeId, txHash, hChainId, signAddress, HexUtil.encode(sign.getSignature()));
+                        break;
+                    }
+                }
+                if (verifySignManagerChangesII) {
+                    // 添加本次收到的消息
+                    compSignPO.getListMsg().add(message);
+                    // 验证通过, 转发消息
+                    NetWorkCall.broadcast(chain, _message, nodeId, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
+                }
+            } while (false);
+
+            ComponentSignMessage currentMessage = null;
+            /**
+             * (签名针对变更交易,为多组件统一业务)
+             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             */
+            boolean signed = false;
+            boolean completed = false;
+            boolean bztPass = false;
+            // 当前节点签名
+            do {
+                if (compSignPO.getCurrentSigned()){
+                    break;
+                }
+                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                List<HeterogeneousSign> currentSignList = new ArrayList<>();
+                // 检查当前节点是否新加入的 则不用签名
+                boolean currentJoin = false;
+                SignAccountDTO packerInfo = ConsensusCall.getPackerInfo(chain);
+                VirtualBankDirector director = chain.getMapVirtualBank().get(packerInfo.getAddress());
+                List<byte[]> inAgents = txData.getInAgents();
+                if (inAgents != null) {
+                    for (int i = 0, size = inAgents.size(); i < size; i++) {
+                        byte[] bytes = inAgents.get(i);
+                        String agentAddress = AddressTool.getStringAddressByBytes(bytes);
+                        if (agentAddress.equals(director.getAgentAddress())) {
+                            currentJoin = true;
+                        }
+                    }
+                }
+                // 当前节点是否新加入的 则不用签名
+                if (currentJoin) {
+                    break;
+                }
+                // 消息签名
+                for (IHeterogeneousChainDocking docking : chainDockings) {
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    /**
+                     * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
+                     * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
+                     * 并且加入到一个消息中广播.
+                     */
+                    String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
+                    String currentHaddress = docking.getCurrentSignAddress();
+                    if (StringUtils.isBlank(currentHaddress)) {
+                        throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
+                    }
+                    HeterogeneousSign currentSign = new HeterogeneousSign(
+                            new HeterogeneousAddress(hChainId, currentHaddress),
+                            HexUtil.decode(signStrData));
+                    currentSignList.add(currentSign);
+                    if (null == currentMessage) {
+                        currentMessage = new ComponentSignMessage(message.getVirtualBankTotal(),
+                                hash, currentSignList);
+                    }
+                    if (currentSignList.size() == htgChainSize) {
+                        compSignPO.getListMsg().add(currentMessage);
+                        signed = true;
+                    }
+
+                }
+            } while (false);
+            // 检查是否收集到足够的节点签名
+            do {
+                boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
+                if (!byzantinePass) {
+                    // 未达到足够的签名
+                    break;
+                }
+                if (compSignPO.getByzantinePass()) {
+                    // 已执行过此流程
+                    break;
+                }
+                List<Map<Integer, HeterogeneousSign>> list = compSignPO.getListMsg().stream().map(m -> m.getListSign().stream().collect(Collectors.toMap(hSign -> hSign.getHeterogeneousAddress().getChainId(), Function.identity()))).collect(Collectors.toList());
+                int byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
+                List<ComponentCallParm> callParmsList = new ArrayList<>();
+                for (IHeterogeneousChainDocking docking : chainDockings) {
+                    int hChainId = docking.getChainId();
+                    // 组装加入参数
+                    String[][] addressData = addressCache.get(hChainId);
+                    String[] inAddress = addressData[0];
+                    String[] outAddress = addressData[1];
+                    // 处理消息并拜占庭验证, 更新compSignPO等
+                    if (isCreate) {
+                        // 创建异构链交易
+                        StringBuilder signatureDataBuilder = new StringBuilder();
+                        int count = 0;
+                        for (Map<Integer, HeterogeneousSign> map : list) {
+                            HeterogeneousSign heterogeneousSign = map.get(hChainId);
+                            if (heterogeneousSign == null) {
+                                LoggerUtil.LOG.warn("[重发虚拟银行变更签名消息-签名信息不完整-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}", nodeId, txHash, hChainId);
+                                continue;
+                            }
+                            signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
+                            count++;
+                        }
+                        // 达到最小签名数才是有效的调用数据
+                        if (count >= byzantineMinPassCount) {
+                            ComponentCallParm callParm = new ComponentCallParm(
+                                    hChainId,
+                                    tx.getType(),
+                                    txHash,
+                                    inAddress,
+                                    outAddress,
+                                    1,
+                                    signatureDataBuilder.toString());
+                            callParmsList.add(callParm);
+                            chain.getLogger().info("[重发虚拟银行变更签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
+                        }
+                    } else {
+                        completed = true;
+                    }
+                }
+                if (callParmsList.size() == htgChainSize) {
+                    compSignPO.setCallParms(callParmsList);
+                    bztPass = true;
+                }
+            } while (false);
+            if (bztPass) {
+                compSignPO.setByzantinePass(true);
+            }
+            if (completed) {
+                compSignPO.setCompleted(true);
+            }
+            if (signed) {
+                compSignPO.setCurrentSigned(true);
+                // 广播当前节点签名消息
+                NetWorkCall.broadcast(chain, VirtualBankSignMessage.of(currentMessage, _message.getPrepare()), ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
+            }
+            // 存储更新后的 compSignPO
+            componentSignStorageService.save(chain, compSignPO);
+        }
     }
 
 }

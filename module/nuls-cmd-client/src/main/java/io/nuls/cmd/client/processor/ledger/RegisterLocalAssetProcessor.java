@@ -83,7 +83,7 @@ public class RegisterLocalAssetProcessor implements CommandProcessor {
     @Override
     public boolean argsValidate(String[] args) {
         checkArgsNumber(args, 6);
-        checkAddress(config.getMainChainId(), args[1]);
+        checkAddress(config.getChainId(), args[1]);
         checkIsAmount(args[4], "initNumber");
         checkIsAmount(args[5], "decimalPlace");
         return true;

@@ -71,8 +71,8 @@ public class HtgBlockAnalysisHelper implements BeanInitial {
         simpleBlockHeader.setHeight(block.getNumber().longValue());
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三个区块
-        htgLocalBlockHelper.deleteByHeight(blockHeight - 3);
+        // 只保留最近的三十个区块
+        htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
 
         if (blockHeight % 50 == 0) {
             htgContext.logger().info("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);

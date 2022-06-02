@@ -68,5 +68,6 @@ public interface HeterogeneousService {
 
 
     void checkRetryParse(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException;
+    void checkRetryHtgTx(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException;
     void cancelHtgTx(Chain chain, int heterogeneousChainId, String heterogeneousAddress, String nonce, String priceGwei) throws NulsException;
 }

@@ -25,6 +25,7 @@
 package network.nerve.converter.core.business.impl;
 
 import io.nuls.core.basic.Result;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
@@ -118,6 +119,28 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
                 txStorageService.saveHeterogeneousHash(chain, heterogeneousTxHash);
                 CheckRetryParseMessage message = new CheckRetryParseMessage(heterogeneousChainId, heterogeneousTxHash);
                 NetWorkCall.broadcast(chain, message, ConverterCmdConstant.CHECK_RETRY_PARSE_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new NulsException(e);
+        }
+
+    }
+
+    @Override
+    public void checkRetryHtgTx(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException {
+        /**
+         * 1.调组件
+         */
+        if (!VirtualBankUtil.isCurrentDirector(chain)) {
+            chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryHtgTx");
+            throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
+        }
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+        try {
+            boolean rs = docking.reAnalysisTx(heterogeneousTxHash);
+            if (!rs) {
+                throw new NulsException(CommonCodeConstanst.DATA_ERROR);
             }
         } catch (Exception e) {
             e.printStackTrace();

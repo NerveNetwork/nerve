@@ -49,7 +49,7 @@ public class HtgListener {
         if (StringUtils.isBlank(address)) {
             return false;
         }
-        return listeningAddressSet.contains(address);
+        return listeningAddressSet.contains(address.toLowerCase());
     }
 
     /**
@@ -66,14 +66,14 @@ public class HtgListener {
      * 增加监听地址
      */
     public void addListeningAddress(String address) {
-        listeningAddressSet.add(address);
+        listeningAddressSet.add(address.toLowerCase());
     }
 
     /**
      * 移除监听地址
      */
     public void removeListeningAddress(String address) {
-        listeningAddressSet.remove(address);
+        listeningAddressSet.remove(address.toLowerCase());
     }
 
     /**

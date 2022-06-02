@@ -669,6 +669,48 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
+    public Boolean reAnalysisTx(String htTxHash) throws Exception {
+        if (htgCommonHelper.constainHash(htTxHash)) {
+            logger().info("重复收集交易hash: {}，不再重复解析[0]", htTxHash);
+            return true;
+        }
+        reAnalysisLock.lock();
+        try {
+            if (htgCommonHelper.constainHash(htTxHash)) {
+                logger().info("重复收集交易hash: {}，不再重复解析[1]", htTxHash);
+                return true;
+            }
+            logger().info("重新解析交易: {}", htTxHash);
+            Chain.Transaction tx = trxWalletApi.getTransactionByHash(htTxHash);
+            if (tx == null) {
+                return false;
+            }
+            Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
+            Chain.Transaction.Contract.ContractType type = contract.getType();
+            if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type &&
+                    tx.getRet(0).getContractRet() != Chain.Transaction.Result.contractResult.SUCCESS) {
+                logger().warn("交易不正常[0]: {}", htTxHash);
+                return false;
+            }
+
+            Response.TransactionInfo txReceipt = trxWalletApi.getTransactionReceipt(htTxHash);
+            if (!TrxUtil.checkTransactionSuccess(txReceipt)) {
+                logger().warn("交易不正常[1]: {}", htTxHash);
+                return false;
+            }
+            Long blockHeight = txReceipt.getBlockNumber();
+            Long txTime = txReceipt.getBlockTimeStamp();
+            trxAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
+            htgCommonHelper.addHash(htTxHash);
+            return true;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            reAnalysisLock.unlock();
+        }
+    }
+
+    @Override
     public long getHeterogeneousNetworkChainId() {
         return htgContext.getConfig().getChainIdOnHtgNetwork();
     }
@@ -832,10 +874,23 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public void initialSignatureVersion() {
         byte version = htgMultiSignAddressHistoryStorageService.getVersion();
+        if (converterConfig.isNewProcessorMode()) {
+            htgContext.SET_VERSION(HtgConstant.VERSION_MULTY_SIGN_LATEST);
+        }
         if (version > 0) {
             htgContext.SET_VERSION(version);
         }
         logger().info("[{}]网络当前签名版本号: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
+    }
+
+    @Override
+    public HeterogeneousOneClickCrossChainData parseOneClickCrossChainData(String extend) {
+        return trxParseTxHelper.parseOneClickCrossChainData(extend, logger());
+    }
+
+    @Override
+    public HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend) {
+        return trxParseTxHelper.parseAddFeeCrossChainData(extend, logger());
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

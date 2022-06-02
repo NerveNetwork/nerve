@@ -43,7 +43,12 @@ public enum AssetName {
     CRO(109, 18),
     AVAX(110, 18),
     AETH(111, 18),
-    FTM(112, 18);
+    FTM(112, 18),
+    METIS(113, 18),
+    IOTX(114, 18),
+    OETH(115, 18),
+    KLAY(116, 18),
+    BCH(117, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

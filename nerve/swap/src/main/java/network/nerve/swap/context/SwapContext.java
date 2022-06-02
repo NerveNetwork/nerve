@@ -27,6 +27,7 @@ package network.nerve.swap.context;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.swap.model.bo.StableCoinGroup;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static network.nerve.swap.constant.SwapConstant.BI_50;
@@ -79,6 +80,10 @@ public class SwapContext {
      * （恒定币交易）系统接收地址-获得的手续费百分比例（剩余部分，则分配给交易组装者指定接收地址）
      */
     public static BigInteger FEE_PERCENT_SYSTEM_RECEIVE_STABLE_SWAP = BI_50;
+    /**
+     * （恒定币交易）手续费收取的最大百分比例（协议21生效）
+     */
+    public static BigDecimal FEE_MAX_PERCENT_STABLE_SWAP = BigDecimal.valueOf(5);
 
     /**
      * v1.15.0 协议升级高度
@@ -86,6 +91,7 @@ public class SwapContext {
     public static long PROTOCOL_1_15_0 = 0L;
     public static long PROTOCOL_1_16_0 = 0L;
     public static long PROTOCOL_1_17_0 = 0L;
+    public static long PROTOCOL_1_21_0 = 0L;
 
     public static StableCoinGroup stableCoinGroup = new StableCoinGroup();
 }

@@ -363,7 +363,7 @@ public class OktWalletApiTest extends Base {
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
 
-    protected void setMainData() {
+    /*protected void setMainData() {
         setMain();
         // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
@@ -374,7 +374,7 @@ public class OktWalletApiTest extends Base {
         list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
         this.multySignContractAddress = "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5";
         init();
-    }
+    }*/
     /**
      * 添加 N 个管理员
      */
@@ -399,6 +399,25 @@ public class OktWalletApiTest extends Base {
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+    }
+
+    /**
+     * 合约升级测试
+     */
+    @Test
+    public void upgradeContractTest() throws Exception {
+        // 环境数据
+        setLocalTest();
+        // GasPrice准备
+        long gasPriceGwei = 1L;
+        htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
+        htgContext.SET_VERSION((byte) 2);
+        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
+        int signCount = list.size();
+        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        String newContract = "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2";
+        String hash = this.sendUpgrade(txKey, newContract, signCount);
+        System.out.println(String.format("合约升级测试: %s，newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
     }
 
     @Test
@@ -497,6 +516,57 @@ public class OktWalletApiTest extends Base {
         int signCount = 15;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+    }
+
+    protected void setMainData() {
+        setMain();
+        list = new ArrayList<>();
+        // 把有OKT余额的私钥放在首位
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0xe096d12d6cb61e11bce3755f938b9259b386523a";
+        init();
+    }
+
+    /**
+     * 5个签名
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        setMainData();
+        String txKey = "bbb1024000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x351af1631aa5ea1ca62ad8a4e3cd87128d4d9108";
+        // 提币数量
+        String value = "4209.8239259093025";
+        // cc
+        String erc20 = "0xe93707eda8bd9690e7a0ed754be9d064ed6984e4";
+        int tokenDecimals = 18;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * 根据已有的签名数据 发送交易 - erc20提现
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        String txKey = "bbb1024000000000000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x351af1631aa5ea1ca62ad8a4e3cd87128d4d9108";
+        // 提币数量
+        String value = "4209.8239259093025";
+        // cc
+        String erc20 = "0xe93707eda8bd9690e7a0ed754be9d064ed6984e4";
+        int tokenDecimals = 18;
+        String signData = "???";
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
     }
 
     /**

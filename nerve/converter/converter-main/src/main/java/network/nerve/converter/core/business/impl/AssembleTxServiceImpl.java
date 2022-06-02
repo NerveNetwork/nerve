@@ -50,6 +50,7 @@ import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteChoiceEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.message.BroadcastHashSignMessage;
 import network.nerve.converter.message.NewTxMessage;
 import network.nerve.converter.model.bo.*;
@@ -69,6 +70,7 @@ import network.nerve.converter.utils.VirtualBankUtil;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -292,13 +294,215 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction rechargeUnconfirmedTxWithoutSign(Chain chain, RechargeUnconfirmedTxData txData, long txTime) throws NulsException {
-        byte[] txDataBytes = null;
+        byte[] txDataBytes;
         try {
             txDataBytes = txData.serialize();
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.RECHARGE_UNCONFIRMED, txDataBytes, txTime);
+        return tx;
+    }
+
+    @Override
+    public Transaction oneClickCrossChainUnconfirmedTx(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long txTime) throws NulsException {
+        Transaction tx = oneClickCrossChainUnconfirmedTxWithoutSign(chain, txData, txTime);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // 调用验证器验证
+        rechargeUnconfirmedVerifier.validateOneClickCrossChain(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(txData.getOriginalTxHash());
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // 完成
+        chain.getLogger().debug(tx.format(OneClickCrossChainUnconfirmedTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction oneClickCrossChainUnconfirmedTxWithoutSign(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long txTime) throws NulsException {
+        byte[] txDataBytes;
+        try {
+            String desToAddress = ConverterUtil.addressToLowerCase(txData.getDesToAddress());
+            txData.setDesToAddress(desToAddress);
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.ONE_CLICK_CROSS_CHAIN_UNCONFIRMED, txDataBytes, txTime);
+        return tx;
+    }
+
+    @Override
+    public Transaction createOneClickCrossChainTx(Chain chain, OneClickCrossChainUnconfirmedTxData dto, long txTime) throws NulsException {
+        Transaction tx = this.createOneClickCrossChainTxWithoutSign(chain, dto, txTime);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // 调用验证器验证
+        rechargeVerifier.validateOneClickCrossChain(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(dto.getOriginalTxHash());
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // 完成
+        chain.getLogger().debug(tx.format(OneClickCrossChainTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createOneClickCrossChainTxWithoutSign(Chain chain, OneClickCrossChainUnconfirmedTxData dto, long txTime) throws NulsException {
+        String desToAddress = ConverterUtil.addressToLowerCase(dto.getDesToAddress());
+        OneClickCrossChainTxData txData = new OneClickCrossChainTxData();
+        txData.setDesChainId(dto.getDesChainId());
+        txData.setDesToAddress(desToAddress);
+        txData.setDesExtend(dto.getDesExtend());
+        txData.setOriginalTxHash(dto.getOriginalTxHash());
+        txData.setHeterogeneousHeight(dto.getHeterogeneousHeight());
+        txData.setHeterogeneousFromAddress(dto.getHeterogeneousFromAddress());
+
+        BigInteger mainAssetAmount = dto.getMainAssetAmount();
+        BigInteger mainAssetFeeAmount = dto.getMainAssetFeeAmount();
+        if (mainAssetFeeAmount.compareTo(mainAssetAmount) > 0) {
+            // 跨到目标链的手续费错误
+            throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_FEE_ERROR);
+        }
+        int withdrawalAssetChainId, withdrawalAssetId;
+        BigInteger withdrawalAmount;
+        int feeAssetChainId = dto.getMainAssetChainId();
+        int feeAssetId = dto.getMainAssetId();
+        BigInteger feeAmount;
+        if (dto.getErc20AssetChainId() > 0) {
+            withdrawalAssetChainId = dto.getErc20AssetChainId();
+            withdrawalAssetId = dto.getErc20AssetId();
+            withdrawalAmount = dto.getErc20Amount();
+            feeAmount = dto.getMainAssetAmount();
+        } else {
+            withdrawalAssetChainId = dto.getMainAssetChainId();
+            withdrawalAssetId = dto.getMainAssetId();
+            withdrawalAmount = mainAssetAmount.subtract(mainAssetFeeAmount);
+            feeAmount = mainAssetFeeAmount;
+        }
+        byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+        byte[] withdrawalBlackhole = dto.getNerveToAddress();
+        CoinData coinData = new CoinData();
+        //组装to
+        List<CoinTo> tos = new ArrayList<>();
+        CoinTo withdrawalCoinTo = new CoinTo(
+                dto.getNerveToAddress(),
+                withdrawalAssetChainId,
+                withdrawalAssetId,
+                withdrawalAmount);
+        tos.add(withdrawalCoinTo);
+        // 判断组装异构链补贴手续费暂存to
+        CoinTo withdrawalFeeCoinTo = new CoinTo(
+                withdrawalFeeAddress,
+                feeAssetChainId,
+                feeAssetId,
+                feeAmount);
+        tos.add(withdrawalFeeCoinTo);
+        // 组装tipping
+        BigInteger tipping = dto.getTipping();
+        if (tipping.compareTo(BigInteger.ZERO) > 0) {
+            // 合法的Nerve地址
+            if (!converterCoreApi.validNerveAddress(dto.getTippingAddress())) {
+                chain.getLogger().error("[{}]OneClickCrossChain tipping address error:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), dto.getTippingAddress(), dto.getOriginalTxHash().getHeterogeneousHash());
+                throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
+            }
+            byte[] tippingAddress = AddressTool.getAddress(dto.getTippingAddress());
+            if (Arrays.equals(tippingAddress, withdrawalBlackhole) || Arrays.equals(tippingAddress, withdrawalFeeAddress)) {
+                chain.getLogger().error("[{}]OneClickCrossChain tipping address setting error:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), dto.getTippingAddress(), dto.getOriginalTxHash().getHeterogeneousHash());
+                throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
+            }
+            // 不得大于跨链资产的10%
+            if (new BigDecimal(withdrawalAmount).multiply(HtgConstant.NUMBER_0_DOT_1).compareTo(new BigDecimal(tipping)) < 0) {
+                chain.getLogger().error("[{}]OneClickCrossChain tipping exceed error:{}, crossValue:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), tipping, withdrawalAmount, dto.getOriginalTxHash().getHeterogeneousHash());
+                throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
+            }
+            CoinTo tippingCoinTo = new CoinTo(
+                    tippingAddress,
+                    dto.getTippingChainId(),
+                    dto.getTippingAssetId(),
+                    tipping);
+            tos.add(tippingCoinTo);
+            withdrawalCoinTo.setAmount(withdrawalCoinTo.getAmount().subtract(tipping));
+        }
+        coinData.setTo(tos);
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.ONE_CLICK_CROSS_CHAIN, txDataBytes, txTime);
+        tx.setCoinData(coinDataBytes);
+        if (StringUtils.isNotBlank(dto.getHeterogeneousFromAddress())) {
+            tx.setRemark(dto.getHeterogeneousFromAddress().getBytes(StandardCharsets.UTF_8));
+        }
+        return tx;
+    }
+
+    @Override
+    public Transaction createAddFeeCrossChainTx(Chain chain, AddFeeCrossChainTxDTO dto, long txTime) throws NulsException {
+        Transaction tx = this.createAddFeeCrossChainTxWithoutSign(chain, dto, txTime);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // 调用验证器验证
+        rechargeVerifier.validateAddFeeCrossChain(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(dto.getOriginalTxHash());
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // 完成
+        chain.getLogger().debug(tx.format(WithdrawalAddFeeByCrossChainTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createAddFeeCrossChainTxWithoutSign(Chain chain, AddFeeCrossChainTxDTO dto, long txTime) throws NulsException {
+        WithdrawalAddFeeByCrossChainTxData txData = new WithdrawalAddFeeByCrossChainTxData();
+        txData.setHtgTxHash(dto.getOriginalTxHash());
+        txData.setNerveTxHash(dto.getNerveTxHash());
+        txData.setSubExtend(dto.getSubExtend());
+        txData.setHeterogeneousHeight(dto.getHeterogeneousHeight());
+        txData.setHeterogeneousFromAddress(dto.getHeterogeneousFromAddress());
+
+        int feeAssetChainId = dto.getMainAssetChainId();
+        int feeAssetId = dto.getMainAssetId();
+        BigInteger feeAmount = dto.getMainAssetAmount();
+        byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+        if (!Arrays.equals(dto.getNerveToAddress(), withdrawalFeeAddress)) {
+            chain.getLogger().error("[{}]AddFeeCrossChain address setting error:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), AddressTool.getStringAddressByBytes(dto.getNerveToAddress()), dto.getOriginalTxHash().getHeterogeneousHash());
+            throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
+        }
+        CoinData coinData = new CoinData();
+        //组装to
+        List<CoinTo> tos = new ArrayList<>();
+        CoinTo withdrawalFeeCoinTo = new CoinTo(
+                withdrawalFeeAddress,
+                feeAssetChainId,
+                feeAssetId,
+                feeAmount);
+        tos.add(withdrawalFeeCoinTo);
+        coinData.setTo(tos);
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.ADD_FEE_OF_CROSS_CHAIN_BY_CROSS_CHAIN, txDataBytes, txTime);
+        tx.setCoinData(coinDataBytes);
+        if (StringUtils.isNotBlank(dto.getHeterogeneousFromAddress())) {
+            tx.setRemark(dto.getHeterogeneousFromAddress().getBytes(StandardCharsets.UTF_8));
+        }
         return tx;
     }
 
@@ -359,7 +563,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction withdrawalAdditionalFeeTx(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
+        if (converterCoreApi.isProtocol21()) {
+            return withdrawalAdditionalFeeTxV21(chain, withdrawalAdditionalFeeTxDTO);
+        } else if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
             return withdrawalAdditionalFeeTxV15(chain, withdrawalAdditionalFeeTxDTO);
         } else if (converterCoreApi.isSupportProtocol13NewValidationOfERC20()) {
             return withdrawalAdditionalFeeTxV13(chain, withdrawalAdditionalFeeTxDTO);
@@ -1309,14 +1515,14 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         for (CoinTo coinTo : coinData.getTo()) {
             if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
                 // 该to是NVT或者异构链主资产
-                boolean feeAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
+                boolean nvtFeeAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                         && coinTo.getAssetsId() == chain.getConfig().getAssetId();
-                info.setNvtAsset(feeAsset);
-                if (!feeAsset) {
+                info.setNvtAsset(nvtFeeAsset);
+                if (!nvtFeeAsset) {
                     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
                     AssetName htgMainAssetName;
-                    feeAsset = (htgMainAssetName = converterCoreApi.getHtgMainAssetName(coinTo)) != null;
-                    if (!feeAsset) {
+                    boolean otherFeeAsset = (htgMainAssetName = converterCoreApi.getHtgMainAssetName(coinTo)) != null;
+                    if (!otherFeeAsset) {
                         throw new NulsException(ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST);
                     }
                     info.setHtgMainAssetName(htgMainAssetName);
@@ -1511,6 +1717,92 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         int feeAssetChainId = chain.getConfig().getChainId();
         int feeAssetId = chain.getConfig().getAssetId();
         if (basicTx.getType() == TxType.WITHDRAWAL) {
+            // 判断该提现交易是否已经有对应的确认提现交易
+            ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+            if (null != po) {
+                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
+            }
+            // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+            CoinData coinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
+            byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+            Coin feeCoin = null;
+            for (CoinTo coinTo : coinData.getTo()) {
+                if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
+                    feeCoin = coinTo;
+                    break;
+                }
+            }
+            // 当前追加的手续费资产链ID
+            int feeChainId = withdrawalAdditionalFeeTxDTO.getFeeChainId();
+            boolean isAddNvtFeeCoin = feeChainId == chain.getChainId();
+            if (!isAddNvtFeeCoin) {
+                NerveAssetInfo htgMainAsset = converterCoreApi.getHtgMainAsset(feeChainId);
+                if (htgMainAsset.isEmpty()) {
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
+                }
+                feeAssetChainId = htgMainAsset.getAssetChainId();
+                feeAssetId = htgMainAsset.getAssetId();
+            }
+            // 追加的手续费资产，必须与提现交易的手续费资产一致
+            if (feeAssetChainId != feeCoin.getAssetsChainId() || feeAssetId != feeCoin.getAssetsId()) {
+                throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR);
+            }
+
+        } else if(basicTx.getType() == TxType.PROPOSAL){
+            String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
+            if (StringUtils.isNotBlank(confirmProposalHash)) {
+                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
+            }
+        }
+        WithdrawalAdditionalFeeTxData txData = new WithdrawalAdditionalFeeTxData(txHash);
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
+        if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
+            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
+        byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId);
+        tx.setCoinData(coinData);
+        //签名
+        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
+        //广播
+        TransactionCall.newTx(chain, tx);
+        return tx;
+    }
+
+    /**
+     * 协议v21 一键跨链
+     */
+    private Transaction withdrawalAdditionalFeeTxV21(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
+        // 修改手续费机制，支持异构链主资产作为手续费
+        // 验证参数
+        String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
+        if (StringUtils.isBlank(txHash)) {
+            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
+        }
+        Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
+        if (null == basicTx) {
+            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN) {
+            // 不是提现交易
+            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
+        }
+        int feeAssetChainId = chain.getConfig().getChainId();
+        int feeAssetId = chain.getConfig().getAssetId();
+        if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
             // 判断该提现交易是否已经有对应的确认提现交易
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {

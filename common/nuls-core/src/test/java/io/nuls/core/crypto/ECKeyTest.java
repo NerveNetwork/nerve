@@ -17,7 +17,7 @@ public class ECKeyTest extends TestCase {
 
     public static void main(String[] args) {
 
-        ECKey ecKey = ECKey.fromPrivate(Hex.decode("023b14b5b35cb1fdb67d9235bc7a901568a0d30578830163ae9a9b090246e9c7"));
+        ECKey ecKey = ECKey.fromPrivate(Hex.decode("???"));
         String msgSignValue = "MEYCIQDWxEdu5ES08I9QtfUv2Bj3HmihnJffRNnjkrvkZtvoEgIhAIHeuY9O4m9COI3YGS+hpAHOdvD5toAhGHL5+MVptAmx";
         byte[] signValue = Base64.decode(msgSignValue);
         System.out.println("all-hex: "+HexUtil.encode(signValue));
@@ -40,7 +40,7 @@ public class ECKeyTest extends TestCase {
     }
 
     public void testSignMessage() {
-        ECKey ecKey = ECKey.fromPrivate(Hex.decode("023b14b5b35cb1fdb67d9235bc7a901568a0d30578830163ae9a9b090246e9c7"));
+        ECKey ecKey = ECKey.fromPrivate(Hex.decode("???"));
         String msgSignValue = ecKey.signMessage("asdfasdfasdf");
         System.out.println(msgSignValue);
         System.out.println(HexUtil.encode(Base64.decode(msgSignValue)).length());
@@ -55,7 +55,7 @@ public class ECKeyTest extends TestCase {
     }
 
     public void testEncryptMessage(){
-        ECKey ecKey = ECKey.fromPrivate(Hex.decode("023b14b5b35cb1fdb67d9235bc7a901568a0d30578830163ae9a9b090246e9c7"));
+        ECKey ecKey = ECKey.fromPrivate(Hex.decode("???"));
         String message = "asdfasdfasdf";
         byte[] encryptedValue = ECIESUtil.encrypt(ecKey.getPubKey(),message.getBytes(StandardCharsets.UTF_8));
         String encryptedValueBase64 = new String(Base64.encode(encryptedValue), StandardCharsets.UTF_8);
@@ -67,5 +67,26 @@ public class ECKeyTest extends TestCase {
         } catch (CryptoException e) {
             e.printStackTrace();
         }
+    }
+
+    public void testHexStringEncryptMessage(){
+        ECKey ecKey = ECKey.fromPrivate(Hex.decode("???"));
+        String message = "4b5b35cb1fdb";
+        byte[] encryptedValue = ECIESUtil.encrypt(ecKey.getPubKey(), HexUtil.decode(message));
+        System.out.println(HexUtil.encode(encryptedValue));
+        try {
+            byte[] decryptBytes = ECIESUtil.decrypt(ecKey.getPrivKeyBytes(), encryptedValue);
+            assertEquals(message, HexUtil.encode(decryptBytes));
+        } catch (CryptoException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void test1() throws CryptoException {
+        String priKey = "???";
+        String data = "04c590421386c62a6875b5e7fa6f640a8660b4d77fe6d587c2a6f1cef150df258afaa1b49fc25bccf77c0218731efc6d7d7468943305143b14a4f526dce5adb0fc00000000000000000000000000000000e317eb39f70a3d691d6b1c6379f9b66ebe6affa614a99960914e94c35f9d9831ac6aeef637ba7a59c964cd5fa7d3228c";
+        byte[] bytes = ECIESUtil.decrypt(HexUtil.decode(priKey), data);
+        System.out.println(HexUtil.encode(bytes));
+        System.out.println(new String(bytes, StandardCharsets.UTF_8));
     }
 }

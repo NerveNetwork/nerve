@@ -39,6 +39,7 @@ import network.nerve.swap.model.vo.SwapPairVO;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -61,24 +62,36 @@ public class SwapHelper {
         this.nerveChain = nerveChain;
     }
 
-    public List<RouteVO> bestTradeExactIn(int chainId, List<String> pairs, TokenAmount tokenAmountIn, NerveToken out, int maxPairSize) throws NulsException {
+    public List<RouteVO> bestTradeExactIn(int chainId, List<String> pairs, TokenAmount tokenAmountIn, NerveToken out, int maxPairSize, String resultRule) throws NulsException {
         if (ledgerAssetCache.getLedgerAsset(chainId, tokenAmountIn.getToken()) == null || ledgerAssetCache.getLedgerAsset(chainId, out) == null) {
             throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         List<SwapPairVO> swapPairs = new ArrayList<>();
-        for (String pairAddress : pairs) {
-            SwapPairDTO pairDTO = swapPairCache.get(pairAddress);
-            if (pairDTO == null) {
-                throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+        // pairs为空时使用全部地址
+        if (pairs == null || pairs.isEmpty()) {
+            Collection<SwapPairDTO> list = swapPairCache.getList();
+            for (SwapPairDTO pairDTO : list) {
+                swapPairs.add(new SwapPairVO(pairDTO));
             }
-            swapPairs.add(new SwapPairVO(pairDTO.getPo().getToken0(), pairDTO.getPo().getToken1()));
+        } else {
+            for (String pairAddress : pairs) {
+                SwapPairDTO pairDTO = swapPairCache.get(pairAddress);
+                if (pairDTO == null) {
+                    throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+                }
+                swapPairs.add(new SwapPairVO(pairDTO));
+            }
         }
-        List<RouteVO> routes = SwapUtils.bestTradeExactIn(chainId, iPairFactory, swapPairs, tokenAmountIn, out, new LinkedHashSet<>(), new ArrayList<>(), tokenAmountIn, maxPairSize);
+        List<RouteVO> routes = SwapUtils.bestTradeExactIn(chainId, iPairFactory, swapPairs, tokenAmountIn, out, new LinkedHashSet<>(), new ArrayList<>(), tokenAmountIn, maxPairSize, resultRule);
         return routes;
     }
 
     public boolean isSupportProtocol17() {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_17_0;
+    }
+
+    public boolean isSupportProtocol21() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_21_0;
     }
 
 }

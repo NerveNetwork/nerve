@@ -770,6 +770,39 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
+    public Boolean reAnalysisTx(String ethTxHash) throws Exception {
+        if (ethCommonHelper.constainHash(ethTxHash)) {
+            logger().info("重复收集交易hash: {}，不再重复解析[0]", ethTxHash);
+            return true;
+        }
+        reAnalysisLock.lock();
+        try {
+            if (ethCommonHelper.constainHash(ethTxHash)) {
+                logger().info("重复收集交易hash: {}，不再重复解析[1]", ethTxHash);
+                return true;
+            }
+            logger().info("重新解析交易: {}", ethTxHash);
+            org.web3j.protocol.core.methods.response.Transaction tx = ethWalletApi.getTransactionByHash(ethTxHash);
+            if (tx == null || tx.getBlockNumber() == null) {
+                return false;
+            }
+            Long blockHeight = tx.getBlockNumber().longValue();
+            EthBlock.Block block = ethWalletApi.getBlockHeaderByHeight(blockHeight);
+            if (block == null) {
+                return false;
+            }
+            Long txTime = block.getTimestamp().longValue();
+            ethAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
+            ethCommonHelper.addHash(ethTxHash);
+            return true;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            reAnalysisLock.unlock();
+        }
+    }
+
+    @Override
     public long getHeterogeneousNetworkChainId() {
         return EthContext.getConfig().getChainIdOnHtgNetwork();
     }

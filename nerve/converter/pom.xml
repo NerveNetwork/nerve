@@ -29,6 +29,11 @@
         <module>converter-avax</module>
         <module>converter-ftm</module>
         <module>converter-arbitrum</module>
+        <module>converter-metis</module>
+        <module>converter-iotx</module>
+        <module>converter-optimism</module>
+        <module>converter-klay</module>
+        <module>converter-bch</module>
 
     </modules>
 

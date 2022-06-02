@@ -31,6 +31,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
@@ -85,6 +86,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private AssembleTxService assembleTxService;
     @Autowired
     private HeterogeneousDockingManager heterogeneousDockingManager;
+    @Autowired
+    private ConverterConfig converterConfig;
+
     private Map<Integer, NerveAssetInfo> htgMainAssetMap = new HashMap<>(16);
     private Map<NerveAssetInfo, AssetName> htgMainAssetByNerveMap = new HashMap<>(16);
     private Set<String> skipTransactions = new HashSet<>();
@@ -374,6 +378,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_16_0;
     }
 
+    @Override
+    public boolean isProtocol21() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_21_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -453,5 +462,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean skippedTransaction(String nerveTxHash) {
         return skipTransactions.contains(nerveTxHash);
+    }
+
+    @Override
+    public ConverterConfig getConverterConfig() {
+        return converterConfig;
     }
 }

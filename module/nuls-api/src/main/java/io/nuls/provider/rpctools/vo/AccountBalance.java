@@ -10,11 +10,11 @@ import io.nuls.core.rpc.model.ApiModelProperty;
  */
 @ApiModel
 public class AccountBalance {
-
+    @ApiModelProperty(description = "资产链ID")
     private int assetChainId;
-
+    @ApiModelProperty(description = "资产ID")
     private int assetId;
-
+    @ApiModelProperty(description = "合约地址")
     private String contractAddress;
 
     @ApiModelProperty(description = "总余额")

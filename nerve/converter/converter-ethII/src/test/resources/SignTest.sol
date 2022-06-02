@@ -14,6 +14,9 @@ contract SignTest {
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
         }
+        if(uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            return address(0);
+        }
         // https://github.com/ethereum/go-ethereum/issues/2053
         if (v < 27) {
             v += 27;
@@ -36,6 +39,9 @@ contract SignTest {
             s := mload(add(sig, 64))
             v := byte(0, mload(add(sig, 96)))
         }
+        if(uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+            return address(0);
+        }
         // https://github.com/ethereum/go-ethereum/issues/2053
         if (v < 27) {
             v += 27;
@@ -46,16 +52,16 @@ contract SignTest {
         return ecrecover(keccak256(bytes(key)), v, r, s);
     }
 
-    function testWithdrawHash(string memory txKey, address payable to, uint256 amount, bool isERC20, address ERC20) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(txKey, to, amount, isERC20, ERC20));
+    function testWithdrawHash(string memory txKey, address payable to, uint256 amount, bool isERC20, address ERC20, uint256 hashSalt) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(txKey, to, amount, isERC20, ERC20, hashSalt));
     }
 
-    function testWithdrawEncode(string memory txKey, address payable to, uint256 amount, bool isERC20, address ERC20) public pure returns (bytes memory) {
-        return abi.encodePacked(txKey, to, amount, isERC20, ERC20);
+    function testWithdrawEncode(string memory txKey, address payable to, uint256 amount, bool isERC20, address ERC20, uint256 hashSalt) public pure returns (bytes memory) {
+        return abi.encodePacked(txKey, to, amount, isERC20, ERC20, hashSalt);
     }
 
-    function testChangeHash(string memory txKey, address[] memory adds, address[] memory removes, uint8 count) public pure returns (bytes32) {
-        return keccak256(abi.encodePacked(txKey, adds, count, removes));
+    function testChangeHash(string memory txKey, address[] memory adds, address[] memory removes, uint8 count, uint256 hashSalt) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(txKey, adds, count, removes, hashSalt));
     }
 
     function testChangeEncode(string memory txKey, address[] memory adds, address[] memory removes, uint8 count) public pure returns (bytes memory) {

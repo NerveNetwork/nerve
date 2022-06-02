@@ -27,7 +27,6 @@ import com.google.protobuf.ByteString;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
@@ -38,9 +37,8 @@ import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxTransaction;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
-import network.nerve.converter.model.bo.HeterogeneousAddress;
-import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
-import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
+import network.nerve.converter.model.bo.*;
+import org.tron.trident.abi.FunctionReturnDecoder;
 import org.tron.trident.abi.datatypes.Address;
 import org.tron.trident.abi.datatypes.Function;
 import org.tron.trident.abi.datatypes.Type;
@@ -142,8 +140,13 @@ public class TrxParseTxHelper implements BeanInitial {
             }
             txInfo.setBlockHeight(txReceipt.getBlockNumber());
             txInfo.setTxTime(txReceipt.getBlockTimeStamp());
-
-            isWithdraw = this.newParseWithdrawTxReceipt(trxTxInfo, txReceipt, txInfo);
+            // 解析交易收据
+            if (htgContext.getConverterCoreApi().isProtocol21()) {
+                // 协议v1.21
+                isWithdraw = this.newParseWithdrawTxReceiptSinceProtocol21(trxTxInfo, txReceipt, txInfo);
+            } else {
+                isWithdraw = this.newParseWithdrawTxReceipt(trxTxInfo, txReceipt, txInfo);
+            }
 
             if (!isWithdraw) {
                 logger().warn("不是提现交易[1], hash: {}", txHash);
@@ -441,11 +444,80 @@ public class TrxParseTxHelper implements BeanInitial {
         if (methodHash.equals(TrxConstant.METHOD_HASH_CROSS_OUT)) {
             return new HtgInput(true, HeterogeneousChainTxType.DEPOSIT);
         }
-        if (methodHash.equals(HtgConstant.METHOD_HASH_CROSS_OUT_II)) {
+        if (methodHash.equals(TrxConstant.METHOD_HASH_CROSS_OUT_II)) {
             return new HtgInput(true);
         }
         return HtgInput.empty();
     }
+
+    public HeterogeneousOneClickCrossChainData parseOneClickCrossChainData(String extend, NulsLogger logger) {
+        if(StringUtils.isBlank(extend)) {
+            return null;
+        }
+        extend = Numeric.prependHexPrefix(extend);
+        if(extend.length() < 10) {
+            return null;
+        }
+        String methodHash = extend.substring(0, 10);
+        if (!TrxConstant.METHOD_HASH_ONE_CLICK_CROSS_CHAIN.equals(methodHash)) {
+            return null;
+        }
+        extend = TrxConstant.HEX_PREFIX + extend.substring(10);
+        try {
+            List<Type> typeList = FunctionReturnDecoder.decode(extend, TrxConstant.INPUT_ONE_CLICK_CROSS_CHAIN);
+            if (typeList == null || typeList.isEmpty()) {
+                return null;
+            }
+            if (typeList.size() < 6) {
+                return null;
+            }
+            int index = 0;
+            List<Object> list = typeList.stream().map(type -> type.getValue()).collect(Collectors.toList());
+            BigInteger feeAmount = (BigInteger) list.get(index++);
+            int desChainId = ((BigInteger) list.get(index++)).intValue();
+            String desToAddress = (String) list.get(index++);
+            BigInteger tipping = (BigInteger) list.get(index++);
+            String tippingAddress = (String) list.get(index++);
+            String desExtend = Numeric.toHexString((byte[]) list.get(index++));
+            return new HeterogeneousOneClickCrossChainData(feeAmount, desChainId, desToAddress, tipping == null ? BigInteger.ZERO : tipping, tippingAddress, desExtend);
+        } catch (Exception e) {
+            logger.error(e);
+            return null;
+        }
+    }
+
+    public HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend, NulsLogger logger) {
+        if(StringUtils.isBlank(extend)) {
+            return null;
+        }
+        extend = Numeric.prependHexPrefix(extend);
+        if(extend.length() < 10) {
+            return null;
+        }
+        String methodHash = extend.substring(0, 10);
+        if (!TrxConstant.METHOD_HASH_ADD_FEE_CROSS_CHAIN.equals(methodHash)) {
+            return null;
+        }
+        extend = TrxConstant.HEX_PREFIX + extend.substring(10);
+        try {
+            List<Type> typeList = FunctionReturnDecoder.decode(extend, TrxConstant.INPUT_ADD_FEE_CROSS_CHAIN);
+            if (typeList == null || typeList.isEmpty()) {
+                return null;
+            }
+            if (typeList.size() < 2) {
+                return null;
+            }
+            int index = 0;
+            List<Object> list = typeList.stream().map(type -> type.getValue()).collect(Collectors.toList());
+            String nerveTxHash = (String) list.get(index++);
+            String subExtend = Numeric.toHexString((byte[]) list.get(index++));
+            return new HeterogeneousAddFeeCrossChainData(nerveTxHash, subExtend);
+        } catch (Exception e) {
+            logger.error(e);
+            return null;
+        }
+    }
+
 
     private boolean newValidationDepositByCrossOut(TrxTransaction tx, Response.TransactionInfo txReceipt, HeterogeneousTransactionInfo po) throws Exception {
         if (tx == null) {
@@ -844,6 +916,100 @@ public class TrxParseTxHelper implements BeanInitial {
                         amount = amount.add(_amount);
                     }
                 }
+            }
+            if (correctErc20 && correctMainAsset) {
+                logger().warn("提现交易[{}]的提现类型冲突[1]", txHash);
+                return false;
+            }
+            if (correctMainAsset) {
+                po.setTo(receive);
+                po.setValue(amount);
+                po.setDecimals(htgContext.getConfig().getDecimals());
+                po.setAssetId(htgContext.HTG_ASSET_ID());
+                return true;
+            } else if (correctErc20) {
+                po.setIfContractAsset(true);
+                po.setContractAddress(erc20);
+                po.setTo(receive);
+                po.setValue(amount);
+                return true;
+            }
+        }
+        logger().warn("提现交易[{}]解析数据缺失", txHash);
+        return false;
+    }
+
+    private boolean newParseWithdrawTxReceiptSinceProtocol21(TrxTransaction trxTxInfo, Response.TransactionInfo txReceipt, HeterogeneousTransactionBaseInfo po) {
+        if (!TrxUtil.checkTransactionSuccess(txReceipt)) {
+            return false;
+        }
+        String txHash = trxTxInfo.getHash();
+        List<Object> withdrawInput = TrxUtil.parseInput(trxTxInfo.getInput(), TrxConstant.INPUT_WITHDRAW);
+        String receive = withdrawInput.get(1).toString();
+        Boolean isERC20 = Boolean.parseBoolean(withdrawInput.get(3).toString());
+        String erc20 = withdrawInput.get(4).toString();
+        List<Response.TransactionInfo.Log> logs = txReceipt.getLogList();
+        if (logs != null && logs.size() > 0) {
+            boolean correctErc20 = false;
+            boolean correctMainAsset = false;
+            boolean hasReceiveAddress = false;
+            String eventHash;
+            String contract;
+            // 转账金额
+            BigInteger amount = BigInteger.ZERO;
+            for (Response.TransactionInfo.Log log : logs) {
+                eventHash = Numeric.toHexString(log.getTopics(0).toByteArray());
+                contract = TrxUtil.ethAddress2trx(log.getAddress().toByteArray());
+                // 为ERC20提现
+                if (eventHash.equals(TrxConstant.EVENT_HASH_ERC20_TRANSFER)) {
+                    TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
+                    String fromAddress = trc20Event.getFrom();
+                    String toAddress = trc20Event.getTo();
+                    // 转账金额
+                    BigInteger _amount = trc20Event.getValue();
+                    if (isERC20 &&
+                            contract.equals(erc20) &&
+                            (fromAddress.equals(htgContext.MULTY_SIGN_ADDRESS()) || fromAddress.equals(TrxConstant.ZERO_ADDRESS_TRX))) {
+                        if (!receive.equals(toAddress)) {
+                            logger().warn("提现交易[{}]的接收地址不匹配", txHash);
+                            continue;
+                        }
+                        correctErc20 = true;
+                        hasReceiveAddress = true;
+                        if (_amount.compareTo(BigInteger.ZERO) > 0) {
+                            amount = amount.add(_amount);
+                        }
+                    }
+                }
+                // 为主资产提现
+                if (eventHash.equals(TrxConstant.EVENT_HASH_TRANSFERFUNDS)) {
+                    if (isERC20 || !contract.equals(htgContext.MULTY_SIGN_ADDRESS())) {
+                        if (isERC20) {
+                            logger().warn("提现交易[{}]的提现类型冲突[0]", txHash);
+                        } else {
+                            logger().warn("提现交易[{}]的多签合约地址不匹配", txHash);
+                        }
+                        return false;
+                    }
+                    String data = Numeric.toHexString(log.getData().toByteArray());
+                    List<Object> objects = TrxUtil.parseEvent(data, TrxConstant.EVENT_TRANSFER_FUNDS);
+                    String toAddress = objects.get(0).toString();
+                    if (!receive.equals(toAddress)) {
+                        logger().warn("提现交易[{}]的接收地址不匹配[主资产提现]", txHash);
+                        return false;
+                    }
+                    correctMainAsset = true;
+                    hasReceiveAddress = true;
+                    // 转账金额
+                    BigInteger _amount = (BigInteger) objects.get(1);
+                    if (_amount.compareTo(BigInteger.ZERO) > 0) {
+                        amount = amount.add(_amount);
+                    }
+                }
+            }
+            if (!hasReceiveAddress) {
+                logger().warn("提现交易[{}]的接收地址不匹配", txHash);
+                return false;
             }
             if (correctErc20 && correctMainAsset) {
                 logger().warn("提现交易[{}]的提现类型冲突[1]", txHash);

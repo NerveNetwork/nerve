@@ -39,6 +39,7 @@ import network.nerve.converter.core.heterogeneous.docking.management.Heterogeneo
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.*;
+import network.nerve.converter.model.dto.AddFeeCrossChainTxDTO;
 import network.nerve.converter.model.dto.RechargeTxDTO;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
 import network.nerve.converter.model.po.ProposalPO;
@@ -50,6 +51,7 @@ import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -97,6 +99,18 @@ public class ByzantineTransactionHelper {
             case TxType.RECHARGE_UNCONFIRMED:
                 hash = hashList.get(0);
                 validation = rechargeUnconfirmed(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                break;
+            case TxType.ONE_CLICK_CROSS_CHAIN_UNCONFIRMED:
+                hash = hashList.get(0);
+                validation = oneClickCrossChainUnconfirmed(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                break;
+            case TxType.ONE_CLICK_CROSS_CHAIN:
+                hash = hashList.get(0);
+                validation = oneClickCrossChain(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
+                break;
+            case TxType.ADD_FEE_OF_CROSS_CHAIN_BY_CROSS_CHAIN:
+                hash = hashList.get(0);
+                validation = addFeeCrossChain(nerveChain, byzantineTxhash, hash.getHeterogeneousChainId(), hash.getHeterogeneousHash());
                 break;
         }
         return validation;
@@ -247,6 +261,174 @@ public class ByzantineTransactionHelper {
             return false;
         }
         assembleTxService.rechargeUnconfirmedTx(nerveChain, dto, depositTx.getTxTime());
+        return true;
+    }
+
+    private boolean oneClickCrossChainUnconfirmed(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        nerveChain.getLogger().info("创建[一键跨链待确认]拜占庭交易[{}]消息, 异构链交易hash: {}", byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        HeterogeneousTransactionInfo occcTx = docking.getDepositTransaction(hTxHash);
+        String extend = occcTx.getDepositIIExtend();
+        HeterogeneousOneClickCrossChainData data = docking.parseOneClickCrossChainData(extend);
+        if (data == null) {
+            nerveChain.getLogger().error("[一键跨链待确认]拜占庭交易验证失败, extend: {}", extend);
+            return false;
+        }
+        BigInteger tipping = data.getTipping();
+        String tippingAddress = data.getTippingAddress();
+        BigInteger erc20Value, mainAssetValue;
+        Integer erc20AssetId;
+        if (occcTx.isDepositIIMainAndToken()) {
+            erc20Value = occcTx.getValue();
+            erc20AssetId = occcTx.getAssetId();
+            mainAssetValue = occcTx.getDepositIIMainAssetValue();
+        } else if (occcTx.isIfContractAsset()) {
+            erc20Value = occcTx.getValue();
+            erc20AssetId = occcTx.getAssetId();
+            mainAssetValue = BigInteger.ZERO;
+        } else {
+            erc20Value = BigInteger.ZERO;
+            erc20AssetId = 0;
+            mainAssetValue = occcTx.getValue();
+        }
+        Long txTime = occcTx.getTxTime();
+        OneClickCrossChainUnconfirmedTxData txData = new OneClickCrossChainUnconfirmedTxData();
+        txData.setMainAssetFeeAmount(data.getFeeAmount());
+        txData.setDesChainId(data.getDesChainId());
+        txData.setDesToAddress(data.getDesToAddress());
+        txData.setDesExtend(data.getDesExtend());
+        txData.setOriginalTxHash(new HeterogeneousHash(hChainId, hTxHash));
+        txData.setHeterogeneousHeight(occcTx.getBlockHeight());
+        txData.setHeterogeneousFromAddress(occcTx.getFrom());
+        txData.setNerveToAddress(AddressTool.getAddress(occcTx.getNerveAddress()));
+        txData.setTipping(tipping);
+        txData.setTippingAddress(tippingAddress);
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        txData.setMainAssetAmount(mainAssetValue);
+        txData.setMainAssetChainId(mainAsset.getAssetChainId());
+        txData.setMainAssetId(mainAsset.getAssetId());
+        // 记录token充值数据
+        txData.setErc20Amount(erc20Value);
+        if (erc20AssetId > 1) {
+            NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
+            txData.setErc20AssetChainId(tokenAsset.getAssetChainId());
+            txData.setErc20AssetId(tokenAsset.getAssetId());
+            txData.setTippingChainId(tokenAsset.getAssetChainId());
+            txData.setTippingAssetId(tokenAsset.getAssetId());
+        } else {
+            txData.setTippingChainId(mainAsset.getAssetChainId());
+            txData.setTippingAssetId(mainAsset.getAssetId());
+        }
+
+        Transaction tx = assembleTxService.oneClickCrossChainUnconfirmedTxWithoutSign(nerveChain, txData, txTime);
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[一键跨链待确认]拜占庭交易验证失败, 交易详情: {}", tx.format(OneClickCrossChainUnconfirmedTxData.class));
+            return false;
+        }
+        assembleTxService.oneClickCrossChainUnconfirmedTx(nerveChain, txData, txTime);
+        return true;
+    }
+
+    private boolean oneClickCrossChain(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        // 创建一键跨链pending check
+        nerveChain.getLogger().info("[{}]创建[一键跨链]拜占庭交易[{}]消息, 异构链交易hash: {}", hChainId, byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        HeterogeneousTransactionInfo occcTx = docking.getDepositTransaction(hTxHash);
+        String extend = occcTx.getDepositIIExtend();
+        HeterogeneousOneClickCrossChainData data = docking.parseOneClickCrossChainData(extend);
+        if (data == null) {
+            nerveChain.getLogger().error("[一键跨链]拜占庭交易验证失败, extend: {}", extend);
+            return false;
+        }
+        BigInteger tipping = data.getTipping();
+        String tippingAddress = data.getTippingAddress();
+        BigInteger erc20Value, mainAssetValue;
+        Integer erc20AssetId;
+        if (occcTx.isDepositIIMainAndToken()) {
+            erc20Value = occcTx.getValue();
+            erc20AssetId = occcTx.getAssetId();
+            mainAssetValue = occcTx.getDepositIIMainAssetValue();
+        } else if (occcTx.isIfContractAsset()) {
+            erc20Value = occcTx.getValue();
+            erc20AssetId = occcTx.getAssetId();
+            mainAssetValue = BigInteger.ZERO;
+        } else {
+            erc20Value = BigInteger.ZERO;
+            erc20AssetId = 0;
+            mainAssetValue = occcTx.getValue();
+        }
+        Long txTime = occcTx.getTxTime();
+        OneClickCrossChainUnconfirmedTxData dto = new OneClickCrossChainUnconfirmedTxData();
+        dto.setMainAssetFeeAmount(data.getFeeAmount());
+        dto.setDesChainId(data.getDesChainId());
+        dto.setDesToAddress(data.getDesToAddress());
+        dto.setDesExtend(data.getDesExtend());
+        dto.setOriginalTxHash(new HeterogeneousHash(hChainId, hTxHash));
+        dto.setHeterogeneousHeight(occcTx.getBlockHeight());
+        dto.setHeterogeneousFromAddress(occcTx.getFrom());
+        dto.setNerveToAddress(AddressTool.getAddress(occcTx.getNerveAddress()));
+        dto.setTipping(tipping);
+        dto.setTippingAddress(tippingAddress);
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        dto.setMainAssetAmount(mainAssetValue);
+        dto.setMainAssetChainId(mainAsset.getAssetChainId());
+        dto.setMainAssetId(mainAsset.getAssetId());
+        // 记录token充值数据
+        dto.setErc20Amount(erc20Value);
+        if (erc20AssetId > 1) {
+            NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
+            dto.setErc20AssetChainId(tokenAsset.getAssetChainId());
+            dto.setErc20AssetId(tokenAsset.getAssetId());
+            dto.setTippingChainId(tokenAsset.getAssetChainId());
+            dto.setTippingAssetId(tokenAsset.getAssetId());
+        } else {
+            dto.setTippingChainId(mainAsset.getAssetChainId());
+            dto.setTippingAssetId(mainAsset.getAssetId());
+        }
+
+        Transaction tx = assembleTxService.createOneClickCrossChainTxWithoutSign(nerveChain, dto, txTime);
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[一键跨链]拜占庭交易验证失败, 交易详情: {}", tx.format(OneClickCrossChainTxData.class));
+            return false;
+        }
+        assembleTxService.createOneClickCrossChainTx(nerveChain, dto, txTime);
+        return true;
+    }
+
+    private boolean addFeeCrossChain(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        // 创建跨链追加手续费pending check
+        nerveChain.getLogger().info("[{}]创建[跨链追加手续费]拜占庭交易[{}]消息, 异构链交易hash: {}", hChainId, byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        HeterogeneousTransactionInfo afccTx = docking.getDepositTransaction(hTxHash);
+        String extend = afccTx.getDepositIIExtend();
+        HeterogeneousAddFeeCrossChainData data = docking.parseAddFeeCrossChainData(extend);
+        if (data == null) {
+            nerveChain.getLogger().error("[跨链追加手续费]拜占庭交易验证失败, extend: {}", extend);
+            return false;
+        }
+        BigInteger mainAssetValue = afccTx.getValue();
+        Long txTime = afccTx.getTxTime();
+        AddFeeCrossChainTxDTO dto = new AddFeeCrossChainTxDTO();
+        dto.setOriginalTxHash(new HeterogeneousHash(hChainId, hTxHash));
+        dto.setHeterogeneousHeight(afccTx.getBlockHeight());
+        dto.setHeterogeneousFromAddress(afccTx.getFrom());
+        dto.setNerveToAddress(AddressTool.getAddress(afccTx.getNerveAddress()));
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        dto.setMainAssetChainId(mainAsset.getAssetChainId());
+        dto.setMainAssetId(mainAsset.getAssetId());
+        dto.setMainAssetAmount(mainAssetValue);
+        dto.setNerveTxHash(data.getNerveTxHash());
+        dto.setSubExtend(data.getSubExtend());
+
+        Transaction tx = assembleTxService.createAddFeeCrossChainTxWithoutSign(nerveChain, dto, txTime);
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[跨链追加手续费]拜占庭交易验证失败, 交易详情: {}", tx.format(WithdrawalAddFeeByCrossChainTxData.class));
+            return false;
+        }
+        assembleTxService.createAddFeeCrossChainTx(nerveChain, dto, txTime);
         return true;
     }
 

@@ -135,6 +135,15 @@ public interface AssembleTxService {
     Transaction rechargeUnconfirmedTx(Chain chain, RechargeUnconfirmedTxData rechargeUnconfirmedTxData, long heterogeneousTxTime) throws NulsException;
     Transaction rechargeUnconfirmedTxWithoutSign(Chain chain, RechargeUnconfirmedTxData rechargeUnconfirmedTxData, long heterogeneousTxTime) throws NulsException;
 
+    Transaction oneClickCrossChainUnconfirmedTx(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long heterogeneousTxTime) throws NulsException;
+    Transaction oneClickCrossChainUnconfirmedTxWithoutSign(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long heterogeneousTxTime) throws NulsException;
+
+    Transaction createOneClickCrossChainTx(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long heterogeneousTxTime) throws NulsException;
+    Transaction createOneClickCrossChainTxWithoutSign(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long heterogeneousTxTime) throws NulsException;
+
+    Transaction createAddFeeCrossChainTx(Chain chain, AddFeeCrossChainTxDTO dto, long heterogeneousTxTime) throws NulsException;
+    Transaction createAddFeeCrossChainTxWithoutSign(Chain chain, AddFeeCrossChainTxDTO dto, long heterogeneousTxTime) throws NulsException;
+
     /**
      * 提现交易
      *

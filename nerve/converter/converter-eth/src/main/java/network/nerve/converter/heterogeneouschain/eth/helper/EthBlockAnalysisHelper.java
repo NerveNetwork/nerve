@@ -66,8 +66,8 @@ public class EthBlockAnalysisHelper {
         simpleBlockHeader.setHeight(blockHeight);
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         ethLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三个区块
-        ethLocalBlockHelper.deleteByHeight(blockHeight - 3);
+        // 只保留最近的三十个区块
+        ethLocalBlockHelper.deleteByHeight(blockHeight - 30);
         if (blockHeight % 20 == 0) {
             EthContext.logger().info("同步ETH高度[{}]完成", blockHeight);
         } else {

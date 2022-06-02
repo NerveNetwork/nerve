@@ -23,6 +23,8 @@
  */
 package network.nerve.swap.model.dto.stable;
 
+import io.nuls.base.data.CoinTo;
+
 import java.math.BigInteger;
 
 /**
@@ -34,11 +36,27 @@ public class StableSwapTradeDTO {
     private byte[] userAddress;
     private byte[] pairAddress;
     private BigInteger[] amountsIn;
+    private CoinTo feeTo;
 
     public StableSwapTradeDTO(byte[] userAddress, byte[] pairAddress, BigInteger[] amountsIn) {
         this.userAddress = userAddress;
         this.pairAddress = pairAddress;
         this.amountsIn = amountsIn;
+    }
+
+    public StableSwapTradeDTO(byte[] userAddress, byte[] pairAddress, BigInteger[] amountsIn, CoinTo feeTo) {
+        this.userAddress = userAddress;
+        this.pairAddress = pairAddress;
+        this.amountsIn = amountsIn;
+        this.feeTo = feeTo;
+    }
+
+    public CoinTo getFeeTo() {
+        return feeTo;
+    }
+
+    public void setFeeTo(CoinTo feeTo) {
+        this.feeTo = feeTo;
     }
 
     public byte[] getUserAddress() {

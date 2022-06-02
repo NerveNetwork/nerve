@@ -27,7 +27,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.AssetName;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
@@ -69,7 +68,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.EMPTY_STRING;
 
 /**
  * @author: Mimi
@@ -127,7 +126,7 @@ public class TrxUtil {
 
         BigInteger recoverPubKey = Sign.recoverFromSignature(sign.getRecId(), signature, hashBytes);
         if (recoverPubKey != null) {
-            String address = HtgConstant.HEX_PREFIX + Keys.getAddress(recoverPubKey);
+            String address = TrxConstant.HEX_PREFIX + Keys.getAddress(recoverPubKey);
             if (trxAddress2eth(from).equals(address.toLowerCase())) {
                 return recoverPubKey;
             }
@@ -334,11 +333,55 @@ public class TrxUtil {
         );
     }
 
+    public static Function getCrossOutIIFunction(String to, BigInteger value, String erc20, String data) {
+        DynamicBytes dynamicBytes;
+        if (StringUtils.isNotBlank(data)) {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(data));
+        } else {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(TrxConstant.HEX_PREFIX));
+        }
+        return new Function(
+                TrxConstant.METHOD_CROSS_OUT_II,
+                List.of(new Utf8String(to),
+                        new Uint256(value),
+                        new Address(erc20),
+                        dynamicBytes),
+                List.of(new TypeReference<Type>() {
+                })
+        );
+    }
+
     public static Function getIsMinterERC20Function(String erc20) {
         return new Function(
                 TrxConstant.METHOD_VIEW_IS_MINTER_ERC20,
                 List.of(new Address(erc20)),
                 List.of(new TypeReference<Bool>() {
+                })
+        );
+    }
+
+    public static Function getOneClickCrossChainFunction(BigInteger feeAmount, int desChainId, String desToAddress, String desExtend) {
+        return getOneClickCrossChainFunction(feeAmount, desChainId, desToAddress, BigInteger.ZERO, EMPTY_STRING, desExtend);
+    }
+    public static Function getOneClickCrossChainFunction(BigInteger feeAmount, int desChainId, String desToAddress,
+                                                         BigInteger tipping, String tippingAddress, String desExtend) {
+        DynamicBytes dynamicBytes;
+        if (StringUtils.isNotBlank(desExtend)) {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(desExtend));
+        } else {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(TrxConstant.HEX_PREFIX));
+        }
+        return new Function(
+                TrxConstant.METHOD_ONE_CLICK_CROSS_CHAIN,
+                List.of(
+                        new Uint256(feeAmount),
+                        new Uint256(desChainId),
+                        new Utf8String(desToAddress),
+                        new Uint256(tipping),
+                        new Utf8String(tippingAddress),
+                        dynamicBytes
+                ),
+                List.of(new TypeReference<Type>() {
                 })
         );
     }

@@ -203,7 +203,14 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             htUnconfirmedTxStorageService.save(po);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
             // 向NERVE网络发出充值待确认交易
-            htgPendingTxHelper.commitNervePendingDepositTx(po);
+            htgPendingTxHelper.commitNervePendingDepositTx(po,
+                    (extend, logger) -> {
+                        return htgParseTxHelper.parseOneClickCrossChainData(extend, logger);
+                    },
+                    (extend, logger) -> {
+                        return htgParseTxHelper.parseAddFeeCrossChainData(extend, logger);
+                    }
+            );
         }
     }
 

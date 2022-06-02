@@ -616,7 +616,7 @@ public class SwapServiceImpl implements SwapService {
     @Override
     public Result<String> stableSwapTokenTrade(int chainId, String address, String password, BigInteger[] amountsIn,
                                                String[] tokensIn, int tokenOutIndex, String feeTo,
-                                               String pairAddress, long deadline, String to) {
+                                               String pairAddress, long deadline, String to, String feeTokenStr, String feeAmountStr) {
         // 检查账户
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
@@ -628,6 +628,15 @@ public class SwapServiceImpl implements SwapService {
         // 简单检查交易业务
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
+        }
+        boolean hasFee = false;
+        byte[] feeToBytes = feeTo != null ? AddressTool.getAddress(feeTo) : null;
+        NerveToken feeToken = null;
+        BigInteger feeAmount = null;
+        if (StringUtils.isNotBlank(feeTo) && StringUtils.isNotBlank(feeTokenStr) && StringUtils.isNotBlank(feeAmountStr)) {
+            hasFee = true;
+            feeToken = SwapUtils.parseTokenStr(feeTokenStr);
+            feeAmount = new BigInteger(feeAmountStr);
         }
         int length = tokensIn.length;
         NerveToken[] _tokensIn = new NerveToken[length];
@@ -651,7 +660,7 @@ public class SwapServiceImpl implements SwapService {
         StableSwapTradeData data = new StableSwapTradeData();
         data.setTo(AddressTool.getAddress(to));
         data.setTokenOutIndex((byte) tokenOutIndex);
-        data.setFeeTo(feeTo != null ? AddressTool.getAddress(feeTo) : null);
+        data.setFeeTo(feeToBytes);
 
         AssembleTransaction aTx = new AssembleTransaction(SwapUtils.nulsData2HexBytes(data));
 
@@ -661,9 +670,16 @@ public class SwapServiceImpl implements SwapService {
         try {
             for (int i = 0; i < length; i++) {
                 NerveToken token = _tokensIn[i];
-                BigInteger amount = amountsIn[i];
                 LedgerBalance balance = ledgerService.getLedgerBalance(chainId, token.getChainId(), token.getAssetId(), address);
+                BigInteger amount = amountsIn[i];
                 aTx.newFrom().setFrom(balance, amount).endFrom();
+                if (hasFee && token.equals(feeToken)) {
+                    amount = amount.subtract(feeAmount);
+                    aTx.newTo().setToAddress(feeToBytes)
+                            .setToAssetsChainId(token.getChainId())
+                            .setToAssetsId(token.getAssetId())
+                            .setToAmount(feeAmount).endTo();
+                }
                 aTx.newTo().setToAddress(pairAddressBytes)
                         .setToAssetsChainId(token.getChainId())
                         .setToAssetsId(token.getAssetId())

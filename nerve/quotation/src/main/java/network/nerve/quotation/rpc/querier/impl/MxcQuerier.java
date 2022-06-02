@@ -40,24 +40,21 @@ import java.util.Map;
 @Component
 public class MxcQuerier implements Querier {
 
-    private final String CMD = "/open/api/v2/market/ticker?symbol=";
+    private final String CMD = "/api/v3/avgPrice?symbol=";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
-        String symbol = (anchorToken.replace("-", "_")).toUpperCase();
+        String symbol = (anchorToken.replace("-", "")).toUpperCase();
         String url = baseurl + CMD + symbol;
         try {
             Map<String, Object> map = HttpRequestUtil.httpRequest(chain, url);
             if (null == map) {
                 return null;
             }
-            List<Object> list = (List<Object>) map.get("data");
-            if(list.isEmpty()){
-                return null;
-            }
-            Map<String,Object> data = (Map<String, Object>) list.get(0);
-            chain.getLogger().info("MXC 获取到交易对[{}]价格:{}", symbol.toUpperCase(), data.get("last"));
-            return new BigDecimal(data.get("last").toString());
+            String price = (String) map.get("price");
+
+            chain.getLogger().info("MXC 获取到交易对[{}]价格:{}", symbol.toUpperCase(), price);
+            return new BigDecimal(price);
         } catch (Throwable e) {
             chain.getLogger().error("MXC, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
             return null;

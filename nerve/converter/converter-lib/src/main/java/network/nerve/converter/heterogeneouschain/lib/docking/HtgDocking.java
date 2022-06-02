@@ -587,7 +587,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // 向HTG网络请求验证
             boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
             if (isCompleted) {
-                logger().info("[{}]交易[{}]已完成", HeterogeneousChainTxType.CHANGE, nerveTxHash);
+                logger().info("[{}][{}]交易[{}]已完成", htgContext.getConfig().getSymbol(), HeterogeneousChainTxType.CHANGE, nerveTxHash);
                 return true;
             }
             // 业务验证
@@ -721,6 +721,39 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             HeterogeneousTransactionInfo txInfo = htgParseTxHelper.parseDepositTransaction(tx);
             if (txInfo == null) {
+                return false;
+            }
+            Long blockHeight = tx.getBlockNumber().longValue();
+            EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(blockHeight);
+            if (block == null) {
+                return false;
+            }
+            Long txTime = block.getTimestamp().longValue();
+            htgAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
+            htgCommonHelper.addHash(htTxHash);
+            return true;
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            reAnalysisLock.unlock();
+        }
+    }
+
+    @Override
+    public Boolean reAnalysisTx(String htTxHash) throws Exception {
+        if (htgCommonHelper.constainHash(htTxHash)) {
+            logger().info("重复收集交易hash: {}，不再重复解析[0]", htTxHash);
+            return true;
+        }
+        reAnalysisLock.lock();
+        try {
+            if (htgCommonHelper.constainHash(htTxHash)) {
+                logger().info("重复收集交易hash: {}，不再重复解析[1]", htTxHash);
+                return true;
+            }
+            logger().info("重新解析交易: {}", htTxHash);
+            org.web3j.protocol.core.methods.response.Transaction tx = htgWalletApi.getTransactionByHash(htTxHash);
+            if (tx == null || tx.getBlockNumber() == null) {
                 return false;
             }
             Long blockHeight = tx.getBlockNumber().longValue();
@@ -909,10 +942,23 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     @Override
     public void initialSignatureVersion() {
         byte version = htgMultiSignAddressHistoryStorageService.getVersion();
+        if (converterConfig.isNewProcessorMode()) {
+            htgContext.SET_VERSION(HtgConstant.VERSION_MULTY_SIGN_LATEST);
+        }
         if (version > 0) {
             htgContext.SET_VERSION(version);
         }
         logger().info("[{}]网络当前签名版本号: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
+    }
+
+    @Override
+    public HeterogeneousOneClickCrossChainData parseOneClickCrossChainData(String extend) {
+        return htgParseTxHelper.parseOneClickCrossChainData(extend, logger());
+    }
+
+    @Override
+    public HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend) {
+        return htgParseTxHelper.parseAddFeeCrossChainData(extend, logger());
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

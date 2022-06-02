@@ -17,6 +17,7 @@ import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.impl.stable.StableSwapTradeHandler;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
@@ -49,6 +50,8 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
     private SwapExecuteResultStorageService swapExecuteResultStorageService;
     @Autowired
     private StableSwapTradeHandler stableSwapTradeHandler;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public int getType() {
@@ -57,52 +60,11 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        if (txs.isEmpty()) {
-            return null;
+        if (swapHelper.isSupportProtocol21()) {
+            return this.validateP21(chainId, txs, txMap, blockHeader);
+        } else {
+            return this.validateP0(chainId, txs, txMap, blockHeader);
         }
-        Chain chain = chainManager.getChain(chainId);
-
-        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
-        if (chain == null) {
-            Log.error("Chains do not exist.");
-            resultMap.put("txList", txs);
-            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
-            return resultMap;
-        }
-        NulsLogger logger = chain.getLogger();
-        List<Transaction> failsList = new ArrayList<>();
-        String errorCode = SwapErrorCode.SUCCESS.getCode();
-        for (Transaction tx : txs) {
-            try {
-                if (tx.getType() != getType()) {
-                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
-                    failsList.add(tx);
-                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
-                    continue;
-                }
-                StableSwapTradeData txData = new StableSwapTradeData();
-                try {
-                    txData.parse(tx.getTxData(), 0);
-                } catch (NulsException e) {
-                    Log.error(e);
-                    failsList.add(tx);
-                    errorCode = e.getErrorCode().getCode();
-                    continue;
-                }
-                byte tokenOutIndex = txData.getTokenOutIndex();
-                CoinData coinData = tx.getCoinDataInstance();
-                StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, tokenOutIndex);
-                SwapUtils.calStableSwapTradeBusiness(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo());
-            } catch (Exception e) {
-                Log.error(e);
-                failsList.add(tx);
-                errorCode = SwapUtils.extractErrorCode(e).getCode();
-                continue;
-            }
-        }
-        resultMap.put("txList", failsList);
-        resultMap.put("errorCode", errorCode);
-        return resultMap;
     }
 
     @Override
@@ -171,6 +133,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
         return true;
     }
 
+
     // 持久化更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
     public void updatePersistence(StableSwapTradeBus bus, long height, long time) throws Exception {
         String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
@@ -202,4 +165,107 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
         stablePair.rollback(BigInteger.ZERO, oldBalances, tradePairBus.getPreBlockHeight(), tradePairBus.getPreBlockTime());
     }
 
+    private Map<String, Object> validateP0(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        if (txs.isEmpty()) {
+            return null;
+        }
+        Chain chain = chainManager.getChain(chainId);
+
+        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
+        if (chain == null) {
+            Log.error("Chains do not exist.");
+            resultMap.put("txList", txs);
+            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
+            return resultMap;
+        }
+        NulsLogger logger = chain.getLogger();
+        List<Transaction> failsList = new ArrayList<>();
+        String errorCode = SwapErrorCode.SUCCESS.getCode();
+        for (Transaction tx : txs) {
+            try {
+                if (tx.getType() != getType()) {
+                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
+                    continue;
+                }
+                StableSwapTradeData txData = new StableSwapTradeData();
+                try {
+                    txData.parse(tx.getTxData(), 0);
+                } catch (NulsException e) {
+                    Log.error(e);
+                    failsList.add(tx);
+                    errorCode = e.getErrorCode().getCode();
+                    continue;
+                }
+                byte tokenOutIndex = txData.getTokenOutIndex();
+                CoinData coinData = tx.getCoinDataInstance();
+                StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, tokenOutIndex);
+                SwapUtils.calStableSwapTradeBusiness(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo());
+            } catch (Exception e) {
+                Log.error(e);
+                failsList.add(tx);
+                errorCode = SwapUtils.extractErrorCode(e).getCode();
+                continue;
+            }
+        }
+        resultMap.put("txList", failsList);
+        resultMap.put("errorCode", errorCode);
+        return resultMap;
+    }
+
+    private Map<String, Object> validateP21(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        if (txs.isEmpty()) {
+            return null;
+        }
+        Chain chain = chainManager.getChain(chainId);
+
+        Map<String, Object> resultMap = new HashMap<>(SwapConstant.INIT_CAPACITY_2);
+        if (chain == null) {
+            Log.error("Chains do not exist.");
+            resultMap.put("txList", txs);
+            resultMap.put("errorCode", SwapErrorCode.CHAIN_NOT_EXIST.getCode());
+            return resultMap;
+        }
+        NulsLogger logger = chain.getLogger();
+        List<Transaction> failsList = new ArrayList<>();
+        String errorCode = SwapErrorCode.SUCCESS.getCode();
+        for (Transaction tx : txs) {
+            try {
+                if (tx.getType() != getType()) {
+                    logger.error("Tx type is wrong! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.DATA_ERROR.getCode();
+                    continue;
+                }
+                StableSwapTradeData txData = new StableSwapTradeData();
+                try {
+                    txData.parse(tx.getTxData(), 0);
+                } catch (NulsException e) {
+                    Log.error(e);
+                    failsList.add(tx);
+                    errorCode = e.getErrorCode().getCode();
+                    continue;
+                }
+                byte tokenOutIndex = txData.getTokenOutIndex();
+                CoinData coinData = tx.getCoinDataInstance();
+                StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfoP21(chainId, coinData, iPairFactory, tokenOutIndex, txData.getFeeTo());
+                if (chainId == 9 && SwapConstant.UNAVAILABLE_STABLE_PAIR.equals(dto.getPairAddress())) {
+                    logger.error("UNAVAILABLE_STABLE_PAIR! hash-{}", tx.getHash().toHex());
+                    failsList.add(tx);
+                    errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
+                    continue;
+                }
+                SwapUtils.calStableSwapTradeBusinessP21(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), dto.getFeeTo());
+            } catch (Exception e) {
+                Log.error(e);
+                failsList.add(tx);
+                errorCode = SwapUtils.extractErrorCode(e).getCode();
+                continue;
+            }
+        }
+        resultMap.put("txList", failsList);
+        resultMap.put("errorCode", errorCode);
+        return resultMap;
+    }
 }

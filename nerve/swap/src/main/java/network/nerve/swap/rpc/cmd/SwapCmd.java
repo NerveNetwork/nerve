@@ -310,7 +310,8 @@ public class SwapCmd extends BaseCmd {
             @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产数量"),
             @Parameter(parameterName = "tokenOutStr", parameterType = "String", parameterDes = "买进资产的类型，示例：1-1"),
             @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易最深路径"),
-            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表")
+            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表"),
+            @Parameter(parameterName = "resultRule", parameterType = "String", parameterDes = "`bestPrice`, `impactPrice`. 按[最优价格]和[价格影响]因素来取结果，默认使用[价格影响]因素来取结果")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "tokenPath", valueType = List.class, description = "最佳交易路径"),
@@ -322,12 +323,13 @@ public class SwapCmd extends BaseCmd {
             Integer chainId = (Integer) params.get("chainId");
             String tokenInStr = params.get("tokenInStr").toString();
             String tokenOutStr = params.get("tokenOutStr").toString();
+            String resultRule = (String) params.get("resultRule");
             BigInteger tokenInAmount = new BigInteger(params.get("tokenInAmount").toString());
             Integer maxPairSize = Integer.parseInt(params.get("maxPairSize").toString());
             List<String> pairsList = (List<String>) params.get("pairs");
             TokenAmount tokenAmountIn = new TokenAmount(SwapUtils.parseTokenStr(tokenInStr), tokenInAmount);
             NerveToken tokenOut = SwapUtils.parseTokenStr(tokenOutStr);
-            List<RouteVO> bestTrades = swapHelper.bestTradeExactIn(chainId, pairsList, tokenAmountIn, tokenOut, maxPairSize);
+            List<RouteVO> bestTrades = swapHelper.bestTradeExactIn(chainId, pairsList, tokenAmountIn, tokenOut, maxPairSize, resultRule);
             if (bestTrades == null || bestTrades.isEmpty()) {
                 return failed(SwapErrorCode.DATA_NOT_FOUND);
             }
@@ -620,10 +622,12 @@ public class SwapCmd extends BaseCmd {
             @Parameter(parameterName = "amountsIn", parameterType = "String[]", parameterDes = "卖出的资产数量列表"),
             @Parameter(parameterName = "tokensIn", parameterType = "String[]", parameterDes = "卖出的资产类型列表"),
             @Parameter(parameterName = "tokenOutIndex", parameterType = "int", parameterDes = "买进的资产索引"),
-            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费取出一部分给指定的接收地址"),
+            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费接收地址"),
             @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
             @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址"),
+            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "手续费资产类型，示例：1-1"),
+            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "交易手续费")
     })
     @ResponseData(description = "交易hash")
     public Response stableSwapTokenTrade(Map<String, Object> params) {
@@ -644,8 +648,10 @@ public class SwapCmd extends BaseCmd {
             String pairAddress = (String) params.get("pairAddress");
             Long deadline = Long.parseLong(params.get("deadline").toString());
             String to = (String) params.get("to");
+            String feeTokenStr = (String) params.get("feeToken");
+            String feeAmountStr = (String) params.get("feeAmount");
             Result<String> result = swapService.stableSwapTokenTrade(chainId, address, password, amountsIn, tokensIn,
-                    tokenOutIndex, feeTo, pairAddress, deadline, to);
+                    tokenOutIndex, feeTo, pairAddress, deadline, to, feeTokenStr, feeAmountStr);
             if (result.isFailed()) {
                 return wrapperFailed(result);
             }

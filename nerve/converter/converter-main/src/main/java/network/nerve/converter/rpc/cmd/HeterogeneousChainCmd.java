@@ -37,6 +37,7 @@ import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
 import network.nerve.converter.config.ConverterConfig;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -845,7 +846,8 @@ public class HeterogeneousChainCmd extends BaseCmd {
             @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
     })
     @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID")
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
+            @Key(name = "contractAddress", valueType = String.class, description = "资产对应合约地址(若有)")
     })
     )
     public Response getRegisterNetwork(Map params) {
@@ -855,7 +857,18 @@ public class HeterogeneousChainCmd extends BaseCmd {
             chain = chainManager.getChain(converterConfig.getChainId());
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
-            List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
+            int registerNetwork;
+            String contractAddress = null;
+            HeterogeneousAssetInfo assetInfo = ConverterContext.assetRegisterNetwork.get(chainId + "_" + assetId);
+            if (assetInfo == null) {
+                registerNetwork = 0;
+            } else {
+                registerNetwork = assetInfo.getChainId();
+                contractAddress = assetInfo.getContractAddress();
+            }
+            rtMap.put("heterogeneousChainId", registerNetwork);
+            rtMap.put("contractAddress", contractAddress);
+            /*List<HeterogeneousAssetInfo> assetInfos = heterogeneousAssetHelper.getHeterogeneousAssetInfo(chainId, assetId);
             if (assetInfos == null || assetInfos.isEmpty()) {
                 return failed(ConverterErrorCode.DATA_NOT_FOUND);
             }
@@ -885,7 +898,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (resultChainId == 0) {
                 return failed(ConverterErrorCode.DATA_NOT_FOUND);
             }
-            rtMap.put("heterogeneousChainId", resultChainId);
+            rtMap.put("heterogeneousChainId", resultChainId);*/
         } catch (Exception e) {
             errorLogProcess(chain, e);
             return failed(e.getMessage());

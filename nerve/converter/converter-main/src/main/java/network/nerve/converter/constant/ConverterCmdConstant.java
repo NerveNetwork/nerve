@@ -39,6 +39,7 @@ public interface ConverterCmdConstant {
     String CHECK_RETRY_PARSE_MESSAGE = "checkRetry";
     String CANCEL_HTG_TX_MESSAGE = "cancelHtgTx";
     String COMPONENT_SIGN = "compSign";
+    String RETRY_VIRTUAL_BANK_MESSAGE = "retryBank";
 
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO = "cv_get_heterogeneous_chain_asset_info";
     String GET_HETEROGENEOUS_CHAIN_ASSET_INFO_LIST = "cv_get_heterogeneous_chain_asset_info_list";
@@ -67,10 +68,12 @@ public interface ConverterCmdConstant {
     String RESET_VIRTUAL_BANK = "cv_resetVirtualBank";
     String DISQUALIFICATION = "cv_disqualification";
     String CHECK_RETRY_PARSE = "cv_checkRetryParse";
+    String CHECK_RETRY_HTG_TX = "cv_checkRetryHtgTx";
     String RETRY_WITHDRAWAL = "cv_retry_withdrawal";
     String CANCEL_HTG_TX = "cv_cancelHtgTx";
     String GET_PROPOSAL_INFO = "cv_getProposalInfo";
     String GET_RECHARGE_NERVE_HASH = "cv_getRechargeNerveHash";
     String FIND_BY_WITHDRAWAL_TX_HASH = "cv_findByWithdrawalTxHash";
+    String RETRY_VIRTUAL_BANK = "cv_retryVirtualBank";
 
 }

@@ -810,6 +810,7 @@ public class MaticWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
+        setMain();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
@@ -930,6 +931,42 @@ public class MaticWalletApiTest extends Base {
             oldValue = oldValue == null ? BigInteger.ZERO : oldValue;
             System.out.println(newValue.compareTo(oldValue) == 0);
             System.out.println();
+        }
+    }
+
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        // 0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"
+        setMain();
+        String contractAddress = "0x673a11e6AFAaBED2d34E07e1259f09F06C7fed03";
+        BigInteger convertAmount = new BigDecimal("5000001").movePointRight(18).toBigInteger();
+        String from = "0x649Fd8b99b1d61d8FE7A9C7eec86dcfF829633F0";
+        String to = "0x9DDc2fB726cF243305349587AE2a33dd7c91460e";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
     }
 

@@ -115,7 +115,7 @@ public class SwapTools implements CallRpc {
      * 寻找最佳交易路径
      */
     public Result<Map<String, Object>> getBestTradeExactIn(int chainId, String tokenInStr, String tokenInAmount,
-                                              String tokenOutStr, int maxPairSize, String[] allPairs) {
+                                              String tokenOutStr, int maxPairSize, String[] allPairs, String resultRule) {
         Map<String, Object> params = new HashMap<>(8);
         params.put("chainId", chainId);
         params.put("tokenInStr", tokenInStr);
@@ -123,6 +123,7 @@ public class SwapTools implements CallRpc {
         params.put("tokenOutStr", tokenOutStr);
         params.put("maxPairSize", maxPairSize);
         params.put("pairs", allPairs);
+        params.put("resultRule", resultRule);
         try {
             return callRpc(ModuleE.SW.abbr, "sw_best_trade_exact_in", params, (Function<Map<String, Object>, Result>) res -> new Result(res));
         } catch (NulsRuntimeException e) {

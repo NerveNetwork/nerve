@@ -55,6 +55,10 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
         int size;
         if (list != null && (size = list.size()) > 0) {
             long txTime = header.getTimestamp();
+            if (htgContext.getConverterCoreApi().isProtocol21()) {
+                // 换算时间为秒
+                txTime = txTime / 1000;
+            }
             for (int i = 0; i < size; i++) {
                 Response.TransactionExtention tx = list.get(i);
                 try {
@@ -71,15 +75,14 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
         simpleBlockHeader.setHeight(blockHeight);
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三个区块
-        htgLocalBlockHelper.deleteByHeight(blockHeight - 3);
+        // 只保留最近的三十个区块
+        htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
 
-        htgContext.logger().info("TRON同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
-        /*if (blockHeight % 50 == 0) {
+        if (blockHeight % 50 == 0) {
             htgContext.logger().info("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
         } else {
             htgContext.logger().debug("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
-        }*/
+        }
     }
 
 

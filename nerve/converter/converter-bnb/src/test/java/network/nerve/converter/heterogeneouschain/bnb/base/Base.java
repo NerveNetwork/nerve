@@ -34,6 +34,9 @@ import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +54,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -69,12 +76,44 @@ public class Base {
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected BnbContext htgContext;
+    private static final CipherSuite[] INFURA_CIPHER_SUITES =
+            new CipherSuite[] {
+                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+                    CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
 
+                    // Note that the following cipher suites are all on HTTP/2's bad cipher suites list.
+                    // We'll
+                    // continue to include them until better suites are commonly available. For example,
+                    // none
+                    // of the better cipher suites listed above shipped with Android 4.4 or Java 7.
+                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+                    CipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256,
+                    CipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384,
+                    CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA,
+                    CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA,
+                    CipherSuite.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+
+                    // Additional INFURA CipherSuites
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
+                    CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256,
+                    CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA256
+            };
+    private static final ConnectionSpec INFURA_CIPHER_SUITE_SPEC =
+            new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                    .cipherSuites(INFURA_CIPHER_SUITES)
+                    .build();
     @BeforeClass
     public static void initClass() {
         Log.info("init");
     }
-
     @Before
     public void setUp() throws Exception {
         /*
@@ -87,7 +126,10 @@ public class Base {
         // 1-s2, 2-s1, 2-s2
         String ethRpcAddress = "https://data-seed-prebsc-2-s3.binance.org:8545/";
         htgWalletApi = new HtgWalletApi();
-        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
         htgContext = new BnbContext();

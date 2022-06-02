@@ -63,6 +63,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     protected String rpcAddress;
     int switchStatus = 0;
     private boolean inited = false;
+    private boolean urlFromThirdParty = false;
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
 
@@ -98,10 +99,17 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 }
                 return;
             }
+            if (urlFromThirdParty) {
+                if (getLog().isDebugEnabled()) {
+                    getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                }
+                return;
+            }
         } else if (clearTimeOfRequestExceededMap != 0){
             getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
             requestExceededMap.clear();
             clearTimeOfRequestExceededMap = 0L;
+            urlFromThirdParty = false;
         }
 
         String rpc = this.calRpcBySwitchStatus(order, switchStatus);
@@ -224,11 +232,9 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         this.inited = true;
     }
 
-    @Override
     public void initialize() {
     }
 
-    @Override
     public long getBlockHeight() throws Exception {
         BigInteger blockHeight = this.timeOutWrapperFunction("getBlockHeight", null, args -> {
             return web3j.ethBlockNumber().send().getBlockNumber();
@@ -288,7 +294,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
-    @Override
     public BigDecimal getBalance(String address) throws Exception {
         BigDecimal balance = this.timeOutWrapperFunction("getBalance", address, args -> {
             EthGetBalance send = web3j.ethGetBalance(args, DefaultBlockParameterName.LATEST).send();
@@ -315,21 +320,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         });
     }
 
-    @Override
-    public boolean canTransferBatch() {
-        return false;
-    }
-
-    @Override
-    public void confirmUnspent(Block block) {
-    }
-
-    @Override
-    public EthSendTransaction sendTransaction(String fromAddress, String secretKey, Map<String, BigDecimal> accounts) {
-        return null;
-    }
-
-    @Override
     public String sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount) {
         String result = null;
         //发送eth
@@ -529,7 +519,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         return ethSendTransaction;
     }
 
-    @Override
     public EthSendTransaction sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount, String contractAddress) throws Exception {
         //发送token
         if (toAddress.length() != 42) {
@@ -540,11 +529,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         }
         EthSendTransaction result = transferERC20Token(fromAddress, toAddress, amount.toBigInteger(), secretKey, contractAddress);
         return result;
-    }
-
-    @Override
-    public String convertToNewAddress(String address) {
-        return address;
     }
 
     public BigInteger convertMainAssetToWei(BigDecimal value) {
@@ -764,12 +748,37 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     private <T, R> R timeOutWrapperFunction(String functionName, T arg, ExceptionFunction<T, R> fucntion) throws Exception {
         return this.timeOutWrapperFunctionReal(functionName, fucntion, 0, arg);
     }
-
+    private boolean timeOutExceed = false;
     private <T, R> R timeOutWrapperFunctionReal(String functionName, ExceptionFunction<T, R> fucntion, int times, T arg) throws Exception {
         try {
             this.checkIfResetWeb3j(times);
             return fucntion.apply(arg);
         } catch (Exception e) {
+            String message = e.getMessage();
+            boolean isTimeOut = ConverterUtil.isTimeOutError(message);
+            if (isTimeOut) {
+                getLog().error("{}: {} function [{}] time out", e.getClass().getName(), symbol(), functionName);
+                if (timeOutExceed || times > 10) {
+                    timeOutExceed = true;
+                    Integer count = requestExceededMap.computeIfAbsent(this.rpcAddress, r -> 0);
+                    requestExceededMap.put(this.rpcAddress, count + 1);
+                    switchStandbyAPI(this.rpcAddress);
+                    throw e;
+                }
+                try {
+                    TimeUnit.MILLISECONDS.sleep(500);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
+            }
+            String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
+            if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
+                clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
+                urlFromThirdParty = true;
+                changeApi(availableRpc);
+                throw e;
+            }
             // 当API连接异常时，重置API连接，使用备用API 异常: ClientConnectionException
             if (e instanceof ClientConnectionException) {
                 getLog().warn("API连接异常时，重置API连接，使用备用API");
@@ -805,17 +814,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 requestExceededMap.put(this.rpcAddress, count + 1);
                 switchStandbyAPI(this.rpcAddress);
                 throw e;
-            }
-            String message = e.getMessage();
-            boolean isTimeOut = ConverterUtil.isTimeOutError(message);
-            if (isTimeOut) {
-                getLog().error("{}: {} function [{}] time out", e.getClass().getName(), symbol(), functionName);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(500);
-                } catch (InterruptedException ex) {
-                    ex.printStackTrace();
-                }
-                return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
             if (e instanceof SSLHandshakeException || e instanceof SSLException) {
                 changeApi(this.rpcAddress);

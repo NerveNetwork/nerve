@@ -35,22 +35,24 @@ public class TrxEstimateSun {
     private boolean reverted;
     private String revertReason;
     private long sunUsed;
+    private long energyUsed;
 
-    private TrxEstimateSun(boolean reverted, String revertReason, long sunUsed) {
+    public TrxEstimateSun(boolean reverted, String revertReason, long sunUsed, long energyUsed) {
         this.reverted = reverted;
         this.revertReason = revertReason;
         this.sunUsed = sunUsed;
+        this.energyUsed = energyUsed;
     }
 
-    public static TrxEstimateSun SUCCESS(long energyUsed) {
-        return new TrxEstimateSun(false, null, energyUsed);
+    public static TrxEstimateSun SUCCESS(long sunUsed, long energyUsed) {
+        return new TrxEstimateSun(false, null, sunUsed, energyUsed);
     }
 
     public static TrxEstimateSun FAILED(String error) {
         if (StringUtils.isBlank(error)) {
             error = DEFAULT_ERROR;
         }
-        return new TrxEstimateSun(true, error, 0);
+        return new TrxEstimateSun(true, error, 0, 0);
     }
 
     public boolean isReverted() {
@@ -63,5 +65,9 @@ public class TrxEstimateSun {
 
     public long getSunUsed() {
         return sunUsed;
+    }
+
+    public long getEnergyUsed() {
+        return energyUsed;
     }
 }

@@ -93,6 +93,14 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
 
     @Override
     public SwapResult execute(int chainId, Transaction tx, long blockHeight, long blockTime) {
+        if (swapHelper.isSupportProtocol21()) {
+            return this.executeP21(chainId, tx, blockHeight, blockTime);
+        } else {
+            return this.executeP0(chainId, tx, blockHeight, blockTime);
+        }
+    }
+
+    private SwapResult executeP0(int chainId, Transaction tx, long blockHeight, long blockTime) {
         SwapResult result = new SwapResult();
         BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
         StableSwapTradeDTO dto = null;
@@ -110,6 +118,89 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             NerveToken[] coins = pairPo.getCoins();
             // 整合计算数据
             StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo());
+            // 装填执行结果
+            result.setTxType(txType());
+            result.setSuccess(true);
+            result.setHash(tx.getHash().toHex());
+            result.setTxTime(tx.getTime());
+            result.setBlockHeight(blockHeight);
+            result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
+            // 组装系统成交交易
+            LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
+            Transaction sysDealTx = this.makeSystemDealTx(bus, coins, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            result.setSubTx(sysDealTx);
+            result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
+            // 更新临时余额
+            tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
+            // 更新临时数据
+            stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeight, blockTime);
+        } catch (Exception e) {
+            Log.error(e);
+            // 装填失败的执行结果
+            result.setTxType(txType());
+            result.setSuccess(false);
+            result.setHash(tx.getHash().toHex());
+            result.setTxTime(tx.getTime());
+            result.setBlockHeight(blockHeight);
+            result.setErrorMessage(e instanceof NulsException ? ((NulsException) e).format() : e.getMessage());
+
+            if (dto == null) {
+                return result;
+            }
+            String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+            IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+            StableSwapPairPo pairPo = stablePair.getPair();
+            NerveToken[] coins = pairPo.getCoins();
+            int length = coins.length;
+            // 组装系统退还交易
+            SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
+            LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
+            BigInteger[] amountsIn = dto.getAmountsIn();
+            for (int i = 0; i < length; i++) {
+                BigInteger amountIn = amountsIn[i];
+                if (BigInteger.ZERO.equals(amountIn)) {
+                    continue;
+                }
+                NerveToken tokenIn = coins[i];
+                LedgerBalance ledgerBalanceIn = tempBalanceManager.getBalance(dto.getPairAddress(), tokenIn.getChainId(), tokenIn.getAssetId()).getData();
+                refund.newFrom()
+                        .setFrom(ledgerBalanceIn, amountIn).endFrom()
+                        .newTo()
+                        .setToAddress(dto.getUserAddress())
+                        .setToAssetsChainId(tokenIn.getChainId())
+                        .setToAssetsId(tokenIn.getAssetId())
+                        .setToAmount(amountIn).endTo();
+            }
+            Transaction refundTx = refund.build();
+            result.setSubTx(refundTx);
+            String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
+            result.setSubTxStr(refundTxStr);
+            // 更新临时余额
+            tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
+        } finally {
+            batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
+        }
+        return result;
+    }
+
+    private SwapResult executeP21(int chainId, Transaction tx, long blockHeight, long blockTime) {
+        SwapResult result = new SwapResult();
+        BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
+        StableSwapTradeDTO dto = null;
+        try {
+            // 提取业务参数
+            StableSwapTradeData txData = new StableSwapTradeData();
+            txData.parse(tx.getTxData(), 0);
+            byte tokenOutIndex = txData.getTokenOutIndex();
+            CoinData coinData = tx.getCoinDataInstance();
+            dto = this.getStableSwapTradeInfoP21(chainId, coinData, iPairFactory, tokenOutIndex, txData.getFeeTo());
+
+            String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+            IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+            StableSwapPairPo pairPo = stablePair.getPair();
+            NerveToken[] coins = pairPo.getCoins();
+            // 整合计算数据
+            StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusinessP21(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), dto.getFeeTo());
             // 装填执行结果
             result.setTxType(txType());
             result.setSuccess(true);
@@ -310,6 +401,94 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             throw new NulsException(SwapErrorCode.SWAP_TRADE_FROMS_ERROR);
         }
         return new StableSwapTradeDTO(_from, pairAddressBytes, amountsIn);
+    }
+
+    public StableSwapTradeDTO getStableSwapTradeInfoP21(int chainId, CoinData coinData, IPairFactory iPairFactory, byte tokenOutIndex, byte[] feeTo) throws NulsException {
+        if (coinData == null) {
+            return null;
+        }
+        boolean hasFeeTo = feeTo != null;
+        if (hasFeeTo && !AddressTool.validAddress(chainId, feeTo)) {
+            throw new NulsException(SwapErrorCode.FEE_RECEIVE_ADDRESS_ERROR);
+        }
+        List<CoinTo> tos = coinData.getTo();
+        if (tos.isEmpty()) {
+            throw new NulsException(SwapErrorCode.SWAP_TRADE_TOS_ERROR);
+        }
+        byte[] toAddress0 = tos.get(0).getAddress();
+        byte[] pairAddressBytes;
+        if (!hasFeeTo || tos.size() == 1) {
+            pairAddressBytes = toAddress0;
+        } else {
+            pairAddressBytes = Arrays.equals(feeTo, toAddress0) ? tos.get(1).getAddress() : toAddress0;
+        }
+        String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        if (!stableSwapPairCache.isExist(pairAddress)) {
+            throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+        }
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        NerveToken[] coins = pairPo.getCoins();
+        int length = coins.length;
+        // 选出用户卖出的资产
+        BigInteger[] amountsIn = new BigInteger[length];
+        //BigInteger feeAmount = null;
+        CoinTo feeCoin = null;
+        for (CoinTo to : tos) {
+            if (to.getLockTime() != 0) {
+                throw new NulsException(SwapErrorCode.SWAP_TRADE_AMOUNT_LOCK_ERROR);
+            }
+            if (hasFeeTo && Arrays.equals(feeTo, to.getAddress())) {
+                if (feeCoin != null) {
+                    // 只允许一个feeTo
+                    throw new NulsException(SwapErrorCode.FEE_RECEIVE_ADDRESS_ERROR);
+                }
+                feeCoin = to;
+                continue;
+            }
+            if (!Arrays.equals(pairAddressBytes, to.getAddress())) {
+                throw new NulsException(SwapErrorCode.PAIR_ADDRESS_ERROR);
+            }
+            boolean exist = false;
+            for (int i = 0; i < length; i++) {
+                NerveToken coin = coins[i];
+                if (coin.getChainId() == to.getAssetsChainId() && coin.getAssetId() == to.getAssetsId()) {
+                    // 用户买进的资产不能是卖出的资产
+                    if (tokenOutIndex == i) {
+                        throw new NulsException(SwapErrorCode.SWAP_TRADE_RECEIVE_ERROR);
+                    }
+                    amountsIn[i] = to.getAmount();
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                throw new NulsException(SwapErrorCode.SWAP_TRADE_TOS_ERROR);
+            }
+        }
+        boolean hasFeeCoin = feeCoin != null;
+        // 空值填充
+        amountsIn = SwapUtils.emptyFillZero(amountsIn);
+        List<CoinFrom> froms = coinData.getFrom();
+        int _fromsSize = froms.size();
+        if (hasFeeCoin) {
+            _fromsSize++;
+        }
+        if (_fromsSize != tos.size()) {
+            throw new NulsException(SwapErrorCode.SWAP_TRADE_FROMS_ERROR);
+        }
+        byte[] _from = null;
+        for (CoinFrom from : froms) {
+            if (_from == null) {
+                _from = from.getAddress();
+            } else if (!Arrays.equals(_from, from.getAddress())) {
+                throw new NulsException(SwapErrorCode.IDENTICAL_ADDRESSES);
+            }
+        }
+        if (_from == null) {
+            throw new NulsException(SwapErrorCode.SWAP_TRADE_FROMS_ERROR);
+        }
+        return new StableSwapTradeDTO(_from, pairAddressBytes, amountsIn, feeCoin);
     }
 
     // 整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换

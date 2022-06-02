@@ -28,6 +28,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.CoinData;
 import io.nuls.base.data.CoinTo;
 import io.nuls.base.data.Transaction;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
@@ -45,6 +46,7 @@ import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.model.txdata.OneClickCrossChainTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
@@ -110,15 +112,26 @@ public class ConfirmWithdrawalVerifier {
         for (CoinTo coinTo : withdrawalCoinData.getTo()) {
             if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
                 withdrawalTo = coinTo;
+                break;
             }
         }
-        WithdrawalTxData withdrawalTxData = ConverterUtil.getInstance(withdrawalTx.getTxData(), WithdrawalTxData.class);
+        int htgChainId = 0;
+        String toAddress = null;
+        if (TxType.WITHDRAWAL == withdrawalTx.getType()) {
+            WithdrawalTxData txData1 = ConverterUtil.getInstance(withdrawalTx.getTxData(), WithdrawalTxData.class);
+            htgChainId = txData1.getHeterogeneousChainId();
+            toAddress = txData1.getHeterogeneousAddress();
+        } else if (TxType.ONE_CLICK_CROSS_CHAIN == withdrawalTx.getType()) {
+            OneClickCrossChainTxData txData1 = ConverterUtil.getInstance(withdrawalTx.getTxData(), OneClickCrossChainTxData.class);
+            htgChainId = txData1.getDesChainId();
+            toAddress = txData1.getDesToAddress();
+        }
         // 根据提现交易 资产信息获取异构链交易信息(转换获取) 再验证
-        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(withdrawalTxData.getHeterogeneousChainId(), withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
+        HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
         if(null == heterogeneousAssetInfo){
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
-        // 获取提案中的异构链充值交易
+        // 获取异构链中对应的提现交易
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 heterogeneousAssetInfo.getChainId(),
                 txData.getHeterogeneousTxHash(),
@@ -141,7 +154,7 @@ public class ConfirmWithdrawalVerifier {
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
         }
 
-        if (!addressToLowerCase(withdrawalTxData.getHeterogeneousAddress()).equals(addressToLowerCase(info.getTo()))) {
+        if (!addressToLowerCase(toAddress).equals(addressToLowerCase(info.getTo()))) {
             // 提现交易确认交易中到账地址与异构确认交易到账地址数据不匹配
             throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_ARRIVE_ADDRESS_MISMATCH);
         }

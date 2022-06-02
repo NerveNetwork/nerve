@@ -81,4 +81,11 @@ public interface MessageService {
      * @param cancelHtgTxMessage
      */
     void cancelHtgTx(Chain chain, String nodeId, CancelHtgTxMessage cancelHtgTxMessage);
+    /**
+     * 重发虚拟银行变更签名消息
+     * @param chain
+     * @param nodeId
+     * @param message
+     */
+    void retryVirtualBankSign(Chain chain, String nodeId, VirtualBankSignMessage message, boolean isCreate);
 }

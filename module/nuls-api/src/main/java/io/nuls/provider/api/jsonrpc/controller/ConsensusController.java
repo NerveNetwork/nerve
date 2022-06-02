@@ -35,6 +35,7 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.model.*;
 import io.nuls.provider.api.config.Context;
 import io.nuls.provider.api.manager.BeanCopierManager;
+import io.nuls.provider.model.dto.AgentInfoDTO;
 import io.nuls.provider.model.dto.DepositInfoDto;
 import io.nuls.provider.model.dto.RandomSeedDTO;
 import io.nuls.provider.model.dto.ReduceNonceDTO;
@@ -360,7 +361,7 @@ public class ConsensusController {
         } catch (Exception e) {
             return RpcResult.paramError("[count] is inValid");
         }
-        if(params.size() > 3) {
+        if (params.size() > 3) {
             try {
                 algorithm = params.get(3).toString();
             } catch (Exception e) {
@@ -404,7 +405,7 @@ public class ConsensusController {
         } catch (Exception e) {
             return RpcResult.paramError("[endHeight] is inValid");
         }
-        if(params.size() > 3) {
+        if (params.size() > 3) {
             try {
                 algorithm = params.get(3).toString();
             } catch (Exception e) {
@@ -1129,8 +1130,8 @@ public class ConsensusController {
     })
     @ResponseData(name = "返回值", description = "返回委托共识集合", responseType = @TypeDescriptor(value = List.class, collectionElement = ReduceNonceDTO.class))
     public RpcResult getReduceNonceList(List<Object> params) {
-        int chainId,quitAll;
-        String agentHash,reduceAmount;
+        int chainId, quitAll;
+        String agentHash, reduceAmount;
         try {
             chainId = (int) params.get(0);
         } catch (Exception e) {
@@ -1150,16 +1151,16 @@ public class ConsensusController {
             return RpcResult.paramError("[reduceAmount] is inValid");
         }
         try {
-            if(params.size() < 4){
+            if (params.size() < 4) {
                 quitAll = 0;
-            }else{
-                quitAll = (int)params.get(3);
+            } else {
+                quitAll = (int) params.get(3);
             }
         } catch (Exception e) {
             return RpcResult.paramError("[reduceAmount] is inValid");
         }
 
-        GetReduceNonceReq req = new GetReduceNonceReq(agentHash,quitAll,reduceAmount);
+        GetReduceNonceReq req = new GetReduceNonceReq(agentHash, quitAll, reduceAmount);
         req.setChainId(chainId);
 
         Result<ReduceNonceInfo> result = consensusProvider.getReduceNonceList(req);
@@ -1168,6 +1169,36 @@ public class ConsensusController {
             List<ReduceNonceInfo> list = result.getList();
             if (list != null && !list.isEmpty()) {
                 List<ReduceNonceDTO> dtoList = list.stream().map(ReduceNonceDTO::new).collect(Collectors.toList());
+                rpcResult.setResult(dtoList);
+            }
+        }
+        return rpcResult;
+    }
+
+    @RpcMethod("getAgentList")
+    @ApiOperation(description = "查询节点列表", order = 559)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
+    })
+    @ResponseData(name = "返回值", description = "返回节点列表", responseType = @TypeDescriptor(value = List.class, collectionElement = AgentInfo.class))
+    public RpcResult getAgentList(List<Object> params) {
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        GetAgentListReq req = new GetAgentListReq();
+        req.setChainId(chainId);
+        req.setPageNumber(1);
+        req.setPageSize(30);
+
+        Result<AgentInfo> result = consensusProvider.getAgentList(req);
+        RpcResult rpcResult = ResultUtil.getJsonRpcResult(result);
+        if (result.isSuccess()) {
+            List<AgentInfo> list = result.getList();
+            if (list != null && !list.isEmpty()) {
+                List<AgentInfoDTO> dtoList = list.stream().map(AgentInfoDTO::new).collect(Collectors.toList());
                 rpcResult.setResult(dtoList);
             }
         }

@@ -180,6 +180,14 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.warn("Failed to get height_1_16_0", e);
         }
+        try {
+            long heightVersion1_21_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_21_0"));
+            // v1.21.0 协议升级高度
+            ConverterContext.PROTOCOL_1_21_0 = heightVersion1_21_0;
+            ConverterContext.protocolHeightMap.put(21, heightVersion1_21_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_21_0", e);
+        }
     }
 
     @Override

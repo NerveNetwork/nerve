@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.trx.handler;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
@@ -44,9 +45,13 @@ import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxSt
 import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxParseTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
+import network.nerve.converter.model.bo.HeterogeneousAddFeeCrossChainData;
+import network.nerve.converter.model.bo.HeterogeneousOneClickCrossChainData;
 import network.nerve.converter.utils.LoggerUtil;
 import org.tron.trident.proto.Response;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -273,43 +278,69 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             }
             po.setValidateTx(validateTx);
         }
+        // 回调充值交易
+        String nerveTxHash;
+        Long height = po.getBlockHeight();
+        Long txTime = po.getTxTime();
         try {
-            // 回调充值交易
-            String nerveTxHash;
-            if (po.isDepositIIMainAndToken()) {
-                // 同时充值两种资产的充值交易
-                nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmit(
-                        htgTxHash,
-                        po.getBlockHeight(),
-                        po.getFrom(),
-                        po.getTo(),
-                        po.getValue(),
-                        po.getTxTime(),
-                        po.getDecimals(),
-                        po.getContractAddress(),
-                        po.getAssetId(),
-                        po.getNerveAddress(),
-                        po.getDepositIIMainAssetValue(), po.getDepositIIExtend());
-            } else {
-                nerveTxHash = htgCallBackManager.getDepositTxSubmitter().txSubmit(
-                        htgTxHash,
-                        po.getBlockHeight(),
-                        po.getFrom(),
-                        po.getTo(),
-                        po.getValue(),
-                        po.getTxTime(),
-                        po.getDecimals(),
-                        po.isIfContractAsset(),
-                        po.getContractAddress(),
-                        po.getAssetId(),
-                        po.getNerveAddress(), po.getDepositIIExtend());
-            }
+            do {
+                ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
+                byte[] withdrawalBlackhole = AddressTool.getAddressByPubKeyStr(converterConfig.getBlackHolePublicKey(), converterConfig.getChainId());
+                byte[] feeAddress = AddressTool.getAddressByPubKeyStr(converterConfig.getFeePubkey(), converterConfig.getChainId());
+                nerveTxHash = this.submitNerveAddFeeCrossChainTx(po, height, txTime, feeAddress);
+                if (StringUtils.isNotBlank(nerveTxHash)) {
+                    // 此交易是跨链追加手续费交易
+                    break;
+                }
+                nerveTxHash = this.submitNerveOneClickCrossChainTx(po, height, txTime, withdrawalBlackhole);
+                if (StringUtils.isNotBlank(nerveTxHash)) {
+                    // 此交易是一键跨链交易
+                    break;
+                }
+                // 充值的nerve接收地址不能是黑洞或者手续费补贴地址
+                if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole) || Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
+                    logger().error("[{}][充值地址异常][黑洞或者手续费补贴地址]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                    // 验证失败，从DB和队列中移除交易
+                    this.clearDB(htgTxHash);
+                    return !isReOfferQueue;
+                }
+                if (po.isDepositIIMainAndToken()) {
+                    // 同时充值两种资产的充值交易
+                    nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmit(
+                            htgTxHash,
+                            height,
+                            po.getFrom(),
+                            po.getTo(),
+                            po.getValue(),
+                            txTime,
+                            po.getDecimals(),
+                            po.getContractAddress(),
+                            po.getAssetId(),
+                            po.getNerveAddress(),
+                            po.getDepositIIMainAssetValue(), po.getDepositIIExtend());
+                } else {
+                    nerveTxHash = htgCallBackManager.getDepositTxSubmitter().txSubmit(
+                            htgTxHash,
+                            height,
+                            po.getFrom(),
+                            po.getTo(),
+                            po.getValue(),
+                            txTime,
+                            po.getDecimals(),
+                            po.isIfContractAsset(),
+                            po.getContractAddress(),
+                            po.getAssetId(),
+                            po.getNerveAddress(), po.getDepositIIExtend());
+                }
+            } while (false);
+
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
             // 当未确认交易数据产生变化时，更新DB数据
             boolean nerveTxHashNotBlank = StringUtils.isNotBlank(nerveTxHash);
             if (nerveTxHashNotBlank) {
-                htgUnconfirmedTxStorageService.update(txPo, update -> update.setNerveTxHash(nerveTxHash));
+                String updateHash = nerveTxHash;
+                htgUnconfirmedTxStorageService.update(txPo, update -> update.setNerveTxHash(updateHash));
                 if (nerveTxHashNotBlank) {
                     htgStorageHelper.saveTxInfo(txPo);
                 }
@@ -326,6 +357,90 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             throw e;
         }
         return isReOfferQueue;
+    }
+
+    private String submitNerveAddFeeCrossChainTx(HtgUnconfirmedTxPo po, Long height, Long txTime, byte[] feeAddress) throws Exception {
+        if (!htgContext.getConverterCoreApi().isProtocol21()) {
+            return null;
+        }
+        HeterogeneousAddFeeCrossChainData data = htgParseTxHelper.parseAddFeeCrossChainData(po.getDepositIIExtend(), logger());
+        if (data == null) {
+            return null;
+        }
+        // 跨链追加手续费的nerve接收地址只能是手续费补贴地址
+        if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
+            logger().error("[{}]AddFeeCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+            return null;
+        }
+        // 不能有token资产
+        if (po.isIfContractAsset()) {
+            logger().error("[{}]AddFeeCrossChain Asset error, token address: {}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getContractAddress(), po.getTxHash());
+            return null;
+        }
+        String nerveTxHash = htgCallBackManager.getDepositTxSubmitter().addFeeCrossChainTxSubmit(
+                po.getTxHash(),
+                height,
+                po.getFrom(),
+                po.getTo(),
+                txTime,
+                po.getNerveAddress(),
+                po.getValue(),
+                data.getNerveTxHash(),
+                data.getSubExtend());
+        return nerveTxHash;
+    }
+
+    // P21生效, 一键跨链交易
+    private String submitNerveOneClickCrossChainTx(HtgUnconfirmedTxPo po, Long height, Long txTime, byte[] withdrawalBlackhole) throws Exception {
+        if (!htgContext.getConverterCoreApi().isProtocol21()) {
+            return null;
+        }
+        HeterogeneousOneClickCrossChainData data = htgParseTxHelper.parseOneClickCrossChainData(po.getDepositIIExtend(), logger());
+        if (data == null) {
+            return null;
+        }
+        // 一键跨链的nerve接收地址只能是黑洞地址
+        if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
+            logger().error("[{}]OneClickCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+            return null;
+        }
+        BigInteger erc20Value, mainAssetValue;
+        Integer erc20Decimals, erc20AssetId;
+        if (po.isDepositIIMainAndToken()) {
+            erc20Value = po.getValue();
+            erc20Decimals = po.getDecimals();
+            erc20AssetId = po.getAssetId();
+            mainAssetValue = po.getDepositIIMainAssetValue();
+        } else if (po.isIfContractAsset()) {
+            erc20Value = po.getValue();
+            erc20Decimals = po.getDecimals();
+            erc20AssetId = po.getAssetId();
+            mainAssetValue = BigInteger.ZERO;
+        } else {
+            erc20Value = BigInteger.ZERO;
+            erc20Decimals = 0;
+            erc20AssetId = 0;
+            mainAssetValue = po.getValue();
+        }
+        String nerveTxHash = htgCallBackManager.getDepositTxSubmitter().oneClickCrossChainTxSubmit(
+                po.getTxHash(),
+                height,
+                po.getFrom(),
+                po.getTo(),
+                erc20Value,
+                txTime,
+                erc20Decimals,
+                po.getContractAddress(),
+                erc20AssetId,
+                po.getNerveAddress(),
+                mainAssetValue,
+                data.getFeeAmount(),
+                data.getDesChainId(),
+                data.getDesToAddress(),
+                data.getTipping(),
+                data.getTippingAddress(),
+                data.getDesExtend());
+        return nerveTxHash;
     }
 
     private boolean dealBroadcastTx(HtgUnconfirmedTxPo po, HtgUnconfirmedTxPo poFromDB) throws Exception {

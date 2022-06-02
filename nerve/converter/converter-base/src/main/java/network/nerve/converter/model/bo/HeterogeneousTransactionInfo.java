@@ -49,10 +49,11 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
     private int orginTxCount;
     private transient int depositErrorTimes;
 
-    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段-addAddresses 作为`crossOutII`中充值主资产的字段
+    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段`addAddresses` 作为`crossOutII`中充值主资产的字段
     public void setDepositIIMainAsset(BigInteger value, Integer decimals, Integer assetId) {
         this.setAddAddresses(new String[]{value.toString(), decimals.toString(), assetId.toString()});
     }
+    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段`removeAddresses` 作为`crossOutII`中的扩展字段
     public void setDepositIIExtend(String extend) {
         this.setRemoveAddresses(new String[]{extend});
     }

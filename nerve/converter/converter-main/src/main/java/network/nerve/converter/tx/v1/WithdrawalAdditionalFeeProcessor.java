@@ -88,7 +88,10 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
+        if (converterCoreApi.isProtocol21()) {
+            // 协议21: 一键跨链
+            return validateV21(chainId, txs, txMap, blockHeader);
+        } else if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
             // 协议15: 修改手续费机制，支持异构链主资产作为手续费
             return validateV15(chainId, txs, txMap, blockHeader);
         } else if (converterCoreApi.isSupportProtocol13NewValidationOfERC20()) {
@@ -504,7 +507,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 }
 
                 /**
-                 * 1.只能有一个coinfrom 必须是nvt资产
+                 * 1.只能有一个coinfrom 必须是nvt资产或者其他链的主资产
                  * cointo 只有一个 地址是手续费地址
                  */
                 int txFromSize = coinData.getFrom().size();
@@ -534,6 +537,155 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 int feeAssetChainId = chain.getConfig().getChainId();
                 int feeAssetId = chain.getConfig().getAssetId();
                 if (basicTx.getType() == TxType.WITHDRAWAL) {
+                    // 判断该提现交易是否已经有对应的确认提现交易
+                    ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
+                    if (null != po) {
+                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        failsList.add(tx);
+                        // Nerve提现交易不存在
+                        errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
+                        chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        continue;
+                    }
+                    // 提现交易的手续费资产ID
+                    CoinData basicCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
+                    byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+                    Coin feeCoin = null;
+                    for (CoinTo coinTo : basicCoinData.getTo()) {
+                        if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
+                            feeCoin = coinTo;
+                            break;
+                        }
+                    }
+                    feeAssetChainId = feeCoin.getAssetsChainId();
+                    feeAssetId = feeCoin.getAssetsId();
+                } else if (basicTx.getType() == TxType.PROPOSAL) {
+                    ProposalPO proposalPO = proposalStorageService.find(chain, basicTx.getHash());
+                    if (null == proposalPO || proposalPO.getType() != REFUND.value()) {
+                        failsList.add(tx);
+                        errorCode = ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
+                        chain.getLogger().error("该提现交易的原始提案交易不存在或不是提案原路退回 , 原始txHash:{}, txhash:{}",
+                                basicTxHash, hash);
+                        continue;
+                    }
+                    String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
+                    if (StringUtils.isNotBlank(confirmProposalHash)) {
+                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        failsList.add(tx);
+                        // Nerve提现交易不存在
+                        errorCode = ConverterErrorCode.PROPOSAL_CONFIRMED.getCode();
+                        chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}, hash:{}", basicTxHash, hash);
+                        continue;
+                    }
+                }
+
+                // 验证to 补贴手续费收集分发地址
+                byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
+                int txToSize = coinData.getTo().size();
+                if (txToSize != COIN_SIZE_1) {
+                    failsList.add(tx);
+                    // 提现交易hash
+                    errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
+                    log.error("coinTo组装错误, 有且只有一个to " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    continue;
+                }
+
+                // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+                CoinTo coinTo = coinData.getTo().get(0);
+                if (coinTo.getAssetsChainId() != feeAssetChainId || coinTo.getAssetsId() != feeAssetId) {
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR.getCode();
+                    chain.getLogger().error("追加交易资产必须与提现交易的手续费资产一致, AssetsChainId:{}, AssetsId:{}",
+                            coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    continue;
+                }
+
+                byte[] toAddress = coinTo.getAddress();
+                if (!Arrays.equals(toAddress, withdrawalFeeAddress)) {
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
+                    chain.getLogger().error("手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+                            AddressTool.getStringAddressByBytes(toAddress),
+                            AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
+                    continue;
+                }
+            }
+            result.put("txList", failsList);
+            result.put("errorCode", errorCode);
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            result.put("txList", txs);
+            result.put("errorCode", ConverterErrorCode.SYS_UNKOWN_EXCEPTION.getCode());
+        }
+        return result;
+    }
+
+    /**
+     * 协议v1.21 一键跨链
+     */
+    private Map<String, Object> validateV21(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
+        // 修改手续费机制，支持异构链主资产作为手续费
+        if (txs.isEmpty()) {
+            return null;
+        }
+        Chain chain = null;
+        Map<String, Object> result = null;
+        try {
+            chain = chainManager.getChain(chainId);
+            NulsLogger log = chain.getLogger();
+            String errorCode = null;
+            result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
+            List<Transaction> failsList = new ArrayList<>();
+            outer:
+            for (Transaction tx : txs) {
+                String hash = tx.getHash().toHex();
+                WithdrawalAdditionalFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAdditionalFeeTxData.class);
+                if (StringUtils.isBlank(txData.getTxHash())) {
+                    failsList.add(tx);
+                    // 提现交易hash
+                    errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                    log.error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                    continue;
+                }
+                CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
+                if (null == coinData.getFrom() || null == coinData.getTo()) {
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
+                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    continue;
+                }
+
+                /**
+                 * 1.只能有一个coinfrom 必须是nvt资产或者其他链的主资产
+                 * cointo 只有一个 地址是手续费地址
+                 */
+                int txFromSize = coinData.getFrom().size();
+                if (txFromSize != COIN_SIZE_1) {
+                    failsList.add(tx);
+                    // 提现交易hash
+                    errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
+                    log.error("coinFrom组装错误, 有且只有一个from " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    continue;
+                }
+
+                String basicTxHash = txData.getTxHash();
+                Transaction basicTx = TransactionCall.getConfirmedTx(chain, basicTxHash);
+                if (null == basicTx) {
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                    chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+                    continue;
+                }
+                if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN) {
+                    // 不是提现交易
+                    failsList.add(tx);
+                    errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
+                    chain.getLogger().error("txdata对应的交易不是提现交易/提案交易/一键跨链 , hash:{}", basicTxHash);
+                    continue;
+                }
+                int feeAssetChainId = chain.getConfig().getChainId();
+                int feeAssetId = chain.getConfig().getAssetId();
+                if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
                     // 判断该提现交易是否已经有对应的确认提现交易
                     ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
                     if (null != po) {

@@ -23,14 +23,21 @@
  */
 package network.nerve.converter.heterogeneouschain.lib.helper;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
+import network.nerve.converter.model.bo.HeterogeneousAddFeeCrossChainData;
+import network.nerve.converter.model.bo.HeterogeneousOneClickCrossChainData;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.function.BiFunction;
 
 
 /**
@@ -42,18 +49,28 @@ public class HtgPendingTxHelper implements BeanInitial {
     private HtgCallBackManager htgCallBackManager;
     private HtgContext htgContext;
 
-    //public HtgPendingTxHelper(BeanMap beanMap) {
-    //    this.htgCallBackManager = (HtgCallBackManager) beanMap.get("htgCallBackManager");
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
-
     private NulsLogger logger() {
         return htgContext.logger();
     }
 
-    public void commitNervePendingDepositTx(HtgUnconfirmedTxPo po) {
+    public void commitNervePendingDepositTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousOneClickCrossChainData> parseOneClickCrossChainData, BiFunction<String, NulsLogger, HeterogeneousAddFeeCrossChainData> parseAddFeeCrossChainData) {
         String htTxHash = po.getTxHash();
         try {
+            // 使用 depositII.extend 来判断，检查是否为跨链追加手续费
+            if (this.addFeeCrossChainTx(po, parseAddFeeCrossChainData)) {
+                return;
+            }
+            // 使用 depositII.extend 来判断，检查是否为一键跨链的数据 oneClickCrossChainProcessor
+            if (this.commitNervePendingOneClickCrossChainTx(po, parseOneClickCrossChainData)) {
+                return;
+            }
+            ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
+            byte[] withdrawalBlackhole = AddressTool.getAddressByPubKeyStr(converterConfig.getBlackHolePublicKey(), converterConfig.getChainId());
+            // 充值的nerve接收地址不能是黑洞地址
+            if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
+                logger().error("[{}]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                return;
+            }
             if (po.isDepositIIMainAndToken()) {
                 htgCallBackManager.getDepositTxSubmitter().pendingDepositIITxSubmit(
                         htTxHash,
@@ -91,6 +108,73 @@ public class HtgPendingTxHelper implements BeanInitial {
             }
             logger().error("在NERVE网络发出充值待确认交易异常", e);
         }
+    }
+
+    // P21生效, 使用 depositII.extend 来判断，检查是否为跨链追加手续费
+    private boolean addFeeCrossChainTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousAddFeeCrossChainData> parseAddFeeCrossChainData) {
+        if (!htgContext.getConverterCoreApi().isProtocol21()) {
+            return false;
+        }
+        HeterogeneousAddFeeCrossChainData data = parseAddFeeCrossChainData.apply(po.getDepositIIExtend(), logger());
+        if (data == null) {
+            return false;
+        }
+        return true;
+    }
+
+    // P21生效, 使用 depositII.extend 来判断，检查是否为一键跨链的数据 oneClickCrossChainProcessor.
+    private boolean commitNervePendingOneClickCrossChainTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousOneClickCrossChainData> parseOneClickCrossChainData) throws Exception {
+        if (!htgContext.getConverterCoreApi().isProtocol21()) {
+            return false;
+        }
+        HeterogeneousOneClickCrossChainData data = parseOneClickCrossChainData.apply(po.getDepositIIExtend(), logger());
+        if (data == null) {
+            return false;
+        }
+        ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
+        byte[] withdrawalBlackhole = AddressTool.getAddressByPubKeyStr(converterConfig.getBlackHolePublicKey(), converterConfig.getChainId());
+        // 一键跨链的nerve接收地址只能是黑洞地址
+        if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
+            logger().error("[{}]OneClickCrossChain Nerve address(only blackHole) error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+            return false;
+        }
+        BigInteger erc20Value, mainAssetValue;
+        Integer erc20Decimals, erc20AssetId;
+        if (po.isDepositIIMainAndToken()) {
+            erc20Value = po.getValue();
+            erc20Decimals = po.getDecimals();
+            erc20AssetId = po.getAssetId();
+            mainAssetValue = po.getDepositIIMainAssetValue();
+        } else if (po.isIfContractAsset()) {
+            erc20Value = po.getValue();
+            erc20Decimals = po.getDecimals();
+            erc20AssetId = po.getAssetId();
+            mainAssetValue = BigInteger.ZERO;
+        } else {
+            erc20Value = BigInteger.ZERO;
+            erc20Decimals = 0;
+            erc20AssetId = 0;
+            mainAssetValue = po.getValue();
+        }
+        htgCallBackManager.getDepositTxSubmitter().pendingOneClickCrossChainTxSubmit(
+                po.getTxHash(),
+                po.getBlockHeight(),
+                po.getFrom(),
+                po.getTo(),
+                erc20Value,
+                po.getTxTime(),
+                erc20Decimals,
+                po.getContractAddress(),
+                erc20AssetId,
+                po.getNerveAddress(),
+                mainAssetValue,
+                data.getFeeAmount(),
+                data.getDesChainId(),
+                data.getDesToAddress(),
+                data.getTipping(),
+                data.getTippingAddress(),
+                data.getDesExtend());
+        return true;
     }
 
     public void commitNervePendingWithdrawTx(String nerveTxHash, String htTxHash) {

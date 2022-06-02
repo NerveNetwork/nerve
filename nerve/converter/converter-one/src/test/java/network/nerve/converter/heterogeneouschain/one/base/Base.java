@@ -95,7 +95,10 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
+        //String mainEthRpcAddress = "https://rpc.ankr.com/harmony";
+        //String mainEthRpcAddress = "https://harmony-mainnet.chainstacklabs.com/";
         String mainEthRpcAddress = "https://api.s0.t.hmny.io";
+        //String mainEthRpcAddress = "https://api.harmony.one";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);

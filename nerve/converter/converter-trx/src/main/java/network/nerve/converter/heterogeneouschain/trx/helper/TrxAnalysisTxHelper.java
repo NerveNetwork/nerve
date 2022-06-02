@@ -209,7 +209,14 @@ public class TrxAnalysisTxHelper implements BeanInitial {
             htUnconfirmedTxStorageService.save(po);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
             // 向NERVE网络发出充值待确认交易
-            htgPendingTxHelper.commitNervePendingDepositTx(po);
+            htgPendingTxHelper.commitNervePendingDepositTx(po,
+                    (extend, logger) -> {
+                        return trxParseTxHelper.parseOneClickCrossChainData(extend, logger);
+                    },
+                    (extend, logger) -> {
+                        return trxParseTxHelper.parseAddFeeCrossChainData(extend, logger);
+                    }
+            );
         }
     }
 

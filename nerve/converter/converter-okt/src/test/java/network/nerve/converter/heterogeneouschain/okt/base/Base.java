@@ -66,7 +66,6 @@ public class Base {
     protected String address = "";
     protected String priKey = "";
     protected String multySignContractAddress = "";
-    protected byte VERSION = 2;
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected OktContext htgContext;
@@ -85,6 +84,7 @@ public class Base {
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
         htgContext = new OktContext();
         htgContext.setLogger(Log.BASIC_LOGGER);
+        htgContext.SET_VERSION((byte) 3);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
         cfg.setChainIdOnHtgNetwork(65);
         htgContext.setConfig(cfg);
@@ -131,7 +131,7 @@ public class Base {
 
     protected String sendMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(18)).toBigInteger();
-        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, VERSION);
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, htgContext.VERSION());
         String signData = this.ethSign(vHash, signCount);
         //signData += "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
         Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
@@ -140,13 +140,25 @@ public class Base {
 
     protected String sendERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) throws Exception {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
-        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, VERSION);
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, htgContext.VERSION());
         String signData = this.ethSign(vHash, signCount);
         Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
+    protected String signDataForERC20Withdraw(String txKey, String toAddress, String value, String erc20, int tokenDecimals, int signCount) {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        String vHash = HtgUtil.encoderWithdraw(htgContext, txKey, toAddress, bValue, true, erc20, htgContext.VERSION());
+        String signData = this.ethSign(vHash, signCount);
+        return signData;
+    }
+    protected String sendERC20WithdrawBySignData(String txKey, String toAddress, String value, String erc20, int tokenDecimals, String signData) throws Exception {
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
-        String vHash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, VERSION);
+        String vHash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, htgContext.VERSION());
         String signData = this.ethSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
@@ -155,7 +167,7 @@ public class Base {
     }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
-        String vHash = HtgUtil.encoderUpgrade(htgContext, txKey, upgradeContract, VERSION);
+        String vHash = HtgUtil.encoderUpgrade(htgContext, txKey, upgradeContract, htgContext.VERSION());
         String signData = this.ethSign(vHash, signCount);
         Function function =  HtgUtil.getCreateOrSignUpgradeFunction(txKey, upgradeContract, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.UPGRADE);

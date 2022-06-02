@@ -24,7 +24,9 @@
 package network.nerve.converter.core.api.interfaces;
 
 import io.nuls.base.data.Transaction;
+import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.exception.NulsException;
+import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
@@ -146,6 +148,11 @@ public interface IConverterCoreApi {
      */
     boolean isProtocol16();
 
+    /**
+     * 是否支持协议21 v1.21.0
+     */
+    boolean isProtocol21();
+
 
     /**
      * 添加任务
@@ -155,4 +162,6 @@ public interface IConverterCoreApi {
     void addHtgWaitingTxInvokeDataHandler(Runnable runnable);
 
     boolean skippedTransaction(String nerveTxHash);
+
+    ConverterConfig getConverterConfig();
 }

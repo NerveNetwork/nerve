@@ -107,6 +107,31 @@
             <artifactId>converter-ftm</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-metis</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-iotx</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-optimism</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-klay</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-bch</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

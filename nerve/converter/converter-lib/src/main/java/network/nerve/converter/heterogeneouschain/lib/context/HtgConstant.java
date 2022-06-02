@@ -43,9 +43,11 @@ import java.util.List;
  */
 public interface HtgConstant {
 
+    byte VERSION_MULTY_SIGN_LATEST = 3;
     String ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
     String PUBLIC_KEY_UNCOMPRESSED_PREFIX = "04";
     String HEX_PREFIX = "0x";
+    String EMPTY_STRING = "";
 
     int RESEND_TIME = 50;
     int DEFAULT_INTERVAL_WAITTING = 5;
@@ -58,12 +60,17 @@ public interface HtgConstant {
     String METHOD_HASH_CROSS_OUT_II = "0x38615bb0";
     String METHOD_HASH_TRANSFER = "0xa9059cbb";
     String METHOD_HASH_TRANSFER_FROM = "0x23b872dd";
+    String METHOD_HASH_ONE_CLICK_CROSS_CHAIN = "0x7d02ce34";
+    String METHOD_HASH_ADD_FEE_CROSS_CHAIN = "0x0929f4c6";
 
     String METHOD_CREATE_OR_SIGN_WITHDRAW = "createOrSignWithdraw";
     String METHOD_CREATE_OR_SIGN_MANAGERCHANGE = "createOrSignManagerChange";
     String METHOD_CREATE_OR_SIGN_UPGRADE = "createOrSignUpgrade";
     String METHOD_CROSS_OUT = "crossOut";
+    String METHOD_CROSS_OUT_II = "crossOutII";
     String METHOD_VIEW_IS_MINTER_ERC20 = "isMinterERC20";
+    String METHOD_ONE_CLICK_CROSS_CHAIN = "oneClickCrossChain";
+    String METHOD_ADD_FEE_CROSS_CHAIN = "addFeeCrossChain";
 
     String METHOD_VIEW_ALL_MANAGERS_TRANSACTION = "allManagers";
     String METHOD_VIEW_IS_COMPLETED_TRANSACTION = "isCompletedTx";
@@ -145,6 +152,24 @@ public interface HtgConstant {
             )
     );
 
+    List<TypeReference<Type>> INPUT_ONE_CLICK_CROSS_CHAIN = Utils.convert(
+            List.of(
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<Uint256>(){},
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
+    List<TypeReference<Type>> INPUT_ADD_FEE_CROSS_CHAIN = Utils.convert(
+            List.of(
+                    new TypeReference<Utf8String>(){},
+                    new TypeReference<DynamicBytes>(){}
+            )
+    );
+
     Event EVENT_TRANSACTION_WITHDRAW_COMPLETED = new Event("TxWithdrawCompleted",
             Arrays.<TypeReference<?>>asList(
                     new TypeReference<Utf8String>(false) {}
@@ -201,6 +226,7 @@ public interface HtgConstant {
     long WAITING_MINUTES = MINUTES_2;
 
     BigDecimal NUMBER_1_DOT_1 = new BigDecimal("1.1");
+    BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");
     BigDecimal BD_20K = BigDecimal.valueOf(20000L);
 
     Long ROLLBACK_NUMER = 100L;
@@ -212,11 +238,14 @@ public interface HtgConstant {
     BigInteger GWEI_3 = BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_5 = BigInteger.valueOf(5L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_10 = BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_11 = BigInteger.valueOf(11L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_20 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_30 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_300 = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_750 = BigInteger.valueOf(750L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_1000 = BigInteger.valueOf(1000L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_5000 = BigInteger.valueOf(5000L).multiply(BigInteger.TEN.pow(9));
     BigInteger HIGH_GAS_PRICE = GWEI_200;
     BigInteger MAX_HTG_GAS_PRICE = GWEI_300;

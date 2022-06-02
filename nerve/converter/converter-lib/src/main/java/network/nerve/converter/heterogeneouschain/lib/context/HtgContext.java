@@ -50,7 +50,7 @@ public abstract class HtgContext {
     private static final BigInteger GAS_LIMIT_OF_WITHDRAW = BigInteger.valueOf(210000L);
     private static final BigInteger GAS_LIMIT_OF_CHANGE = BigInteger.valueOf(400000L);
     private static final BigInteger GAS_LIMIT_OF_MAIN_ASSET = BigInteger.valueOf(21000L);
-    private static final BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(60000L);
+    private static final BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(100000L);
     private static final BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     private static final BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
 

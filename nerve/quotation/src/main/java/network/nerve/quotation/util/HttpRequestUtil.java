@@ -4,7 +4,6 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.quotation.model.bo.Chain;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -53,7 +52,7 @@ public class HttpRequestUtil {
         }
     }
 
-    private static String _httpRequest(Chain chain, String url) {
+    public static String _httpRequest(Chain chain, String url) {
         CloseableHttpClient httpClient = HttpClientBuilder.create().build();
 
         HttpGet httpGet = new HttpGet(url);

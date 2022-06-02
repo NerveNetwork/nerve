@@ -25,7 +25,10 @@
 package network.nerve.converter.core.thread.task;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.*;
+import io.nuls.base.data.CoinData;
+import io.nuls.base.data.CoinTo;
+import io.nuls.base.data.NulsHash;
+import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.constant.TxType;
@@ -47,6 +50,7 @@ import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.message.ComponentSignMessage;
+import network.nerve.converter.message.VirtualBankSignMessage;
 import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.po.*;
@@ -154,6 +158,7 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         }
                         break;
                     case TxType.WITHDRAWAL:
+                    case TxType.ONE_CLICK_CROSS_CHAIN:
                         // 处理提现
                         //if (chain.getHeterogeneousChangeBankExecuting().get()) {
                         //    // 有虚拟银行变更异构链交易正在执行中, 暂停新的异构处理
@@ -288,6 +293,19 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         if (null != compSignPO) {
             if (!compSignPO.getCurrentSigned()) {
                 sign = true;
+            } else if (pendingPO.getRetry() && !pendingPO.isRetryVirtualBankInit()) {
+                compSignPO.setCurrentSigned(false);
+                // 重试时清空签名列表
+                if (compSignPO.getListMsg() != null) {
+                    compSignPO.getListMsg().clear();
+                }
+                if (compSignPO.getCallParms() != null) {
+                    compSignPO.getCallParms().clear();
+                }
+                compSignPO.setByzantinePass(false);
+                compSignPO.setCompleted(false);
+                sign = true;
+                pendingPO.setRetryVirtualBankInit(true);
             }
         } else {
             sign = true;
@@ -297,8 +315,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
             int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
             List<HeterogeneousSign> currentSignList = new ArrayList<>();
-            for (IHeterogeneousChainDocking hInterface : hInterfaces) {
-                int hChainId = hInterface.getChainId();
+            for (IHeterogeneousChainDocking docking : hInterfaces) {
+                int hChainId = docking.getChainId();
                 // 组装加入参数
                 String[] inAddress = new String[inSize];
                 if (null != txData.getInAgents()) {
@@ -309,7 +327,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents(), pendingPO);
                 }
                 // 验证消息签名
-                IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hInterface.getChainId());
                 String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                 String currentHaddress = docking.getCurrentSignAddress();
                 if (StringUtils.isBlank(currentHaddress)) {
@@ -332,17 +349,29 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             compSignPO.setCurrentSigned(true);
 
             // 广播当前节点签名消息
-            NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
-
+            if (pendingPO.getRetry()) {
+                VirtualBankSignMessage retryMessage = VirtualBankSignMessage.of(currentMessage, pendingPO.getPrepare());
+                NetWorkCall.broadcast(chain, retryMessage, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
+                pendingPO.setRetry(false);
+            } else {
+                NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
+            }
         }
-
+        // 变更重试准备阶段
+        if (pendingPO.getRetry() && pendingPO.getPrepare() == 1) {
+            return true;
+        }
         boolean rs = false;
-        if (compSignPO.getByzantinePass() && !chain.getHeterogeneousChangeBankExecuting().get()) {
+        if (compSignPO.getByzantinePass() && (!chain.getHeterogeneousChangeBankExecuting().get() || pendingPO.getRetry())) {
             if (!compSignPO.getCompleted()) {
                 // 执行调用异构链
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
                 if (null == callParmsList) {
-                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    chain.getLogger().error("虚拟银行变更, 调用异构链参数为空");
+                    return false;
+                }
+                if (callParmsList.size() != hInterfaces.size()) {
+                    chain.getLogger().error("虚拟银行变更, 调用异构链数量不足, 调用数量: {}, 当前网络数量: {}", callParmsList.size(), hInterfaces.size());
                     return false;
                 }
                 for (IHeterogeneousChainDocking docking : hInterfaces) {
@@ -408,6 +437,45 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             if (null != toFirstPO) {
                 chain.getPendingTxQueue().addFirst(toFirstPO);
             }
+
+            // add by pierre at 2022/3/11, 找出变更重复的任务并去重
+            it = chain.getPendingTxQueue().iterator();
+            Map<String, List<TxSubsequentProcessPO>> map = null;
+            boolean hasMany = false;
+            while (it.hasNext()) {
+                TxSubsequentProcessPO po = it.next();
+                if (TxType.CHANGE_VIRTUAL_BANK == po.getTx().getType()) {
+                    map = map == null ? new HashMap<>() : map;
+                    List<TxSubsequentProcessPO> list = map.computeIfAbsent(po.getTx().getHash().toHex(), a -> new ArrayList<>());
+                    list.add(po);
+                    if (list.size() > 1) {
+                        hasMany = true;
+                    }
+                }
+            }
+            if (hasMany) {
+                Collection<List<TxSubsequentProcessPO>> values = map.values();
+                for (List<TxSubsequentProcessPO> list : values) {
+                    if (list.size() <= 1) {
+                        continue;
+                    }
+                    // 重复变更任务中，只保留正在重试的任务，其他的从队列中移除
+                    for (TxSubsequentProcessPO po : list) {
+                        if (po.getRetry()) {
+                            list.remove(po);
+                            break;
+                        }
+                    }
+                    for (TxSubsequentProcessPO po : list) {
+                        chain.getPendingTxQueue().remove(po);
+                    }
+                }
+            }
+
+            if (null != toFirstPO) {
+                chain.getPendingTxQueue().addFirst(toFirstPO);
+            }
+
         }
         return rs;
     }
@@ -481,14 +549,24 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             sign = true;
         }
         if (sign) {
-            WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+            int htgChainId = 0;
+            String toAddress = null;
+            if (TxType.WITHDRAWAL == tx.getType()) {
+                WithdrawalTxData txData1 = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
+                htgChainId = txData1.getHeterogeneousChainId();
+                toAddress = txData1.getHeterogeneousAddress();
+            } else if (TxType.ONE_CLICK_CROSS_CHAIN == tx.getType()) {
+                OneClickCrossChainTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainTxData.class);
+                htgChainId = txData.getDesChainId();
+                toAddress = txData.getDesToAddress();
+            }
             CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
             HeterogeneousAssetInfo assetInfo = null;
             CoinTo withdrawCoinTo = null;
             byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
             for (CoinTo coinTo : coinData.getTo()) {
                 if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
+                    assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     if (assetInfo != null) {
                         withdrawCoinTo = coinTo;
                         break;
@@ -501,7 +579,6 @@ public class CfmTxSubsequentProcessTask implements Runnable {
             }
             int heterogeneousChainId = assetInfo.getChainId();
             BigInteger amount = withdrawCoinTo.getAmount();
-            String toAddress = txData.getHeterogeneousAddress();
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
             // 如果当前节点还没签名则触发当前节点签名,存储 并广播
             String signStrData = docking.signWithdrawII(txHash, toAddress, amount, assetInfo.getAssetId());

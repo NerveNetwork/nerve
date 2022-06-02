@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  */
 public class ApiDocTool {
 
-    static String appName = "nuls-api";
+    static String appName = "nerve-api";
 
     static Set<String> exclusion = Set.of("io.nuls.base.protocol.cmd", "io.nuls.core.rpc.cmd.kernel", "io.nuls.core.rpc.modulebootstrap");
 
@@ -67,6 +67,7 @@ public class ApiDocTool {
         baseType.add(String.class);
         baseType.add(Object[].class);
         baseType.add(String[].class);
+        baseType.add(String[][].class);
         baseType.add(BigInteger.class);
         baseType.add(BigDecimal.class);
     }
@@ -454,7 +455,7 @@ public class ApiDocTool {
                     } else if(field.getType() == Set.class) {
                         o1 = new HashSet<>();
                     } else if(field.getType().isArray()) {
-                        o1 = Array.newInstance(field.getType(), 0);
+                        o1 = Array.newInstance(field.getType().getComponentType(), 0);
                     } else {
                         o1 = field.getType().newInstance();
 
@@ -555,8 +556,12 @@ public class ApiDocTool {
         }
 
         public static List<ResultDes> classToResultDes(Class<?> clzs) {
+            if (clzs == Void.class) {
+                return null;
+            }
             Annotation annotation = clzs.getAnnotation(ApiModel.class);
             if (annotation == null) {
+                System.err.println(clzs.getName());
                 throw new IllegalArgumentException("返回值是复杂对象时必须声明ApiModule注解 + " + clzs.getSimpleName());
             }
             List<Field> list = new LinkedList();
@@ -1193,17 +1198,17 @@ public class ApiDocTool {
             private List<String> path;
 
             public Url() {
-                this.protocol = "http";
+                this.protocol = "https";
                 this.host = new ArrayList<>();
-                this.host.add("localhost");
-                this.port = "18004";
+                this.host.add("api.nerve.network");
+                this.port = null;
                 this.path = new ArrayList<>();
             }
 
             public static Url jsonrpcInstance() {
                 Url url = new Url();
                 url.path.add("jsonrpc");
-                url.raw = "http://localhost:18004/jsonrpc";
+                url.raw = "https://api.nerve.network/jsonrpc";
                 return url;
             }
 

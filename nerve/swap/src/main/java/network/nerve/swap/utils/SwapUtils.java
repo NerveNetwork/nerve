@@ -3,10 +3,7 @@ package network.nerve.swap.utils;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.NulsByteBuffer;
-import io.nuls.base.data.Address;
-import io.nuls.base.data.BaseNulsData;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.data.Transaction;
+import io.nuls.base.data.*;
 import io.nuls.base.signture.MultiSignTxSignature;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
@@ -43,6 +40,7 @@ import network.nerve.swap.model.dto.RealAddLiquidityOrderDTO;
 import network.nerve.swap.model.po.FarmPoolPO;
 import network.nerve.swap.model.po.SwapPairPO;
 import network.nerve.swap.model.po.stable.StableSwapPairPo;
+import network.nerve.swap.model.vo.RouteOfPriceImpactVO;
 import network.nerve.swap.model.vo.RouteVO;
 import network.nerve.swap.model.vo.SwapPairVO;
 
@@ -389,7 +387,7 @@ public class SwapUtils {
 
     public static StableRemoveLiquidityBus calStableRemoveLiquidityBusiness(
             int chainId, IPairFactory iPairFactory,
-            BigInteger liquidity, byte[] indexs, byte[] pairAddressBytes, byte[] to) throws NulsException {
+            BigInteger liquidity, byte[] indexes, byte[] pairAddressBytes, byte[] to) throws NulsException {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
@@ -408,7 +406,7 @@ public class SwapUtils {
         int expect = (length - 1) * length / 2;
         // 累加indexs的实际值
         int fact = 0;
-        for (byte index : indexs) {
+        for (byte index : indexes) {
             if (index > length - 1) {
                 throw new NulsException(SwapErrorCode.INVALID_COINS);
             }
@@ -424,7 +422,7 @@ public class SwapUtils {
         final BigInteger finalTotalReceives = totalReceives;
         // 按照用户选择的提取顺序，扣减池子数量
         BigInteger[] receives = new BigInteger[length];
-        for (byte index : indexs) {
+        for (byte index : indexes) {
             BigInteger balance = balances[index].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[index]));
             if (totalReceives.compareTo(balance) < 0) {
                 receives[index] = totalReceives;
@@ -444,6 +442,100 @@ public class SwapUtils {
         }
         // 还原receives <= 以上代码计算用户可赎回资产数量时，把精度都填充到了18位，最终结果按每个coin的实际精度，还原数值
         for (int i = 0; i < length; i++) {
+            BigInteger receive = receives[i];
+            if (receive.equals(BigInteger.ZERO)) {
+                continue;
+            }
+            receives[i] = receive.divide(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
+        }
+
+        StableRemoveLiquidityBus bus = new StableRemoveLiquidityBus(receives, balances, liquidity, pairAddressBytes, to);
+        bus.setPreBlockHeight(stablePair.getBlockHeightLast());
+        bus.setPreBlockTime(stablePair.getBlockTimeLast());
+        return bus;
+    }
+
+    public static StableRemoveLiquidityBus calStableRemoveLiquidityBusinessP21(
+            int chainId, IPairFactory iPairFactory,
+            BigInteger liquidity, byte[] indexes, byte[] pairAddressBytes, byte[] to) throws NulsException {
+        if (!AddressTool.validAddress(chainId, to)) {
+            throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
+        }
+        // 计算用户赎回的资产
+        String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
+        BigInteger[] balances = stablePair.getBalances();
+        BigInteger totalSupply = stablePair.totalSupply();
+        // 检查indexs合法与重复
+        NerveToken[] coins = pairPo.getCoins();
+        int lengthOfCoins = coins.length;
+        int lengthOfIndexes = indexes.length;
+        // 检查参数中`indexs`是否合法
+        if (lengthOfIndexes == lengthOfCoins) {
+            // indexs本身是等差数列，根据等差数列求和公式算出期望值
+            int expect = (lengthOfCoins - 1) * lengthOfCoins / 2;
+            // 累加indexs的实际值
+            int fact = 0;
+            for (byte index : indexes) {
+                if (index > lengthOfCoins - 1) {
+                    throw new NulsException(SwapErrorCode.INVALID_COINS);
+                }
+                fact = fact + index;
+            }
+            if (fact != expect) {
+                throw new NulsException(SwapErrorCode.INVALID_COINS);
+            }
+        } else if (lengthOfIndexes < lengthOfCoins) {
+            byte[] _indexes = new byte[lengthOfCoins];
+            byte[] temp = new byte[lengthOfCoins];
+            for (int i = 0; i < lengthOfIndexes; i++) {
+                byte index = indexes[i];
+                if (index > lengthOfCoins - 1) {
+                    throw new NulsException(SwapErrorCode.INVALID_COINS);
+                }
+                temp[index] = 1;
+                _indexes[i] = index;
+            }
+            int k = 0;
+            for (int i = 0; i < lengthOfCoins; i++) {
+                if (temp[i] == 1) {
+                    continue;
+                }
+                _indexes[k++ + lengthOfIndexes] = (byte) i;
+            }
+            indexes = _indexes;
+        } else {
+            throw new NulsException(SwapErrorCode.INVALID_COINS);
+        }
+        // 获取池子总量
+        BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
+        // 用户可赎回资产数量(PRECISION_MUL)
+        BigInteger totalReceives = poolTotal.multiply(liquidity).divide(totalSupply);
+        final BigInteger finalTotalReceives = totalReceives;
+        // 按照用户选择的提取顺序，扣减池子数量
+        BigInteger[] receives = new BigInteger[lengthOfCoins];
+        for (byte index : indexes) {
+            BigInteger balance = balances[index].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[index]));
+            if (totalReceives.compareTo(balance) < 0) {
+                receives[index] = totalReceives;
+                break;
+            } else {
+                receives[index] = balance;
+                totalReceives = totalReceives.subtract(balance);
+                if (totalReceives.equals(BigInteger.ZERO)) {
+                    break;
+                }
+            }
+        }
+        receives = SwapUtils.emptyFillZero(receives);
+        BigInteger _totalReceives = SwapUtils.getCumulativeAmounts(receives);
+        if (!_totalReceives.equals(finalTotalReceives)) {
+            throw new NulsException(SwapErrorCode.INVALID_AMOUNTS);
+        }
+        // 还原receives <= 以上代码计算用户可赎回资产数量时，把精度都填充到了18位，最终结果按每个coin的实际精度，还原数值
+        for (int i = 0; i < lengthOfCoins; i++) {
             BigInteger receive = receives[i];
             if (receive.equals(BigInteger.ZERO)) {
                 continue;
@@ -510,6 +602,67 @@ public class SwapUtils {
         return bus;
     }
 
+    public static StableSwapTradeBus calStableSwapTradeBusinessP21(
+            int chainId, IPairFactory iPairFactory,
+            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, CoinTo feeTo) throws NulsException {
+        if (!AddressTool.validAddress(chainId, to)) {
+            throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
+        }
+        boolean hasFeeTo = feeTo != null;
+        String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
+        NerveToken[] coins = pairPo.getCoins();
+        int length = coins.length;
+        BigInteger[] changeBalances = new BigInteger[length];
+        BigInteger[] balances = stablePair.getBalances();
+        // 把精度填充到18位
+        BigInteger outBalance = balances[tokenOutIndex].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
+        BigInteger totalAmountOut = BigInteger.ZERO;
+        BigInteger feeAmountExtend = BigInteger.ZERO;
+        for (int i = 0; i < length; i++) {
+            BigInteger amountIn = amountsIn[i];
+            if (amountIn.equals(BigInteger.ZERO)) {
+                continue;
+            }
+            if (hasFeeTo) {
+                NerveToken coin = coins[i];
+                if (coin.getChainId() == feeTo.getAssetsChainId() && coin.getAssetId() == feeTo.getAssetsId()) {
+                    feeAmountExtend = feeTo.getAmount().multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
+                }
+            }
+            // 把精度填充到18位
+            BigInteger _amountIn = amountIn.multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
+            BigInteger amountOut = _amountIn;
+            if (outBalance.compareTo(amountOut) < 0) {
+                throw new NulsException(SwapErrorCode.INSUFFICIENT_OUTPUT_AMOUNT);
+            }
+            outBalance = outBalance.subtract(amountOut);
+            totalAmountOut = totalAmountOut.add(amountOut);
+        }
+        // 检查手续费比例
+        if (hasFeeTo) {
+            BigDecimal percent = new BigDecimal(feeAmountExtend).divide(new BigDecimal(totalAmountOut.add(feeAmountExtend)), 2, RoundingMode.UP).movePointRight(2);
+            if (percent.compareTo(SwapContext.FEE_MAX_PERCENT_STABLE_SWAP) > 0) {
+                throw new NulsException(FEE_AMOUNT_ERROR);
+            }
+        }
+
+        // 还原`totalAmountOut` <= 以上代码计算用户买进资产数量时，把精度填充到了18位，最终结果按实际精度，还原数值
+        totalAmountOut = totalAmountOut.divide(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
+
+        changeBalances = SwapUtils.emptyFillZero(changeBalances);
+        for (int i = 0; i < length; i++) {
+            changeBalances[i] = changeBalances[i].add(amountsIn[i]);
+        }
+        changeBalances[tokenOutIndex] = changeBalances[tokenOutIndex].subtract(totalAmountOut);
+        StableSwapTradeBus bus = new StableSwapTradeBus(pairAddressBytes, changeBalances, balances, amountsIn, SwapUtils.emptyFillZero(new BigInteger[length]), tokenOutIndex, totalAmountOut, to);
+        bus.setPreBlockHeight(stablePair.getBlockHeightLast());
+        bus.setPreBlockTime(stablePair.getBlockTimeLast());
+        return bus;
+    }
+
     private static BigInteger getAmountOutForBestTrade(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut) {
         if (amountIn.compareTo(BigInteger.ZERO) <= 0) {
             return BigInteger.ZERO;
@@ -526,7 +679,7 @@ public class SwapUtils {
 
     public static List<RouteVO> bestTradeExactIn(int chainId, IPairFactory iPairFactory, List<SwapPairVO> pairs, TokenAmount tokenAmountIn,
                                                  NerveToken out, LinkedHashSet<SwapPairVO> currentPath,
-                                                 List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int maxPairSize) {
+                                                 List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int maxPairSize, String resultRule) {
         // 筛选出直接可换的交易对
         NerveToken tokenIn = tokenAmountIn.getToken();
         NerveToken[] tokens = tokenSort(tokenIn, out);
@@ -547,8 +700,48 @@ public class SwapUtils {
         }
         // 查找所有匹配的交易路径
         List<RouteVO> routes = bestTradeExactIn(chainId, iPairFactory, pairs, tokenAmountIn, out, currentPath, bestTrade, orginTokenAmountIn, 0, maxPairSize);
-        routes.sort(RouteVOSort.INSTANCE);
+        if (routes.size() == 1) {
+            return routes;
+        } else if (BEST_PRICE.equals(resultRule)) {
+            // 按最优价格排序
+            routes.sort(RouteVOSort.INSTANCE);
+        } else {
+            // 按价格影响排序
+            List<RouteOfPriceImpactVO> impactTrades = calcImpactPrice(routes);
+            impactTrades.sort(RouteImpactVOSort.INSTANCE);
+        }
         return routes;
+    }
+
+    private static List<RouteOfPriceImpactVO> calcImpactPrice(List<RouteVO> list) {
+        List<RouteOfPriceImpactVO> resultList = new ArrayList<>();
+        for (RouteVO route : list) {
+            TokenAmount tokenAmountIn = route.getTokenAmountIn();
+            TokenAmount tokenAmountOut = route.getTokenAmountOut();
+            List<SwapPairVO> path = route.getPath();
+            NerveToken tokenIn = tokenAmountIn.getToken();
+            BigInteger amountIn = tokenAmountIn.getAmount();
+            NerveToken tokenOut = tokenAmountOut.getToken();
+            BigInteger amountOut = tokenAmountOut.getAmount();
+            SwapPairVO pairIn = path.get(0);
+            BigInteger reserveIn, reserveOut, _reserveIn, _reserveOut;
+            reserveIn = pairIn.getToken0().equals(tokenIn) ? pairIn.getReserve0() : pairIn.getReserve1();
+            if (path.size() == 1) {
+                reserveOut = pairIn.getToken0().equals(tokenIn) ? pairIn.getReserve1() : pairIn.getReserve0();
+            } else {
+                SwapPairVO pairOut = path.get(path.size() - 1);
+                reserveOut = pairOut.getToken0().equals(tokenOut) ? pairOut.getReserve0() : pairOut.getReserve1();
+            }
+            _reserveIn = reserveIn.add(amountIn);
+            _reserveOut = reserveOut.subtract(amountOut);
+
+            BigDecimal impact = BigDecimal.ONE.subtract(
+                            new BigDecimal(_reserveOut.multiply(reserveIn)).divide(
+                                    new BigDecimal(_reserveIn.multiply(reserveOut)), 78, RoundingMode.UP))
+                    .abs();
+            resultList.add(new RouteOfPriceImpactVO(route, impact));
+        }
+        return resultList;
     }
 
     private static List<RouteVO> bestTradeExactIn(int chainId, IPairFactory iPairFactory, List<SwapPairVO> pairs, TokenAmount tokenAmountIn,
@@ -566,8 +759,10 @@ public class SwapUtils {
             BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
 
             if (tokenOut.equals(out)) {
-                currentPath.add(pair);
-                bestTrade.add(new RouteVO(currentPath.stream().collect(Collectors.toList()), orginTokenAmountIn, new TokenAmount(tokenOut, amountOut)));
+                LinkedHashSet<SwapPairVO> cloneCurrentPath = cloneLinkedHashSet(currentPath);
+                cloneCurrentPath.add(pair);
+                //currentPath.add(pair);
+                bestTrade.add(new RouteVO(cloneCurrentPath.stream().collect(Collectors.toList()), orginTokenAmountIn, new TokenAmount(tokenOut, amountOut)));
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1) {
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 cloneLinkedHashSet.add(pair);

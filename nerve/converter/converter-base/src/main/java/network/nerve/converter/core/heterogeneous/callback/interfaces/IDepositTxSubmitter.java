@@ -24,7 +24,6 @@
 package network.nerve.converter.core.heterogeneous.callback.interfaces;
 
 import io.nuls.core.basic.Result;
-import io.nuls.core.exception.NulsException;
 
 import java.math.BigInteger;
 
@@ -53,7 +52,11 @@ public interface IDepositTxSubmitter {
 
     String depositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
                                     Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, String extend) throws Exception;
+    String oneClickCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                                    Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, BigInteger mainAssetFeeAmount, int desChainId, String desToAddress, BigInteger tipping, String tippingAddress, String desExtend) throws Exception;
 
+    String addFeeCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, Long txTime,
+                                    String nerveAddress, BigInteger mainAssetValue, String nerveTxHash, String subExtend) throws Exception;
 
     /**
      * @param txHash          交易hash
@@ -73,6 +76,9 @@ public interface IDepositTxSubmitter {
 
     String pendingDepositIITxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
                   Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue) throws Exception;
+
+    String pendingOneClickCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                                             Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, BigInteger mainAssetFeeAmount, int desChainId, String desToAddress, BigInteger tipping, String tippingAddress, String desExtend) throws Exception;
 
     /**
      * 验证是否充值交易

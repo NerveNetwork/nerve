@@ -40,7 +40,9 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousHash;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.bo.NerveAssetInfo;
+import network.nerve.converter.model.dto.AddFeeCrossChainTxDTO;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.model.txdata.OneClickCrossChainUnconfirmedTxData;
 import network.nerve.converter.model.txdata.RechargeUnconfirmedTxData;
 import network.nerve.converter.rpc.call.TransactionCall;
 
@@ -134,6 +136,67 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
     }
 
     @Override
+    public String oneClickCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value, Long txTime,
+                                             Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue,
+                                             BigInteger mainAssetFeeAmount, int desChainId, String desToAddress, BigInteger tipping, String tippingAddress, String desExtend) throws Exception {
+        OneClickCrossChainUnconfirmedTxData dto = new OneClickCrossChainUnconfirmedTxData();
+        dto.setMainAssetFeeAmount(mainAssetFeeAmount);
+        dto.setDesChainId(desChainId);
+        dto.setDesToAddress(desToAddress);
+        dto.setDesExtend(desExtend);
+        dto.setOriginalTxHash(new HeterogeneousHash(hChainId, txHash));
+        dto.setHeterogeneousHeight(blockHeight);
+        dto.setHeterogeneousFromAddress(from);
+        dto.setNerveToAddress(AddressTool.getAddress(nerveAddress));
+        dto.setTipping(tipping);
+        dto.setTippingAddress(tippingAddress);
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        dto.setMainAssetChainId(mainAsset.getAssetChainId());
+        dto.setMainAssetId(mainAsset.getAssetId());
+        dto.setMainAssetAmount(mainAssetValue);
+        // 记录token充值数据
+        dto.setErc20Amount(erc20Value);
+        if (erc20AssetId > 1) {
+            NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
+            dto.setErc20AssetChainId(tokenAsset.getAssetChainId());
+            dto.setErc20AssetId(tokenAsset.getAssetId());
+            dto.setTippingChainId(tokenAsset.getAssetChainId());
+            dto.setTippingAssetId(tokenAsset.getAssetId());
+        } else {
+            dto.setTippingChainId(mainAsset.getAssetChainId());
+            dto.setTippingAssetId(mainAsset.getAssetId());
+        }
+        Transaction tx = assembleTxService.createOneClickCrossChainTx(nerveChain, dto, txTime);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String addFeeCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, Long txTime, String nerveAddress, BigInteger mainAssetValue, String nerveTxHash, String subExtend) throws Exception {
+        AddFeeCrossChainTxDTO dto = new AddFeeCrossChainTxDTO();
+        dto.setOriginalTxHash(new HeterogeneousHash(hChainId, txHash));
+        dto.setHeterogeneousHeight(blockHeight);
+        dto.setHeterogeneousFromAddress(from);
+        dto.setNerveToAddress(AddressTool.getAddress(nerveAddress));
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        dto.setMainAssetChainId(mainAsset.getAssetChainId());
+        dto.setMainAssetId(mainAsset.getAssetId());
+        dto.setMainAssetAmount(mainAssetValue);
+        dto.setNerveTxHash(nerveTxHash);
+        dto.setSubExtend(subExtend);
+        // 记录token充值数据
+        Transaction tx = assembleTxService.createAddFeeCrossChainTx(nerveChain, dto, txTime);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
     public String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception {
         if (!converterCoreApi.isSupportNewMechanismOfWithdrawalFee()) {
@@ -179,6 +242,46 @@ public class DepositTxSubmitterImpl implements IDepositTxSubmitter {
         txData.setMainAssetChainId(mainAsset.getAssetChainId());
         txData.setMainAssetId(mainAsset.getAssetId());
         Transaction tx = assembleTxService.rechargeUnconfirmedTx(nerveChain, txData, txTime);
+        if(tx == null) {
+            return null;
+        }
+        return tx.getHash().toHex();
+    }
+
+    @Override
+    public String pendingOneClickCrossChainTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger erc20Value,
+                                                    Long txTime, Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId,
+                                                    String nerveAddress, BigInteger mainAssetValue, BigInteger mainAssetFeeAmount,
+                                                    int desChainId, String desToAddress, BigInteger tipping, String tippingAddress, String desExtend) throws Exception {
+        OneClickCrossChainUnconfirmedTxData txData = new OneClickCrossChainUnconfirmedTxData();
+        txData.setMainAssetFeeAmount(mainAssetFeeAmount);
+        txData.setDesChainId(desChainId);
+        txData.setDesToAddress(desToAddress);
+        txData.setDesExtend(desExtend);
+        txData.setOriginalTxHash(new HeterogeneousHash(hChainId, txHash));
+        txData.setHeterogeneousHeight(blockHeight);
+        txData.setHeterogeneousFromAddress(from);
+        txData.setNerveToAddress(AddressTool.getAddress(nerveAddress));
+        txData.setTipping(tipping);
+        txData.setTippingAddress(tippingAddress);
+        // 记录主资产充值数据
+        NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
+        txData.setMainAssetAmount(mainAssetValue);
+        txData.setMainAssetChainId(mainAsset.getAssetChainId());
+        txData.setMainAssetId(mainAsset.getAssetId());
+        // 记录token充值数据
+        txData.setErc20Amount(erc20Value);
+        if (erc20AssetId > 1) {
+            NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
+            txData.setErc20AssetChainId(tokenAsset.getAssetChainId());
+            txData.setErc20AssetId(tokenAsset.getAssetId());
+            txData.setTippingChainId(tokenAsset.getAssetChainId());
+            txData.setTippingAssetId(tokenAsset.getAssetId());
+        } else {
+            txData.setTippingChainId(mainAsset.getAssetChainId());
+            txData.setTippingAssetId(mainAsset.getAssetId());
+        }
+        Transaction tx = assembleTxService.oneClickCrossChainUnconfirmedTx(nerveChain, txData, txTime);
         if(tx == null) {
             return null;
         }

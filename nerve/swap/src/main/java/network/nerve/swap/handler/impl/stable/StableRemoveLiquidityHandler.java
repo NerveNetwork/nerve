@@ -42,6 +42,7 @@ import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
 import network.nerve.swap.model.Chain;
@@ -78,6 +79,8 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
     private StableSwapPairCache stableSwapPairCache;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Integer txType() {
@@ -91,6 +94,14 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
 
     @Override
     public SwapResult execute(int chainId, Transaction tx, long blockHeight, long blockTime) {
+        if (swapHelper.isSupportProtocol21()) {
+            return this.executeP21(chainId, tx, blockHeight, blockTime);
+        } else {
+            return this.executeP0(chainId, tx, blockHeight, blockTime);
+        }
+    }
+
+    private SwapResult executeP0(int chainId, Transaction tx, long blockHeight, long blockTime) {
         SwapResult result = new SwapResult();
         Chain chain = chainManager.getChain(chainId);
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -156,7 +167,90 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             Transaction refundTx =
                     refund.newFrom()
                             .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
-                           .newTo()
+                            .newTo()
+                            .setToAddress(dto.getUserAddress())
+                            .setToAssetsChainId(tokenLP.getChainId())
+                            .setToAssetsId(tokenLP.getAssetId())
+                            .setToAmount(dto.getLiquidity()).endTo()
+                            .build();
+            result.setSubTx(refundTx);
+            String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
+            result.setSubTxStr(refundTxStr);
+            // 更新临时余额
+            tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
+        } finally {
+            batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
+        }
+        return result;
+    }
+
+    private SwapResult executeP21(int chainId, Transaction tx, long blockHeight, long blockTime) {
+        SwapResult result = new SwapResult();
+        Chain chain = chainManager.getChain(chainId);
+        BatchInfo batchInfo = chain.getBatchInfo();
+        StableRemoveLiquidityDTO dto = null;
+        try {
+            CoinData coinData = tx.getCoinDataInstance();
+            dto = this.getStableRemoveLiquidityInfo(chainId, coinData);
+            // 提取业务参数
+            StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
+            txData.parse(tx.getTxData(), 0);
+
+            String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+            if (!stableSwapPairCache.isExist(pairAddress)) {
+                throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
+            }
+            // 销毁的LP资产
+            BigInteger liquidity = dto.getLiquidity();
+            byte[] indexs = txData.getIndexs();
+            IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+            StableSwapPairPo pairPo = stablePair.getPair();
+            NerveToken tokenLP = pairPo.getTokenLP();
+            NerveToken[] coins = pairPo.getCoins();
+
+            // 整合计算数据
+            StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
+            //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
+            // 装填执行结果
+            result.setTxType(txType());
+            result.setSuccess(true);
+            result.setHash(tx.getHash().toHex());
+            result.setTxTime(tx.getTime());
+            result.setBlockHeight(blockHeight);
+            result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
+            // 组装系统成交交易
+            LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
+            Transaction sysDealTx = this.makeSystemDealTx(chain, bus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
+            result.setSubTx(sysDealTx);
+            result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
+            // 更新临时余额
+            tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
+            // 更新临时数据
+            stablePair.update(liquidity.negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeight, blockTime);
+        } catch (Exception e) {
+            Log.error(e);
+            // 装填失败的执行结果
+            result.setTxType(txType());
+            result.setSuccess(false);
+            result.setHash(tx.getHash().toHex());
+            result.setTxTime(tx.getTime());
+            result.setBlockHeight(blockHeight);
+            result.setErrorMessage(e instanceof NulsException ? ((NulsException) e).format() : e.getMessage());
+
+            if (dto == null) {
+                return result;
+            }
+            // 组装系统退还交易
+            String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+            IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+            NerveToken tokenLP = stablePair.getPair().getTokenLP();
+            SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
+            LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
+            LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(dto.getPairAddress(), tokenLP.getChainId(), tokenLP.getAssetId()).getData();
+            Transaction refundTx =
+                    refund.newFrom()
+                            .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
+                            .newTo()
                             .setToAddress(dto.getUserAddress())
                             .setToAssetsChainId(tokenLP.getChainId())
                             .setToAssetsId(tokenLP.getAssetId())
@@ -198,7 +292,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
                     LedgerBalance balance = tempBalanceManager.getBalance(pairAddress, coin.getChainId(), coin.getAssetId()).getData();
                     sysDeal.newFrom()
                             .setFrom(balance, receive).endFrom()
-                           .newTo()
+                            .newTo()
                             .setToAddress(to)
                             .setToAssetsChainId(coin.getChainId())
                             .setToAssetsId(coin.getAssetId())
@@ -235,5 +329,4 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         byte[] userAddress = from.getAddress();
         return new StableRemoveLiquidityDTO(userAddress, pairAddress, to.getAmount());
     }
-
 }

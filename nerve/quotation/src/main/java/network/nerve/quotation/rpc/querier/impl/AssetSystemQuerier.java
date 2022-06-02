@@ -25,6 +25,7 @@
 package network.nerve.quotation.rpc.querier.impl;
 
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.model.StringUtils;
 import network.nerve.quotation.model.bo.Chain;
 import network.nerve.quotation.rpc.querier.Querier;
 import network.nerve.quotation.util.HttpRequestUtil;
@@ -39,35 +40,28 @@ import java.util.Map;
  * @date: 2020/6/16
  */
 @Component
-public class DexQuerier implements Querier {
+public class AssetSystemQuerier implements Querier {
 
     /**
      * 获取交易对价格接口
      */
-    private final String CMD = "/coin/trading/price/";
+    private final String CMD = "price/";
 
     @Override
     public BigDecimal tickerPrice(Chain chain, String baseurl, String anchorToken) {
         String symbol = anchorToken.toUpperCase();
-        symbol = symbol.replace("USDT", "eUSDT");
+        symbol = symbol.replace("-USDT", "");
         String url = baseurl + CMD + symbol;
         try {
-            Map<String, Object> data = HttpRequestUtil.httpRequest(chain, url);
-            if (null == data) {
+            String data = HttpRequestUtil._httpRequest(chain, url);
+            if (StringUtils.isBlank(data)) {
                 return null;
             }
-            Map map = (Map) data.get("data");
-            boolean success = (Boolean) map.get("success");
-            if (!success) {
-                chain.getLogger().warn("Dex没有获取到交易对[{}]价格", symbol);
-                return null;
-            }
-            Map result = (Map) map.get("result");
-            BigDecimal res = new BigDecimal(result.get("price").toString());
-            chain.getLogger().info("Dex 获取到交易对[{}]价格:{}", symbol, res);
+            BigDecimal res = new BigDecimal(data);
+            chain.getLogger().info("AS 获取到交易对[{}]价格:{}", symbol, res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Dex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("AS, 调用接口 {}, anchorToken:{} 获取价格失败", url, symbol);
             return null;
         }
     }

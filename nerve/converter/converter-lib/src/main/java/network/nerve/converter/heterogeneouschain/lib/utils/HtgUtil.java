@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.BD_20K;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
 
 /**
  * @author: Mimi
@@ -361,11 +362,73 @@ public class HtgUtil {
         );
     }
 
+    public static Function getCrossOutIIFunction(String to, BigInteger value, String erc20, String data) {
+        DynamicBytes dynamicBytes;
+        if (StringUtils.isNotBlank(data)) {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(data));
+        } else {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(HtgConstant.HEX_PREFIX));
+        }
+        return new Function(
+                HtgConstant.METHOD_CROSS_OUT_II,
+                List.of(new Utf8String(to),
+                        new Uint256(value),
+                        new Address(erc20),
+                        dynamicBytes),
+                List.of(new TypeReference<Type>() {
+                })
+        );
+    }
+
     public static Function getIsMinterERC20Function(String erc20) {
         return new Function(
                 HtgConstant.METHOD_VIEW_IS_MINTER_ERC20,
                 List.of(new Address(erc20)),
                 List.of(new TypeReference<Bool>() {
+                })
+        );
+    }
+
+    public static Function getOneClickCrossChainFunction(BigInteger feeAmount, int desChainId, String desToAddress, String desExtend) {
+        return getOneClickCrossChainFunction(feeAmount, desChainId, desToAddress, BigInteger.ZERO, EMPTY_STRING, desExtend);
+    }
+    public static Function getOneClickCrossChainFunction(BigInteger feeAmount, int desChainId, String desToAddress,
+                                                         BigInteger tipping, String tippingAddress, String desExtend) {
+        DynamicBytes dynamicBytes;
+        if (StringUtils.isNotBlank(desExtend)) {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(desExtend));
+        } else {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(HtgConstant.HEX_PREFIX));
+        }
+        return new Function(
+                HtgConstant.METHOD_ONE_CLICK_CROSS_CHAIN,
+                List.of(
+                        new Uint256(feeAmount),
+                        new Uint256(desChainId),
+                        new Utf8String(desToAddress),
+                        new Uint256(tipping),
+                        new Utf8String(tippingAddress),
+                        dynamicBytes
+                ),
+                List.of(new TypeReference<Type>() {
+                })
+        );
+    }
+
+    public static Function getAddFeeCrossChainFunction(String nerveTxHash, String extend) {
+        DynamicBytes dynamicBytes;
+        if (StringUtils.isNotBlank(extend)) {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(extend));
+        } else {
+            dynamicBytes = new DynamicBytes(Numeric.hexStringToByteArray(HtgConstant.HEX_PREFIX));
+        }
+        return new Function(
+                HtgConstant.METHOD_ADD_FEE_CROSS_CHAIN,
+                List.of(
+                        new Utf8String(nerveTxHash),
+                        dynamicBytes
+                ),
+                List.of(new TypeReference<Type>() {
                 })
         );
     }
@@ -466,6 +529,9 @@ public class HtgUtil {
         // OKT网络，用户给多少手续费，就花费多少手续费
         if (currentNetworkAssetName == AssetName.OKT) {
             return gasPriceSupport;
+        } else if (currentNetworkAssetName == AssetName.KLAY) {
+            // KLAY网络，严格按照网络中设定的价格，不能多不能少
+            return gasPriceNetwork;
         }
         // 其他以太系异构网络，最大花费当前网络平均手续费的1.5倍
         BigDecimal maximumPrice;

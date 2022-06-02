@@ -52,29 +52,37 @@ public class QuotationCall {
     public static BigDecimal getPriceByOracleKey(Chain chain, String oracleKey) {
         /********************* 测试用 ***************************/
         /*if("ETH_PRICE".equals(oracleKey)){
-            return new BigDecimal("4272.6417");
+            return new BigDecimal("2080.6417");
         } else if (ORACLE_KEY_NVT_PRICE.equals(oracleKey)){
-            return new BigDecimal("0.0267");
+            return new BigDecimal("0.0147");
         } else if ("BNB_PRICE".equals(oracleKey)){
-            return new BigDecimal("580.3948");
+            return new BigDecimal("306.3948");
         } else if ("HT_PRICE".equals(oracleKey)){
-            return new BigDecimal("9.8641");
+            return new BigDecimal("7.0541");
         } else if ("OKT_PRICE".equals(oracleKey)){
-            return new BigDecimal("54.5144");
+            return new BigDecimal("24.6444");
         } else if ("ONE_PRICE".equals(oracleKey)){
-            return new BigDecimal("0.31331");
+            return new BigDecimal("0.3431331");
         } else if ("MATIC_PRICE".equals(oracleKey)){
-            return new BigDecimal("1.6912");
+            return new BigDecimal("0.7412");
         } else if ("KCS_PRICE".equals(oracleKey)){
-            return new BigDecimal("23.9747");
+            return new BigDecimal("14.2687");
         } else if ("TRX_PRICE".equals(oracleKey)){
-            return new BigDecimal("0.10005");
+            return new BigDecimal("0.07095");
         } else if ("CRO_PRICE".equals(oracleKey)){
-            return new BigDecimal("0.8698");
+            return new BigDecimal("0.1991");
         } else if ("AVAX_PRICE".equals(oracleKey)){
-            return new BigDecimal("120.5");
+            return new BigDecimal("34.43");
         } else if ("FTM_PRICE".equals(oracleKey)){
-            return new BigDecimal("2.2498");
+            return new BigDecimal("0.3648");
+        } else if ("METIS_PRICE".equals(oracleKey)){
+            return new BigDecimal("29.8957");
+        } else if ("IOTX_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.03262");
+        } else if ("KLAY_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.4146");
+        } else if ("BCH_PRICE".equals(oracleKey)){
+            return new BigDecimal("207.26");
         }*/
         /************************************************/
         try {

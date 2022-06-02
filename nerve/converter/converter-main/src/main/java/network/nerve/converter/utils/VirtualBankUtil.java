@@ -237,7 +237,7 @@ public class VirtualBankUtil {
         }
     }
 
-    public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager) throws Exception {
+    public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager, int logPrint) throws Exception {
         ExecutorService threadPool = null;
         try {
             // 并行查询余额
@@ -257,7 +257,7 @@ public class VirtualBankUtil {
                         countDownLatch = new CountDownLatch(listSize - s);
                     }
                 }
-                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch));
+                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch, logPrint));
                 // 达到CountDown的最大任务数时，等待执行完成
                 if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
                     countDownLatch.await();
@@ -277,12 +277,14 @@ public class VirtualBankUtil {
         private CountDownLatch countDownLatch;
         private HeterogeneousDockingManager heterogeneousDockingManager;
         private VirtualBankDirectorDTO directorDTO;
+        private int logPrint;
 
-        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch) {
+        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch, int logPrint) {
             this.heterogeneousDockingManager = heterogeneousDockingManager;
             this.countDownLatch = countDownLatch;
             this.directorDTO = directorDTO;
             this.logger = logger;
+            this.logPrint = logPrint;
         }
 
         @Override
@@ -292,7 +294,11 @@ public class VirtualBankUtil {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
                     BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
                     addr.setBalance(balance.toPlainString());
-                    logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                    if (this.logPrint % 10 == 0) {
+                        logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                    } else {
+                        logger.debug("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                    }
                 }
             } catch (Exception e) {
                 logger.error("查询异构链账户余额异常", e);

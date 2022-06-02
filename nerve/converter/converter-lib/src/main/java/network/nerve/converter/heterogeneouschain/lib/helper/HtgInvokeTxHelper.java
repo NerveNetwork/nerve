@@ -103,7 +103,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
         info.setCurrentNodeSendOrder(currentNodeSendOrder);
         info.setSignatures(signatureData);
         info.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (currentNodeSendOrder - 1));
-        info.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (info.getCurrentVirtualBanks().size() - 1));
+        info.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (info.getCurrentVirtualBanks().size()));
     }
 
     public HtgWaitingTxPo findEthWaitingTxPo(String nerveTxHash) {
@@ -113,7 +113,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
     public void clearEthWaitingTxPo(HtgWaitingTxPo po) throws Exception {
         po.setInvokeResend(false);
         po.setWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (po.getCurrentNodeSendOrder() - 1));
-        po.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (po.getCurrentVirtualBanks().size() - 1));
+        po.setMaxWaitingEndTime(System.currentTimeMillis() + HtgConstant.WAITING_MINUTES * (po.getCurrentVirtualBanks().size()));
         po.setValidateHeight(htgContext.getConverterCoreApi().getCurrentBlockHeightOnNerve() + 30);
         htgTxInvokeInfoStorageService.save(po.getNerveTxHash(), po);
     }

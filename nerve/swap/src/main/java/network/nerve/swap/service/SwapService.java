@@ -25,7 +25,6 @@ package network.nerve.swap.service;
 
 import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
-import network.nerve.swap.model.NerveToken;
 
 import java.math.BigInteger;
 
@@ -157,10 +156,12 @@ public interface SwapService {
      * @param amountsIn 卖出的资产数量列表
      * @param tokensIn 卖出的资产类型列表
      * @param tokenOutIndex 买进的资产索引
-     * @param feeTo 交易手续费取出一部分给指定的接收地址
+     * @param feeTo 交易手续费接收地址
      * @param pairAddress 交易对地址
      * @param deadline 过期地址
      * @param to 资产接收地址
+     * @param feeTokenStr 手续费资产类型
+     * @param feeAmountStr 交易手续费
      * @return
      */
     Result<String> stableSwapTokenTrade(int chainId, String address, String password,
@@ -168,7 +169,7 @@ public interface SwapService {
                                         String[] tokensIn,
                                         int tokenOutIndex, String feeTo,
                                         String pairAddress,
-                                        long deadline, String to);
+                                        long deadline, String to, String feeTokenStr, String feeAmountStr);
 
     /**
      * 根据LP资产获取交易对地址

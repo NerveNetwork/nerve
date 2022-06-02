@@ -151,7 +151,7 @@ public class CreateStablePairTxProcessor implements TransactionProcessor {
                 CreateStablePairData txData = new CreateStablePairData();
                 txData.parse(tx.getTxData(), 0);
                 LedgerAssetDTO dto = ledgerAssetRegisterHelper.lpAssetRegForStable(chainId, stablePairAddress, txData.getCoins(), txData.getSymbol());
-                logger.info("[commit] Swap Stable Create Pair Info: {}-{}, symbol: {}, decimals: {}", dto.getChainId(), dto.getAssetId(), dto.getAssetSymbol(), dto.getDecimalPlace());
+                logger.info("[commit] Swap Stable Create Pair Info: {}-{}, symbol: {}, decimals: {}, stablePairAddress: {}", dto.getChainId(), dto.getAssetId(), dto.getAssetSymbol(), dto.getDecimalPlace(), stablePairAddress);
                 // load cache
                 stableSwapPairCache.get(stablePairAddress);
             }

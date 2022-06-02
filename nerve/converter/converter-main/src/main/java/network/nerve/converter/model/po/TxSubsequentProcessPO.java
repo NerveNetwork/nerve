@@ -101,10 +101,27 @@ public class TxSubsequentProcessPO implements Serializable {
      * 重试机制(消息重发)
      */
     private boolean retry;
-
+    private transient boolean retryVirtualBankInit;// 变更重试数据初始化
+    private transient int prepare;// 1 - 准备阶段，2 - 非准备，执行阶段
     private transient int withdrawErrorTimes;
     private transient int withdrawErrorTotalTimes;
     private transient int feeChangeVersion;
+
+    public boolean isRetryVirtualBankInit() {
+        return retryVirtualBankInit;
+    }
+
+    public void setRetryVirtualBankInit(boolean retryVirtualBankInit) {
+        this.retryVirtualBankInit = retryVirtualBankInit;
+    }
+
+    public int getPrepare() {
+        return prepare;
+    }
+
+    public void setPrepare(int prepare) {
+        this.prepare = prepare;
+    }
 
     public void increaseWithdrawErrorTime() {
         this.withdrawErrorTimes++;

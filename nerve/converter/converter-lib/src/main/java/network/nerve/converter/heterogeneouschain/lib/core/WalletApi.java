@@ -24,9 +24,10 @@
 
 package network.nerve.converter.heterogeneouschain.lib.core;
 
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 
-import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -37,22 +38,21 @@ import java.util.Map;
  */
 public interface WalletApi {
 
-    void initialize();
+    default String getAvailableRpcFromThirdParty(long htgChainId) {
+        try {
+            String result = HttpClientUtil.get(String.format("https://assets.nabox.io/api/chainapi/%s", htgChainId));
+            if (StringUtils.isNotBlank(result)) {
+                Map<String, Object> map = JSONUtils.json2map(result);
+                String apiUrl = (String) map.get("apiUrl");
+                if (StringUtils.isNotBlank(apiUrl)) {
+                    apiUrl = apiUrl.trim();
+                }
+                return apiUrl;
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
 
-    long getBlockHeight() throws Exception;
-
-    BigDecimal getBalance(String address) throws Exception;
-
-    boolean canTransferBatch();
-
-    void confirmUnspent(Block block);
-
-    EthSendTransaction sendTransaction(String fromAddress, String secretKey, Map<String, BigDecimal> transferRequests);
-
-    String sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount);
-
-    EthSendTransaction sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount, String contractAddress) throws Exception;
-
-    String convertToNewAddress(String address);
-
+    }
 }

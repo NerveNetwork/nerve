@@ -63,6 +63,9 @@ public class BnbWalletApiTest extends Base {
     static String USDI_BNB_MINTER = "0xF3B4771813f27C390B11703450F5E188b83829F9";
     static String ETH_BNB_MINTER = "0x9296D0AF7DA81AAD9ae273118Ba377403db6691a";
 
+    static String TRX_TRON_BNB_MINTER = "0x3fc005d5552a5a8236f366fB6Cca94527889Ec35";
+    static String USDT_TRON_BNB_MINTER = "0xB8aAE3a961b9Fd45302c20e5346441ADB4cB0d28";
+
     protected void setErc20USDI() {
         erc20Address = "0xxxx";
         erc20Decimals = 6;
@@ -88,6 +91,16 @@ public class BnbWalletApiTest extends Base {
 
     protected void setErc20USDX() {
         erc20Address = USDX_BNB;
+        erc20Decimals = 6;
+    }
+
+    protected void setErc20USDTOfTRON() {
+        erc20Address = USDT_TRON_BNB_MINTER;
+        erc20Decimals = 6;
+    }
+
+    protected void setErc20TrxOfTRON() {
+        erc20Address = TRX_TRON_BNB_MINTER;
         erc20Decimals = 6;
     }
 
@@ -187,8 +200,10 @@ public class BnbWalletApiTest extends Base {
         list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
         list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         init();
+        erc20Address = HtgConstant.ZERO_ADDRESS;
+        erc20Decimals = 0;
     }
 
     protected void setBeta() {
@@ -198,7 +213,7 @@ public class BnbWalletApiTest extends Base {
         list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 0x3c2ff003ff996836d39601ca22394a58ca9c473b
         list.add("7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b");// 0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        this.multySignContractAddress = "0xf7915d4de86b856F3e51b894134816680bf09EEE";
+        this.multySignContractAddress = "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2";
         init();
     }
 
@@ -299,25 +314,24 @@ public class BnbWalletApiTest extends Base {
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
         htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
-        this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         // 初始化 账户
         //setAccount_2501();
-        setAccount_024F();
+        //setAccount_024F();
         //setAccount_7B65();
-        //setAccount_EFa1();
+        setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "2000";
+        String sendAmount = "20";
         // 初始化 ERC20 地址信息
-        setErc20BUG();
+        //setErc20BUG();
         //setErc20EthMinter();
         //setErc20UsdiMinter();
 
         //setErc20BUG();
-        //setErc20USDX();
+        setErc20USDX();
         //setErc20DXA();
         //setErc20GOAT();
         //setErc20SAFEMOON();
-        setErc20BUSD();
+        //setErc20USDTOfTRON();
 
 
         //setErc20NVT();
@@ -355,6 +369,260 @@ public class BnbWalletApiTest extends Base {
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
         System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链USDX
+     */
+    @Test
+    public void oneClickCrossChainUSDXTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        int desChainId = 104;
+        String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        // 一键跨链手续费
+        String feeAmount = "0.0001";
+        // ERC20 转账数量
+        String sendAmount = "2.5";
+        // 初始化 ERC20 地址信息
+        setErc20USDX();
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        // tipping
+        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        String tipping = "0.0";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        // crossOut erc20转账
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链USDT(tron)到波场
+     */
+    @Test
+    public void oneClickCrossChainUSDTOfTronTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        int desChainId = 108;
+        String desToAddress = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        // 一键跨链手续费
+        String feeAmount = "0.007";
+        // ERC20 转账数量
+        String sendAmount = "0.4";
+        // 初始化 ERC20 地址信息
+        setErc20USDTOfTRON();
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        // tipping
+        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        String tipping = "0.03";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        // crossOut erc20转账
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链TRX(tron)到波场
+     */
+    @Test
+    public void oneClickCrossChainTrxOfTronTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        int desChainId = 108;
+        String desToAddress = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        // 一键跨链手续费
+        String feeAmount = "0.001";
+        // ERC20 转账数量
+        String sendAmount = "0.25";
+        // 初始化 ERC20 地址信息
+        setErc20TrxOfTRON();
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        // tipping
+        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        String tipping = "0.02";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        // crossOut erc20转账
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链NVT
+     */
+    @Test
+    public void oneClickCrossChainNVTTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        int desChainId = 108;
+        String desToAddress = "TTaJsdnYPsBjLLM1u2qMw1e9fLLoVKnNUX";
+        // 一键跨链手续费
+        String feeAmount = "0.000005";
+        // ERC20 转账数量
+        String sendAmount = "2.5";
+        // 初始化 ERC20 地址信息
+        setErc20NVT();
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        // tipping
+        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
+        String tipping = "0.2";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        // crossOut erc20转账
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 跨链追加手续费
+     */
+    @Test
+    public void addFeeCrossChainNVTTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        // 一键跨链手续费
+        String feeAmount = "0.007";
+        // Nerve 接收地址
+        String to = "TNVTdTSPP9oSLvdtVSVFiUYCvXJdj1ZA1nyQU";
+        // 追加手续费的跨链交易的hash
+        String nerveTxHash = "60b266818a37d4981bfafe51f6cff5cb94ccc0d6056e95390d0d30f8c6c31f7e";
+
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function addFeeCrossChainFunction = HtgUtil.getAddFeeCrossChainFunction(nerveTxHash, null);
+        String data = FunctionEncoder.encode(addFeeCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, BigInteger.ZERO, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("跨链追加手续费[%s], 交易hash: %s", feeAmount, hash));
+    }
+
+    /**
+     * 一键跨链BNB
+     */
+    @Test
+    public void oneClickCrossChainMainAssetTest() throws Exception {
+        setBeta();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // 初始化 账户
+        setAccount_EFa1();
+        // BNB 转账数量
+        String sendAmount = "0.01";
+        // 一键跨链手续费
+        String feeAmount = "0.002";
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        // tipping
+        String tippingAddress = "";
+        String tipping = "0.000000";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(18).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(18).toBigInteger();
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, 101, "0xc11D9943805e56b630A401D4bd9A29550353EFa1", convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, BigInteger.ZERO, HtgConstant.ZERO_ADDRESS, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount.add(feeCrossChain), multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链 试错
+     */
+    @Test
+    public void oneClickCrossChainErrorTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        // 初始化 账户
+        setAccount_EFa1();
+        String feeAmount = "0.000005";// 一键跨链手续费
+        setErc20USDX();// 初始化 ERC20 地址信息
+        String sendErc20Amount = "2.6";// ERC20 转账数量
+        String sendMainAmount = "0";// 主资产 转账数量
+        int desChainId = 104;
+        String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        // Nerve 接收地址
+        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        //String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+
+        BigInteger convertErc20Amount = new BigDecimal(sendErc20Amount).movePointRight(erc20Decimals).toBigInteger();
+        BigInteger convertMainAmount = new BigDecimal(sendMainAmount).movePointRight(18).toBigInteger();
+        // tipping
+        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";// TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY or TNVTdTSPP9oSLvdtVSVFiUYCvXJdj1ZA1nyQU
+        String tipping = "0.26";
+        BigInteger convertTipping;
+        if (convertErc20Amount.compareTo(BigInteger.ZERO) <= 0) {
+            convertTipping = new BigDecimal(tipping).movePointRight(18).toBigInteger();
+        } else {
+            convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+        }
+        // crossOut erc20转账
+        BigInteger convertFeeAmount = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        String data = "0x";
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(convertFeeAmount, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertErc20Amount, erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertFeeAmount.add(convertMainAmount), multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendErc20Amount, hash));
+    }
+
+    /**
+     * 合约升级测试
+     */
+    @Test
+    public void upgradeContractTest() throws Exception {
+        // 环境数据
+        setLocalTest();
+        // GasPrice准备
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.SET_VERSION((byte) 2);
+        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
+        int signCount = list.size();
+        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        String newContract = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
+        String hash = this.sendUpgrade(txKey, newContract, signCount);
+        System.out.println(String.format("合约升级测试: %s，newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
     }
 
     @Test
@@ -641,12 +909,14 @@ public class BnbWalletApiTest extends Base {
      */
     @Test
     public void erc20WithdrawBy10Managers() throws Exception {
-        String txKey = "fff0000000000000000000000000000000000000000000000000000000000000";
+        setBeta();
+        String txKey = "fff0000000000000000000000000000000000000000000000000000000000002";
         String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        String value = "20";
-        String erc20 = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        int tokenDecimals = 6;
-        int signCount = 10;
+        String value = "233228.604321626";
+        String erc20 = "0x7BE69eb38443D3A632cB972df840013D667365e6";
+        int tokenDecimals = 9;
+        int signCount = 3;
+        htgContext.SET_VERSION((byte) 2);
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
         System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
     }
@@ -748,7 +1018,7 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void txInputCrossOutIIDecoderTest() throws JsonProcessingException {
-        String input = "0x38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000001312d00000000000000000000000000b6d685346106b697e6b2bba09bc343cafc930ca300000000000000000000000000000000000000000000000000000000000000e00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e5535417843397351410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        String input = "0x38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000005f5e100000000000000000000000000f7915d4de86b856f3e51b894134816680bf09eee00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002430663039383864392d383333302d343363302d616361312d37633461396635626131336100000000000000000000000000000000000000000000000000000000";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT_II);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
@@ -984,7 +1254,7 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        setMain();
+        //setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -1080,8 +1350,11 @@ public class BnbWalletApiTest extends Base {
         // 0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"
         setMain();
         String contractAddress = "0x42981d0bfbaf196529376ee702f2a9eb9092fcb5";
-        BigInteger convertAmount = new BigDecimal("30000").movePointRight(9).toBigInteger();
-        String to = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
+        BigInteger convertAmount = new BigDecimal("7.034").movePointRight(18).toBigInteger();
+        //BigInteger convertAmount = new BigDecimal("1").toBigInteger();
+        String from = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
+        String to = "0x9fEb35f94B1Eb2914409C18eF881e3dE7cbE65A4";
+        //String to = "0x0000000000000000000000000000000000000000";
 
         Function function = new Function(
                 "transfer",
@@ -1093,7 +1366,7 @@ public class BnbWalletApiTest extends Base {
 
         BigInteger value = null;
         org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
-                "0xa803fc1c1e83d6389865e1248dc924ed4c6953de",
+                from,
                 null,
                 null,
                 null,
@@ -1249,6 +1522,35 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void newParseWithdrawTxReceiptSinceProtocol21Test() throws Exception {
+        setMainData();
+        htgContext.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
+        List<String> list = new ArrayList<>();
+        list.add("0x7a55a728421c6c47ec0753fdd122fa5f4014644185d39664a62545b81674bcf4");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", htgContext);
+            Method method = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceipt", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(String.format("newParseWithdrawTxReceipt return: %s", invoke));
+            BigInteger newValue = po.getValue();
+            System.out.println(String.format("newParseWithdrawTxReceipt Withdraw Amount: %s", newValue));
+
+            Method method1 = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceiptSinceProtocol21", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method1.setAccessible(true);
+            Object invoke1 = method1.invoke(helper, tx, txReceipt, po);
+            System.out.println(String.format("newParseWithdrawTxReceiptSinceProtocol21 return: %s", invoke1));
+            BigInteger value1 = po.getValue();
+            System.out.println(String.format("newParseWithdrawTxReceiptSinceProtocol21 Withdraw Amount: %s", value1));
+            System.out.println();
+        }
+    }
+
+    @Test
     public void newValidationEthDepositByCrossOutTest() throws Exception {
         setMain();
         List<String> list = new ArrayList<>();
@@ -1326,6 +1628,48 @@ public class BnbWalletApiTest extends Base {
         String directTxHash = "0x03f27803ecccebcd647e4e28579004ad9ee01b01c43476c9beef467babff453a";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
+    }
+
+    @Test
+    public void oneClickCrossChainDataFunctionTest() {
+        BigInteger feeAmount = new BigDecimal("0.012").movePointRight(18).toBigInteger();
+        Function function = HtgUtil.getOneClickCrossChainFunction(feeAmount, 102, "0x830befa62501F1073ebE2A519B882e358f2a0318", null);
+        String extend = FunctionEncoder.encode(function);
+        System.out.println(FunctionEncoder.encode(function));
+        extend = HtgConstant.HEX_PREFIX + extend.substring(10);
+        List<Type> typeList = FunctionReturnDecoder.decode(extend, HtgConstant.INPUT_ONE_CLICK_CROSS_CHAIN);
+        String subExtend = Numeric.toHexString((byte[]) typeList.get(typeList.size() - 1).getValue());
+        System.out.println(subExtend);
+    }
+
+    @Test
+    public void addFeeCrossChainDataFunctionTest() {
+        String nerveTxHash = "b1ddb98a5263d921e4394b17e5cb824bac587ce67420ad0f72943f37c9c26be6";
+        Function function = HtgUtil.getAddFeeCrossChainFunction(nerveTxHash, null);
+        String extend = FunctionEncoder.encode(function);
+        System.out.println(FunctionEncoder.encode(function));
+        extend = HtgConstant.HEX_PREFIX + extend.substring(10);
+        List<Type> typeList = FunctionReturnDecoder.decode(extend, HtgConstant.INPUT_ADD_FEE_CROSS_CHAIN);
+        String subExtend = Numeric.toHexString((byte[]) typeList.get(typeList.size() - 1).getValue());
+        System.out.println(typeList.get(0).getValue());
+        System.out.println(subExtend);
+    }
+
+    @Test
+    public void xtmcUpgradeTest() throws Exception {
+        setMain();
+        int htgChainId = 102;
+        String from = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
+        String oldMulty = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        String erc20Contract = "0x822f73c2ba95080490579e631434061edbd00215";
+        Function upgradeContractS2 = new Function("upgradeContractS2", Arrays.asList(new Address(erc20Contract)), List.of());
+        EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, oldMulty, upgradeContractS2);
+        if (ethEstimateGas.getError() != null) {
+            System.err.println(String.format("验证失败[Token资产转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, erc20Contract, ethEstimateGas.getError().getMessage()));
+        } else {
+            System.out.println(String.format("验证成功, result: %s", ethEstimateGas.getAmountUsed()));
+        }
+
     }
 
     @Test

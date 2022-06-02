@@ -5,17 +5,16 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
-import io.nuls.core.rpc.model.message.Response;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.NonceBalance;
 import network.nerve.converter.utils.LoggerUtil;
 
-import javax.xml.stream.FactoryConfigurationError;
 import java.math.BigInteger;
 import java.text.MessageFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class LedgerCall extends BaseCall {
@@ -191,6 +190,15 @@ public class LedgerCall extends BaseCall {
             LoggerUtil.LOG.error(msg, e);
             return null;
         }
+    }
+
+    public static List<Map> ledgerAssetQueryAll(int chainId) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+        Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_get_all_asset", params);
+        List<Map> assets = (List<Map>) result.get("assets");
+        return assets;
     }
 
 }

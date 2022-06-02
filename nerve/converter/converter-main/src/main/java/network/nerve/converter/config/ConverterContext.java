@@ -25,6 +25,7 @@
 package network.nerve.converter.config;
 
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 
 import java.math.BigInteger;
@@ -150,6 +151,10 @@ public class ConverterContext {
      * v1.16.0 协议升级高度
      */
     public static long PROTOCOL_1_16_0 = 0L;
+    /**
+     * v1.21.0 协议升级高度
+     */
+    public static long PROTOCOL_1_21_0 = 0L;
 
     /**
      * 协议升级对应的高度
@@ -168,5 +173,14 @@ public class ConverterContext {
      * 虚拟银行管理员详情列表(包含各异构链对应余额)
      */
     public static List<VirtualBankDirectorDTO> VIRTUAL_BANK_DIRECTOR_LIST = new ArrayList<>();
+    /**
+     * 虚拟银行管理员详情列表(包含各异构链对应余额)(用于查询接口)
+     */
+    public static List<VirtualBankDirectorDTO> VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD = new ArrayList<>();
+    /**
+     * 缓存记录时间，用于过期缓存的替换
+     */
+    public static long VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = 0L;
+    public static Map<String, HeterogeneousAssetInfo> assetRegisterNetwork = new HashMap<>();
 
 }

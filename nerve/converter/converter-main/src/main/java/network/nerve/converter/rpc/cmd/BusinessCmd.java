@@ -26,6 +26,7 @@ package network.nerve.converter.rpc.cmd;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import io.nuls.base.RPCUtil;
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
@@ -49,13 +50,17 @@ import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.manager.ChainManager;
+import network.nerve.converter.model.bo.AgentBasic;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.dto.*;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.TxSubsequentProcessPO;
+import network.nerve.converter.model.txdata.ChangeVirtualBankTxData;
 import network.nerve.converter.model.txdata.ProposalTxData;
+import network.nerve.converter.rpc.call.BlockCall;
+import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.*;
 import network.nerve.converter.utils.ConverterUtil;
@@ -69,6 +74,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static network.nerve.converter.constant.ConverterConstant.MINUTES_5;
 
 /**
  * @author: Loki
@@ -258,14 +265,21 @@ public class BusinessCmd extends BaseCmd {
             if (!checkBalance) {
                 return success(map);
             }
-            if (ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.isEmpty()) {
+            long now = System.currentTimeMillis();
+            long cacheRecordTime = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME;
+            if (cacheRecordTime > 0 && (now - cacheRecordTime) >= MINUTES_5) {
+                ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.clear();
+            }
+            if (ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.isEmpty()) {
                 chain.getLogger().debug("缓存未建立，直接查询异构链余额");
+                ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD = list;
+                ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = now;
                 // 并行查询异构链余额
-                VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager);
+                VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, 0);
             } else {
                 chain.getLogger().debug("使用缓存的异构链余额");
                 // 使用缓存的异构链余额
-                Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
+                Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
                 for (VirtualBankDirectorDTO dto : list) {
                     VirtualBankDirectorDTO cacheDto = cacheMap.get(dto.getSignAddress());
                     if (cacheDto != null) {
@@ -573,6 +587,51 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_HTG_TX, version = 1.0, description = "重新解析异构链交易")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public Response checkRetryHtgTx(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("heterogeneousTxHash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            int heterogeneousChainId = (Integer) params.get("heterogeneousChainId");
+            String heterogeneousTxHash = params.get("heterogeneousTxHash").toString();
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryHtgTx");
+                map.put("value", false);
+            } else {
+                heterogeneousService.checkRetryHtgTx(chain, heterogeneousChainId, heterogeneousTxHash);
+                map.put("value", true);
+            }
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
     @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_WITHDRAWAL, version = 1.0, description = "重新将异构链提现交易放入task, 重发消息")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
@@ -779,11 +838,141 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_VIRTUAL_BANK, version = 1.0, description = "重试虚拟银行异构链(合约)")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "虚拟银行变更交易hash"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "交易所在高度"),
+            @Parameter(parameterName = "prepare", requestType = @TypeDescriptor(value = int.class), parameterDes = "1 - 准备阶段，2 - 非准备，执行阶段"),
+
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public Response retryVirtualBank(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("hash"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("height"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("prepare"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+                throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            if (!VirtualBankUtil.isCurrentDirector(chain)) {
+                chain.getLogger().error("当前非虚拟银行成员节点, 不处理retryVirtualBank");
+                map.put("value", false);
+                return success(map);
+            }
+            int prepare = ((Integer) params.get("prepare")).intValue();
+            if (prepare != 1 && prepare != 2) {
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+            String hash = params.get("hash").toString();
+            Transaction confirmedTx = TransactionCall.getConfirmedTx(chain, hash);
+            long height = Long.parseLong(params.get("height").toString());
+            BlockHeader blockHeader = BlockCall.getBlockHeader(chain, height);
+            this.retryVirtualBankProcessor(chain, confirmedTx, blockHeader, prepare);
+            map.put("value", true);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
     private void errorLogProcess(Chain chain, Exception e) {
         if (chain == null) {
             LoggerUtil.LOG.error(e);
         } else {
             chain.getLogger().error(e);
         }
+    }
+
+    private void retryVirtualBankProcessor(Chain chain, Transaction confirmedTx, BlockHeader blockHeader, int prepare) throws NulsException {
+        List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, blockHeader.getHeight());
+        Transaction tx = confirmedTx;
+        ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
+        List<byte[]> listOutAgents = txData.getOutAgents();
+        List<VirtualBankDirector> listOutDirector = new ArrayList<>();
+        if (listOutAgents != null && !listOutAgents.isEmpty()) {
+            for (byte[] addressBytes : listOutAgents) {
+                String agentAddress0 = AddressTool.getStringAddressByBytes(addressBytes);
+                AgentBasic agentInfo0 = getAgentInfo0(listAgent, agentAddress0);
+                if (null == agentInfo0) {
+                    throw new NulsException(ConverterErrorCode.AGENT_INFO_NOT_FOUND);
+                }
+                VirtualBankDirector director = new VirtualBankDirector();
+                director.setAgentHash(agentInfo0.getAgentHash());
+                director.setAgentAddress(agentAddress0);
+                director.setSignAddress(agentInfo0.getPackingAddress());
+                director.setRewardAddress(agentInfo0.getRewardAddress());
+                director.setSignAddrPubKey(agentInfo0.getPubKey());
+                director.setSeedNode(false);
+                director.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
+                listOutDirector.add(director);
+            }
+        }
+
+        List<byte[]> listInAgents = txData.getInAgents();
+        List<VirtualBankDirector> listInDirector = new ArrayList<>();
+        if (listInAgents != null && !listInAgents.isEmpty()) {
+            for (byte[] addressBytes : listInAgents) {
+                String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
+                AgentBasic agentInfo = getAgentInfo0(listAgent, agentAddress);
+                if (null == agentInfo) {
+                    throw new NulsException(ConverterErrorCode.AGENT_INFO_NOT_FOUND);
+                }
+                VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
+                virtualBankDirector.setAgentHash(agentInfo.getAgentHash());
+                virtualBankDirector.setAgentAddress(agentAddress);
+                virtualBankDirector.setSignAddress(agentInfo.getPackingAddress());
+                virtualBankDirector.setRewardAddress(agentInfo.getRewardAddress());
+                virtualBankDirector.setSignAddrPubKey(agentInfo.getPubKey());
+                virtualBankDirector.setSeedNode(false);
+                virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
+                listInDirector.add(virtualBankDirector);
+            }
+        }
+
+
+        // 放入异构链处理机制
+        TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+        pendingPO.setTx(tx);
+        pendingPO.setListInDirector(listInDirector);
+        pendingPO.setListOutDirector(listOutDirector);
+        pendingPO.setBlockHeader(blockHeader);
+        pendingPO.setSyncStatusEnum(SyncStatusEnum.RUNNING);
+        pendingPO.setCurrentJoin(false);
+        pendingPO.setCurrentQuit(false);
+        pendingPO.setCurrentQuitDirector(null);
+        pendingPO.setCurrentDirector(true);
+        pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
+        pendingPO.setRetry(true);
+        pendingPO.setPrepare(prepare);
+        txSubsequentProcessStorageService.save(chain, pendingPO);
+        chain.getPendingTxQueue().offer(pendingPO);
+    }
+
+    private AgentBasic getAgentInfo0(List<AgentBasic> listCurrentAgent, String agentAddress) {
+        for (int i = 0; i < listCurrentAgent.size(); i++) {
+            AgentBasic agentBasic = listCurrentAgent.get(i);
+            if (agentBasic.getAgentAddress().equals(agentAddress)) {
+                return agentBasic;
+            }
+        }
+        return null;
     }
 }

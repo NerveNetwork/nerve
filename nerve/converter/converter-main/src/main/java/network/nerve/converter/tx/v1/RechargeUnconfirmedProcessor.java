@@ -112,7 +112,7 @@ public class RechargeUnconfirmedProcessor implements TransactionProcessor {
         try {
             for (Transaction tx : txs) {
                 RechargeUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeUnconfirmedTxData.class);
-                chain.getLogger().info("[commit] 异构链组件解析到新充值交易 hash:{}, 异构链充值交易hash:{}", tx.getHash().toHex(), txData.getOriginalTxHash());
+                chain.getLogger().info("[commit] [Pending] 异构链组件解析到新充值交易 hash:{}, 异构链充值交易hash:{}", tx.getHash().toHex(), txData.getOriginalTxHash());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
