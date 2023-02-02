@@ -203,15 +203,17 @@ public interface TrxConstant {
                     //new TypeReference<Uint>(false) {}
             ));
 
-    BigInteger FEE_LIMIT_OF_WITHDRAW = BigInteger.valueOf(40_000000L);
-    BigInteger FEE_LIMIT_OF_CHANGE = BigInteger.valueOf(200_000000L);
+    BigInteger FEE_LIMIT_OF_WITHDRAW = BigInteger.valueOf(60_000000L);
+    BigInteger FEE_LIMIT_OF_CHANGE = BigInteger.valueOf(300_000000L);
     BigInteger TRX_1 = BigInteger.valueOf(1_000000L);
     BigInteger TRX_2 = BigInteger.valueOf(2_000000L);
     BigInteger TRX_10 = BigInteger.valueOf(10_000000L);
     BigInteger TRX_20 = BigInteger.valueOf(20_000000L);
     BigInteger TRX_100 = BigInteger.valueOf(100_000000L);
-    BigInteger SUN_PER_ENERGY = BigInteger.valueOf(280);
+    BigInteger SUN_PER_ENERGY = BigInteger.valueOf(420);
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
     BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");
+    //TODO pierre 动态获取tron的能量单价
+    String chainParamsURL = "https://api.trongrid.io/wallet/getchainparameters";
 
 }

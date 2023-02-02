@@ -306,7 +306,7 @@ public class IoUtils {
         try {
             return readBytes(new FileInputStream(file));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
         return null;
     }

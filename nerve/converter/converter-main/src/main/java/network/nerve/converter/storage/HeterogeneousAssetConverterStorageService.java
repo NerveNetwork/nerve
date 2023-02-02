@@ -72,6 +72,11 @@ public interface HeterogeneousAssetConverterStorageService {
      */
     NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId);
 
-
+    int pauseInAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+    int resumeInAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+    boolean isPauseInHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+    int pauseOutAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+    int resumeOutAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
+    boolean isPauseOutHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
 
 }

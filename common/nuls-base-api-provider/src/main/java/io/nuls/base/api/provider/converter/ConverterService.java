@@ -81,6 +81,8 @@ public interface ConverterService {
 
     Result<String> registerHeterogeneousMainAsset(RegisterHeterogeneousMainAssetReq req);
 
+    Result<String> bindHeterogeneousMainAsset(BindHeterogeneousMainAssetReq req);
+
     Result<String> bind(BindReq req);
 
     Result<String> bindOverride(BindOverrideReq req);
@@ -88,6 +90,10 @@ public interface ConverterService {
     Result<String> unbind(UnbindReq req);
 
     Result<String> unregister(UnbindReq req);
+    Result<String> pauseIn(UnbindReq req);
+    Result<String> resumeIn(UnbindReq req);
+    Result<String> pauseOut(UnbindReq req);
+    Result<String> resumeOut(UnbindReq req);
 
     Result<Boolean> retryWithdrawal(RetryWithdrawalReq req);
 

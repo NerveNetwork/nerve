@@ -34,6 +34,7 @@ import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +52,15 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static network.nerve.converter.heterogeneouschain.lib.core.WalletApi.INFURA_CIPHER_SUITE_SPEC;
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -96,7 +102,15 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://smartbch.greyh.at";
+        //String mainEthRpcAddress = "https://rpc.smartbch.org";//y
+        //String mainEthRpcAddress = "https://smartbch.greyh.at";//x
+        //String mainEthRpcAddress = "https://global.uat.cash";//x
+        //String mainEthRpcAddress = "https://rpc.uatvo.com";//x
+        String mainEthRpcAddress = "https://smartbch.fountainhead.cash/mainnet";
+        //final OkHttpClient.Builder builder =
+        //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        //OkHttpClient okHttpClient = builder.build();
+        //Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);

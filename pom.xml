@@ -22,7 +22,7 @@
         <java.version>11</java.version>
         <core.version>1.0.0-SNAPSHOT</core.version>
         <base.version>1.0.0-SNAPSHOT</base.version>
-        <slf4j.version>1.7.26</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <logback.version>1.2.3</logback.version>
     </properties>
 
@@ -138,14 +138,15 @@
         </plugins>
     </build>
 
+
     <distributionManagement>
         <repository>
-            <id>maven-releases</id>
-            <url>http://nexus.nuls.center/nexus/content/repositories/releases/</url>
+            <id>nuls-release</id>
+            <url>http://nexus.nuls.io/repository/nuls-release/</url>
         </repository>
         <snapshotRepository>
-            <id>maven-snapshots</id>
-            <url>http://nexus.nuls.center/nexus/content/repositories/snapshots/</url>
+            <id>nuls-snapshot</id>
+            <url>http://nexus.nuls.io/repository/nuls-snapshot/</url>
         </snapshotRepository>
     </distributionManagement>
 

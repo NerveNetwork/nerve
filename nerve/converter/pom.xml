@@ -34,6 +34,10 @@
         <module>converter-optimism</module>
         <module>converter-klay</module>
         <module>converter-bch</module>
+        <module>converter-goerliETH</module>
+        <module>converter-enuls</module>
+        <module>converter-kava</module>
+        <module>converter-ethw</module>
 
     </modules>
 

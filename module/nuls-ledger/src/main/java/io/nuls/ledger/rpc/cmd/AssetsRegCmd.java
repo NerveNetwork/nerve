@@ -166,6 +166,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                         defaultAsset.put("assetType", _assetType);
                         assetType = _assetType;
                         rtMap.put("assetType", assetType);
+                        rtMap.put("decimalPlace", defaultAsset.get("decimalPlace"));
                         return success(rtMap);
                     }
                 } else {
@@ -189,6 +190,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                 crossChainAssetRegMngRepository.saveCrossChainAsset(chainId, ledgerAsset);
             }
             rtMap.put("assetType", assetType);
+            rtMap.put("decimalPlace", ledgerAsset.getDecimalPlace());
             LoggerUtil.COMMON_LOG.debug("return={}", JSONUtils.obj2json(rtMap));
         } catch (Exception e) {
             LoggerUtil.COMMON_LOG.error(e);

@@ -112,6 +112,13 @@
         "verifySignature": true,
         "verifyFee": true,
         "handler": "StableLpSwapTradeTxProcessorV1"
+      },{
+        "type": "83",
+        "systemTx": false,
+        "unlockTx": false,
+        "verifySignature": true,
+        "verifyFee": true,
+        "handler": "SwapTradeStableRemoveLpTxProcessorV1"
       }
     ],
     "validMsgs": [

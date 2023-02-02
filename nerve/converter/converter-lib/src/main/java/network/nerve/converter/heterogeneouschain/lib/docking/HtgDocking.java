@@ -501,11 +501,12 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         // v15波场协议升级后，直接从异构链上获取交易，防止异构链网络区块回滚导致的交易信息与本地保存的交易信息不一致的问题
         if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
             org.web3j.protocol.core.methods.response.Transaction tx = htgWalletApi.getTransactionByHash(txHash);
-            if (tx == null || tx.getBlockNumber() == null) {
+            BigInteger txHeight = htgParseTxHelper.getTxHeight(logger(), tx);
+            if (tx == null || txHeight == null) {
                 return null;
             }
             from = tx.getFrom();
-            blockHeight = tx.getBlockNumber().longValue();
+            blockHeight = txHeight.longValue();
             if(signers == null || signers.isEmpty()) {
                 TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(txHash);
                 signers = htgParseTxHelper.parseSigners(txReceipt, from);
@@ -716,14 +717,15 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             logger().info("重新解析充值交易: {}", htTxHash);
             org.web3j.protocol.core.methods.response.Transaction tx = htgWalletApi.getTransactionByHash(htTxHash);
-            if (tx == null || tx.getBlockNumber() == null) {
+            BigInteger txHeight = htgParseTxHelper.getTxHeight(logger(), tx);
+            if (tx == null || txHeight == null) {
                 return false;
             }
             HeterogeneousTransactionInfo txInfo = htgParseTxHelper.parseDepositTransaction(tx);
             if (txInfo == null) {
                 return false;
             }
-            Long blockHeight = tx.getBlockNumber().longValue();
+            Long blockHeight = txHeight.longValue();
             EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(blockHeight);
             if (block == null) {
                 return false;
@@ -753,15 +755,17 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             logger().info("重新解析交易: {}", htTxHash);
             org.web3j.protocol.core.methods.response.Transaction tx = htgWalletApi.getTransactionByHash(htTxHash);
-            if (tx == null || tx.getBlockNumber() == null) {
+            BigInteger txHeight = htgParseTxHelper.getTxHeight(logger(), tx);
+            if (tx == null || txHeight == null) {
                 return false;
             }
-            Long blockHeight = tx.getBlockNumber().longValue();
+            Long blockHeight = txHeight.longValue();
             EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(blockHeight);
             if (block == null) {
                 return false;
             }
             Long txTime = block.getTimestamp().longValue();
+            htgUnconfirmedTxStorageService.deleteByTxHash(htTxHash);
             htgAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
             htgCommonHelper.addHash(htTxHash);
             return true;
@@ -790,6 +794,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
+        // 若跨链资产精度不同，则换算精度
+        value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         // 把地址转换成小写
         toAddress = toAddress.toLowerCase();
         String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
@@ -859,6 +865,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
+        // 若跨链资产精度不同，则换算精度
+        value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         // 把地址转换成小写
         toAddress = toAddress.toLowerCase();
         String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
@@ -899,7 +907,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
-    public boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
         return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
     }
 
@@ -962,7 +970,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
-        if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
+        if (htgContext.getConverterCoreApi().isProtocol22()) {
+            // 协议22: 支持不同精度的跨链资产
+            return createOrSignWithdrawTxIIProtocol22(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
+        } else if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
             // 协议15: 修改手续费机制，支持异构链主资产作为手续费
             return createOrSignWithdrawTxIIProtocol15(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
         } else {
@@ -1377,6 +1388,93 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), new BigDecimal(feeInfo.getFee()), po.getAssetId());
             } else {
                 gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(new BigDecimal(feeInfo.getFee()), po.getAssetId());
+            }
+            if (gasPrice == null) {
+                throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+            }
+            gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
+
+            // 验证合约后发出交易
+            String htTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW, gasPrice.toBigInteger(), !checkOrder);
+            if (StringUtils.isNotBlank(htTxHash)) {
+                // 记录提现交易已向HTG网络发出
+                htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htTxHash);
+            }
+            return htTxHash;
+        } catch (Exception e) {
+            if (e instanceof NulsException) {
+                throw (NulsException) e;
+            }
+            logger().error(e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+        }
+    }
+
+    private String createOrSignWithdrawTxIIProtocol22(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
+        try {
+            if (!htgContext.isAvailableRPC()) {
+                logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
+            }
+            logger().info("准备发送提现的{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            // 交易准备
+            HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
+            HtgAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
+            // 保存交易调用参数，设置等待结束时间
+            htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, toAddress, value, assetId, signatureData, account.getOrder(), waitingPo);
+            if (account.isEmpty()) {
+                return EMPTY_STRING;
+            }
+            // 当要检查顺序时，非首位不发交易
+            if (checkOrder && !checkFirstOrder(account.getOrder())) {
+                logger().info("非首位不发交易, order: {}", account.getOrder());
+                return EMPTY_STRING;
+            }
+            // 获取管理员账户
+            String fromAddress = account.getAddress();
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            // 业务验证
+            HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
+            po.setNerveTxHash(nerveTxHash);
+            boolean isContractAsset = assetId > 1;
+            String contractAddressERC20;
+            if (isContractAsset) {
+                contractAddressERC20 = htgERC20Helper.getContractAddressByAssetId(assetId);
+                htgERC20Helper.loadERC20(contractAddressERC20, po);
+            } else {
+                contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
+                po.setDecimals(htgContext.getConfig().getDecimals());
+                po.setAssetId(htgContext.HTG_ASSET_ID());
+            }
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则提现异常
+            if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
+                    && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
+                logger().warn("[{}]不合法的{}网络的提现交易, ERC20[{}]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
+            // 把地址转换成小写
+            toAddress = toAddress.toLowerCase();
+            po.setTo(toAddress);
+            po.setValue(value);
+            po.setIfContractAsset(isContractAsset);
+            if (isContractAsset) {
+                po.setContractAddress(contractAddressERC20);
+            }
+            // 若跨链资产精度不同，则换算精度
+            value = coreApi.checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
+            Function createOrSignWithdrawFunction = HtgUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
+            // 计算GasPrice
+            // 检查提现手续费
+            BigDecimal gasPrice;
+            WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
+            if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
+            // 使用非提现网络的其他主资产作为手续费时
+            BigDecimal feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeInfo.getFee()));
+            if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
+                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
+            } else {
+                gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
             }
             if (gasPrice == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);

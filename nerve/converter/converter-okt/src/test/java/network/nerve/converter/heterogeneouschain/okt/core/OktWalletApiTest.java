@@ -52,6 +52,7 @@ public class OktWalletApiTest extends Base {
     static String NVT_OKT_MINTER = "0x8B3b22C252F431a75644E544FCAf67E390A206F4";
     static String NULS_OKT_MINTER = "0xf3392C7b8d47694c10564C85736d6B0643b1761E";
     static String ETH_OKT_MINTER = "0xbBF80744c94C85d65B08290860df6ff04089F050";
+    static String USDX_OKT_MINTER = "0x64fBEf777594Bd2f763101abde343AF72CF1f8d3";
 
     static String OKUSD_OKT_8 = "0x10B382863647C4610050A69fBc1E582aC29fE58A";
     static String HUSD_HT_18 = "0x10B382863647C4610050A69fBc1E582aC29fE58A";
@@ -81,6 +82,11 @@ public class OktWalletApiTest extends Base {
     protected void setErc20EthMinter() {
         erc20Address = ETH_OKT_MINTER;
         erc20Decimals = 18;
+    }
+
+    protected void setErc20USDXMinter() {
+        erc20Address = USDX_OKT_MINTER;
+        erc20Decimals = 6;
     }
 
     protected void setAccount_c684() {
@@ -132,7 +138,7 @@ public class OktWalletApiTest extends Base {
         list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
         list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        this.multySignContractAddress = "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2";
         // 备用: 0xB29A26df2702B10BFbCf8cd52914Ad1fc99A4540
         init();
     }
@@ -245,26 +251,36 @@ public class OktWalletApiTest extends Base {
         BigInteger erc20Balance = htgWalletApi.getERC20Balance(account, contract);
         System.out.println(erc20Balance);
     }
+
+    @Test
+    public void balanceOfMain() throws Exception {
+        setMain();
+        // 0xd87F2ad3EF011817319FD25454FC186CA71B3B56 0x0Eb9e4427a0Af1Fa457230bEF3481d028488363E
+        String account = "0xd87F2ad3EF011817319FD25454FC186CA71B3B56";
+        BigDecimal balance = htgWalletApi.getBalance(account);
+        System.out.println(balance.movePointLeft(18).toPlainString());
+    }
     /**
      * 新方式充值erc20
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        htgContext.setEthGasPrice(BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "3200";
+        String sendAmount = "1.12";
         // 初始化 ERC20 地址信息
         //setErc20EthMinter();
         //setErc20UsdiMinter();
         //setErc20DXA();
         //setErc20USDX();
-        setErc20OKUSD();
-        //setErc20USDT();
+        //setErc20OKUSD();
+        setErc20USDT();
         //setErc20NVT();
         //setErc20NULS();
+        //setErc20USDXMinter();
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
@@ -276,8 +292,9 @@ public class OktWalletApiTest extends Base {
         BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
             // erc20授权
-            String approveAmount = "99999999";
-            Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
+            BigInteger approveAmount = new BigInteger("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
+            //new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals))
+            Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, approveAmount);
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
             System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
@@ -297,6 +314,41 @@ public class OktWalletApiTest extends Base {
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
         System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+    }
+
+    /**
+     * 一键跨链USDT
+     */
+    @Test
+    public void oneClickCrossChainUSDTTest() throws Exception {
+        setLocalTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // 初始化 账户
+        setAccount_EFa1();
+        int desChainId = 102;
+        String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        // 一键跨链手续费
+        String feeAmount = "0.0001";
+        // ERC20 转账数量
+        String sendAmount = "3.22";
+        // 初始化 ERC20 地址信息
+        setErc20USDT();
+        // Nerve 接收地址
+        String to = "0x0000000000000000000000000000000000000000";
+        // tipping
+        String tippingAddress = "0xd16634629c638efd8ed90bb096c216e7aec01a91";
+        String tipping = "0.2321";
+        BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
+
+        BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
+        // crossOut erc20转账
+        BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
+        Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
+        String data = FunctionEncoder.encode(oneClickCrossChainFunction);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount.add(convertTipping), erc20Address, data);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
+
+        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
     }
 
     @Test
@@ -807,14 +859,6 @@ public class OktWalletApiTest extends Base {
     }
 
     @Test
-    public void getHtTransaction() throws Exception {
-        setMain();
-        String directTxHash = "0x54a99b46b1652f90a11c43f3ed47bc0d994003e7e88d1eb64799d424f945cad5";
-        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
-        System.out.println(JSONUtils.obj2PrettyJson(tx));
-    }
-
-    @Test
     public void ethDepositByCrossOutTest() throws Exception {
         String directTxHash = "0x176856463c4bf086e5f6df8c600867f5e3d39f6a293bcac188f4bcc61e019b3d";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
@@ -869,20 +913,33 @@ public class OktWalletApiTest extends Base {
 
     @Test
     public void getBlockHeight() throws Exception {
+        setMain();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 
     @Test
+    public void getTx() throws Exception {
+        setMain();
+        String directTxHash = "0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1";
+        Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        System.out.println(JSONUtils.obj2PrettyJson(tx));
+    }
+
+    @Test
     public void getTestNetTxReceipt() throws Exception {
+        // 0x7f054ce8e7a3c2aaa1939275ef7f5246f0372f095d2a26b01dc723b74c495f39
+        // 0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1
+        //setMainProxy();
+        setMain();
         // 直接调用erc20合约
-        String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
+        String directTxHash = "0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        setMain();
+        //setMain();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());

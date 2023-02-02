@@ -31,9 +31,11 @@ import io.nuls.core.constant.ErrorCode;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
@@ -46,6 +48,7 @@ import network.nerve.converter.model.txdata.HeterogeneousContractAssetRegComplet
 import network.nerve.converter.model.txdata.HeterogeneousMainAssetRegTxData;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
+import network.nerve.converter.utils.HeterogeneousUtil;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -74,6 +77,8 @@ public class HeterogeneousMainAssetRegProcessor implements TransactionProcessor 
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -95,6 +100,15 @@ public class HeterogeneousMainAssetRegProcessor implements TransactionProcessor 
                 // 签名验证(种子虚拟银行)
                 ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
 
+                // exclude (nuls & EVM:enuls) (eth & EVM:goerliETH)
+                if (converterCoreApi.isProtocol22() && !HeterogeneousUtil.checkHeterogeneousMainAssetReg(txData.getChainId())) {
+                    logger.error("此异构链不支持注册: {}", txData.getChainId());
+                    ErrorCode error = ConverterErrorCode.NO_LONGER_SUPPORTED;
+                    errorCode = error.getCode();
+                    logger.error(error.getMsg());
+                    failsList.add(tx);
+                    continue;
+                }
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getChainId());
                 HeterogeneousAssetInfo mainAsset = docking.getMainAsset();
                 NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(mainAsset.getChainId(), mainAsset.getAssetId());

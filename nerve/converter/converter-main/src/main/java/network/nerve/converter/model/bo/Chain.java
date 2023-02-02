@@ -121,6 +121,7 @@ public class Chain {
         Integer version = withdrawFeeChanges.getOrDefault(withdrawHash, 0);
         version++;
         withdrawFeeChanges.put(withdrawHash, version);
+        logger.info("[increase] withdrawHash: {}, current feeChangeVersion: {}", withdrawHash, version);
     }
 
     public void decreaseWithdrawFeeChangeVersion(String withdrawHash) {
@@ -130,6 +131,7 @@ public class Chain {
         }
         version--;
         withdrawFeeChanges.put(withdrawHash, version);
+        logger.info("[decrease] withdrawHash: {}, current feeChangeVersion: {}", withdrawHash, version);
     }
 
     public int getWithdrawFeeChangeVersion(String withdrawHash) {

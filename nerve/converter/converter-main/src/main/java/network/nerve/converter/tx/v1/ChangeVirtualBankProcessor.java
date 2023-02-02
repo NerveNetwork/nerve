@@ -462,6 +462,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
         Collection<VirtualBankDirector> allDirectors = chain.getMapVirtualBank().values();
         if (null != allDirectors && !allDirectors.isEmpty()) {
             for (VirtualBankDirector director : allDirectors) {
+                boolean save = false;
                 for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                     if (director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
                         // 存在异构地址就不创建
@@ -471,10 +472,13 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
-                    virtualBankStorageService.update(chain, director);
-                    virtualBankAllHistoryStorageService.save(chain, director);
-                    chain.getLogger().debug("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                    save = true;
+                    chain.getLogger().info("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
                             director.getAgentAddress(), hInterface.getChainId(), director.getHeterogeneousAddrMap().get(hInterface.getChainId()));
+                }
+                if (save) {
+                    virtualBankStorageService.save(chain, director);
+                    virtualBankAllHistoryStorageService.save(chain, director);
                 }
             }
         }

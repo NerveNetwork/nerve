@@ -18,7 +18,6 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.ByteUtils;
-import io.nuls.sdk.core.utils.TimeService;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -50,7 +49,7 @@ public class AccountServiceTest {
         //初始化配置
         accountBootstrap.init();
 //        启动时间同步线程
-        TimeService.getInstance().start();
+//        TimeService.getInstance().start();
         accountService = SpringLiteContext.getBean(AccountService.class);
         chain.setConfig(new ConfigBean(chainId, assetId));
     }

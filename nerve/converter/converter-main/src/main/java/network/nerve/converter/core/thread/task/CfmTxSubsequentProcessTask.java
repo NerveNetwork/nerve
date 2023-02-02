@@ -168,8 +168,9 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawalProcessor(pendingPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
-                            if (pendingPO.isWithdrawExceedErrorTime(chain.getWithdrawFeeChangeVersion(tx.getHash().toHex()), 10)) {
-                                chain.getLogger().warn("[withdraw] 提现手续费不足，重试次数超过限制，暂停处理当前提前任务, txHash: {}", tx.getHash().toHex());
+                            int feeChangeVersion = chain.getWithdrawFeeChangeVersion(tx.getHash().toHex());
+                            if (pendingPO.isWithdrawExceedErrorTime(feeChangeVersion, 10)) {
+                                chain.getLogger().warn("[withdraw] 提现手续费不足，重试次数超过限制，暂停处理当前提前任务, feeChangeVersion: {}, txHash: {}", feeChangeVersion, tx.getHash().toHex());
                                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                             }
                             if (!withdrawalByzantineProcessor(pendingPO)) {
@@ -540,15 +541,15 @@ public class CfmTxSubsequentProcessTask implements Runnable {
         String txHash = hash.toHex();
         // 判断是否收到过该消息, 并签了名
         ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
-        boolean sign = false;
+        boolean needSign = false;
         if (null != compSignPO) {
             if (!compSignPO.getCurrentSigned()) {
-                sign = true;
+                needSign = true;
             }
         } else {
-            sign = true;
+            needSign = true;
         }
-        if (sign) {
+        if (needSign) {
             int htgChainId = 0;
             String toAddress = null;
             if (TxType.WITHDRAWAL == tx.getType()) {
@@ -618,16 +619,16 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     WithdrawalTotalFeeInfo totalFeeInfo = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
-                    BigInteger totalFee = totalFeeInfo.getFee();
                     boolean enoughFeeOfWithdraw;
                     // 修改手续费机制，支持异构链主资产作为手续费
                     if (totalFeeInfo.isNvtAsset()) {
                         // 验证NVT作为手续费
-                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                        enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFeeInfo.getFee()), callParm.getAssetId());
                     } else {
+                        BigDecimal feeAmount = new BigDecimal(converterCoreApi.checkDecimalsSubtractedToNerveForWithdrawal(totalFeeInfo.getHtgMainAssetName().chainId(), 1, totalFeeInfo.getFee()));
                         // 验证异构链主资产作为手续费
                         // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
-                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdrawByMainAssetProtocol15(totalFeeInfo.getHtgMainAssetName(), new BigDecimal(totalFee), callParm.getAssetId());
+                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdrawByMainAssetProtocol15(totalFeeInfo.getHtgMainAssetName(), feeAmount, callParm.getAssetId());
                     }
                     if (!enoughFeeOfWithdraw) {
                         // 异常计数
@@ -932,6 +933,8 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                         new HeterogeneousAddress(heterogeneousInterface.getChainId(), heterogeneousAddress));
                 virtualBankStorageService.update(chain, director);
                 virtualBankAllHistoryStorageService.save(chain, director);
+                chain.getLogger().info("[为新成员创建异构链多签地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                        director.getAgentAddress(), heterogeneousInterface.getChainId(), director.getHeterogeneousAddrMap().get(heterogeneousInterface.getChainId()));
             }
         }
     }

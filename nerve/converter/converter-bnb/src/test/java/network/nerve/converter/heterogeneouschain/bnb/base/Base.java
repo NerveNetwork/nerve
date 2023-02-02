@@ -31,6 +31,7 @@ import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.bnb.core.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
@@ -76,40 +77,7 @@ public class Base {
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected BnbContext htgContext;
-    private static final CipherSuite[] INFURA_CIPHER_SUITES =
-            new CipherSuite[] {
-                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-                    CipherSuite.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
 
-                    // Note that the following cipher suites are all on HTTP/2's bad cipher suites list.
-                    // We'll
-                    // continue to include them until better suites are commonly available. For example,
-                    // none
-                    // of the better cipher suites listed above shipped with Android 4.4 or Java 7.
-                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
-                    CipherSuite.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-                    CipherSuite.TLS_RSA_WITH_AES_128_GCM_SHA256,
-                    CipherSuite.TLS_RSA_WITH_AES_256_GCM_SHA384,
-                    CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA,
-                    CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA,
-                    CipherSuite.TLS_RSA_WITH_3DES_EDE_CBC_SHA,
-
-                    // Additional INFURA CipherSuites
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
-                    CipherSuite.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384,
-                    CipherSuite.TLS_RSA_WITH_AES_128_CBC_SHA256,
-                    CipherSuite.TLS_RSA_WITH_AES_256_CBC_SHA256
-            };
-    private static final ConnectionSpec INFURA_CIPHER_SUITE_SPEC =
-            new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
-                    .cipherSuites(INFURA_CIPHER_SUITES)
-                    .build();
     @BeforeClass
     public static void initClass() {
         Log.info("init");
@@ -124,12 +92,15 @@ public class Base {
          */
         // 删除
         // 1-s2, 2-s1, 2-s2
-        String ethRpcAddress = "https://data-seed-prebsc-2-s3.binance.org:8545/";
+        //String ethRpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+
+        //final OkHttpClient.Builder builder =
+        //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        //OkHttpClient okHttpClient = builder.build();
+        //Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
+        String ethRpcAddress = "https://bsc-testnet.public.blastapi.io";// https://bsctestapi.terminet.io/rpc
+        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi = new HtgWalletApi();
-        final OkHttpClient.Builder builder =
-                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
-        OkHttpClient okHttpClient = builder.build();
-        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
         htgContext = new BnbContext();
@@ -145,14 +116,25 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
+        /*
+         "commonRpcAddress": "https://bsc-dataseed.binance.org/",
+         "mainRpcAddress": "https://bsc-dataseed1.binance.org/",
+         "orderRpcAddresses": "https://bsc-dataseed.binance.org/,https://bsc-dataseed1.binance.org/,https://bsc-dataseed2.binance.org/,https://bsc-dataseed3.binance.org/",
+         "standbyRpcAddresses": "https://bsc-dataseed1.defibit.io/,https://bsc-dataseed4.defibit.io/,https://bsc-dataseed3.ninicoin.io/,https://bsc-dataseed4.ninicoin.io/",
+0xfaf436543661419de222536e518833ce5a1ed4dc
+         */
         //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-        //String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";
+        String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
         //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
-        //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";//1
         //String mainEthRpcAddress = "https://bsc-dataseed2.binance.org/";
-        //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";//1
         //String mainEthRpcAddress = "https://bsc-dataseed3.binance.org/";
-        String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";
+        //String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";//1
+        //final OkHttpClient.Builder builder =
+        //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        //OkHttpClient okHttpClient = builder.build();
+        //Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
@@ -176,8 +158,8 @@ public class Base {
 
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
-            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
+            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败, {}", txType, estimateGasObj.getError().getMessage());
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败, " + estimateGasObj.getError().getMessage());
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas;

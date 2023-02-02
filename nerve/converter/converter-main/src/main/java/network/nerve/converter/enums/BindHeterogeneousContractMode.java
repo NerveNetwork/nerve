@@ -31,5 +31,7 @@ public enum BindHeterogeneousContractMode {
     NEW,
     REMOVE,
     OVERRIDE,
-    UNREGISTER;
+    UNREGISTER,
+    PAUSE,
+    RESUME;
 }

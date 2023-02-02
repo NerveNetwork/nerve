@@ -50,6 +50,7 @@ public interface ConverterCmdConstant {
     String CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_create_heterogeneous_contract_asset_reg_pending_tx";
     String VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX = "cv_validate_heterogeneous_contract_asset_reg_pending_tx";
     String CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX = "cv_create_heterogeneous_main_asset_reg_tx";
+    String CREATE_HETEROGENEOUS_MAIN_ASSET_BIND_TX = "cv_create_heterogeneous_main_asset_bind_tx";
     String GET_HETEROGENEOUS_REGISTER_NETWORK = "cv_get_heterogeneous_register_network";
     String GET_HETEROGENEOUS_NETWORK_CHAIN_ID = "cv_get_heterogeneous_network_chain_id";
 
@@ -58,6 +59,10 @@ public interface ConverterCmdConstant {
     String OVERRIDE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_override_bind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_unbind_heterogeneous_contract_token_to_nerve_asset_reg_tx";
     String UNREGISTER_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX = "cv_unregister_heterogeneous_contract_token_to_nerve_asset_reg_tx";
+    String PAUSE_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_pause_in_heterogeneous_contract_token";
+    String RESUME_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_resume_in_heterogeneous_contract_token";
+    String PAUSE_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_pause_out_heterogeneous_contract_token";
+    String RESUME_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_resume_out_heterogeneous_contract_token";
     /** 提现 */
     String WITHDRAWAL = "cv_withdrawal";
     String WITHDRAWAL_ADDITIONAL_FEE = "cv_withdrawal_additional_fee";

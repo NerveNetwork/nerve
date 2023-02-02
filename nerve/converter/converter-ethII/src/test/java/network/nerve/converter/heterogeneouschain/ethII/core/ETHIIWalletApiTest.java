@@ -121,7 +121,7 @@ public class ETHIIWalletApiTest extends BaseII {
         list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
         list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2";
+        this.multySignContractAddress = "0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653";
         init();
     }
     protected void setBeta() {
@@ -231,13 +231,12 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        this.multySignContractAddress = "0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653";
         //setBeta();
         EthContext.setEthGasPrice(BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9)));
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "200";
+        String sendAmount = "2.21";
         // 初始化 ERC20 地址信息
         //setErc20USDI();
         //setErc20USDX();
@@ -942,9 +941,15 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(70437);
+        setMain();
+        Long height = Long.valueOf(15939881);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
+        System.out.println(block.getTimestamp());
+
+        block = htgWalletApi.getBlockHeaderByHeight(height-1);
+        System.out.println(block.getHash());
+        System.out.println(block.getTimestamp());
     }
 
     @Test

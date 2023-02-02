@@ -121,4 +121,34 @@ public class HeterogeneousUtil {
         }
         return true;
     }
+
+    // only (nuls & EVM:enuls) (eth & EVM:goerliETH)
+    public static boolean checkHeterogeneousMainAssetBind(int chainId, int htgChainId, int nerveAssetChainId, int nerveAssetId) {
+        if (chainId == 5) {
+            if (htgChainId == 118) {
+                if (nerveAssetChainId == 5 && nerveAssetId == 2) {
+                    return true;
+                }
+            } else if (htgChainId == 119) {
+                if (nerveAssetChainId == 2 && nerveAssetId == 1) {
+                    return true;
+                }
+            }
+        } else if (chainId == 9) {
+            if (htgChainId == 119) {
+                if (nerveAssetChainId == 1 && nerveAssetId == 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // exclude (nuls & EVM:enuls) (eth & EVM:goerliETH)
+    public static boolean checkHeterogeneousMainAssetReg(int htgChainId) {
+        if (htgChainId == 118 || htgChainId == 119) {
+            return false;
+        }
+        return true;
+    }
 }

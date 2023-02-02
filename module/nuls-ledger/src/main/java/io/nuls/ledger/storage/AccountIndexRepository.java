@@ -37,12 +37,12 @@ public interface AccountIndexRepository {
 
     void updateAssetsIndex(int chainId, byte[] key, byte[] value);
 
-    void updateAssetsAddressIndex(int addressChainId, int assetChainId, int assetId, byte[] addressKey, byte[] value);
+//    void updateAssetsAddressIndex(int addressChainId, int assetChainId, int assetId, byte[] addressKey, byte[] value);
 
-    void updateAssetsAddressIndex(int addressChainId, int assetChainId, int assetId, Map<byte[], byte[]> kvs);
+//    void updateAssetsAddressIndex(int addressChainId, int assetChainId, int assetId, Map<byte[], byte[]> kvs);
 
     List<String> assetsKeyList(int chainId);
 
-    List<String> assetsAddressKeyList(int addressChainId, int assetChainId, int assetId);
+//    List<String> assetsAddressKeyList(int addressChainId, int assetChainId, int assetId);
 
 }

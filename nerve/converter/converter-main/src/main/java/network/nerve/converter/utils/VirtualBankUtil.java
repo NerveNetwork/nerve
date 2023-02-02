@@ -32,6 +32,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.model.bo.Chain;
@@ -46,6 +47,7 @@ import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.storage.VirtualBankStorageService;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -237,7 +239,7 @@ public class VirtualBankUtil {
         }
     }
 
-    public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager, int logPrint) throws Exception {
+    public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager, int logPrint, ConverterCoreApi converterCoreApi) throws Exception {
         ExecutorService threadPool = null;
         try {
             // 并行查询余额
@@ -257,7 +259,7 @@ public class VirtualBankUtil {
                         countDownLatch = new CountDownLatch(listSize - s);
                     }
                 }
-                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch, logPrint));
+                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch, logPrint, converterCoreApi));
                 // 达到CountDown的最大任务数时，等待执行完成
                 if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
                     countDownLatch.await();
@@ -278,26 +280,32 @@ public class VirtualBankUtil {
         private HeterogeneousDockingManager heterogeneousDockingManager;
         private VirtualBankDirectorDTO directorDTO;
         private int logPrint;
+        private ConverterCoreApi converterCoreApi;
 
-        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch, int logPrint) {
+        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch, int logPrint, ConverterCoreApi converterCoreApi) {
             this.heterogeneousDockingManager = heterogeneousDockingManager;
             this.countDownLatch = countDownLatch;
             this.directorDTO = directorDTO;
             this.logger = logger;
             this.logPrint = logPrint;
+            this.converterCoreApi = converterCoreApi;
         }
 
         @Override
         public void run() {
             try {
                 for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
-                    IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                    BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
-                    addr.setBalance(balance.toPlainString());
-                    if (this.logPrint % 10 == 0) {
-                        logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                    if (!converterCoreApi.checkNetworkRunning(addr.getChainId())) {
+                        addr.setBalance("0");
                     } else {
-                        logger.debug("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                        BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
+                        addr.setBalance(balance.toPlainString());
+                        if (this.logPrint % 10 == 0) {
+                            logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                        } else {
+                            logger.debug("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                        }
                     }
                 }
             } catch (Exception e) {

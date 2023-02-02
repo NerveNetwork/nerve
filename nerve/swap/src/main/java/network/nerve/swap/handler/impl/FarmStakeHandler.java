@@ -292,6 +292,8 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
             BigInteger allHeight = farm.getSyrupTokenBalance().divide(farm.getSyrupPerBlock());
             farm.setStopHeight(blockHeight + allHeight.longValue());
         }
+        //todo 新的协议业务，当第一笔委托早于起始高度时，使用startHeight计算stopHeight，这样更准确
+        
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
         bus.setLastRewardBlockNew(farm.getLastRewardBlock());

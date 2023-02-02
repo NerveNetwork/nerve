@@ -39,7 +39,10 @@ import network.nerve.converter.heterogeneouschain.lib.enums.BroadcastTxValidateS
 import network.nerve.converter.heterogeneouschain.lib.helper.*;
 import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
-import network.nerve.converter.heterogeneouschain.lib.model.*;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxRelationStorageService;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxStorageService;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
@@ -87,11 +90,6 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     private HtgResendHelper htgResendHelper;
     private HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
-    int count = 0;
-
-    //public HtgConfirmTxHandler(BeanMap beanMap) {
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
 
     private NulsLogger logger() {
         return htgContext.logger();
@@ -104,6 +102,10 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             String symbol = htgContext.getConfig().getSymbol();
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 LoggerUtil.LOG.debug("[{}]忽略同步区块模式", symbol);
+                return;
+            }
+            if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
+                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
@@ -132,18 +134,8 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             for (int i = 0; i < size; i++) {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
-                    if(logger().isDebugEnabled()) {
-                        logger().debug("移除空值PO");
-                    }
+                    logger().info("移除空值PO");
                     continue;
-                }
-                // 临时处理: 问题交易延迟处理，v15波场协议升级后修复
-                if ("MATIC".equalsIgnoreCase(symbol) && "0x3f5bf21246badadbef6dd9546ce433486e795f65e424805ee1aae6861379e22e".equalsIgnoreCase(po.getTxHash())) {
-                    count++;
-                    if (count % 30 != 0) {
-                        queue.offer(po);
-                        continue;
-                    }
                 }
                 // 清理无用的变更任务
                 if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
@@ -277,7 +269,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if(tx == null) {
             return false;
         }
-        BigInteger blockNumber = tx.getBlockNumber();
+        BigInteger blockNumber = htgParseTxHelper.getTxHeight(logger(), tx);
         // 本地最新的区块
         HtgSimpleBlockHeader localMax = htgLocalBlockHelper.getLatestLocalBlockHeader();
         if(localMax == null) {
@@ -331,7 +323,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         }
         try {
             Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
-            Long height = htgTx.getBlockNumber().longValue();
+            Long height = htgParseTxHelper.getTxHeight(logger(), htgTx).longValue();
             EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
             long txTime = header.getTimestamp().longValue();
             // 回调充值交易
@@ -587,7 +579,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     String realNerveTxHash = nerveTxHash;
                     logger().info("[{}]签名完成的{}交易[{}]调用Nerve确认[{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
                     Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
-                    Long height = htgTx.getBlockNumber().longValue();
+                    Long height = htgParseTxHelper.getTxHeight(logger(), htgTx).longValue();
                     EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
                     // 签名完成的交易将触发回调Nerve Core
                     htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
@@ -789,6 +781,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             BigDecimal gasPrice;
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
             // 使用非提现网络的其他主资产作为手续费时
+            feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeAmount.toBigInteger()));
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
                 gasPrice = HtgUtil.calcGasPriceOfWithdraw(feeInfo.getHtgMainAssetName(), coreApi.getUsdtPriceByAsset(feeInfo.getHtgMainAssetName()), feeAmount, coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId(), htgContext.GAS_LIMIT_OF_WITHDRAW());
             } else {

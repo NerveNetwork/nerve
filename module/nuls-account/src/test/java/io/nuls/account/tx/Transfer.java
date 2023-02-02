@@ -52,23 +52,18 @@ import io.nuls.core.log.Log;
 import io.nuls.core.parse.I18nUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
-import io.nuls.core.rpc.info.HostInfo;
-import io.nuls.core.rpc.info.NoUse;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import io.nuls.v2.model.dto.RpcResult;
 import io.nuls.v2.util.JsonRpcUtil;
-import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -172,7 +167,8 @@ public class Transfer implements Runnable {
         assetId = 1;
         fromKey = "4efb6c23991f56626bc77cdb341d64e891e0412b03cbcb948aba6d4defb4e60a";
         // TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg
-        byte[] addressByPrikey = AddressTool.getAddressByPrikey(HexUtil.decode(fromKey), chainId, (byte) 1);
+        ECKey ecKey = ECKey.fromPrivate(HexUtil.decode(fromKey));
+        byte[] addressByPrikey = AddressTool.getAddress(ecKey.getPubKey(), chainId);;
         fromStr = AddressTool.getStringAddressByBytes(addressByPrikey);
     }
 
@@ -220,13 +216,15 @@ public class Transfer implements Runnable {
         coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
-        File file = new File("/Users/pierreluo/Nuls/account_new_nerve");
-        List<String> list = IOUtils.readLines(new FileInputStream(file), StandardCharsets.UTF_8.name());
-        System.out.println("read length: " + list.size());
-        Set<String> set = list.stream().map(a -> a.trim()).collect(Collectors.toSet());
-        System.out.println("deduplication length: " + set.size());
-        data.setAddresses(set.toArray(new String[set.size()]));
-        //data.setAddresses(new String[]{"NULSd6HgicLJuKk3kmPfJeFPMHzwHWpwm5zJT"});
+        //File file = new File("/Users/pierreluo/Nuls/account_new_nerve");
+        //List<String> list = IOUtils.readLines(new FileInputStream(file), StandardCharsets.UTF_8.name());
+        //System.out.println("read length: " + list.size());
+        //Set<String> set = list.stream().map(a -> a.trim()).collect(Collectors.toSet());
+        //System.out.println("deduplication length: " + set.size());
+        //data.setAddresses(set.toArray(new String[set.size()]));
+        data.setAddresses(new String[]{
+                "NERVEepb6DAjxbCKZZ4sEoytDbRNhvz4ZEk98s"
+        });
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
@@ -352,9 +350,7 @@ public class Transfer implements Runnable {
         tx.setCoinData(coinData.serialize());
         AccountBlockData data = new AccountBlockData();
         data.setAddresses(new String[]{
-                "NERVEepb63kZAEfTW8ATHPzVWBp3JjnK5qxkvc",
-                "NERVEepb63bxmjYTvphE9L4njaP2ZycssxHjeC",
-                "NERVEepb66A8LmCYJywkwGtDYyAZU7Gudmt7CZ"
+                "NERVEepb6DAjxbCKZZ4sEoytDbRNhvz4ZEk98s"
         });
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);

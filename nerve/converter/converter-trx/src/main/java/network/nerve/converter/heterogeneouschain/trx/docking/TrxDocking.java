@@ -700,6 +700,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             }
             Long blockHeight = txReceipt.getBlockNumber();
             Long txTime = txReceipt.getBlockTimeStamp();
+            htgUnconfirmedTxStorageService.deleteByTxHash(htTxHash);
             trxAnalysisTxHelper.analysisTx(tx, txTime, blockHeight);
             htgCommonHelper.addHash(htTxHash);
             return true;
@@ -728,8 +729,8 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
-        // 把地址转换成小写
-        //toAddress = toAddress.toLowerCase();
+        // 若跨链资产精度不同，则换算精度
+        value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
@@ -797,8 +798,8 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
-        // 把地址转换成小写
-        //toAddress = toAddress.toLowerCase();
+        // 若跨链资产精度不同，则换算精度
+        value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
         logger().debug("[验证签名] 提现vHash: {}", vHash);
@@ -837,7 +838,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
-    public boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
         return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
     }
 
@@ -894,6 +895,15 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
+        if (htgContext.getConverterCoreApi().isProtocol22()) {
+            // 协议22: 支持不同精度的跨链资产
+            return createOrSignWithdrawTxIIProtocol22(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
+        } else {
+            return _createOrSignWithdrawTxII(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
+        }
+    }
+
+    private String _createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
                 logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
@@ -948,6 +958,90 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
             BigDecimal feeAmount = new BigDecimal(feeInfo.getFee());
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
+            BigDecimal need;
+            // // 使用非提现网络的其他主资产作为手续费时
+            if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
+            } else {
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
+            }
+            if (need == null) {
+                throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
+            }
+
+            // 验证合约后发出交易
+            String htTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW);
+            if (StringUtils.isNotBlank(htTxHash)) {
+                // 记录提现交易已向HTG网络发出
+                htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htTxHash);
+            }
+            return htTxHash;
+        } catch (Exception e) {
+            if (e instanceof NulsException) {
+                throw (NulsException) e;
+            }
+            logger().error(e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+        }
+    }
+
+    private String createOrSignWithdrawTxIIProtocol22(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
+        try {
+            if (!htgContext.isAvailableRPC()) {
+                logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
+            }
+            logger().info("准备发送提现的{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            // 交易准备
+            HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
+            TrxAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
+            // 保存交易调用参数，设置等待结束时间
+            htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, toAddress, value, assetId, signatureData, account.getOrder(), waitingPo);
+            if (account.isEmpty()) {
+                return EMPTY_STRING;
+            }
+            // 当要检查顺序时，非首位不发交易
+            if (checkOrder && !checkFirstOrder(account.getOrder())) {
+                logger().info("非首位不发交易, order: {}", account.getOrder());
+                return EMPTY_STRING;
+            }
+            // 获取管理员账户
+            String fromAddress = account.getAddress();
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            // 业务验证
+            HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
+            po.setNerveTxHash(nerveTxHash);
+            boolean isContractAsset = assetId > 1;
+            String contractAddressERC20;
+            if (isContractAsset) {
+                contractAddressERC20 = trxERC20Helper.getContractAddressByAssetId(assetId);
+                trxERC20Helper.loadERC20(contractAddressERC20, po);
+            } else {
+                contractAddressERC20 = TrxConstant.ZERO_ADDRESS_TRX;
+                po.setDecimals(htgContext.getConfig().getDecimals());
+                po.setAssetId(htgContext.HTG_ASSET_ID());
+            }
+            IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
+            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则提现异常
+            if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
+                    && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
+                logger().warn("[{}]不合法的{}网络的提现交易, ERC20[{}]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
+            po.setTo(toAddress);
+            po.setValue(value);
+            po.setIfContractAsset(isContractAsset);
+            if (isContractAsset) {
+                po.setContractAddress(contractAddressERC20);
+            }
+            // 跨链资产精度不同，换算精度
+            value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
+            Function createOrSignWithdrawFunction = TrxUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
+
+            // 检查手续费
+            WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
+            if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
+            BigDecimal feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeInfo.getFee()));
             BigDecimal need;
             // // 使用非提现网络的其他主资产作为手续费时
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {

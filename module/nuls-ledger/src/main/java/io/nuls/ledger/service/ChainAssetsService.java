@@ -37,7 +37,7 @@ public interface ChainAssetsService {
 
     void updateChainAssets(int addressChainid, Map<String, List<String>> assetAddressIndex);
 
-    List<Map<String, Object>> getAssetsByChainId(int addressChainId);
+//    List<Map<String, Object>> getAssetsByChainId(int addressChainId);
 
-    Map<String, Object> getAssetByChainAssetId(int addressChainid, int chainAssetId, int assetId);
+//    Map<String, Object> getAssetByChainAssetId(int addressChainid, int chainAssetId, int assetId);
 }

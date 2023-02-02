@@ -24,15 +24,16 @@
 package network.nerve.converter.core.api.interfaces;
 
 import io.nuls.base.data.Transaction;
-import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.model.HeterogeneousSign;
+import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousWithdrawTxInfo;
 import network.nerve.converter.model.bo.WithdrawalTotalFeeInfo;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -153,6 +154,11 @@ public interface IConverterCoreApi {
      */
     boolean isProtocol21();
 
+    /**
+     * 是否支持协议22 v1.22.0
+     */
+    boolean isProtocol22();
+
 
     /**
      * 添加任务
@@ -164,4 +170,18 @@ public interface IConverterCoreApi {
     boolean skippedTransaction(String nerveTxHash);
 
     ConverterConfig getConverterConfig();
+
+    boolean isPauseInHeterogeneousAsset(int hChainId, int hAssetId) throws Exception;
+    boolean isPauseOutHeterogeneousAsset(int hChainId, int hAssetId) throws Exception;
+
+    Map<Long, Map> HTG_RPC_CHECK_MAP();
+    HeterogeneousAssetInfo getHeterogeneousAsset(int hChainId, int hAssetId);
+    BigInteger checkDecimalsSubtractedToNerveForWithdrawal(int htgChainId, int htgAssetId, BigInteger value);
+    BigInteger checkDecimalsSubtractedToNerveForWithdrawal(HeterogeneousAssetInfo assetInfo, BigInteger value);
+    BigInteger checkDecimalsSubtractedToNerveForDeposit(int htgChainId, int nerveAssetChainId, int nerveAssetId, BigInteger value);
+    BigInteger checkDecimalsSubtractedToNerveForDeposit(HeterogeneousAssetInfo assetInfo, BigInteger value);
+
+    void setCurrentHeterogeneousVersionII();
+
+    boolean checkNetworkRunning(int hChainId);
 }

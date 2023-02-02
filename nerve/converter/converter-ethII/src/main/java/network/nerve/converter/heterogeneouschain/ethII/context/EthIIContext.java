@@ -257,4 +257,8 @@ public class EthIIContext extends HtgContext implements Serializable {
     public void SET_DOCKING(HtgDocking docking) {
         DOCKING = docking;
     }
+
+    @Override
+    public void setConverterCoreApi(IConverterCoreApi converterCoreApi) {}
+
 }

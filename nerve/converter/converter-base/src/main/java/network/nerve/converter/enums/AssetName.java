@@ -48,7 +48,11 @@ public enum AssetName {
     IOTX(114, 18),
     OETH(115, 18),
     KLAY(116, 18),
-    BCH(117, 18);
+    BCH(117, 18),
+    GOERLIETH(118, 18),
+    ENULS(119, 18),
+    KAVA(120, 18),
+    ETHW(121, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

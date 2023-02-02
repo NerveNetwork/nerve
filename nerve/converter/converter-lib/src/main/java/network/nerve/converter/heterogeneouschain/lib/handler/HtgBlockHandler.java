@@ -36,9 +36,6 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader
 import network.nerve.converter.utils.LoggerUtil;
 import org.web3j.protocol.core.methods.response.EthBlock;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 /**
  * @author: Mimi
  * @date: 2020-02-20
@@ -58,17 +55,16 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
 
     private HtgContext htgContext;
 
-    //public HtgBlockHandler(BeanMap beanMap) {
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
-
-
     public void run() {
         try {
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
                     LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
                 }
+                return;
+            }
+            if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
+                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {

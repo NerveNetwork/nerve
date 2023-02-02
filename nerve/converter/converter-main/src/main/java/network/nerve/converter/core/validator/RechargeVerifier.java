@@ -211,7 +211,11 @@ public class RechargeVerifier {
             // 充值资产错误
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
-        if (info.getValue().compareTo(coinTo.getAmount()) != 0) {
+        BigInteger infoValue = info.getValue();
+        if (converterCoreApi.isProtocol22()) {
+            infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(heterogeneousAssetInfo, info.getValue());
+        }
+        if (infoValue.compareTo(coinTo.getAmount()) != 0) {
             // 充值金额错误
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
@@ -234,12 +238,15 @@ public class RechargeVerifier {
             // 充值token金额错误
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
-
         if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
             // 充值主资产错误
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
-        if (info.getDepositIIMainAssetValue().compareTo(mainAmountTo.getAmount()) != 0) {
+        BigInteger depositIIMainAssetValue = info.getDepositIIMainAssetValue();
+        if (converterCoreApi.isProtocol22()) {
+            depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
+        }
+        if (depositIIMainAssetValue.compareTo(mainAmountTo.getAmount()) != 0) {
             // 充值主金额错误
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
@@ -269,7 +276,11 @@ public class RechargeVerifier {
             // 充值主资产错误
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
-        if (info.getDepositIIMainAssetValue().compareTo(mainAmountTo.getAmount()) != 0) {
+        BigInteger depositIIMainAssetValue = info.getDepositIIMainAssetValue();
+        if (converterCoreApi.isProtocol22()) {
+            depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
+        }
+        if (depositIIMainAssetValue.compareTo(mainAmountTo.getAmount()) != 0) {
             // 充值主金额错误
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
@@ -543,7 +554,11 @@ public class RechargeVerifier {
                 // 充值资产错误
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
-            if (info.getValue().compareTo(coinWithdrawal.getAmount().add(coinFee.getAmount()).add(tippingFromCoin)) != 0) {
+            BigInteger infoValue = info.getValue();
+            if (converterCoreApi.isProtocol22()) {
+                infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(infoMain, infoValue);
+            }
+            if (infoValue.compareTo(coinWithdrawal.getAmount().add(coinFee.getAmount()).add(tippingFromCoin)) != 0) {
                 // 充值金额错误
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
             }

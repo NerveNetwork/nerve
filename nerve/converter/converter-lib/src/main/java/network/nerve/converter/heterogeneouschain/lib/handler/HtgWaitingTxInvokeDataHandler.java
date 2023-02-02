@@ -56,15 +56,6 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
     private HtgResendHelper htgResendHelper;
     private HtgContext htgContext;
 
-    //public HtgWaitingTxInvokeDataHandler(BeanMap beanMap) {
-    //    this.htTxInvokeInfoStorageService = (HtgTxInvokeInfoStorageService) beanMap.get("htTxInvokeInfoStorageService");
-    //    this.htgWalletApi = (HtgWalletApi) beanMap.get("htgWalletApi");
-    //    this.htgInvokeTxHelper = (HtgInvokeTxHelper) beanMap.get("htgInvokeTxHelper");
-    //    this.htgParseTxHelper = (HtgParseTxHelper) beanMap.get("htgParseTxHelper");
-    //    this.htgResendHelper = (HtgResendHelper) beanMap.get("htgResendHelper");
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
-
     private NulsLogger logger() {
         return htgContext.logger();
     }
@@ -77,6 +68,10 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
         try {
             if (!converterCoreApi.isRunning()) {
                 LoggerUtil.LOG.debug("[{}]忽略同步区块模式", symbol);
+                return;
+            }
+            if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
+                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!converterCoreApi.isVirtualBankByCurrentNode()) {

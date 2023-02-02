@@ -29,6 +29,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -38,15 +39,19 @@ import network.nerve.converter.enums.BindHeterogeneousContractMode;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.NerveAssetInfo;
+import network.nerve.converter.model.dto.HtgAssetBindDTO;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.constant.ConverterConstant.IN;
+import static network.nerve.converter.constant.ConverterConstant.OUT;
 
 /**
  * @author: mimi
@@ -83,17 +88,40 @@ public class LedgerAssetRegisterHelper {
         return true;
     }
 
-    public Boolean crossChainAssetRegByExistNerveAsset(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
-        LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
+    public Boolean htgMainAssetBind(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+        HtgAssetBindDTO bindDTO = LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
         HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
         info.setChainId(heterogeneousAssetChainId);
         info.setAssetId(heterogeneousAssetId);
         info.setSymbol(assetSymbol);
         info.setDecimals(decimalPlace);
         info.setContractAddress(assetAddress);
+        // 精度差额
+        BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
+        BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
+        info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
+        heterogeneousAssetConverterStorageService.saveBindAssetInfo(nerveAssetChainId, nerveAssetId, info);
+        heterogeneousAssetConverterStorageService.saveAssetInfo(converterConfig.getChainId(), nerveAssetId, info);
+        return true;
+    }
+
+    public Boolean crossChainAssetRegByExistNerveAsset(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+        HtgAssetBindDTO bindDTO = LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
+        HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
+        info.setChainId(heterogeneousAssetChainId);
+        info.setAssetId(heterogeneousAssetId);
+        info.setSymbol(assetSymbol);
+        info.setDecimals(decimalPlace);
+        info.setContractAddress(assetAddress);
+        // 精度差额
+        BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
+        BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
+        info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
         heterogeneousAssetConverterStorageService.saveBindAssetInfo(nerveAssetChainId, nerveAssetId, info);
         return true;
     }
+
+
 
     public Boolean deleteCrossChainAssetByExistNerveAsset(int heterogeneousAssetChainId, int heterogeneousAssetId) throws Exception {
         NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
@@ -128,22 +156,22 @@ public class LedgerAssetRegisterHelper {
     }
 
     public String checkHeterogeneousContractAssetReg(Chain chain, Transaction tx,
-                        String contractAddress,
-                        byte decimals,
-                        String symbol,
-                        int heterogeneousChainId,
-                        Set<String> contractAssetRegSet,
-                        Set<String> bindNewSet,
-                        Set<String> bindRemoveSet,
-                        Set<String> bindOverrideSet,
-                        Set<String> unregisterSet,
-                        boolean validateHeterogeneousAssetInfoFromNet) throws Exception {
+                                                     String contractAddress,
+                                                     byte decimals,
+                                                     String symbol,
+                                                     int heterogeneousChainId,
+                                                     Set<String> contractAssetRegSet,
+                                                     Set<String> bindNewSet,
+                                                     Set<String> bindRemoveSet,
+                                                     Set<String> bindOverrideSet,
+                                                     Set<String> unregisterSet,
+                                                     Set<String> pauseSet, Set<String> resumeSet, boolean validateHeterogeneousAssetInfoFromNet) throws Exception {
         String errorCode;
         NulsLogger logger = chain.getLogger();
         int chainId = chain.getChainId();
         ErrorCode bindError = null;
-        boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false;
-        String bindNewKey, bindRemoveKey, bindOverrideKey, unregisterKey;
+        boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false;
+        String bindNewKey, bindRemoveKey, bindOverrideKey, unregisterKey, pauseKey, resumeKey;
         try {
             do {
                 byte[] remark = tx.getRemark();
@@ -273,6 +301,72 @@ public class LedgerAssetRegisterHelper {
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
+                } else if (BindHeterogeneousContractMode.PAUSE.toString().equals(mode)) {
+                    if (hAssetInfo == null) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
+                        break;
+                    }
+                    if (modeSplit.length != 3) {
+                        bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                        break;
+                    }
+                    String operationType = modeSplit[2];
+                    boolean isIn = IN.equalsIgnoreCase(operationType);
+                    if (!isIn) {
+                        if (!OUT.equalsIgnoreCase(operationType)) {
+                            bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                            break;
+                        }
+                    }
+                    Integer assetType = Integer.parseInt(nerveAsset.get("assetType").toString());
+                    if (assetType < 4 || assetType == 10) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH;
+                        break;
+                    }
+                    isPause = true;
+                    pauseKey = new StringBuilder(heterogeneousChainId).append("_")
+                            .append(assetChainId).append("_")
+                            .append(assetId).append("_")
+                            .append(operationType).toString();
+                    boolean notExist = pauseSet.add(pauseKey);
+                    if (!notExist) {
+                        logger.error("[冲突检测重复交易]合约资产充值暂停");
+                        bindError = ConverterErrorCode.DUPLICATE_REGISTER;
+                        break;
+                    }
+                } else if (BindHeterogeneousContractMode.RESUME.toString().equals(mode)) {
+                    if (hAssetInfo == null) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
+                        break;
+                    }
+                    if (modeSplit.length != 3) {
+                        bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                        break;
+                    }
+                    String operationType = modeSplit[2];
+                    boolean isIn = IN.equalsIgnoreCase(operationType);
+                    if (!isIn) {
+                        if (!OUT.equalsIgnoreCase(operationType)) {
+                            bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                            break;
+                        }
+                    }
+                    Integer assetType = Integer.parseInt(nerveAsset.get("assetType").toString());
+                    if (assetType < 4 || assetType == 10) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_INFO_NOT_MATCH;
+                        break;
+                    }
+                    isResume = true;
+                    resumeKey = new StringBuilder(heterogeneousChainId).append("_")
+                            .append(assetChainId).append("_")
+                            .append(assetId).append("_")
+                            .append(operationType).toString();
+                    boolean notExist = resumeSet.add(resumeKey);
+                    if (!notExist) {
+                        logger.error("[冲突检测重复交易]合约资产充值恢复");
+                        bindError = ConverterErrorCode.DUPLICATE_REGISTER;
+                        break;
+                    }
                 }
             } while (false);
         } catch (Exception e) {
@@ -288,9 +382,14 @@ public class LedgerAssetRegisterHelper {
             return EMPTY_STRING;
         }
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-        HeterogeneousAssetInfo assetInfo = docking.getAssetByContractAddress(contractAddress);
+        HeterogeneousAssetInfo assetInfo;
+        if (StringUtils.isNotBlank(contractAddress)) {
+            assetInfo = docking.getAssetByContractAddress(contractAddress);
+        } else {
+            assetInfo = docking.getMainAsset();
+        }
         // 绑定覆盖资产 OR 异构链资产取消注册，合约资产必须存在
-        if (isBindOverride || isUnregister) {
+        if (isBindOverride || isUnregister || isPause || isResume) {
             if (assetInfo == null) {
                 logger.error("合约资产不存在");
                 ErrorCode error = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
@@ -309,7 +408,7 @@ public class LedgerAssetRegisterHelper {
             return errorCode;
         }
         // 异构合约资产注册
-        if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister) {
+        if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume) {
             String key = heterogeneousChainId + "_" + contractAddress;
             boolean notExist = contractAssetRegSet.add(key);
             if (!notExist) {
@@ -332,4 +431,27 @@ public class LedgerAssetRegisterHelper {
     }
 
 
+    public void pauseIn(Integer hChainId, int assetId) throws Exception {
+        heterogeneousAssetConverterStorageService.pauseInAssetInfo(hChainId, assetId);
+    }
+
+    public void resumeIn(Integer hChainId, int assetId) throws Exception {
+        heterogeneousAssetConverterStorageService.resumeInAssetInfo(hChainId, assetId);
+    }
+
+    public boolean isPauseInHeterogeneousAsset(Integer hChainId, int assetId) throws Exception {
+        return heterogeneousAssetConverterStorageService.isPauseInHeterogeneousAsset(hChainId, assetId);
+    }
+
+    public void pauseOut(Integer hChainId, int assetId) throws Exception {
+        heterogeneousAssetConverterStorageService.pauseOutAssetInfo(hChainId, assetId);
+    }
+
+    public void resumeOut(Integer hChainId, int assetId) throws Exception {
+        heterogeneousAssetConverterStorageService.resumeOutAssetInfo(hChainId, assetId);
+    }
+
+    public boolean isPauseOutHeterogeneousAsset(Integer hChainId, int assetId) throws Exception {
+        return heterogeneousAssetConverterStorageService.isPauseOutHeterogeneousAsset(hChainId, assetId);
+    }
 }

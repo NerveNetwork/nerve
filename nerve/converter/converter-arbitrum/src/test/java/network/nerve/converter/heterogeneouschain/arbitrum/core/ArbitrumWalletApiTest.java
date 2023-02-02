@@ -895,6 +895,41 @@ public class ArbitrumWalletApiTest extends Base {
         System.out.println(txHash);
     }
 
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9";
+        BigInteger convertAmount = new BigDecimal("7.034").movePointRight(6).toBigInteger();
+        String from = "0xf89d7b9c864f589bbf53a82105107622b35eaa40";
+        String to = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
     static class MockHtgERC20Helper extends HtgERC20Helper {
         @Override
         public boolean isERC20(String address, HeterogeneousTransactionBaseInfo po) {

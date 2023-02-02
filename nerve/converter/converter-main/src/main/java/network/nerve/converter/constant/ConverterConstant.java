@@ -93,4 +93,6 @@ public interface ConverterConstant {
     int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
     byte[] ZERO_BYTES = new byte[]{0};
     long MINUTES_5 = 5 * 60 * 1000L;
+    String IN = "in";
+    String OUT = "out";
 }

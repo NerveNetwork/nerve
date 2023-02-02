@@ -24,7 +24,6 @@
 package network.nerve.swap.sender;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
@@ -34,10 +33,8 @@ import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.LedgerBalance;
-import network.nerve.swap.model.txdata.FarmUpdateData;
 import network.nerve.swap.model.txdata.stable.CreateStablePairData;
 import network.nerve.swap.utils.AssembleTransaction;
-import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -49,13 +46,13 @@ import java.util.List;
 public class StableSwapTxSender extends ApiTxSender {
 
     private static final String apiUrl = "https://api.nerve.network/jsonrpc/";
-    private static final String prikeyHex = "75d9e61ca37afd26e004af26c5d37afdf08f63f5ded37afdfa4adfa1a3f61cab";
+    private static final String prikeyHex = "";
     private static final String address = "NERVEepb69gmzej5zNPFvwqp2cpmATczZEvrrh";
     private static final int chainId = 9;
 
     public static void main(String[] args) throws Exception {
-        String coins = "1-81,9-420";
-        String lpName = "VIBKN";
+        String coins = "9-446,9-455,9-459,9-460";
+        String lpName = "IOTXN";
 //        new FarmTxSender().sendUpdateTx(farmHash, BigInteger.valueOf(100000000), 0, BigInteger.ZERO, 10000, 5, 1);
         new StableSwapTxSender().createStableSwap(coins, lpName);
 

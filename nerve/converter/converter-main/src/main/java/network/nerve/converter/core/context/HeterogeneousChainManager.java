@@ -211,9 +211,13 @@ public class HeterogeneousChainManager {
                 return;
             }
             int chainId = converterConfig.getChainId();
-            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(FIRST_HETEROGENEOUS_ASSET_CHAIN_ID);
+            int htgChainId = FIRST_HETEROGENEOUS_ASSET_CHAIN_ID;
+            if (chainId != 9) {
+                htgChainId = 118;
+            }
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
             HeterogeneousAssetInfo assetInfo = docking.getMainAsset();
-            ledgerAssetRegisterHelper.crossChainAssetReg(chainId, assetInfo.getChainId(), assetInfo.getAssetId(),
+            ledgerAssetRegisterHelper.crossChainAssetReg(chainId, FIRST_HETEROGENEOUS_ASSET_CHAIN_ID, assetInfo.getAssetId(),
                     assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());
             heterogeneousChainInfoStorageService.init2LedgerAssetCompleted();
         } catch (Exception e) {

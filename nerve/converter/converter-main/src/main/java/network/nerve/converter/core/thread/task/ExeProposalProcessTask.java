@@ -668,7 +668,7 @@ public class ExeProposalProcessTask implements Runnable {
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     BigInteger totalFee = assembleTxService.calculateRefundTotalFee(chain, proposalHash);
-                    boolean enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    boolean enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
                     if (!enoughFeeOfWithdraw) {
                         chain.getLogger().error("[withdraw] 提现手续费计算, 手续费不足以支付提现费用. amount:{}", callParm.getValue());
                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);

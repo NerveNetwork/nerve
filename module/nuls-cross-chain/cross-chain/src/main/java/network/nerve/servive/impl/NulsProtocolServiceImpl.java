@@ -263,23 +263,23 @@ public class NulsProtocolServiceImpl implements ProtocolService {
         chain.getLogger().debug("其他链节点{}发送过来的完整跨链交易消息接收完成,Hash:{}", nodeId,ctxHashHex);
     }
 
-    @Override
-    public void getCirculation(int chainId, String nodeId, GetCirculationMessage messageBody) {
-        int handleChainId = chainId;
-        if (config.isMainNet()) {
-            handleChainId = config.getMainChainId();
-        }
-        Chain chain = chainManager.getChainMap().get(handleChainId);
-        chain.getLogger().info("主网节点{}本节点查询本链资产流通量,查询的资产ID为：{}\n\n", nodeId, messageBody.getAssetIds());
-        //调用账本模块接口获取查询资产的流通量
-        CirculationMessage message = new CirculationMessage();
-        try {
-            List<Circulation> circulationList = LedgerCall.getAssetsById(chain, messageBody.getAssetIds());
-            message.setCirculationList(circulationList);
-            //将结果返回给请求节点
-            NetWorkCall.sendToNode(chainId, message, nodeId, CommandConstant.CIRCULATION_MESSAGE);
-        } catch (NulsException e) {
-            chain.getLogger().error(e);
-        }
-    }
+//    @Override
+//    public void getCirculation(int chainId, String nodeId, GetCirculationMessage messageBody) {
+//        int handleChainId = chainId;
+//        if (config.isMainNet()) {
+//            handleChainId = config.getMainChainId();
+//        }
+//        Chain chain = chainManager.getChainMap().get(handleChainId);
+//        chain.getLogger().info("主网节点{}本节点查询本链资产流通量,查询的资产ID为：{}\n\n", nodeId, messageBody.getAssetIds());
+//        //调用账本模块接口获取查询资产的流通量
+//        CirculationMessage message = new CirculationMessage();
+//        try {
+//            List<Circulation> circulationList = LedgerCall.getAssetsById(chain, messageBody.getAssetIds());
+//            message.setCirculationList(circulationList);
+//            //将结果返回给请求节点
+//            NetWorkCall.sendToNode(chainId, message, nodeId, CommandConstant.CIRCULATION_MESSAGE);
+//        } catch (NulsException e) {
+//            chain.getLogger().error(e);
+//        }
+//    }
 }

@@ -58,6 +58,7 @@ public abstract class HtgContext {
     public abstract HeterogeneousCfg getConfig();
     public abstract NulsLogger logger();
     public abstract IConverterCoreApi getConverterCoreApi();
+    public abstract void setConverterCoreApi(IConverterCoreApi converterCoreApi);
     public abstract List<String> RPC_ADDRESS_LIST();
     public abstract List<String> STANDBY_RPC_ADDRESS_LIST();
     public abstract String ADMIN_ADDRESS_PUBLIC_KEY();
@@ -86,6 +87,10 @@ public abstract class HtgContext {
     public abstract void SET_VERSION(byte version);
     public abstract void setLogger(NulsLogger logger);
     public abstract void setConfig(HeterogeneousCfg config);
+
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        throw new RuntimeException("Not Support.");
+    }
     /**
      * 当前异构链是否支持合约的pending查询
      */

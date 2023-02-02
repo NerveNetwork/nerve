@@ -28,11 +28,14 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import io.nuls.core.rockdb.model.Entry;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.HtgERC20StorageServiceImpl;
+import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.ComponentCallParm;
 import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
@@ -41,9 +44,7 @@ import org.junit.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author: PierreLuo
@@ -73,6 +74,21 @@ public class DataTest {
         Transaction tx = new Transaction();
         tx.parse(bytes, 0);
         System.out.println(tx.format(ConfirmWithdrawalTxData.class));
+    }
+
+    @Test
+    public void testVirtualBankTableTx() throws Exception {
+        RocksDBService.init("/Users/pierreluo/Nuls/cv0623");
+        List<Entry<byte[], byte[]>> listEntry = RocksDBService.entryList(ConverterDBConstant.DB_VIRTUAL_BANK_PREFIX + 9);
+        if (null == listEntry) {
+            return;
+        }
+        Map<String, VirtualBankDirector> map = new HashMap<>();
+        for (Entry<byte[], byte[]> entry : listEntry) {
+            VirtualBankDirector vbd = ConverterDBUtil.getModel(entry.getValue(), VirtualBankDirector.class);
+            map.put(vbd.getSignAddress(), vbd);
+        }
+        System.out.println(map.size());
     }
 
     @Test

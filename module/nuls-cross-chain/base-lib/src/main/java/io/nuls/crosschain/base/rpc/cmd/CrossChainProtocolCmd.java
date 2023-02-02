@@ -98,24 +98,24 @@ public class CrossChainProtocolCmd extends BaseCmd {
     /**
      * 发起链接收主网发送来获取链资产消息
      * */
-    @CmdAnnotation(cmd = CommandConstant.GET_CIRCULLAT_MESSAGE, version = 1.0, description = "查询本链资产信息消息/get chain circulation")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "nodeId", parameterType = "String", parameterDes = "节点IP")
-    @Parameter(parameterName = "messageBody", parameterType = "String", parameterDes = "消息体")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
-    public Response getCirculat(Map<String,Object> params){
-        int chainId = Integer.parseInt(params.get("chainId").toString());
-        String nodeId = params.get("nodeId").toString();
-        byte[] decode = RPCUtil.decode(params.get("messageBody").toString());
-        GetCirculationMessage message = new GetCirculationMessage();
-        try {
-            message.parse(new NulsByteBuffer(decode));
-        } catch (NulsException e) {
-            return failed(CrossChainErrorCode.PARAMETER_ERROR);
-        }
-        service.getCirculation(chainId,nodeId,message);
-        return success();
-    }
+//    @CmdAnnotation(cmd = CommandConstant.GET_CIRCULLAT_MESSAGE, version = 1.0, description = "查询本链资产信息消息/get chain circulation")
+//    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
+//    @Parameter(parameterName = "nodeId", parameterType = "String", parameterDes = "节点IP")
+//    @Parameter(parameterName = "messageBody", parameterType = "String", parameterDes = "消息体")
+//    @ResponseData(description = "无特定返回值，没有错误即成功")
+//    public Response getCirculat(Map<String,Object> params){
+//        int chainId = Integer.parseInt(params.get("chainId").toString());
+//        String nodeId = params.get("nodeId").toString();
+//        byte[] decode = RPCUtil.decode(params.get("messageBody").toString());
+//        GetCirculationMessage message = new GetCirculationMessage();
+//        try {
+//            message.parse(new NulsByteBuffer(decode));
+//        } catch (NulsException e) {
+//            return failed(CrossChainErrorCode.PARAMETER_ERROR);
+//        }
+////        service.getCirculation(chainId,nodeId,message);
+//        return success();
+//    }
 
 
     /**

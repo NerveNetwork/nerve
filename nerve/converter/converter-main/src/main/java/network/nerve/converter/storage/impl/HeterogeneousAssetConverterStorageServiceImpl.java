@@ -29,16 +29,17 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.config.ConverterConfig;
-import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.model.po.IntegerSetPo;
-import network.nerve.converter.model.po.StringListPo;
 import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static network.nerve.converter.constant.ConverterConstant.FIRST_HETEROGENEOUS_ASSET_CHAIN_ID;
 import static network.nerve.converter.constant.ConverterConstant.ZERO_BYTES;
@@ -63,6 +64,8 @@ public class HeterogeneousAssetConverterStorageServiceImpl implements Heterogene
     private final String KEY_PREFIX_HTG_MORE = "HTG_ASSET_HTG_MORE_";
     private final String KEY_PREFIX_NERVE_HTG_KEY_SET = "HTG_ASSET_NERVE_HTG_KEY_SET-";
     private final String KEY_PREFIX_HTG_BIND = "HTG_ASSET_BIND_";
+    private final String KEY_PREFIX_HTG_PAUSE_IN = "HTG_ASSET_PAUSE_IN_";
+    private final String KEY_PREFIX_HTG_PAUSE_OUT = "HTG_ASSET_PAUSE_OUT_";
     private final String CONTACT_LINE = "-";
 
     @Override
@@ -251,4 +254,45 @@ public class HeterogeneousAssetConverterStorageServiceImpl implements Heterogene
         return info;
     }
 
+    @Override
+    public int pauseInAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_IN + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId), ZERO_BYTES);
+        return 1;
+    }
+
+    @Override
+    public int resumeInAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_IN + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
+        return 1;
+    }
+
+    @Override
+    public boolean isPauseInHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_IN + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
+        if (bytes == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int pauseOutAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_OUT + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId), ZERO_BYTES);
+        return 1;
+    }
+
+    @Override
+    public int resumeOutAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_OUT + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
+        return 1;
+    }
+
+    @Override
+    public boolean isPauseOutHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception {
+        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_HTG_PAUSE_OUT + heterogeneousChainId + CONTACT_LINE + heterogeneousAssetId));
+        if (bytes == null) {
+            return false;
+        }
+        return true;
+    }
 }

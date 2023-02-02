@@ -155,6 +155,10 @@ public class ConverterContext {
      * v1.21.0 协议升级高度
      */
     public static long PROTOCOL_1_21_0 = 0L;
+    /**
+     * v1.22.0 协议升级高度
+     */
+    public static long PROTOCOL_1_22_0 = 0L;
 
     /**
      * 协议升级对应的高度
@@ -183,4 +187,5 @@ public class ConverterContext {
     public static long VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = 0L;
     public static Map<String, HeterogeneousAssetInfo> assetRegisterNetwork = new HashMap<>();
 
+    public static Map<Long, Map> HTG_RPC_CHECK_MAP = new HashMap<>();
 }

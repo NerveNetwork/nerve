@@ -133,7 +133,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offer(pendingPO);
-                        chain.getLogger().info("[commit] 提现交易 hash:{}", tx.getHash().toHex());
+                        chain.getLogger().info("[commit] 提现交易加入待处理队列 hash:{}", tx.getHash().toHex());
                     }
                 }
             } catch (Exception e) {
@@ -551,7 +551,6 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 }
                 Coin feeCoin = null;
                 String withdrawalFromInfo = null;
-                BigInteger feeTo = BigInteger.ZERO;
                 String withdrawalToInfo = null;
                 // 补贴手续费收集分发地址
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
@@ -575,7 +574,6 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         }
                         // 组装的补贴手续费的coinTo
                         feeCoin = coinTo;
-                        feeTo = coinTo.getAmount();
                     } else if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
                         // 提现资产的coinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
@@ -585,9 +583,19 @@ public class WithdrawalProcessor implements TransactionProcessor {
                             failsList.add(tx);
                             // 异构链资产不存在
                             errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
-                            log.error("不支持该资产提现, txhash:{}, AssetChainId:{}, AssetId:{}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
+                            log.error("不支持该资产提现, txhash:{}, AssetChainId:{}, AssetId:{}, error: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
                             continue outer;
                         }
+                        // add by pierre at 2022/7/1 提现暂停机制
+                        boolean pauseOut = converterCoreApi.isPauseOutHeterogeneousAsset(heterogeneousAssetInfo.getChainId(), heterogeneousAssetInfo.getAssetId());
+                        if (pauseOut) {
+                            failsList.add(tx);
+                            // 异构链资产不存在
+                            errorCode = ConverterErrorCode.WITHDRAWAL_PAUSE.getCode();
+                            log.error("[暂停资产提现], txhash:{}, AssetChainId:{}, AssetId:{}, heterogeneousId: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), txData.getHeterogeneousChainId());
+                            continue outer;
+                        }
+                        // end code by pierre
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
                         boolean rs = docking.validateAddress(txData.getHeterogeneousAddress());
                         if (!rs) {

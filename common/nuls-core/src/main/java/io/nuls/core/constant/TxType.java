@@ -378,5 +378,13 @@ public class TxType {
      * 跨链追加跨链手续费交易
      */
     public static final int ADD_FEE_OF_CROSS_CHAIN_BY_CROSS_CHAIN = 82;
+    /**
+     * swap交易聚合稳定币撤销流动性交易
+     */
+    public static final int SWAP_TRADE_SWAP_STABLE_REMOVE_LP = 83;
+    /**
+     * 异构链主资产绑定NERVE资产交易
+     */
+    public static final int HETEROGENEOUS_MAIN_ASSET_BIND = 84;
 
 }

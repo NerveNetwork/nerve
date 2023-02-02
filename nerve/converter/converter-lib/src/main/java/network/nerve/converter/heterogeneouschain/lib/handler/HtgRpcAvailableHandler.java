@@ -51,6 +51,10 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
                 }
                 return;
             }
+            if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
+                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                return;
+            }
             if (LoggerUtil.LOG.isDebugEnabled()) {
                 LoggerUtil.LOG.debug("[{}网络RPC可用性检查任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }

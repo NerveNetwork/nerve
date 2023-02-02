@@ -656,7 +656,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         }
     }
 
-    private byte[] calcPairAddressProtocol17(int chainId, NerveToken token1, NerveToken token2) {
+    public byte[] calcPairAddressProtocol17(int chainId, NerveToken token1, NerveToken token2) {
         int groupIndex;
         if ((groupIndex = SwapContext.stableCoinGroup.groupIndex(token1, token2)) != -1) {
             return AddressTool.getAddress(SwapContext.stableCoinGroup.getAddressByIndex(groupIndex));

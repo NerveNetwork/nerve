@@ -25,10 +25,12 @@ package network.nerve.converter.heterogeneouschain.lib.utils;
 
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManager;
+import network.nerve.converter.heterogeneouschain.lib.callback.HtgCallBackManagerNew;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
@@ -80,10 +82,10 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  */
 public class HtgUtil {
 
-    public static HeterogeneousTransactionInfo newTransactionInfo(Transaction tx, int nerveChainId) {
+    public static HeterogeneousTransactionInfo newTransactionInfo(Transaction tx, int nerveChainId, HtgParseTxHelper htgParseTxHelper, NulsLogger logger) throws Exception {
         HeterogeneousTransactionInfo txInfo = new HeterogeneousTransactionInfo();
         txInfo.setTxHash(tx.getHash());
-        txInfo.setBlockHeight(tx.getBlockNumber().longValue());
+        txInfo.setBlockHeight(htgParseTxHelper.getTxHeight(logger, tx).longValue());
         txInfo.setFrom(tx.getFrom());
         txInfo.setTo(tx.getTo());
         txInfo.setValue(tx.getValue());
@@ -91,11 +93,21 @@ public class HtgUtil {
         return txInfo;
     }
 
-    public static HeterogeneousTransactionInfo newTransactionInfo(HtgUnconfirmedTxPo txPo) {
+    public static HeterogeneousTransactionInfo newTransactionInfo(Transaction tx, int nerveChainId) {
         HeterogeneousTransactionInfo txInfo = new HeterogeneousTransactionInfo();
-        BeanUtils.copyProperties(txPo, txInfo);
+        txInfo.setTxHash(tx.getHash());
+        txInfo.setFrom(tx.getFrom());
+        txInfo.setTo(tx.getTo());
+        txInfo.setValue(tx.getValue());
+        txInfo.setNerveAddress(covertNerveAddressByEthTx(tx, nerveChainId));
         return txInfo;
     }
+
+    //public static HeterogeneousTransactionInfo newTransactionInfo(HtgUnconfirmedTxPo txPo) {
+    //    HeterogeneousTransactionInfo txInfo = new HeterogeneousTransactionInfo();
+    //    BeanUtils.copyProperties(txPo, txInfo);
+    //    return txInfo;
+    //}
 
     public static HtgAccount createAccount(String prikey) {
         Credentials credentials = Credentials.create(prikey);
@@ -744,7 +756,11 @@ public class HtgUtil {
             beanMap.add(HtgListener.class, new HtgListener());
 
             beanMap.add(ConverterConfig.class, converterConfig);
-            beanMap.add(HtgCallBackManager.class, htgCallBackManager);
+            if (htgCallBackManager == null) {
+                beanMap.add(HtgCallBackManager.class, HtgCallBackManagerNew.class.getDeclaredConstructor().newInstance());
+            } else {
+                beanMap.add(HtgCallBackManager.class, htgCallBackManager);
+            }
 
             beanMap.add(HtgWalletApi.class);
             beanMap.add(HtgBlockHandler.class);

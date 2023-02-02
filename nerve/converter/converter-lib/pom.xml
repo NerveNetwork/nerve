@@ -139,12 +139,6 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.13</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.iq80.leveldb</groupId>
             <artifactId>leveldb</artifactId>
             <version>0.7</version>
@@ -159,7 +153,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>4.2.0.RELEASE</version>
+            <version>5.3.21</version>
             <scope>compile</scope>
             <exclusions>
                 <exclusion>
@@ -171,13 +165,13 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-orm</artifactId>
-            <version>4.2.0.RELEASE</version>
+            <version>5.3.21</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
-            <version>4.2.0.RELEASE</version>
+            <version>5.3.21</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -286,9 +280,17 @@
         <dependency>
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>
-            <version>1.1.5.RELEASE</version>
+            <version>1.1.7.RELEASE</version>
             <scope>test</scope>
             <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
                 <exclusion>
                     <artifactId>nuls-base-api-provider</artifactId>
                     <groupId>io.nuls.v2</groupId>

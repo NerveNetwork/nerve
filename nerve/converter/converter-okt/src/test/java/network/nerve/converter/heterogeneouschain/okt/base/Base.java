@@ -29,11 +29,15 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 import network.nerve.converter.heterogeneouschain.okt.core.BeanUtilTest;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.CipherSuite;
+import okhttp3.ConnectionSpec;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +55,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -79,6 +87,10 @@ public class Base {
     public void setUp() throws Exception {
         String ethRpcAddress = "https://exchaintestrpc.okex.org";
         htgWalletApi = new HtgWalletApi();
+        //final OkHttpClient.Builder builder =
+        //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        //OkHttpClient okHttpClient = builder.build();
+        //Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(ethRpcAddress);
@@ -96,7 +108,27 @@ public class Base {
             htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://exchainrpc.okex.org";
+        //String mainEthRpcAddress = "https://okchain.mytokenpocket.vip";
+        //final OkHttpClient.Builder builder =
+        //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        //OkHttpClient okHttpClient = builder.build();
+        //Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.config.setChainIdOnHtgNetwork(66);
+    }
+
+    protected void setMainProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        String mainEthRpcAddress = "https://exchainrpc.okex.org";
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
+        //Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
         htgContext.config.setChainIdOnHtgNetwork(66);

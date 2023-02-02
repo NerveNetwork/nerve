@@ -324,7 +324,7 @@ public interface IHeterogeneousChainDocking {
         return 0;
     }
 
-    default boolean isEnoughFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+    default boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
         return false;
     }
 
@@ -361,4 +361,5 @@ public interface IHeterogeneousChainDocking {
     default HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend) {
         return null;
     }
+
 }

@@ -50,9 +50,9 @@ public class AccountIndexRepositoryImpl implements AccountIndexRepository, Initi
         return  DataBaseArea.TB_LEDGER_ASSET_INDEX+ "_" +chainId;
     }
 
-    String getLedgerAddressIndexTableName(int addressChainId,int assetChainId,int assetId) {
-        return  DataBaseArea.TB_LEDGER_ASSET_ADDR_INDEX+ "_" +addressChainId+ "_" +assetChainId+ "_" +assetId;
-    }
+//    String getLedgerAddressIndexTableName(int addressChainId,int assetChainId,int assetId) {
+//        return  DataBaseArea.TB_LEDGER_ASSET_ADDR_INDEX+ "_" +addressChainId+ "_" +assetChainId+ "_" +assetId;
+//    }
     /**
      * 初始化数据库
      */
@@ -68,17 +68,17 @@ public class AccountIndexRepositoryImpl implements AccountIndexRepository, Initi
         return table;
 
     }
-    public String initLedgerAddressIndexDb(int addressChainId,int assetChainId,int assetId) {
-        String table = getLedgerAddressIndexTableName(addressChainId,assetChainId,assetId);
-        try {
-            if (!RocksDBService.existTable(table)) {
-                RocksDBService.createTable(table);
-            }
-        } catch (Exception e) {
-            logger(addressChainId).error(e);
-        }
-        return table;
-    }
+//    public String initLedgerAddressIndexDb(int addressChainId,int assetChainId,int assetId) {
+//        String table = getLedgerAddressIndexTableName(addressChainId,assetChainId,assetId);
+//        try {
+//            if (!RocksDBService.existTable(table)) {
+//                RocksDBService.createTable(table);
+//            }
+//        } catch (Exception e) {
+//            logger(addressChainId).error(e);
+//        }
+//        return table;
+//    }
     @Override
     public void updateAssetsIndex(int addressChainId, byte[] key, byte[] value) {
        String table = initAssetsIndexDb(addressChainId);
@@ -89,24 +89,24 @@ public class AccountIndexRepositoryImpl implements AccountIndexRepository, Initi
         }
     }
 
-      @Override
-    public void updateAssetsAddressIndex(int addressChainId,int assetChainId,int assetId, byte[] addressKey, byte[] value) {
-        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
-        try {
-            RocksDBService.put(table,addressKey,value);
-        } catch (Exception e) {
-            logger(addressChainId).error(e);
-        }
-    }
-    @Override
-    public void updateAssetsAddressIndex(int addressChainId,int assetChainId,int assetId, Map<byte[], byte[]> kvs) {
-        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
-        try {
-            RocksDBService.batchPut(table,kvs);
-        } catch (Exception e) {
-            logger(addressChainId).error(e);
-        }
-    }
+//      @Override
+//    public void updateAssetsAddressIndex(int addressChainId,int assetChainId,int assetId, byte[] addressKey, byte[] value) {
+//        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
+//        try {
+//            RocksDBService.put(table,addressKey,value);
+//        } catch (Exception e) {
+//            logger(addressChainId).error(e);
+//        }
+//    }
+//    @Override
+//    public void updateAssetsAddressIndex(int addressChainId,int assetChainId,int assetId, Map<byte[], byte[]> kvs) {
+//        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
+//        try {
+//            RocksDBService.batchPut(table,kvs);
+//        } catch (Exception e) {
+//            logger(addressChainId).error(e);
+//        }
+//    }
 
     @Override
     public List<String> assetsKeyList(int addressChainId) {
@@ -115,12 +115,12 @@ public class AccountIndexRepositoryImpl implements AccountIndexRepository, Initi
         return ByteUtils.bytesToStrings(assetKeys);
     }
 
-    @Override
-    public List<String> assetsAddressKeyList(int addressChainId, int assetChainId, int assetId) {
-        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
-        List<byte[]>  assetKeys =  RocksDBService.keyList(table);
-        return ByteUtils.bytesToStrings(assetKeys);
-    }
+//    @Override
+//    public List<String> assetsAddressKeyList(int addressChainId, int assetChainId, int assetId) {
+//        String table = initLedgerAddressIndexDb(addressChainId,assetChainId,assetId);
+//        List<byte[]>  assetKeys =  RocksDBService.keyList(table);
+//        return ByteUtils.bytesToStrings(assetKeys);
+//    }
 
     @Override
     public void afterPropertiesSet() throws NulsException {

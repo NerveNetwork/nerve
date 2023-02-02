@@ -45,6 +45,8 @@ public class HeterogeneousAssetInfo implements Serializable {
     private int assetId;
     @ApiModelProperty(description = "资产对应合约地址(若有)")
     private String contractAddress;
+    @ApiModelProperty(description = "Htg资产到nerve资产的小数位差值")
+    private String decimalsSubtractedToNerve;
 
     public int getChainId() {
         return chainId;
@@ -84,5 +86,13 @@ public class HeterogeneousAssetInfo implements Serializable {
 
     public void setContractAddress(String contractAddress) {
         this.contractAddress = contractAddress;
+    }
+
+    public String getDecimalsSubtractedToNerve() {
+        return decimalsSubtractedToNerve;
+    }
+
+    public void setDecimalsSubtractedToNerve(String decimalsSubtractedToNerve) {
+        this.decimalsSubtractedToNerve = decimalsSubtractedToNerve;
     }
 }

@@ -2,6 +2,7 @@ package io.nuls.provider.api.jsonrpc.controller;
 
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Controller;
 import io.nuls.core.core.annotation.RpcMethod;
@@ -405,5 +406,66 @@ public class ConverterController {
         params1.put("heterogeneousTxHash", heterogeneousTxHash);
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_checkRetryHtgTx", params1);
         return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("registerheterogeneousasset")
+    @ApiOperation(description = "注册异构链资产", order = 613)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true)
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "交易hash")
+    })
+    )
+    public RpcResult registerheterogeneousasset(List<Object> params) {
+        VerifyUtils.verifyParams(params, 8);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        int heterogeneousChainId = (int) params.get(i++);
+        int decimals = (int) params.get(i++);
+        String symbol = (String) params.get(i++);
+        String contractAddress = (String) params.get(i++);
+        String address = (String) params.get(i++);
+        String password = (String) params.get(i++);
+        String remark = (String) params.get(i++);
+
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("heterogeneousChainId", heterogeneousChainId);
+        params1.put("decimals", decimals);
+        params1.put("symbol", symbol);
+        params1.put("contractAddress", contractAddress);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_validate_heterogeneous_contract_asset_reg_pending_tx", params1);
+        if (result.isFailed()) {
+            return ResultUtil.getJsonRpcResult(result);
+        }
+        Map<String, Object> dataMap = result.getData();
+        Boolean data = Boolean.parseBoolean(dataMap.get("value").toString());
+        if (!data.booleanValue()) {
+            return RpcResult.failed(CommonCodeConstanst.DATA_ERROR, "validate error");
+        }
+
+        Map<String, Object> params2 = new HashMap<>();
+        params2.put("chainId", chainId);
+        params2.put("heterogeneousChainId", heterogeneousChainId);
+        params2.put("decimals", decimals);
+        params2.put("symbol", symbol);
+        params2.put("contractAddress", contractAddress);
+        params2.put("address", address);
+        params2.put("password", password);
+        params2.put("remark", remark);
+        Result<Map<String, Object>> result1 = converterTools.commonRequest("cv_create_heterogeneous_contract_asset_reg_pending_tx", params2);
+
+        return ResultUtil.getJsonRpcResult(result1);
     }
 }

@@ -11,7 +11,7 @@ import io.nuls.core.parse.SerializeUtils;
  * @author tag
  * @date 2019/4/4
  */
-public class GetCirculationMessage extends BaseMessage {
+public class GetCirculationMessage1 extends BaseMessage {
     private String assetIds;
 
     @Override

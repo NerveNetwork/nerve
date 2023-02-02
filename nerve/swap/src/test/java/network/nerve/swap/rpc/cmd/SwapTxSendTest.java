@@ -27,6 +27,8 @@ import network.nerve.swap.model.bo.NonceBalance;
 import network.nerve.swap.model.business.AddLiquidityBus;
 import network.nerve.swap.model.business.RemoveLiquidityBus;
 import network.nerve.swap.model.business.SwapTradeBus;
+import network.nerve.swap.model.business.linkswap.StableLpSwapTradeBus;
+import network.nerve.swap.model.business.linkswap.SwapTradeStableRemoveLpBus;
 import network.nerve.swap.model.business.stable.StableAddLiquidityBus;
 import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
 import network.nerve.swap.model.business.stable.StableSwapTradeBus;
@@ -153,7 +155,7 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQhiHZGM4SLHbTzBacW4AAcTCsWDr1j";
+    protected String stablePairAddress = "TNVTdTSQgdDqnHaDYM5M5uxiLFR4Ldn43Eqi6";
 
     protected NerveToken U1D = new NerveToken(5, 3);
     protected NerveToken U2D = new NerveToken(5, 4);
@@ -354,8 +356,8 @@ public class SwapTxSendTest {
         //this.create3(params);
         //this.create4(params);
         //this.create5(params);
-        params.put("tokenAStr", new NerveToken(5, 2).str());
-        params.put("tokenBStr", new NerveToken(5, 4).str());
+        params.put("tokenAStr", new NerveToken(5, 1).str());
+        params.put("tokenBStr", new NerveToken(5, 6).str());
 
         this.sendTx(from, SWAP_CREATE_PAIR, params);
     }
@@ -449,11 +451,11 @@ public class SwapTxSendTest {
         //this.addLiquidityNvt8safemoon9(params);
         //this.addLiquidityGoat9safemoon9(params);
         String amountA = "10000";
-        String amountB = "5555";
+        String amountB = "500";
         amountA = new BigDecimal(amountA).scaleByPowerOfTen(8).toPlainString();
-        amountB = new BigDecimal(amountB).scaleByPowerOfTen(8).toPlainString();
+        amountB = new BigDecimal(amountB).scaleByPowerOfTen(18).toPlainString();
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 5).str());
+        params.put("tokenBStr", new NerveToken(5, 6).str());
         params.put("amountA", amountA);
         params.put("amountB", amountB);
 
@@ -553,12 +555,24 @@ public class SwapTxSendTest {
     })
     @Test
     public void stableSwapCreatePairTest() throws Exception {
+        // U1D[5-2] decimals: 18, initNumber: 100000000, type: 1
+        // U2D[5-3] decimals: 18, initNumber: 100000000, type: 1
+        // U3D[5-4] decimals: 18, initNumber: 100000000, type: 1
+        // U4D[5-5] decimals: 18, initNumber: 100000000, type: 1
+        // UDN[5-6] decimals: 18, initNumber: 0, type: 10
         Map<String, Object> params = new HashMap<>();
-        //params.put("coins", new String[]{"5-3","5-4"});
-        //params.put("symbol", "T12COIN");
-        params.put("coins", new String[]{"5-3","5-4","5-5","5-6"});
-        params.put("symbol", "USDN");
+        params.put("coins", new String[]{"5-3","5-4","5-5","5-2"});
+        params.put("symbol", "UDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
+    }
+
+    @Test
+    public void stableAddressTest() {
+        // TNVTdTSQgdDqnHaDYM5M5uxiLFR4Ldn43Eqi6
+        NulsHash txHash = NulsHash.fromHex("ffcb8c0a87487f94d4f5acab5e84a4e01f2752f5fb3594f6e3242e7e22a00f4f");
+        byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
+        stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
+        System.out.println(stablePairAddress);
     }
 
     @Parameters(value = {
@@ -573,22 +587,15 @@ public class SwapTxSendTest {
     })
     @Test
     public void stableSwapAddLiquidity() throws Exception {
-        //NulsHash txHash = NulsHash.fromHex("079f7505291b13cb57fc1706ba47aee73ab073292158e26f61cf13e5036f47cc");
-        //byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
-        //stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
-        //System.out.println(stablePairAddress);
-        //String amountHt = new BigDecimal("50000").scaleByPowerOfTen(18).toPlainString();
-        //String amountBnb = new BigDecimal("20000").scaleByPowerOfTen(18).toPlainString();
-        //String amountEth = new BigDecimal("300").scaleByPowerOfTen(6).toPlainString();
-        //String amountOkt = new BigDecimal("200").scaleByPowerOfTen(8).toPlainString();
-        String amountHt = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
-        String amountBnb = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
-        String amountEth = new BigDecimal("300").scaleByPowerOfTen(6).toPlainString();
-        String amountOkt = new BigDecimal("200").scaleByPowerOfTen(8).toPlainString();
+        stablePairAddress = "TNVTdTSQgdDqnHaDYM5M5uxiLFR4Ldn43Eqi6";
+        String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
+        String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
+        String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
+        String amount4 = new BigDecimal("200").scaleByPowerOfTen(18).toPlainString();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amounts", new String[]{amountHt, amountBnb});
-        params.put("tokens", new String[]{new NerveToken(5, 3).str(), new NerveToken(5, 4).str()});
+        params.put("amounts", new String[]{amount1, amount2, amount3, amount4});
+        params.put("tokens", new String[]{"5-2", new NerveToken(5, 3).str(), new NerveToken(5, 4).str(), "5-5"});
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address22);
@@ -693,14 +700,13 @@ public class SwapTxSendTest {
         //NulsHash txHash = NulsHash.fromHex("05e310975c23979a5bb8af587412c2b3c5006216e3eedc72756e2baac693ac94");
         //byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), chainId, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
-
         Map map = this.getStableSwapPairInfo(stablePairAddress);
         System.out.println(JSONUtils.obj2PrettyJson(map));
     }
 
     @Test
     public void getResult() throws Exception {
-        String hash = "ad7ee6b67e771ee04c3d7d6dc39f52311da26e7f6e4ed0607e36f077d093eb1a";
+        String hash = "0fd47577d813fa2c51c7e511cee04c3d30784211c26b9caa63324fcf84d958b9";
         Map map = this.getSwapResultInfo(hash);
         System.out.println(JSONUtils.obj2PrettyJson(map));
         System.out.println();
@@ -742,6 +748,8 @@ public class SwapTxSendTest {
         busClassMap.put(TxType.SWAP_ADD_LIQUIDITY_STABLE_COIN, StableAddLiquidityBus.class);
         busClassMap.put(TxType.SWAP_REMOVE_LIQUIDITY_STABLE_COIN, StableRemoveLiquidityBus.class);
         busClassMap.put(TxType.SWAP_TRADE_STABLE_COIN, StableSwapTradeBus.class);
+        busClassMap.put(TxType.SWAP_STABLE_LP_SWAP_TRADE, StableLpSwapTradeBus.class);
+        busClassMap.put(TxType.SWAP_TRADE_SWAP_STABLE_REMOVE_LP, SwapTradeStableRemoveLpBus.class);
     }
 
     protected Object desBusStr(Object txType, Object busStr) {
@@ -1034,7 +1042,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getTx() throws Exception {
-        String txStr = (String) (getTxCfmClient("6280be66a9d0b7bef774dfc8839bf0d4b08023b5234d942a1de04a073d85f9c9").get("tx"));
+        String txStr = (String) (getTxCfmClient("20d27a63cebd99997d5014d70812408718b028a734a2e90f8e99f4c0237149fb").get("tx"));
         System.out.println(txStr);
         Transaction tx = Transaction.getInstance(HexUtil.decode(txStr), Transaction.class);//最后一条
         System.out.println(tx.format());

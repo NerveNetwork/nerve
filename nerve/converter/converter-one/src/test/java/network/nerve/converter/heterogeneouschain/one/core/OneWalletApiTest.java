@@ -366,16 +366,70 @@ public class OneWalletApiTest extends Base {
 
     protected void setMainData() {
         setMain();
-        // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
-        // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
-        // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5";
+        // 把有BNB余额的私钥放在首位
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        list.add("");
+        this.multySignContractAddress = "0x32fae32961474e6d19b7a6346524b8a6a6fd1d9c";
         init();
     }
+
+    /**
+     * 5个签名
+     */
+    @Test
+    public void signDataForERC20WithdrawTest() throws Exception {
+        /*
+         0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610,
+         0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5,
+         0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d,
+         0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444,
+         0x10c17be7b6d3e1f424111c8bddf221c9557728b0, 0x15cb37aa4d55d5a0090966bef534c89904841065, 0x17e61e0176ad8a88cac5f786ca0779de87b3043b address[]
+
+
+         0xaff68cd458539a16b932748cf4bdd53bf196789f, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444,
+         0x1f13e90daa9548defae45cd80c135c183558db1f, 0xb12a6716624431730c3ef55f80c458371954fa52
+         0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610,
+         0x17e61e0176ad8a88cac5f786ca0779de87b3043b, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88
+         */
+        setMainData();
+        String txKey = "ddd1024102410240000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x0Eb9e4427a0Af1Fa457230bEF3481d028488363E";
+        // 转出数量
+        String value = "2099.891468";
+        // token合约
+        String erc20 = "0x3C2B8Be99c50593081EAA2A724F0B8285F5aba8f";
+        int tokenDecimals = 6;
+        int signCount = 5;
+        String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
+        System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", value, signCount, signData));
+    }
+
+    /**
+     * 根据已有的签名数据 发送交易 - erc20提现
+     */
+    @Test
+    public void sendERC20WithdrawBySignDataTest() throws Exception {
+        setMainData();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "ddd1024102410240000000000000000000000000000000000000000000000000";
+        // 接收者地址
+        String toAddress = "0x0Eb9e4427a0Af1Fa457230bEF3481d028488363E";
+        // 转出数量
+        String value = "2099.891468";
+        // token合约
+        String erc20 = "0x3C2B8Be99c50593081EAA2A724F0B8285F5aba8f";
+        int tokenDecimals = 6;
+        String signData = "";
+
+        String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
+    }
+
     /**
      * 添加 N 个管理员
      */
@@ -847,6 +901,15 @@ public class OneWalletApiTest extends Base {
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+    }
+
+    @Test
+    public void getCurrentNonce() throws Exception {
+        setMain();
+        BigInteger nonce = htgWalletApi.getNonce("0xd87F2ad3EF011817319FD25454FC186CA71B3B56");
+        System.out.println(nonce);
+        nonce = htgWalletApi.getLatestNonce("0xd87F2ad3EF011817319FD25454FC186CA71B3B56");
+        System.out.println(nonce);
     }
 
     @Test

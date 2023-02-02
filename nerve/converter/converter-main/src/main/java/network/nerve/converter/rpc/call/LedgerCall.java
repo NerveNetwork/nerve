@@ -9,6 +9,7 @@ import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.NonceBalance;
+import network.nerve.converter.model.dto.HtgAssetBindDTO;
 import network.nerve.converter.utils.LoggerUtil;
 
 import java.math.BigInteger;
@@ -96,7 +97,7 @@ public class LedgerCall extends BaseCall {
     /**
      * NERVE资产绑定异构跨链合约资产
      */
-    public static Integer bindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
+    public static HtgAssetBindDTO bindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -105,7 +106,10 @@ public class LedgerCall extends BaseCall {
             params.put("assetId", assetId);
             Map result = (Map) requestAndResponse(ModuleE.LG.abbr, "lg_bind_heterogeneous_asset_reg", params);
             Object value = result.get("assetType");
-            return Integer.parseInt(value.toString());
+            Object decimalPlace = result.get("decimalPlace");
+            Integer assetType = Integer.parseInt(value.toString());
+            Integer assetDecimals = Integer.parseInt(decimalPlace.toString());
+            return new HtgAssetBindDTO(assetType, assetDecimals);
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.LG.abbr, "lg_bind_heterogeneous_asset_reg");
             LoggerUtil.LOG.error(msg, e);

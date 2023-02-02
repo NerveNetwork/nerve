@@ -734,7 +734,9 @@ public class SwapUtils {
             }
             _reserveIn = reserveIn.add(amountIn);
             _reserveOut = reserveOut.subtract(amountOut);
-
+            if (_reserveIn.compareTo(BigInteger.ZERO) == 0 || reserveOut.compareTo(BigInteger.ZERO) == 0 ) {
+                continue;
+            }
             BigDecimal impact = BigDecimal.ONE.subtract(
                             new BigDecimal(_reserveOut.multiply(reserveIn)).divide(
                                     new BigDecimal(_reserveIn.multiply(reserveOut)), 78, RoundingMode.UP))

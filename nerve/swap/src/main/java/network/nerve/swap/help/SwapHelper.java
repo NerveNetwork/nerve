@@ -94,4 +94,8 @@ public class SwapHelper {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_21_0;
     }
 
+    public boolean isSupportProtocol22() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_22_0;
+    }
+
 }

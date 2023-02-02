@@ -125,6 +125,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<String> bindHeterogeneousMainAsset(BindHeterogeneousMainAssetReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_create_heterogeneous_main_asset_bind_tx", req, fun);
+    }
+
+    @Override
     public Result<String> bind(BindReq req) {
         Function<Map, Result> fun = res -> {
             String data = (String) res.get("value");
@@ -158,6 +167,42 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
             return success(data);
         };
         return callRpc(ModuleE.CV.abbr, "cv_unregister_heterogeneous_contract_token_to_nerve_asset_reg_tx", req, fun);
+    }
+
+    @Override
+    public Result<String> pauseIn(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_pause_in_heterogeneous_contract_token", req, fun);
+    }
+
+    @Override
+    public Result<String> resumeIn(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_resume_in_heterogeneous_contract_token", req, fun);
+    }
+
+    @Override
+    public Result<String> pauseOut(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_pause_out_heterogeneous_contract_token", req, fun);
+    }
+
+    @Override
+    public Result<String> resumeOut(UnbindReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_resume_out_heterogeneous_contract_token", req, fun);
     }
 
     @Override

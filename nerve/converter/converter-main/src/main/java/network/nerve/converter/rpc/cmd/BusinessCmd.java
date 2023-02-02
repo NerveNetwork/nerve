@@ -45,6 +45,7 @@ import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
@@ -102,6 +103,8 @@ public class BusinessCmd extends BaseCmd {
     private RechargeStorageService rechargeStorageService;
     @Autowired
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -254,9 +257,13 @@ public class BusinessCmd extends BaseCmd {
             for (VirtualBankDirector director : mapVirtualBank.values()) {
                 VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
                 for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
-                    IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                    String chainSymbol = heterogeneousDocking.getChainSymbol();
-                    addr.setSymbol(chainSymbol);
+                    if (addr.getChainId() == 101) {
+                        addr.setSymbol("ETH");
+                    } else {
+                        IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                        String chainSymbol = heterogeneousDocking.getChainSymbol();
+                        addr.setSymbol(chainSymbol);
+                    }
                 }
                 list.add(directorDTO);
             }
@@ -275,7 +282,7 @@ public class BusinessCmd extends BaseCmd {
                 ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD = list;
                 ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = now;
                 // 并行查询异构链余额
-                VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, 0);
+                VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, 0, converterCoreApi);
             } else {
                 chain.getLogger().debug("使用缓存的异构链余额");
                 // 使用缓存的异构链余额
@@ -670,6 +677,7 @@ public class BusinessCmd extends BaseCmd {
                 pendingPO.setBlockHeader(header);
                 txSubsequentProcessStorageService.save(chain, pendingPO);
                 map.put("value", chain.getPendingTxQueue().offer(pendingPO));
+                chain.getLogger().info("重新将异构链提现交易放入task, 重发消息, txHash: {}", txHash);
             }
             return success(map);
         } catch (NulsRuntimeException e) {

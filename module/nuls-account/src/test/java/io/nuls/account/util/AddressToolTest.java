@@ -57,7 +57,8 @@ public class AddressToolTest {
         List<String> list = new ArrayList<>();
         for (String pri : prilist) {
             ECKey ecKey = ECKey.fromPrivate(HexUtil.decode(pri));
-            String val = AddressTool.getAddressString(ecKey.getPubKey(), 5);
+            String val = AddressTool.getStringAddressByBytes(AddressTool.getAddress(ecKey.getPubKey(), 5));
+
             list.add(val);
         }
         List<String> result = new ArrayList<>();
@@ -86,7 +87,7 @@ public class AddressToolTest {
     @Test
     public void testGetBytesAddress() {
         for (int i = 0; i < 10; i++) {
-            String address = AddressTool.getAddressString(new ECKey().getPubKey(), 5);
+            String address = AddressTool.getStringAddressByBytes(AddressTool.getAddress(new ECKey().getPubKey(), 5));
             byte[] real = AddressTool.getAddress(address);
             System.out.println("args{\"" + address + "\"},\"" + HexUtil.encode(real) + "\"");
         }
@@ -100,7 +101,7 @@ public class AddressToolTest {
 //        f07d26a6cc0e931602f638fdf5b7dfa94ac8e1a0f9b5885feb78db17a4a7400a
 //        034e7ebe781dc25d5603c78616c939beabb1bd89ef5a2a182d292535146828c509
 //        TNVTdTSPG3sAwUkrGBqoVVzDjHYqvQKMX1khf
-        System.out.println(AddressTool.getAddressString(ecKey.getPubKey(), 9));
+        System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddress(ecKey.getPubKey(), 9)));
 //        a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca
 //        02401b78e28d293ad840f9298c2c7e522c68776e3badf092c2dbf457af1b8ed43e
 //                TNERVEfTSPQvEngihwxqwCNPq3keQL1PwrcLbtj

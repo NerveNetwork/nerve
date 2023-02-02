@@ -174,9 +174,16 @@ public class TrxAnalysisTxHelper implements BeanInitial {
             }
 
         } while (false);
-        if (isDepositTx && !htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
-            htgContext.logger().warn("[充值地址异常] 交易[{}], [0]充值地址: {}", trxTxHash, po.getNerveAddress());
-            return;
+        if (isDepositTx) {
+            if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
+                htgContext.logger().warn("[充值地址异常] 交易[{}], [0]充值地址: {}", trxTxHash, po.getNerveAddress());
+                return;
+            }
+            // add by pierre at 2022/6/29 增加充值暂停机制
+            if (htgContext.getConverterCoreApi().isPauseInHeterogeneousAsset(htgContext.HTG_CHAIN_ID(), po.getAssetId())) {
+                htgContext.logger().warn("[充值暂停] 交易[{}]", trxTxHash);
+                return;
+            }
         }
         // 检查是否被Nerve网络确认，产生原因是当前节点解析eth交易比其他节点慢，其他节点确认了此交易后，当前节点才解析到此交易
         HtgUnconfirmedTxPo txPoFromDB = null;

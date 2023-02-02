@@ -267,7 +267,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         return result;
     }
 
-    private Transaction makeSystemDealTx(Chain chain, StableRemoveLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash,
+    public Transaction makeSystemDealTx(Chain chain, StableRemoveLiquidityBus bus, NerveToken[] coins, NerveToken tokenLP, String orginTxHash,
                                          long blockTime, LedgerTempBalanceManager tempBalanceManager) {
         SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
         BigInteger[] receives = bus.getAmounts();

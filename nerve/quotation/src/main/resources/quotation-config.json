@@ -164,6 +164,20 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BCH-USDT",
           "desc": "BCH相对USDT价格"
+        },
+        {
+          "key": "KAVA_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "KAVA-USDT",
+          "desc": "KAVA相对USDT价格"
+        },
+        {
+          "key": "ETHW_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "ETHW-USDT",
+          "desc": "ETHW相对USDT价格"
         }
       ]
     }

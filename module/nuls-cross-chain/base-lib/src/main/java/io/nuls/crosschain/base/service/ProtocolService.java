@@ -40,7 +40,7 @@ public interface ProtocolService {
      * @param nodeId      发送此消息的节点Id
      * @param messageBody 消息体
      * */
-    void getCirculation(int chainId, String nodeId, GetCirculationMessage messageBody);
+//    void getCirculation(int chainId, String nodeId, GetCirculationMessage messageBody);
 
 
     /**

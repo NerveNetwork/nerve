@@ -74,7 +74,7 @@ public interface DataBaseArea {
     /**
      *   链资产地址索引
      */
-    String TB_LEDGER_ASSET_ADDR_INDEX = "ledger_asset_addr_index";
+//    String TB_LEDGER_ASSET_ADDR_INDEX = "ledger_asset_addr_index";
 
     /**
      *   链资产注册表

@@ -17,7 +17,7 @@
     "swapTokenContractAddress": "0xee31a8bb1edb26d8de688e2a1ca086e5c11f5978",
     "baseTokenContractAddress": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     "baseAnchorToken": "BNB-USDT",
-    "rpcAddress": "https://bsc-dataseed.binance.org/",
+    "rpcAddress": "https://bsc-dataseed1.defibit.io/",
     "effectiveHeight": 0,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   },

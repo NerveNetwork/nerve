@@ -55,6 +55,10 @@ public class HeterogeneousDockingManager {
         heterogeneousDockingMap.put(heterogeneousChainId, docking);
     }
 
+    public boolean existHeterogeneousDocking(int heterogeneousChainId) {
+        return heterogeneousDockingMap.containsKey(heterogeneousChainId);
+    }
+
     public IHeterogeneousChainDocking getHeterogeneousDocking(int heterogeneousChainId) throws NulsException {
         IHeterogeneousChainDocking docking = heterogeneousDockingMap.get(heterogeneousChainId);
         if (docking == null) {

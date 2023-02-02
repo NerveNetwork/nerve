@@ -31,6 +31,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rpc.info.Constants;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
@@ -58,6 +59,7 @@ import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -95,6 +97,18 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private volatile List<Runnable> htgConfirmTxHandlers = new ArrayList<>();
     private volatile List<Runnable> htgRpcAvailableHandlers = new ArrayList<>();
     private volatile List<Runnable> htgWaitingTxInvokeDataHandlers = new ArrayList<>();
+
+    Set<Integer> skippedNetworks;
+
+    public ConverterCoreApi() {
+        skippedNetworks = new HashSet<>();
+        skippedNetworks.add(105);
+        skippedNetworks.add(111);
+        skippedNetworks.add(112);
+        skippedNetworks.add(113);
+        skippedNetworks.add(115);
+        skippedNetworks.add(117);
+    }
 
     public NulsLogger logger() {
         return nerveChain.getLogger();
@@ -383,6 +397,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_21_0;
     }
 
+    @Override
+    public boolean isProtocol22() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_22_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -467,5 +486,93 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public ConverterConfig getConverterConfig() {
         return converterConfig;
+    }
+
+    @Override
+    public boolean isPauseInHeterogeneousAsset(int hChainId, int hAssetId) throws Exception {
+        return ledgerAssetRegisterHelper.isPauseInHeterogeneousAsset(hChainId, hAssetId);
+    }
+
+    @Override
+    public boolean isPauseOutHeterogeneousAsset(int hChainId, int hAssetId) throws Exception {
+        return ledgerAssetRegisterHelper.isPauseOutHeterogeneousAsset(hChainId, hAssetId);
+    }
+
+    @Override
+    public Map<Long, Map> HTG_RPC_CHECK_MAP() {
+        return ConverterContext.HTG_RPC_CHECK_MAP;
+    }
+
+    @Override
+    public HeterogeneousAssetInfo getHeterogeneousAsset(int hChainId, int hAssetId) {
+        NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, hAssetId);
+        if (nerveAssetInfo == null) {
+            return null;
+        }
+        HeterogeneousAssetInfo assetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(hChainId, nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
+        return assetInfo;
+    }
+
+    @Override
+    public BigInteger checkDecimalsSubtractedToNerveForWithdrawal(int htgChainId, int htgAssetId, BigInteger value) {
+        // 跨链资产精度不同，换算精度
+        HeterogeneousAssetInfo heterogeneousAsset = this.getHeterogeneousAsset(htgChainId, htgAssetId);
+        return checkDecimalsSubtractedToNerveForWithdrawal(heterogeneousAsset, value);
+    }
+
+    @Override
+    public BigInteger checkDecimalsSubtractedToNerveForWithdrawal(HeterogeneousAssetInfo heterogeneousAsset, BigInteger value) {
+        if (heterogeneousAsset == null) {
+            return value;
+        }
+        String decimalsSubtractedToNerve = heterogeneousAsset.getDecimalsSubtractedToNerve();
+        if (StringUtils.isBlank(decimalsSubtractedToNerve)) {
+            return value;
+        }
+        BigInteger decimalsSubtracted = new BigInteger(decimalsSubtractedToNerve);
+        if (decimalsSubtracted.compareTo(BigInteger.ZERO) < 0) {
+            value = new BigDecimal(value).movePointLeft(decimalsSubtracted.intValue()).toBigInteger();
+        } else if (decimalsSubtracted.compareTo(BigInteger.ZERO) > 0) {
+            value = new BigDecimal(value).movePointRight(decimalsSubtracted.intValue()).toBigInteger();
+        }
+        return value;
+    }
+
+    @Override
+    public BigInteger checkDecimalsSubtractedToNerveForDeposit(int htgChainId, int nerveAssetChainId, int nerveAssetId, BigInteger value) {
+        // 跨链资产精度不同，换算精度
+        HeterogeneousAssetInfo heterogeneousAsset = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, nerveAssetChainId, nerveAssetId);
+        return checkDecimalsSubtractedToNerveForDeposit(heterogeneousAsset, value);
+    }
+
+    @Override
+    public BigInteger checkDecimalsSubtractedToNerveForDeposit(HeterogeneousAssetInfo heterogeneousAsset, BigInteger value) {
+        if (heterogeneousAsset == null) {
+            return value;
+        }
+        String decimalsSubtractedToNerve = heterogeneousAsset.getDecimalsSubtractedToNerve();
+        if (StringUtils.isBlank(decimalsSubtractedToNerve)) {
+            return value;
+        }
+        BigInteger decimalsSubtracted = new BigInteger(decimalsSubtractedToNerve);
+        if (decimalsSubtracted.compareTo(BigInteger.ZERO) < 0) {
+            value = new BigDecimal(value).movePointRight(decimalsSubtracted.intValue()).toBigInteger();
+        } else if (decimalsSubtracted.compareTo(BigInteger.ZERO) > 0) {
+            value = new BigDecimal(value).movePointLeft(decimalsSubtracted.intValue()).toBigInteger();
+        }
+        return value;
+    }
+
+    @Override
+    public void setCurrentHeterogeneousVersionII() {
+        nerveChain.setCurrentHeterogeneousVersion(2);
+    }
+
+    @Override
+    public boolean checkNetworkRunning(int hChainId) {
+        if (nerveChain.getChainId() == 5 && skippedNetworks.contains(hChainId)) {
+            return false;
+        }
+        return true;
     }
 }

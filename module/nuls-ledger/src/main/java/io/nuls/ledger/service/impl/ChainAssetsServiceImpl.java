@@ -64,62 +64,62 @@ public class ChainAssetsServiceImpl implements ChainAssetsService {
     @Override
     public void updateChainAssets(int addressChainid, Map<String, List<String>> assetAddressIndex) {
         try {
-            byte[] value = ByteUtils.intToBytes(1);
+//            byte[] value = ByteUtils.intToBytes(1);
             for (Map.Entry<String, List<String>> entry : assetAddressIndex.entrySet()) {
                 String assetIndex = entry.getKey();
                 byte[] indexBytes = assetIndex.getBytes(LedgerConstant.DEFAULT_ENCODING);
                 accountIndexRepository.updateAssetsIndex(addressChainid, indexBytes, indexBytes);
                 //地址存储
-                List<String> assetAddress = entry.getValue();
-                String[] assetChainAssetId = assetIndex.split("-");
-                int assetChainId = Integer.valueOf(assetChainAssetId[0]);
-                int assetId = Integer.valueOf(assetChainAssetId[1]);
-                Map<byte[], byte[]> assetAddressMap = new HashMap<>();
-                for (String address : assetAddress) {
-                    byte[] addrBytes = address.getBytes(LedgerConstant.DEFAULT_ENCODING);
-                    assetAddressMap.put(addrBytes, value);
-                }
-                accountIndexRepository.updateAssetsAddressIndex(addressChainid,
-                        assetChainId,
-                        assetId, assetAddressMap);
+//                List<String> assetAddress = entry.getValue();
+//                String[] assetChainAssetId = assetIndex.split("-");
+//                int assetChainId = Integer.valueOf(assetChainAssetId[0]);
+//                int assetId = Integer.valueOf(assetChainAssetId[1]);
+//                Map<byte[], byte[]> assetAddressMap = new HashMap<>();
+//                for (String address : assetAddress) {
+//                    byte[] addrBytes = address.getBytes(LedgerConstant.DEFAULT_ENCODING);
+//                    assetAddressMap.put(addrBytes, value);
+//                }
+//                accountIndexRepository.updateAssetsAddressIndex(addressChainid,
+//                        assetChainId,
+//                        assetId, assetAddressMap);
             }
         } catch (Exception e) {
             LoggerUtil.logger(addressChainid).error(e);
         }
     }
 
-    @Override
-    public List<Map<String, Object>> getAssetsByChainId(int addressChainId) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        List<String> assetKeys = accountIndexRepository.assetsKeyList(addressChainId);
-        if (null != assetKeys) {
-            for (String assetKey : assetKeys) {
-                String[] assetChainAssetId = assetKey.split("-");
-                int assetChainId = Integer.valueOf(assetChainAssetId[0]);
-                int assetId = Integer.valueOf(assetChainAssetId[1]);
-                Map<String, Object> asset = getAssetByChainAssetId(addressChainId, assetChainId, assetId);
-                list.add(asset);
-            }
-        }
-        return list;
-    }
+//    @Override
+//    public List<Map<String, Object>> getAssetsByChainId(int addressChainId) {
+//        List<Map<String, Object>> list = new ArrayList<>();
+//        List<String> assetKeys = accountIndexRepository.assetsKeyList(addressChainId);
+//        if (null != assetKeys) {
+//            for (String assetKey : assetKeys) {
+//                String[] assetChainAssetId = assetKey.split("-");
+//                int assetChainId = Integer.valueOf(assetChainAssetId[0]);
+//                int assetId = Integer.valueOf(assetChainAssetId[1]);
+//                Map<String, Object> asset = getAssetByChainAssetId(addressChainId, assetChainId, assetId);
+//                list.add(asset);
+//            }
+//        }
+//        return list;
+//    }
 
-    @Override
-    public Map<String, Object> getAssetByChainAssetId(int addressChainId, int assetChainId, int assetId) {
-        List<String> addressKeys = accountIndexRepository.assetsAddressKeyList(addressChainId, assetChainId, assetId);
-        Map<String, Object> asset = new HashMap<>();
-        BigInteger amount = BigInteger.ZERO;
-        BigInteger freeze = BigInteger.ZERO;
-        if (null != addressKeys) {
-            for (String addressKey : addressKeys) {
-                AccountState accountState = accountStateService.getAccountStateReCal(addressKey, addressChainId, assetChainId, assetId);
-                amount = amount.add(accountState.getAvailableAmount());
-                freeze = freeze.add(accountState.getFreezeTotal());
-            }
-        }
-        asset.put("assetId", assetId);
-        asset.put("availableAmount", amount);
-        asset.put("freeze", freeze);
-        return asset;
-    }
+//    @Override
+//    public Map<String, Object> getAssetByChainAssetId(int addressChainId, int assetChainId, int assetId) {
+//        List<String> addressKeys = accountIndexRepository.assetsAddressKeyList(addressChainId, assetChainId, assetId);
+//        Map<String, Object> asset = new HashMap<>();
+//        BigInteger amount = BigInteger.ZERO;
+//        BigInteger freeze = BigInteger.ZERO;
+//        if (null != addressKeys) {
+//            for (String addressKey : addressKeys) {
+//                AccountState accountState = accountStateService.getAccountStateReCal(addressKey, addressChainId, assetChainId, assetId);
+//                amount = amount.add(accountState.getAvailableAmount());
+//                freeze = freeze.add(accountState.getFreezeTotal());
+//            }
+//        }
+//        asset.put("assetId", assetId);
+//        asset.put("availableAmount", amount);
+//        asset.put("freeze", freeze);
+//        return asset;
+//    }
 }

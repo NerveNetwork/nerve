@@ -13,6 +13,7 @@ import network.nerve.converter.heterogeneouschain.lib.helper.HtgParseTxHelper;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
+import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Before;
 import org.junit.Test;
 import org.web3j.abi.*;
@@ -24,6 +25,7 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -355,14 +357,15 @@ public class CroWalletApiTest extends Base {
     }
 
     protected void setMainData() {
+        setMain();
         // "0xd87f2ad3ef011817319fd25454fc186ca71b3b56"
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0xf0e406c49c63abf358030a299c0e00118c4c6ba5";
+        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         init();
     }
     /**
@@ -903,6 +906,35 @@ public class CroWalletApiTest extends Base {
                 new BigDecimal("15.1").scaleByPowerOfTen(9).toBigInteger(),
                 latestNonce);
         System.out.println(txHash);
+    }
+
+    @Test
+    public void newParseWithdrawTxReceiptSinceProtocol21Test() throws Exception {
+        setMainData();
+        htgContext.SET_MULTY_SIGN_ADDRESS(multySignContractAddress);
+        List<String> list = new ArrayList<>();
+        list.add("0x403665e410d46122601989eeb9d3a0eb851595d076376cbaf43d5cad4015d5f3");
+        for (String directTxHash : list) {
+            Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+            TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+            HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
+            HtgParseTxHelper helper = new HtgParseTxHelper();
+            BeanUtilTest.setBean(helper, "htgContext", htgContext);
+            Method method = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceipt", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method.setAccessible(true);
+            Object invoke = method.invoke(helper, tx, txReceipt, po);
+            System.out.println(String.format("newParseWithdrawTxReceipt return: %s", invoke));
+            BigInteger newValue = po.getValue();
+            System.out.println(String.format("newParseWithdrawTxReceipt Withdraw Amount: %s", newValue));
+
+            Method method1 = helper.getClass().getDeclaredMethod("newParseWithdrawTxReceiptSinceProtocol21", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionBaseInfo.class);
+            method1.setAccessible(true);
+            Object invoke1 = method1.invoke(helper, tx, txReceipt, po);
+            System.out.println(String.format("newParseWithdrawTxReceiptSinceProtocol21 return: %s", invoke1));
+            BigInteger value1 = po.getValue();
+            System.out.println(String.format("newParseWithdrawTxReceiptSinceProtocol21 Withdraw Amount: %s", value1));
+            System.out.println();
+        }
     }
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

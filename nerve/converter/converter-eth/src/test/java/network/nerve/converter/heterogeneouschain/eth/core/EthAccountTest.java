@@ -85,7 +85,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
+        String prikey = "2dc445be9fb5bb4069e5dc853f1e6e27ff1809598414dc20c66815ea83b3d9f6";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -183,14 +183,17 @@ public class EthAccountTest extends Base {
 
     @Test
     public void createEthAccount() throws Exception {
-        for (int i = 0; i < 1; i++) {
+        String addresses = "";
+        for (int i = 0; i < 5; i++) {
             ECKeyPair ecKeyPair = Keys.createEcKeyPair();
             String pk = Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
             Credentials credentials = Credentials.create(pk);
+            addresses += credentials.getAddress() + ",";
             String msg = "address: " + credentials.getAddress()
                     + ", privateKey: " + Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
             System.out.println(msg);
         }
+        System.out.println(addresses);
     }
 
     @Test
@@ -216,12 +219,13 @@ public class EthAccountTest extends Base {
         // 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
         AddressTool.addPrefix(18, "BBAI");
         List<String> pubList = new ArrayList<>();
-        pubList.add("020e19418ed26700b0dba720dcc95483cb4adb1b5f8a103818dab17d5b05231854");
+        pubList.add("000000000000000000000000000000000000000000000000000000000000000000");
         chainId = 1;
         for (String pubkey : pubList) {
             System.out.println("------");
             System.out.println(pubkey);
-            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, chainId)));
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 2)));
             System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
             System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
             System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 5)));
@@ -235,7 +239,7 @@ public class EthAccountTest extends Base {
         //0x044477033a4521efee5f90caf30f8eb3284e8d1bb7fef2923ae21617b24aacc8cbce2450fde8f48910e3ffb1455724d0c3671122c86000bae2840ab38dc7766932
         //0x32a6d6b1e968f996757cb49fd4f0b08692f9d7f6
         String pubkey = "039850150bb6869f6967afb7fdfd85add84273e6d883ee94143e003d608a80a090";
-        System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+        System.out.println(Keys.toChecksumAddress(EthUtil.genEthAddressByCompressedPublickey(pubkey)));
     }
 
     @Test
@@ -289,7 +293,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1, 0x15cb37aa4d55d5a0090966bef534c89904841065, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x10c17be7b6d3e1f424111c8bddf221c9557728b0";
+        String pubkeySet = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x10c17be7b6d3e1f424111c8bddf221c9557728b0, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x8255a0e99456f45f8b85246ef6a9b1895c784c9f, 0x25955965648cd5c017d6d4644bf65830645ef2f2, 0x5fbf7793196efbf7066d99fa29dc64dc23052451";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");

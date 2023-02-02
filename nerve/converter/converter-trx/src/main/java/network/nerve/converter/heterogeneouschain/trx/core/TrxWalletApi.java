@@ -71,13 +71,13 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     String tempKey = "3333333333333333333333333333333333333333333333333333333333333333";
     private boolean inited = false;
     private boolean urlFromThirdParty = false;
+    private boolean urlFromThirdPartyForce = false;
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
+    private int rpcVersion = -1;
 
     private Map<String, BigInteger> map = new HashMap<>();
     private ReentrantLock checkLock = new ReentrantLock();
-    private ReentrantLock resetLock = new ReentrantLock();
-    private ReentrantLock reSignLock = new ReentrantLock();
 
     private NulsLogger getLog() {
         return htgContext.logger();
@@ -96,40 +96,79 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     }
 
     public void checkApi(int order) throws NulsException {
-        long now = System.currentTimeMillis();
-        // 如果使用的是应急API，应急API使用时间内，不检查API切换
-        if (now < clearTimeOfRequestExceededMap) {
-            if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+        checkLock.lock();
+        try {
+            do {
+                // 强制从第三方系统更新rpc
+                Map<Long, Map> rpcCheckMap = htgContext.getConverterCoreApi().HTG_RPC_CHECK_MAP();
+                Map<String, Object> resultMap = rpcCheckMap.get(htgContext.getConfig().getChainIdOnHtgNetwork());
+                if (resultMap == null) {
+                    break;
                 }
-                return;
-            }
-            if (urlFromThirdParty) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                Integer _version = (Integer) resultMap.get("rpcVersion");
+                if (_version == null) {
+                    break;
                 }
-                return;
-            }
-        } else if (clearTimeOfRequestExceededMap != 0){
-            getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
-            requestExceededMap.clear();
-            clearTimeOfRequestExceededMap = 0L;
-        }
+                if (this.rpcVersion == -1) {
+                    this.rpcVersion = _version.intValue();
+                    break;
+                }
+                if (this.rpcVersion == _version.intValue()){
+                    break;
+                }
+                if (_version.intValue() > this.rpcVersion){
+                    // 发现version改变，切换rpc
+                    Integer _index = (Integer) resultMap.get("index");
+                    if (_index == null) {
+                        break;
+                    }
+                    String apiUrl = (String) resultMap.get("extend" + (_index + 1));
+                    if (StringUtils.isBlank(apiUrl)) {
+                        break;
+                    }
+                    this.changeApi(apiUrl);
+                    this.rpcVersion = _version.intValue();
+                    urlFromThirdPartyForce = true;
+                    return;
+                }
+            } while (false);
 
-        String rpc = this.calRpcBySwitchStatus(order, switchStatus);
-        if (!rpc.equals(this.rpcAddress)) {
-            checkLock.lock();
-            try {
-                if (!rpc.equals(this.rpcAddress)) {
-                    getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
-                    changeApi(rpc);
-                }
-            } catch (NulsException e) {
-                throw e;
-            } finally {
-                checkLock.unlock();
+            if (this.urlFromThirdPartyForce) {
+                getLog().info("[{}]强制应急API(ThirdParty)使用期间内，不再根据bank order切换API", symbol());
+                return;
             }
+
+            long now = System.currentTimeMillis();
+            // 如果使用的是应急API，应急API使用时间内，不检查API切换
+            if (now < clearTimeOfRequestExceededMap) {
+                if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                    }
+                    return;
+                }
+                if (urlFromThirdParty) {
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                    }
+                    return;
+                }
+            } else if (clearTimeOfRequestExceededMap != 0){
+                getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                requestExceededMap.clear();
+                clearTimeOfRequestExceededMap = 0L;
+                urlFromThirdParty = false;
+            }
+
+            String rpc = this.calRpcBySwitchStatus(order, switchStatus);
+            if (!rpc.equals(this.rpcAddress)) {
+                getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                changeApi(rpc);
+            }
+        } catch (NulsException e) {
+            throw e;
+        } finally {
+            checkLock.unlock();
         }
     }
 
@@ -172,9 +211,13 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     }
 
     private void switchStandbyAPI(String oldRpc) throws NulsException {
-        getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
-        resetLock.lock();
+        checkLock.lock();
         try {
+            if (urlFromThirdParty || urlFromThirdPartyForce) {
+                getLog().info("应急API(ThirdParty)使用时间内，不检查API切换");
+                return;
+            }
+            getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
             // 不相等，说明已经被切换
             if (!oldRpc.equals(this.rpcAddress)) {
                 getLog().info("{} API 已切换至: {}", symbol(), this.rpcAddress);
@@ -205,7 +248,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
         } catch (NulsException e) {
             throw e;
         } finally {
-            resetLock.unlock();
+            checkLock.unlock();
         }
     }
 
@@ -297,6 +340,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
                 clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
                 urlFromThirdParty = true;
+                urlFromThirdPartyForce = false;
                 changeApi(availableRpc);
                 throw e;
             }

@@ -170,6 +170,14 @@
         "verifySignature": false,
         "verifyFee": false,
         "handler": "WithdrawalAddFeeByCrossChainV1"
+      },
+      {
+        "type": "84",
+        "systemTx": true,
+        "unlockTx": false,
+        "verifySignature": false,
+        "verifyFee": false,
+        "handler": "HeterogeneousMainAssetBindV1"
       }
     ],
     "validMsgs": [

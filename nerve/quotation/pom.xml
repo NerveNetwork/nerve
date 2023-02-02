@@ -145,12 +145,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>1.9.13</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.iq80.leveldb</groupId>
       <artifactId>leveldb</artifactId>
       <version>0.7</version>
@@ -165,7 +159,7 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
-      <version>4.2.0.RELEASE</version>
+      <version>5.3.21</version>
       <scope>compile</scope>
       <exclusions>
         <exclusion>
@@ -177,13 +171,13 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-orm</artifactId>
-      <version>4.2.0.RELEASE</version>
+      <version>5.3.21</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-tx</artifactId>
-      <version>4.2.0.RELEASE</version>
+      <version>5.3.21</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

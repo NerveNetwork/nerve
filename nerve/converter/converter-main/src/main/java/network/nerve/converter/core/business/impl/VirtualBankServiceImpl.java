@@ -194,7 +194,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
 
-    private void initBank(Chain chain, List<AgentBasic> listAgent, long height) {
+    private synchronized void initBank(Chain chain, List<AgentBasic> listAgent, long height) {
         int bankNumber = chain.getMapVirtualBank().size();
         /* 2020/11/19 如果异构链数量与虚拟银行节点（种子）维护的异构链地址数不一致， 则需要初始化虚拟银行**/
         int heterogeneousSize = 0;
@@ -554,15 +554,21 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 // 非种子节点 没有初始化, 无法获取异构链地址
                 continue;
             }*/
+            boolean save = false;
             for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                 if (!director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
                     // 为新成员创建新的异构链多签地址
                     String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
-                    virtualBankStorageService.save(chain, director);
-                    virtualBankAllHistoryStorageService.save(chain, director);
+                    save = true;
+                    chain.getLogger().info("[初始化异构链多签地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                            director.getAgentAddress(), hInterface.getChainId(), heterogeneousAddress);
                 }
+            }
+            if (save) {
+                virtualBankStorageService.save(chain, director);
+                virtualBankAllHistoryStorageService.save(chain, director);
             }
         }
         // 发送给共识

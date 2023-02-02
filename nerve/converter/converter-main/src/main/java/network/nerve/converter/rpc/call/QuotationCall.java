@@ -83,6 +83,14 @@ public class QuotationCall {
             return new BigDecimal("0.4146");
         } else if ("BCH_PRICE".equals(oracleKey)){
             return new BigDecimal("207.26");
+        } else if ("NULS_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.2035");
+        } else if ("KAVA_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.752");
+        } else if ("ETHW_PRICE".equals(oracleKey)){
+            return new BigDecimal("3.409");
+        } else if ("LGCY_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.0001815");
         }*/
         /************************************************/
         try {

@@ -263,12 +263,11 @@ public class HtWalletApiTest extends Base {
     @Test
     public void depositHTByCrossOut() throws Exception {
         setLocalTest();
-        this.multySignContractAddress = "0xF7c9BB7e6D6B8F603F17f6af0713D99EE285BDDb";
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
         setAccount_EFa1();
         // HT数量
-        String sendAmount = "0.2";
+        String sendAmount = "0.02";
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
@@ -292,21 +291,20 @@ public class HtWalletApiTest extends Base {
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
-        this.multySignContractAddress = "0xF7c9BB7e6D6B8F603F17f6af0713D99EE285BDDb";
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "20";
+        String sendAmount = "300.31";
         // 初始化 ERC20 地址信息
         //setErc20EthMinter();
         //setErc20UsdiMinter();
         //setErc20DXA();
-        //setErc20USDX();
+        setErc20USDX();
         //setErc20HUSD();
         //setErc20USDT();
         //setErc20GOAT();
-        setErc20NVT();
+        //setErc20NVT();
         //setErc20NULS();
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";

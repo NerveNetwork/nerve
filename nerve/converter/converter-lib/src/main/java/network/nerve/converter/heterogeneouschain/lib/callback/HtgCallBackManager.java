@@ -42,4 +42,9 @@ public interface HtgCallBackManager {
 
     IHeterogeneousUpgrade getHeterogeneousUpgrade();
 
+    void setDepositTxSubmitter(IDepositTxSubmitter depositTxSubmitter);
+
+    void setTxConfirmedProcessor(ITxConfirmedProcessor txConfirmedProcessor);
+
+    void setHeterogeneousUpgrade(IHeterogeneousUpgrade heterogeneousUpgrade);
 }

@@ -11,6 +11,7 @@ import network.nerve.converter.heterogeneouschain.lib.helper.HtgAccountHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.utils.ConverterUtil;
+import okhttp3.OkHttpClient;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -36,11 +37,15 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.net.ConnectException;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 /**
  * @package com.bloex.wallet.util
@@ -63,13 +68,14 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     protected String rpcAddress;
     int switchStatus = 0;
     private boolean inited = false;
-    private boolean urlFromThirdParty = false;
+    private volatile boolean urlFromThirdParty = false;
+    private volatile boolean urlFromThirdPartyForce = false;
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
+    private int rpcVersion = -1;
 
     private Map<String, BigInteger> map = new HashMap<>();
     private ReentrantLock checkLock = new ReentrantLock();
-    private ReentrantLock resetLock = new ReentrantLock();
     private ReentrantLock reSignLock = new ReentrantLock();
 
     private NulsLogger getLog() {
@@ -90,42 +96,88 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     public void checkApi(int order) throws NulsException {
-        long now = System.currentTimeMillis();
-        // 如果使用的是应急API，应急API使用时间内，不检查API切换
-        if (now < clearTimeOfRequestExceededMap) {
-            if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+        checkLock.lock();
+        try {
+            do {
+                // 强制从第三方系统更新rpc
+                Map<Long, Map> rpcCheckMap = htgContext.getConverterCoreApi().HTG_RPC_CHECK_MAP();
+                Map<String, Object> resultMap = rpcCheckMap.get(htgContext.getConfig().getChainIdOnHtgNetwork());
+                if (resultMap == null) {
+                    //getLog().warn("Empty resultMap! {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    break;
                 }
+                Integer _version = (Integer) resultMap.get("rpcVersion");
+                if (_version == null) {
+                    //getLog().warn("Empty rpcVersion! {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    break;
+                }
+                if (this.rpcVersion == -1) {
+                    this.rpcVersion = _version.intValue();
+                    getLog().info("初始化 {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    break;
+                }
+                if (this.rpcVersion == _version.intValue()){
+                    //getLog().info("版本相同 {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    break;
+                }
+                if (_version.intValue() > this.rpcVersion){
+                    // 发现version改变，切换rpc
+                    Integer _index = (Integer) resultMap.get("index");
+                    if (_index == null) {
+                        getLog().warn("Empty index! {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                        break;
+                    }
+                    String apiUrl = (String) resultMap.get("extend" + (_index + 1));
+                    if (StringUtils.isBlank(apiUrl)) {
+                        getLog().warn("Empty apiUrl! {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                        break;
+                    }
+                    getLog().info("检查到需更改RPC服务 {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    this.changeApi(apiUrl);
+                    this.rpcVersion = _version.intValue();
+                    this.urlFromThirdPartyForce = true;
+                    return;
+                }
+            } while (false);
+
+            if (this.urlFromThirdPartyForce) {
+                getLog().info("[{}]强制应急API(ThirdParty)使用期间内，不再根据bank order切换API", symbol());
                 return;
             }
-            if (urlFromThirdParty) {
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+
+            long now = System.currentTimeMillis();
+            // 如果使用的是应急API，应急API使用时间内，不检查API切换
+            if (now < clearTimeOfRequestExceededMap) {
+                if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                    }
+                    return;
                 }
-                return;
+                if (urlFromThirdParty) {
+                    if (getLog().isDebugEnabled()) {
+                        getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                    }
+                    return;
+                }
+            } else if (clearTimeOfRequestExceededMap != 0){
+                getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                requestExceededMap.clear();
+                clearTimeOfRequestExceededMap = 0L;
+                urlFromThirdParty = false;
             }
-        } else if (clearTimeOfRequestExceededMap != 0){
-            getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
-            requestExceededMap.clear();
-            clearTimeOfRequestExceededMap = 0L;
-            urlFromThirdParty = false;
+
+            String rpc = this.calRpcBySwitchStatus(order, switchStatus);
+            if (!rpc.equals(this.rpcAddress)) {
+                getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                changeApi(rpc);
+            }
+        } catch (Exception e) {
+            throw e;
+        } finally {
+            checkLock.unlock();
         }
 
-        String rpc = this.calRpcBySwitchStatus(order, switchStatus);
-        if (!rpc.equals(this.rpcAddress)) {
-            checkLock.lock();
-            try {
-                if (!rpc.equals(this.rpcAddress)) {
-                    getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
-                    changeApi(rpc);
-                }
-            } catch (NulsException e) {
-                throw e;
-            } finally {
-                checkLock.unlock();
-            }
-        }
     }
 
     private String calRpcBySwitchStatus(int order, int tempSwitchStatus) throws NulsException {
@@ -183,9 +235,13 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     private void switchStandbyAPI(String oldRpc) throws NulsException {
-        getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
-        resetLock.lock();
+        checkLock.lock();
         try {
+            if (urlFromThirdParty || urlFromThirdPartyForce) {
+                getLog().info("应急API(ThirdParty)使用时间内，不检查API切换");
+                return;
+            }
+            getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
             // 不相等，说明已经被切换
             if (!oldRpc.equals(this.rpcAddress)) {
                 getLog().info("{} API 已切换至: {}", symbol(), this.rpcAddress);
@@ -213,7 +269,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         } catch (NulsException e) {
             throw e;
         } finally {
-            resetLock.unlock();
+            checkLock.unlock();
         }
     }
 
@@ -255,6 +311,15 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     private Web3j newInstanceWeb3j(String rpcAddress) throws NulsException {
+        if (htgContext.getConfig().isProxy()) {
+            String httpProxy = htgContext.getConfig().getHttpProxy();
+            String[] split = httpProxy.split(":");
+            final OkHttpClient.Builder builder =
+                    new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(split[0], Integer.parseInt(split[1])))).connectionSpecs(Arrays.asList(INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+            OkHttpClient okHttpClient = builder.build();
+            Web3j web3j = Web3j.build(new HttpService(rpcAddress, okHttpClient));
+            return web3j;
+        }
         Web3j web3j = Web3j.build(new HttpService(rpcAddress));
         return web3j;
     }
@@ -772,16 +837,18 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
+            getLog().warn("API连接异常. ERROR: {}", message);
             String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
             if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
                 clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
                 urlFromThirdParty = true;
+                urlFromThirdPartyForce = false;
                 changeApi(availableRpc);
                 throw e;
             }
             // 当API连接异常时，重置API连接，使用备用API 异常: ClientConnectionException
             if (e instanceof ClientConnectionException) {
-                getLog().warn("API连接异常时，重置API连接，使用备用API");
+                getLog().warn("API连接异常时，重置API连接，使用备用API.");
                 if (ConverterUtil.isRequestExpired(e.getMessage()) && htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
                     getLog().info("重新签名应急API: {}", this.rpcAddress);
                     reSignMainAPI();

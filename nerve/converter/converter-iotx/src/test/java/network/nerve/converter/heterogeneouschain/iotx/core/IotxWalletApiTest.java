@@ -871,18 +871,34 @@ public class IotxWalletApiTest extends Base {
 
     @Test
     public void approveTest() throws Exception {
+        setBeta();
         // erc20授权
-        //BigInteger approveAmount = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
-        htgContext.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
-        setMain();
-        String from = "";
-        String fromPriKey = "";
-        String to = "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5";
-        String erc20 = "0x54e4622DC504176b3BB432dCCAf504569699a7fF";
-        BigInteger approveAmount = new BigInteger("1",16);
+        BigInteger approveAmount = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        setAccount_EFa1();
+        String from = this.from;
+        String fromPriKey = this.fromPriKey;
+        String to = "0x3F1f3D17619E916C4F04707BA57d8E0b9e994fB0";
+        String erc20 = "0xb6d685346106b697e6b2bba09bc343cafc930ca3";
+        //BigInteger approveAmount = new BigInteger("1",16);
         Function approveFunction = this.getERC20ApproveFunction(to, approveAmount);
         String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20);
-        System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+        System.out.println(String.format("erc20授权[%s], 授权hash: %s", approveAmount, authHash));
+    }
+
+    @Test
+    public void allowanceTest() throws Exception {
+        setBeta();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        // 初始化 账户
+        setAccount_EFa1();
+
+        Function allowanceFunction = new Function("allowance",
+                Arrays.asList(new Address(from), new Address(multySignContractAddress)),
+                Arrays.asList(new TypeReference<Uint256>() {}));
+        String erc20Address = "0xb6d685346106b697e6b2bba09bc343cafc930ca3";
+        BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
+        System.out.println(String.format("allowanceAmount: %s", allowanceAmount));
     }
 
     @Test
@@ -892,7 +908,7 @@ public class IotxWalletApiTest extends Base {
         // 初始化 账户
         setAccount_EFa1();
         // 初始化 ERC20 地址信息
-        setErc20USDT();
+        setErc20USD18();
         // erc20授权
         String approveAmount = "0";
         Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));

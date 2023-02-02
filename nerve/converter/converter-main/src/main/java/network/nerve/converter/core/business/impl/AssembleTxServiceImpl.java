@@ -212,7 +212,6 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         // 支持同时转入token和main
         Transaction tx = this.createRechargeTxWithoutSign(chain, rechargeTxDTO);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-
         // 调验证器验证
         rechargeVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
@@ -244,7 +243,12 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 toAddress,
                 nerveAssetInfo.getAssetChainId(),
                 nerveAssetInfo.getAssetId(),
-                rechargeTxDTO.getAmount());
+                converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                        rechargeTxDTO.getHeterogeneousChainId(),
+                        nerveAssetInfo.getAssetChainId(),
+                        nerveAssetInfo.getAssetId(),
+                        rechargeTxDTO.getAmount())
+        );
         tos.add(coinTo);
         // 同时充值token和main，增加main的支持
         if (rechargeTxDTO.isDepositII()) {
@@ -253,7 +257,12 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     toAddress,
                     mainInfo.getAssetChainId(),
                     mainInfo.getAssetId(),
-                    rechargeTxDTO.getMainAmount());
+                    converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                            rechargeTxDTO.getHeterogeneousChainId(),
+                            mainInfo.getAssetChainId(),
+                            mainInfo.getAssetId(),
+                            rechargeTxDTO.getMainAmount())
+            );
             tos.add(mainTo);
         }
 
@@ -292,10 +301,33 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         return tx;
     }
 
+    private boolean greaterTranZero(BigInteger amount) {
+        if (amount != null && amount.compareTo(BigInteger.ZERO) > 0) {
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public Transaction rechargeUnconfirmedTxWithoutSign(Chain chain, RechargeUnconfirmedTxData txData, long txTime) throws NulsException {
         byte[] txDataBytes;
         try {
+            txData.setAmount(
+                    converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                            txData.getOriginalTxHash().getHeterogeneousChainId(),
+                            txData.getAssetChainId(),
+                            txData.getAssetId(),
+                            txData.getAmount())
+            );
+            if (greaterTranZero(txData.getMainAssetAmount())) {
+                txData.setMainAssetAmount(
+                        converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                                txData.getOriginalTxHash().getHeterogeneousChainId(),
+                                txData.getMainAssetChainId(),
+                                txData.getMainAssetId(),
+                                txData.getMainAssetAmount())
+                );
+            }
             txDataBytes = txData.serialize();
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
@@ -325,6 +357,42 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction oneClickCrossChainUnconfirmedTxWithoutSign(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long txTime) throws NulsException {
         byte[] txDataBytes;
         try {
+            if (greaterTranZero(txData.getErc20Amount())) {
+                txData.setErc20Amount(
+                        converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                                txData.getOriginalTxHash().getHeterogeneousChainId(),
+                                txData.getErc20AssetChainId(),
+                                txData.getErc20AssetId(),
+                                txData.getErc20Amount())
+                );
+            }
+            if (greaterTranZero(txData.getTipping())) {
+                txData.setTipping(
+                        converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                                txData.getOriginalTxHash().getHeterogeneousChainId(),
+                                txData.getTippingChainId(),
+                                txData.getTippingAssetId(),
+                                txData.getTipping())
+                );
+            }
+            if (greaterTranZero(txData.getMainAssetFeeAmount())) {
+                txData.setMainAssetFeeAmount(
+                        converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                                txData.getOriginalTxHash().getHeterogeneousChainId(),
+                                txData.getMainAssetChainId(),
+                                txData.getMainAssetId(),
+                                txData.getMainAssetFeeAmount())
+                );
+            }
+            if (greaterTranZero(txData.getMainAssetAmount())) {
+                txData.setMainAssetFeeAmount(
+                        converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                                txData.getOriginalTxHash().getHeterogeneousChainId(),
+                                txData.getMainAssetChainId(),
+                                txData.getMainAssetId(),
+                                txData.getMainAssetAmount())
+                );
+            }
             String desToAddress = ConverterUtil.addressToLowerCase(txData.getDesToAddress());
             txData.setDesToAddress(desToAddress);
             txDataBytes = txData.serialize();
@@ -394,14 +462,24 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 dto.getNerveToAddress(),
                 withdrawalAssetChainId,
                 withdrawalAssetId,
-                withdrawalAmount);
+                converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                        txData.getOriginalTxHash().getHeterogeneousChainId(),
+                        withdrawalAssetChainId,
+                        withdrawalAssetId,
+                        withdrawalAmount)
+        );
         tos.add(withdrawalCoinTo);
         // 判断组装异构链补贴手续费暂存to
         CoinTo withdrawalFeeCoinTo = new CoinTo(
                 withdrawalFeeAddress,
                 feeAssetChainId,
                 feeAssetId,
-                feeAmount);
+                converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                        txData.getOriginalTxHash().getHeterogeneousChainId(),
+                        feeAssetChainId,
+                        feeAssetId,
+                        feeAmount)
+        );
         tos.add(withdrawalFeeCoinTo);
         // 组装tipping
         BigInteger tipping = dto.getTipping();
@@ -425,9 +503,14 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     tippingAddress,
                     dto.getTippingChainId(),
                     dto.getTippingAssetId(),
-                    tipping);
+                    converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                            txData.getOriginalTxHash().getHeterogeneousChainId(),
+                            dto.getTippingChainId(),
+                            dto.getTippingAssetId(),
+                            tipping)
+            );
             tos.add(tippingCoinTo);
-            withdrawalCoinTo.setAmount(withdrawalCoinTo.getAmount().subtract(tipping));
+            withdrawalCoinTo.setAmount(withdrawalCoinTo.getAmount().subtract(tippingCoinTo.getAmount()));
         }
         coinData.setTo(tos);
         byte[] coinDataBytes;
@@ -487,7 +570,12 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 withdrawalFeeAddress,
                 feeAssetChainId,
                 feeAssetId,
-                feeAmount);
+                converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                        dto.getOriginalTxHash().getHeterogeneousChainId(),
+                        feeAssetChainId,
+                        feeAssetId,
+                        feeAmount)
+        );
         tos.add(withdrawalFeeCoinTo);
         coinData.setTo(tos);
         byte[] coinDataBytes;
@@ -863,6 +951,38 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         TransactionCall.newTx(chain, tx);
 
         chain.getLogger().debug(tx.format(HeterogeneousMainAssetRegTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createHeterogeneousMainAssetBindTx(Chain chain, String from, String password, int heterogeneousChainId, int nerveAssetChainId, int nerveAssetId, String remark) throws NulsException {
+        if (null == heterogeneousChainManager.getHeterogeneousChainByChainId(heterogeneousChainId)) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
+        }
+        HeterogeneousMainAssetBindTxData txData = new HeterogeneousMainAssetBindTxData();
+        txData.setChainId(heterogeneousChainId);
+        txData.setNerveAssetChainId(nerveAssetChainId);
+        txData.setNerveAssetId(nerveAssetId);
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = new Transaction(TxType.HETEROGENEOUS_MAIN_ASSET_BIND);
+        tx.setTxData(txDataBytes);
+        tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
+        tx.setRemark(StringUtils.isBlank(remark) ? null : StringUtils.bytes(remark));
+
+        SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
+        byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
+        tx.setCoinData(coinData);
+        //签名
+        ConverterSignUtil.signTx(tx, signAccountDTO);
+        //广播
+        TransactionCall.newTx(chain, tx);
+
+        chain.getLogger().debug(tx.format(HeterogeneousMainAssetBindTxData.class));
         return tx;
     }
 
@@ -1328,7 +1448,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 address);
         BigInteger balance = nonceBalance.getAvailable();
         BigInteger amount = TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES;
-        if (null != extraFee && extraFee.compareTo(BigInteger.ZERO) > 0) {
+        if (greaterTranZero(extraFee)) {
             amount = amount.add(extraFee);
         }
         if (BigIntegerUtils.isLessThan(balance, amount)) {
@@ -1349,7 +1469,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         froms.add(coinFrom);
 
         List<CoinTo> tos = new ArrayList<>();
-        if (null != extraFee && extraFee.compareTo(BigInteger.ZERO) > 0) {
+        if (greaterTranZero(extraFee)) {
             // 额外费用 如果有
             if (BigIntegerUtils.isLessThan(balance, TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES.add(extraFee))) {
                 chain.getLogger().error("The balance is insufficient to cover the package fee and the extra fee");
@@ -1901,7 +2021,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         froms.add(coinFrom);
 
         List<CoinTo> tos = new ArrayList<>();
-        if (null != extraFee && extraFee.compareTo(BigInteger.ZERO) > 0) {
+        if (greaterTranZero(extraFee)) {
             CoinTo extraFeeCoinTo = new CoinTo(
                     AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId()),
                     assetChainId,

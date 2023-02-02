@@ -80,6 +80,7 @@ public class Protocol21Test {
                 contractForCreateERC20Minter_IOTX = "0x616feEA47576c410689C66855B4132412c1BEFa7";
             } else {
                 contractForCreateERC20Minter = "0x1EA3FfD41c3ed3e3f788830aAef553F8F691aD8C";
+                contractForCreateERC20Minter_IOTX = "0x2e5822a3c651b1c31a60d7c6e0641c113e98c98c";
             }
             for (int i = 113; i <= 117; i++) {
                 int htgChainId = i;
@@ -194,12 +195,12 @@ public class Protocol21Test {
 
         String txKey = "aaa1000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
-                "0xb12a6716624???c458371954fa52", "0x1f13e90daa954???0c135c183558db1f",
-                "0x16525740c7b???94bd4f42c5ade1", "0x15cb37aa4d55d???f534c89904841065",
-                "0x66fb6d6df71???55390710da40a5", "0x659ec06a7aedf???0c23cd3ed8623a88",
-                "0x5c44e511324???bdd881538e2ad1", "0x6c9783cc9c9ff???08afaadf08cfb43d",
-                "0xaff68cd4585???bdd53bf196789f", "0xc8dcc24b09eed???277fd0a389855dae",
-                "0xa28035bb508???cb2e0645167444", "0x10c17be7b6d3e???ddf221c9557728b0"
+                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
+                "0x66fb6d6df71bbbf1c247769ba955390710da40a5", "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
+                "0xaff68cd458539a16b932748cf4bdd53bf196789f", "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
+                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0x10c17be7b6d3e1f424111c8bddf221c9557728b0",
+                "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1", "0x15cb37aa4d55d5a0090966bef534c89904841065",
+                "0x8255a0e99456f45f8b85246ef6a9b1895c784c9f", "0x25955965648cd5c017d6d4644bf65830645ef2f2"
         };
         String[] removes = new String[]{};
         int txCount = 1;
@@ -220,7 +221,7 @@ public class Protocol21Test {
 
     @Test
     public void setupMinterOnCreateERC20MinterTest() {
-        // 替换工具合约中的minter地址为新多签地址，异构链113~117
+        // 更新工具合约中的minter地址为新多签地址，异构链113~117
         String prikey = "???";
         // 遍历所有异构链
         for (int i = 113; i <= 117; i++) {

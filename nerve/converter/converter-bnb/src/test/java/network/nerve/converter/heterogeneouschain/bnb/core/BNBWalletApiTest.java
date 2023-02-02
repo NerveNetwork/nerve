@@ -3,6 +3,7 @@ package network.nerve.converter.heterogeneouschain.bnb.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
+import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
@@ -220,6 +221,7 @@ public class BnbWalletApiTest extends Base {
     public void init() {
         htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         this.address = Credentials.create(list.get(0)).getAddress();
+        //this.address = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56";
         this.priKey = list.get(0);
     }
 
@@ -320,14 +322,15 @@ public class BnbWalletApiTest extends Base {
         //setAccount_7B65();
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "20";
+        String sendAmount = "40";
         // 初始化 ERC20 地址信息
         //setErc20BUG();
         //setErc20EthMinter();
         //setErc20UsdiMinter();
 
         //setErc20BUG();
-        setErc20USDX();
+        //setErc20USDX();
+        setErc20BUSD();
         //setErc20DXA();
         //setErc20GOAT();
         //setErc20SAFEMOON();
@@ -366,9 +369,9 @@ public class BnbWalletApiTest extends Base {
         }
         System.out.println("[ERC20授权]额度已满足条件");
         // crossOut erc20转账
-        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
-        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+        //Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
+        //String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
+        //System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
     }
 
     /**
@@ -383,16 +386,16 @@ public class BnbWalletApiTest extends Base {
         int desChainId = 104;
         String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // 一键跨链手续费
-        String feeAmount = "0.0001";
+        String feeAmount = "0.000000001";
         // ERC20 转账数量
-        String sendAmount = "2.5";
+        String sendAmount = "22.22";
         // 初始化 ERC20 地址信息
-        setErc20USDX();
+        setErc20BUSD();
         // Nerve 接收地址
-        String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
+        String to = "0x0000000000000000000000000000000000000000";
         // tipping
-        String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
-        String tipping = "0.0";
+        String tippingAddress = "0xd16634629c638efd8ed90bb096c216e7aec01a91";
+        String tipping = "2.222";
         BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
 
         BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
@@ -400,7 +403,7 @@ public class BnbWalletApiTest extends Base {
         BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
         Function oneClickCrossChainFunction = HtgUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
         String data = FunctionEncoder.encode(oneClickCrossChainFunction);
-        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
+        Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount.add(convertTipping), erc20Address, data);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
 
         System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
@@ -521,11 +524,11 @@ public class BnbWalletApiTest extends Base {
         // 初始化 账户
         setAccount_EFa1();
         // 一键跨链手续费
-        String feeAmount = "0.007";
+        String feeAmount = "0.000001217768718802";
         // Nerve 接收地址
-        String to = "TNVTdTSPP9oSLvdtVSVFiUYCvXJdj1ZA1nyQU";
+        String to = "0x0000000000000000000000000000000000000000";
         // 追加手续费的跨链交易的hash
-        String nerveTxHash = "60b266818a37d4981bfafe51f6cff5cb94ccc0d6056e95390d0d30f8c6c31f7e";
+        String nerveTxHash = "d0505fe1776249f6a3a8f8368f9547807164fa8b7a0d420ca85213eabe825bda";
 
         BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(18).toBigInteger();
         Function addFeeCrossChainFunction = HtgUtil.getAddFeeCrossChainFunction(nerveTxHash, null);
@@ -799,15 +802,15 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void sendERC20WithdrawBySignDataTest() throws Exception {
         setMainData();
-        String txKey = "ddd1024000000000000000000000000000000000000000000000000000000000";
+        String txKey = "8d7dbad3e658e5e83d2ca430acbf0c6623eb45d81af27b659d523fef55a842c5";
         // 接收者地址
-        String toAddress = "0x3250dABB584f7FEA1BAFAFf6000FFBBD2F419A15";
+        String toAddress = "0x7d4565d769dd39227e1ea36dbb3a02075cc0f623";
         // 造币数量
-        String value = "53334857.539598";
-        // FISU token合约
-        String erc20 = "0x0d12197EeD5f4C867Af1528ABbE1837C5c40902e";
+        String value = "852.409090437364882556";
+        // token合约
+        String erc20 = "0x5d7f9c9f3f901f2c1b576b8d81bd4165647855a4";
         int tokenDecimals = 18;
-        String signData = "";
+        String signData = "d0edd6566e532af378978d68ec15167e31941dee92b958c9967574384f9629660aaedf5bdbea02be27bc8a0177c5b6e59d739406110c3d901dc80cc2d3a2cbde1bc6521464467af89b1c942f5a09861b147daa1d233fde32768cec738663dadc0f55f28e5158dd3b8494b018b7b129cbd77651bc94134b903441f11a8ed1603f681c6cefc5e4326cbbd01f879d387ab7edce52c7cb08268b5b5b19f562af477f322d1d6d63eabe2e6af42ca959da0554f72c98567a9ccafb7f82aebe4d1ef39904301ccd7ada891b767495e8aa855e42c2d7b9f312361a242165e344f5579330bc6c2c4fd5a638755968759034bad5d52fb16100d9c80aa68d29947abc60cbbecf4c911c69d19847d004b1bc10cd3424d5253a5264d7148cc1ca1c9fe706133ca7ef29be33e14f99f7ceb57313fb6cbe60ae4c24cdc3536f929eac484b891f3df5ccade51cc4f883cd5ee3f596e6ce7bfaf3f53f5286c246f4c7cfebffde768f4a3fe0b3fb4e5d0fd2d34dca1a3e5fa7658384524cb424309b5e3eaa781e97daa5414ef5fe1c2b4705df22fd122ab0c074f2b07fd27b1e2ce670baa2380ac68e1167f65b38e50e79b26ae4540bfea357eb9ff9ff485c417f7c1017192529ef242882f9e6029f1cddcddd86c2eb6b97b803473b7efdd21d60ebecda553d77c654d8f4522913127303092ecd2048f0cf490fb354ad0737cf54de8bb465923b1769cf02c62a77447e1c0805d4f6f50ac7df5b8fe0d8d0200e430618fe8e59666ab59343aa82bc29cc5063c0499a88b8172cc0dd8290e1a61a608302d8be9cdc3208be15837deb0415f81b96ead55309787050f7c5908340b586326beaecba9c9f8289d6c05737cc697ae715952eef796d2a260489b2e13cda1a985e96c290bc4a3af3785ad1b258387a631b";
 
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
@@ -1018,9 +1021,34 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void txInputCrossOutIIDecoderTest() throws JsonProcessingException {
-        String input = "0x38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000005f5e100000000000000000000000000f7915d4de86b856f3e51b894134816680bf09eee00000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002430663039383864392d383333302d343363302d616361312d37633461396635626131336100000000000000000000000000000000000000000000000000000000";
+        String input = "0x38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a76400000000000000000000000000000edc79e030b8077bc768542a252ecb0c7beb513f00000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000000000000000000002a3078303030303030303030303030303030303030303030303030303030303030303030303030303030300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001a47d02ce34000000000000000000000000000000000000000000000000000001e771846097000000000000000000000000000000000000000000000000000000000000006800000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000002a30786331316439393433383035653536623633306134303164346264396132393535303335336566613100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a30786431363633343632396336333865666438656439306262303936633231366537616563303161393100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT_II);
-        System.out.println(JSONUtils.obj2PrettyJson(typeList));
+        //System.out.println(JSONUtils.obj2PrettyJson(typeList));
+        for (Object obj : typeList) {
+            if (obj instanceof byte[]) {
+                System.out.println(Numeric.toHexStringNoPrefix((byte[]) obj));
+                continue;
+            }
+            System.out.println(obj.toString());
+        }
+
+    }
+
+    @Test
+    public void txInputOneClickCrossChainDecoderTest() throws JsonProcessingException {
+        //0x0000000000000000000000000000000000000000
+        //1000000000000000000
+        //0x0edc79e030b8077bc768542a252ecb0c7beb513f
+        String input = "0x7d02ce34000000000000000000000000000000000000000000000000000001e771846097000000000000000000000000000000000000000000000000000000000000006800000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000002a30786331316439393433383035653536623633306134303164346264396132393535303335336566613100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002a307864313636333436323963363338656664386564393062623039366332313665376165633031613931000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_ONE_CLICK_CROSS_CHAIN);
+        //System.out.println(JSONUtils.obj2PrettyJson(typeList));
+        for (Object obj : typeList) {
+            if (obj instanceof byte[]) {
+                System.out.println(Numeric.toHexStringNoPrefix((byte[]) obj));
+                continue;
+            }
+            System.out.println(obj.toString());
+        }
 
     }
 
@@ -1348,12 +1376,19 @@ public class BnbWalletApiTest extends Base {
     @Test
     public void erc20TransferEstimateGasTest() throws Exception {
         // 0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"
-        setMain();
-        String contractAddress = "0x42981d0bfbaf196529376ee702f2a9eb9092fcb5";
-        BigInteger convertAmount = new BigDecimal("7.034").movePointRight(18).toBigInteger();
+        // // 接收者地址
+        //        String toAddress = "0x7d4565d769dd39227e1ea36dbb3a02075cc0f623";
+        //        // 造币数量
+        //        String value = "852.409090437364882556";
+        //        // token合约
+        //        String erc20 = "0x5d7f9c9f3f901f2c1b576b8d81bd4165647855a4";
+        //        int tokenDecimals = 18;
+        setMainData();
+        String contractAddress = "0x23D9B6B307b75c7072aF519c50f5749a39D90c59";
+        BigInteger convertAmount = new BigDecimal("465.873011223506188986").movePointRight(18).toBigInteger();
         //BigInteger convertAmount = new BigDecimal("1").toBigInteger();
         String from = "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
-        String to = "0x9fEb35f94B1Eb2914409C18eF881e3dE7cbE65A4";
+        String to = "0xd817c5576cc74aadb124dd02b004b0cc1a168ce9";
         //String to = "0x0000000000000000000000000000000000000000";
 
         Function function = new Function(
@@ -1384,29 +1419,67 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void erc20TransferFromEstimateGasTest() throws Exception {
+        setMain();
+        //String sender = "0x10ED43C718714eb63d5aA57B78B54704E256024E";
+        String sender = "0xcF0feBd3f17CEf5b47b0cD257aCf6025c5BFf3b7";
+        //String contractAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+        String contractAddress = "0x755f34709e369d37c6fa52808ae84a32007d1155";
+        BigInteger convertAmount = new BigDecimal("1").movePointRight(18).toBigInteger();
+        String from = "0xfa84267c6441C53ec5fc1e710879c42A7E064fa5";
+        String to = "0x29b4abb0f8734EA672a0e82FA47998F710B6A07a";
+
+        Function function = new Function(
+                "transferFrom",
+                Arrays.asList(new Address(from),new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                sender,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
     public void symboltest() throws Exception {
-        //setMain();
-        String contractAddress = "0x75363e9a5e6fb87eb6197ef6b633961061636348";
+        setMain();
+        String contractAddress = "0x9f5C37e0fd9bF729b1F0a6F39CE57bE5e9Bfd435";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
         }
         String symbol = symbolResult.get(0).getValue().toString();
-        System.out.println(symbol);
+        System.out.println("|" + symbol + "|");
 
         List<Type> nameResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getNameERC20Function());
         if (nameResult.isEmpty()) {
             return;
         }
         String name = nameResult.get(0).getValue().toString();
-        System.out.println(name);
+        System.out.println( "|" + name + "|");
 
         List<Type> decimalsResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getDecimalsERC20Function());
         if (decimalsResult.isEmpty()) {
             return;
         }
         String decimals = decimalsResult.get(0).getValue().toString();
-        System.out.println(decimals);
+        System.out.println("|" + decimals + "|");
     }
 
     @Test
@@ -1554,24 +1627,26 @@ public class BnbWalletApiTest extends Base {
     public void newValidationEthDepositByCrossOutTest() throws Exception {
         setMain();
         List<String> list = new ArrayList<>();
-        list.add("0xf33d7958967d36331eb20eafb23e49dcfcbddb5f925b6b23608cb5fd74a1433c");
+        list.add("0xb3c31761e479484f56196f0cdc984b94fa5817abf46b186406477ed1b2252a51");
         for (String directTxHash : list) {
             Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
             TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
             HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
             HtgParseTxHelper helper = new HtgParseTxHelper();
-            BeanUtilTest.setBean(helper, "htgContext", new BnbContext());
-            Method method = helper.getClass().getDeclaredMethod("newValidationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            BeanUtilTest.setBean(helper, "htgContext", new MockBnbContext());
+            BeanUtilTest.setBean(helper, "htgERC20Helper", new MockHtgERC20Helper());
+            Method method = helper.getClass().getDeclaredMethod("newValidationEthDepositByCrossOutProtocol22", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
             method.setAccessible(true);
-            Object invoke = method.invoke(helper, tx, txReceipt, po);
-            System.out.println(invoke);
+            boolean invoke = (boolean) method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke ? "true, amount: " + po.getValue() : "false");
 
-            method = helper.getClass().getDeclaredMethod("_validationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
+            method = helper.getClass().getDeclaredMethod("newValidationEthDepositByCrossOut", Transaction.class, TransactionReceipt.class, HeterogeneousTransactionInfo.class);
             method.setAccessible(true);
-            invoke = method.invoke(helper, tx, txReceipt, po);
-            System.out.println(invoke);
+            invoke = (boolean) method.invoke(helper, tx, txReceipt, po);
+            System.out.println(invoke ? "true, amount: " + po.getValue() : "false");
         }
     }
+
 
     @Test
     public void hasERC20WithListeningAddressTest() throws Exception {
@@ -1625,8 +1700,12 @@ public class BnbWalletApiTest extends Base {
     public void getTx() throws Exception {
         setMain();
         // 直接调用erc20合约
-        String directTxHash = "0x03f27803ecccebcd647e4e28579004ad9ee01b01c43476c9beef467babff453a";
+        String directTxHash = "0x2b9d576067c330e6c1f37151bdf37fd81654d3850086dc8f0074a28d45fe1a05";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
+        TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(tx.getBlockNumberRaw() + "---" + txReceipt.getBlockNumberRaw());
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }
 
@@ -1634,10 +1713,10 @@ public class BnbWalletApiTest extends Base {
     public void oneClickCrossChainDataFunctionTest() {
         BigInteger feeAmount = new BigDecimal("0.012").movePointRight(18).toBigInteger();
         Function function = HtgUtil.getOneClickCrossChainFunction(feeAmount, 102, "0x830befa62501F1073ebE2A519B882e358f2a0318", null);
-        String extend = FunctionEncoder.encode(function);
-        System.out.println(FunctionEncoder.encode(function));
-        extend = HtgConstant.HEX_PREFIX + extend.substring(10);
-        List<Type> typeList = FunctionReturnDecoder.decode(extend, HtgConstant.INPUT_ONE_CLICK_CROSS_CHAIN);
+        String data = FunctionEncoder.encode(function);
+        System.out.println(data);
+        data = HtgConstant.HEX_PREFIX + data.substring(10);
+        List<Type> typeList = FunctionReturnDecoder.decode(data, HtgConstant.INPUT_ONE_CLICK_CROSS_CHAIN);
         String subExtend = Numeric.toHexString((byte[]) typeList.get(typeList.size() - 1).getValue());
         System.out.println(subExtend);
     }
@@ -1720,6 +1799,22 @@ public class BnbWalletApiTest extends Base {
         @Override
         public boolean isERC20(String address, HeterogeneousTransactionBaseInfo po) {
             return true;
+        }
+    }
+    static class MockBnbContext extends BnbContext {
+        @Override
+        public NulsLogger logger() {
+            return Log.BASIC_LOGGER;
+        }
+
+        @Override
+        public String MULTY_SIGN_ADDRESS() {
+            return "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4";
+        }
+
+        @Override
+        public byte VERSION() {
+            return 3;
         }
     }
 

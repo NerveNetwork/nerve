@@ -135,7 +135,7 @@ public class CommandHandler implements InitializingBean {
         //get account balance
         register(getBean(GetBalanceProcessor.class));
         //local asset register
-//        register(getBean(RegisterLocalAssetProcessor.class));
+        //register(getBean(RegisterLocalAssetProcessor.class));
 //        register(getBean(GetContractCrossAssetProcessor.class));
         register(getBean(GetLocalCrossAssetProcessor.class));
 
@@ -146,6 +146,7 @@ public class CommandHandler implements InitializingBean {
         register(getBean(VoteProposalProcess.class));
         register(getBean(RegisterHeterogeneousAssetProcessor.class));
         register(getBean(RegisterHeterogeneousMainAssetProcessor.class));
+        register(getBean(BindHeterogeneousMainAssetProcessor.class));
         register(getBean(ResetBankProcess.class));
         register(getBean(CheckRetryParseProcess.class));
         register(getBean(CancelHtgTxProcess.class));
@@ -155,6 +156,10 @@ public class CommandHandler implements InitializingBean {
         register(getBean(UnbindProcess.class));
         register(getBean(RetryWithdrawalProcess.class));
         register(getBean(UnregisterProcess.class));
+        register(getBean(PauseInProcess.class));
+        register(getBean(ResumeInProcess.class));
+        register(getBean(PauseOutProcess.class));
+        register(getBean(ResumeOutProcess.class));
         /**
          * consensus
          */

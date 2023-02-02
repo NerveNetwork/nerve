@@ -229,54 +229,9 @@ public class TransactionController {
             if (!Context.isChainExist(chainId)) {
                 return RpcResult.dataNotFound();
             }
-            int type = extractTxTypeFromTx(txHex);
-            Result result = new Result();
-            switch (type) {
-                case CREATE_CONTRACT:
-                    Transaction tx = new Transaction();
-                    tx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                    CreateContractData create = new CreateContractData();
-                    create.parse(new NulsByteBuffer(tx.getTxData()));
-                    result = contractTools.validateContractCreate(chainId,
-                            AddressTool.getStringAddressByBytes(create.getSender()),
-                            create.getGasLimit(),
-                            create.getPrice(),
-                            RPCUtil.encode(create.getCode()),
-                            create.getArgs());
-                    break;
-                case CALL_CONTRACT:
-                    Transaction callTx = new Transaction();
-                    callTx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                    CallContractData call = new CallContractData();
-                    call.parse(new NulsByteBuffer(callTx.getTxData()));
-                    result = contractTools.validateContractCall(chainId,
-                            AddressTool.getStringAddressByBytes(call.getSender()),
-                            call.getValue(),
-                            call.getGasLimit(),
-                            call.getPrice(),
-                            AddressTool.getStringAddressByBytes(call.getContractAddress()),
-                            call.getMethodName(),
-                            call.getMethodDesc(),
-                            call.getArgs());
-                    break;
-                case DELETE_CONTRACT:
-                    Transaction deleteTx = new Transaction();
-                    deleteTx.parse(new NulsByteBuffer(RPCUtil.decode(txHex)));
-                    DeleteContractData delete = new DeleteContractData();
-                    delete.parse(new NulsByteBuffer(deleteTx.getTxData()));
-                    result = contractTools.validateContractDelete(chainId,
-                            AddressTool.getStringAddressByBytes(delete.getSender()),
-                            AddressTool.getStringAddressByBytes(delete.getContractAddress()));
-                    break;
-                default:
-                    break;
-            }
-            Map contractMap = (Map) result.getData();
-            if (contractMap != null && Boolean.FALSE.equals(contractMap.get("success"))) {
-                return RpcResult.failed(CommonCodeConstanst.DATA_ERROR, (String) contractMap.get("msg"));
-            }
 
-            result = transactionTools.newTx(chainId, txHex);
+
+            Result result = transactionTools.newTx(chainId, txHex);
 
             if (result.isSuccess()) {
                 return RpcResult.success(result.getData());

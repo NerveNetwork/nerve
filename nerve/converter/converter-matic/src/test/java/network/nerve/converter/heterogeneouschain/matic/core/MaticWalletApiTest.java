@@ -847,29 +847,27 @@ public class MaticWalletApiTest extends Base {
     @Test
     public void symboltest() throws Exception {
         setMain();
-        // usdt 0xb6D685346106B697E6b2BbA09bc343caFC930cA3
-        // nvt 0x8B3b22C252F431a75644E544FCAf67E390A206F4
-        String contractAddress = "0xe176ebe47d621b984a73036b9da5d834411ef734";
+        String contractAddress = "0x044A4E879dF84af8ACB9Dc653bb42Ea09787487C";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
         }
         String symbol = symbolResult.get(0).getValue().toString();
-        System.out.println(symbol);
+        System.out.println("|" + symbol + "|");
 
         List<Type> nameResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getNameERC20Function());
         if (nameResult.isEmpty()) {
             return;
         }
         String name = nameResult.get(0).getValue().toString();
-        System.out.println(name);
+        System.out.println( "|" + name + "|");
 
         List<Type> decimalsResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getDecimalsERC20Function());
         if (decimalsResult.isEmpty()) {
             return;
         }
         String decimals = decimalsResult.get(0).getValue().toString();
-        System.out.println(decimals);
+        System.out.println("|" + decimals + "|");
     }
 
     @Test

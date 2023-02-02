@@ -6,6 +6,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.trx.base.Base;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
 import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
@@ -453,13 +454,14 @@ public class TrxWalletApiTest extends Base {
     @Test
     public void transferTRC20() throws Exception {
         //setM2();
-        setUX();
+        //setUX();
+        setPM();
 
         //setErc20FCI();
         //setErc20DX();
         setErc20USDT();
-        String to = "TFzEXjcejyAdfLSEANordcppsxeGW9jEm2";
-        String value = "1";
+        String to = "TLr94azKSz8L4HKE17V7ip12uJ5muXMBxH";
+        String value = "100";
         // 估算feeLimit
         Function function = new Function(
                 "transfer",
@@ -987,6 +989,7 @@ public class TrxWalletApiTest extends Base {
         //list.add("0xf173805F1e3fE6239223B17F0807596Edc283012");
         list.add("41c11d9943805e56b630a401d4bd9a29550353efa1");
         list.add("41f723e62e48f4e0a5160ebaf69a60d7244e462a05");
+        list.add("0xb8E729189346c94a7C96E9b6A8d24ceAfF0874Dc");
         for (String address : list) {
             System.out.println("-------");
             System.out.println(TrxUtil.ethAddress2trx(address));
@@ -1005,6 +1008,34 @@ public class TrxWalletApiTest extends Base {
         List<Type> valueTypes = walletApi.callViewFunction(multy, isMinterERC20Function);
         boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
         System.out.println(isMinterERC20);
+    }
+
+
+
+    @Test
+    public void symboltest() throws Exception {
+        setMain();
+        String contractAddress = "TH9VTvcAHsiYytEd76AoZfUpEA6STuQ9gZ";
+        List<Type> symbolResult = walletApi.callViewFunction(contractAddress, TrxUtil.getSymbolERC20Function());
+        if (symbolResult.isEmpty()) {
+            return;
+        }
+        String symbol = symbolResult.get(0).getValue().toString();
+        System.out.println("|" + symbol + "|");
+
+        List<Type> nameResult = walletApi.callViewFunction(contractAddress, TrxUtil.getNameERC20Function());
+        if (nameResult.isEmpty()) {
+            return;
+        }
+        String name = nameResult.get(0).getValue().toString();
+        System.out.println( "|" + name + "|");
+
+        List<Type> decimalsResult = walletApi.callViewFunction(contractAddress, TrxUtil.getDecimalsERC20Function());
+        if (decimalsResult.isEmpty()) {
+            return;
+        }
+        String decimals = decimalsResult.get(0).getValue().toString();
+        System.out.println("|" + decimals + "|");
     }
 
     public static SECP256K1.KeyPair createPair(String prikey) {

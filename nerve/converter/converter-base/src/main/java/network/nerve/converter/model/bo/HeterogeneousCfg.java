@@ -108,6 +108,24 @@ public class HeterogeneousCfg {
      * 价格KEY
      */
     private String priceKey;
+    private boolean proxy;
+    private String httpProxy;
+
+    public boolean isProxy() {
+        return proxy;
+    }
+
+    public void setProxy(boolean proxy) {
+        this.proxy = proxy;
+    }
+
+    public String getHttpProxy() {
+        return httpProxy;
+    }
+
+    public void setHttpProxy(String httpProxy) {
+        this.httpProxy = httpProxy;
+    }
 
     public String getPriceKey() {
         return priceKey;

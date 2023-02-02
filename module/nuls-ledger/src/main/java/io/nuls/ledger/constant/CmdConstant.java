@@ -160,7 +160,7 @@ public interface CmdConstant {
     /**
      * 获取资产信息
      */
-    String CMD_GET_ASSETS_BY_ID = "getAssetsById";
+//    String CMD_GET_ASSETS_BY_ID = "getAssetsById";
 
 
 }

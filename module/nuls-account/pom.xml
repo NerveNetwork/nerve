@@ -11,11 +11,26 @@
     <artifactId>nuls-account</artifactId>
     <dependencies>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+        <!--<dependency>
             <groupId>io.nuls.sdk</groupId>
             <artifactId>sdk-all</artifactId>
             <version>1.1.4.6</version>
             <scope>test</scope>
-        </dependency>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>cglib</groupId>
+                    <artifactId>cglib</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>-->
 
         <dependency>
             <groupId>network.nerve</groupId>
@@ -36,12 +51,16 @@
         <dependency>
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>
-            <version>1.1.6.RELEASE</version>
+            <version>1.1.7.RELEASE</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <artifactId>nuls-base-api-provider</artifactId>
                     <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>io.nuls.v2</groupId>
@@ -66,6 +85,10 @@
                 <exclusion>
                     <groupId>org.mybatis</groupId>
                     <artifactId>mybatis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

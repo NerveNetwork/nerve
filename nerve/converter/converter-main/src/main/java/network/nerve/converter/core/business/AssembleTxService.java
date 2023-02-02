@@ -294,6 +294,24 @@ public interface AssembleTxService {
                                                              int heterogeneousChainId, String remark) throws NulsException;
 
     /**
+     * 组装并发布注册异构链主资产绑定NERVE资产交易
+     *
+     * @param chain
+     * @param from
+     * @param password
+     * @param heterogeneousChainId
+     * @param nerveAssetChainId
+     * @param nerveAssetId
+     * @param remark
+     * @return
+     * @throws NulsException
+     */
+    Transaction createHeterogeneousMainAssetBindTx(Chain chain,
+                                                             String from,
+                                                             String password,
+                                                             int heterogeneousChainId, int nerveAssetChainId, int nerveAssetId, String remark) throws NulsException;
+
+    /**
      * 组装并发布完成注册异构链合约资产交易
      *
      * @param chain

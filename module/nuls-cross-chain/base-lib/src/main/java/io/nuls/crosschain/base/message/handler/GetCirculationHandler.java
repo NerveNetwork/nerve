@@ -5,7 +5,7 @@ import io.nuls.base.protocol.MessageProcessor;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.crosschain.base.constant.CommandConstant;
-import io.nuls.crosschain.base.message.GetCirculationMessage;
+//import io.nuls.crosschain.base.message.GetCirculationMessage;
 import io.nuls.crosschain.base.service.ProtocolService;
 
 /**
@@ -28,10 +28,10 @@ public class GetCirculationHandler implements MessageProcessor {
 
     @Override
     public void process(int chainId, String nodeId, String message) {
-        GetCirculationMessage realMessage = RPCUtil.getInstanceRpcStr(message, GetCirculationMessage.class);
-        if (message == null) {
-            return;
-        }
-        protocolService.getCirculation(chainId, nodeId, realMessage);
+//        GetCirculationMessage realMessage = RPCUtil.getInstanceRpcStr(message, GetCirculationMessage.class);
+//        if (message == null) {
+//            return;
+//        }
+//        protocolService.getCirculation(chainId, nodeId, realMessage);
     }
 }

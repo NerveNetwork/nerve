@@ -134,27 +134,27 @@ public class LedgerCall {
      * 查询资产流通量
      * Search for assets circulation
      * */
-    @SuppressWarnings("unchecked")
-    public static List<Circulation> getAssetsById(Chain chain, String assetIds ) throws NulsException {
-        try {
-            Map<String, Object> params = new HashMap<>(4);
-            params.put(Constants.VERSION_KEY_STR, RPC_VERSION);
-            params.put(Constants.CHAIN_ID, chain.getChainId());
-            params.put("assetIds", assetIds);
-            Map result = (Map)CommonCall.request(ModuleE.LG.abbr, "getAssetsById", params);
-            List<Circulation> circulationList = new ArrayList<>();
-            List<Map<String,Object>> assertList = (List<Map<String,Object>> )result.get("assets");
-            if(assertList != null && assertList.size() > 0){
-                for (Map<String,Object> assertInfoMap:assertList) {
-                    Circulation circulation = JSONUtils.map2pojo(assertInfoMap, Circulation.class);
-                    circulationList.add(circulation);
-                }
-            }
-            return circulationList;
-        } catch (Exception e) {
-            throw new NulsException(e);
-        }
-    }
+//    @SuppressWarnings("unchecked")
+//    public static List<Circulation> getAssetsById(Chain chain, String assetIds ) throws NulsException {
+//        try {
+//            Map<String, Object> params = new HashMap<>(4);
+//            params.put(Constants.VERSION_KEY_STR, RPC_VERSION);
+//            params.put(Constants.CHAIN_ID, chain.getChainId());
+//            params.put("assetIds", assetIds);
+//            Map result = (Map)CommonCall.request(ModuleE.LG.abbr, "getAssetsById", params);
+//            List<Circulation> circulationList = new ArrayList<>();
+//            List<Map<String,Object>> assertList = (List<Map<String,Object>> )result.get("assets");
+//            if(assertList != null && assertList.size() > 0){
+//                for (Map<String,Object> assertInfoMap:assertList) {
+//                    Circulation circulation = JSONUtils.map2pojo(assertInfoMap, Circulation.class);
+//                    circulationList.add(circulation);
+//                }
+//            }
+//            return circulationList;
+//        } catch (Exception e) {
+//            throw new NulsException(e);
+//        }
+//    }
 
     /**
      * 注册资产信息
