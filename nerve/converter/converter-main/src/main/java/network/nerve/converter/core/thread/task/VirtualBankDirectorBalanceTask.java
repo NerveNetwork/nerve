@@ -122,6 +122,9 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                     for (VirtualBankDirector director : mapVirtualBank.values()) {
                         VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
                         for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+                            if (chain.getChainId() == 5 && addr.getChainId() == 101) {
+                                continue;
+                            }
                             IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
                             String chainSymbol = heterogeneousDocking.getChainSymbol();
                             addr.setSymbol(chainSymbol);
@@ -184,6 +187,9 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
             if (resultChainId == 0) {
                 for (HeterogeneousAssetInfo assetInfo : assetInfos) {
                     if (!converterCoreApi.checkNetworkRunning(assetInfo.getChainId())) {
+                        return null;
+                    }
+                    if (chain.getChainId() == 5 && assetInfo.getChainId() == 101) {
                         return null;
                     }
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(assetInfo.getChainId());

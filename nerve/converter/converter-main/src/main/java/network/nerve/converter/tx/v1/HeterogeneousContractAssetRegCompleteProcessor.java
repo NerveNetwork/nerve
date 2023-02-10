@@ -216,8 +216,8 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                             ledgerAssetRegisterHelper.pauseOut(hChainId, hAssetId);
                         }
                         isPause = true;
-                        chain.getLogger().info("[commit] 异构链合约资产[充值暂停], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
-                                assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                        chain.getLogger().info("[commit] 异构链合约资产[{}暂停], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                                isIn ? "充值" : "提现", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     } else if (BindHeterogeneousContractMode.RESUME.toString().equals(mode)) {
                         int hAssetId = 1;
                         if (StringUtils.isNotBlank(info.getContractAddress())) {
@@ -233,8 +233,8 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                             ledgerAssetRegisterHelper.resumeOut(hChainId, hAssetId);
                         }
                         isResume = true;
-                        chain.getLogger().info("[commit] 异构链合约资产[充值恢复], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
-                                assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                        chain.getLogger().info("[commit] 异构链合约资产[{}恢复], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                                isIn ? "充值" : "提现", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     }
 
                 } while (false);

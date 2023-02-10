@@ -159,6 +159,11 @@ public interface IConverterCoreApi {
      */
     boolean isProtocol22();
 
+    /**
+     * 是否支持协议23 v1.23.0
+     */
+    boolean isProtocol23();
+
 
     /**
      * 添加任务

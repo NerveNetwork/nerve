@@ -70,10 +70,15 @@ public class EthwWalletApiTest extends Base {
 
     @BeforeClass
     public static void beforeClass() throws Exception {
-        String path = "";
-        String pData = IoUtils.readBytesToString(new File(path));
-        pMap = JSONUtils.json2map(pData);
-        System.out.println(pMap.size());
+        try {
+
+            String path = "";
+            String pData = IoUtils.readBytesToString(new File(path));
+            pMap = JSONUtils.json2map(pData);
+            System.out.println(pMap.size());
+        } catch (Exception e) {
+
+        }
     }
 
     protected void setLocalTest() {
@@ -382,10 +387,10 @@ public class EthwWalletApiTest extends Base {
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-        this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
+        this.multySignContractAddress = "0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E";
         init();
     }
     /**
@@ -414,14 +419,19 @@ public class EthwWalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        //setBeta();
         setMainData();
+        //setLocalTest();
+        boolean queryBalance = false;
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
         for (String address : all) {
-            BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
-            System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            if (queryBalance) {
+                BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
+                System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            } else {
+                System.out.print(String.format("address %s", address));
+            }
             System.out.println();
         }
     }

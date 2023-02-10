@@ -119,6 +119,33 @@ public class DataTest {
         System.out.println(big);
         System.out.println(token);
         System.out.println(big.subtract(token));
+        try {
+            new DataTest().testSignTableTx();
+        } catch (Exception e) {
+            e.printStackTrace();
+            StackTraceElement[] stackTrace0 = e.getStackTrace();
+            if (stackTrace0 != null) {
+                for (StackTraceElement s : stackTrace0) {
+                    System.out.println(String.format("---pierre test0----, %s", s));
+                }
+            }
+            if (e.getCause() != null) {
+                StackTraceElement[] stackTrace = e.getCause().getStackTrace();
+                if (stackTrace != null) {
+                    for (StackTraceElement s : stackTrace) {
+                        System.out.println(String.format("---pierre test----, %s", s));
+                    }
+                }
+                if (e.getCause().getCause() != null) {
+                    StackTraceElement[] stackTrace1 = e.getCause().getCause().getStackTrace();
+                    if (stackTrace1 != null) {
+                        for (StackTraceElement s : stackTrace1) {
+                            System.out.println(String.format("---pierre test1----, %s", s));
+                        }
+                    }
+                }
+            }
+        }
     }
     @Test
     public void airdropDataTest() {

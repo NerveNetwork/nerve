@@ -259,7 +259,7 @@ public class VirtualBankUtil {
                         countDownLatch = new CountDownLatch(listSize - s);
                     }
                 }
-                threadPool.submit(new GetBalance(chain.getLogger(), heterogeneousDockingManager, directorDTO, countDownLatch, logPrint, converterCoreApi));
+                threadPool.submit(new GetBalance(chain, heterogeneousDockingManager, directorDTO, countDownLatch, logPrint, converterCoreApi));
                 // 达到CountDown的最大任务数时，等待执行完成
                 if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
                     countDownLatch.await();
@@ -275,6 +275,7 @@ public class VirtualBankUtil {
     }
 
     static class GetBalance implements Runnable {
+        private Chain chain;
         private NulsLogger logger;
         private CountDownLatch countDownLatch;
         private HeterogeneousDockingManager heterogeneousDockingManager;
@@ -282,11 +283,12 @@ public class VirtualBankUtil {
         private int logPrint;
         private ConverterCoreApi converterCoreApi;
 
-        public GetBalance(NulsLogger logger, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch, int logPrint, ConverterCoreApi converterCoreApi) {
+        public GetBalance(Chain chain, HeterogeneousDockingManager heterogeneousDockingManager, VirtualBankDirectorDTO directorDTO, CountDownLatch countDownLatch, int logPrint, ConverterCoreApi converterCoreApi) {
+            this.chain = chain;
             this.heterogeneousDockingManager = heterogeneousDockingManager;
             this.countDownLatch = countDownLatch;
             this.directorDTO = directorDTO;
-            this.logger = logger;
+            this.logger = chain.getLogger();
             this.logPrint = logPrint;
             this.converterCoreApi = converterCoreApi;
         }
@@ -295,7 +297,10 @@ public class VirtualBankUtil {
         public void run() {
             try {
                 for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+
                     if (!converterCoreApi.checkNetworkRunning(addr.getChainId())) {
+                        addr.setBalance("0");
+                    } else if (chain.getChainId() == 5 && addr.getChainId() == 101) {
                         addr.setBalance("0");
                     } else {
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());

@@ -253,5 +253,5 @@ public interface HtgConstant {
     ErrorCode TX_ALREADY_EXISTS_0 = ErrorCode.init(ModuleE.TX.getPrefix() + "_0013");
     ErrorCode TX_ALREADY_EXISTS_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0040");
     ErrorCode TX_ALREADY_EXISTS_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0048");
-
+    byte[] ZERO_BYTES = new byte[]{0};
 }

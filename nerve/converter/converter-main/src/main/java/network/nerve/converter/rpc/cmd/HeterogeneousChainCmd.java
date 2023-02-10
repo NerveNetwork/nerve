@@ -624,7 +624,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             }
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("heterogeneousChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
-            ObjectUtils.canNotEmpty(params.get("contractAddress"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            //ObjectUtils.canNotEmpty(params.get("contractAddress"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("nerveAssetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("nerveAssetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
@@ -661,9 +661,14 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 throw new NulsRuntimeException(ConverterErrorCode.DUPLICATE_BIND);
             }
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            HeterogeneousAssetInfo hAssetInfo = docking.getAssetByContractAddress(contractAddress);
-            if (hAssetInfo == null) {
-                throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+            HeterogeneousAssetInfo hAssetInfo;
+            if (StringUtils.isBlank(contractAddress)) {
+                hAssetInfo = docking.getMainAsset();
+            } else {
+                hAssetInfo = docking.getAssetByContractAddress(contractAddress);
+                if (hAssetInfo == null) {
+                    throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+                }
             }
             if (nerveAssetDecimals != hAssetInfo.getDecimals()) {
                 throw new NulsRuntimeException(ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY);

@@ -285,6 +285,9 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public HeterogeneousAssetInfo getAssetByContractAddress(String contractAddress) {
+        if (StringUtils.isBlank(contractAddress)) {
+            return mainAsset();
+        }
         HtgERC20Po erc20Po = trxERC20Helper.getERC20ByContractAddress(contractAddress);
         if (erc20Po == null) {
             return null;

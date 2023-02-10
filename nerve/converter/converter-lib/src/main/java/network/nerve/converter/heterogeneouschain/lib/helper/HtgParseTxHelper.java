@@ -84,6 +84,9 @@ public class HtgParseTxHelper implements BeanInitial {
     private boolean isCompletedTransactionByStatus(String nerveTxHash, boolean latest) throws Exception {
         Function isCompletedFunction = HtgUtil.getIsCompletedFunction(nerveTxHash);
         List<Type> valueTypes = htgWalletApi.callViewFunction(htgContext.MULTY_SIGN_ADDRESS(), isCompletedFunction, latest);
+        if (valueTypes == null || valueTypes.size() == 0) {
+            return false;
+        }
         boolean isCompleted = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
         return isCompleted;
     }

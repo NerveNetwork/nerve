@@ -31,9 +31,11 @@ import network.nerve.converter.heterogeneouschain.kava.context.KavaContext;
 import network.nerve.converter.heterogeneouschain.kava.core.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +53,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -91,12 +97,40 @@ public class Base {
         BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
     }
 
+    protected void setTestProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        String ethRpcAddress = "https://evm.testnet.kava.io";
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(2221);
+    }
+
     protected void setMain() {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
         String mainEthRpcAddress = "https://evm.kava.io";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(2222);
+    }
+
+    protected void setMainProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        String mainEthRpcAddress = "https://evm.kava.io";
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
         htgContext.getConfig().setChainIdOnHtgNetwork(2222);
@@ -135,6 +169,18 @@ public class Base {
         String signData = this.ethSign(vHash, signCount);
         //signData += "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
         Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
+    protected String sendMainAssetWithdrawBySignData(String txKey, String toAddress, String value, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).movePointRight(18).toBigInteger();
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
+    protected String sendERC20WithdrawBySignData(String txKey, String toAddress, String value, String erc20, int tokenDecimals, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 

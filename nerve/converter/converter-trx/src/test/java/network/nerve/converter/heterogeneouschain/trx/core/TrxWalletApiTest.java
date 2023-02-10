@@ -419,6 +419,36 @@ public class TrxWalletApiTest extends Base {
         System.out.println(String.format("TRC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
     }
 
+    protected void setMainTest() {
+        list = new ArrayList<>();
+        list.add("???");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+
+        this.multySignContractAddress = "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN";
+        this.priKey = list.get(0);
+        this.address = new KeyPair(priKey).toBase58CheckAddress();
+    }
+
+    @Test
+    public void sendTRC20WithdrawBySignDataTest() throws Exception {
+        setMain();
+        String txKey = "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534";
+        // 接收者地址
+        String toAddress = "TMKPjep6FqqsKnSijrfSkbBAsdYuTvE7m9";
+        // 造币数量
+        String value = "0.997";
+        // token合约
+        String erc20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+        int tokenDecimals = 6;
+        String signData = "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c";
+
+        String hash = this.sendTRC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
+        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
+    }
+
+
+
     /**
      * TRX转账
      */
@@ -557,7 +587,7 @@ public class TrxWalletApiTest extends Base {
         //setErc20FCI();
         //setErc20DX();
         setMain();
-        from = "TVXoMStg9Cmh2gMU4eBcZyS2Cr8Py99Wiz";
+        from = "TVhwJEU8vZ1xxV87Uja17tdZ7y6EpXTTYh";
         //setErc20USDTMain();
         //String to = "THmbMWg4XrFpPWQKUojF1Hh9KjVmjXQTNX";
         //String value = "1324.98";
@@ -565,16 +595,16 @@ public class TrxWalletApiTest extends Base {
         //Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
 
         Function function = TrxUtil.getCreateOrSignWithdrawFunction(
-                "b0a3f4e0f7f28b6d55ced8f333e63f0844c25f061b8a843f8c49c6a0612ccd8d",
-                "THmbMWg4XrFpPWQKUojF1Hh9KjVmjXQTNX",
-                new BigInteger("1324980000"),
+                "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534",
+                "TMKPjep6FqqsKnSijrfSkbBAsdYuTvE7m9",
+                new BigInteger("997000"),
                 true,
                 "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-                "44121a15536b8263820367883a3d96db2b1786e4de0987b501fa0ae1f60e2f4810c85d069be066f2816947a0134ce3cefdf1b4745fa1639c247532e11ab619fa1cb4f57f7a9fdf21ac45b74da672c2a8c774ac3fc34f76cabbd2a20ba3a69d3c9969187ae20f0e70004b206b86425d2594d83981e4b46eb28a32ce0d0bb8ddb8b51cdb270b34c92e2ac68c448d317db325202f222a7540ac59457893fcc725b0e65a4cdc23a8411c320faf59225e0ee83dda1af056ad075c7e1a5fafd9a89d30a5231b221b2850d3b8bf5c2f2c6f8efd4e6b2818c2840d84d704f3fa115b9d9d7f64306c66e85dba76272f90691db548da39b1e9b60b5090da4c48b916dc683f2b85991b1052d2954d0a7d40507ec1e530cd7a50e0834ac821f58b5e7d3e9e7f26df99bc65e1e479141b13c526d59b60a41c8205a74c1a29c58adbbcb4aa13de1313ccd01c02c57e6bc78a3830e9e11604474b6b1cb052c556610ada6ac2c961564202d7a74d51a5f0e81cd0e190b0e9eaa916850cfd43a8cdb76b014803888120a375a8351bfbaaace456e1e2a39c8b65f06ad5c8202f0fc50f03f7a243abbc9a1ad10af34d1ae14eb7ebdd0b3e6a1044c0394bfdff4261610b468eb5805ea39311a4070e1c1b0b1475fa000496a9cd5203119860b5bc9e70df850a75e9f43bdbeaa4d7c0e24b39fccee6e31d4ce4274c1d5161796a13abde394f0194817b6264bde59e09757f1c609d2ff527c7979df1d6129e183c38dee5ca950a2a62718b26f4468f55c5d64275b310ee6ae586a5883170f6e4cb1c4d9e65f7758055897f8290a79ff96e99881cef896c030af54afed95dbe111effd44408fa597d06eb674889972b07058743a76e3d48a0410fcf50e4757bd78fbc9e20f2d8b628bc01b97de77213f98a8036631b"
+                "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c"
         );
         //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
 
-        Response.TransactionExtention call = wrapper.constantCall(from, "TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm", function);
+        Response.TransactionExtention call = wrapper.constantCall(from, "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN", function);
         System.out.println(call.toString());
         System.out.println("====================================================================================");
         String resultValue = Numeric.toHexString(call.getConstantResult(0).toByteArray());
@@ -600,16 +630,6 @@ public class TrxWalletApiTest extends Base {
         System.out.println(String.format("energyUsed: %s", energyUsed));
     }
 
-    protected void setMainTest() {
-        list = new ArrayList<>();
-        list.add("???");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
-
-        this.multySignContractAddress = "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN";
-        this.priKey = list.get(0);
-        this.address = new KeyPair(priKey).toBase58CheckAddress();
-    }
     /**
      * 管理员变更
      */
@@ -661,7 +681,8 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void getTxAndParseInput() throws Exception {
-        String txHash = "d1958721f6c9fb379866760542b2dfff4fb0897aeb03888790f7f1e037b912a5";
+        setMain();
+        String txHash = "a904f0139eb4c2aa9396aa4584944598d262906105d4b9b6677ab4b688807be4";
         Chain.Transaction tx = wrapper.getTransactionById(txHash);
         System.out.println(tx.getRawData().getContractCount());
         System.out.println(tx.toString());
@@ -987,9 +1008,9 @@ public class TrxWalletApiTest extends Base {
         //list.add("0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac");
         //list.add("0x3c2ff003ff996836d39601ca22394a58ca9c473b");
         //list.add("0xf173805F1e3fE6239223B17F0807596Edc283012");
-        list.add("41c11d9943805e56b630a401d4bd9a29550353efa1");
-        list.add("41f723e62e48f4e0a5160ebaf69a60d7244e462a05");
-        list.add("0xb8E729189346c94a7C96E9b6A8d24ceAfF0874Dc");
+        list.add("0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03");// TWAKmvmmcCgSrKXD94isjn2HiEzm5v8gj3 LfR535hsY8oYwx9jiw4TVePv1fcivand4Y
+        list.add("0xD16634629C638EFd8eD90bB096C216e7aEc01A91");// TV4QfTGaCZrLsHaSAsJgEkXg182nK31Dfx LeK9vcCg8VySxvCxkjeFzcuJJYekBhHVJw
+        list.add("0x16534991E80117Ca16c724C991aad9EAbd1D7ebe");// TC1FeBru3po4mcx6n2cXUQ4QQuuwV9ZQsM LMFzuLnzykvAsFadMtx7EGS2iLXuP4VwRE
         for (String address : list) {
             System.out.println("-------");
             System.out.println(TrxUtil.ethAddress2trx(address));

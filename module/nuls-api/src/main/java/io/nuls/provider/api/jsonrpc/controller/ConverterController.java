@@ -312,6 +312,34 @@ public class ConverterController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+    @RpcMethod("getHeterogeneousAssetInfoList")
+    @ApiOperation(description = "查询资产的异构链资产信息列表", order = 614)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产链ID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产ID")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = List.class)
+    )
+    public RpcResult getHeterogeneousAssetInfoList(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId, assetId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            assetId = (int) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[assetId] is inValid");
+        }
+        Map<String, Object> params1 = new HashMap<>(2);
+        params1.put("chainId", chainId);
+        params1.put("assetId", assetId);
+        Result result = converterTools.commonRequest("cv_get_heterogeneous_chain_asset_info_list", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
     @RpcMethod("retryVirtualBank")
     @ApiOperation(description = "重新执行变更", order = 611)
     @Parameters({

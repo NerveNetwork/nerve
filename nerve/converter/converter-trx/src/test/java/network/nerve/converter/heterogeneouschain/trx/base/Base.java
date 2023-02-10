@@ -104,8 +104,8 @@ public class Base {
         if (walletApi.getWrapper() != null) {
             walletApi.getWrapper().close();
         }
-        wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
-//        wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
+        //wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
+        wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
         walletApi.setWrapper(wrapper);
         walletApi.setRpcAddress("endpoint:tron.nerve.network");
         context.config.setChainIdOnHtgNetwork(100000002);
@@ -136,6 +136,12 @@ public class Base {
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
+    protected String sendTRC20WithdrawBySignData(String txKey, String toAddress, String value, String erc20, int tokenDecimals, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        Function function =  TrxUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
         String vHash = TrxUtil.encoderChange(context, txKey, adds, count, removes, VERSION);
         String signData = this.ethSign(vHash, signCount);
@@ -162,6 +168,7 @@ public class Base {
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
         // 估算feeLimit
+        System.out.println(String.format("%s, %s, %s, %s", fromAddress, contract, FunctionEncoder.encode(txFunction), value));
         TrxEstimateSun estimateSun = walletApi.estimateSunUsed(fromAddress, contract, txFunction, value);
         if (estimateSun.isReverted()) {
             System.err.println(String.format("[%s]交易验证失败，原因: %s", txType, estimateSun.getRevertReason()));

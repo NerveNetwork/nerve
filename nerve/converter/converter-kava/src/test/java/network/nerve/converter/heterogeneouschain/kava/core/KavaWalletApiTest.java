@@ -111,9 +111,7 @@ public class KavaWalletApiTest extends Base {
         list.add("978c643313a0a5473bf65da5708766dafc1cca22613a2480d0197dc99183bb09");// 0x1a9f8b818a73b0f9fde200cd88c42b626d2661cd
         list.add("6e905a55d622d43c499fa844c05db46859aed9bb525794e2451590367e202492");// 0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac
         list.add("d48b870f2cf83a739a134cd19015ed96d377f9bc9e6a41108ac82daaca5465cf");// 0x3c2ff003ff996836d39601ca22394a58ca9c473b
-        // 0xae00574bdc6bbd40612ec024e2536cc0784f73e4
-        // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        this.multySignContractAddress = "0x830befa62501F1073ebE2A519B882e358f2a0318";
+        this.multySignContractAddress = "0x8999d8738CC9B2E1fb1D01E1af732421D53Cb2A9";
         init();
     }
 
@@ -419,14 +417,19 @@ public class KavaWalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        //setBeta();
         setMainData();
+        //setLocalTest();
+        boolean queryBalance = false;
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
         for (String address : all) {
-            BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
-            System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            if (queryBalance) {
+                BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
+                System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            } else {
+                System.out.print(String.format("address %s", address));
+            }
             System.out.println();
         }
     }
@@ -544,6 +547,24 @@ public class KavaWalletApiTest extends Base {
         int signCount = 10;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
         System.out.println(String.format("MainAsset提现%s个，%s个签名，hash: %s", value, signCount, hash));
+    }
+
+    /**
+     * 根据已有的签名数据 发送交易 - 主资产提现
+     */
+    @Test
+    public void sendMainAssetWithdrawBySignDataTest() throws Exception {
+        setBeta();
+        // 准备发送提现的KAVA交易，nerveTxHash: 82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663, signatureData: d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c
+        String txKey = "82c4799d737085d54daf2595336651b08b67f5d08147759bc32afe3ad1425663";
+        // 接收者地址
+        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        // 造币数量
+        String value = "0.001";
+        String signData = "d51f3c0d4b844aa8c1705a9494af8b89d9b1b24494c4d179d48949605344a5e86b83ce890ee3c3e461a0ecda2fe61e486766f07d9980e432553a57d59611198d1bf6c0e6cdf9a8eb040ef1f490d19e6b9e2628d88f45227bcf948a04b536a386c02638cf00161cc55203d72e9c5019fe76be5a063a1dd79c18f8ec99aef765d95e1c";
+
+        String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
+        System.out.println(String.format("提现%s个，hash: %s", value, hash));
     }
 
     /**
@@ -823,6 +844,7 @@ public class KavaWalletApiTest extends Base {
     @Test
     public void getBlockHeight() throws Exception {
         //setMain();
+        //setTestProxy();
         System.out.println(htgWalletApi.getBlockHeight());
     }
 

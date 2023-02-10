@@ -306,6 +306,9 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public HeterogeneousAssetInfo getAssetByContractAddress(String contractAddress) {
+        if (StringUtils.isBlank(contractAddress)) {
+            return mainAsset();
+        }
         HtgERC20Po erc20Po = htgERC20Helper.getERC20ByContractAddress(contractAddress);
         if (erc20Po == null) {
             return null;
@@ -1416,7 +1419,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("准备发送提现的{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            logger().info("准备发送提现的{}交易，nerveTxHash: {}, toAddress: {}, value: {}, assetId: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, toAddress, value, assetId, signatureData);
             // 交易准备
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             HtgAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
@@ -1489,10 +1492,33 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             }
             return htTxHash;
         } catch (Exception e) {
+            /*StackTraceElement[] stackTrace0 = e.getStackTrace();
+            if (stackTrace0 != null) {
+                for (StackTraceElement s : stackTrace0) {
+                    logger().error("---pierre test0----, {}", s);
+                }
+            }
+            if (e.getCause() != null) {
+                StackTraceElement[] stackTrace = e.getCause().getStackTrace();
+                if (stackTrace != null) {
+                    for (StackTraceElement s : stackTrace) {
+                        logger().error("---pierre test----, {}", s);
+                    }
+                }
+                if (e.getCause().getCause() != null) {
+                    StackTraceElement[] stackTrace1 = e.getCause().getCause().getStackTrace();
+                    if (stackTrace1 != null) {
+                        for (StackTraceElement s : stackTrace1) {
+                            logger().error("---pierre test1----, {}", s);
+                        }
+                    }
+                }
+            }*/
             if (e instanceof NulsException) {
                 throw (NulsException) e;
             }
             logger().error(e);
+            if (e.getCause() != null) logger().error(e.getCause());
             throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
         }
     }

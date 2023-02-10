@@ -159,6 +159,10 @@ public class ConverterContext {
      * v1.22.0 协议升级高度
      */
     public static long PROTOCOL_1_22_0 = 0L;
+    /**
+     * v1.23.0 协议升级高度
+     */
+    public static long PROTOCOL_1_23_0 = 0L;
 
     /**
      * 协议升级对应的高度

@@ -201,6 +201,10 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
             if (director.getSeedNode()) {
                 heterogeneousSize = director.getHeterogeneousAddrMap().size();
+                if (chain.getChainId() == 5 && director.getHeterogeneousAddrMap().containsKey(101)) {
+                    // add by pierre at 2023/2/6 测试网删除了101配置
+                    heterogeneousSize--;
+                }
                 break;
             }
         }

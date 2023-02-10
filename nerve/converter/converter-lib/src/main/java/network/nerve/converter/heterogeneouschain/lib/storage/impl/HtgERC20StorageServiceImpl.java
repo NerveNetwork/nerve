@@ -37,6 +37,9 @@ import network.nerve.converter.utils.ConverterDBUtil;
 
 import java.util.*;
 
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
+
 /**
  * @author: Mimi
  * @date: 2020-02-20
@@ -66,7 +69,13 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
         }
         Map<byte[], byte[]> values = new HashMap<>(8);
         String address = po.getAddress();
-        byte[] addressBytes = ConverterDBUtil.stringToBytes(address);
+        byte[] addressBytes;
+        if (StringUtils.isBlank(address)) {
+            address = EMPTY_STRING;
+            addressBytes = ZERO_BYTES;
+        } else {
+            addressBytes = ConverterDBUtil.stringToBytes(address);
+        }
         values.put(ConverterDBUtil.stringToBytes(KEY_PREFIX + address), ConverterDBUtil.getModelSerialize(po));
         values.put(ConverterDBUtil.stringToBytes(KEY_ASSETID_PREFIX + po.getAssetId()), addressBytes);
         StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + po.getSymbol()), StringSetPo.class);
@@ -91,6 +100,9 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
     @Override
     public HtgERC20Po findByAddress(String address) {
+        if (StringUtils.isBlank(address)) {
+            address = EMPTY_STRING;
+        }
         HtgERC20Po po = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address), HtgERC20Po.class);
         if (po == null) {
             return null;
@@ -112,6 +124,9 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
     @Override
     public boolean isExistsByAddress(String address) {
+        if (StringUtils.isBlank(address)) {
+            address = EMPTY_STRING;
+        }
         byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
         if (bytes == null) {
             return false;

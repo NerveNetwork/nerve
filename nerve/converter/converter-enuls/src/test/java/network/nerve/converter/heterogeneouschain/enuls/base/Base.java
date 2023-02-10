@@ -95,11 +95,11 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "???";
+        String mainEthRpcAddress = "https://evmapi.nuls.io";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
-        htgContext.getConfig().setChainIdOnHtgNetwork(111111);
+        htgContext.getConfig().setChainIdOnHtgNetwork(119);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {

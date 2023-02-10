@@ -33,9 +33,11 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.enums.BindHeterogeneousContractMode;
+import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.NerveAssetInfo;
@@ -48,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.constant.ConverterConstant.IN;
@@ -68,6 +71,10 @@ public class LedgerAssetRegisterHelper {
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private HeterogeneousAssetHelper heterogeneousAssetHelper;
+    @Autowired
+    private ChainManager chainManager;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     public Boolean crossChainAssetReg(int chainId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
         Integer nerveAssetId = LedgerCall.crossChainAssetReg(chainId, assetName, decimalPlace, assetSymbol, assetAddress);
@@ -89,20 +96,11 @@ public class LedgerAssetRegisterHelper {
     }
 
     public Boolean htgMainAssetBind(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
-        HtgAssetBindDTO bindDTO = LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
-        HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
-        info.setChainId(heterogeneousAssetChainId);
-        info.setAssetId(heterogeneousAssetId);
-        info.setSymbol(assetSymbol);
-        info.setDecimals(decimalPlace);
-        info.setContractAddress(assetAddress);
-        // 精度差额
-        BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
-        BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
-        info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
-        heterogeneousAssetConverterStorageService.saveBindAssetInfo(nerveAssetChainId, nerveAssetId, info);
-        heterogeneousAssetConverterStorageService.saveAssetInfo(converterConfig.getChainId(), nerveAssetId, info);
-        return true;
+        if (converterCoreApi.isProtocol23()) {
+            return this.htgMainAssetBindP23(nerveAssetChainId, nerveAssetId, heterogeneousAssetChainId, heterogeneousAssetId, assetName, decimalPlace, assetSymbol, assetAddress);
+        } else {
+            return this._htgMainAssetBind(nerveAssetChainId, nerveAssetId, heterogeneousAssetChainId, heterogeneousAssetId, assetName, decimalPlace, assetSymbol, assetAddress);
+        }
     }
 
     public Boolean crossChainAssetRegByExistNerveAsset(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
@@ -454,4 +452,68 @@ public class LedgerAssetRegisterHelper {
     public boolean isPauseOutHeterogeneousAsset(Integer hChainId, int assetId) throws Exception {
         return heterogeneousAssetConverterStorageService.isPauseOutHeterogeneousAsset(hChainId, assetId);
     }
+
+    private Boolean _htgMainAssetBind(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+        HtgAssetBindDTO bindDTO = LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
+        HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
+        info.setChainId(heterogeneousAssetChainId);
+        info.setAssetId(heterogeneousAssetId);
+        info.setSymbol(assetSymbol);
+        info.setDecimals(decimalPlace);
+        info.setContractAddress(assetAddress);
+        // 精度差额
+        BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
+        BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
+        info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
+        heterogeneousAssetConverterStorageService.saveBindAssetInfo(nerveAssetChainId, nerveAssetId, info);
+        heterogeneousAssetConverterStorageService.saveAssetInfo(converterConfig.getChainId(), nerveAssetId, info);
+        checkLogger(heterogeneousAssetChainId, heterogeneousAssetId);
+        return true;
+    }
+
+    private Boolean htgMainAssetBindP23(int nerveAssetChainId, int nerveAssetId, int heterogeneousAssetChainId, int heterogeneousAssetId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws Exception {
+        HtgAssetBindDTO bindDTO = LedgerCall.bindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetChainId, nerveAssetId);
+        HeterogeneousAssetInfo info = new HeterogeneousAssetInfo();
+        info.setChainId(heterogeneousAssetChainId);
+        info.setAssetId(heterogeneousAssetId);
+        info.setSymbol(assetSymbol);
+        info.setDecimals(decimalPlace);
+        info.setContractAddress(assetAddress);
+        // 精度差额
+        BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
+        BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
+        info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
+        if (heterogeneousAssetChainId == 119 && heterogeneousAssetId == 1 && converterConfig.getChainId() == 9) {
+            NerveAssetInfo assetInfo = converterCoreApi.getHtgMainAsset(119);
+            if (assetInfo != null && !assetInfo.isEmpty() && (assetInfo.getAssetChainId() != 1 || assetInfo.getAssetId() != 1)) {
+                heterogeneousAssetConverterStorageService.deleteAssetInfo(119, 1);
+                converterCoreApi.clearHtgMainAssetMap();
+            }
+        }
+        heterogeneousAssetConverterStorageService.saveBindAssetInfo(nerveAssetChainId, nerveAssetId, info);
+        checkLogger(heterogeneousAssetChainId, heterogeneousAssetId);
+        return true;
+    }
+
+    private void checkLogger(int heterogeneousAssetChainId, int heterogeneousAssetId) {
+        if (heterogeneousAssetChainId == 119 && heterogeneousAssetId == 1) {
+            Chain chain = chainManager.getChain(converterConfig.getChainId());
+            NulsLogger logger = chain.getLogger();
+            logger.info("Enuls资产注册检查-->");
+            HeterogeneousAssetInfo assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(119, 9, 1);
+            logger.info("119,9,1 assetInfo not exist--> {}", assetInfo == null);
+            List<HeterogeneousAssetInfo> infoList = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(9, 1);
+            logger.info("9,1 bind enuls assetInfo not exist--> {}", infoList.stream().filter(i -> i.getChainId() == 119).collect(Collectors.toList()).size() == 0);
+
+            HeterogeneousAssetInfo assetInfo1 = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(119, 1, 1);
+            logger.info("119,1,1 assetInfo exist--> {}", assetInfo1 != null);
+            List<HeterogeneousAssetInfo> infoList1 = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(1, 1);
+            logger.info("1,1 bind enuls assetInfo exist--> {}", infoList1.stream().filter(i -> i.getChainId() == 119).collect(Collectors.toList()).size() != 0);
+            NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(119, 1);
+            logger.info("119,1 enuls assetInfo is --> {}-{}", nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
+            NerveAssetInfo cacheAssetInfo = converterCoreApi.getHtgMainAsset(119);
+            logger.info("119 enuls cache assetInfo is --> {}-{}", cacheAssetInfo.getAssetChainId(), cacheAssetInfo.getAssetId());
+        }
+    }
+
 }

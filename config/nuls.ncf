@@ -150,6 +150,7 @@ height_1_19_0=23925000
 height_1_20_0=24550000
 height_1_21_0=29528000
 height_1_22_0=39820000
+height_1_23_0=40080000
 
 [nuls-api]
 #httpServer的启动ip

@@ -253,6 +253,9 @@ public class HtgERC20Helper implements BeanInitial {
         try {
             for (HeterogeneousAssetInfo info : assetInfos) {
                 HtgERC20Po erc20Po = htgERC20StorageService.findByAddress(info.getContractAddress());
+                if (erc20Po == null) {
+                    continue;
+                }
                 info.setAssetId(erc20Po.getAssetId());
                 htgERC20StorageService.deleteByAddress(erc20Po.getAddress());
                 successList.add(erc20Po);

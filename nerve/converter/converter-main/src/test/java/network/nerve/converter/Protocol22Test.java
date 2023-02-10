@@ -224,7 +224,7 @@ public class Protocol22Test {
 
     @Test
     public void setupMinterOnCreateERC20MinterTest() {
-        // 更新工具合约中的minter地址为新多签地址，异构链113~117
+        // 更新工具合约中的minter地址为新多签地址
         String prikey = "???";
         // 遍历所有异构链
         for (int i = 118; i <= 121; i++) {
@@ -233,6 +233,10 @@ public class Protocol22Test {
                 continue;
             }
             String _contractForCreateERC20Minter = contractForCreateERC20Minter;
+            if (htgChainId == 121 && MAIN) {
+                _contractForCreateERC20Minter = "0xBa536D073c38614057D8C14C2F28144e84c1cde6";
+            }
+
             HeterogeneousCfg cfg = cfgMap.get(htgChainId);
             long networkChainId = cfg.getChainIdOnHtgNetwork();
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
