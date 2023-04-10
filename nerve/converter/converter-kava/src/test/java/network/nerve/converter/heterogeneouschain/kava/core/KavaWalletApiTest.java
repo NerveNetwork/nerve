@@ -295,11 +295,12 @@ public class KavaWalletApiTest extends Base {
 
     @Test
     public void getBalance() throws Exception {
-        setLocalTest();
-        setAccount_EFa1();
-        erc20BalancePrint("NVT", from, NVT_KAVA_MINTER, 8);
-        erc20BalancePrint("USDT", from, USDT_KAVA, 6);
-        balancePrint(from, 18);
+        setMainData();
+        //setLocalTest();
+        //setAccount_EFa1();
+        //erc20BalancePrint("NVT", from, NVT_KAVA_MINTER, 8);
+        //erc20BalancePrint("USDT", from, USDT_KAVA, 6);
+        //balancePrint(from, 18);
         balancePrint(multySignContractAddress, 18);
     }
 

@@ -178,6 +178,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ETHW-USDT",
           "desc": "ETHW相对USDT价格"
+        },
+        {
+          "key": "REI_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "REI-USDT",
+          "desc": "REI相对USDT价格"
         }
       ]
     }

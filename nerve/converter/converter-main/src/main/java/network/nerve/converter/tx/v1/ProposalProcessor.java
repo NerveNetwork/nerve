@@ -24,6 +24,7 @@
 
 package network.nerve.converter.tx.v1;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.protocol.TransactionProcessor;
@@ -35,11 +36,13 @@ import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteStatusEnum;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.ProposalTxData;
+import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.storage.ProposalVotingStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
@@ -91,6 +94,20 @@ public class ProposalProcessor implements TransactionProcessor {
                     failsList.add(tx);
                     errorCode = e.getErrorCode().getCode();
                     log.error(e.getErrorCode().getMsg());
+                    continue;
+                }
+                // swap手续费定制，验证设置范围
+                ProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ProposalTxData.class);
+                if (txData.getType() != ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE.value()) {
+                    continue;
+                }
+                Integer feeRate = Integer.parseInt(txData.getContent());
+                String swapPairAddress = AddressTool.getStringAddressByBytes(txData.getAddress());
+                if (!SwapCall.isLegalSwapFeeRate(chainId, swapPairAddress, feeRate)) {
+                    failsList.add(tx);
+                    // 异构链地址不能为空
+                    errorCode = ConverterErrorCode.PROPOSAL_REJECTED.getCode();
+                    log.error("[Validate SwapFeeRate] error, swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);
                     continue;
                 }
             }

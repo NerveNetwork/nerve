@@ -173,7 +173,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                     errorCode = SwapErrorCode.PAIR_INCONSISTENCY.getCode();
                     continue;
                 }
-                swapTradeHandler._calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
+                swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
                         txData.getTo(), txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
             } catch (Exception e) {
                 Log.error(e);
@@ -276,11 +276,11 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                         continue;
                     }
                 }
-                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusinessProtocol17(chainId, iPairFactory, dto.getAmountIn(),
+                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
                         txData.getTo(), txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
                 //协议17: 增加校验，稳定币兑换的逻辑
                 if (swapTradeBus.isExistStablePair()) {
-                    swapTradeHandler.makeSystemDealTxProtocol17(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
+                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
                 }
             } catch (Exception e) {
                 Log.error(e);

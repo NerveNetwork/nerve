@@ -1387,35 +1387,36 @@ public class ETHWalletApiTest extends Base {
     }
     @Test
     public void test() {
-        String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
-        System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
-        System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
+        //String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
+        //System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
+        //System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // eth的usdt价格
-        ethUsdt = new BigDecimal("4401.29");
+        ethUsdt = new BigDecimal("1700.14");
         // gas Gwei
-        price = 90L;
+        price = "200";
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
-        gasCost(1200000);
-        gasCost(800000);
-        gasCost(520000);
-        gasCost(400000);
-        gasCost(380000);
-        gasCost(350000);
-        gasCost(300000);
-        gasCost(274881);
-        gasCost(260000);
-        gasCost(250000);
-        gasCost(220000);
         gasCost(200000);
-        gasCost(150000);
-        gasCost(100000);
-        gasCost(60000);
-        gasCost(21000);
+        //gasCost(1200000);
+        //gasCost(800000);
+        //gasCost(520000);
+        //gasCost(400000);
+        //gasCost(380000);
+        //gasCost(350000);
+        //gasCost(300000);
+        //gasCost(274881);
+        //gasCost(260000);
+        //gasCost(250000);
+        //gasCost(220000);
+        //gasCost(200000);
+        //gasCost(150000);
+        //gasCost(100000);
+        //gasCost(60000);
+        //gasCost(21000);
     }
     protected BigDecimal ethUsdt;
-    protected long price;
+    protected String price;
     protected void gasCost(long cost) {
-        BigDecimal eth = new BigDecimal(cost).multiply(BigDecimal.valueOf(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18));
+        BigDecimal eth = new BigDecimal(cost).multiply(new BigDecimal(price).multiply(BigDecimal.TEN.pow(9))).divide(BigDecimal.valueOf(10L).pow(18));
         System.out.println(String.format("%s\t gas cost %s eth, \tequals %s USDT.", cost, eth, eth.multiply(ethUsdt).toPlainString()));
     }
 

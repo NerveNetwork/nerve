@@ -148,7 +148,7 @@ public class RemoveLiquidityHandlerTest {
         BigInteger amountLP = toAddressBalanceLP.divide(BigInteger.valueOf(2));
         // 计算预期保护值
         RemoveLiquidityBus bus = SwapUtils.calRemoveLiquidityBusiness(chainId, iPairFactory, pairAddress, amountLP,
-                token0, token1, BigInteger.ZERO, BigInteger.ZERO);
+                token0, token1, BigInteger.ZERO, BigInteger.ZERO, true);
         BigInteger amountAMin = bus.getAmount0();
         BigInteger amountBMin = bus.getAmount1();
         System.out.println(String.format("\t交易前计算移除流动性的数据结果: %s", bus.toString()));
@@ -210,7 +210,7 @@ public class RemoveLiquidityHandlerTest {
         BigInteger amountLP = toAddressBalanceLP;
         // 计算预期保护值
         RemoveLiquidityBus bus = SwapUtils.calRemoveLiquidityBusiness(chainId, iPairFactory, pairAddress, amountLP,
-                token0, token1, BigInteger.ZERO, BigInteger.ZERO);
+                token0, token1, BigInteger.ZERO, BigInteger.ZERO, true);
         BigInteger amountAMin = bus.getAmount0();
         BigInteger amountBMin = bus.getAmount1();
         System.out.println(String.format("\t交易前计算移除流动性的数据结果: %s", bus.toString()));

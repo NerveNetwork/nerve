@@ -30,6 +30,7 @@ import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.heterogeneouschain.trx.model.TRC20TransferEvent;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxAccount;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxTransaction;
@@ -477,8 +478,8 @@ public class TrxUtil {
         return false;
     }
 
-    public static BigDecimal calcOtherMainAssetOfWithdraw(AssetName otherMainAssetName, BigDecimal otherMainAssetUSD, BigDecimal htgUSD) {
-        BigDecimal feeLimit = new BigDecimal(TrxConstant.FEE_LIMIT_OF_WITHDRAW);
+    public static BigDecimal calcOtherMainAssetOfWithdraw(HtgContext htgContext, AssetName otherMainAssetName, BigDecimal otherMainAssetUSD, BigDecimal htgUSD) {
+        BigDecimal feeLimit = new BigDecimal(htgContext.GAS_LIMIT_OF_WITHDRAW());
         BigDecimal otherMainAssetAmount = feeLimit.multiply(htgUSD).movePointRight(otherMainAssetName.decimals()).movePointLeft(6).divide(otherMainAssetUSD, 0, RoundingMode.DOWN);
         // 当NVT作为手续费时，向上取整
         if (otherMainAssetName == AssetName.NVT) {
@@ -487,8 +488,8 @@ public class TrxUtil {
         return otherMainAssetAmount;
     }
 
-    public static BigDecimal calcTrxOfWithdrawProtocol15() {
-        return new BigDecimal(TrxConstant.FEE_LIMIT_OF_WITHDRAW);
+    public static BigDecimal calcTrxOfWithdrawProtocol15(HtgContext htgContext) {
+        return new BigDecimal(htgContext.GAS_LIMIT_OF_WITHDRAW());
     }
 
     public static String trxAddress2eth(String address) {

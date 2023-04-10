@@ -214,6 +214,13 @@ public class ExeProposalProcessTask implements Runnable {
                                 ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE,
                                 proposalPO.getHash().toHex());
                         break;
+                    case MANAGE_SWAP_PAIR_FEE_RATE:
+                        // swap模块 用于Swap交易对定制手续费
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                                ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE,
+                                proposalPO.getHash().toHex());
+                        break;
                     case OTHER:
                     default:
                         break;

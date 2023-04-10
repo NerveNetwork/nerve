@@ -27,6 +27,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapDBConstant;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.po.StringSetPo;
@@ -102,7 +103,11 @@ public class SwapPairStorageServiceImpl implements SwapPairStorageService {
             return null;
         }
         int chainId = AddressTool.getChainIdByAddress(address);
-        return SwapDBUtil.getModel(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + address), SwapPairPO.class);
+        SwapPairPO model = SwapDBUtil.getModel(baseArea + chainId, SwapDBUtil.stringToBytes(KEY_PREFIX + address), SwapPairPO.class);
+        if (model != null && model.getFeeRate() == null) {
+            model.setFeeRate(SwapConstant.BI_3.intValue());
+        }
+        return model;
     }
 
     @Override

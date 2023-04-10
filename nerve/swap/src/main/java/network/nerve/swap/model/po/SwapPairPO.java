@@ -5,6 +5,8 @@ import network.nerve.swap.model.NerveToken;
 
 import java.util.Arrays;
 
+import static network.nerve.swap.constant.SwapConstant.BI_3;
+
 /**
  * @author Niels
  */
@@ -15,6 +17,7 @@ public class SwapPairPO {
     private NerveToken token0;
     private NerveToken token1;
     private NerveToken tokenLP;
+    private Integer feeRate;// add by pierre at 2023/3/8 p24
 
     public SwapPairPO(byte[] address) {
         this.address = address;
@@ -53,12 +56,24 @@ public class SwapPairPO {
         this.tokenLP = tokenLP;
     }
 
+    public Integer getFeeRate() {
+        if (feeRate == null) {
+            feeRate = BI_3.intValue();
+        }
+        return feeRate ;
+    }
+
+    public void setFeeRate(Integer feeRate) {
+        this.feeRate = feeRate;
+    }
+
     @Override
     public SwapPairPO clone() {
         SwapPairPO po = new SwapPairPO(address);
         po.setToken0(token0.clone());
         po.setToken1(token1.clone());
         po.setTokenLP(tokenLP.clone());
+        po.setFeeRate(feeRate);
         return po;
     }
 
@@ -73,6 +88,7 @@ public class SwapPairPO {
                 .append('\"').append(token1.str()).append('\"');
         sb.append(",\"tokenLP\":")
                 .append('\"').append(tokenLP.str()).append('\"');
+        sb.append(",\"feeRate\":").append(feeRate);
         sb.append('}');
         return sb.toString();
     }

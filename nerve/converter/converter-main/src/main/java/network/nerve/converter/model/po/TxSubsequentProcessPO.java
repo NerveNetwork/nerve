@@ -133,7 +133,7 @@ public class TxSubsequentProcessPO implements Serializable {
         if (currentFeeChangeVersion != feeChangeVersion) {
             feeChangeVersion = currentFeeChangeVersion;
             this.clearWithdrawErrorTime();
-            return true;
+            return false;
         }
         int multiplier = (this.withdrawErrorTotalTimes + limit - 1) / limit;
         multiplier = Math.min(multiplier, 5);

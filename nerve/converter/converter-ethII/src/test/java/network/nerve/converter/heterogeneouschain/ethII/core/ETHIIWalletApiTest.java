@@ -26,8 +26,10 @@ import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.DynamicArray;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -115,13 +117,13 @@ public class ETHIIWalletApiTest extends BaseII {
         list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
         list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
         list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
-        list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
-        list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
-        list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
-        list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
-        list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
-        list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653";
+        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
+        //list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
+        //list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
+        //list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
+        //list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
+        this.multySignContractAddress = "0xcb76C205866A58f6cEE4F3d4035CEE160D65F05D";
         init();
     }
     protected void setBeta() {
@@ -359,19 +361,63 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
     }
 
+    private Set<String> allManagers(String contract) throws Exception {
+        Function allManagersFunction = new Function(
+                "allManagers",
+                List.of(),
+                List.of(new TypeReference<DynamicArray<Address>>() {
+                })
+        );
+        Function function = allManagersFunction;
+        String encode = FunctionEncoder.encode(function);
+        org.web3j.protocol.core.methods.request.Transaction ethCallTransaction = org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(null, contract, encode);
+        EthCall ethCall = htgWalletApi.getWeb3j().ethCall(ethCallTransaction, DefaultBlockParameterName.LATEST).sendAsync().get();
+        String value = ethCall.getResult();
+        List<Type> typeList = FunctionReturnDecoder.decode(value, function.getOutputParameters());
+        List<String> results = new ArrayList();
+        for (Type type : typeList) {
+            results.add(type.getValue().toString());
+        }
+        String resultStr = results.get(0).substring(1, results.get(0).length() - 1);
+        String[] resultArr = resultStr.split(",");
+        Set<String> resultList = new HashSet<>();
+        for (String result : resultArr) {
+            resultList.add(result.trim().toLowerCase());
+        }
+        return resultList;
+    }
+
+    @Test
+    public void allContractManagerSet() throws Exception {
+        //localdev();
+        //localdevII();
+        //setMain();
+        setLocalTest();
+        //mainnetII();
+        System.out.println("查询当前合约管理员列表，请等待……");
+        Set<String> all = this.allManagers(multySignContractAddress);
+        System.out.println(String.format("size : %s", all.size()));
+        for (String address : all) {
+            BigDecimal balance = htgWalletApi.getBalance(address).movePointLeft(18);
+            System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
+            System.out.println();
+        }
+    }
+
     /**
      * 添加 N 个管理员
      */
     @Test
     public void managerAdd() throws Exception {
         // 正式网环境数据
-        setMainData();
+        //setMainData();
+        setLocalTest();
         // GasPrice准备
-        long gasPriceGwei = 26L;
+        long gasPriceGwei = 160L;
         EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa6000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{};
-        String[] removes = new String[]{"0x018fc24ec7a4a69c83884d93b3b8f87b670c0ef5"};
+        String txKey = "c753d679f58b6111cc7df52b57217a0d81ff725c000000000000000000000005";
+        String[] adds = new String[]{"0xC753D679f58b6111cc7Df52B57217A0d81FF725C"};
+        String[] removes = new String[]{};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);

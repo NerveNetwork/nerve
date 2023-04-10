@@ -128,21 +128,51 @@ public class SwapUtils {
         return amountB;
     }
 
-    public static BigInteger getAmountOut(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut) {
+    /*
+     常量乘积公式:
+     rI * rO = (rI + aI) * (rO - aO) = rI * rO - rI * aO + ai * rO - aI * aO
+     rI * aO + aI * aO = aI * rO
+     aO * (rI + aI) = aI * rO
+
+     换算后得到amountOut:
+     aO = aI * rO / (rI + aI)
+
+     加入手续费率:
+     aO = rO * aI * 997 / 1000 / (rI + aI *997 / 1000)
+        = rO * aI * 997 / (rI * 1000 + aI *997 / 1000 * 1000)
+        = rO * aI * 997 / (rI * 1000 + aI *997)
+     */
+    public static BigInteger getAmountOut(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut, BigInteger feeRate) {
         if (amountIn.compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsRuntimeException(INSUFFICIENT_INPUT_AMOUNT);
         }
         if (reserveIn.compareTo(BigInteger.ZERO) <= 0 || reserveOut.compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsRuntimeException(INSUFFICIENT_LIQUIDITY);
         }
-        BigInteger amountInWithFee = amountIn.multiply(BI_997);
+        // update by pierre at 2023/3/9 p24
+        //BigInteger amountInWithFee = amountIn.multiply(BI_997);
+        BigInteger amountInWithFee = amountIn.multiply(BI_1000.subtract(feeRate));
         BigInteger numerator = amountInWithFee.multiply(reserveOut);
         BigInteger denominator = reserveIn.multiply(BI_1000).add(amountInWithFee);
         BigInteger amountOut = numerator.divide(denominator);
         return amountOut;
     }
 
-    public static BigInteger getAmountIn(BigInteger amountOut, BigInteger reserveIn, BigInteger reserveOut) {
+    /*
+     常量乘积公式:
+     rI * rO = (rI + aI) * (rO - aO) = rI * rO - rI * aO + aI * rO - aI * aO
+     rI * aO = aI * rO - aI * aO
+     aI * (rO - aO) = rI * aO
+
+     换算后得到amountIn:
+     aI = rI * aO / (rO - aO)
+
+     加入手续费率:
+     aI * 997 / 1000 = rI * aO / (rO - aO);
+     aI = rI * aO * 1000 / (rO - aO) / 997
+     aI = rI * aO * 1000 / ((rO - aO) * 997)
+     */
+    public static BigInteger getAmountIn(BigInteger amountOut, BigInteger reserveIn, BigInteger reserveOut, BigInteger feeRate) {
         if (amountOut.compareTo(BigInteger.ZERO) <= 0) {
             throw new NulsRuntimeException(INSUFFICIENT_OUTPUT_AMOUNT);
         }
@@ -150,16 +180,20 @@ public class SwapUtils {
             throw new NulsRuntimeException(INSUFFICIENT_LIQUIDITY);
         }
         BigInteger numerator = reserveIn.multiply(amountOut).multiply(BI_1000);
-        BigInteger denominator = reserveOut.subtract(amountOut).multiply(BI_997);
+        //BigInteger denominator = reserveOut.subtract(amountOut).multiply(BI_997);
+        BigInteger denominator = reserveOut.subtract(amountOut).multiply(BI_1000.subtract(feeRate));
         BigInteger amountIn = numerator.divide(denominator).add(BigInteger.ONE);
         return amountIn;
     }
 
-    public static BigInteger[] getReserves(int chainId, IPairFactory pairFactory, NerveToken tokenA, NerveToken tokenB) {
+    private static BigInteger[] getReservesAndFeeRate(int chainId, IPairFactory pairFactory, NerveToken tokenA, NerveToken tokenB) {
         NerveToken[] nerveTokens = tokenSort(tokenA, tokenB);
         NerveToken token0 = nerveTokens[0];
-        BigInteger[] reserves = pairFactory.getPair(getStringPairAddress(chainId, tokenA, tokenB)).getReserves();
-        BigInteger[] result = tokenA.equals(token0) ? reserves : new BigInteger[]{reserves[1], reserves[0]};
+        IPair pair = pairFactory.getPair(getStringPairAddress(chainId, tokenA, tokenB));
+        BigInteger[] reserves = pair.getReserves();
+        // 返回feeRate
+        BigInteger feeRate = BigInteger.valueOf(pair.getPair().getFeeRate().intValue());
+        BigInteger[] result = tokenA.equals(token0) ? new BigInteger[]{reserves[0], reserves[1], feeRate} : new BigInteger[]{reserves[1], reserves[0], feeRate};
         return result;
     }
 
@@ -170,12 +204,13 @@ public class SwapUtils {
         }
         BigInteger[] amounts = new BigInteger[pathLength];
         amounts[0] = amountIn;
-        BigInteger reserveIn, reserveOut;
+        BigInteger reserveIn, reserveOut, feeRate;
         for (int i = 0; i < pathLength - 1; i++) {
-            BigInteger[] reserves = getReserves(chainId, pairFactory, path[i], path[i + 1]);
+            BigInteger[] reserves = getReservesAndFeeRate(chainId, pairFactory, path[i], path[i + 1]);
             reserveIn = reserves[0];
             reserveOut = reserves[1];
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+            feeRate = reserves[2];
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, feeRate);
         }
         return amounts;
     }
@@ -218,7 +253,7 @@ public class SwapUtils {
         }
         BigInteger[] amounts = new BigInteger[pathLength];
         amounts[0] = amountIn;
-        BigInteger reserveIn, reserveOut;
+        BigInteger reserveIn, reserveOut, feeRate;
         NerveToken tokenIn, tokenOut;
         for (int i = 0; i < pathLength - 1; i++) {
             tokenIn = path[i];
@@ -229,10 +264,11 @@ public class SwapUtils {
                 amounts[i + 1] = getStableOutAmountByGroupIndex(groupIndex, tokenIn, amounts[i], tokenOut, pairFactory, stableCoinGroup);
                 continue;
             }
-            BigInteger[] reserves = getReserves(chainId, pairFactory, tokenIn, tokenOut);
+            BigInteger[] reserves = getReservesAndFeeRate(chainId, pairFactory, tokenIn, tokenOut);
             reserveIn = reserves[0];
             reserveOut = reserves[1];
-            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut);
+            feeRate = reserves[2];
+            amounts[i + 1] = getAmountOut(amounts[i], reserveIn, reserveOut, feeRate);
         }
         return amounts;
     }
@@ -244,12 +280,13 @@ public class SwapUtils {
         }
         BigInteger[] amounts = new BigInteger[pathLength];
         amounts[pathLength - 1] = amountOut;
-        BigInteger reserveIn, reserveOut;
+        BigInteger reserveIn, reserveOut, feeRate;
         for (int i = pathLength - 1; i > 0; i--) {
-            BigInteger[] reserves = getReserves(chainId, pairFactory, path[i - 1], path[i]);
+            BigInteger[] reserves = getReservesAndFeeRate(chainId, pairFactory, path[i - 1], path[i]);
             reserveIn = reserves[0];
             reserveOut = reserves[1];
-            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut);
+            feeRate = reserves[2];
+            amounts[i - 1] = getAmountIn(amounts[i], reserveIn, reserveOut, feeRate);
         }
         return amounts;
     }
@@ -263,7 +300,7 @@ public class SwapUtils {
             BigInteger amountAMin,
             BigInteger amountBMin
     ) throws NulsException {
-        BigInteger[] _reserves = SwapUtils.getReserves(chainId, iPairFactory, tokenA, tokenB);
+        BigInteger[] _reserves = getReservesAndFeeRate(chainId, iPairFactory, tokenA, tokenB);
         BigInteger reserveA = _reserves[0];
         BigInteger reserveB = _reserves[1];
         BigInteger[] realAmount;
@@ -317,7 +354,7 @@ public class SwapUtils {
             NerveToken tokenA,
             NerveToken tokenB,
             BigInteger amountAMin,
-            BigInteger amountBMin) throws NulsException {
+            BigInteger amountBMin, boolean protocol24) throws NulsException {
         IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairAddress));
         BigInteger[] reserves = pair.getReserves();
         SwapPairPO pairPO = pair.getPair();
@@ -329,8 +366,14 @@ public class SwapUtils {
         // 可赎回的资产
         BigInteger amount0 = liquidity.multiply(balance0).divide(totalSupply);
         BigInteger amount1 = liquidity.multiply(balance1).divide(totalSupply);
-        if (amount0.compareTo(BigInteger.ZERO) <= 0 || amount1.compareTo(BigInteger.ZERO) <= 0) {
-            throw new NulsException(INSUFFICIENT_LIQUIDITY_BURNED);
+        if (protocol24) {
+            if (amount0.compareTo(BigInteger.ZERO) <= 0 && amount1.compareTo(BigInteger.ZERO) <= 0) {
+                throw new NulsException(INSUFFICIENT_LIQUIDITY_BURNED);
+            }
+        } else {
+            if (amount0.compareTo(BigInteger.ZERO) <= 0 || amount1.compareTo(BigInteger.ZERO) <= 0) {
+                throw new NulsException(INSUFFICIENT_LIQUIDITY_BURNED);
+            }
         }
 
         boolean firstTokenA = tokenA.equals(token0);
@@ -663,14 +706,16 @@ public class SwapUtils {
         return bus;
     }
 
-    private static BigInteger getAmountOutForBestTrade(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut) {
+    private static BigInteger getAmountOutForBestTrade(BigInteger amountIn, BigInteger reserveIn, BigInteger reserveOut, BigInteger feeRate) {
         if (amountIn.compareTo(BigInteger.ZERO) <= 0) {
             return BigInteger.ZERO;
         }
         if (reserveIn.compareTo(BigInteger.ZERO) <= 0 || reserveOut.compareTo(BigInteger.ZERO) <= 0) {
             return BigInteger.ZERO;
         }
-        BigInteger amountInWithFee = amountIn.multiply(BI_997);
+        // update by pierre at 2023/3/9 p24
+        //BigInteger amountInWithFee = amountIn.multiply(BI_997);
+        BigInteger amountInWithFee = amountIn.multiply(BI_1000.subtract(feeRate));
         BigInteger numerator = amountInWithFee.multiply(reserveOut);
         BigInteger denominator = reserveIn.multiply(BI_1000).add(amountInWithFee);
         BigInteger amountOut = numerator.divide(denominator);
@@ -694,8 +739,8 @@ public class SwapUtils {
         }
         if (subIndex != -1) {
             SwapPairVO removePair = pairs.remove(subIndex);
-            BigInteger[] reserves = getReserves(chainId, iPairFactory, tokenIn, out);
-            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
+            BigInteger[] reserves = getReservesAndFeeRate(chainId, iPairFactory, tokenIn, out);
+            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1], reserves[2]);
             bestTrade.add(new RouteVO(List.of(removePair), orginTokenAmountIn, new TokenAmount(out, amountOut)));
         }
         // 查找所有匹配的交易路径
@@ -756,9 +801,9 @@ public class SwapUtils {
             if (!pair.getToken0().equals(tokenIn) && !pair.getToken1().equals(tokenIn)) continue;
             NerveToken tokenOut = pair.getToken0().equals(tokenIn) ? pair.getToken1() : pair.getToken0();
             if (containsCurrency(currentPath, tokenOut)) continue;
-            BigInteger[] reserves = getReserves(chainId, iPairFactory, tokenIn, tokenOut);
+            BigInteger[] reserves = getReservesAndFeeRate(chainId, iPairFactory, tokenIn, tokenOut);
             if (BigInteger.ZERO.equals(reserves[0]) || BigInteger.ZERO.equals(reserves[1])) continue;
-            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1]);
+            BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1], reserves[2]);
 
             if (tokenOut.equals(out)) {
                 LinkedHashSet<SwapPairVO> cloneCurrentPath = cloneLinkedHashSet(currentPath);

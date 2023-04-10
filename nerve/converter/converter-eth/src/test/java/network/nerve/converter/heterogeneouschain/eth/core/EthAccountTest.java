@@ -37,6 +37,7 @@ import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import org.bitcoinj.crypto.*;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
@@ -85,7 +86,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "2dc445be9fb5bb4069e5dc853f1e6e27ff1809598414dc20c66815ea83b3d9f6";
+        String prikey = "a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -131,19 +132,28 @@ public class EthAccountTest extends Base {
 
     }
 
+    public static void main(String[] args) {
+        System.out.println(HexUtil.encode("NULSd6HgeQy7ymuqnUxvwYbAZf4aqsokXbUo5".getBytes(StandardCharsets.UTF_8)));
+    }
+
     @Test
     public void compressedPubkey() {
         String[] ps = new String[]{"0x71a594ebf01f3b39f5410d384ff17b42e24cd9a8eba0a1f3dcb2a9c2fca81f9a7b7622daee723bc52eec124308a65909e9c8b6fa6e5b887df5a7814d6fe0daf2"};
         for (String p : ps) {
-            String pub = Numeric.cleanHexPrefix(p);
-            pub = leftPadding(pub, "0", 128);
-            String pubkeyFromEth = "04" + pub;
-            System.out.println(String.format("pubkey From Eth: %s", pubkeyFromEth));
-            ECPublicKeyParameters publicKey = new ECPublicKeyParameters(CURVE.getCurve().decodePoint(HexUtil.decode(pubkeyFromEth)), CURVE);
-            String compressedPubkey = Numeric.toHexStringNoPrefix(publicKey.getQ().getEncoded(true));
+            String compressedPubkey = calcCompressedPubkey(p);
             System.out.println(String.format("compressed pubkey: %s", compressedPubkey));
             System.out.println(String.format("eth address: %s", EthUtil.genEthAddressByCompressedPublickey(compressedPubkey)));
         }
+    }
+
+    private String calcCompressedPubkey(String orginalPubkey) {
+        String pub = Numeric.cleanHexPrefix(orginalPubkey);
+        pub = leftPadding(pub, "0", 128);
+        String pubkeyFromEth = "04" + pub;
+        //System.out.println(String.format("pubkey From Eth: %s", pubkeyFromEth));
+        ECPublicKeyParameters publicKey = new ECPublicKeyParameters(CURVE.getCurve().decodePoint(HexUtil.decode(pubkeyFromEth)), CURVE);
+        String compressedPubkey = Numeric.toHexStringNoPrefix(publicKey.getQ().getEncoded(true));
+        return compressedPubkey;
     }
 
     @Test
@@ -184,16 +194,21 @@ public class EthAccountTest extends Base {
     @Test
     public void createEthAccount() throws Exception {
         String addresses = "";
-        for (int i = 0; i < 5; i++) {
+        String pubkeys = "";
+        for (int i = 0; i < 1; i++) {
             ECKeyPair ecKeyPair = Keys.createEcKeyPair();
             String pk = Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
             Credentials credentials = Credentials.create(pk);
+            String pub = calcCompressedPubkey(Numeric.encodeQuantity(ecKeyPair.getPublicKey()));
             addresses += credentials.getAddress() + ",";
+            pubkeys += pub + ",";
             String msg = "address: " + credentials.getAddress()
-                    + ", privateKey: " + Numeric.encodeQuantity(ecKeyPair.getPrivateKey());
+                    + ", privateKey: " + Numeric.encodeQuantity(ecKeyPair.getPrivateKey())
+                    + ", pubkey: " + pub;
             System.out.println(msg);
         }
         System.out.println(addresses);
+        System.out.println(pubkeys);
     }
 
     @Test
@@ -293,7 +308,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x10c17be7b6d3e1f424111c8bddf221c9557728b0, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x8255a0e99456f45f8b85246ef6a9b1895c784c9f, 0x25955965648cd5c017d6d4644bf65830645ef2f2, 0x5fbf7793196efbf7066d99fa29dc64dc23052451";
+        String pubkeySet = "0xa43cb8b34e3684146c7d7c40ec875e419ddd6ab5,0x993ceca520eaa925800686c4c4871f1dd78d0e19,0xb6a385bd1f16b830ea95df776d30649635dd98e3";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");

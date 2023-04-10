@@ -1,13 +1,13 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/niels/workspace/nerve-network/logs
-logLevel=INFO
-dataPath=/Users/niels/workspace/nerve-network/data
+logPath=../../../../Logs
+logLevel=DEBUG
+dataPath=../../../../data
 #默认本链ID
-chainId=9
+chainId=5
 #地址前缀
-addressPrefix=NERVE
+addressPrefix=TNVT
 #默认本链主资产ID
 assetId=1
 #默认资产小数位数
@@ -17,32 +17,32 @@ chainName=nerve
 #本链默认资产符号
 symbol=NVT
 #主网链id
-mainChainId=1
+mainChainId=2
 #主网主资产id
 mainAssetId=1
 #主网主资产符号
 mainSymbol=NULS
 blackHolePublicKey=000000000000000000000000000000000000000000000000000000000000000000
-serviceManagerPort=8771
 packageVersion=%PACKAGE_VERSION%
+serviceManagerPort=8771
 
 [network]
-reverseCheck=0
-port=7001
-crossPort=7002
+port=17001
+crossPort=17002
 #魔法参数
-packetMagic=2020071001
+packetMagic=202009122
 #种子节点
-selfSeedIps=seeda.nerve.network:7001,seedb.nerve.network:7001,seedh.nerve.network:7001,seedg.nerve.network:7001,seedc.nerve.network:7001,seede.nerve.network:7001
+selfSeedIps=192.168.5.100:17001,192.168.5.10:17001,192.168.5.40:17001
 #主网的跨链种子连接节点
-moonSeedIps=seeda.nuls.io:8002,seedb.nuls.io:8002,seedc.nuls.io:8002,seedd.nuls.io:8002,seede.nuls.io:8002,seedf.nuls.io:8002
+moonSeedIps=192.168.1.116:8002,192.168.1.117:8002,192.168.1.118:8002
 #最大入网连接数
 maxInCount=300
 #最大出网连接数
 maxOutCount=50
+reverseCheck=0
 
 [account]
-blockAccountManager=NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt
+blockAccountManager=TNVTdTSPPBao2pGRc5at7mSdBqnypJbMqrKMg
 keystoreFolder=/keystore/backup
 
 [block]
@@ -53,7 +53,7 @@ extendMaxSize=1024
 #引发分叉链切换的高度差阈值
 chainSwtichThreshold=3
 #最小链接节点数,当链接到的网络节点低于此参数时,会持续等待
-minNodeAmount=2
+minNodeAmount=1
 #区块同步过程中,每次从网络上节点下载的区块数量
 downloadNumber=10
 #从网络节点下载单个区块的超时时间
@@ -64,15 +64,16 @@ cachedBlockSizeLimit=20971520
 genesisBlockPath=genesis-block.json
 
 [consensus]
-seedNodes=NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA,NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB,NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC,NERVEepb63mC8F4cwLRbkW3ATbZbtFChbRp2DD,NERVEepb6CY4q799Pqk3dKuxZgU68Hn8WpPdEE
+seedNodes=TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV,TNVTdTSPMGoSukZyzpg23r3A7AnaNyi3roSXT,TNVTdTSPV7WotsBxPc4QjbL8VLLCoQfHPXWTq
 #种子节点对应的公钥列表
-pubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0,020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5
+pubKeyList=03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9,024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba75,02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded
+
 #出块地址密码
 password=nuls123456
 #出块间隔时间(单位：s)
-packingInterval=2
+packingInterval=5
 #共识委托抵押资产链ID
-agentChainId=9
+agentChainId=5
 #共识委托抵押资产ID
 agentAssetId=1
 #共识奖励资产ID(共识奖励必须为本链资产)
@@ -85,6 +86,7 @@ mainAssertBase=2
 localAssertBase=2
 #节点保证金基数
 reservegentDepositBase=1.5
+#节点保证金基数
 agentDepositBase=3
 #虚拟银行保证金基数
 superAgentDepositBase=4
@@ -98,10 +100,12 @@ initHeight=1
 deflationRatio=0.0082
 #通缩间隔高度,100天
 deflationHeightInterval=4320000
+dataPath=../../../../data
+logPath=../../../../Logs
 
 [public-service]
 #public-service模块对外的rpc端口号
-rpcPort=7003
+rpcPort=17003
 #数据库url地址
 databaseUrl=127.0.0.1
 #数据库端口号
@@ -117,8 +121,11 @@ connectTimeOut=30000
 mongoUser=nuls
 mongoPwd=nuls123456
 nulsApiUrl=https://api.nuls.io/jsonrpc
-lockedAddress=NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6YQa1CZMLGazw3UWhBNwdJzziw6oh4,NERVEepb6drT18ZJbNbF7qqJCAWN2GomMD4b3m,NERVEepb6fMaDTWxHBhCE4cE9WqVS6XA5WdX92,NERVEepb6CQYM6di889LaHqvQMEZUEveUtv6do
+lockedAddress=NULSd6HgjNHAs4W6RL6wy9XRaLtNNd3SyJ7Er,NULSd6HgYYmifVKWPjjiMUU7zgYJbmcCXv5wi,NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6Chtj1NEaxu8VC5LqojAoxknX4RExF,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb6AHhD8hBtVnUbf4Ynxf5Kgek6du4KC,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6DYgJrFnLQVf7U9dNny6RzMDGhPQ1P,NERVEepb64Fc8yoW786NTdqaEDGbw7LvK2twRX,NERVEepb642YtQrJ8y8C9KxqY7Yzvc2FQxcZyT,NERVEepb65oPwX3XKDMSEmmYgLTVMv6MKJhjJY,NERVEepb6BKFc2usbP1mUfmvNyZGELaFRm1L5G
+
 [cross-chain]
+dataPath=../../../../../data
+logPath=../../../../../Logs
 #跨链节点链接的最小值
 minNodeAmount=3
 #跨链节点链接的最大值 注：此配置已过时
@@ -126,9 +133,9 @@ sendHeight=6
 #跨链交易拜占庭比例
 byzantineRatio=66
 #主网跨链种子节点列表
-crossSeedIps=seeda.nuls.io:8002,seedb.nuls.io:8002,seedc.nuls.io:8002,seedd.nuls.io:8002,seede.nuls.io:8002,seedf.nuls.io:8002
+crossSeedIps=192.168.1.116:8002,192.168.1.117:8002,192.168.1.118:8002
 #主网验证人列表
-verifiers=NULSd6Hge7xHDnvsSpnzbR2gWHd31zJ1How11,NULSd6Hgc5VNP4rF4wxdiXEQKpBKUE4w5RS22,NULSd6HgeQwXLdre69ArkqVZNDqMLU4CaAz33,NULSd6HgcjAKAgq8jjXgBCcNLEJUvJEYcoj44,NULSd6HgiDdTjcuvhqzm3bomyBFZmosV3ei55
+verifiers=NULSd6HgcjSWUbG4SSPYsvQysbsT5R3Rvmbom,NULSd6HgUxj3weGguFo3sbPu5cqStBAsxy8ZP,NULSd6HgVK1WCJercC8DvKCmHHNycEtsrKeW1
 #主网签名拜占庭比列
 mainByzantineRatio=66
 #主网最大签名数
@@ -136,75 +143,76 @@ maxSignatureCount=100
 
 [protocol-update]
 #每隔多少个区块统计一次协议占比
-interval=1000
-height_1_6_0=5600000
-height_1_8_0=7385000
-height_1_11_0=12530000
-height_1_12_0=13420000
-height_1_13_0=16420000
-height_1_14_0=18150000
-height_1_15_0=19790000
-height_1_16_0=22180000
-height_1_17_0=23373200
-height_1_18_0=23684100
-height_1_19_0=23925000
-height_1_20_0=24550000
-height_1_21_0=29528000
-height_1_22_0=39820000
-height_1_23_0=40080000
+interval=5
+height_1_6_0 =20
+height_1_8_0 =20
+height_1_11_0=20
+height_1_12_0=20
+height_1_13_0=20
+height_1_14_0=20
+height_1_15_0=20
+height_1_16_0=20
+height_1_17_0=20
+height_1_18_0=20
+height_1_19_0=20
+height_1_20_0=20
+height_1_21_0=20
+height_1_22_0=20
+height_1_23_0=20
+height_1_24_0=20
 
 [nuls-api]
 #httpServer的启动ip
 serverIp=0.0.0.0
 #httpServer的启动port
-serverPort=7004
+serverPort=17004
 
 [nerve-network-wallet]
-apiModuleApi=http://127.0.0.1:7003/
-webWalletPort=7006
+apiModuleApi=http://127.0.0.1:17003/
+webWalletPort=17006
 webWalletHost=0.0.0.0
 
-[nerve-explorer]
-apiModuleApi=http://127.0.0.1:7003/
-explorerPort=7005
-explorerHost=0.0.0.0
+[nuls-module-explorer]
+apiModuleApi=http://127.0.0.1:17003/
+webWalletPort=17005
+webWalletHost=0.0.0.0
 
 [dex]
 #系统收取手续费地址
-sysFeeAddress=NERVEepb6Em8hfKMNNnk3Xag8kN3Sf2tya5UDj
-#系统收取手续费比例（2，表示2/10000）
+sysFeeAddress=TNVTdTSPQ9yhsrG8az1JqK2MhcVDvJi9ukD81
+#系统收取手续费比例（3，表示3/10000）
 sysFeeScale=2
 #创建交易对费用
 createTradingAmount=20000000000
 
 [dex-api]
-walletPSUrl=https://public.nerve.network/
-walletApiUrl=https://api.nerve.network/
+walletPSUrl=http://beta.public.nerve.network/
+walletApiUrl=http://beta.api.nerve.network/
+autoOrderAddress=TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg,TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg
 #运行节点设置手续费收取地址
-feeAddress=NERVEepb6BiuhyRh4Q9mcwyQd44pfz4AofM2h5
-#运行节点设置手续费收取比例，6
+feeAddress=TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf
+#运行节点设置手续费收取比例，最高不能超过5
 feeScale=6
-#同步区块的起始高度
-startSyncHeight=1450000
-priceUrl=https://api.binance.com/api/v3/ticker/price?symbol=
-dexPassword=dex123456
+
 
 [dex-public-service]
-dexUrl=https://nervedex.com/
-psUrl=https://public.nerve.network/jsonrpc
-nulsApi=https://api.nerve.network/
-priceUrl=https://api.binance.com/api/v3/ticker/price?symbol=
+dexUrl=http://beta.nervedex.com/
+nulsApi=http://beta.api.nerve.network/
+psUrl=http://beta.public.nerve.network/jsonrpc
 mongoUser=nuls
 mongoPwd=nuls123456
 
 [quotation]
 effectiveQuotation=1
 removeMaxMinCount=2
-quoteStartHm=00:00
-quoteEndHm=00:10
+quoteStartHm=03:00
+quoteEndHm=03:10
+nerveBasedNuls=1
 
 [converter]
-executeChangeVirtualBankPeriodicHeight=1000
+dataPath=../../../../../data
+logPath=../../../../../Logs
+executeChangeVirtualBankPeriodicHeight=20
 feePubkey=111111111111111111111111111111111111111111111111111111111111111111
 initVirtualBankHeight=10
 virtualBankAgentTotal=15
@@ -212,23 +220,24 @@ proposalPrice=1000000000
 proposalVotingDays=10
 distributionFee=1000000000
 byzantineRatio=66
-multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,102:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,103:0x23023c99dcede393d6d18ca7fb08541b3364fa90,104:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,105:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,106:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,107:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,108:TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm,109:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,110:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,111:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,112:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,113:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,114:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,115:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,116:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,117:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,119:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,120:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,121:0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E
-multySignAddressUpgradeSet=101:0x6758d4c4734ac7811358395a8e0c3832ba6ac624
-heterogeneousMainNet=true
-initVirtualBankPubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
-newProcessorMode=false
-feeEffectiveHeightFirst=1700000
-feeEffectiveHeightSecond=2260000
+# ZK网络: 0x63bC7684B95aB9FC8165B97332ED1F6e96c94Ea0
+multySignAddressSet=101:0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653,102:0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b,103:0xF7c9BB7e6D6B8F603F17f6af0713D99EE285BDDb,104:0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2,105:0x8B3b22C252F431a75644E544FCAf67E390A206F4,106:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,107:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,108:TQeQaQiXnBFRnW2HYxPFjE5FMkkCxaa7eL,109:0xb6D685346106B697E6b2BbA09bc343caFC930cA3,110:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,111:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,112:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,113:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,114:0x8B3b22C252F431a75644E544FCAf67E390A206F4,115:0xb339211438Dcbf3D00d7999ad009637472FC72b3,116:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,117:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,118:0x8B3b22C252F431a75644E544FCAf67E390A206F4,119:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,120:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,121:0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA,122:0xdd35003eD2118D997F3404C9C17eb20dfea0f767,123:0x26A724F86648F13CAdAA3B8A4C7ad1834Cb825c9
+multySignAddressUpgradeSet=101:0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2
+multySignAddressUpgradeVerionIIISet=101:0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653,102:0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b,103:0xF7c9BB7e6D6B8F603F17f6af0713D99EE285BDDb,104:0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2,108:TQeQaQiXnBFRnW2HYxPFjE5FMkkCxaa7eL
+heterogeneousMainNet=false
+initVirtualBankPubKeyList=03b77df3d540817d20d3414f920ccec61b3395e1dc1ef298194e5ff696e038edd9,024173f84acb3de56b3ef99894fa3b9a1fe4c48c1bdc39163c37c274cd0334ba75,02c0a82ba398612daa4133a891b3f52832114e0d3d6210348543f1872020556ded
+newProcessorMode=true
+feeEffectiveHeightFirst=10
+feeEffectiveHeightSecond=10
 
 [swap]
-#手续费开发团队接收地址
-awardFeeSystemAddressPublicKey=03be1113ebf617fe8f6e482c507cf82276f753795eabe48d9b284173edb3c03dfd
-#手续费开发团队接收地址(协议17生效)-NERVEepb6BRQcoN7sshV9tkNsGAFbxNYV15Wj3
-awardFeeSystemAddressPublicKeyProtocol17=02c3e88e1c593ed354f0cbff6814a825df9d53436dedfa98e1476f7ab200f7d08e
-#手续费销毁地址
-awardFeeDestructionAddressPublicKey=02f8146b1090e7111edb34d5ac7f01bb6f1d3eb8ad15faccc532e276262eda5615
+#手续费开发团队接收地址-TNVTdTSPP6vD8BuWUYibYRx5qHFUPfkztAFo4
+awardFeeSystemAddressPublicKey=031672b023ef35e37eb1d570015b54e1c29a6cc57d5a11c4733e960efe7ca56b80
+#手续费开发团队接收地址(协议17生效)-TNVTdTSPUr48Mp8MTfhtGMT8Q9XdAiWZ9536e
+awardFeeSystemAddressPublicKeyProtocol17=02d0b400dfd6dd9ecdf81a068e8311c3cd4f873162389901d793d41e2043128635
+#手续费销毁地址-TNVTdTSPVnoPACtKgRmQy4s7SG3vm6XyR2Ffv
+awardFeeDestructionAddressPublicKey=020e19418ed26700b0dba720dcc95483cb4adb1b5f8a103818dab17d5b05231854
 #初始交易对地址[聚合stableCombining]
-stablePairAddressInitialSet=NERVEepb7WDfEU4ZKsEFmwCfGwCaYWgdHgk5tW,NERVEepb7XXViheVZG7tgAxhjr47KpSGi9cNbY
+stablePairAddressInitialSet=TNVTdTSQjXTtxDzx5T6pKnrYX5due39JDd1Se,TNVTdTSQbykRNGbseNWWPv4USLMFfirtx3aSx
 #读取文件的网络[重新保存所有交易对地址的关系]
-allPairRelationMainNet=true
-
+allPairRelationMainNet=false

@@ -362,4 +362,7 @@ public interface IHeterogeneousChainDocking {
         return null;
     }
 
+    default HeterogeneousChainGasInfo getHeterogeneousChainGasInfo() {
+        return null;
+    }
 }

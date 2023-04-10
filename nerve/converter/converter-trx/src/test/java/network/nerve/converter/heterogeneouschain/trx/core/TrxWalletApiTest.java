@@ -432,6 +432,7 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void sendTRC20WithdrawBySignDataTest() throws Exception {
+        setMainTest();
         setMain();
         String txKey = "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534";
         // 接收者地址
@@ -603,6 +604,7 @@ public class TrxWalletApiTest extends Base {
                 "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c"
         );
         //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
+        System.out.println(FunctionEncoder.encode(function));
 
         Response.TransactionExtention call = wrapper.constantCall(from, "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN", function);
         System.out.println(call.toString());
@@ -981,7 +983,7 @@ public class TrxWalletApiTest extends Base {
 
     @Test
     public void needFeeTest() {
-        BigDecimal nvt = calcOtherMainAssetOfWithdraw(AssetName.NVT, new BigDecimal("0.0304"), new BigDecimal("0.07"));
+        BigDecimal nvt = calcOtherMainAssetOfWithdraw(context, AssetName.NVT, new BigDecimal("0.0304"), new BigDecimal("0.07"));
         System.out.println(nvt);
     }
 
@@ -1008,9 +1010,9 @@ public class TrxWalletApiTest extends Base {
         //list.add("0x6c2039b5fdae068bad4931e8cc0b8e3a542937ac");
         //list.add("0x3c2ff003ff996836d39601ca22394a58ca9c473b");
         //list.add("0xf173805F1e3fE6239223B17F0807596Edc283012");
-        list.add("0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03");// TWAKmvmmcCgSrKXD94isjn2HiEzm5v8gj3 LfR535hsY8oYwx9jiw4TVePv1fcivand4Y
-        list.add("0xD16634629C638EFd8eD90bB096C216e7aEc01A91");// TV4QfTGaCZrLsHaSAsJgEkXg182nK31Dfx LeK9vcCg8VySxvCxkjeFzcuJJYekBhHVJw
-        list.add("0x16534991E80117Ca16c724C991aad9EAbd1D7ebe");// TC1FeBru3po4mcx6n2cXUQ4QQuuwV9ZQsM LMFzuLnzykvAsFadMtx7EGS2iLXuP4VwRE
+        list.add("TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN");// TWAKmvmmcCgSrKXD94isjn2HiEzm5v8gj3 LfR535hsY8oYwx9jiw4TVePv1fcivand4Y
+        list.add("T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb");// TV4QfTGaCZrLsHaSAsJgEkXg182nK31Dfx LeK9vcCg8VySxvCxkjeFzcuJJYekBhHVJw
+        list.add("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");// TC1FeBru3po4mcx6n2cXUQ4QQuuwV9ZQsM LMFzuLnzykvAsFadMtx7EGS2iLXuP4VwRE
         for (String address : list) {
             System.out.println("-------");
             System.out.println(TrxUtil.ethAddress2trx(address));

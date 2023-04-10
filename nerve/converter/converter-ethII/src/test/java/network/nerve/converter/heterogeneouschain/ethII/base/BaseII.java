@@ -77,7 +77,7 @@ public class BaseII {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://ropsten.infura.io/v3/cf9ce39514724372bfeac13262e164af";
+        String ethRpcAddress = "https://goerli.infura.io/v3/cf9ce39514724372bfeac13262e164af";
         htgWalletApi = new HtgWalletApi();
         EthContext.setLogger(Log.BASIC_LOGGER);
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
@@ -87,7 +87,7 @@ public class BaseII {
         htgContext = new EthIIContext();
         htgContext.SET_VERSION((byte) 3);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
-        cfg.setChainIdOnHtgNetwork(3);
+        cfg.setChainIdOnHtgNetwork(5);
         EthContext.setConfig(cfg);
         BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
     }
@@ -125,7 +125,7 @@ public class BaseII {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
-        return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress, null);
+        return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress, BigInteger.valueOf(18));
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract, BigInteger nonce) throws Exception {
@@ -138,7 +138,7 @@ public class BaseII {
         }
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
         Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
-        BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
+        BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(0L));
         HtgSendTransactionPo ethSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, nonce);
         //HtgSendTransactionPo ethSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, BigInteger.valueOf(90).multiply(BigInteger.TEN.pow(9)), BigInteger.valueOf(92));
         String ethTxHash = ethSendTransactionPo.getTxHash();
@@ -180,7 +180,7 @@ public class BaseII {
     }
     protected String sendChange(String txKey, String[] adds, int count, String[] removes, int signCount) throws Exception {
         String vHash = HtgUtil.encoderChange(htgContext, txKey, adds, count, removes, htgContext.VERSION());
-        String signData = this.ethSign(vHash, signCount);
+        String signData = this.ethPersonalSign(vHash, signCount);
         List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
         Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
@@ -203,6 +203,28 @@ public class BaseII {
             Credentials credentials = Credentials.create(prikey);
             String address = credentials.getAddress();
             Sign.SignatureData signMessage = Sign.signMessage(hash, credentials.getEcKeyPair(), false);
+            byte[] signed = new byte[65];
+            System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
+            System.arraycopy(signMessage.getS(), 0, signed, 32, 32);
+            System.arraycopy(signMessage.getV(), 0, signed, 64, 1);
+            String signedHex = Numeric.toHexStringNoPrefix(signed);
+            result += signedHex;
+            addressList.add(address);
+        }
+        System.out.println(Arrays.toString(addressList.toArray()));
+        System.out.println(String.format("signatures: 0x%s", result));
+        return result;
+    }
+
+    protected String ethPersonalSign(String hashStr, int signCount) {
+        String result = "";
+        List<String> addressList = new ArrayList<>();
+        byte[] hash = Numeric.hexStringToByteArray(hashStr);
+        for (int i = 0; i < signCount; i++) {
+            String prikey = list.get(i);
+            Credentials credentials = Credentials.create(prikey);
+            String address = credentials.getAddress();
+            Sign.SignatureData signMessage = Sign.signPrefixedMessage(hash, credentials.getEcKeyPair());
             byte[] signed = new byte[65];
             System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
             System.arraycopy(signMessage.getS(), 0, signed, 32, 32);

@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
@@ -1425,6 +1426,38 @@ public class HeterogeneousChainCmd extends BaseCmd {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode(), e.getMessage());
         } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.GAS_LIMIT_OF_HETEROGENEOUS_CHAINS, version = 1.0, description = "异构链需要的gasLimit")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    public Response gasLimitOfHeterogeneousChains(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            Map<Integer, HeterogeneousChainGasInfo> result = heterogeneousDockingManager.getAllHeterogeneousDocking().stream()
+                    .collect(Collectors.toMap(IHeterogeneousChainDocking::getChainId, IHeterogeneousChainDocking::getHeterogeneousChainGasInfo));
+            return success(result);
+        } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode(), e.getMessage());
         } catch (Exception e) {

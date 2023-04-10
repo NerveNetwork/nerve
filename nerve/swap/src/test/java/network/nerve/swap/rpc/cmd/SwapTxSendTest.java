@@ -357,7 +357,7 @@ public class SwapTxSendTest {
         //this.create4(params);
         //this.create5(params);
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 6).str());
+        params.put("tokenBStr", new NerveToken(5, 3).str());
 
         this.sendTx(from, SWAP_CREATE_PAIR, params);
     }
@@ -450,12 +450,12 @@ public class SwapTxSendTest {
         //this.addLiquidityGoat9usdx_bnb(params);
         //this.addLiquidityNvt8safemoon9(params);
         //this.addLiquidityGoat9safemoon9(params);
-        String amountA = "10000";
-        String amountB = "500";
+        String amountA = "2088736.98000275";
+        String amountB = "27255.899678279200910451";
         amountA = new BigDecimal(amountA).scaleByPowerOfTen(8).toPlainString();
         amountB = new BigDecimal(amountB).scaleByPowerOfTen(18).toPlainString();
         params.put("tokenAStr", new NerveToken(5, 1).str());
-        params.put("tokenBStr", new NerveToken(5, 6).str());
+        params.put("tokenBStr", new NerveToken(5, 3).str());
         params.put("amountA", amountA);
         params.put("amountB", amountB);
 
@@ -463,8 +463,8 @@ public class SwapTxSendTest {
         params.put("amountAMin", minAmounts[0].toString());
         params.put("amountBMin", minAmounts[1].toString());
         params.put("deadline", deadline());
-        params.put("to", address32);
-        from = address22;
+        params.put("to", address31);
+        from = address31;
         this.sendTx(from, SWAP_ADD_LIQUIDITY, params);
     }
 
@@ -484,17 +484,17 @@ public class SwapTxSendTest {
     @Test
     public void swapRemoveLiquidity() throws Exception {
         Map<String, Object> params = new HashMap<>();
-        params.put("amountLP", "23130066012");
-        params.put("tokenLPStr", "5-20");
+        params.put("amountLP", "1");
+        params.put("tokenLPStr", "5-4");
         params.put("tokenAStr", nvt.str());
-        params.put("tokenBStr", usdx_eth.str());
+        params.put("tokenBStr", "5-3");
         BigInteger[] minAmounts = this.calMinAmountOnSwapRemoveLiquidity(params);
         System.out.println(String.format("minAmounts: %s", Arrays.deepToString(minAmounts)));
         params.put("amountAMin", minAmounts[0].toString());
         params.put("amountBMin", minAmounts[1].toString());
         params.put("deadline", deadline());
         params.put("to", address31);
-        this.sendTx(address32, SWAP_REMOVE_LIQUIDITY, params);
+        this.sendTx(address31, SWAP_REMOVE_LIQUIDITY, params);
     }
 
     @Parameters(value = {
@@ -510,15 +510,15 @@ public class SwapTxSendTest {
     })
     @Test
     public void swapTokenTrade() throws Exception {
-        //String tokenIn = nvt.str();
-        //String amountIn = "50";
-        //amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(8).toPlainString();
-        //String tokenOut = usdx_bnb.str();
 
-        String tokenIn = usdx_bnb.str();
-        String amountIn = "5";
-        amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(6).toPlainString();
-        String tokenOut = nvt.str();
+        //String tokenIn = "5-3";
+        //String amountIn = "5";
+        //amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(18).toPlainString();
+        //String tokenOut = nvt.str();
+        String tokenIn = "5-1";
+        String amountIn = "300";
+        amountIn = new BigDecimal(amountIn).scaleByPowerOfTen(8).toPlainString();
+        String tokenOut = "5-3";
 
         //String[] pairs = new String[]{"TNVTdTSQ4vfckRXy2GWUykx174o3np9b7TC5q",
         //                                "TNVTdTSQBq61Gw6s8R9g8Jd7p6M2859Wn7kXW",
@@ -526,8 +526,9 @@ public class SwapTxSendTest {
         //                                "TNVTdTSQCTbG8b6Xq4qFN3pFikKrwsdfJRbKJ",
         //                                "TNVTdTSQJCuJoXDHUWH9c6pVydCiGc6Ees79i",
         //                                "TNVTdTSQ9MxeQxwX5sYW9xoCrXZt6FLvcchZu"};
-        String[] pairs = new String[]{"TNVTdTSQB2TVBWTB4p656AzJAEDvgaXr7coUG",
-                                        "TNVTdTSQHqLpFewLDaz76CqwfvqrHqhSmNqP7"};
+        //String[] pairs = new String[]{"TNVTdTSQB2TVBWTB4p656AzJAEDvgaXr7coUG",
+        //                                "TNVTdTSQHqLpFewLDaz76CqwfvqrHqhSmNqP7"};
+        String[] pairs = null;
         Map map = this.bestTradeExactIn(tokenIn, amountIn, tokenOut, 3, pairs);
         List<String> path = (List<String>) map.get("tokenPath");
         System.out.println(String.format("tokenPath: %s", path.toString()));
@@ -545,6 +546,18 @@ public class SwapTxSendTest {
         this.sendTx(from, SWAP_TOKEN_TRADE, params);
     }
 
+    @Test
+    public void getAmountOutTest() {
+        // 38296103107
+        // 34467124852
+        // 3916930679227385455
+        // 3525288254470448521
+        BigInteger amountIn = new BigInteger("30000000000");
+        BigInteger reserveIn = new BigInteger("208801035659207");
+        BigInteger reserveOut = new BigInteger("27265889678279200910451");
+        BigInteger feeRate = new BigInteger("100");
+        System.out.println(SwapUtils.getAmountOut(amountIn, reserveIn, reserveOut, feeRate));
+    }
 
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
@@ -691,7 +704,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getPairInfo() throws Exception {
-        Map map = this.getSwapPairInfo(nvt.str(), usdx_eth.str());
+        Map map = this.getSwapPairInfo(nvt.str(), "5-3");
         System.out.println(JSONUtils.obj2PrettyJson(map));
     }
 
@@ -706,7 +719,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getResult() throws Exception {
-        String hash = "0fd47577d813fa2c51c7e511cee04c3d30784211c26b9caa63324fcf84d958b9";
+        String hash = "3c4de5108fada194f21fff4b937aab73eace39382d9bea490184bc12dfd562cf";
         Map map = this.getSwapResultInfo(hash);
         System.out.println(JSONUtils.obj2PrettyJson(map));
         System.out.println();
@@ -888,6 +901,29 @@ public class SwapTxSendTest {
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
         params.put("remark", "稳定币增加币种测试");
         params.put("address", "TNVTdTSPLpegzD3B6qaVKhfj6t8cYtnkfR7Wx");
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+    @Test
+    public void proposalSwapPairFeeRate() throws Exception {
+        //账户已存在则覆盖 If the account exists, it covers.
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", (byte) 11);// ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE
+        params.put("content", "100");// 100‰ == 10%
+        params.put("businessAddress", "TNVTdTSQJkuFpDm9j49KJBBuduuv3XsQCoeJQ");// pairAddress
+        params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
+        params.put("remark", "交易对定制手续费");
+        params.put("address", address31);
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));

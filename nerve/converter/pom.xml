@@ -38,6 +38,8 @@
         <module>converter-enuls</module>
         <module>converter-kava</module>
         <module>converter-ethw</module>
+        <module>converter-rei</module>
+        <module>converter-zk</module>
 
     </modules>
 

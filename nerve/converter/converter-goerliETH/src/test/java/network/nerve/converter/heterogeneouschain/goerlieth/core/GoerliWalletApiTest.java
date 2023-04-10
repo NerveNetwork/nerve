@@ -421,8 +421,9 @@ public class GoerliWalletApiTest extends Base {
 
     @Test
     public void allContractManagerSet() throws Exception {
-        //setBeta();
-        setMainData();
+        setBeta();
+        //setMainData();
+        multySignContractAddress = "0xcb76C205866A58f6cEE4F3d4035CEE160D65F05D";
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
@@ -830,7 +831,7 @@ public class GoerliWalletApiTest extends Base {
 
     @Test
     public void getChainId() throws Exception {
-        setMain();
+        //setMain();
         System.out.println(htgWalletApi.getWeb3j().ethChainId().send().getChainId());
     }
 

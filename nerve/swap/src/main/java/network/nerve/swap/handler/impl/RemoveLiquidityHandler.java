@@ -42,6 +42,7 @@ import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.help.IPair;
 import network.nerve.swap.help.IPairFactory;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
 import network.nerve.swap.model.Chain;
@@ -79,6 +80,8 @@ public class RemoveLiquidityHandler extends SwapHandlerConstraints {
     private SwapPairCache swapPairCache;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Integer txType() {
@@ -128,7 +131,7 @@ public class RemoveLiquidityHandler extends SwapHandlerConstraints {
 
             // 整合计算数据
             RemoveLiquidityBus bus = SwapUtils.calRemoveLiquidityBusiness(chainId, iPairFactory, dto.getPairAddress(), liquidity,
-                    tokenA, tokenB, txData.getAmountAMin(), txData.getAmountBMin());
+                    tokenA, tokenB, txData.getAmountAMin(), txData.getAmountBMin(), swapHelper.isSupportProtocol24());
 
             IPair pair = bus.getPair();
             BigInteger amount0 = bus.getAmount0();
@@ -193,40 +196,14 @@ public class RemoveLiquidityHandler extends SwapHandlerConstraints {
     }
 
     private Transaction makeSystemDealTx(Chain chain, RemoveLiquidityBus bus, RemoveLiquidityDTO dto, NerveToken tokenLP, byte[] to, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
-        NerveToken token0 = bus.getToken0();
-        NerveToken token1 = bus.getToken1();
-        BigInteger amount0 = bus.getAmount0();
-        BigInteger amount1 = bus.getAmount1();
-        LedgerBalance ledgerBalance0 = tempBalanceManager.getBalance(dto.getPairAddress(), token0.getChainId(), token0.getAssetId()).getData();
-        LedgerBalance ledgerBalance1 = tempBalanceManager.getBalance(dto.getPairAddress(), token1.getChainId(), token1.getAssetId()).getData();
-        LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(dto.getPairAddress(), tokenLP.getChainId(), tokenLP.getAssetId()).getData();
-
-        SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
-        sysDeal.newFrom()
-                .setFrom(ledgerBalance0, amount0).endFrom()
-                .newFrom()
-                .setFrom(ledgerBalance1, amount1).endFrom()
-                .newFrom()
-                .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
-                .newTo()
-                .setToAddress(to)
-                .setToAssetsChainId(token0.getChainId())
-                .setToAssetsId(token0.getAssetId())
-                .setToAmount(amount0).endTo()
-                .newTo()
-                .setToAddress(to)
-                .setToAssetsChainId(token1.getChainId())
-                .setToAssetsId(token1.getAssetId())
-                .setToAmount(amount1).endTo();
-        if (chain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_15_0) {
-            sysDeal.newTo()
-                    .setToAddress(SwapContext.BLACKHOLE_ADDRESS)
-                    .setToAssetsChainId(tokenLP.getChainId())
-                    .setToAssetsId(tokenLP.getAssetId())
-                    .setToAmount(dto.getLiquidity()).endTo();
+        if (swapHelper.isSupportProtocol24()) {
+            // 更新流动性数额太小能退出
+            return makeSystemDealTxProtocol24(chain, bus, dto, tokenLP, to, orginTxHash, blockTime, tempBalanceManager);
+        } else if (swapHelper.isSupportProtocol15()) {
+            return makeSystemDealTxProtocol15(chain, bus, dto, tokenLP, to, orginTxHash, blockTime, tempBalanceManager);
+        } else {
+            return _makeSystemDealTx(chain, bus, dto, tokenLP, to, orginTxHash, blockTime, tempBalanceManager);
         }
-        Transaction sysDealTx = sysDeal.build();
-        return sysDealTx;
     }
 
     public RemoveLiquidityDTO getRemoveLiquidityInfo(int chainId, CoinData coinData) throws NulsException {
@@ -253,6 +230,111 @@ public class RemoveLiquidityHandler extends SwapHandlerConstraints {
         }
         byte[] userAddress = from.getAddress();
         return new RemoveLiquidityDTO(userAddress, pairAddress, to.getAmount());
+    }
+
+    private Transaction _makeSystemDealTx(Chain chain, RemoveLiquidityBus bus, RemoveLiquidityDTO dto, NerveToken tokenLP, byte[] to, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
+        NerveToken token0 = bus.getToken0();
+        NerveToken token1 = bus.getToken1();
+        BigInteger amount0 = bus.getAmount0();
+        BigInteger amount1 = bus.getAmount1();
+        LedgerBalance ledgerBalance0 = tempBalanceManager.getBalance(dto.getPairAddress(), token0.getChainId(), token0.getAssetId()).getData();
+        LedgerBalance ledgerBalance1 = tempBalanceManager.getBalance(dto.getPairAddress(), token1.getChainId(), token1.getAssetId()).getData();
+        LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(dto.getPairAddress(), tokenLP.getChainId(), tokenLP.getAssetId()).getData();
+
+        SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
+        sysDeal.newFrom()
+                .setFrom(ledgerBalance0, amount0).endFrom()
+                .newFrom()
+                .setFrom(ledgerBalance1, amount1).endFrom()
+                .newFrom()
+                .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
+                .newTo()
+                .setToAddress(to)
+                .setToAssetsChainId(token0.getChainId())
+                .setToAssetsId(token0.getAssetId())
+                .setToAmount(amount0).endTo()
+                .newTo()
+                .setToAddress(to)
+                .setToAssetsChainId(token1.getChainId())
+                .setToAssetsId(token1.getAssetId())
+                .setToAmount(amount1).endTo();
+        Transaction sysDealTx = sysDeal.build();
+        return sysDealTx;
+    }
+
+    private Transaction makeSystemDealTxProtocol15(Chain chain, RemoveLiquidityBus bus, RemoveLiquidityDTO dto, NerveToken tokenLP, byte[] to, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
+        NerveToken token0 = bus.getToken0();
+        NerveToken token1 = bus.getToken1();
+        BigInteger amount0 = bus.getAmount0();
+        BigInteger amount1 = bus.getAmount1();
+        LedgerBalance ledgerBalance0 = tempBalanceManager.getBalance(dto.getPairAddress(), token0.getChainId(), token0.getAssetId()).getData();
+        LedgerBalance ledgerBalance1 = tempBalanceManager.getBalance(dto.getPairAddress(), token1.getChainId(), token1.getAssetId()).getData();
+        LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(dto.getPairAddress(), tokenLP.getChainId(), tokenLP.getAssetId()).getData();
+
+        SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
+        sysDeal.newFrom()
+                .setFrom(ledgerBalance0, amount0).endFrom()
+                .newFrom()
+                .setFrom(ledgerBalance1, amount1).endFrom()
+                .newFrom()
+                .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
+                .newTo()
+                .setToAddress(to)
+                .setToAssetsChainId(token0.getChainId())
+                .setToAssetsId(token0.getAssetId())
+                .setToAmount(amount0).endTo()
+                .newTo()
+                .setToAddress(to)
+                .setToAssetsChainId(token1.getChainId())
+                .setToAssetsId(token1.getAssetId())
+                .setToAmount(amount1).endTo()
+                .newTo()
+                .setToAddress(SwapContext.BLACKHOLE_ADDRESS)
+                .setToAssetsChainId(tokenLP.getChainId())
+                .setToAssetsId(tokenLP.getAssetId())
+                .setToAmount(dto.getLiquidity()).endTo();
+        Transaction sysDealTx = sysDeal.build();
+        return sysDealTx;
+    }
+
+    private Transaction makeSystemDealTxProtocol24(Chain chain, RemoveLiquidityBus bus, RemoveLiquidityDTO dto, NerveToken tokenLP, byte[] to, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager) {
+        NerveToken token0 = bus.getToken0();
+        NerveToken token1 = bus.getToken1();
+        BigInteger amount0 = bus.getAmount0();
+        BigInteger amount1 = bus.getAmount1();
+        LedgerBalance ledgerBalanceLp = tempBalanceManager.getBalance(dto.getPairAddress(), tokenLP.getChainId(), tokenLP.getAssetId()).getData();
+
+        SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
+        if (amount0.compareTo(BigInteger.ZERO) > 0) {
+            LedgerBalance ledgerBalance0 = tempBalanceManager.getBalance(dto.getPairAddress(), token0.getChainId(), token0.getAssetId()).getData();
+            sysDeal.newFrom()
+                    .setFrom(ledgerBalance0, amount0).endFrom()
+                    .newTo()
+                    .setToAddress(to)
+                    .setToAssetsChainId(token0.getChainId())
+                    .setToAssetsId(token0.getAssetId())
+                    .setToAmount(amount0).endTo();
+        }
+
+        if (amount1.compareTo(BigInteger.ZERO) > 0) {
+            LedgerBalance ledgerBalance1 = tempBalanceManager.getBalance(dto.getPairAddress(), token1.getChainId(), token1.getAssetId()).getData();
+            sysDeal.newFrom()
+                    .setFrom(ledgerBalance1, amount1).endFrom()
+                    .newTo()
+                    .setToAddress(to)
+                    .setToAssetsChainId(token1.getChainId())
+                    .setToAssetsId(token1.getAssetId())
+                    .setToAmount(amount1).endTo();
+        }
+        sysDeal.newFrom()
+                .setFrom(ledgerBalanceLp, dto.getLiquidity()).endFrom()
+                .newTo()
+                .setToAddress(SwapContext.BLACKHOLE_ADDRESS)
+                .setToAssetsChainId(tokenLP.getChainId())
+                .setToAssetsId(tokenLP.getAssetId())
+                .setToAmount(dto.getLiquidity()).endTo();
+        Transaction sysDealTx = sysDeal.build();
+        return sysDealTx;
     }
 
 }

@@ -52,9 +52,9 @@ public class QuotationCall {
     public static BigDecimal getPriceByOracleKey(Chain chain, String oracleKey) {
         /********************* 测试用 ***************************/
         /*if("ETH_PRICE".equals(oracleKey)){
-            return new BigDecimal("2080.6417");
+            return new BigDecimal("1800.6417");
         } else if (ORACLE_KEY_NVT_PRICE.equals(oracleKey)){
-            return new BigDecimal("0.0147");
+            return new BigDecimal("0.0135");
         } else if ("BNB_PRICE".equals(oracleKey)){
             return new BigDecimal("306.3948");
         } else if ("HT_PRICE".equals(oracleKey)){
@@ -91,6 +91,8 @@ public class QuotationCall {
             return new BigDecimal("3.409");
         } else if ("LGCY_PRICE".equals(oracleKey)){
             return new BigDecimal("0.0001815");
+        } else if ("REI_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.1993");
         }*/
         /************************************************/
         try {

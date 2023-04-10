@@ -78,7 +78,8 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://rpc-mumbai.maticvigil.com";
+        //String ethRpcAddress = "https://rpc-mumbai.maticvigil.com";
+        String ethRpcAddress = "https://polygon-mumbai.blockpi.network/v1/rpc/public";
         htgWalletApi = new HtgWalletApi();
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);

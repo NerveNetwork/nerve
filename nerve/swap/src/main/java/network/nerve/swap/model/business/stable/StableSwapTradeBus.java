@@ -23,9 +23,11 @@
  */
 package network.nerve.swap.model.business.stable;
 
+import io.nuls.base.basic.AddressTool;
 import network.nerve.swap.model.business.BaseBus;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 /**
  * @author: PierreLuo
@@ -136,5 +138,28 @@ public class StableSwapTradeBus extends BaseBus {
 
     public void setTo(byte[] to) {
         this.to = to;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"pairAddress\":")
+                .append("\"").append(pairAddress == null ? "" : AddressTool.getStringAddressByBytes(pairAddress)).append("\"");
+        sb.append(",\"changeBalances\":")
+                .append(Arrays.toString(changeBalances));
+        sb.append(",\"balances\":")
+                .append(Arrays.toString(balances));
+        sb.append(",\"amountsIn\":")
+                .append(Arrays.toString(amountsIn));
+        sb.append(",\"unLiquidityAwardFees\":")
+                .append(Arrays.toString(unLiquidityAwardFees));
+        sb.append(",\"tokenOutIndex\":")
+                .append(tokenOutIndex);
+        sb.append(",\"amountOut\":")
+                .append(amountOut);
+        sb.append(",\"to\":")
+                .append("\"").append(to == null ? "" : AddressTool.getStringAddressByBytes(to)).append("\"");
+        sb.append('}');
+        return sb.toString();
     }
 }

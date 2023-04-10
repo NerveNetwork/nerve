@@ -1,18 +1,20 @@
 package network.nerve.converter.heterogeneouschain.trx.core;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.UnknownFieldSet;
 import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.ExceptionFunction;
 import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
+import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
@@ -454,7 +456,8 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             long sunUsed = 0;
             long energyUsed = call.getEnergyUsed();
             if (energyUsed != 0) {
-                sunUsed = BigInteger.valueOf(energyUsed).multiply(TrxConstant.SUN_PER_ENERGY).longValue();
+                TrxContext trxContext = (TrxContext) htgContext;
+                sunUsed = BigInteger.valueOf(energyUsed).multiply(trxContext.SUN_PER_ENERGY).longValue();
             }
             return TrxEstimateSun.SUCCESS(sunUsed, energyUsed);
         });
@@ -624,5 +627,25 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), from, to, value, null, TRX_2);
         });
         return transferTrx;
+    }
+
+    public BigInteger getCurrentGasPrice() throws Exception {
+        String result = HttpClientUtil.get(String.format(chainParamsURL));
+        if (StringUtils.isBlank(result)) {
+            return null;
+        }
+        Map<String, Object> map0 = JSONUtils.json2map(result);
+        List<Map> chainParameters = (List<Map>) map0.get("chainParameter");
+        if (chainParameters == null) {
+            return null;
+        }
+        BigInteger energyFee = null;
+        for (Map map : chainParameters) {
+            if ("getEnergyFee".equalsIgnoreCase((String) map.get("key"))) {
+                energyFee = new BigInteger(map.get("value").toString());
+                break;
+            }
+        }
+        return energyFee;
     }
 }

@@ -116,6 +116,7 @@ buildNumber.properties
 # Nuls output
 # log
 logs/
+data
 /data/
 /data-beta/
 /data-main/

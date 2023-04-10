@@ -125,7 +125,7 @@ public class Protocol22Test {
         /*
             101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
-            118 GoerliETH, 119 ENULS, 120 KAVA, 122 LGCY
+            118 GoerliETH, 119 ENULS, 120 KAVA, 122 LGCY?
          */
         Map<Integer, String[]> map = new HashMap<>();
         // 前旧后新
@@ -142,7 +142,7 @@ public class Protocol22Test {
         /*
             101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
-            119 ENULS, 120 KAVA, 121 ETHW, 122 LGCY
+            119 ENULS, 120 KAVA, 121 ETHW, 122 LGCY?
          */
         // 配置每个链的新旧多签合约
         Map<Integer, String[]> map = new HashMap<>();

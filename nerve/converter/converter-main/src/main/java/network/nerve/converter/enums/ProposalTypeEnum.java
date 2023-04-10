@@ -33,7 +33,8 @@ import java.util.Map;
  */
 public enum ProposalTypeEnum {
 
-    //类型 1:退回资金, 2:转到其他账户, 3:冻结账户, 4:解冻账户, 5:撤销银行资格, 6:其他类型, 7:多签合约升级, 8:提现, 9:稳定币交易对添加币种(swap module), 10:管理稳定币交易对-用于Swap交易(swap module)
+    //类型 1:退回资金, 2:转到其他账户, 3:冻结账户, 4:解冻账户, 5:撤销银行资格, 6:其他类型, 7:多签合约升级, 8:提现,
+    //    9:稳定币交易对添加币种(swap module), 10:管理稳定币交易对-用于Swap交易(swap module), 11: 管理SWAP交易对定制手续费
     REFUND((byte) 1),
 
     TRANSFER((byte) 2),
@@ -52,7 +53,9 @@ public enum ProposalTypeEnum {
 
     ADDCOIN((byte) 9),
 
-    MANAGE_STABLE_PAIR_FOR_SWAP_TRADE((byte) 10);
+    MANAGE_STABLE_PAIR_FOR_SWAP_TRADE((byte) 10),
+
+    MANAGE_SWAP_PAIR_FEE_RATE((byte) 11);
 
     private byte value;
     private static Map<Byte, ProposalTypeEnum> map;
@@ -68,7 +71,7 @@ public enum ProposalTypeEnum {
 
     private static ProposalTypeEnum putValue(byte value, ProposalTypeEnum valueEnum) {
         if (map == null) {
-            map = new HashMap<>(8);
+            map = new HashMap<>();
         }
         return map.put(value, valueEnum);
     }

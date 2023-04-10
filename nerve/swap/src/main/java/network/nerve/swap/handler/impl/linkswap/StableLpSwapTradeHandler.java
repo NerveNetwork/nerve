@@ -155,7 +155,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             StableAddLiquidityBus stableAddLiquidityBus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), firstSwapPair);
             NerveToken[] swapTradePath = new NerveToken[path.length - 1];
             System.arraycopy(path, 1, swapTradePath, 0, path.length - 1);
-            SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusinessProtocol17(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
+            SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
 
 
             // 装填执行结果
@@ -170,7 +170,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
             // 生成swap系统交易
-            Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTxProtocol17(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
 
             // 集成两个生成的交易
             Transaction sysDealTx = sysDealTx0;

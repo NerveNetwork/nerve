@@ -32,7 +32,9 @@ import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
+import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import network.nerve.converter.model.bo.HeterogeneousChainGasInfo;
 
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -51,6 +53,11 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  * @date: 2020-02-26
  */
 public class TrxContext extends HtgContext implements Serializable {
+
+    public BigInteger FEE_LIMIT_OF_WITHDRAW = TrxConstant.FEE_LIMIT_OF_WITHDRAW_BASE;
+    public BigInteger FEE_LIMIT_OF_CHANGE = TrxConstant.FEE_LIMIT_OF_CHANGE_BASE;
+    public BigInteger SUN_PER_ENERGY = TrxConstant.SUN_PER_ENERGY_BASE;
+    public HeterogeneousChainGasInfo gasInfo;
 
     public final int HTG_CHAIN_ID = 108;
     public final int HTG_ASSET_ID = 1;
@@ -255,5 +262,15 @@ public class TrxContext extends HtgContext implements Serializable {
     @Override
     public void SET_VERSION(byte version) {
         VERSION = version;
+    }
+
+    @Override
+    public BigInteger GAS_LIMIT_OF_WITHDRAW() {
+        return FEE_LIMIT_OF_WITHDRAW;
+    }
+
+    @Override
+    public BigInteger GAS_LIMIT_OF_CHANGE() {
+        return FEE_LIMIT_OF_CHANGE;
     }
 }

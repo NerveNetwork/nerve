@@ -52,6 +52,26 @@ public class SwapCall extends BaseCall {
         }
     }
 
+    public static boolean isLegalSwapFeeRate(int chainId, String swapPairAddress, Integer feeRate) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("swapPairAddress", swapPairAddress);
+            params.put("feeRate", feeRate);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_is_legal_swap_fee_rate", params);
+            if (result == null || result.get("value") == null) {
+                return false;
+            }
+            return (boolean) result.get("value");
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_swap_fee_rate");
+            LoggerUtil.LOG.error(msg, e);
+            return false;
+        }
+    }
+
 
     public static void addCoinForAddStable(int chainId, String stablePairAddress, int assetChainId, int assetId) throws NulsException {
         try {
@@ -125,6 +145,33 @@ public class SwapCall extends BaseCall {
             }
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_remove_stable_for_swap_trade");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static void updateSwapPairFeeRate(int chainId, String swapPairAddress, Integer feeRate) throws NulsException {
+        // swap手续费定制
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("swapPairAddress", swapPairAddress);
+            params.put("feeRate", feeRate);
+            boolean success;
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_update_swap_pair_fee_rate", params);
+            if (result == null || result.get("value") == null) {
+                success = false;
+            } else {
+                success = (boolean) result.get("value");
+            }
+            if (!success) {
+                LoggerUtil.LOG.error("[SWAP手续费定制] 更新失败. swapPairAddress: {}, feeRate:{}", swapPairAddress, feeRate);
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_update_swap_pair_fee_rate");
             LoggerUtil.LOG.error(msg, e);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }

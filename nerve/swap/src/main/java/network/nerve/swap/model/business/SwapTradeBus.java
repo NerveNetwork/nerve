@@ -23,6 +23,7 @@
  */
 package network.nerve.swap.model.business;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -58,5 +59,14 @@ public class SwapTradeBus {
 
     public void setTradePairBuses(List<TradePairBus> tradePairBuses) {
         this.tradePairBuses = tradePairBuses;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"tradePairBuses\":")
+                .append(Arrays.deepToString(tradePairBuses.toArray()));
+        sb.append('}');
+        return sb.toString();
     }
 }

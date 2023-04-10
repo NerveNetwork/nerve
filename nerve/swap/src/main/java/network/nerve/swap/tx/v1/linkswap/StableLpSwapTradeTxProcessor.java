@@ -174,10 +174,10 @@ public class StableLpSwapTradeTxProcessor implements TransactionProcessor {
                 StableAddLiquidityBus stableAddLiquidityBus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), firstSwapPair);
                 NerveToken[] swapTradePath = new NerveToken[path.length - 1];
                 System.arraycopy(path, 1, swapTradePath, 0, path.length - 1);
-                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusinessProtocol17(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
+                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
                 //协议17: 增加校验，稳定币兑换的逻辑
                 if (swapTradeBus.isExistStablePair()) {
-                    swapTradeHandler.makeSystemDealTxProtocol17(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
+                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
                 }
             } catch (Exception e) {
                 Log.error(e);

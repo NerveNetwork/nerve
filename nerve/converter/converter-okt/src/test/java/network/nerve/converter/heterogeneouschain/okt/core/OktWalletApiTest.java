@@ -205,6 +205,30 @@ public class OktWalletApiTest extends Base {
     }
 
     /**
+     * 转入eth
+     */
+    @Test
+    public void transferMainAsset() throws Exception {
+        List<String> tos = new ArrayList<>();
+        tos.add("0x5b7715efcbe4f2e9c474a246669f0eec77e271eb");
+        tos.add("0xa43cb8b34e3684146c7d7c40ec875e419ddd6ab5");
+        tos.add("0x993ceca520eaa925800686c4c4871f1dd78d0e19");
+        tos.add("0xb6a385bd1f16b830ea95df776d30649635dd98e3");
+        tos.add("0x2f865579a9fb015fe6cf4ce83ec0572ebb567078");
+        setLocalTest();
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        BigInteger gasPrice = htgContext.getEthGasPrice();
+        // 初始化 账户
+        setAccount_EFa1();
+        // MainAsset数量
+        String sendAmount = "0.5";
+        for (String to : tos) {
+            String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
+            System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
+        }
+    }
+
+    /**
      * 给多签合约转入eth和erc20（用于测试提现）
      */
     @Test
@@ -475,6 +499,7 @@ public class OktWalletApiTest extends Base {
     @Test
     public void allContractManagerSet() throws Exception {
         setBeta();
+        multySignContractAddress = "0x4B3230f6d76B9DE6B41c1E484eD5401f0F0458a9";
         System.out.println("查询当前合约管理员列表，请等待……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));

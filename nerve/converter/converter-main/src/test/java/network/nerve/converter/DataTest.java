@@ -26,6 +26,7 @@ package network.nerve.converter;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.model.Entry;
@@ -33,15 +34,18 @@ import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgERC20Po;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.HtgERC20StorageServiceImpl;
 import network.nerve.converter.model.bo.VirtualBankDirector;
 import network.nerve.converter.model.po.ComponentCallParm;
 import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.txdata.ConfirmWithdrawalTxData;
+import network.nerve.converter.rpc.cmd.TxSendTest;
 import network.nerve.converter.utils.ConverterDBUtil;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -51,6 +55,20 @@ import java.util.*;
  * @date: 2021/7/21
  */
 public class DataTest {
+
+    public static void main(String[] args) {
+        try {
+            String path = new File(HtgConstant.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            System.out.println(path);
+            String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
+            System.out.println(pData);
+            //String pData = IoUtils.readBytesToString();
+            //Map<String, Object> pMap = JSONUtils.json2map(pData);
+            //System.out.println(pData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void test() throws Exception {
@@ -113,7 +131,8 @@ public class DataTest {
         System.out.println(po.getHash().toHex());
     }
 
-    public static void main(String[] args) {
+    @Test
+    public void testBigDecimal() {
         BigDecimal big = new BigDecimal("13068492433458328880192656953000000000000000000").movePointLeft(18);
         BigDecimal token = new BigDecimal("13068492433458328880192656953").movePointLeft(18);
         System.out.println(big);

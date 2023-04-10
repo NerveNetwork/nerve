@@ -121,7 +121,7 @@ public class StableAddLiquidityBus extends BaseBus {
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
         sb.append("\"from\":")
-                .append(AddressTool.getStringAddressByBytes(from));
+                .append("\"").append(AddressTool.getStringAddressByBytes(from)).append("\"");
         sb.append(",\"realAmounts\":")
                 .append(Arrays.toString(realAmounts));
         sb.append(",\"liquidity\":")
@@ -131,7 +131,7 @@ public class StableAddLiquidityBus extends BaseBus {
         sb.append(",\"refundAmounts\":")
                 .append(Arrays.toString(refundAmounts));
         sb.append(",\"to\":")
-                .append(to == null ? "" : AddressTool.getStringAddressByBytes(to));
+                .append("\"").append(to == null ? "" : AddressTool.getStringAddressByBytes(to)).append("\"");
         sb.append('}');
         return sb.toString();
     }

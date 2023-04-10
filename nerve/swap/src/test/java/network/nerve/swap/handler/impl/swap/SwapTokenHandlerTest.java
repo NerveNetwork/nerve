@@ -147,7 +147,7 @@ public class SwapTokenHandlerTest {
         // 第二种方式计算amountOut
         IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairAddress));
         BigInteger[] reserves = pair.getReserves();
-        BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1]);
+        BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1], BI_3);
         Assert.assertEquals("两种方式计算amountOut", amountOutMin, amountOut);
         System.out.println(String.format("\t计算出的最低可买进: %s", amountOutMin));
         byte[] feeTo = null;
@@ -213,7 +213,7 @@ public class SwapTokenHandlerTest {
         // 第二种方式计算amountOut
         IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairAddress));
         BigInteger[] reserves = pair.getReserves();
-        BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1]);
+        BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1], BI_3);
         Assert.assertEquals("两种方式计算amountOut", amountOutMin, amountOut);
         System.out.println(String.format("\t计算出的最低可买进: %s", amountOutMin));
         byte[] feeTo = null;

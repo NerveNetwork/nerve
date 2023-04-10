@@ -233,6 +233,31 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = IS_LEGAL_SWAP_FEE_RATE, version = 1.0, description = "检查交易对手续费定制是否合法")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "交易对地址"),
+            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "手续费率")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response checkLegalSwapFeeRate(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String swapPairAddress = (String) params.get("swapPairAddress");
+            Integer feeRate = Integer.parseInt(params.get("feeRate").toString());
+            logger().debug("chainId: {}, swapPairAddress: {}, feeRate: {}", chainId, swapPairAddress, feeRate);
+            boolean legal = swapHelper.isLegalSwapFeeRate(chainId, swapPairAddress, feeRate);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legal);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
     @CmdAnnotation(cmd = ADD_COIN_FOR_STABLE, version = 1.0, description = "在稳定币兑换池中添加币种")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
@@ -252,6 +277,30 @@ public class SwapCmd extends BaseCmd {
             boolean legalCoin = stableSwapHelper.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
             Map<String, Object> resultData = new HashMap<>();
             resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = UPDATE_SWAP_PAIR_FEE_RATE, version = 1.0, description = "SWAP定制手续费")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "交易对地址"),
+            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "手续费率"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response updateSwapPairFeeRate(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String swapPairAddress = (String) params.get("swapPairAddress");
+            Integer feeRate = Integer.parseInt(params.get("feeRate").toString());
+            boolean success = swapHelper.updateSwapPairFeeRate(chainId, swapPairAddress, feeRate);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", success);
             return success(resultData);
         } catch (Exception e) {
             logger().error(e);
@@ -718,7 +767,7 @@ public class SwapCmd extends BaseCmd {
             byte[] pairAddress = SwapUtils.getPairAddress(chainId, tokenA, tokenB);
 
             RemoveLiquidityBus bus = SwapUtils.calRemoveLiquidityBusiness(chainId, iPairFactory, pairAddress, amountLP,
-                    tokenA, tokenB, BigInteger.ZERO, BigInteger.ZERO);
+                    tokenA, tokenB, BigInteger.ZERO, BigInteger.ZERO, swapHelper.isSupportProtocol24());
             if (bus == null) {
                 return failed(SwapErrorCode.DATA_ERROR);
             }

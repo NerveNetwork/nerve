@@ -42,6 +42,8 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxRelationStorageService;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgTxStorageService;
 import network.nerve.converter.heterogeneouschain.lib.storage.HtgUnconfirmedTxStorageService;
+import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxParseTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
@@ -50,6 +52,7 @@ import network.nerve.converter.model.bo.HeterogeneousOneClickCrossChainData;
 import network.nerve.converter.utils.LoggerUtil;
 import org.tron.trident.proto.Response;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -57,6 +60,7 @@ import java.util.Map;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.*;
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.SUN_PER_ENERGY_BASE;
 
 
 /**
@@ -92,6 +96,20 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
                 return;
+            }
+            try {
+                BigInteger energyFee = htgWalletApi.getCurrentGasPrice();
+                htgContext.logger().debug("当前{}网络的EnergyFee: {}.", htgContext.getConfig().getSymbol(), energyFee);
+                TrxContext trxContext = (TrxContext) htgContext;
+                if (energyFee != null && trxContext.SUN_PER_ENERGY.intValue() != energyFee.intValue()) {
+                    trxContext.FEE_LIMIT_OF_WITHDRAW = TrxConstant.FEE_LIMIT_OF_WITHDRAW_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
+                    trxContext.FEE_LIMIT_OF_CHANGE = TrxConstant.FEE_LIMIT_OF_CHANGE_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
+                    trxContext.SUN_PER_ENERGY = energyFee;
+                    trxContext.gasInfo = null;
+                    htgContext.logger().info("更新当前{}网络的EnergyFee: {}, FEE_LIMIT_OF_WITHDRAW: {}, FEE_LIMIT_OF_CHANGE: {}.", htgContext.getConfig().getSymbol(), energyFee, trxContext.FEE_LIMIT_OF_WITHDRAW, trxContext.FEE_LIMIT_OF_CHANGE);
+                }
+            } catch (Exception e) {
+                htgContext.logger().error(String.format("同步%s当前EnergyFee失败", htgContext.getConfig().getSymbol()), e);
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
                 LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());

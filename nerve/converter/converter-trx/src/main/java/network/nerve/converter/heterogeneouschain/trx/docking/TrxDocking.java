@@ -47,6 +47,7 @@ import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant;
+import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import network.nerve.converter.heterogeneouschain.trx.core.TrxWalletApi;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxAnalysisTxHelper;
 import network.nerve.converter.heterogeneouschain.trx.helper.TrxERC20Helper;
@@ -897,6 +898,17 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         return trxParseTxHelper.parseAddFeeCrossChainData(extend, logger());
     }
 
+    @Override
+    public HeterogeneousChainGasInfo getHeterogeneousChainGasInfo() {
+        TrxContext trxContext = (TrxContext) htgContext;
+        if (trxContext.gasInfo == null) {
+            trxContext.gasInfo = new HeterogeneousChainGasInfo();
+            trxContext.gasInfo.setGasLimitOfWithdraw(htgContext.GAS_LIMIT_OF_WITHDRAW().toString());
+            trxContext.gasInfo.setExtend(trxContext.SUN_PER_ENERGY.toString());
+        }
+        return trxContext.gasInfo;
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         if (htgContext.getConverterCoreApi().isProtocol22()) {
             // 协议22: 支持不同精度的跨链资产
@@ -1292,9 +1304,9 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         // feeLimit选择
         BigInteger feeLimit;
         if (txType == HeterogeneousChainTxType.WITHDRAW) {
-            feeLimit = TrxConstant.FEE_LIMIT_OF_WITHDRAW;
+            feeLimit = htgContext.GAS_LIMIT_OF_WITHDRAW();
         } else {
-            feeLimit = TrxConstant.FEE_LIMIT_OF_CHANGE;
+            feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
         }
         if (estimateSun.getSunUsed() > 0) {
             // 放大到1.3倍
@@ -1333,7 +1345,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             logger().error("[{}][withdraw] 提现手续费计算,没有获取到完整的报价. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
-        BigDecimal needOtherMainAssetAmount = TrxUtil.calcOtherMainAssetOfWithdraw(otherMainAssetName, otherMainAssetUSD, htgUSD);
+        BigDecimal needOtherMainAssetAmount = TrxUtil.calcOtherMainAssetOfWithdraw(htgContext, otherMainAssetName, otherMainAssetUSD, htgUSD);
         if (otherMainAssetAmount.compareTo(needOtherMainAssetAmount) >= 0) {
             logger().info("[{}]手续费足够，当前网络需要的{}: {}, 实际支出的{}: {}",
                     htgContext.getConfig().getSymbol(),
@@ -1355,7 +1367,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
-        BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15();
+        BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15(htgContext);
         if (amount.compareTo(amountCalc) >= 0) {
             return amountCalc;
         }

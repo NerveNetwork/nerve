@@ -23,6 +23,7 @@
  */
 package network.nerve.swap.help;
 
+import io.nuls.base.basic.AddressTool;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
@@ -34,8 +35,10 @@ import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.TokenAmount;
 import network.nerve.swap.model.dto.SwapPairDTO;
+import network.nerve.swap.model.po.SwapPairPO;
 import network.nerve.swap.model.vo.RouteVO;
 import network.nerve.swap.model.vo.SwapPairVO;
+import network.nerve.swap.storage.SwapPairStorageService;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.util.ArrayList;
@@ -57,6 +60,8 @@ public class SwapHelper {
     private IPairFactory iPairFactory;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+    @Autowired
+    private SwapPairStorageService swapPairStorageService;
 
     public void setNerveChain(Chain nerveChain) {
         this.nerveChain = nerveChain;
@@ -86,6 +91,10 @@ public class SwapHelper {
         return routes;
     }
 
+    public boolean isSupportProtocol15() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_15_0;
+    }
+
     public boolean isSupportProtocol17() {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_17_0;
     }
@@ -97,5 +106,37 @@ public class SwapHelper {
     public boolean isSupportProtocol22() {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_22_0;
     }
+    public boolean isSupportProtocol24() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_24_0;
+    }
 
+    public boolean updateSwapPairFeeRate(int chainId, String swapPairAddress, int feeRate) throws Exception {
+        nerveChain.getLogger().info("[Commit SwapFeeRate] swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);
+        byte[] address = AddressTool.getAddress(swapPairAddress);
+        SwapPairPO pair = swapPairStorageService.getPair(address);
+        if (pair == null) {
+            return false;
+        }
+        pair.setFeeRate(feeRate);
+        swapPairStorageService.savePair(address, pair);
+        // 更新缓存
+        swapPairCache.reload(swapPairAddress);
+        return true;
+    }
+
+    public boolean isLegalSwapFeeRate(Integer chainId, String swapPairAddress, Integer feeRate) {
+        byte[] address = AddressTool.getAddress(swapPairAddress);
+        SwapPairPO pair = swapPairStorageService.getPair(address);
+        if (pair == null) {
+            return false;
+        }
+        if (feeRate == null) {
+            return false;
+        }
+        if (feeRate.intValue() <= 3 || feeRate.intValue() >= 1000) {
+            nerveChain.getLogger().error("[CheckSwapFeeRate] error, swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);
+            return false;
+        }
+        return true;
+    }
 }

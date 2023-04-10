@@ -1386,7 +1386,7 @@ public class Protocol16Test {
                 return;
             }
             // feeLimit选择
-            BigInteger feeLimit = TrxConstant.FEE_LIMIT_OF_CHANGE;
+            BigInteger feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
             if (estimateSun.getSunUsed() > 0) {
                 // 放大到1.3倍
                 feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_1_DOT_3).toBigInteger();

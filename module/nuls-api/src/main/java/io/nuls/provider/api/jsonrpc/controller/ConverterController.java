@@ -496,4 +496,24 @@ public class ConverterController {
 
         return ResultUtil.getJsonRpcResult(result1);
     }
+
+    @RpcMethod("gasLimitOfHeterogeneousChains")
+    @ApiOperation(description = "异构链需要的gasLimit", order = 614)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    public RpcResult gasLimitOfHeterogeneousChains(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_gasLimitOfHeterogeneousChains", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
 }

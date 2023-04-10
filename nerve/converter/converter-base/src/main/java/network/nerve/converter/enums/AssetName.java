@@ -52,7 +52,9 @@ public enum AssetName {
     GOERLIETH(118, 18),
     ENULS(119, 18),
     KAVA(120, 18),
-    ETHW(121, 18);
+    ETHW(121, 18),
+    REI(122, 18),
+    ZK(123, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

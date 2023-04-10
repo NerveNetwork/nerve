@@ -57,4 +57,15 @@ public class SwapTradeStableRemoveLpBus extends BaseBus {
     public void setSwapTradeBus(SwapTradeBus swapTradeBus) {
         this.swapTradeBus = swapTradeBus;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("\"swapTradeBus\":")
+                .append(swapTradeBus);
+        sb.append(",\"stableRemoveLiquidityBus\":")
+                .append(stableRemoveLiquidityBus);
+        sb.append('}');
+        return sb.toString();
+    }
 }

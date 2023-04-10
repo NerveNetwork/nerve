@@ -407,6 +407,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_23_0;
     }
 
+    @Override
+    public boolean isProtocol24() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_24_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -580,6 +585,8 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public boolean checkNetworkRunning(int hChainId) {
+        //skippedNetworks.add(103);
+        //skippedNetworks.add(109);
         if (nerveChain.getChainId() == 5 && skippedNetworks.contains(hChainId)) {
             return false;
         }

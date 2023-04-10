@@ -170,7 +170,7 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             // 用户卖出的资产数量
             BigInteger amountIn = dto.getAmountIn();
             // 整合计算数据
-            SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusinessProtocol17(chainId, iPairFactory, amountIn,
+            SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, amountIn,
                     swapTradeTo, path, txData.getAmountOutMin(), txData.getFeeTo());
             List<TradePairBus> pairBuses = swapTradeBus.getTradePairBuses();
             TradePairBus lastPairBus = pairBuses.get(pairBuses.size() - 1);
@@ -189,7 +189,7 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             // 组装系统成交交易
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             // 生成swap系统交易
-            Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTxProtocol17(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
             // 更新临时余额
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx0, blockTime);
             // 生成撤销稳定币流动性系统交易

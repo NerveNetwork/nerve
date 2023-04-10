@@ -181,11 +181,11 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                 }
 
                 // 整合计算数据
-                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusinessProtocol17(chainId, iPairFactory, dto.getAmountIn(),
+                SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
                         stablePairAddressBytes, txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
                 //协议17: 增加校验，稳定币兑换的逻辑
                 if (swapTradeBus.isExistStablePair()) {
-                    swapTradeHandler.makeSystemDealTxProtocol17(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
+                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
                 }
                 List<TradePairBus> pairBuses = swapTradeBus.getTradePairBuses();
                 TradePairBus lastPairBus = pairBuses.get(pairBuses.size() - 1);

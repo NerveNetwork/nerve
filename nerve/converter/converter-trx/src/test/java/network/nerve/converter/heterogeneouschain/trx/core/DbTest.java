@@ -28,12 +28,15 @@ import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.HtgBlockHeaderStorageServiceImpl;
+import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
 import network.nerve.converter.heterogeneouschain.trx.constant.TrxDBConstant;
 import network.nerve.converter.heterogeneouschain.trx.context.TrxContext;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
+
+import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.chainParamsURL;
 
 /**
  * @author: PierreLuo
@@ -55,5 +58,11 @@ public class DbTest {
     public void testBlockDB() throws Exception {
         HtgBlockHeaderStorageServiceImpl blockDB = new HtgBlockHeaderStorageServiceImpl(htContext, TrxDBConstant.DB_TRX);
         System.out.println(JSONUtils.obj2PrettyJson(blockDB.findLatest()));
+    }
+
+    @Test
+    public void chainParamsTest() throws Exception {
+        String result = HttpClientUtil.get(String.format(chainParamsURL));
+        System.out.println(result);
     }
 }

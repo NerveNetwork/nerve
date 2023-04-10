@@ -62,6 +62,11 @@ public class MaticWalletApiTest extends Base {
         erc20Decimals = 8;
     }
 
+    protected void setAccount_2501() {
+        from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
+        fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
+    }
+
     protected void setAccount_c684() {
         from = "0xfa27c84eC062b2fF89EB297C24aaEd366079c684";
         fromPriKey = "b36097415f57fe0ac1665858e3d007ba066a7c022ec712928d2372b27e8513ff";
@@ -197,17 +202,18 @@ public class MaticWalletApiTest extends Base {
     public void transferMainAssetAndERC20() throws Exception {
         BigInteger gasPrice = htgContext.getEthGasPrice();
         // 初始化 账户
-        setAccount_EFa1();
+        setAccount_2501();
         // MainAsset数量
-        String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
-        System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
+        String sendAmount = "0.001";
+        String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
+        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, toAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", toAddress, sendAmount, txHash));
         // ERC20
-        String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
-        String tokenAmount = "100";
-        int tokenDecimals = 6;
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
-        System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
+        //String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
+        //String tokenAmount = "100";
+        //int tokenDecimals = 6;
+        //EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
+        //System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
 
     /**

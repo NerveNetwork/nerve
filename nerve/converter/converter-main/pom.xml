@@ -152,6 +152,16 @@
             <artifactId>converter-ethw</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-rei</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-zk</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

@@ -99,6 +99,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     protected HtgResendHelper htgResendHelper;
     protected HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
+    private HeterogeneousChainGasInfo gasInfo;
 
     //public HtgDocking(BeanMap beanMap) {
     //    this.htgContext = (HtgContext) beanMap.get("htgContext");
@@ -970,6 +971,15 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     @Override
     public HeterogeneousAddFeeCrossChainData parseAddFeeCrossChainData(String extend) {
         return htgParseTxHelper.parseAddFeeCrossChainData(extend, logger());
+    }
+
+    @Override
+    public HeterogeneousChainGasInfo getHeterogeneousChainGasInfo() {
+        if (gasInfo == null) {
+            gasInfo = new HeterogeneousChainGasInfo();
+            gasInfo.setGasLimitOfWithdraw(htgContext.GAS_LIMIT_OF_WITHDRAW().toString());
+        }
+        return gasInfo;
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

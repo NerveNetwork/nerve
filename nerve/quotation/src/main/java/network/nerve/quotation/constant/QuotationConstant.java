@@ -123,6 +123,7 @@ public interface QuotationConstant {
 
     String ANCHOR_TOKEN_KAVA = "KAVA-USDT";
     String ANCHOR_TOKEN_ETHW = "ETHW-USDT";
+    String ANCHOR_TOKEN_REI = "REI-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

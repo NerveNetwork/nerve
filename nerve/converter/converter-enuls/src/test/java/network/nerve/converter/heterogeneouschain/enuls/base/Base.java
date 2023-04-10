@@ -153,6 +153,12 @@ public class Base {
         Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
     }
+    protected String sendChangeWithSignData(String txKey, String[] adds, int count, String[] removes, String signData) throws Exception {
+        List<Address> addList = Arrays.asList(adds).stream().map(a -> new Address(a)).collect(Collectors.toList());
+        List<Address> removeList = Arrays.asList(removes).stream().map(r -> new Address(r)).collect(Collectors.toList());
+        Function function = HtgUtil.getCreateOrSignManagerChangeFunction(txKey, addList, removeList, count, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.CHANGE);
+    }
 
     protected String sendUpgrade(String txKey, String upgradeContract, int signCount) throws Exception {
         String vHash = HtgUtil.encoderUpgrade(htgContext, txKey, upgradeContract, VERSION);

@@ -117,9 +117,9 @@ public class StableRemoveLiquidityBus extends BaseBus {
         sb.append(",\"liquidity\":")
                 .append(liquidity);
         sb.append(",\"pairAddress\":")
-                .append(pairAddress == null ? "" : AddressTool.getStringAddressByBytes(pairAddress));
+                .append("\"").append(pairAddress == null ? "" : AddressTool.getStringAddressByBytes(pairAddress)).append("\"");
         sb.append(",\"to\":")
-                .append(to == null ? "" : AddressTool.getStringAddressByBytes(to));
+                .append("\"").append(to == null ? "" : AddressTool.getStringAddressByBytes(to)).append("\"");
         sb.append('}');
         return sb.toString();
     }

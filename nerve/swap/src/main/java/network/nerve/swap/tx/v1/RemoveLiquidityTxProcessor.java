@@ -19,6 +19,7 @@ import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.impl.RemoveLiquidityHandler;
 import network.nerve.swap.help.IPair;
 import network.nerve.swap.help.IPairFactory;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
@@ -52,6 +53,8 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
     private LedgerAssetCache ledgerAssetCache;
     @Autowired
     private SwapPairCache swapPairCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public int getType() {
@@ -136,7 +139,7 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 SwapUtils.calRemoveLiquidityBusiness(chainId, iPairFactory, dto.getPairAddress(), dto.getLiquidity(),
-                        tokenA, tokenB, amountAMin, amountBMin);
+                        tokenA, tokenB, amountAMin, amountBMin, swapHelper.isSupportProtocol24());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

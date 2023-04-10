@@ -163,6 +163,10 @@ public interface IConverterCoreApi {
      * 是否支持协议23 v1.23.0
      */
     boolean isProtocol23();
+    /**
+     * 是否支持协议24 v1.24.0
+     */
+    boolean isProtocol24();
 
 
     /**

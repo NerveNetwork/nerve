@@ -104,8 +104,8 @@ public class Base {
         if (walletApi.getWrapper() != null) {
             walletApi.getWrapper().close();
         }
-        //wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
-        wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
+        wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
+        //wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
         walletApi.setWrapper(wrapper);
         walletApi.setRpcAddress("endpoint:tron.nerve.network");
         context.config.setChainIdOnHtgNetwork(100000002);

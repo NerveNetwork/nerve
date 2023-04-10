@@ -80,5 +80,6 @@ public interface ConverterCmdConstant {
     String GET_RECHARGE_NERVE_HASH = "cv_getRechargeNerveHash";
     String FIND_BY_WITHDRAWAL_TX_HASH = "cv_findByWithdrawalTxHash";
     String RETRY_VIRTUAL_BANK = "cv_retryVirtualBank";
+    String GAS_LIMIT_OF_HETEROGENEOUS_CHAINS = "cv_gasLimitOfHeterogeneousChains";
 
 }

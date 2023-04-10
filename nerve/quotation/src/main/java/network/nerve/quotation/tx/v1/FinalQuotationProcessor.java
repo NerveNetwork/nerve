@@ -266,6 +266,13 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                 }
             }
 
+            if(key.equals(ANCHOR_TOKEN_REI)) {
+                if (height < protocol24Height) {
+                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    return false;
+                }
+            }
+
             return true;
         }
         for(QuotationContractCfg quContractCfg : chain.getContractQuote()){

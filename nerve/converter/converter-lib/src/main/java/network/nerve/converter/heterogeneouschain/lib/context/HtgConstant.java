@@ -35,7 +35,9 @@ import org.web3j.abi.datatypes.generated.Uint8;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author: PierreLuo
@@ -90,7 +92,12 @@ public interface HtgConstant {
     String EVENT_HASH_CROSS_OUT_FUNDS = "0x5ddf9724d8fe5d9e12499be2867f93d41a582733dcd65f74a486ad7e30667146";
     String EVENT_HASH_CROSS_OUT_II_FUNDS = "0x692e6a6e27573f2a2a757e34cb16ae101c5fca8834f9b8a6cdbcf64b8450d870";
     String EVENT_HASH_UNKNOWN_ON_POLYGON = "0x4dfe1bbbcf077ddc3e01291eea2d5c70c2b422b415d95645b9adcfd678cb1d63";
-
+    String EVENT_HASH_UNKNOWN_ON_REI = "0x873c82cd37aaacdcf736cbb6beefc8da36d474b65ad23aaa1b1c6fbd875f7076";
+    Set<String> TRANSACTION_COMPLETED_TOPICS = Set.of(
+            EVENT_HASH_TRANSACTION_WITHDRAW_COMPLETED,
+            EVENT_HASH_TRANSACTION_MANAGER_CHANGE_COMPLETED,
+            EVENT_HASH_TRANSACTION_UPGRADE_COMPLETED
+    );
 
     List<TypeReference<Type>> INPUT_WITHDRAW = Utils.convert(
             List.of(
@@ -233,6 +240,7 @@ public interface HtgConstant {
 
     BigInteger GWEI_DOT_01 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(7));
     BigInteger GWEI_DOT_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(8));
+    BigInteger GWEI_DOT_3 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(8));
     BigInteger GWEI_1 = BigInteger.valueOf(1L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_2 = BigInteger.valueOf(2L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_3 = BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9));

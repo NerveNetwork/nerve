@@ -61,14 +61,6 @@ public class HtgParseTxHelper implements BeanInitial {
     private HtgListener htgListener;
     private HtgContext htgContext;
 
-    //public HtgParseTxHelper(BeanMap beanMap) {
-    //    this.htgERC20Helper = (HtgERC20Helper) beanMap.get("htgERC20Helper");
-    //    this.htgTxStorageService = (HtgTxStorageService) beanMap.get("htgTxStorageService");
-    //    this.htgWalletApi = (HtgWalletApi) beanMap.get("htgWalletApi");
-    //    this.htgListener = (HtgListener) beanMap.get("htgListener");
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
-
     private NulsLogger logger() {
         return htgContext.logger();
     }
@@ -608,33 +600,49 @@ public class HtgParseTxHelper implements BeanInitial {
         if (logs == null || logs.isEmpty()) {
             return null;
         }
-        Log log = logs.get(logs.size() - 1);
-        List<String> topics = log.getTopics();
-        if (log.getTopics().size() == 0) {
-            return null;
-        }
-        String eventHash = topics.get(0);
-        // Polygon链，存在erc20转账的合约交易中，会在末尾多出一个未知事件
-        if (htgContext.getConfig().getChainId() == 106) {
-            if (HtgConstant.EVENT_HASH_UNKNOWN_ON_POLYGON.equals(eventHash)) {
-                log = logs.get(logs.size() - 2);
-                topics = log.getTopics();
-                eventHash = topics.get(0);
+        Log signerLog = null;
+        for (Log log : logs) {
+            List<String> topics = log.getTopics();
+            if (topics != null && topics.size() > 0) {
+                String eventHash = topics.get(0);
+                if (HtgConstant.TRANSACTION_COMPLETED_TOPICS.contains(eventHash)) {
+                    signerLog = log;
+                    break;
+                }
             }
         }
+        if (signerLog == null) {
+            return null;
+        }
+        String eventHash = signerLog.getTopics().get(0);
+        //// Polygon链，存在erc20转账的合约交易中，会在末尾多出一个未知事件
+        //if (htgContext.getConfig().getChainId() == 106) {
+        //    if (HtgConstant.EVENT_HASH_UNKNOWN_ON_POLYGON.equals(eventHash)) {
+        //        log = logs.get(logs.size() - 2);
+        //        topics = log.getTopics();
+        //        eventHash = topics.get(0);
+        //    }
+        //} else if (htgContext.getConfig().getChainId() == 122) {
+        //    // REI链，存在erc20转账的合约交易中，会在末尾多出一个未知事件
+        //    if (HtgConstant.EVENT_HASH_UNKNOWN_ON_REI.equals(eventHash)) {
+        //        log = logs.get(logs.size() - 2);
+        //        topics = log.getTopics();
+        //        eventHash = topics.get(0);
+        //    }
+        //}
 
         // topics 解析事件名, 签名完成会触发的事件
         // 解析事件数据，获得交易的成功事件数据列表
         List<Object> eventResult = null;
         switch (eventHash) {
             case HtgConstant.EVENT_HASH_TRANSACTION_WITHDRAW_COMPLETED:
-                eventResult = HtgUtil.parseEvent(log.getData(), HtgConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED);
+                eventResult = HtgUtil.parseEvent(signerLog.getData(), HtgConstant.EVENT_TRANSACTION_WITHDRAW_COMPLETED);
                 break;
             case HtgConstant.EVENT_HASH_TRANSACTION_MANAGER_CHANGE_COMPLETED:
-                eventResult = HtgUtil.parseEvent(log.getData(), HtgConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED);
+                eventResult = HtgUtil.parseEvent(signerLog.getData(), HtgConstant.EVENT_TRANSACTION_MANAGER_CHANGE_COMPLETED);
                 break;
             case HtgConstant.EVENT_HASH_TRANSACTION_UPGRADE_COMPLETED:
-                eventResult = HtgUtil.parseEvent(log.getData(), HtgConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED);
+                eventResult = HtgUtil.parseEvent(signerLog.getData(), HtgConstant.EVENT_TRANSACTION_UPGRADE_COMPLETED);
                 break;
         }
         return eventResult;

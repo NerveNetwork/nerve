@@ -3,6 +3,7 @@ package network.nerve.converter.heterogeneouschain.lib.core;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
@@ -456,6 +457,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         //发送广播
         EthSendTransaction send = send(hexValue);
         if (send == null || send.getResult() == null) {
+            getLog().error(JSONUtils.obj2json(send));
             return null;
         }
         if (send.getResult().equals("nonce too low")) {
