@@ -3,6 +3,7 @@ package network.nerve.pocbft.v1;
 import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import network.nerve.pocbft.constant.CommandConstant;
@@ -130,7 +131,7 @@ public class VoteController extends BasicObject {
 
         byte[] sign;
         try {
-            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes());
+            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes(), Map.of("voteMessage", HexUtil.encode(message.serialize()), "method", "voteMsgSign"));
         } catch (IOException | NulsException e) {
             LoggerUtil.commonLog.error(e);
             return;
@@ -218,7 +219,7 @@ public class VoteController extends BasicObject {
         message.setVoteRoundIndex(voteRoundIndex);
         byte[] sign;
         try {
-            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes());
+            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes(), Map.of("voteMessage", HexUtil.encode(message.serialize()), "method", "voteMsgSign"));
         } catch (IOException | NulsException e) {
             log.error(e);
             return;

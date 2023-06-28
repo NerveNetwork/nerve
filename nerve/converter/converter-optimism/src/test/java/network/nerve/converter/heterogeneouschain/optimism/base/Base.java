@@ -95,7 +95,8 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://mainnet.optimism.io";
+        //String mainEthRpcAddress = "https://endpoints.omniatech.io/v1/op/goerli/public";
+        String mainEthRpcAddress = "https://1rpc.io/op";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);

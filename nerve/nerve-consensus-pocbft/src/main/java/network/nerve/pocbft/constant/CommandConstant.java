@@ -69,9 +69,16 @@ public interface CommandConstant {
      */
     String CALL_AC_GET_UNENCRYPTED_ADDRESS_LIST = "ac_getUnencryptedAddressList";
     String CALL_AC_GET_PRIKEY_BY_ADDRESS = "ac_getPriKeyByAddress";
+    String CALL_AC_GET_PUBLIC_BY_ADDRESS = "ac_getPubKeyByAddress";
+
+    String CALL_AC_ACCOUNT_VALID = "ac_valid_account";
     String CALL_AC_GET_MULTI_SIGN_ACCOUNT = "ac_getMultiSignAccount";
     String CALL_AC_GET_SIGN_DIGEST = "ac_signDigest";
+    String CALL_AC_GET_SIGN_DIGEST_NEW = "ac_signature";
+    String CALL_AC_ECIES_DECRYPT = "ac_ecies_decrypt";
     String CALL_AC_SIGN_BLOCK_DIGEST = "ac_signBlockDigest";
+
+    String CALL_AC_SIGN_BLOCK_DIGEST_NEW = "ac_block_signature";
     String CALL_AC_GET_ENCRYPTED_ADDRESS_LIST = "ac_getEncryptedAddressList";
     String CALL_AC_GET_ALIAS_BY_ADDRESS = "ac_getAliasByAddress";
 

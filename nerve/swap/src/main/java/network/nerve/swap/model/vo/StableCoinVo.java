@@ -25,6 +25,7 @@ package network.nerve.swap.model.vo;
 
 import network.nerve.swap.model.NerveToken;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,16 @@ public class StableCoinVo {
             this.groupCoin.put(token.str(), 1);
         }
     }
+
+    public StableCoinVo(String address, NerveToken lpToken, NerveToken[] coins) {
+        this.address = address;
+        this.lpToken = lpToken.str();
+        this.groupCoin = new HashMap<>();
+        for (NerveToken token : coins) {
+            this.groupCoin.put(token.str(), 1);
+        }
+    }
+
 
     public String getAddress() {
         return address;

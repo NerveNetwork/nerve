@@ -181,7 +181,7 @@ public class ArbitrumWalletApiTest extends Base {
         setAccount_EFa1();
         // MainAsset数量
         String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(1810000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(1810000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
     }
 
@@ -199,9 +199,10 @@ public class ArbitrumWalletApiTest extends Base {
         setErc20USDT();
         String tokenAddress = erc20Address;
         int tokenDecimals = erc20Decimals;
-        String tokenAmount = "43211234.123456";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
-        System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
+        String tokenAmount = "0.123456";
+        String to = "0xfa27c84eC062b2fF89EB297C24aaEd366079c684";
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 
     /**

@@ -105,13 +105,13 @@ public class EnulsWalletApiTest extends Base {
         list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
         list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
         list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
-        list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
-        list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
-        list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
-        list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
-        list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
-        list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
+        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
+        //list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
+        //list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
+        //list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
+        //list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
+        this.multySignContractAddress = "0xE1F5Ae8aC67878B0D07315BDE36F004494351d67";
         // 备用: 0xB29A26df2702B10BFbCf8cd52914Ad1fc99A4540
         init();
     }
@@ -211,7 +211,7 @@ public class EnulsWalletApiTest extends Base {
         // MainAsset数量
         String sendAmount = "1";
         for (String to : tos) {
-            String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
+            String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
             System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
         }
     }
@@ -236,7 +236,7 @@ public class EnulsWalletApiTest extends Base {
         int tokenDecimals = erc20Decimals;
         String tokenAmount = "100000000";
         String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
 
         setErc20USD18();
@@ -244,7 +244,7 @@ public class EnulsWalletApiTest extends Base {
         tokenDecimals = erc20Decimals;
         tokenAmount = "100000000";
         to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 
@@ -253,16 +253,17 @@ public class EnulsWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setMainData();
+        //setMainData();
+        setLocalTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
-        //setAccount_EFa1();
-        fromPriKey = "???";
-        from = Credentials.create(fromPriKey).getAddress();
+        setAccount_EFa1();
+        //fromPriKey = "???";
+        //from = Credentials.create(fromPriKey).getAddress();
         // MainAsset数量
         String sendAmount = "0.123456";
         // Nerve 接收地址
-        String to = "NERVE???";
+        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, HtgConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
@@ -283,16 +284,16 @@ public class EnulsWalletApiTest extends Base {
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
-        //setLocalTest();
-        setBeta();
+        setLocalTest();
+        //setBeta();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
         String sendAmount = "8.12345678";// 1.123456, 1234.123456789123456789
         // 初始化 ERC20 地址信息
-        //setErc20USDT();
-        setErc20NVT();erc20Address="0x6D948B9Dd21f4bEB14edDd19aa8Fa94d32F02D15";
+        setErc20USDT();
+        //setErc20NVT();
         //setErc20USD18();
         // Nerve 接收地址
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
@@ -429,19 +430,13 @@ public class EnulsWalletApiTest extends Base {
      * 还原合约管理员
      */
     @Test
-    public void resetContractManager() throws Exception {
+    public void removeContractManager() throws Exception {
         setLocalTest();
         // 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65,0xd29E172537A3FB133f790EBE57aCe8221CB8024F,0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
-        String txKey = "bbbf300000000000000000000000000000000000000000000000000000000000";
+        String txKey = "bbbf300000000000000000000000000000000000000000000000000000000001";
         String[] adds = new String[]{};
-        /*String[] removes = new String[]{
-                "0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17",
-                "0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65",
-                "0xd29E172537A3FB133f790EBE57aCe8221CB8024F"
-        };*/
         String[] removes = new String[]{
-                "0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389",
-                "0x9d12d368cc5d3461f157ef7fe58513863844b909"
+                "0xc753d679f58b6111cc7df52b57217a0d81ff725c"
         };
         int txCount = 1;
         int signCount = list.size();
@@ -570,6 +565,25 @@ public class EnulsWalletApiTest extends Base {
         list.add("");// ???
         this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         init();
+    }
+
+    @Test
+    public void upgradeContractTest() throws Exception {
+        setLocalTest();
+        list.clear();
+        list.add("e750c0c681a34449110787e234c125157f191449b5df27a10f6075f883b66f00");
+        list.add("e84d680293e130f23068bc6bf0f16546bdb5f04816ec6d6338a9a14f0770e53a");
+        list.add("b76bfc28683863b797a88749c1083819e2ec4e6358d71d34e0069da7b92a10f7");
+        init();
+        // GasPrice准备
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.SET_VERSION((byte) 3);
+        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
+        int signCount = list.size();
+        this.multySignContractAddress = "0x7293e234D14150A108f02eD822C280604Ee76583";
+        String newContract = "0x4f99f4Dd49B615b924DBD34E8FCdff190c6BeF46";
+        String hash = this.sendUpgrade(txKey, newContract, signCount);
+        System.out.println(String.format("合约升级: %s，%s个签名，hash: %s", newContract, signCount, hash));
     }
 
     /**

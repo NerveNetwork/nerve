@@ -179,6 +179,15 @@ public class SignatureUtil {
         return false;
     }
 
+    public static void main(String[] args) throws NulsException {
+        byte[] hash = HexUtil.decode("02002103200bda89e4116392aa5b939d739e6c9358600c0f8c1790dd4f284591b285de70143130362e35352e3234342e3136303a3137303031210308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260143130362e39312e3230352e3231303a3137303031");
+        byte[] bytes = HexUtil.decode("210308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db7819826046304402206964e8b8cfb0b2879cddc837ed849a0a7d50d4e65b16e890e7057e262bc79a8e0220350319ba333d99358aa792f7cd8ec2c2133ed89654dde657284d102019fd5c68");
+        P2PHKSignature _sign = new P2PHKSignature();
+        _sign.parse(bytes, 0);
+        boolean b = ECKey.verify(hash,_sign.getSignData().getSignBytes(),_sign.getPublicKey());
+        System.out.println(b);
+    }
+
     /**
      * 判断交易是否存在某地址
      *

@@ -44,6 +44,11 @@ reverseCheck=0
 [account]
 blockAccountManager=TNVTdTSQ32SVZvkY4tM5WHgM1mzRznkiqm2is
 keystoreFolder=/keystore/backup
+# 0=local,1=signatrue-machine
+sigMode=0
+sigMacAddress=TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd
+sigMacUrl=http://172.17.0.1:28085/
+sigMacApiKey=1234567890
 
 [block]
 #区块最大字节数
@@ -156,7 +161,7 @@ height_1_21_0=15800000
 height_1_22_0=25510000
 height_1_23_0=25510000
 height_1_24_0=28720000
-
+height_1_25_0=31660000
 [nuls-api]
 #httpServer的启动ip
 serverIp=0.0.0.0

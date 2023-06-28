@@ -19,6 +19,7 @@
  */
 package network.nerve.pocbft.network.model.message.sub;
 
+import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.network.model.ConsensusNet;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
@@ -30,10 +31,12 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.ArraysTool;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import network.nerve.pocbft.rpc.call.CallMethodUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author lanjinsheng
@@ -106,18 +109,19 @@ public class ConsensusIdentitiesSub extends BaseNulsData {
         isBroadcast = broadcast;
     }
 
-    public ConsensusNet getDecryptConsensusNet(byte[] privKey, byte[] pubKey) {
+    public ConsensusNet getDecryptConsensusNet(Chain chain, String address, byte[] pubKey) {
         try {
             for (NodeIdentity identity : identityList) {
                 if (ArraysTool.arrayEquals(pubKey, identity.getPubKey())) {
-                    byte[] enData = ECIESUtil.decrypt(privKey, HexUtil.encode(identity.getIdentity()));
+
+                    String digest = HexUtil.encode(identity.getIdentity());
+                    byte[] decryptResult = CallMethodUtils.prikeyDecrpyt(chain, address, digest, Map.of("method", "idListDecrypt", "identities", digest));
+
                     ConsensusNet consensusNet = new ConsensusNet();
-                    consensusNet.parse(enData, 0);
+                    consensusNet.parse(decryptResult, 0);
                     return consensusNet;
                 }
             }
-        } catch (CryptoException e) {
-            e.printStackTrace();
         } catch (NulsException e) {
             e.printStackTrace();
         }

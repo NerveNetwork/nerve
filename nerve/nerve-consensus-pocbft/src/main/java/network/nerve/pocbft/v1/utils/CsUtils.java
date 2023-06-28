@@ -3,6 +3,7 @@ package network.nerve.pocbft.v1.utils;
 import io.nuls.base.data.BlockExtendsData;
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.NulsHash;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.pocbft.constant.ConsensusConstant;
@@ -15,6 +16,7 @@ import network.nerve.pocbft.v1.message.VoteResultMessage;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Eva
@@ -32,7 +34,7 @@ public class CsUtils {
         message.setBlockHash(result.getBlockHash());
         byte[] sign;
         try {
-            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes());
+            sign = CallMethodUtils.signature(chain, address, message.getHash().getBytes(), Map.of("voteMessage", HexUtil.encode(message.serialize()), "method", "voteMsgSign"));
         } catch (IOException | NulsException e) {
             LoggerUtil.commonLog.error(e);
             return null;

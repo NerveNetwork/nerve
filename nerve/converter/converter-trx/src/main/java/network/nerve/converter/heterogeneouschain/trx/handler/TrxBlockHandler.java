@@ -90,6 +90,12 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                 htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
             }
             trxWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
+            if (trxWalletApi.isReSyncBlock()) {
+                htgContext.logger().info("[{}]网络删除本地全部区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                htgLocalBlockHelper.deleteAllLocalBlockHeader();
+                trxWalletApi.setReSyncBlock(false);
+                return;
+            }
             // + 由于区块解析失败的生产问题，期间产生了一个虚拟银行变更，主网必须同步波场高度 34899400
             if (!managerChangeSync) {
                 long managerChangeHeight = 34899400L;

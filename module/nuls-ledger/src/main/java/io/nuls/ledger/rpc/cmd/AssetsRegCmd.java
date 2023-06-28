@@ -27,6 +27,7 @@ package io.nuls.ledger.rpc.cmd;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
@@ -176,7 +177,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                 // 获取登记的跨链资产
                 ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
             }
-            if (ledgerAsset == null) {
+            if (ledgerAsset == null || StringUtils.isBlank(ledgerAsset.getSymbol())) {
                 return failed(LedgerErrorCode.DATA_NOT_FOUND);
             }
             Short _assetType = CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.get(ledgerAsset.getAssetType());
@@ -237,7 +238,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                 // 获取登记的跨链资产
                 ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
             }
-            if (ledgerAsset == null) {
+            if (ledgerAsset == null || StringUtils.isBlank(ledgerAsset.getSymbol())) {
                 return failed(LedgerErrorCode.DATA_NOT_FOUND);
             }
             Short _assetType = CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.get(ledgerAsset.getAssetType());

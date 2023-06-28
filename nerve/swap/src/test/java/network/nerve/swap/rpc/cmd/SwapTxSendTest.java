@@ -919,7 +919,7 @@ public class SwapTxSendTest {
         params.put(Constants.CHAIN_ID, chainId);
 
         params.put("type", (byte) 11);// ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE
-        params.put("content", "100");// 100‰ == 10%
+        params.put("content", "500");// 500‰ == 50%
         params.put("businessAddress", "TNVTdTSQJkuFpDm9j49KJBBuduuv3XsQCoeJQ");// pairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
         params.put("remark", "交易对定制手续费");

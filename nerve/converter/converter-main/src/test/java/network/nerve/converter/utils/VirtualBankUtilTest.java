@@ -226,17 +226,7 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        //proposalTxHashList.add(new String[]{"ETH", "645a7f10e4f28167ed2af4022c6945d976e4b02e3308d19f551b013505500067"});
-        //proposalTxHashList.add(new String[]{"BSC", "780c9de8b993e5d2149ba8945f9851b135da9193a12ae342da2ee2e25891dc32"});
-        proposalTxHashList.add(new String[]{"HECO", "648f49bf80d0d52e88d13547ce2b774a1dded3dc5c73e4f25cfbe4920c50674d"});
-        //proposalTxHashList.add(new String[]{"OKex", "8d2be22369dff4728b1720b296f2bcd3c6c5b1a9fd6e512fa11ef0b240e3c177"});
-        //proposalTxHashList.add(new String[]{"AVAX", "307989b9f663bbcd7d05c7f15194abcc1bdf884845bc75f909a2f9fb106a31d2"});
-        //proposalTxHashList.add(new String[]{"KCC", "9588a9bc34e6a5543deab5ff63cdb176c789abfc3af7e46654a4e04cc383dee6"});
-        //proposalTxHashList.add(new String[]{"Cronos", "b0d61d44a0d9a2b48736fb17a1f344b7d831eb336667cbbe41b636ae01c77f7f"});
-        //proposalTxHashList.add(new String[]{"Polygon", "459350c7ee00c8a7e3d15a3669c953e56eac480da07e21b81dc707fc2f8d1a6d"});
-        //proposalTxHashList.add(new String[]{"Harmony", "7df76371f78b94ed41706a599d4e50b639b5781f49d8f579fc0ab1b27f25bbcd"});
-        //proposalTxHashList.add(new String[]{"Arbitrum", "2f5a7defddb321e7217dc22d9815084659983ef633c9a7cd8488d64779c4fd89"});
-        //proposalTxHashList.add(new String[]{"TRX", "b586f180c2f59a40086a50f2310d24a84bc32f5f440c3c4b67d39ecf9e885622"});
+        proposalTxHashList.add(new String[]{"NERVE", "a4b0a5c7d3f5a2edd4a0fabe652c1f4110167816fb7aea9d53da6cb75f9ece64"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
@@ -247,6 +237,11 @@ public class VirtualBankUtilTest {
         //list.add(new String[]{"NERVEepb6bt22V1LgaWavLNPEyTKbayCD58xo4", "03501d23db2f62863d89631168d427d3cc5f8b4a28fbb643e26695ae6cd5fdcc4b,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
 
         Map<String, String> nonceMap = new HashMap<>();
+        nonceMap.put("NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "49c90491a17d9722");
+        nonceMap.put("NERVEepb6gVC8TBCioYHK6PPLKYk9aoXH8eGbV", "d55a173fbaef7c7e");
+        nonceMap.put("NERVEepb6bT6dAfEtY9Z4c38Khawdr4LKZNais", "f6f8d219418801dd");
+        nonceMap.put("NERVEepb6eKxoK6ZmKhhDK4oZkuXnUMxZfCta4", "6837d657cdc07cb9");
+        nonceMap.put("NERVEepb6exLKu4eJkHCekXicn7YpDa3hzHGvt", "3f130c18626862cc");
         for (String[] proposalInfo : proposalTxHashList) {
             String chainName = proposalInfo[0];
             String proposalHash = proposalInfo[1];

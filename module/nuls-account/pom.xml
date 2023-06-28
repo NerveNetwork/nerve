@@ -36,18 +36,17 @@
             <groupId>network.nerve</groupId>
             <artifactId>nuls-base-protocol-update</artifactId>
         </dependency>
-        <!--<dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>core</artifactId>
-            <version>5.0.0</version>
-            <scope>test</scope>
-        </dependency>
         <dependency>
-            <groupId>io.github.novacrypto</groupId>
-            <artifactId>BIP39</artifactId>
-            <version>2019.01.27</version>
-            <scope>test</scope>
-        </dependency>-->
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>io.nuls.v2</groupId>
             <artifactId>sdk4j</artifactId>

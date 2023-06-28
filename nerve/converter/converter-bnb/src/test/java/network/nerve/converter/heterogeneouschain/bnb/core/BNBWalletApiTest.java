@@ -195,13 +195,13 @@ public class BnbWalletApiTest extends Base {
         list.add("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5");// 0xdd7CBEdDe731e78e8b8E4b2c212bC42fA7C09D03
         list.add("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f");// 0xD16634629C638EFd8eD90bB096C216e7aEc01A91
         list.add("fbcae491407b54aa3904ff295f2d644080901fda0d417b2b427f5c1487b2b499");// 0x16534991E80117Ca16c724C991aad9EAbd1D7ebe
-        //list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
-        //list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
-        //list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
+        list.add("43DA7C269917207A3CBB564B692CD57E9C72F9FCFDB17EF2190DD15546C4ED9D");// 0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65
+        list.add("0935E3D8C87C2EA5C90E3E3A0509D06EB8496655DB63745FAE4FF01EB2467E85");// 0xd29E172537A3FB133f790EBE57aCe8221CB8024F
+        list.add("CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2");// 0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17
         //list.add("c98cf686d26af4ec8e8cc8d8529a2494d9a3f1b9cce4b19bacca603734419244");//
         //list.add("493a2f626838b137583a96a5ffd3379463a2b15460fa67727c2a0af4f8966a05");//
         //list.add("4ec4a3df0f4ef0db2010d21d081a1d75bbd0a7746d5a83ba46d790070af6ecae");// 0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389
-        this.multySignContractAddress = "0xcb76C205866A58f6cEE4F3d4035CEE160D65F05D";
+        this.multySignContractAddress = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
         init();
         erc20Address = HtgConstant.ZERO_ADDRESS;
         erc20Decimals = 0;
@@ -280,13 +280,13 @@ public class BnbWalletApiTest extends Base {
         setAccount_EFa1();
         // BNB数量
         String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个BNB, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
         // ERC20
         String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
         String tokenAmount = "100";
         int tokenDecimals = 6;
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
 
@@ -322,7 +322,7 @@ public class BnbWalletApiTest extends Base {
         //setAccount_7B65();
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "40";
+        String sendAmount = "1.2";
         // 初始化 ERC20 地址信息
         //setErc20BUG();
         //setErc20EthMinter();
@@ -351,8 +351,8 @@ public class BnbWalletApiTest extends Base {
         BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
             // erc20授权
-            String approveAmount = "99999999";
-            Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
+            BigInteger approveAmount = new BigInteger("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", 16);
+            Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, approveAmount);
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
             System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
@@ -369,9 +369,9 @@ public class BnbWalletApiTest extends Base {
         }
         System.out.println("[ERC20授权]额度已满足条件");
         // crossOut erc20转账
-        //Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
-        //String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        //System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
+        String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
+        System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
     }
 
     /**
@@ -617,13 +617,18 @@ public class BnbWalletApiTest extends Base {
     public void upgradeContractTest() throws Exception {
         // 环境数据
         setLocalTest();
+        list.clear();
+        list.add("e750c0c681a34449110787e234c125157f191449b5df27a10f6075f883b66f00");
+        list.add("e84d680293e130f23068bc6bf0f16546bdb5f04816ec6d6338a9a14f0770e53a");
+        list.add("b76bfc28683863b797a88749c1083819e2ec4e6358d71d34e0069da7b92a10f7");
+        init();
         // GasPrice准备
         htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
-        htgContext.SET_VERSION((byte) 2);
+        htgContext.SET_VERSION((byte) 3);
         String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
         int signCount = list.size();
-        this.multySignContractAddress = "0xdd35003eD2118D997F3404C9C17eb20dfea0f767";
-        String newContract = "0xc9Ad179aDbF72F2DcB157D11043D5511D349a44b";
+        this.multySignContractAddress = "0x7293e234D14150A108f02eD822C280604Ee76583";
+        String newContract = "0xA5666f880D56EC3E845e38f7A2c661e83e79f3C3";
         String hash = this.sendUpgrade(txKey, newContract, signCount);
         System.out.println(String.format("合约升级测试: %s，newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
     }
@@ -828,8 +833,12 @@ public class BnbWalletApiTest extends Base {
         long gasPriceGwei = 10L;
         htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "aaa4000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{"0xc753d679f58b6111cc7df52b57217a0d81ff725c"};
-        String[] removes = new String[]{};
+        String[] adds = new String[]{
+        };
+        String[] removes = new String[]{
+                "0x8F05AE1C759b8dB56ff8124A89bb1305ECe17B65"
+                ,"0xd29E172537A3FB133f790EBE57aCe8221CB8024F"
+                ,"0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17"};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
@@ -1095,6 +1104,14 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
+    public void encoderUpgradeTest() {
+        String txKey = "7570677261646561000000000000000000000000000000000000000000000000";
+        String newContract = "0x36633F41BF6c578fDA44aE17A2E7BF40640f7Fb6";
+        String hash = HtgUtil.encoderUpgrade(htgContext, txKey, newContract, (byte) 3);
+        System.out.println(String.format("hash: %s", hash));
+    }
+
+    @Test
     public void crossOutEventTest() throws Exception {
         String data = "0x000000000000000000000000742e9290053f63f38270b64b1a8daf52c91e6a510000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000271000000000000000000000000080b47d949b4bbd09bb48300c81e2c30df243310c00000000000000000000000000000000000000000000000000000000000000264e4552564565706236426b3765474b776e33546e6e373534633244674b65784b4c5467325a720000000000000000000000000000000000000000000000000000";
         List<Object> eventResult = HtgUtil.parseEvent(data, HtgConstant.EVENT_CROSS_OUT_FUNDS);
@@ -1309,7 +1326,7 @@ public class BnbWalletApiTest extends Base {
         // MainAsset数量
         String sendAmount = "0.4";
         for (String to : tos) {
-            String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
+            String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
             System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
         }
     }
@@ -1725,15 +1742,93 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
-        setMain();
+        //setMain();
         // 直接调用erc20合约
-        String directTxHash = "0x2b9d576067c330e6c1f37151bdf37fd81654d3850086dc8f0074a28d45fe1a05";
+        String directTxHash = "0xf33d7958967d36331eb20eafb23e49dcfcbddb5f925b6b23608cb5fd74a1433c";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(tx.getBlockNumberRaw() + "---" + txReceipt.getBlockNumberRaw());
         System.out.println(txReceipt.getBlockNumber().longValue());
         System.out.println(tx.getBlockNumber().longValue());
         System.out.println(JSONUtils.obj2PrettyJson(tx));
+        long s = System.currentTimeMillis();
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        tx = htgWalletApi.getTransactionByHash(directTxHash);
+        txReceipt = htgWalletApi.getTxReceipt(directTxHash);
+        System.out.println(txReceipt.getBlockNumber().longValue());
+        System.out.println(tx.getBlockNumber().longValue());
+        System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+        long e = System.currentTimeMillis();
+        System.out.println(e - s);
     }
 
     @Test

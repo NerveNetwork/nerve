@@ -184,7 +184,7 @@ public class GoerliWalletApiTest extends Base {
         String to = from;
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(from, to, "0x", new BigDecimal(sendAmount).movePointRight(18).toBigInteger());
         System.out.println(String.format("交易类型: 转账主资产, 估算的GasLimit: %s, %s", estimateGasObj.getAmountUsed(), estimateGasObj.getError() != null ? estimateGasObj.getError().getMessage() : ""));
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), estimateGasObj.getAmountUsed(), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), estimateGasObj.getAmountUsed(), gasPrice);
         System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
     }
 
@@ -192,6 +192,30 @@ public class GoerliWalletApiTest extends Base {
         from = "0xf173805F1e3fE6239223B17F0807596Edc283012";
         fromPriKey = "d15fdd6030ab81cee6b519645f0c8b758d112cd322960ee910f65ad7dbb03c2b";
     }
+
+    /**
+     * 合约升级测试
+     */
+    @Test
+    public void upgradeContractTest() throws Exception {
+        // 环境数据
+        setLocalTest();
+        list.clear();
+        list.add("e750c0c681a34449110787e234c125157f191449b5df27a10f6075f883b66f00");
+        list.add("e84d680293e130f23068bc6bf0f16546bdb5f04816ec6d6338a9a14f0770e53a");
+        list.add("b76bfc28683863b797a88749c1083819e2ec4e6358d71d34e0069da7b92a10f7");
+        init();
+        // GasPrice准备
+        htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
+        htgContext.SET_VERSION((byte) 3);
+        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
+        int signCount = list.size();
+        this.multySignContractAddress = "0x7293e234D14150A108f02eD822C280604Ee76583";
+        String newContract = "0x5a0632074b6A5c2c43e64272D36F03C2B1CB7499";
+        String hash = this.sendUpgrade(txKey, newContract, signCount);
+        System.out.println(String.format("合约升级测试: %s，newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
+    }
+
     /**
      * 转入erc20
      */
@@ -208,7 +232,7 @@ public class GoerliWalletApiTest extends Base {
         int tokenDecimals = erc20Decimals;
         String tokenAmount = "100000000";
         String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
 
         setErc20USD18();
@@ -216,7 +240,7 @@ public class GoerliWalletApiTest extends Base {
         tokenDecimals = erc20Decimals;
         tokenAmount = "100000000";
         to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USD18), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 

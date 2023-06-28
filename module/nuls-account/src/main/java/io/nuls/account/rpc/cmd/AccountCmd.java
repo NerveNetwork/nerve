@@ -1,5 +1,6 @@
 package io.nuls.account.rpc.cmd;
 
+import io.nuls.account.config.AccountConfig;
 import io.nuls.account.constant.AccountConstant;
 import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.constant.RpcConstant;
@@ -53,6 +54,9 @@ public class AccountCmd extends BaseCmd {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private AccountConfig config;
     @Autowired
     private AccountKeyStoreService keyStoreService;
     @Autowired
@@ -318,6 +322,9 @@ public class AccountCmd extends BaseCmd {
                     encryptedAddressList.add(account.getAddress().getBase58());
                 }
             }
+            if (config.getSigMode() == AccountConstant.SIG_MODE_MACHINE) {
+                encryptedAddressList.add(config.getSigMacAddress());
+            }
         } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);
             return failed(e.getErrorCode());
@@ -530,10 +537,124 @@ public class AccountCmd extends BaseCmd {
             }
             int chainId = chain.getChainId();
             Account account = accountService.getAccount(chainId, address);
-            unencryptedPrivateKey = accountService.getPrivateKey(chain.getChainId(),account, password);
+            unencryptedPrivateKey = accountService.getPrivateKey(chain.getChainId(), account, password);
             Map<String, Object> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
             map.put("priKey", unencryptedPrivateKey);
             map.put("pubKey", HexUtil.encode(account.getPubKey()));
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+
+    }
+
+    @CmdAnnotation(cmd = "ac_getPubKeyByAddress", version = 1.0, description = "通过账户地址和密码,查询账户私匙/Inquire the account's private key according to the address")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map，包含pubkey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "pubKey", description = "公钥")
+    }))
+    public Response getPubKeyByAddress(Map params) {
+        String unencryptedPrivateKey;
+        Chain chain = null;
+        try {
+            // check parameters
+            Object chainIdObj = params == null ? null : params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object addressObj = params == null ? null : params.get(RpcParameterNameConstant.ADDRESS);
+            Object passwordObj = params == null ? null : params.get(RpcParameterNameConstant.PASSWORD);
+            if (params == null || chainIdObj == null || addressObj == null || passwordObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            //链ID
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //账户地址
+            String address = (String) addressObj;
+            //账户密码
+            String password = (String) passwordObj;
+            if (!AddressTool.validAddress(chain.getChainId(), address)) {
+                return failed(AccountErrorCode.ADDRESS_ERROR);
+            }
+            int chainId = chain.getChainId();
+            String publicKey = accountService.getPublicKey(chainId, address, password);
+            Map<String, Object> map = new HashMap<>(1);
+            map.put("pubKey", publicKey);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    /**
+     * 通过账户地址和密码,查询账户私匙
+     * inquire the account's private key according to the address.
+     * only returns the private key of the encrypted account, and the unencrypted account does not return.
+     *
+     * @param params [chainId,address,password]
+     * @return
+     */
+    @CmdAnnotation(cmd = "ac_valid_account", version = 1.0, description = "通过账户地址和密码,查询账户私匙/Inquire the account's private key according to the address")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map，包含二个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "priKey", description = "私钥"),
+            @Key(name = "pubKey", description = "公钥")
+    }))
+    public Response validAccount(Map params) {
+        Object chainIdObj = params == null ? null : params.get(RpcParameterNameConstant.CHAIN_ID);
+        Object addressObj = params == null ? null : params.get(RpcParameterNameConstant.ADDRESS);
+        Object passwordObj = params == null ? null : params.get(RpcParameterNameConstant.PASSWORD);
+        if (params == null || chainIdObj == null || addressObj == null || passwordObj == null) {
+            throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+        }
+        // parse params
+        //链ID
+        Chain chain = chainManager.getChain((Integer) chainIdObj);
+        if (null == chain) {
+            throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+        }
+        if (config.getSigMode() == AccountConstant.SIG_MODE_LOCAL) {
+            return validAccountLocal(chain, addressObj, passwordObj);
+        } else {
+            Map<String, Object> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+            map.put("result", config.getSigMacAddress().equals(addressObj));
+            return success(map);
+        }
+    }
+
+    public Response validAccountLocal(Chain chain, Object addressObj, Object passwordObj) {
+        String unencryptedPrivateKey;
+
+        try {
+            //账户地址
+            String address = (String) addressObj;
+            //账户密码
+            String password = (String) passwordObj;
+            if (!AddressTool.validAddress(chain.getChainId(), address)) {
+                return failed(AccountErrorCode.ADDRESS_ERROR);
+            }
+            int chainId = chain.getChainId();
+            Account account = accountService.getAccount(chainId, address);
+            unencryptedPrivateKey = accountService.getPrivateKey(chain.getChainId(), account, password);
+            Map<String, Object> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+            map.put("result", StringUtils.isNotBlank(unencryptedPrivateKey));
             return success(map);
         } catch (NulsRuntimeException e) {
             errorLogProcess(chain, e);
@@ -1134,6 +1255,172 @@ public class AccountCmd extends BaseCmd {
             return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
         }
         return success(map);
+    }
+
+    @CmdAnnotation(cmd = "ac_ecies_decrypt", version = 1.0, description = "私钥解密/Private key decrypt")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "data", parameterType = "String", parameterDes = "待解密数据"),
+            @Parameter(parameterName = "extend", parameterType = "Map", parameterDes = "待解密证据")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = RpcConstant.SIGNATURE, description = "签名后数据")
+    }))
+    public Response eciesDecrypt(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            Preconditions.checkNotNull(params, AccountErrorCode.NULL_PARAMETER);
+            Object chainIdObj = params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object addressObj = params.get(RpcParameterNameConstant.ADDRESS);
+            Object passwordObj = params.get(RpcParameterNameConstant.PASSWORD);
+            Object dataObj = params.get(RpcParameterNameConstant.DATA);
+            Object extendObj = params.get(RpcParameterNameConstant.EXTEND);
+            if (chainIdObj == null || addressObj == null || passwordObj == null || dataObj == null || extendObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //账户地址
+            String address = (String) addressObj;
+            //账户密码
+            String password = (String) passwordObj;
+            //待签名的数据
+            String dataStr = (String) dataObj;
+
+            Map<String, Object> extend = (Map<String, Object>) extendObj;
+            String eciesDecrypt = accountService.eciesDecrypt(dataStr, chain.getChainId(), address, password, extend);
+            if (StringUtils.isBlank(eciesDecrypt)) {
+                throw new NulsRuntimeException(AccountErrorCode.SIGNATURE_ERROR);
+            }
+            Map<String, String> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+            map.put(RpcConstant.VALUE, eciesDecrypt);
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = "ac_block_signature", version = 1.0, description = "区块签名/Block signature")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "data", parameterType = "String", parameterDes = "待签名数据"),
+            @Parameter(parameterName = "extend", parameterType = "Map", parameterDes = "签名证据")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = RpcConstant.SIGNATURE, description = "签名后数据")
+    }))
+    public Response blockSignature(Map params) {
+        Map<String, String> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+        Chain chain = null;
+        try {
+            // check parameters
+            Preconditions.checkNotNull(params, AccountErrorCode.NULL_PARAMETER);
+            Object chainIdObj = params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object addressObj = params.get(RpcParameterNameConstant.ADDRESS);
+            Object passwordObj = params.get(RpcParameterNameConstant.PASSWORD);
+            Object dataObj = params.get(RpcParameterNameConstant.DATA);
+            Object extendObj = params.get(RpcParameterNameConstant.EXTEND);
+            if (chainIdObj == null || addressObj == null || passwordObj == null || dataObj == null || extendObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //账户地址
+            String address = (String) addressObj;
+            //账户密码
+            String password = (String) passwordObj;
+            //待签名的数据
+            String dataStr = (String) dataObj;
+            //数据解码为字节数组
+            byte[] data = RPCUtil.decode(dataStr);
+            Map<String, Object> extend = (Map<String, Object>) extendObj;
+            //sign digest data
+            String signature = accountService.blockSignature(data, chain.getChainId(), address, password, extend);
+            if (StringUtils.isBlank(signature)) {
+                throw new NulsRuntimeException(AccountErrorCode.SIGNATURE_ERROR);
+            }
+            map.put(RpcConstant.SIGNATURE, signature);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+        return success(map);
+    }
+
+    @CmdAnnotation(cmd = "ac_signature", version = 1.0, description = "签名/Signature")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "data", parameterType = "String", parameterDes = "待签名数据"),
+            @Parameter(parameterName = "extend", parameterType = "Map", parameterDes = "签名证据")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = RpcConstant.SIGNATURE, description = "签名后数据")
+    }))
+    public Response signature(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            Preconditions.checkNotNull(params, AccountErrorCode.NULL_PARAMETER);
+            Object chainIdObj = params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object addressObj = params.get(RpcParameterNameConstant.ADDRESS);
+            Object passwordObj = params.get(RpcParameterNameConstant.PASSWORD);
+            Object dataObj = params.get(RpcParameterNameConstant.DATA);
+            Object extendObj = params.get(RpcParameterNameConstant.EXTEND);
+            if (chainIdObj == null || addressObj == null || passwordObj == null || dataObj == null || extendObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //账户地址
+            String address = (String) addressObj;
+            //账户密码
+            String password = (String) passwordObj;
+            //待签名的数据
+            String dataStr = (String) dataObj;
+            //数据解码为字节数组
+            byte[] data = RPCUtil.decode(dataStr);
+            Map<String, Object> extend = (Map<String, Object>) extendObj;
+            //sign digest data
+            String signatureHex = accountService.signature(data, chain.getChainId(), address, password, extend);
+            if (StringUtils.isBlank(signatureHex)) {
+                throw new NulsRuntimeException(AccountErrorCode.SIGNATURE_ERROR);
+            }
+            Map<String, String> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+            map.put(RpcConstant.SIGNATURE, signatureHex);
+            return success(map);
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(e.getMessage());
+        }
     }
 
     /**

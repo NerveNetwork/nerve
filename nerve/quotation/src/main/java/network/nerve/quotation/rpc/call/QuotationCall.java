@@ -111,7 +111,7 @@ public class QuotationCall {
     }
 
 
-    public static P2PHKSignature signDigest(String address, String password, byte[] data) throws NulsException {
+    public static P2PHKSignature signDigest(String address, String password, byte[] data,Map<String,Object> extend) throws NulsException {
         try {
             int chainId = AddressTool.getChainIdByAddress(address);
             Map<String, Object> params = new HashMap<>(QuotationConstant.INIT_CAPACITY_8);
@@ -120,7 +120,8 @@ public class QuotationCall {
             params.put("address", address);
             params.put("password", password);
             params.put("data", RPCUtil.encode(data));
-            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_signDigest", params);
+            params.put("extend", extend);
+            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_signature", params);
             String signatureStr = (String) result.get("signature");
             return CommonUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
         } catch (NulsException e) {

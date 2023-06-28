@@ -30,6 +30,7 @@ import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.exception.CryptoException;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.FormatValidUtils;
+import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterErrorCode;
 import org.bouncycastle.crypto.params.KeyParameter;
 
@@ -42,6 +43,7 @@ import java.io.Serializable;
  * @date: 2020-02-26
  */
 public abstract class HeterogeneousAccount implements Serializable {
+    private static final byte[] ZERO_BYTES = new byte[]{0};
 
     private String address;
 
@@ -64,8 +66,16 @@ public abstract class HeterogeneousAccount implements Serializable {
      * 账户是否被加密(是否设置过密码)
      * Whether the account is encrypted (Whether the password is set)
      */
-    public boolean isEncrypted() {
+    private boolean isEncrypted() {
         return getEncryptedPriKey() != null && getEncryptedPriKey().length > 0;
+    }
+
+    private boolean isEmptyPriKey() {
+        return getPriKey() == null || getPriKey().length <= 1;
+    }
+
+    private boolean isEmptyEncryptedPriKey() {
+        return getEncryptedPriKey() == null || getEncryptedPriKey().length <= 1;
     }
 
     /**
@@ -92,11 +102,16 @@ public abstract class HeterogeneousAccount implements Serializable {
      * Password-encrypted account (set password for account)
      */
     public void encrypt(String password) {
+        if (isEmptyPriKey()) {
+            this.setPriKey(ZERO_BYTES);
+            this.setEncryptedPriKey(ZERO_BYTES);
+            return;
+        }
         if (this.isEncrypted()) {
             return;
         }
         EncryptedData encryptedPrivateKey = AESEncrypt.encrypt(this.priKey, EncryptedData.DEFAULT_IV, new KeyParameter(Sha256Hash.hash(password.getBytes())));
-        this.setPriKey(new byte[0]);
+        this.setPriKey(ZERO_BYTES);
         this.setEncryptedPriKey(encryptedPrivateKey.getEncryptedBytes());
     }
 
@@ -106,6 +121,11 @@ public abstract class HeterogeneousAccount implements Serializable {
      */
     public boolean decrypt(String password) throws NulsException {
         try {
+            if (isEmptyEncryptedPriKey()) {
+                this.setPriKey(ZERO_BYTES);
+                this.setEncryptedPriKey(ZERO_BYTES);
+                return true;
+            }
             byte[] unencryptedPrivateKey = AESEncrypt.decrypt(this.getEncryptedPriKey(), password);
 
             // 解密后的明文生成公钥，与原公钥校验

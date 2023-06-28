@@ -1,5 +1,6 @@
 package network.nerve.quotation.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.model.DoubleUtils;
 import io.nuls.core.parse.JSONUtils;
 import network.nerve.quotation.model.bo.Chain;
@@ -82,26 +83,26 @@ public class NerveSwapUtil {
 
     public static void main(String[] args) throws IOException {
 
-        String totalLP = "3077328817258";
-        String reserve0 = "747147308927";
-        String reserve1 = "12725296813955";
+        String totalLP = "3162277660167379";
+        String reserve0 = "10000000000000";
+        String reserve1 = "1000000000000000000";
 
 
         BigInteger lpTotalCount = new BigInteger(totalLP);
         BigInteger aCount = new BigInteger(reserve0);
         BigInteger bCount = new BigInteger(reserve1);
 
-        QuotationContractCfg quContractCfg = JSONUtils.json2pojo("{\n" +
+        QuotationContractCfg quContractCfg = JSONUtils.json2pojo(" {\n" +
                 "    \"chain\": \"nerve\",\n" +
-                "    \"key\": \"NULSNVTLP\",\n" +
-                "    \"anchorToken\": \"NULSNVTLP-USDT\",\n" +
-                "    \"swapTokenContractAddress\": \"9-1-8\",\n" +
-                "    \"baseTokenContractAddress\": \"1-1-8\",\n" +
-                "    \"baseAnchorToken\": \"USDT-USDT\",\n" +
-                "    \"tokenInfo\": \"9-232-18\",\n" +
-                "    \"baseTokenInfo\": \"9-220-18\",\n" +
-                "    \"rpcAddress\": \"9-1,9-220\",\n" +
-                "    \"effectiveHeight\": 100000000,\n" +
+                "    \"key\": \"NVTETHNLPKEY\",\n" +
+                "    \"anchorToken\": \"NVTETHNLP-USDT\",\n" +
+                "    \"tokenInfo\": \"5-146-18\",\n" +
+                "    \"baseTokenInfo\": \"5-102-18\",\n" +
+                "    \"swapTokenContractAddress\": \"5-1-8\",\n" +
+                "    \"baseTokenContractAddress\": \"5-145-18\",\n" +
+                "    \"baseAnchorToken\": \"ETH-USDT\",\n" +
+                "    \"rpcAddress\": \"5-1,5-102\",\n" +
+                "    \"effectiveHeight\": 31660000,\n" +
                 "    \"calculator\": \"network.nerve.quotation.processor.impl.CalculatorProcessor\"\n" +
                 "  }", QuotationContractCfg.class);
 
@@ -134,16 +135,14 @@ public class NerveSwapUtil {
 //        if (null == priceResult) {
 //            return;
 //        }
-        Long amountOutMin = Long.valueOf(36852657665981224L);
-        if (null == amountOutMin) {
-            return;
-        }
-        BigDecimal priceValue = new BigDecimal(BigInteger.valueOf(amountOutMin), cfg.getBaseAssetDecimals());
+
+        String priceStr = "9071000000000000";
+        BigDecimal priceValue = new BigDecimal(new BigInteger(priceStr), cfg.getBaseAssetDecimals());
         if (doit == 1) {
             BigDecimal aValue = new BigDecimal(aCount, cfg.getaAssetDecimals());
             aValue = aValue.multiply(priceValue).multiply(BigDecimal.valueOf(2));
             double val = DoubleUtils.round(DoubleUtils.div(aValue, lpValue).doubleValue(), 2);
-            System.out.println(DoubleUtils.getRoundStr(val));
+            System.out.println("here" + DoubleUtils.getRoundStr(val));
         }
         if (doit == 2) {
             BigDecimal bValue = new BigDecimal(bCount, cfg.getbAssetDecimals());

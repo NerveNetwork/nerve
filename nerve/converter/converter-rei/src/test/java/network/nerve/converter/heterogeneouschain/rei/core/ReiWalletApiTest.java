@@ -189,7 +189,7 @@ public class ReiWalletApiTest extends Base {
         int tokenDecimals = erc20Decimals;
         String tokenAmount = "100000000";
         String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
 
         setErc20USD18();
@@ -197,7 +197,7 @@ public class ReiWalletApiTest extends Base {
         tokenDecimals = erc20Decimals;
         tokenAmount = "100000000";
         to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USD18), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 
@@ -1002,7 +1002,7 @@ public class ReiWalletApiTest extends Base {
         // MainAsset数量
         String sendAmount = "0.04";
         for (String to : tos) {
-            String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
+            String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(100000L), gasPrice);
             System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
         }
     }

@@ -124,7 +124,7 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
             List<String> signedAddressList = new ArrayList<>();
             for (CoinDTO coinDTO : crossTxTransferDTO.getListFrom()) {
                 if (!signedAddressList.contains(coinDTO.getAddress())) {
-                    P2PHKSignature p2PHKSignature = AccountCall.signDigest(coinDTO.getAddress(), coinDTO.getPassword(), tx.getHash().getBytes());
+                    P2PHKSignature p2PHKSignature = AccountCall.signDigest(coinDTO.getAddress(), coinDTO.getPassword(), tx.getHash().getBytes(),null);
                     p2PHKSignatures.add(p2PHKSignature);
                     signedAddressList.add(coinDTO.getAddress());
                 }
@@ -303,7 +303,7 @@ public class NulsCrossChainServiceImpl implements CrossChainService {
                     //发起拜占庭验证
                     //清空交易原始签名
                     ctx.setTransactionSignature(null);
-                    chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, ctx, syncStatus));
+                    chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, ctx,blockHeader, syncStatus));
                 }
                 //这里处理转出总数的维护
                 BackOutAmount backOutAmount = getBackAmount(ctx, chain);

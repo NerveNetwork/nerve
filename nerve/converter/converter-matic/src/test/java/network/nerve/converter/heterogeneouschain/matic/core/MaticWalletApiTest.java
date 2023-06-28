@@ -206,7 +206,7 @@ public class MaticWalletApiTest extends Base {
         // MainAsset数量
         String sendAmount = "0.001";
         String toAddress = "0xc11d9943805e56b630a401d4bd9a29550353efa1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, toAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, toAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", toAddress, sendAmount, txHash));
         // ERC20
         //String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";

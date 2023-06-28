@@ -27,6 +27,7 @@ package io.nuls.ledger.storage.impl;
 
 import io.nuls.core.basic.InitializingBean;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
@@ -35,6 +36,7 @@ import io.nuls.ledger.model.po.LedgerAsset;
 import io.nuls.ledger.storage.AssetRegMngRepository;
 import io.nuls.ledger.storage.DataBaseArea;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +168,8 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
     @Override
     public void deleteLedgerAssetReg(int chainId, int assetId) throws Exception {
         String assetRegTable = getLedgerAssetRegMngTableName(chainId);
-        RocksDBService.delete(assetRegTable, ByteUtils.intToBytes(assetId));
+        //RocksDBService.delete(assetRegTable, ByteUtils.intToBytes(assetId));
+        RocksDBService.put(assetRegTable, ByteUtils.intToBytes(assetId), new LedgerAsset().serialize());
         DB_CONTRACT_ASSETS_IDS_MAP.remove(chainId + LedgerConstant.DOWN_LINE + assetId);
     }
 

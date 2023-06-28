@@ -617,6 +617,10 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                 }
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
+                if (!converterCoreApi.checkNetworkRunning(docking.getChainId())) {
+                    chain.getLogger().info("[withdraw] 测试网络[{}]运行暂停, chainId: {}", docking.getChainSymbol(), docking.getChainId());
+                    throw new NulsException(ConverterErrorCode.WITHDRAWAL_PAUSE);
+                }
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     WithdrawalTotalFeeInfo totalFeeInfo = assembleTxService.calculateWithdrawalTotalFee(chain, tx);
                     boolean enoughFeeOfWithdraw;

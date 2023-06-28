@@ -193,4 +193,12 @@ public interface IConverterCoreApi {
     void setCurrentHeterogeneousVersionII();
 
     boolean checkNetworkRunning(int hChainId);
+
+    boolean isLocalSign();
+
+    String signWithdrawByMachine(long nativeId, String signerPubkey, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) throws NulsException;
+    String signChangeByMachine(long nativeId, String signerPubkey, String txKey, String[] adds, int count, String[] removes, byte version) throws NulsException;
+    String signUpgradeByMachine(long nativeId, String signerPubkey, String txKey, String upgradeContract, byte version) throws NulsException;
+    String signRawTransactionByMachine(long nativeId, String signerPubkey, String from, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, BigInteger value, String data) throws Exception;
+    String signTronRawTransactionByMachine(String signerPubkey, String txStr) throws Exception;
 }

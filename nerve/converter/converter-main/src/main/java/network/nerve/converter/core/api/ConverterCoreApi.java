@@ -28,12 +28,14 @@ import io.nuls.base.data.*;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.info.Constants;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -51,13 +53,16 @@ import network.nerve.converter.model.dto.VirtualBankDirectorDTO;
 import network.nerve.converter.model.po.ComponentSignByzantinePO;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
+import network.nerve.converter.rpc.call.AccountCall;
 import network.nerve.converter.rpc.call.LedgerCall;
 import network.nerve.converter.rpc.call.QuotationCall;
 import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ComponentSignStorageService;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.utils.ConverterUtil;
+import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -101,7 +106,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     Set<Integer> skippedNetworks;
 
     public ConverterCoreApi() {
+        // 101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
+        // 108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
+        // 119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK
         skippedNetworks = new HashSet<>();
+        skippedNetworks.add(103);
         skippedNetworks.add(105);
         skippedNetworks.add(111);
         skippedNetworks.add(112);
@@ -585,11 +594,96 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public boolean checkNetworkRunning(int hChainId) {
+        // 101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
+        // 108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
+        // 119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK
+        //skippedNetworks.add(101);
         //skippedNetworks.add(103);
-        //skippedNetworks.add(109);
+        //skippedNetworks.add(105);
+        //skippedNetworks.addAll(List.of(106, 107, 109, 110));
+        //skippedNetworks.add(108);
+        //skippedNetworks.add(111);
+        //skippedNetworks.add(112);
+        //skippedNetworks.add(113);
+        //skippedNetworks.add(114);
+        //skippedNetworks.add(115);
+        //skippedNetworks.add(116);
+        //skippedNetworks.add(117);
+        //skippedNetworks.addAll(List.of(118, 119, 120, 121, 122, 123));
+        //skippedNetworks.remove(108);
         if (nerveChain.getChainId() == 5 && skippedNetworks.contains(hChainId)) {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean isLocalSign() {
+        return ConverterContext.SIG_MODE == ConverterConstant.SIG_MODE_LOCAL;
+    }
+
+    @Override
+    public String signWithdrawByMachine(long nativeId, String signerPubkey, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) throws NulsException {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvSignWithdraw");
+        extend.put("nativeId", nativeId);
+        extend.put("txKey", txKey);
+        extend.put("toAddress", toAddress);
+        extend.put("value", value.toString());
+        extend.put("isContractAsset", isContractAsset);
+        extend.put("erc20", erc20);
+        extend.put("version", version);
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
+
+    @Override
+    public String signChangeByMachine(long nativeId, String signerPubkey, String txKey, String[] adds, int count, String[] removes, byte version) throws NulsException {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvSignChange");
+        extend.put("nativeId", nativeId);
+        extend.put("txKey", txKey);
+        extend.put("adds", adds);
+        extend.put("count", count);
+        extend.put("removes", removes);
+        extend.put("version", version);
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
+
+    @Override
+    public String signUpgradeByMachine(long nativeId, String signerPubkey, String txKey, String upgradeContract, byte version) throws NulsException {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvSignUpgrade");
+        extend.put("nativeId", nativeId);
+        extend.put("txKey", txKey);
+        extend.put("upgradeContract", upgradeContract);
+        extend.put("version", version);
+        String hex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.cleanHexPrefix(hex);
+    }
+
+    @Override
+    public String signRawTransactionByMachine(long nativeId, String signerPubkey, String from, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, BigInteger value, String data) throws Exception {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvSignRawTransaction");
+        extend.put("nativeId", nativeId);
+        extend.put("from", from);
+        extend.put("nonce", nonce.toString());
+        extend.put("gasPrice", gasPrice.toString());
+        extend.put("gasLimit", gasLimit.toString());
+        extend.put("to", to);
+        extend.put("value", value.toString());
+        extend.put("data", data);
+        String txHex = AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+        return Numeric.prependHexPrefix(txHex);
+    }
+
+    @Override
+    public String signTronRawTransactionByMachine(String signerPubkey, String txStr) throws Exception {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvSignTronRawTransaction");
+        extend.put("tx", txStr);
+        return AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
     }
 }

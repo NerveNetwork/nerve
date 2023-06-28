@@ -1,5 +1,8 @@
 package network.nerve.converter.heterogeneouschain.trx.core;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
@@ -60,6 +63,28 @@ import static org.tron.trident.core.ApiWrapper.parseHex;
  */
 public class TrxWalletApi implements WalletApi, BeanInitial {
 
+    private static LoadingCache<TxKey, Chain.Transaction> TX_CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .maximumSize(200)
+            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .build(new CacheLoader<TxKey, Chain.Transaction>() {
+                @Override
+                public Chain.Transaction load(TxKey txKey) throws Exception {
+                    return txKey.getTrxWalletApi().getTransactionByHashReal(txKey.getTxHash());
+                }
+            });
+
+    private static LoadingCache<TxKey, Response.TransactionInfo> TX_RECEIPT_CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .maximumSize(200)
+            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .build(new CacheLoader<TxKey, Response.TransactionInfo>() {
+                @Override
+                public Response.TransactionInfo load(TxKey txKey) throws Exception {
+                    return txKey.getTrxWalletApi().getTransactionReceiptReal(txKey.getTxHash());
+                }
+            });
+    
     private HtgContext htgContext;
 
     private String symbol() {
@@ -77,6 +102,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
     private int rpcVersion = -1;
+    private boolean reSyncBlock = false;
 
     private Map<String, BigInteger> map = new HashMap<>();
     private ReentrantLock checkLock = new ReentrantLock();
@@ -131,6 +157,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     this.changeApi(apiUrl);
                     this.rpcVersion = _version.intValue();
                     urlFromThirdPartyForce = true;
+                    this.reSyncBlock = true;
                     return;
                 }
             } while (false);
@@ -293,6 +320,10 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
 
     public Response.TransactionInfo getTransactionReceipt(String txHash) throws Exception {
+        return TX_RECEIPT_CACHE.get(new TxKey(txHash, this));
+    }
+
+    private Response.TransactionInfo getTransactionReceiptReal(String txHash) throws Exception {
         if (StringUtils.isBlank(txHash)) {
             return null;
         }
@@ -395,6 +426,10 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
      * 获取交易详情
      */
     public Chain.Transaction getTransactionByHash(String txHash) throws Exception {
+        return TX_CACHE.get(new TxKey(txHash, this));
+    }
+
+    private Chain.Transaction getTransactionByHashReal(String txHash) throws Exception {
         if (StringUtils.isBlank(txHash)) {
             return null;
         }
@@ -528,17 +563,25 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
             builder.setFeeLimit(_feeLimit.longValue());
 
-            Chain.Transaction signedTxn = wrapper.signTransaction(builder.build(), new KeyPair(_privateKey));
-            Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
-            if (!ret.getResult()) {
-                getLog().error("[{}]调用合约交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
-                return null;
+            Chain.Transaction txn = builder.build();
+            Chain.Transaction signedTxn;
+            if (htgContext.getConverterCoreApi() != null && !htgContext.getConverterCoreApi().isLocalSign()) {
+                String txStr = Numeric.toHexStringNoPrefix(txn.toByteArray());
+                String signData = htgContext.getConverterCoreApi().signTronRawTransactionByMachine(htgContext.ADMIN_ADDRESS_PUBLIC_KEY(), txStr);
+                signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signData))).build();
+            } else {
+                signedTxn = wrapper.signTransaction(txn, new KeyPair(_privateKey));
+                Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
+                if (!ret.getResult()) {
+                    getLog().error("[{}]调用合约交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
+                    return null;
+                }
             }
+
             return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), _from, _contractAddress, _value, _encodedFunction, _feeLimit);
         });
         return txPo;
     }
-
 
     public void setRpcAddress(String rpcAddress) {
         this.rpcAddress = rpcAddress;
@@ -611,7 +654,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
         return callContract;
     }
 
-    public TrxSendTransactionPo transferTrx(String from, String to, BigInteger value, String privateKey) throws Exception {
+    public TrxSendTransactionPo transferTrxForTestcase(String from, String to, BigInteger value, String privateKey) throws Exception {
         TrxSendTransactionPo transferTrx = this.timeOutWrapperFunction("transferTrx", List.of(from, to, value, privateKey), args -> {
             Response.TransactionExtention txnExt = wrapper.transfer(from, to, value.longValue());
 
@@ -647,5 +690,61 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             }
         }
         return energyFee;
+    }
+
+    public boolean isReSyncBlock() {
+        return reSyncBlock;
+    }
+
+    public void setReSyncBlock(boolean reSyncBlock) {
+        this.reSyncBlock = reSyncBlock;
+    }
+
+    static class TxKey {
+        private String txHash;
+        private long nativeId;
+        private TrxWalletApi trxWalletApi;
+
+        public TxKey(String txHash, TrxWalletApi trxWalletApi) {
+            this.txHash = txHash;
+            this.trxWalletApi = trxWalletApi;
+            this.nativeId = trxWalletApi.htgContext.getConfig().getChainIdOnHtgNetwork();
+        }
+
+        public String getTxHash() {
+            return txHash;
+        }
+
+        public void setTxHash(String txHash) {
+            this.txHash = txHash;
+        }
+
+        public TrxWalletApi getTrxWalletApi() {
+            return trxWalletApi;
+        }
+
+        public void setTrxWalletApi(TrxWalletApi trxWalletApi) {
+            this.trxWalletApi = trxWalletApi;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TxKey txKey = (TxKey) o;
+
+            if (nativeId != txKey.nativeId) return false;
+            if (!txHash.equals(txKey.txHash)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = txHash.hashCode();
+            result = 31 * result + (int) (nativeId ^ (nativeId >>> 32));
+            return result;
+        }
     }
 }

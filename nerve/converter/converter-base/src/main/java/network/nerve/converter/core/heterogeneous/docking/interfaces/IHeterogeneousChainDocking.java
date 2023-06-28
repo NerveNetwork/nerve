@@ -73,16 +73,6 @@ public interface IHeterogeneousChainDocking {
     HeterogeneousAccount importAccountByPriKey(String priKey, String password) throws NulsException;
 
     /**
-     * 根据keystore导入地址，只允许导入一个地址，新导入的将覆盖已有的
-     */
-    HeterogeneousAccount importAccountByKeystore(String keystore, String password) throws NulsException;
-
-    /**
-     * 导出账户的keystore
-     */
-    String exportAccountKeystore(String address, String password) throws NulsException;
-
-    /**
      * 验证账户密码是否正确
      */
     boolean validateAccountPassword(String address, String password) throws NulsException;
@@ -91,16 +81,6 @@ public interface IHeterogeneousChainDocking {
      * 查询账户详情
      */
     HeterogeneousAccount getAccount(String address);
-
-    /**
-     * 查询账户列表
-     */
-    List<HeterogeneousAccount> getAccountList();
-
-    /**
-     * 移除账户
-     */
-    void removeAccount(String address) throws Exception;
 
     /**
      * 验证地址格式
@@ -113,13 +93,6 @@ public interface IHeterogeneousChainDocking {
      * @return 地址余额
      */
     BigDecimal getBalance(String address);
-
-    /**
-     * 创建多签地址
-     *
-     * @return 多签地址
-     */
-    String createMultySignAddress(String[] pubKeys, int minSigns);
 
     /**
      * 更新多签地址
@@ -364,5 +337,9 @@ public interface IHeterogeneousChainDocking {
 
     default HeterogeneousChainGasInfo getHeterogeneousChainGasInfo() {
         return null;
+    }
+
+    default boolean isAvailableRPC() {
+        return true;
     }
 }

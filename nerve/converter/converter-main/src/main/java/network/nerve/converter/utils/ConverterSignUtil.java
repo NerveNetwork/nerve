@@ -24,10 +24,10 @@
 
 package network.nerve.converter.utils;
 
-import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.model.bo.Chain;
@@ -37,7 +37,9 @@ import network.nerve.converter.rpc.call.ConsensusCall;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: Loki
@@ -52,10 +54,7 @@ public class ConverterSignUtil {
      * @param signAccountDTO
      * @throws NulsException
      */
-    public static P2PHKSignature signTx(Transaction tx, SignAccountDTO signAccountDTO) throws NulsException {
-        if (null == signAccountDTO) {
-            throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
-        }
+    public static P2PHKSignature signTx(int chainId, SignAccountDTO signAccountDTO, Transaction tx) throws NulsException {
         List<P2PHKSignature> p2PHKSignatures;
         TransactionSignature transactionSignature;
 
@@ -69,7 +68,7 @@ public class ConverterSignUtil {
             transactionSignature = new TransactionSignature();
         }
 
-        P2PHKSignature p2PHKSignature = getP2PHKSignature(tx.getHash(), signAccountDTO);
+        P2PHKSignature p2PHKSignature = getP2PHKSignature(chainId, signAccountDTO, tx);
         p2PHKSignatures.add(p2PHKSignature);
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         try {
@@ -80,11 +79,20 @@ public class ConverterSignUtil {
         }
     }
 
-    public static P2PHKSignature getP2PHKSignature(NulsHash hash, SignAccountDTO signAccountDTO) throws NulsException {
-        return AccountCall.signDigest(
+    private static P2PHKSignature getP2PHKSignature(int chainId, SignAccountDTO signAccountDTO, Transaction tx) throws NulsException {
+        Map<String, Object> extend = new HashMap<>();
+        extend.put("method", "cvTxSign");
+        try {
+            extend.put("tx", HexUtil.encode(tx.serialize()));
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.IO_ERROR);
+        }
+        String signatureStr = AccountCall.signature(chainId,
                 signAccountDTO.getAddress(),
                 signAccountDTO.getPassword(),
-                hash);
+                tx.getHash().toHex(),
+                extend);
+        return ConverterUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
     }
 
     /**
@@ -105,7 +113,7 @@ public class ConverterSignUtil {
                     tx.getType(), tx.getHash().toHex(), signAccountDTO.getAddress());
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
         }
-        return signTx(tx, signAccountDTO);
+        return signTx(chain.getChainId(), signAccountDTO, tx);
     }
 
     /**
@@ -116,7 +124,7 @@ public class ConverterSignUtil {
     public static P2PHKSignature addSignatureByDirector(Chain chain, Transaction tx) throws NulsException {
         SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
         if (null != signAccountDTO && chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
-            return signTx(tx, signAccountDTO);
+            return signTx(chain.getChainId(), signAccountDTO, tx);
         }
         return null;
     }
@@ -126,10 +134,10 @@ public class ConverterSignUtil {
      * @param chain
      * @param txHash
      */
-    public static P2PHKSignature getSignatureByDirector(Chain chain, NulsHash txHash) throws NulsException {
+    public static P2PHKSignature getSignatureByDirector(Chain chain, Transaction tx) throws NulsException {
         SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
         if (null != signAccountDTO && chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
-            return getP2PHKSignature(txHash, signAccountDTO);
+            return getP2PHKSignature(chain.getChainId(), signAccountDTO, tx);
         }
         return null;
     }

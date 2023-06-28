@@ -89,7 +89,7 @@ public class DepositServiceImpl implements DepositService {
                 throw new NulsException(ConsensusErrorCode.ADDRESS_ERROR);
             }
             //账户验证
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
 
             //验证资产是否可以参与stacking
             if (null == chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())) {
@@ -151,7 +151,7 @@ public class DepositServiceImpl implements DepositService {
                 return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
             }
             //账户验证
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             NulsHash hash = NulsHash.fromHex(dto.getTxHash());
             Transaction depositTransaction = CallMethodUtils.getTransaction(chain, dto.getTxHash());
             if (depositTransaction == null) {
@@ -353,7 +353,7 @@ public class DepositServiceImpl implements DepositService {
             }
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //账户验证
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             String[] hashHexList = dto.getTxHash().split(",");
             List<CoinFrom> fromList = new ArrayList<>();
             List<NulsHash> joinTxHashList = new ArrayList<>();
@@ -504,7 +504,7 @@ public class DepositServiceImpl implements DepositService {
             }
             byte[] address = AddressTool.getAddress(dto.getAddress());
             //账户验证
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             String[] hashHexList = dto.getTxHashes().split(",");
             List<CoinFrom> fromList = new ArrayList<>();
             List<NulsHash> joinTxHashList = new ArrayList<>();

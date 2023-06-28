@@ -92,6 +92,7 @@ public interface RpcParameterNameConstant {
      * dataHex
      */
     String DATA = "data";
+    String EXTEND = "extend";
 
     /**
      * pageNumber

@@ -37,7 +37,10 @@ import network.nerve.converter.heterogeneouschain.eth.callback.EthCallBackManage
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
-import network.nerve.converter.heterogeneouschain.eth.helper.*;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthAnalysisTxHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthCommonHelper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthERC20Helper;
+import network.nerve.converter.heterogeneouschain.eth.helper.EthParseTxHelper;
 import network.nerve.converter.heterogeneouschain.eth.listener.EthListener;
 import network.nerve.converter.heterogeneouschain.eth.model.*;
 import network.nerve.converter.heterogeneouschain.eth.storage.*;
@@ -48,9 +51,6 @@ import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.crypto.CipherException;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
@@ -58,7 +58,6 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -172,43 +171,6 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
-    public HeterogeneousAccount importAccountByKeystore(String keystorePath, String password) throws NulsException {
-        Credentials credentials;
-        try {
-            credentials = WalletUtils.loadCredentials(password, keystorePath);
-        } catch (IOException e) {
-            throw new NulsException(ConverterErrorCode.PARSE_JSON_FAILD, e);
-        } catch (CipherException e) {
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
-        }
-        try {
-            ECKeyPair keyPair = credentials.getEcKeyPair();
-            HeterogeneousAccount account = this.importAccountByPriKey(Numeric.encodeQuantity(keyPair.getPrivateKey()), password);
-            return account;
-        } catch (NulsException e) {
-            throw e;
-        }
-    }
-
-    @Override
-    public String exportAccountKeystore(String address, String password) throws NulsException {
-        if (!validateAccountPassword(address, password)) {
-            logger().error("password is wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
-        }
-        String destinationDirectoryPath = getKeystorePath();
-        HeterogeneousAccount account = this.getAccount(address);
-        account.decrypt(password);
-        try {
-            WalletUtils.generateNewWalletFile(password, new File(destinationDirectoryPath));
-            return destinationDirectoryPath;
-        } catch (Exception e) {
-            logger().error(e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, "failed to generate the keystore");
-        }
-    }
-
-    @Override
     public boolean validateAccountPassword(String address, String password) throws NulsException {
         if (!FormatValidUtils.validPassword(password)) {
             logger().error("password format wrong");
@@ -228,16 +190,6 @@ public class EthDocking implements IHeterogeneousChainDocking {
     }
 
     @Override
-    public List<HeterogeneousAccount> getAccountList() {
-        return ethAccountStorageService.findAll();
-    }
-
-    @Override
-    public void removeAccount(String address) throws Exception {
-        ethAccountStorageService.deleteByAddress(address);
-    }
-
-    @Override
     public boolean validateAddress(String address) {
         return WalletUtils.isValidAddress(address);
     }
@@ -254,12 +206,6 @@ public class EthDocking implements IHeterogeneousChainDocking {
             return BigDecimal.ZERO;
         }
         return ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger());
-    }
-
-    @Override
-    public String createMultySignAddress(String[] pubKeys, int minSigns) {
-        // do nothing
-        return null;
     }
 
     @Override

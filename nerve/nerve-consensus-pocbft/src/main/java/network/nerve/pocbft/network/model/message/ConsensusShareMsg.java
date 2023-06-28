@@ -32,9 +32,13 @@ import io.nuls.core.exception.CryptoException;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
+import network.nerve.pocbft.model.bo.Chain;
+import network.nerve.pocbft.network.model.ShareMsgSignResult;
 import network.nerve.pocbft.network.model.message.sub.ConsensusShare;
+import network.nerve.pocbft.rpc.call.CallMethodUtils;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author lanjinsheng
@@ -52,22 +56,47 @@ public class ConsensusShareMsg extends BaseBusinessMessage {
     private transient ConsensusShare consensusShare;
     private String nodeId;
 
-    public ConsensusShareMsg(ConsensusShare consensusShare, byte[] peerPubKey, byte[] pubKey, byte[] privKey) throws IOException {
+    public ConsensusShareMsg(Chain chain, ConsensusShare consensusShare, byte[] peerPubKey, String address) throws Exception {
         this.identityList = ECIESUtil.encrypt(peerPubKey, consensusShare.serialize());
         this.messageTime = NulsDateUtils.getCurrentTimeMillis();
-        ECKey ecKey = ECKey.fromPrivate(privKey);
-        NulsSignData nulsSignData = SignatureUtil.signDigest(identityList, ecKey);
-        sign = new P2PHKSignature(nulsSignData, ecKey.getPubKey());
+        byte[] signResult = CallMethodUtils.signature(chain, address, identityList, Map.of("method", "idListEncryptAndSign",
+                "share", HexUtil.encode(consensusShare.serialize()),
+                "peerPubkey", HexUtil.encode(peerPubKey)));
+        if (signResult.length > 120) {
+            ShareMsgSignResult result = new ShareMsgSignResult();
+            result.parse(signResult, 0);
+            this.identityList = result.getIdentityList();
+            P2PHKSignature _sign = new P2PHKSignature();
+            _sign.parse(result.getSignatrue(), 0);
+            sign = _sign;
+        } else {
+            P2PHKSignature _sign = new P2PHKSignature();
+            _sign.parse(signResult, 0);
+            sign = _sign;
+        }
+    }
+
+    public static void main(String[] args) throws NulsException {
+        String hex = "e104acbf88d166be5abf5ecf478f68e366b6b215c6894b0fef3a34a771cca1a677a57b1d3f1cf8877a276e13c0c28faa99d99b477939dd1517e10e139106171ed1cb00000000000000000000000000000000324f99da85e04630c5fe3fbd8abea38b3d27d1b1e7779c790c3eca416050317c1c7912a4d8aaa2ea0dc42bd15769bd386a4625c449ea9e1db2a8f79d9f34d23e213c8b362927a5385fef84a255e5cfa893dbbed7943ff38b86d20f987b63a342266af4228eb42dc06a4df75a336a4c5e6f0ec839754d61e818b9ac4e537d5ca42134dea33894d6fd4a474236db429d3a69210308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db7819826046304402205025129f01f1a926660dd66031acae091f0ac54451f08d5b47df34469c41011202203ebba74f3131ac197c46edff5f86446170c78e2fb295ec48159512e80f094376";
+        byte[] signResult = HexUtil.decode(hex);
+        ShareMsgSignResult result = new ShareMsgSignResult();
+        result.parse(signResult, 0);
+        P2PHKSignature _sign = new P2PHKSignature();
+        _sign.parse(result.getSignatrue(), 0);
+        System.out.println(result.getSignatrue().length);
     }
 
     public ConsensusShareMsg() {
     }
 
-    public ConsensusShare getDecryptConsensusShare(byte[] privKey, byte[] pubKey) {
+    public ConsensusShare getDecryptConsensusShare(Chain chain, String address) {
         try {
-            byte[] enData = ECIESUtil.decrypt(privKey, HexUtil.encode(identityList));
+//            byte[] decryptResult = ECIESUtil.decrypt(privKey, );
+            String digest = HexUtil.encode(identityList);
+            byte[] decryptResult = CallMethodUtils.prikeyDecrpyt(chain, address, digest, Map.of("method", "idListDecrypt", "identities", digest));
+
             ConsensusShare consensusShare = new ConsensusShare();
-            consensusShare.parse(enData, 0);
+            consensusShare.parse(decryptResult, 0);
             return consensusShare;
         } catch (Exception e) {
             return null;

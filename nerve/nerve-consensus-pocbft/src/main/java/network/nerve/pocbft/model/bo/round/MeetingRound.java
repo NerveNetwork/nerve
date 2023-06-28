@@ -188,11 +188,7 @@ public class MeetingRound {
 
     private boolean validAccount(Chain chain, String address) {
         try {
-            HashMap callResult = CallMethodUtils.accountValid(chain.getConfig().getChainId(), address, chain.getConfig().getPassword());
-            String priKey = (String) callResult.get("priKey");
-            if (StringUtils.isNotBlank(priKey)) {
-                return true;
-            }
+            return CallMethodUtils.accountValid(chain.getConfig().getChainId(), address, chain.getConfig().getPassword());
         } catch (Exception e) {
             Log.error(e);
         }
@@ -288,7 +284,7 @@ public class MeetingRound {
     }
 
     public void resetMemberOrder() {
-        for(MeetingMember meetingMember:this.memberList){
+        for (MeetingMember meetingMember : this.memberList) {
             meetingMember.setRoundStartTime(this.getStartTime());
             meetingMember.setSortValue(null);
         }

@@ -236,13 +236,13 @@ public class HtWalletApiTest extends Base {
         setAccount_EFa1();
         // HT数量
         String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个HT, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
         // ERC20
         String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
         String tokenAmount = "100";
         int tokenDecimals = 6;
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
     @Test
@@ -254,7 +254,7 @@ public class HtWalletApiTest extends Base {
         String to = this.multySignContractAddress;
         // HT数量
         String sendAmount = "0.1";
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
         System.out.println(String.format("向[%s]转账%s个HT, 交易hash: %s", to, sendAmount, txHash));
     }
         /**

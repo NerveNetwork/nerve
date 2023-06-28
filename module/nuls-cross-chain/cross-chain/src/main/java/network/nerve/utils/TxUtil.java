@@ -8,6 +8,7 @@ import io.nuls.core.constant.TxStatusEnum;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.crosschain.base.constant.CommandConstant;
@@ -66,7 +67,7 @@ public class TxUtil {
      * Friendly Chain Protocol Cross-Chain Transaction to Main Network Protocol Cross-Chain Transaction
      */
     public static Transaction friendConvertToMain(Chain chain, Transaction friendCtx, int ctxType) throws NulsException, IOException {
-        return friendConvertToMain(chain,friendCtx,ctxType,false);
+        return friendConvertToMain(chain, friendCtx, ctxType, false);
     }
 
 
@@ -84,15 +85,15 @@ public class TxUtil {
         mainCtx.setCoinData(realCoinData.serialize());
         int fromChainId = AddressTool.getChainIdByAddress(realCoinData.getFrom().get(0).getAddress());
         //如果是发起链则需要重构txData，将发起链的交易hash设置到txData中
-        if(chain.getChainId() == fromChainId){
+        if (chain.getChainId() == fromChainId) {
             CrossTransferData crossTransferData = new CrossTransferData();
-            crossTransferData.parse(friendCtx.getTxData(),0);
+            crossTransferData.parse(friendCtx.getTxData(), 0);
             crossTransferData.setSourceHash(friendCtx.getHash().getBytes());
             mainCtx.setTxData(crossTransferData.serialize());
-        }else{
+        } else {
             mainCtx.setTxData(friendCtx.getTxData());
         }
-        if(needSign){
+        if (needSign) {
             mainCtx.setTransactionSignature(friendCtx.getTransactionSignature());
         }
         /*
@@ -140,10 +141,10 @@ public class TxUtil {
     public static Transaction createVerifierChangeTx(List<String> registerAgentList, List<String> cancelAgentList, long time, int chainId) throws IOException {
         Transaction verifierChangeTx = new Transaction(TxType.VERIFIER_CHANGE);
         verifierChangeTx.setTime(time);
-        if(registerAgentList != null){
+        if (registerAgentList != null) {
             registerAgentList.sort(Comparator.naturalOrder());
         }
-        if(cancelAgentList != null){
+        if (cancelAgentList != null) {
             cancelAgentList.sort(Comparator.naturalOrder());
         }
         VerifierChangeData verifierChangeData = new VerifierChangeData(registerAgentList, cancelAgentList, chainId);
@@ -253,18 +254,25 @@ public class TxUtil {
                     if (ctx.getType() == TxType.CROSS_CHAIN && ctx.getCoinDataInstance().getFromAddressList().contains(address)) {
                         message.setSignature(transactionSignature.getP2PHKSignatures().get(0).serialize());
                     } else {
-                        P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, hash.getBytes());
+                        Map<String, Object> extend = new HashMap<>();
+                        extend.put("method", "cc_ctx_sign");
+                        extend.put("txHex", HexUtil.encode(ctx.serialize()));
+                        P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, hash.getBytes(), extend);
                         transactionSignature.getP2PHKSignatures().add(p2PHKSignature);
                         message.setSignature(p2PHKSignature.serialize());
                     }
                 } else {
-                    P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, convertHash.getBytes());
+
+                    Map<String, Object> extend = new HashMap<>();
+                    extend.put("method", "cc_ctx_sign");
+                    extend.put("txHex", HexUtil.encode(ctx.serialize()));
+                    P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, convertHash.getBytes(), extend);
                     transactionSignature.getP2PHKSignatures().add(p2PHKSignature);
                     message.setSignature(p2PHKSignature.serialize());
                 }
-                MessageUtil.signByzantineInChain(chain, ctx, transactionSignature, packers,hash);
+                MessageUtil.signByzantineInChain(chain, ctx, transactionSignature, packers, hash);
                 NetWorkCall.broadcast(chainId, message, CommandConstant.BROAD_CTX_SIGN_MESSAGE, false);
-            }else{
+            } else {
                 ctxStatusService.save(hash, ctxStatusPO, chainId);
             }
             //将收到的签名消息加入消息队列
@@ -282,7 +290,7 @@ public class TxUtil {
      * Cross-Chain Transaction Processing
      */
     @SuppressWarnings("unchecked")
-    public static void handleNewCtx(Transaction ctx, Chain chain, List<String> cancelList) {
+    public static void handleNewCtx(Transaction ctx, Chain chain, BlockHeader header, List<String> cancelList) {
         int chainId = chain.getChainId();
         NulsHash hash = ctx.getHash();
         String hashHex = hash.toHex();
@@ -312,14 +320,19 @@ public class TxUtil {
             chain.getLogger().info("本节点为共识节点，对跨链交易签名,Hash:{}", hashHex);
             P2PHKSignature p2PHKSignature;
             try {
-                p2PHKSignature = AccountCall.signDigest(address, password, hash.getBytes());
+
+                Map<String, Object> extend = new HashMap<>();
+                extend.put("method", "cc_ctx_sign");
+                extend.put("txHex", HexUtil.encode(ctx.serialize()));
+
+                p2PHKSignature = AccountCall.signDigest(address, password, hash.getBytes(), extend);
                 message.setSignature(p2PHKSignature.serialize());
                 TransactionSignature signature = new TransactionSignature();
                 List<P2PHKSignature> p2PHKSignatureList = new ArrayList<>();
                 p2PHKSignatureList.add(p2PHKSignature);
                 signature.setP2PHKSignatures(p2PHKSignatureList);
                 ctx.setTransactionSignature(signature.serialize());
-                byzantinePass = MessageUtil.signByzantineInChain(chain, ctx, signature, verifierList,hash);
+                byzantinePass = MessageUtil.signByzantineInChain(chain, ctx, signature, verifierList, hash);
             } catch (Exception e) {
                 chain.getLogger().error(e);
                 chain.getLogger().error("签名错误!,hash:{}", hashHex);
@@ -332,7 +345,7 @@ public class TxUtil {
             保存并广播该交易
             */
             chain.getWaitBroadSignMap().get(hash).add(new WaitBroadSignMessage(null, message));
-        }else{
+        } else {
             ctxStatusService.save(hash, ctxStatusPO, chainId);
         }
         if (!config.isMainNet()) {
@@ -353,11 +366,12 @@ public class TxUtil {
      * 签名并广播交易（同步过程中的跨链交易只签名广播不做其他处理）
      * Sign and broadcast transactions
      *
-     * @param chain 链信息
-     * @param ctx   跨链交易
+     * @param chain  链信息
+     * @param ctx    跨链交易
+     * @param header
      */
     @SuppressWarnings("unchecked")
-    public static void signAndBroad(Chain chain, Transaction ctx) {
+    public static void signAndBroad(Chain chain, Transaction ctx, BlockHeader header) {
         Map packerInfo;
         List<String> verifierList = chain.getVerifierList();
         if (ctx.getType() == TxType.VERIFIER_INIT) {
@@ -382,7 +396,10 @@ public class TxUtil {
                     realTx = TxUtil.friendConvertToMain(chain, ctx, TxType.CROSS_CHAIN);
                 }
             }
-            P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, realTx.getHash().getBytes());
+            Map<String, Object> extend = new HashMap<>();
+            extend.put("method", "cc_ctx_sign");
+            extend.put("txHex", HexUtil.encode(realTx.serialize()));
+            P2PHKSignature p2PHKSignature = AccountCall.signDigest(address, password, realTx.getHash().getBytes(), extend);
             message.setSignature(p2PHKSignature.serialize());
             NetWorkCall.broadcast(chain.getChainId(), message, CommandConstant.BROAD_CTX_SIGN_MESSAGE, false);
         } catch (IOException | NulsException e) {

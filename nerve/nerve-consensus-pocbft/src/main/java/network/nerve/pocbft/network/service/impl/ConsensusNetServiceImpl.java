@@ -184,9 +184,9 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     }
 
     @Override
-    public boolean createConsensusNetwork(int chainId, byte[] selfPubKey, byte[] selfPrivKey, List<byte[]> consensusSeedPubKeyList, Set<String> consensusAddrList) {
+    public boolean createConsensusNetwork(int chainId, byte[] selfPubKey, List<byte[]> consensusSeedPubKeyList, Set<String> consensusAddrList) {
         Chain chain = chainManager.getChainMap().get(chainId);
-        if (selfPubKey == null || selfPrivKey == null) {
+        if (selfPubKey == null) {
             chain.getLogger().error("=======================createConsensusNetwork error. self Pub or priv is null");
             return false;
         }
@@ -194,7 +194,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
         ConsensusNetGroup group = GROUPS_MAP.computeIfAbsent(chainId, val -> new ConsensusNetGroup(chainId));
 
 
-        ConsensusKeys consensusKeys = new ConsensusKeys(selfPubKey, selfPrivKey, chainId);
+        ConsensusKeys consensusKeys = new ConsensusKeys(selfPubKey, chainId);
         String nodeId = networkService.getSelfNodeId(chainId);
         //chain.getLogger().debug("=======================createConsensusNetwork,self nodeId:{}", nodeId);
         ConsensusNet selfConsensusNet = new ConsensusNet();
@@ -230,11 +230,11 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
         //广播身份消息
         try {
             if (StringUtils.isNotBlank(selfConsensusNet.getNodeId())) {
-                consensusIdentitiesMsg.signDatas(consensusKeys.getPrivKey());
+                consensusIdentitiesMsg.signDatas(chain,consensusKeys.getAddress());
                 networkService.broadCastIdentityMsg(chain, NetworkCmdConstant.POC_IDENTITY_MESSAGE,
                         HexUtil.encode(consensusIdentitiesMsg.serialize()), null);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             chain.getLogger().error(e);
             return false;
         }
@@ -400,7 +400,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
             params.put("ips", GROUPS_MAP.get(chainId).getConsensusNetIps());
             params.put("messageBody", messageBodyHex);
             params.put("command", cmd);
-            params.put("isForward",false);
+            params.put("isForward", false);
             params.put("excludeNodes", excludeNodes);
 
             Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, NetworkCmdConstant.NW_BROADCAST_CONSENSUS_NET, params);

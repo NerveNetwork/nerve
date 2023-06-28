@@ -103,7 +103,7 @@ public class AgentServiceImpl implements AgentService {
                 throw new NulsRuntimeException(ConsensusErrorCode.ADDRESS_ERROR);
             }
             //2.账户验证
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAgentAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAgentAddress(), dto.getPassword());
             //3.组装创建节点交易
             Transaction tx = new Transaction(TxType.REGISTER_AGENT);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
@@ -157,7 +157,7 @@ public class AgentServiceImpl implements AgentService {
             if (rs.isFailed()) {
                 return rs;
             }
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             Transaction tx = new Transaction(TxType.APPEND_AGENT_DEPOSIT);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
             ChangeAgentDepositData txData = new ChangeAgentDepositData(address, BigIntegerUtils.stringToBigInteger(dto.getAmount()), agentHash);
@@ -227,7 +227,7 @@ public class AgentServiceImpl implements AgentService {
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
 
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             Transaction tx = new Transaction(TxType.REDUCE_AGENT_DEPOSIT);
             long txTime = NulsDateUtils.getCurrentTimeSeconds();
             tx.setTime(txTime);
@@ -273,7 +273,7 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         try {
-            HashMap callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getAddress(), dto.getPassword());
+            HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             List<Agent> agentList = chain.getAgentList();
             Agent agent = null;
             for (Agent a : agentList) {

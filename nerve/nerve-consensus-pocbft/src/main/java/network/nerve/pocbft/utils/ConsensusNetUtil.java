@@ -59,10 +59,8 @@ public class ConsensusNetUtil {
      */
     public static void initConsensusNet(Chain chain, String packAddress, Set<String> packAddressList) {
         try {
-            HashMap callResult = CallMethodUtils.accountValid(chain.getChainId(), packAddress, chain.getConfig().getPassword());
-            String priKey = (String) callResult.get(PARAM_PRI_KEY);
-            String pubKey = (String) callResult.get(PARAM_PUB_KEY);
-            netService.createConsensusNetwork(chain.getChainId(), HexUtil.decode(pubKey), HexUtil.decode(priKey), chain.getSeedNodePubKeyList(), packAddressList);
+            String pubKey = CallMethodUtils.getPublicKey(chain.getChainId(), packAddress, chain.getConfig().getPassword());
+            netService.createConsensusNetwork(chain.getChainId(), HexUtil.decode(pubKey),  chain.getSeedNodePubKeyList(), packAddressList);
             if (!consensusNetStatus) {
                 consensusNetStatus = true;
                 ThreadUtils.createAndRunThread("Cache-ConsensusIdentity_message", new CacheConsensusIdentityProcessor(chain), false);

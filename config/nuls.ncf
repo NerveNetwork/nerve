@@ -43,6 +43,11 @@ maxOutCount=50
 [account]
 blockAccountManager=NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt
 keystoreFolder=/keystore/backup
+# 0=local,1=signatrue-machine
+sigMode=0
+sigMacAddress=TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd
+sigMacUrl=http://127.0.0.1:8085/
+sigMacApiKey=1234567890
 
 [block]
 #区块最大字节数
@@ -152,6 +157,7 @@ height_1_21_0=29528000
 height_1_22_0=39820000
 height_1_23_0=40020000
 height_1_24_0=42500000
+height_1_25_0=45890000
 
 [nuls-api]
 #httpServer的启动ip

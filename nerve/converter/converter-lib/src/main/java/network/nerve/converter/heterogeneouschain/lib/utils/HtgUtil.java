@@ -44,13 +44,11 @@ import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
-import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.Token20TransferDTO;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.ethereum.crypto.ECKey;
-import org.springframework.beans.BeanUtils;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
@@ -73,8 +71,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.BD_20K;
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.*;
 
 /**
  * @author: Mimi
@@ -120,6 +117,17 @@ public class HtgUtil {
         account.setEncryptedPriKey(new byte[0]);
         ECKey ecKey = ECKey.fromPrivate(Numeric.hexStringToByteArray(prikey));
         account.setCompressedPublicKey(Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(true)));
+        return account;
+    }
+
+    public static HtgAccount createAccountByPubkey(String pubkey) {
+        byte[] pubKey = HexUtil.decode(pubkey);
+        HtgAccount account = new HtgAccount();
+        account.setAddress(genEthAddressByCompressedPublickey(pubkey));
+        account.setPubKey(pubKey);
+        account.setPriKey(ZERO_BYTES);
+        account.setEncryptedPriKey(ZERO_BYTES);
+        account.setCompressedPublicKey(HexUtil.encode(pubKey));
         return account;
     }
 

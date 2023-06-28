@@ -95,7 +95,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
             try {
                 do {
                     if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                        chain.getLogger().debug("非虚拟银行成员，跳过异构链RPC检视的任务");
+                        chain.getLogger().info("非虚拟银行成员，跳过异构链RPC检视的任务");
                         break;
                     }
                     chain.getLogger().info("按照高度来更新异构链RPC检视信息, 每隔150个区块统计一次, 当前网络高度: {}", latestHeight);
@@ -113,7 +113,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
             try {
                 do {
                     if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                        chain.getLogger().debug("非虚拟银行成员，跳过异构链余额缓存的任务");
+                        chain.getLogger().info("非虚拟银行成员，跳过异构链余额缓存的任务");
                         break;
                     }
                     chain.getLogger().info("按照高度来更新缓存的虚拟银行异构链网络余额, 每隔150个区块统计一次, 当前网络高度: {}", latestHeight);

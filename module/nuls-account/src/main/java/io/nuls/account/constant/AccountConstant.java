@@ -38,6 +38,9 @@ import java.util.Comparator;
  */
 public interface AccountConstant {
 
+    int SIG_MODE_LOCAL = 0;
+    int SIG_MODE_MACHINE = 1;
+
     /**
      * 设置别名的费用(销毁)
      * The cost of setting an alias

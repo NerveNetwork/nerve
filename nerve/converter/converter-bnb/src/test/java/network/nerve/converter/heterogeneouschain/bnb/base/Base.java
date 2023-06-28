@@ -98,7 +98,8 @@ public class Base {
         //        new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
         //OkHttpClient okHttpClient = builder.build();
         //Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
-        String ethRpcAddress = "https://bsc-testnet.public.blastapi.io";// https://bsctestapi.terminet.io/rpc
+        //String ethRpcAddress = "https://endpoints.omniatech.io/v1/bsc/testnet/public";// https://bsctestapi.terminet.io/rpc https://bsc-testnet.public.blastapi.io
+        String ethRpcAddress = "https://bsc-testnet.public.blastapi.io";// https://bsctestapi.terminet.io/rpc https://bsc-testnet.public.blastapi.io
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi = new HtgWalletApi();
         htgWalletApi.setWeb3j(web3j);
@@ -220,6 +221,7 @@ public class Base {
             Credentials credentials = Credentials.create(prikey);
             String address = credentials.getAddress();
             Sign.SignatureData signMessage = Sign.signMessage(hash, credentials.getEcKeyPair(), false);
+            //Sign.SignatureData signMessage = Sign.signPrefixedMessage(hash, credentials.getEcKeyPair());
             byte[] signed = new byte[65];
             System.arraycopy(signMessage.getR(), 0, signed, 0, 32);
             System.arraycopy(signMessage.getS(), 0, signed, 32, 32);

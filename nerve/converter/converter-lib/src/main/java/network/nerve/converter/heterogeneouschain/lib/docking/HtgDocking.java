@@ -50,9 +50,6 @@ import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.crypto.CipherException;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
@@ -61,13 +58,13 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
 
 
 /**
@@ -100,10 +97,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     protected HtgPendingTxHelper htgPendingTxHelper;
     private HtgContext htgContext;
     private HeterogeneousChainGasInfo gasInfo;
-
-    //public HtgDocking(BeanMap beanMap) {
-    //    this.htgContext = (HtgContext) beanMap.get("htgContext");
-    //}
 
     private NulsLogger logger() {
         return htgContext.logger();
@@ -146,6 +139,14 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public HeterogeneousAccount importAccountByPriKey(String priKey, String password) throws NulsException {
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            return _importAccountByPriKey(priKey, password);
+        } else {
+            return _importAccountByPubKey(priKey, password);
+        }
+    }
+
+    private HeterogeneousAccount _importAccountByPriKey(String priKey, String password) throws NulsException {
         if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
             HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
@@ -173,40 +174,30 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
     }
 
-    @Override
-    public HeterogeneousAccount importAccountByKeystore(String keystorePath, String password) throws NulsException {
-        Credentials credentials;
-        try {
-            credentials = WalletUtils.loadCredentials(password, keystorePath);
-        } catch (IOException e) {
-            throw new NulsException(ConverterErrorCode.PARSE_JSON_FAILD, e);
-        } catch (CipherException e) {
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, e);
+    private HeterogeneousAccount _importAccountByPubKey(String pubKey, String password) throws NulsException {
+        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
+            if (Arrays.equals(account.getPubKey(), HexUtil.decode(pubKey))) {
+                account.setPriKey(ZERO_BYTES);
+                account.setEncryptedPriKey(ZERO_BYTES);
+                return account;
+            }
         }
+        if (!FormatValidUtils.validPassword(password)) {
+            logger().error("password format wrong");
+            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+        }
+        HtgAccount account = HtgUtil.createAccountByPubkey(pubKey);
         try {
-            ECKeyPair keyPair = credentials.getEcKeyPair();
-            HeterogeneousAccount account = this.importAccountByPriKey(Numeric.encodeQuantity(keyPair.getPrivateKey()), password);
+            htgAccountStorageService.save(account);
+            // 覆写这个地址作为虚拟银行管理员地址
+            htgContext.SET_ADMIN_ADDRESS(account.getAddress());
+            htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
+            htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            logger().info("向{}异构组件导入节点出块地址信息, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
-        } catch (NulsException e) {
-            throw e;
-        }
-    }
-
-    @Override
-    public String exportAccountKeystore(String address, String password) throws NulsException {
-        if (!validateAccountPassword(address, password)) {
-            logger().error("password is wrong");
-            throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
-        }
-        String destinationDirectoryPath = getKeystorePath();
-        HeterogeneousAccount account = this.getAccount(address);
-        account.decrypt(password);
-        try {
-            WalletUtils.generateNewWalletFile(password, new File(destinationDirectoryPath));
-            return destinationDirectoryPath;
         } catch (Exception e) {
-            logger().error(e);
-            throw new NulsException(ConverterErrorCode.DATA_ERROR, "failed to generate the keystore");
+            throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
         }
     }
 
@@ -230,16 +221,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
-    public List<HeterogeneousAccount> getAccountList() {
-        return htgAccountStorageService.findAll();
-    }
-
-    @Override
-    public void removeAccount(String address) throws Exception {
-        htgAccountStorageService.deleteByAddress(address);
-    }
-
-    @Override
     public boolean validateAddress(String address) {
         return WalletUtils.isValidAddress(address);
     }
@@ -256,12 +237,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             return BigDecimal.ZERO;
         }
         return HtgWalletApi.convertWeiToMainAsset(ethBalance.toBigInteger());
-    }
-
-    @Override
-    public String createMultySignAddress(String[] pubKeys, int minSigns) {
-        // do nothing
-        return null;
     }
 
     @Override
@@ -787,10 +762,6 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        // 获取管理员账户
-        HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         boolean isContractAsset = assetId > 1;
         String contractAddressERC20;
         if (isContractAsset) {
@@ -802,10 +773,19 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         // 把地址转换成小写
         toAddress = toAddress.toLowerCase();
-        String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
-        return HtgUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            // 获取管理员账户
+            HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = HtgUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+            logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+            logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
+            return HtgUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signWithdrawByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        }
     }
 
     @Override
@@ -838,26 +818,37 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_4);
             }
         }
-        // 获取管理员账户
-        HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        String vHash = HtgUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
-        logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
-        return HtgUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            // 获取管理员账户
+            HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = HtgUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+            logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            return HtgUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signChangeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        }
+
     }
 
     @Override
     public String signUpgradeII(String nerveTxHash, String upgradeContract) throws NulsException {
-        // 获取管理员账户
-        HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         // 把地址转换成小写
         upgradeContract = upgradeContract.toLowerCase();
-        String vHash = HtgUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
-        logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
-        return HtgUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            // 获取管理员账户
+            HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = HtgUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
+            logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            return HtgUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signUpgradeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    nerveTxHash, upgradeContract, htgContext.VERSION());
+        }
     }
 
     @Override
@@ -980,6 +971,11 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             gasInfo.setGasLimitOfWithdraw(htgContext.GAS_LIMIT_OF_WITHDRAW().toString());
         }
         return gasInfo;
+    }
+
+    @Override
+    public boolean isAvailableRPC() {
+        return htgContext.isAvailableRPC();
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

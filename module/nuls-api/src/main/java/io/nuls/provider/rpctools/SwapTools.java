@@ -194,4 +194,17 @@ public class SwapTools implements CallRpc {
         }
     }
 
+    /**
+     * 查询所有有效的稳定币交易对
+     */
+    public Result<List<Map>> getAvailableStablePairList(int chainId) {
+        Map<String, Object> params = new HashMap<>(8);
+        params.put("chainId", chainId);
+        try {
+            return callRpc(ModuleE.SW.abbr, "sw_get_available_stable_pair_list", params, (Function<List<Map>, Result>) res -> new Result(res));
+        } catch (NulsRuntimeException e) {
+            return Result.fail(e.getCode(), e.getMessage());
+        }
+    }
+
 }

@@ -1,5 +1,6 @@
 package io.nuls.core.model;
 
+import java.util.Random;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,6 +59,10 @@ public class StringUtils {
      */
     public static String getNewUUID() {
         return UUID.randomUUID().toString().replaceAll("-", "");
+    }
+    public static String newJsonrpcId() {
+        Random random = new Random();
+        return "" + (1000 + random.nextInt(8999));
     }
 
     /**

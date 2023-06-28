@@ -78,7 +78,7 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://rinkeby.arbitrum.io/rpc";
+        String ethRpcAddress = "https://endpoints.omniatech.io/v1/arbitrum/goerli/public";
         htgWalletApi = new HtgWalletApi();
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi.setWeb3j(web3j);

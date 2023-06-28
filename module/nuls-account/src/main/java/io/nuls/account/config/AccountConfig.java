@@ -32,6 +32,13 @@ public class AccountConfig implements ModuleConfig {
      */
     private String keystoreFolder;
 
+    private int sigMode = 0;
+
+    private String sigMacUrl ;
+    private String sigMacApiKey ;
+
+    private String sigMacAddress;
+
     private int mainChainId;
 
     private int mainAssetId;
@@ -137,6 +144,38 @@ public class AccountConfig implements ModuleConfig {
 
     public void setAddressPrefix(String addressPrefix) {
         this.addressPrefix = addressPrefix;
+    }
+
+    public int getSigMode() {
+        return sigMode;
+    }
+
+    public void setSigMode(int sigMode) {
+        this.sigMode = sigMode;
+    }
+
+    public String getSigMacUrl() {
+        return sigMacUrl;
+    }
+
+    public String getSigMacApiKey() {
+        return sigMacApiKey;
+    }
+
+    public void setSigMacApiKey(String sigMacApiKey) {
+        this.sigMacApiKey = sigMacApiKey;
+    }
+
+    public void setSigMacUrl(String sigMacUrl) {
+        this.sigMacUrl = sigMacUrl;
+    }
+
+    public String getSigMacAddress() {
+        return sigMacAddress;
+    }
+
+    public void setSigMacAddress(String sigMacAddress) {
+        this.sigMacAddress = sigMacAddress;
     }
 
     public ConfigBean getChainConfig() {

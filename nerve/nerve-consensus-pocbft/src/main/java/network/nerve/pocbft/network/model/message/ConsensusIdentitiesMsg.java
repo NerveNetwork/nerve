@@ -19,6 +19,8 @@
  */
 package network.nerve.pocbft.network.model.message;
 
+import io.nuls.core.crypto.HexUtil;
+import network.nerve.pocbft.model.bo.Chain;
 import network.nerve.pocbft.network.model.ConsensusNet;
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
@@ -26,13 +28,14 @@ import io.nuls.base.data.BaseBusinessMessage;
 import io.nuls.base.data.NulsSignData;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
-import io.nuls.core.crypto.ECKey;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.pocbft.network.model.message.sub.ConsensusIdentitiesSub;
+import network.nerve.pocbft.rpc.call.CallMethodUtils;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author lanjinsheng
@@ -63,11 +66,15 @@ public class ConsensusIdentitiesMsg extends BaseBusinessMessage {
         this.consensusIdentitiesSub = consensusIdentitiesSub;
     }
 
-    public void signDatas(byte []privKey) throws IOException {
-        ECKey  ecKey = ECKey.fromPrivate(privKey);
-        NulsSignData nulsSignData = SignatureUtil.signDigest(consensusIdentitiesSub.serialize(),ecKey);
-        sign = new P2PHKSignature(nulsSignData, ecKey.getPubKey());
+    public void signDatas(Chain chain, String address) throws Exception {
+
+        byte[] digest = consensusIdentitiesSub.serialize();
+        byte[] signResult = CallMethodUtils.signature(chain, address, digest, Map.of("method", "csIdSign", "identities", HexUtil.encode(digest)));
+        P2PHKSignature _sign = new P2PHKSignature();
+        _sign.parse(signResult, 0);
+        this.sign = _sign;
     }
+
     public P2PHKSignature getSign() {
         return sign;
     }

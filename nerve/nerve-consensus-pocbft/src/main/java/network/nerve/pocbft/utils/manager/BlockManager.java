@@ -34,6 +34,8 @@ public class BlockManager {
     @Autowired
     private AgentManager agentManager;
 
+    private Long lastHeight;
+
     /**
      * 收到最新区块头，更新链区块缓存数据
      * Receive the latest block header, update the chain block cache entity
@@ -42,6 +44,12 @@ public class BlockManager {
      * @param blockHeader block header
      */
     public void addNewBlock(Chain chain, BlockHeader blockHeader, int download) {
+
+        if (null != lastHeight && lastHeight >= blockHeader.getHeight()) {
+            return;
+        }
+        lastHeight = blockHeader.getHeight();
+
         //保存共识奖励结算信息
         ConsensusAwardUtil.saveAndSwitchSettleRecord(chain, blockHeader);
         /*

@@ -463,4 +463,25 @@ public class SwapController {
         return ResultUtil.getJsonRpcResult(result);
     }
 
+    @RpcMethod("getAvailableStablePairList")
+    @ApiOperation(description = "查询所有有效的稳定币交易对", order = 711)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+    })
+    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
+    public RpcResult getAvailableStablePairList(List<Object> params) {
+        VerifyUtils.verifyParams(params, 1);
+        int chainId;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Result<List<Map>> result = swapTools.getAvailableStablePairList(chainId);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
 }

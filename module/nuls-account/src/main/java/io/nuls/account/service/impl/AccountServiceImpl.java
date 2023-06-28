@@ -26,6 +26,7 @@
 package io.nuls.account.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.nuls.account.config.AccountConfig;
 import io.nuls.account.constant.AccountConstant;
 import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.model.bo.Account;
@@ -34,10 +35,7 @@ import io.nuls.account.model.bo.Chain;
 import io.nuls.account.model.po.AccountPO;
 import io.nuls.account.rpc.call.ContractCall;
 import io.nuls.account.rpc.call.EventCall;
-import io.nuls.account.service.AccountCacheService;
-import io.nuls.account.service.AccountKeyStoreService;
-import io.nuls.account.service.AccountService;
-import io.nuls.account.service.AliasService;
+import io.nuls.account.service.*;
 import io.nuls.account.storage.AccountStorageService;
 import io.nuls.account.util.AccountTool;
 import io.nuls.account.util.LoggerUtil;
@@ -50,10 +48,7 @@ import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.crypto.AESEncrypt;
-import io.nuls.core.crypto.Base58;
-import io.nuls.core.crypto.ECKey;
-import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.*;
 import io.nuls.core.exception.CryptoException;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
@@ -83,6 +78,11 @@ public class AccountServiceImpl implements AccountService {
     @Autowired
     private AccountKeyStoreService keyStoreService;
 
+    @Autowired
+    private AccountConfig accountConfig;
+
+    @Autowired
+    private SigMachineService sigMachineService;
     private AccountCacheService accountCacheService = AccountCacheService.getInstance();
 
 
@@ -485,6 +485,13 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public String getPublicKey(int chainId, String address, String password) {
+        if (accountConfig.getSigMode() == AccountConstant.SIG_MODE_MACHINE) {
+            try {
+                return getPublicKey(address);
+            } catch (Exception e) {
+                return null;
+            }
+        }
         //check whether the account exists
         Account account = this.getAccountByAddress(chainId, address);
         if (null == account) {
@@ -588,8 +595,8 @@ public class AccountServiceImpl implements AccountService {
         accountCacheService.getLocalAccountMaps().put(account.getAddress().getBase58(), account);
         //backup account to keystore
         keyStoreService.backupAccountToKeyStore(null, chainId, account.getAddress().getBase58(), password);
-        if(!ContractCall.invokeAccountContract(chain, account.getAddress().getBase58())){
-           chain.getLogger().warn("importAccountByPrikey invokeAccountContract failed. -address:{}", account.getAddress().getBase58());
+        if (!ContractCall.invokeAccountContract(chain, account.getAddress().getBase58())) {
+            chain.getLogger().warn("importAccountByPrikey invokeAccountContract failed. -address:{}", account.getAddress().getBase58());
         }
         return account;
     }
@@ -634,7 +641,7 @@ public class AccountServiceImpl implements AccountService {
                     byte[] bytes = Base58.decode(keyStore.getAddress());
                     byte[] originalAddressHash160 = new byte[Address.RIPEMD160_LENGTH];
                     System.arraycopy(bytes, 3, originalAddressHash160, 0, Address.RIPEMD160_LENGTH);
-                    if(!Arrays.equals(newAccountHash160, originalAddressHash160)) {
+                    if (!Arrays.equals(newAccountHash160, originalAddressHash160)) {
                         throw new NulsRuntimeException(AccountErrorCode.ACCOUNTKEYSTORE_FILE_DAMAGED);
                     }
                 } catch (Exception e) {
@@ -658,7 +665,7 @@ public class AccountServiceImpl implements AccountService {
                     byte[] bytes = Base58.decode(keyStore.getAddress());
                     byte[] originalAddressHash160 = new byte[Address.RIPEMD160_LENGTH];
                     System.arraycopy(bytes, 3, originalAddressHash160, 0, Address.RIPEMD160_LENGTH);
-                    if(!Arrays.equals(newAccountHash160, originalAddressHash160)) {
+                    if (!Arrays.equals(newAccountHash160, originalAddressHash160)) {
                         throw new NulsRuntimeException(AccountErrorCode.ACCOUNTKEYSTORE_FILE_DAMAGED);
                     }
                 } catch (Exception e) {
@@ -688,7 +695,7 @@ public class AccountServiceImpl implements AccountService {
         //backup account to keystore
         keyStoreService.backupAccountToKeyStore(null, chainId, account.getAddress().getBase58(), password);
 
-        if(!ContractCall.invokeAccountContract(chain, account.getAddress().getBase58())){
+        if (!ContractCall.invokeAccountContract(chain, account.getAddress().getBase58())) {
             chain.getLogger().warn("importAccountByPrikey invokeAccountContract failed. -address:{}", account.getAddress().getBase58());
         }
         return account;
@@ -734,4 +741,61 @@ public class AccountServiceImpl implements AccountService {
         return blockSign;
     }
 
+    @Override
+    public String signature(byte[] data, int chainId, String address, String password, Map<String, Object> extend) throws Exception {
+        if (AccountConstant.SIG_MODE_LOCAL == this.accountConfig.getSigMode()) {
+            P2PHKSignature signature = signDigest(data, chainId, address, password);
+            return HexUtil.encode(signature.serialize());
+        }
+        if (!this.accountConfig.getSigMacAddress().equals(address)) {
+            return null;
+        }
+        extend.put("address", address);
+        return this.sigMachineService.request(extend);
+    }
+
+    @Override
+    public String blockSignature(byte[] hash, int chainId, String address, String password, Map<String, Object> extend) throws Exception {
+        if (AccountConstant.SIG_MODE_LOCAL == this.accountConfig.getSigMode()) {
+            BlockSignature signature = signBlockDigest(hash, chainId, address, password);
+            return HexUtil.encode(signature.serialize());
+        }
+        if (!this.accountConfig.getSigMacAddress().equals(address)) {
+            return null;
+        }
+        extend.put("address", address);
+        return this.sigMachineService.request(extend);
+    }
+
+    private Map<String, String> publicKeyMap = new HashMap<>();
+
+    @Override
+    public String getPublicKey(String address) throws Exception {
+        if (StringUtils.isBlank(address) || !address.equals(accountConfig.getSigMacAddress())) {
+            return null;
+        }
+        String pubkey = publicKeyMap.get(address);
+        if (StringUtils.isBlank(pubkey)) {
+            Map<String, Object> extend = new HashMap<>();
+            extend.put("method", "getPubKey");
+            pubkey = this.sigMachineService.request(extend);
+            publicKeyMap.put(address, pubkey);
+        }
+        return pubkey;
+    }
+
+    @Override
+    public String eciesDecrypt(String data, int chainId, String address, String password, Map<String, Object> extend) throws NulsException {
+        try {
+            if (AccountConstant.SIG_MODE_LOCAL == this.accountConfig.getSigMode()) {
+                String prikey = getPrivateKey(chainId, address, password);
+                byte[] result = ECIESUtil.decrypt(HexUtil.decode(prikey), data);
+                return HexUtil.encode(result);
+            }
+            extend.put("address", address);
+            return this.sigMachineService.request(extend);
+        } catch (Exception e) {
+            throw new NulsException(e);
+        }
+    }
 }

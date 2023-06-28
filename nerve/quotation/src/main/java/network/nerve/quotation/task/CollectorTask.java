@@ -83,6 +83,14 @@ public class CollectorTask implements Runnable {
     @Override
     public void run() {
         try {
+//用于测试            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
+//                if ("5-146-18".equals(quContractCfg.getTokenInfo())) {
+//                    Double price = NerveSwapUtil.getPrice(chain, quContractCfg);
+//                    chain.getLogger().info("==========price: {}", price);
+//                }
+//            }
+
+
             if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteStartH, QuotationContext.quoteStartM, QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
                 return;
             }

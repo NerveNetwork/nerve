@@ -2,7 +2,7 @@ package network.nerve.converter.heterogeneouschain.trx.core;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnknownFieldSet;
-import io.nuls.base.basic.AddressTool;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
@@ -14,6 +14,7 @@ import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxTransaction;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
+import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
 import org.junit.Before;
 import org.junit.Test;
 import org.tron.trident.abi.FunctionEncoder;
@@ -27,6 +28,7 @@ import org.tron.trident.abi.datatypes.generated.Uint256;
 import org.tron.trident.api.GrpcAPI;
 import org.tron.trident.core.ApiWrapper;
 import org.tron.trident.core.key.KeyPair;
+import org.tron.trident.core.transaction.TransactionBuilder;
 import org.tron.trident.crypto.SECP256K1;
 import org.tron.trident.crypto.tuwenitypes.Bytes32;
 import org.tron.trident.crypto.tuwenitypes.MutableBytes;
@@ -36,6 +38,9 @@ import org.tron.trident.proto.Contract;
 import org.tron.trident.proto.Response;
 import org.tron.trident.utils.Convert;
 import org.tron.trident.utils.Numeric;
+import org.web3j.crypto.ECDSASignature;
+import org.web3j.crypto.Keys;
+import org.web3j.crypto.Sign;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -48,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.*;
 import static network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil.*;
+import static org.tron.trident.core.ApiWrapper.parseAddress;
+import static org.tron.trident.core.ApiWrapper.parseHex;
 
 
 public class TrxWalletApiTest extends Base {
@@ -229,8 +236,10 @@ public class TrxWalletApiTest extends Base {
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
-        setUX();
-        setErc20NVT();
+        //setUX();
+        setPM();
+        //setErc20NVT();
+        setErc20USDT();
         //setErc20DX();
         // ERC20 转账数量
         String sendAmount = "3.3";
@@ -459,7 +468,7 @@ public class TrxWalletApiTest extends Base {
         String to = multySignContractAddress;
         to = TrxUtil.ethAddress2trx(to);
         String value = "1.1";
-        TrxSendTransactionPo trx = walletApi.transferTrx(from, to, convertTrxToSun(new BigDecimal(value)), fromPriKey);
+        TrxSendTransactionPo trx = walletApi.transferTrxForTestcase(from, to, convertTrxToSun(new BigDecimal(value)), fromPriKey);
         System.out.println(trx.getTxHash());
     }
 
@@ -1059,6 +1068,130 @@ public class TrxWalletApiTest extends Base {
         }
         String decimals = decimalsResult.get(0).getValue().toString();
         System.out.println("|" + decimals + "|");
+    }
+
+    @Test
+    public void txEncoder() {
+        String tempKey = "3333333333333333333333333333333333333333333333333333333333333333";
+        //ApiWrapper wrapper = ApiWrapper.ofMainnet(tempKey, "76f3c2b5-357a-4e6c-aced-9e1c42179717");
+        ApiWrapper wrapper = ApiWrapper.ofShasta(tempKey);
+        String _from = "TG8o48ycgUCB7UJd46cSnxSJybWwTHmRpm";
+        String _privateKey = "d8fd23d961076b3616078ff235c4018c6113f3811ed97109e925f7232986b583";
+        String _contractAddress = "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ";
+        String _to = "TLr94azKSz8L4HKE17V7ip12uJ5muXMBxH";
+        BigInteger _erc20Value = new BigDecimal("100").movePointRight(6).toBigInteger();
+        //创建RawTransaction交易对象
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(_to), new Uint256(_erc20Value)),
+                Arrays.asList(new TypeReference<Type>() {}));
+
+        String _encodedFunction = FunctionEncoder.encode(function);
+        BigInteger _value = new BigInteger("0");
+        Contract.TriggerSmartContract trigger =
+                Contract.TriggerSmartContract.newBuilder()
+                        .setOwnerAddress(parseAddress(_from))
+                        .setContractAddress(parseAddress(_contractAddress))
+                        .setData(parseHex(_encodedFunction))
+                        .setCallValue(_value.longValue())
+                        .build();
+        Response.TransactionExtention txnExt = wrapper.blockingStub.triggerContract(trigger);
+        TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
+        builder.setFeeLimit(new BigDecimal("100").movePointRight(6).longValue());
+
+        //Chain.Transaction signedTxn = wrapper.signTransaction(builder.build(), new KeyPair(_privateKey));
+        Chain.Transaction signedTxn = builder.build();
+        System.out.println(String.format("hash: %s", HexUtil.encode(signedTxn.getRawData().toByteArray())));
+        System.out.println(signedTxn.toString());
+        System.out.println(HexUtil.encode(signedTxn.toByteArray()));
+        signedTxn = wrapper.signTransaction(signedTxn, new KeyPair(_privateKey));
+        System.out.println(HexUtil.encode(signedTxn.toByteArray()));
+    }
+
+    private static byte[] calculateTransactionHash(byte[] bytes) {
+        Digest digest = new Digest();
+        digest.update(bytes);
+        byte[] txid = digest.digest();
+        return txid;
+    }
+
+    @Test
+    public void txDecoder() throws Exception {
+        String _privateKey = "d8fd23d961076b3616078ff235c4018c6113f3811ed97109e925f7232986b583";
+        String hex = "0ad3010a028a8b220873099a0c7b5d38df40b8f9fef38a315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a154143a0eca8a75c86f30045a434114d750eb1b4b6e0121541e8def5a8a34d0af78e1c9d257ca51f69a1e3ed8f2244a9059cbb00000000000000000000000077532f026faaa9704e3d86ff911166e2277088ad0000000000000000000000000000000000000000000000000000000005f5e1007089bbfbf38a31900180c2d72f";
+        //            0ad3010a028a8b220873099a0c7b5d38df40b8f9fef38a315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a154143a0eca8a75c86f30045a434114d750eb1b4b6e0121541e8def5a8a34d0af78e1c9d257ca51f69a1e3ed8f2244a9059cbb00000000000000000000000077532f026faaa9704e3d86ff911166e2277088ad0000000000000000000000000000000000000000000000000000000005f5e1007089bbfbf38a31900180c2d72f
+        //            0ad3010a028a8b220873099a0c7b5d38df40b8f9fef38a315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a154143a0eca8a75c86f30045a434114d750eb1b4b6e0121541e8def5a8a34d0af78e1c9d257ca51f69a1e3ed8f2244a9059cbb00000000000000000000000077532f026faaa9704e3d86ff911166e2277088ad0000000000000000000000000000000000000000000000000000000005f5e1007089bbfbf38a31900180c2d72f12411facd7836eafb1579ffd0907a0729e547cb44f04e630ca05c7608aebc3b79c7119197a0bbcf1ea9384145027636d50320644152df2a9c7af98f06ad2e5878ea41c
+        //            0ad3010a028a8b220873099a0c7b5d38df40b8f9fef38a315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a154143a0eca8a75c86f30045a434114d750eb1b4b6e0121541e8def5a8a34d0af78e1c9d257ca51f69a1e3ed8f2244a9059cbb00000000000000000000000077532f026faaa9704e3d86ff911166e2277088ad0000000000000000000000000000000000000000000000000000000005f5e1007089bbfbf38a31900180c2d72f124112ed28e519fcdefc76b8d882daebc810c7f2d58d837d55d3a1101b852bd2d72e098eb7e878b2d96e063129fb0996309e60ade82f2dd173e1600c23b4c6197e291b
+        //String hex = "0ad3010a028a8b220873099a0c7b5d38df40b8f9fef38a315aae01081f12a9010a31747970652e676f6f676c65617069732e636f6d2f70726f746f636f6c2e54726967676572536d617274436f6e747261637412740a154143a0eca8a75c86f30045a434114d750eb1b4b6e0121541e8def5a8a34d0af78e1c9d257ca51f69a1e3ed8f2244a9059cbb00000000000000000000000077532f026faaa9704e3d86ff911166e2277088ad0000000000000000000000000000000000000000000000000000000005f5e1007089bbfbf38a31900180c2d72f124112ed28e519fcdefc76b8d882daebc810c7f2d58d837d55d3a1101b852bd2d72e098eb7e878b2d96e063129fb0996309e60ade82f2dd173e1600c23b4c6197e2900";
+        // 124112ed28e519fcdefc76b8d882daebc810c7f2d58d837d55d3a1101b852bd2d72e098eb7e878b2d96e063129fb0996309e60ade82f2dd173e1600c23b4c6197e2900
+        byte[] bytes = HexUtil.decode(hex);
+
+
+        Chain.Transaction txn = Chain.Transaction.parseFrom(bytes);
+        byte[] txid = calculateTransactionHash(txn.getRawData().toByteArray());
+        System.out.println(String.format("hash: %s", HexUtil.encode(txid)));
+        String sign = HtgUtil.dataSign(HexUtil.encode(txid), _privateKey);
+        System.out.println(sign);
+
+        System.out.println(txn.toString());
+        System.out.println(HexUtil.encode(txn.toByteArray()));
+        Chain.Transaction signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(HexUtil.decode(sign))).build();
+        System.out.println(signedTxn.toString());
+        System.out.println(HexUtil.encode(signedTxn.toByteArray()));
+    }
+
+    @Test
+    public void verifySignatureTest() {
+        /*{
+            "id": "3889",
+                "jsonrpc": null,
+                "method": "cvSignWithdraw",
+                "params": {
+                    "erc20": "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ",
+                    "txKey": "df1757e63f9efbe2bfd8f70a25462cb6b3a02a75bfcaa2d5dc6e8e02408e0e18",
+                    "isContractAsset": true,
+                    "nativeId": 100000001,
+                    "toAddress": "TG8o48ycgUCB7UJd46cSnxSJybWwTHmRpm",
+                    "value": "12300",
+                    "version": 3,
+                    "address": "TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK"
+        }
+        }*/
+        String txHash = "df1757e63f9efbe2bfd8f70a25462cb6b3a02a75bfcaa2d5dc6e8e02408e0e18";
+        String toAddress = "TG8o48ycgUCB7UJd46cSnxSJybWwTHmRpm";
+        String valueStr = "12300";
+        BigInteger value = new BigInteger(valueStr);
+        Boolean isContractAsset = true;
+        String contractAddressERC20 = "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ";
+        //String signed = "94cb881c719d18933bbb35c6583bee4f9453632f26ccb0db5ddbdef841fdb8563b0f04afc9c46d888a9826ee74a12ee249738d1d9e0fe222c1154bfc9cfd8e001b";
+        String signed = "3489ae647e79f041c40c5e4d040fb1dcf36b844cb910b45ed4e6d1659b9d7dd80055fcfb6232f922a01ca27e3500530e56b64293c106e938a98eb480732604a11c";
+        //String signed = "f9586f12e5039a1bc3403b136c484936cf81541f9f425679b6f85140285386b55b40edf3fdae4f5bfa3e1b6284424bbc19515feadd49a8086a45e5cbd5f67b6c1b";
+
+        String vHash = TrxUtil.encoderWithdraw(context, txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION());
+        System.out.println(String.format("[验证签名] 提现数据: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
+        System.out.println(String.format("[验证签名] 提现vHash: %s", vHash));
+        byte[] hashBytes = org.web3j.utils.Numeric.hexStringToByteArray(vHash);
+
+        signed = Numeric.cleanHexPrefix(signed);
+        if (signed.length() != 130) {
+            return;
+        }
+        String r = "0x" + signed.substring(0, 64);
+        String s = "0x" + signed.substring(64, 128);
+        int v = Integer.parseInt(signed.substring(128), 16);
+        if (v >= 27) {
+            v -= 27;
+        }
+        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+        BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
+        if (recover != null) {
+            String address = "0x" + Keys.getAddress(recover);
+            System.out.println(address);
+            System.out.println(ethAddress2trx(address));
+        }
+
+        System.out.println("----------------");
+        System.out.println();
     }
 
     public static SECP256K1.KeyPair createPair(String prikey) {

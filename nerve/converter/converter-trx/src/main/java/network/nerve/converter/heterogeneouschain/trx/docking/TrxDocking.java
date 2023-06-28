@@ -73,6 +73,7 @@ import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
 
 
 /**
@@ -147,6 +148,15 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public HeterogeneousAccount importAccountByPriKey(String priKey, String password) throws NulsException {
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            return _importAccountByPriKey(priKey, password);
+        } else {
+            return _importAccountByPubKey(priKey, password);
+        }
+    }
+
+    private HeterogeneousAccount _importAccountByPriKey(String priKey, String password) throws NulsException {
+
         if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
             HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
@@ -174,14 +184,31 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
     }
 
-    @Override
-    public HeterogeneousAccount importAccountByKeystore(String keystorePath, String password) throws NulsException {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "TRON不再支持的函数[3]");
-    }
-
-    @Override
-    public String exportAccountKeystore(String address, String password) throws NulsException {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "TRON不再支持的函数[3]");
+    private HeterogeneousAccount _importAccountByPubKey(String pubKey, String password) throws NulsException {
+        if (StringUtils.isNotBlank(htgContext.ADMIN_ADDRESS())) {
+            HtgAccount account = htgAccountStorageService.findByAddress(htgContext.ADMIN_ADDRESS());
+            if (Arrays.equals(account.getPubKey(), Numeric.hexStringToByteArray(pubKey))) {
+                account.setPriKey(ZERO_BYTES);
+                account.setEncryptedPriKey(ZERO_BYTES);
+                return account;
+            }
+        }
+        if (!FormatValidUtils.validPassword(password)) {
+            logger().error("password format wrong");
+            throw new NulsException(ConverterErrorCode.PASSWORD_FORMAT_WRONG);
+        }
+        HtgAccount account = TrxUtil.createAccountByPubkey(pubKey);
+        try {
+            htgAccountStorageService.save(account);
+            // 覆写这个地址作为虚拟银行管理员地址
+            htgContext.SET_ADMIN_ADDRESS(account.getAddress());
+            htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
+            htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
+            logger().info("向{}异构组件导入节点出块地址信息, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
+            return account;
+        } catch (Exception e) {
+            throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
+        }
     }
 
     @Override
@@ -201,16 +228,6 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public HeterogeneousAccount getAccount(String address) {
         return htgAccountStorageService.findByAddress(address);
-    }
-
-    @Override
-    public List<HeterogeneousAccount> getAccountList() {
-        return htgAccountStorageService.findAll();
-    }
-
-    @Override
-    public void removeAccount(String address) throws Exception {
-        htgAccountStorageService.deleteByAddress(address);
     }
 
     @Override
@@ -235,12 +252,6 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             return BigDecimal.ZERO;
         }
         return TrxUtil.convertSunToTrx(ethBalance.toBigInteger());
-    }
-
-    @Override
-    public String createMultySignAddress(String[] pubKeys, int minSigns) {
-        // do nothing
-        return null;
     }
 
     @Override
@@ -723,9 +734,6 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
         // 获取管理员账户
-        TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         boolean isContractAsset = assetId > 1;
         String contractAddressERC20;
         if (isContractAsset) {
@@ -735,10 +743,19 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
         // 若跨链资产精度不同，则换算精度
         value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
-        String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
-        return TrxUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+            logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+            logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
+            return TrxUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signWithdrawByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        }
+
     }
 
     @Override
@@ -771,26 +788,34 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_4);
             }
         }
-        // 获取管理员账户
-        TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
-        logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
-        return TrxUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            // 获取管理员账户
+            TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+            logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            return TrxUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signChangeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
+        }
     }
 
     @Override
     public String signUpgradeII(String nerveTxHash, String upgradeContract) throws NulsException {
-        // 获取管理员账户
-        TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
-        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
-        String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        // 把地址转换成小写
-        //upgradeContract = upgradeContract.toLowerCase();
-        String vHash = TrxUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
-        logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
-        return TrxUtil.dataSign(vHash, priKey);
+        if (htgContext.getConverterCoreApi().isLocalSign()) {
+            // 获取管理员账户
+            TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+            account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+            String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
+            String vHash = TrxUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
+            logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            return TrxUtil.dataSign(vHash, priKey);
+        } else {
+            return htgContext.getConverterCoreApi().signUpgradeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                    nerveTxHash, upgradeContract, htgContext.VERSION());
+        }
     }
 
     @Override
@@ -907,6 +932,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             trxContext.gasInfo.setExtend(trxContext.SUN_PER_ENERGY.toString());
         }
         return trxContext.gasInfo;
+    }
+
+    @Override
+    public boolean isAvailableRPC() {
+        return htgContext.isAvailableRPC();
     }
 
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {

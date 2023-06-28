@@ -642,7 +642,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleWithdrawalCoinData(chain, withdrawalTxDTO);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, withdrawalTxDTO.getSignAccount());
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalTxData.class));
         //广播
         TransactionCall.newTx(chain, tx);
@@ -728,7 +728,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
             heterogeneousHashList.add(new HeterogeneousHash(heterogeneousChainId, heterogeneousTxHash));
             NulsHash txHash = tx.getHash();
-            P2PHKSignature p2PHKSignature = ConverterSignUtil.getSignatureByDirector(chain, txHash);
+            P2PHKSignature p2PHKSignature = ConverterSignUtil.getSignatureByDirector(chain, tx);
             BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
             NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
 
@@ -787,7 +787,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.PROPOSAL, txDataBytes, proposalTxDTO.getRemark());
         byte[] coinData = assembleProposalFeeCoinData(chain, tx.size(), proposalTxDTO.getSignAccountDTO(), ConverterContext.PROPOSAL_PRICE);
         tx.setCoinData(coinData);
-        ConverterSignUtil.signTx(tx, proposalTxDTO.getSignAccountDTO());
+        ConverterSignUtil.signTx(chain.getChainId(), proposalTxDTO.getSignAccountDTO(), tx);
         return processProposalTx(chain, tx, proposalTxDTO.getHeterogeneousChainId(), proposalTxDTO.getHeterogeneousTxHash());
     }
 
@@ -808,7 +808,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
         Transaction tx = assembleUnsignTxWithFee(chain, TxType.VOTE_PROPOSAL, txDataBytes, remark, signAccount);
-        ConverterSignUtil.signTx(tx, signAccount);
+        ConverterSignUtil.signTx(chain.getChainId(), signAccount, tx);
         TransactionCall.newTx(chain, tx);
 
         chain.getLogger().debug(tx.format(VoteProposalTxData.class));
@@ -916,7 +916,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, signAccountDTO);
+        ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
         //广播
         TransactionCall.newTx(chain, tx);
 
@@ -946,7 +946,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, signAccountDTO);
+        ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
         //广播
         TransactionCall.newTx(chain, tx);
 
@@ -978,7 +978,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, signAccountDTO);
+        ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
         //广播
         TransactionCall.newTx(chain, tx);
 
@@ -1040,7 +1040,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.RESET_HETEROGENEOUS_VIRTUAL_BANK, txDataBytes);
-        ConverterSignUtil.signTx(tx, signAccount);
+        ConverterSignUtil.signTx(chain.getChainId(), signAccount, tx);
         chain.getLogger().debug(tx.format(ResetVirtualBankTxData.class));
         TransactionCall.newTx(chain, tx);
         return tx;
@@ -1750,7 +1750,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
         //广播
         TransactionCall.newTx(chain, tx);
@@ -1807,7 +1807,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
         //广播
         TransactionCall.newTx(chain, tx);
@@ -1893,7 +1893,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
         //广播
         TransactionCall.newTx(chain, tx);
@@ -1979,7 +1979,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId);
         tx.setCoinData(coinData);
         //签名
-        ConverterSignUtil.signTx(tx, withdrawalAdditionalFeeTxDTO.getSignAccount());
+        ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
         //广播
         TransactionCall.newTx(chain, tx);

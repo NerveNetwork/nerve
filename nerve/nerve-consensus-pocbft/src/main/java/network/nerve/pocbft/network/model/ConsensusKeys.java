@@ -26,13 +26,11 @@ import io.nuls.core.model.ByteUtils;
  * 自身节点公私钥
  */
 public class ConsensusKeys {
-    private byte[] privKey;
     private byte[] pubKey;
     private String address = null;
 
-    public ConsensusKeys(byte[] publicKey, byte[] privateKey,int chainId) {
+    public ConsensusKeys(byte[] publicKey,int chainId) {
         this.pubKey = ByteUtils.copyOf(publicKey, publicKey.length);
-        this.privKey = ByteUtils.copyOf(privateKey, privateKey.length);
         if (null==address){
             address= AddressTool.getStringAddressByBytes(AddressTool.getAddress(publicKey, chainId));
         }
@@ -44,14 +42,6 @@ public class ConsensusKeys {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public byte[] getPrivKey() {
-        return privKey;
-    }
-
-    public void setPrivKey(byte[] privKey) {
-        this.privKey = privKey;
     }
 
     public byte[] getPubKey() {

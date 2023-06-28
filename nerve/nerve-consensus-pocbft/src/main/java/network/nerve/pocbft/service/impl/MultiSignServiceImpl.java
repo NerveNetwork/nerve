@@ -70,7 +70,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAgentAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
             Transaction tx = new Transaction(TxType.REGISTER_AGENT);
@@ -124,7 +124,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
             Transaction tx = new Transaction(TxType.STOP_AGENT);
@@ -195,7 +195,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
             if (agent == null) {
@@ -256,7 +256,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             Agent agent = agentManager.getValidAgentByAddress(chain, AddressTool.getAddress(dto.getAddress()));
             if (agent == null) {
@@ -335,7 +335,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
             //验证资产是否可以参与stacking
             if (null == chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())) {
@@ -397,7 +397,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             MultiSigAccount multiSigAccount = CallMethodUtils.getMultiSignAccount(dto.getChainId(), dto.getAddress());
             HashMap callResult = null;
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
-                callResult = CallMethodUtils.accountValid(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
+                callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
 
             NulsHash hash = NulsHash.fromHex(dto.getTxHash());

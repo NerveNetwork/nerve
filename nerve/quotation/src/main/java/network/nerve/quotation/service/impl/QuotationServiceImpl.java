@@ -30,6 +30,7 @@ import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Component;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
@@ -46,6 +47,7 @@ import network.nerve.quotation.util.TimeUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -131,7 +133,14 @@ public class QuotationServiceImpl implements QuotationService {
         }
         List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
         TransactionSignature transactionSignature = new TransactionSignature();
-        P2PHKSignature p2PHKSignature = QuotationCall.signDigest(address, password, tx.getHash().getBytes());
+        Map<String, Object> extendMap = new HashMap<>();
+        extendMap.put("method", "quotationSign");
+        try {
+            extendMap.put("txHex", HexUtil.encode(tx.serialize()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        P2PHKSignature p2PHKSignature = QuotationCall.signDigest(address, password, tx.getHash().getBytes(),extendMap);
         p2PHKSignatures.add(p2PHKSignature);
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         try {

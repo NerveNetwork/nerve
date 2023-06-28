@@ -91,6 +91,12 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
             }
             htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
+            if (htgWalletApi.isReSyncBlock()) {
+                htgContext.logger().info("[{}]网络删除本地全部区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                htgLocalBlockHelper.deleteAllLocalBlockHeader();
+                htgWalletApi.setReSyncBlock(false);
+                return;
+            }
             // 当前HTG网络最新的区块
             long blockHeightFromEth = htgWalletApi.getBlockHeight();
             // 本地最新的区块
@@ -149,7 +155,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                     break;
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             htgContext.logger().error(String.format("同步%s区块失败", htgContext.getConfig().getSymbol()), e);
         }
     }

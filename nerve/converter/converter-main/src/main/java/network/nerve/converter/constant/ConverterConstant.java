@@ -95,4 +95,6 @@ public interface ConverterConstant {
     long MINUTES_5 = 5 * 60 * 1000L;
     String IN = "in";
     String OUT = "out";
+    int SIG_MODE_LOCAL = 0;
+    int SIG_MODE_MACHINE = 1;
 }

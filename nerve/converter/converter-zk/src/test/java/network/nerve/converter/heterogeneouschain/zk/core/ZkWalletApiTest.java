@@ -212,6 +212,7 @@ public class ZkWalletApiTest extends Base {
         BigInteger decimals = this.erc20Decimals("0x8B3b22C252F431a75644E544FCAf67E390A206F4");
         System.out.println(decimals);
 
+
         /*BigInteger totalSupply1 = this.erc20TotalSupply("0xae7FccFF7Ec3cf126cd96678ADAE83a2b303791C");
         System.out.println(totalSupply1);
         BigInteger totalSupply2 = this.erc20TotalSupply("0x856129092C53f5E2e4d9DB7E04c961580262D0AE");
@@ -248,7 +249,7 @@ public class ZkWalletApiTest extends Base {
         int tokenDecimals = erc20Decimals;
         String tokenAmount = "100000000";
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
 
         setErc20USD18();
@@ -256,7 +257,7 @@ public class ZkWalletApiTest extends Base {
         tokenDecimals = erc20Decimals;
         tokenAmount = "50000000";
         to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
-        token = htgWalletApi.transferERC20Token(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USD18), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 
@@ -741,7 +742,7 @@ public class ZkWalletApiTest extends Base {
 
     @Test
     public void txInputCrossOutDecoderTest() throws JsonProcessingException {
-        String input = "0x0889d1f00000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000bebc20000000000000000000000000025ebbac2ca9db0c1d6f0fc959bbc74985417bab00000000000000000000000000000000000000000000000000000000000000025544e565464545350526e586b446961677937656e7469314b4c37354e553541784339735141000000000000000000000000000000000000000000000000000000";
+        String input = "0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564";
         List<Object> typeList = HtgUtil.parseInput(input, HtgConstant.INPUT_CROSS_OUT);
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
 
@@ -854,6 +855,11 @@ public class ZkWalletApiTest extends Base {
 
     @Test
     public void arrayTest() {
+        String asd = "574662112133559816364767";
+        String asd1 = "274154958571019704221046";
+        String asd2 = "300507153562540112143721";
+        System.out.println(new BigInteger(asd1).add(new BigInteger(asd2)));
+
         String[] arr = new String[]{"aa", "bb", "cc", "dd", "ee", "ff", "gg", "hh", "ii"};
         // aa, "", cc, "", ee
         arr[1] = "";
@@ -959,8 +965,8 @@ public class ZkWalletApiTest extends Base {
 
     @Test
     public void getTxReceipt() throws Exception {
-        setMain();
-        String directTxHash = "0xf613764873eba1546e814a0e00ad563aa592ec1e7620f841423337cbfddb6b30";
+        //setMain();
+        String directTxHash = "0x9ff503f2c6a57502958d48e2de27766b6c4285459fd8f57bc860687274862fce";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(tx.getGas());
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
@@ -977,10 +983,10 @@ public class ZkWalletApiTest extends Base {
 
     @Test
     public void symboltest() throws Exception {
-        setMain();
+        //setMain();
         // usdt 0xb6D685346106B697E6b2BbA09bc343caFC930cA3
         // nvt 0x8B3b22C252F431a75644E544FCAf67E390A206F4
-        String contractAddress = "0xe176ebe47d621b984a73036b9da5d834411ef734";
+        String contractAddress = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
         List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, HtgUtil.getSymbolERC20Function());
         if (symbolResult.isEmpty()) {
             return;
@@ -1082,11 +1088,177 @@ public class ZkWalletApiTest extends Base {
         // MainAsset数量
         String sendAmount = "0.05";
         for (String to : tos) {
-            String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), htgContext.GAS_LIMIT_OF_MAIN_ASSET(), gasPrice);
+            String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), htgContext.GAS_LIMIT_OF_MAIN_ASSET(), gasPrice);
             System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
         }
     }
 
+    @Test
+    public void registerMinterERC20EstimateGasTest() throws Exception {
+        // 多签合约地址
+        String contractAddress = "0xA8e8c840e92d10dF3514A00491f50B6277aF215f";
+        // 注册的ERC20Minter合约地址
+        String erc20Minter = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
+
+        //创建RawTransaction交易对象
+        Function function = new Function(
+                "registerMinterERC20",
+                List.of(new Address(erc20Minter)),
+                List.of(new TypeReference<Type>() {
+                })
+        );
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0xf173805F1e3fE6239223B17F0807596Edc283012",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void crossOutEstimateGasTest() throws Exception {
+        setMain();
+        // 多签合约地址
+        String contractAddress = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "aaa";
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String token = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
+
+        //创建RawTransaction交易对象
+        Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, token);
+
+        String encodedFunction = FunctionEncoder.encode(crossOutFunction);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void estimateGasTest() throws Exception {
+        // 多签合约地址
+        String contractAddress = "0xfb3b78d16163124c5b4adefcc8fe9aac8546fd4b";
+
+        String encodedFunction = "0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564";
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void erc20TransferEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+
+        Function function = new Function(
+                "transfer",
+                Arrays.asList(new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                from,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void erc20TransferFromEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
+        BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
+        String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
+        String to = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
+        String caller = to;
+
+        Function function = new Function(
+                "transferFrom",
+                Arrays.asList(new Address(from), new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                caller,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
 
 
     static class MockHtgERC20Helper extends HtgERC20Helper {

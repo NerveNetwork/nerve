@@ -69,6 +69,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
 import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstant.EMPTY_STRING;
 
 /**
@@ -571,6 +572,19 @@ public class TrxUtil {
         account.setCompressedPublicKey(Numeric.toHexStringNoPrefix(ecKey.getPubKeyPoint().getEncoded(true)));
         return account;
     }
+
+    public static TrxAccount createAccountByPubkey(String pubkey) {
+        byte[] pubKey = Numeric.hexStringToByteArray(pubkey);
+        TrxAccount account = new TrxAccount();
+        account.setAddress(genTrxAddressByCompressedPublickey(pubkey));
+        account.setPubKey(pubKey);
+        account.setPriKey(ZERO_BYTES);
+        account.setEncryptedPriKey(ZERO_BYTES);
+        account.setCompressedPublicKey(Numeric.toHexStringNoPrefix(pubKey));
+        return account;
+    }
+
+
 
     public static String calcTxHash(Chain.Transaction tx) {
         SHA256.Digest digest = new SHA256.Digest();

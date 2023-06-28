@@ -64,7 +64,7 @@ public interface ConsensusNetService {
      * @return
      * @description 自身从共识节点变为普通节点时候调用
      */
-    boolean createConsensusNetwork(int chainId, byte[] selfPubKey, byte[] selfPrivKey, List<byte[]> consensusSeedPubKeyList, Set<String> consensusAddrList);
+    boolean createConsensusNetwork(int chainId, byte[] selfPubKey, List<byte[]> consensusSeedPubKeyList, Set<String> consensusAddrList);
 
     /**
      * @param chainId

@@ -25,14 +25,12 @@
 package network.nerve.converter.rpc.call;
 
 import io.nuls.base.basic.AddressTool;
-import io.nuls.base.data.NulsHash;
-import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
-import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.LoggerUtil;
 
 import java.util.HashMap;
@@ -45,38 +43,35 @@ import java.util.Map;
  */
 public class AccountCall extends BaseCall {
 
-    /**
-     * 签名
-     * @param address
-     * @param password
-     * @param hash
-     * @return
-     * @throws NulsException
-     */
-    public static P2PHKSignature signDigest(String address, String password, NulsHash hash) throws NulsException {
+    public static String signature(int chainId, String address, String password, String data, Map<String, Object> extend) throws NulsException {
         try {
-            int chainId = AddressTool.getChainIdByAddress(address);
             Map<String, Object> params = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
             params.put(Constants.VERSION_KEY_STR, ConverterConstant.RPC_VERSION);
             params.put(Constants.CHAIN_ID, chainId);
             params.put("address", address);
             params.put("password", password);
-            params.put("data", hash.toHex());
-            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_signDigest", params);
+            params.put("data", data);
+            params.put("extend", extend);
+
+            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_signature", params);
             String signatureStr = (String)result.get("signature");
-            return ConverterUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
+            return signatureStr;
         } catch (NulsException e) {
-            LoggerUtil.LOG.error("SignDigest fail - address:{}", address);
+            LoggerUtil.LOG.error("SignDigest fail - data:{}", data);
             throw e;
-        } catch (RuntimeException e) {
-            LoggerUtil.LOG.error("SignDigest fail - address:{}", address);
-            LoggerUtil.LOG.error(e);
-            throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);
         }
     }
 
 
     public static String getPriKey(String address, String password) throws NulsException {
+        if (ConverterContext.SIG_MODE == ConverterConstant.SIG_MODE_LOCAL) {
+            return _getPriKey(address, password);
+        } else {
+            return _getPubKey(address, password);
+        }
+    }
+
+    private static String _getPriKey(String address, String password) throws NulsException {
         try {
             int chainId = AddressTool.getChainIdByAddress(address);
             Map<String, Object> params = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
@@ -92,6 +87,27 @@ public class AccountCall extends BaseCall {
             throw e;
         } catch (RuntimeException e) {
             LoggerUtil.LOG.error("getPriKey fail - address:{}", address);
+            LoggerUtil.LOG.error(e);
+            throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);
+        }
+    }
+
+    private static String _getPubKey(String address, String password) throws NulsException {
+        try {
+            int chainId = AddressTool.getChainIdByAddress(address);
+            Map<String, Object> params = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+            params.put(Constants.VERSION_KEY_STR, ConverterConstant.RPC_VERSION);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            params.put("password", password);
+            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_getPubKeyByAddress", params);
+            String pubKey = (String) result.get("pubKey");
+            return pubKey;
+        } catch (NulsException e) {
+            LoggerUtil.LOG.error("getPubKey fail - address:{}", address);
+            throw e;
+        } catch (RuntimeException e) {
+            LoggerUtil.LOG.error("getPubKey fail - address:{}", address);
             LoggerUtil.LOG.error(e);
             throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD);
         }

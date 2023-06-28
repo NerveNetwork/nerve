@@ -250,9 +250,12 @@ public class Transaction {
     // Parity returns a byte value, Geth returns a hex-encoded string
     // https://github.com/ethereum/go-ethereum/issues/3339
     public void setV(Object v) {
+        // for cronos +
         if (v == null) {
             v = Long.valueOf(0);
         }
+        // for cronos -
+
         if (v instanceof String) {
             this.v = Numeric.toBigInt((String) v).longValueExact();
         } else if (v instanceof Integer) {

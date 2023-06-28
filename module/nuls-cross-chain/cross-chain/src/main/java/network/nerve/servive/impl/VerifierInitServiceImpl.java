@@ -47,6 +47,7 @@ public class VerifierInitServiceImpl implements VerifierInitService {
     private RegisteredCrossChainService registeredCrossChainService;
     @Autowired
     private ConfigService configService;
+
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
         List<Transaction> invalidTxList = new ArrayList<>();
@@ -59,21 +60,21 @@ public class VerifierInitServiceImpl implements VerifierInitService {
             try {
                 ChainInfo chainInfo;
                 VerifierInitData verifierInitData = new VerifierInitData();
-                verifierInitData.parse(verifierInitTx.getTxData(),0);
+                verifierInitData.parse(verifierInitTx.getTxData(), 0);
                 List<String> initVerifierList = verifierInitData.getVerifierList();
                 int verifierChainId = verifierInitData.getRegisterChainId();
                 if (initVerifierList == null || initVerifierList.isEmpty() || verifierChainId <= 0) {
                     chain.getLogger().error("验证人变更信息无效,chainId:{}", verifierChainId);
                 }
 
-                if(!config.isMainNet()){
+                if (!config.isMainNet()) {
                     verifierList = new ArrayList<>(Arrays.asList(config.getVerifiers().split(NulsCrossChainConstant.VERIFIER_SPLIT)));
                     verifierChainId = config.getMainChainId();
-                    minPassCount = verifierList.size() * config.getMainByzantineRatio()/ CrossChainConstant.MAGIC_NUM_100;
-                    if(minPassCount == 0){
+                    minPassCount = verifierList.size() * config.getMainByzantineRatio() / CrossChainConstant.MAGIC_NUM_100;
+                    if (minPassCount == 0) {
                         minPassCount = 1;
                     }
-                }else{
+                } else {
                     chainInfo = chainManager.getChainInfo(verifierChainId);
                     if (chainInfo == null) {
                         chain.getLogger().error("链未注册,chainId:{}", verifierChainId);
@@ -118,12 +119,12 @@ public class VerifierInitServiceImpl implements VerifierInitService {
         for (Transaction verifierInitTx : txs) {
             try {
                 VerifierInitData verifierInitData = new VerifierInitData();
-                verifierInitData.parse(verifierInitTx.getTxData(),0);
+                verifierInitData.parse(verifierInitTx.getTxData(), 0);
                 List<String> initVerifierList = verifierInitData.getVerifierList();
                 int verifierChainId;
-                if(!config.isMainNet()){
+                if (!config.isMainNet()) {
                     verifierChainId = config.getMainChainId();
-                }else{
+                } else {
                     verifierChainId = verifierInitData.getRegisterChainId();
                 }
                 ChainInfo chainInfo = chainManager.getChainInfo(verifierChainId);
@@ -137,22 +138,22 @@ public class VerifierInitServiceImpl implements VerifierInitService {
                 }
                 commitSuccessList.add(verifierInitTx);
                 chainManager.setCrossNetUseAble(true);
-                if(!config.isMainNet()){
+                if (!config.isMainNet()) {
                     List<String> localVerifierList = (List<String>) ConsensusCall.getPackerInfo(chain).get(ParamConstant.PARAM_PACK_ADDRESS_LIST);
-                    if(chain.getVerifierList() == null || chain.getVerifierList().isEmpty()){
-                        chain.getLogger().info("Parallel link receives primary network initialization verifier transaction, initializes local verifier,localVerifierList:{}",localVerifierList);
+                    if (chain.getVerifierList() == null || chain.getVerifierList().isEmpty()) {
+                        chain.getLogger().info("Parallel link receives primary network initialization verifier transaction, initializes local verifier,localVerifierList:{}", localVerifierList);
                         boolean result = LocalVerifierManager.initLocalVerifier(chain, localVerifierList);
-                        if(!result){
+                        if (!result) {
                             return false;
                         }
                     }
-                    chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, TxUtil.createVerifierInitTx(localVerifierList, blockHeader.getTime(), chainId),syncStatus));
+                    chain.getCrossTxThreadPool().execute(new CrossTxHandler(chain, TxUtil.createVerifierInitTx(localVerifierList, blockHeader.getTime(), chainId), blockHeader, syncStatus));
                 }
             } catch (NulsException e) {
                 chain.getLogger().error(e);
                 rollback(chainId, commitSuccessList, blockHeader);
                 return false;
-            }catch (IOException io){
+            } catch (IOException io) {
                 chain.getLogger().error(io);
                 rollback(chainId, commitSuccessList, blockHeader);
                 return false;
@@ -170,12 +171,12 @@ public class VerifierInitServiceImpl implements VerifierInitService {
         for (Transaction verifierInitTx : txs) {
             try {
                 VerifierInitData verifierInitData = new VerifierInitData();
-                verifierInitData.parse(verifierInitTx.getTxData(),0);
+                verifierInitData.parse(verifierInitTx.getTxData(), 0);
                 List<String> initVerifierList = verifierInitData.getVerifierList();
                 int verifierChainId;
-                if(!config.isMainNet()){
+                if (!config.isMainNet()) {
                     verifierChainId = config.getMainChainId();
-                }else{
+                } else {
                     verifierChainId = verifierInitData.getRegisterChainId();
                 }
                 ChainInfo chainInfo = chainManager.getChainInfo(verifierChainId);

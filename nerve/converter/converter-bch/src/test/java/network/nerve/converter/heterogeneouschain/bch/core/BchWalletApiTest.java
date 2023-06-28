@@ -186,7 +186,7 @@ public class BchWalletApiTest extends Base {
         String to = from;
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(from, to, "0x", new BigDecimal(sendAmount).movePointRight(18).toBigInteger());
         System.out.println(String.format("交易类型: 转账主资产, 估算的GasLimit: %s, %s", estimateGasObj.getAmountUsed(), estimateGasObj.getError() != null ? estimateGasObj.getError().getMessage() : ""));
-        String txHash = htgWalletApi.sendMainAsset(from, fromPriKey, to, new BigDecimal(sendAmount), estimateGasObj.getAmountUsed(), gasPrice);
+        String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), estimateGasObj.getAmountUsed(), gasPrice);
         System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
     }
 
@@ -205,7 +205,7 @@ public class BchWalletApiTest extends Base {
         String tokenAddress = erc20Address;
         int tokenDecimals = erc20Decimals;
         String tokenAmount = "43211234.123456";
-        EthSendTransaction token = htgWalletApi.transferERC20Token(from, multySignContractAddress, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
+        EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, multySignContractAddress, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
         System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
 

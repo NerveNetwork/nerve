@@ -7,7 +7,6 @@ import io.nuls.base.data.Transaction;
 import io.nuls.core.basic.Result;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
@@ -18,6 +17,7 @@ import io.nuls.core.rpc.model.message.Response;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.config.SwapConfig;
+import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.enums.BlockType;
@@ -25,7 +25,6 @@ import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.StableSwapHelper;
 import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
-import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.TokenAmount;
 import network.nerve.swap.model.bo.StableCoin;
@@ -1011,6 +1010,31 @@ public class SwapCmd extends BaseCmd {
             List<StableCoin> groupList = SwapContext.stableCoinGroup.getGroupList();
             List<StableCoinVo> collect = groupList.stream().filter(s -> StringUtils.isNotBlank(s.getAddress())).map(s -> new StableCoinVo(s.getAddress(), stableSwapPairCache.get(s.getAddress()).getPo().getTokenLP(), s.getGroupCoin())).collect(Collectors.toList());
             return success(collect);
+        } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = SWAP_GET_AVAILABLE_STABLE_PAIR_LIST, version = 1.0, description = "查询所有有效的稳定币交易对")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
+    public Response getAvailableStablePairList(Map params) {
+        try {
+            Integer chainId = Integer.parseInt(params.get("chainId").toString());
+            Collection<StableSwapPairDTO> list = stableSwapPairCache.getList();
+            List<StableCoinVo> resultList = new ArrayList<>();
+            for (StableSwapPairDTO dto : list) {
+                String stableAddress = AddressTool.getStringAddressByBytes(dto.getPo().getAddress());
+                if (chainId == 5 && "TNVTdTSQkncm2UqXw1gLzmtnjTRN5YqB8Tg1n".equalsIgnoreCase(stableAddress)) {
+                    continue;
+                } else if (chainId == 9 && SwapConstant.UNAVAILABLE_STABLE_PAIR.equalsIgnoreCase(stableAddress)) {
+                    continue;
+                }
+                resultList.add(new StableCoinVo(stableAddress, stableSwapPairCache.get(stableAddress).getPo().getTokenLP(), dto.getPo().getCoins()));
+            }
+            return success(resultList);
         } catch (Exception e) {
             return failed(e.getMessage());
         }

@@ -62,7 +62,7 @@ public class ShareProcessor extends BasicRunnable {
 //            //chain.getLogger().debug("msgHash={} is not consensus node,drop msg", msgHash);
             return;
         } else {
-            ConsensusShare consensusShare = message.getDecryptConsensusShare(consensusKeys.getPrivKey(), consensusKeys.getPubKey());
+            ConsensusShare consensusShare = message.getDecryptConsensusShare(chain, consensusKeys.getAddress());
             if (null == consensusShare) {
                 return;
             }

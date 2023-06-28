@@ -8,6 +8,7 @@ import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.constant.ErrorCode;
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
@@ -55,7 +56,29 @@ public class CallMethodUtils {
      * @param password
      * @return validate result
      */
-    public static HashMap accountValid(int chainId, String address, String password) throws NulsException {
+    public static String getPublicKey(int chainId, String address, String password) throws NulsException {
+        try {
+            Map<String, Object> callParams = new HashMap<>(4);
+            callParams.put(PARAM_CHAIN_ID, chainId);
+            callParams.put(PARAM_ADDRESS, address);
+            callParams.put(PARAM_PASSWORD, password);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_GET_PUBLIC_BY_ADDRESS, callParams);
+            if (!cmdResp.isSuccess()) {
+                throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
+            }
+            HashMap callResult = (HashMap) ((HashMap) cmdResp.getResponseData()).get(CALL_AC_GET_PUBLIC_BY_ADDRESS);
+            if (callResult == null || callResult.size() == 0) {
+                throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
+            }
+            return (String) callResult.get("pubKey");
+        } catch (NulsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new NulsException(e);
+        }
+    }
+
+    public static HashMap getPrivateKey(int chainId, String address, String password) throws NulsException {
         try {
             Map<String, Object> callParams = new HashMap<>(4);
             callParams.put(PARAM_CHAIN_ID, chainId);
@@ -70,6 +93,29 @@ public class CallMethodUtils {
                 throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
             }
             return callResult;
+        } catch (NulsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new NulsException(e);
+        }
+    }
+
+    public static boolean accountValid(int chainId, String address, String password) throws NulsException {
+        try {
+            Map<String, Object> callParams = new HashMap<>(4);
+            callParams.put(PARAM_CHAIN_ID, chainId);
+            callParams.put(PARAM_ADDRESS, address);
+            callParams.put(PARAM_PASSWORD, password);
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_ACCOUNT_VALID, callParams);
+            if (!cmdResp.isSuccess()) {
+                throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
+            }
+            HashMap callResult = (HashMap) ((HashMap) cmdResp.getResponseData()).get(CALL_AC_ACCOUNT_VALID);
+            if (callResult == null || callResult.size() == 0) {
+                throw new NulsException(ConsensusErrorCode.ACCOUNT_VALID_ERROR);
+            }
+            Boolean result = (Boolean) callResult.get("result");
+            return result != null && result;
         } catch (NulsException e) {
             throw e;
         } catch (Exception e) {
@@ -164,13 +210,18 @@ public class CallMethodUtils {
             callParams.put(PARAM_ADDRESS, address);
             callParams.put(PARAM_PASSWORD, chain.getConfig().getPassword());
             callParams.put(PARAM_DATA, RPCUtil.encode(header.getHash().getBytes()));
-            Response signResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_SIGN_BLOCK_DIGEST, callParams);
+            Map<String, Object> extendMap = new HashMap<>();
+            extendMap.put("header", HexUtil.encode(header.serialize()));
+            extendMap.put("method", "blockSign");
+            callParams.put(PARAM_EXTEND, extendMap);
+            Response signResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_SIGN_BLOCK_DIGEST_NEW, callParams);
             if (!signResp.isSuccess()) {
                 throw new NulsException(ConsensusErrorCode.TX_SIGNTURE_ERROR);
             }
-            HashMap signResult = (HashMap) ((HashMap) signResp.getResponseData()).get(CALL_AC_SIGN_BLOCK_DIGEST);
+            HashMap signResultMap = (HashMap) ((HashMap) signResp.getResponseData()).get(CALL_AC_SIGN_BLOCK_DIGEST_NEW);
+            byte[] signResult = HexUtil.decode((String) signResultMap.get("signature"));
             BlockSignature blockSignature = new BlockSignature();
-            blockSignature.parse(RPCUtil.decode((String) signResult.get(PARAM_SIGNATURE)), 0);
+            blockSignature.parse(signResult, 0);
             header.setBlockSignature(blockSignature);
         } catch (NulsException e) {
             throw e;
@@ -179,27 +230,20 @@ public class CallMethodUtils {
         }
     }
 
-    /**
-     * 区块签名
-     * block signature
-     *
-     * @param chain
-     * @param address
-     * @return
-     */
-    public static byte[] signature(Chain chain, String address, byte[] data) throws NulsException {
+    public static byte[] signature(Chain chain, String address, byte[] data, Map<String, Object> extendMap) throws NulsException {
         try {
             Map<String, Object> callParams = new HashMap<>(4);
             callParams.put(Constants.CHAIN_ID, chain.getChainId());
             callParams.put(PARAM_ADDRESS, address);
             callParams.put(PARAM_PASSWORD, chain.getConfig().getPassword());
             callParams.put(PARAM_DATA, RPCUtil.encode(data));
-            Response signResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_SIGN_BLOCK_DIGEST, callParams);
+            callParams.put(PARAM_EXTEND, extendMap);
+            Response signResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_GET_SIGN_DIGEST_NEW, callParams);
             if (!signResp.isSuccess()) {
                 throw new NulsException(ConsensusErrorCode.TX_SIGNTURE_ERROR);
             }
-            HashMap signResult = (HashMap) ((HashMap) signResp.getResponseData()).get(CALL_AC_SIGN_BLOCK_DIGEST);
-            return RPCUtil.decode((String) signResult.get(PARAM_SIGNATURE));
+            HashMap signResult = (HashMap) ((HashMap) signResp.getResponseData()).get(CALL_AC_GET_SIGN_DIGEST_NEW);
+            return HexUtil.decode((String) signResult.get("signature"));
         } catch (NulsException e) {
             throw e;
         } catch (Exception e) {
@@ -698,5 +742,26 @@ public class CallMethodUtils {
 
         Map<String, Object> result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("lg_get_asset");
         return (int) result.get("decimalPlace");
+    }
+
+    public static byte[] prikeyDecrpyt(Chain chain, String address, String data, Map<String, String> extendMap) throws NulsException {
+        try {
+            Map<String, Object> callParams = new HashMap<>(4);
+            callParams.put(Constants.CHAIN_ID, chain.getChainId());
+            callParams.put(PARAM_ADDRESS, address);
+            callParams.put(PARAM_PASSWORD, chain.getConfig().getPassword());
+            callParams.put(PARAM_DATA, data);
+            callParams.put(PARAM_EXTEND, extendMap);
+            Response signResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, CALL_AC_ECIES_DECRYPT, callParams);
+            if (!signResp.isSuccess()) {
+                throw new NulsException(ConsensusErrorCode.TX_SIGNTURE_ERROR);
+            }
+            HashMap decryptResult = (HashMap) ((HashMap) signResp.getResponseData()).get(CALL_AC_ECIES_DECRYPT);
+            return HexUtil.decode((String) decryptResult.get("value"));
+        } catch (NulsException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new NulsException(e);
+        }
     }
 }

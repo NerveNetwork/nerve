@@ -178,7 +178,7 @@
     "decimal": 18,
     "simple": "NVT_ETH_LP",
     "weight": 200,
-    "stopHeight": 0
+    "stopHeight": 45890000
   },
   {
     "assetId": "251",
@@ -186,6 +186,15 @@
     "canBePeriodically": false,
     "decimal": 18,
     "simple": "NVT_BNB_LP",
+    "weight": 200,
+    "stopHeight": 0
+  },
+  {
+    "assetId": "672",
+    "oracleKey": "NVTETHNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-ETHN-LP",
     "weight": 200,
     "stopHeight": 0
   }

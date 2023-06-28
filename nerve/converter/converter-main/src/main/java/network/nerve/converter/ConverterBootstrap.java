@@ -212,6 +212,12 @@ public class ConverterBootstrap extends RpcModule {
         } catch (Exception e) {
             Log.warn("Failed to get height_1_4_0", e);
         }
+        try {
+            int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
+            ConverterContext.SIG_MODE = sigMode;
+        } catch (Exception e) {
+            Log.warn("Failed to get sigMode", e);
+        }
     }
 
     @Override

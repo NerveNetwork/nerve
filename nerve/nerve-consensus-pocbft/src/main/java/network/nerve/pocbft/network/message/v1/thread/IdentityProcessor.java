@@ -80,7 +80,7 @@ public class IdentityProcessor extends BasicRunnable {
                 return;
             }
             //如果无法解密直接返回
-            ConsensusNet consensusNet = message.getConsensusIdentitiesSub().getDecryptConsensusNet(consensusKeys.getPrivKey(), consensusKeys.getPubKey());
+            ConsensusNet consensusNet = message.getConsensusIdentitiesSub().getDecryptConsensusNet(chain, consensusKeys.getAddress(), consensusKeys.getPubKey());
             if (null == consensusNet) {
 //                chain.getLogger().error("=======无法解密消息，返回！", nodeId);
                 return;

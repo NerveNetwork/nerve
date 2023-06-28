@@ -59,9 +59,9 @@ public class Base {
         if(ethWalletApi.getWeb3j() != null) {
             ethWalletApi.getWeb3j().shutdown();
         }
-        String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
-//        String mainEthRpcAddress = "http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
-//        String mainEthRpcAddress = "https://http-mainnet.hecochain.com";
+        //String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
+        String mainEthRpcAddress = "http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
+        //String mainEthRpcAddress = "https://http-mainnet.hecochain.com";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         ethWalletApi.setWeb3j(web3j);
         ethWalletApi.setEthRpcAddress(mainEthRpcAddress);

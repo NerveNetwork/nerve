@@ -54,6 +54,7 @@ public interface SwapCmdConstant {
     String SWAP_PAIR_INFO_BY_LP = "sw_swap_pair_info_by_lp";
     String SWAP_PAIRS_ALL = "sw_get_all_swap_pairs";
     String SWAP_GET_STABLE_PAIR_LIST_FOR_SWAP_TRADE = "sw_get_stable_pair_list_for_swap_trade";
+    String SWAP_GET_AVAILABLE_STABLE_PAIR_LIST = "sw_get_available_stable_pair_list";
 
     String STABLE_SWAP_CREATE_PAIR = "sw_stable_swap_create_pair";
     String STABLE_SWAP_ADD_LIQUIDITY = "sw_stable_swap_add_liquidity";

@@ -1,5 +1,8 @@
 package network.nerve.converter.heterogeneouschain.lib.core;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
@@ -26,6 +29,7 @@ import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
+import org.web3j.protocol.core.Response;
 import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.exceptions.ClientConnectionException;
 import org.web3j.protocol.http.HttpService;
@@ -56,6 +60,28 @@ import static okhttp3.ConnectionSpec.CLEARTEXT;
  */
 public class HtgWalletApi implements WalletApi, BeanInitial {
 
+    private static LoadingCache<TxKey, org.web3j.protocol.core.methods.response.Transaction> TX_CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .maximumSize(200)
+            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .build(new CacheLoader<TxKey, org.web3j.protocol.core.methods.response.Transaction>() {
+                @Override
+                public org.web3j.protocol.core.methods.response.Transaction load(TxKey txKey) throws Exception {
+                    return txKey.getHtgWalletApi().getTransactionByHashReal(txKey.getTxHash());
+                }
+            });
+
+    private static LoadingCache<TxKey, TransactionReceipt> TX_RECEIPT_CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .maximumSize(200)
+            .expireAfterAccess(20, TimeUnit.MINUTES)
+            .build(new CacheLoader<TxKey, TransactionReceipt>() {
+                @Override
+                public TransactionReceipt load(TxKey txKey) throws Exception {
+                    return txKey.getHtgWalletApi().getTxReceiptReal(txKey.getTxHash());
+                }
+            });
+
     private ConverterConfig converterConfig;
     private HtgAccountHelper htgAccountHelper;
     private HtgContext htgContext;
@@ -74,6 +100,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     private Map<String, Integer> requestExceededMap = new HashMap<>();
     private long clearTimeOfRequestExceededMap = 0L;
     private int rpcVersion = -1;
+    private boolean reSyncBlock = false;
 
     private Map<String, BigInteger> map = new HashMap<>();
     private ReentrantLock checkLock = new ReentrantLock();
@@ -137,6 +164,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                     this.changeApi(apiUrl);
                     this.rpcVersion = _version.intValue();
                     this.urlFromThirdPartyForce = true;
+                    this.reSyncBlock = true;
                     return;
                 }
             } while (false);
@@ -333,10 +361,15 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      */
     public EthBlock.Block getBlockByHeight(Long height) throws Exception {
         EthBlock.Block block = this.timeOutWrapperFunction("getBlockByHeight", height, args -> {
-            return web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), true).send().getBlock();
+            EthBlock send = web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), true).send();
+            Response.Error error = send.getError();
+            if (error != null) {
+                getLog().error("区块查询异常，errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
+            }
+            return send.getBlock();
         });
         if (block == null) {
-            getLog().error("获取区块为空");
+            getLog().error("获取区块为空, 高度: {}, rpc: {}", height, this.rpcAddress);
         }
         return block;
     }
@@ -346,10 +379,15 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      */
     public EthBlock.Block getBlockHeaderByHeight(Long height) throws Exception {
         EthBlock.Block header = this.timeOutWrapperFunction("getBlockHeaderByHeight", height, args -> {
-            return web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), false).send().getBlock();
+            EthBlock send = web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), false).send();
+            Response.Error error = send.getError();
+            if (error != null) {
+                getLog().error("区块头查询异常，errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
+            }
+            return send.getBlock();
         });
         if (header == null) {
-            getLog().error("获取区块头为空");
+            getLog().error("获取区块头为空, 高度: {}, rpc: {}", height, this.rpcAddress);
         }
         return header;
     }
@@ -376,6 +414,20 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * 获取交易详情
      */
     public org.web3j.protocol.core.methods.response.Transaction getTransactionByHash(String txHash) throws Exception {
+        try {
+            if (htgContext.HTG_CHAIN_ID() == 106) {
+                return this.getTransactionByHashReal(txHash);
+            } else {
+                return TX_CACHE.get(new TxKey(txHash, this));
+            }
+        } catch (Exception e) {
+            htgContext.logger().error("[{}] Transaction[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
+            return null;
+        }
+    }
+
+    private org.web3j.protocol.core.methods.response.Transaction getTransactionByHashReal(String txHash) throws Exception {
+        htgContext.logger().debug("[{}]real request network for getTransactionByHash: {}", htgContext.getConfig().getSymbol(), txHash);
         return this.timeOutWrapperFunction("getTransactionByHash", txHash, args -> {
             org.web3j.protocol.core.methods.response.Transaction transaction = null;
             EthTransaction send = web3j.ethGetTransactionByHash(args).send();
@@ -384,23 +436,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             }
             return transaction;
         });
-    }
-
-    public String sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount) {
-        String result = null;
-        //发送eth
-        if (toAddress.length() != 42) {
-            return null;
-        }
-        if (secretKey == null) {
-            getLog().error("账户私钥不存在!");
-        }
-        try {
-            result = sendMainAsset(fromAddress, secretKey, toAddress, amount, htgContext.GAS_LIMIT_OF_MAIN_ASSET(), htgContext.getEthGasPrice());
-        } catch (Exception e) {
-            getLog().error("send fail", e);
-        }
-        return result;
     }
 
     /**
@@ -425,7 +460,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * Author: xinjl
      * Date: 2018/4/16 14:55
      */
-    public String sendMainAsset(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice) throws Exception {
+    public String sendMainAssetForTestCase(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice) throws Exception {
         BigDecimal htBalance = getBalance(fromAddress);
         if (htBalance == null) {
             getLog().error("获取当前地址{}余额失败!", symbol());
@@ -461,10 +496,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             return null;
         }
         if (send.getResult().equals("nonce too low")) {
-            sendMainAsset(fromAddress, privateKey, toAddress, value, gasLimit, gasPrice);
+            sendMainAssetForTestCase(fromAddress, privateKey, toAddress, value, gasLimit, gasPrice);
         }
         return send.getTransactionHash();
     }
+
 
     public String sendMainAssetWithNonce(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice, BigInteger nonce) throws Exception {
         String hash = this.timeOutWrapperFunction("sendMainAssetWithNonce", List.of(fromAddress, privateKey, toAddress, value, gasLimit, gasPrice, nonce), args -> {
@@ -477,11 +513,16 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             BigInteger _gasPrice = (BigInteger) args.get(i++);
             BigInteger _nonce = (BigInteger) args.get(i++);
             BigInteger bigIntegerValue = convertMainAssetToWei(_value);
-            RawTransaction etherTransaction = RawTransaction.createEtherTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue);
-            //交易签名
-            Credentials credentials = Credentials.create(_privateKey);
-            byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
-            String hexValue = Numeric.toHexString(signedMessage);
+            String hexValue;
+            if (htgContext.getConverterCoreApi() != null && !htgContext.getConverterCoreApi().isLocalSign()) {
+                hexValue = htgContext.getConverterCoreApi().signRawTransactionByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(), _fromAddress, _nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue, null);
+            } else {
+                RawTransaction etherTransaction = RawTransaction.createEtherTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue);
+                //交易签名
+                Credentials credentials = Credentials.create(_privateKey);
+                byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
+                hexValue = Numeric.toHexString(signedMessage);
+            }
             EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).send();
             if (ethSendTransaction == null || ethSendTransaction.getResult() == null) {
                 if (ethSendTransaction != null && ethSendTransaction.getError() != null) {
@@ -553,11 +594,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
      * @return
      * @throws Exception
      */
-    public EthSendTransaction transferERC20Token(String from,
-                                                 String to,
-                                                 BigInteger value,
-                                                 String privateKey,
-                                                 String contractAddress) throws Exception {
+    public EthSendTransaction transferERC20TokenForTestCase(String from,
+                                                            String to,
+                                                            BigInteger value,
+                                                            String privateKey,
+                                                            String contractAddress) throws Exception {
         //加载转账所需的凭证，用私钥
         Credentials credentials = Credentials.create(privateKey);
         //获取nonce，交易笔数
@@ -586,18 +627,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         return ethSendTransaction;
     }
 
-    public EthSendTransaction sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount, String contractAddress) throws Exception {
-        //发送token
-        if (toAddress.length() != 42) {
-            return null;
-        }
-        if (secretKey == null) {
-            getLog().error("账户私钥不存在!");
-        }
-        EthSendTransaction result = transferERC20Token(fromAddress, toAddress, amount.toBigInteger(), secretKey, contractAddress);
-        return result;
-    }
-
     public BigInteger convertMainAssetToWei(BigDecimal value) {
         BigDecimal cardinalNumber = new BigDecimal("1000000000000000000");
         value = value.multiply(cardinalNumber);
@@ -612,6 +641,20 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     public TransactionReceipt getTxReceipt(String txHash) throws Exception {
+        try {
+            if (htgContext.HTG_CHAIN_ID() == 106) {
+                return this.getTxReceiptReal(txHash);
+            } else {
+                return TX_RECEIPT_CACHE.get(new TxKey(txHash, this));
+            }
+        } catch (Exception e) {
+            htgContext.logger().error("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
+            return null;
+        }
+    }
+
+    private TransactionReceipt getTxReceiptReal(String txHash) throws Exception {
+        htgContext.logger().debug("[{}]real request network for getTxReceipt: {}", htgContext.getConfig().getSymbol(), txHash);
         return this.timeOutWrapperFunction("getTxReceipt", txHash, args -> {
             Optional<TransactionReceipt> result = web3j.ethGetTransactionReceipt(args).send().getTransactionReceipt();
             if (result == null || result.isEmpty()) {
@@ -658,7 +701,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             BigInteger gasLimit = _currentTxPo.getGasLimit();
             String contractAddress = _currentTxPo.getTo();
             String encodedFunction = _currentTxPo.getData();
-            Credentials credentials = Credentials.create(_privateKey);
             BigInteger nonce = _currentTxPo.getNonce();
             BigInteger gasPrice = _currentTxPo.getGasPrice();
             BigInteger value = _currentTxPo.getValue();
@@ -669,11 +711,16 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                     gasLimit,
                     contractAddress,
                     value,
-                    encodedFunction
-            );
-            //签名Transaction，这里要对交易做签名
-            byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
-            String hexValue = Numeric.toHexString(signMessage);
+                    encodedFunction);
+            String hexValue;
+            if (htgContext.getConverterCoreApi() != null && !htgContext.getConverterCoreApi().isLocalSign()) {
+                hexValue = htgContext.getConverterCoreApi().signRawTransactionByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(), from, nonce, gasPrice, gasLimit, contractAddress, value, encodedFunction);
+            } else {
+                Credentials credentials = Credentials.create(_privateKey);
+                //签名Transaction，这里要对交易做签名
+                byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
+                hexValue = Numeric.toHexString(signMessage);
+            }
             //发送交易
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
@@ -685,10 +732,6 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             return new HtgSendTransactionPo(send.getTransactionHash(), from, rawTransaction);
         });
         return txPo;
-    }
-
-    public HtgSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function) throws Exception {
-        return this.callContract(from, privateKey, contractAddress, gasLimit, function, null, null, null);
     }
 
     public HtgSendTransactionPo callContract(String from, String privateKey, String contractAddress, BigInteger gasLimit, Function function, BigInteger value, BigInteger gasPrice, BigInteger nonce) throws Exception {
@@ -707,18 +750,24 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             BigInteger _value = (BigInteger) args.get(i++);
             BigInteger _gasPrice = (BigInteger) args.get(i++);
             BigInteger _nonce = (BigInteger) args.get(i++);
-            Credentials credentials = Credentials.create(_privateKey);
             RawTransaction rawTransaction = RawTransaction.createTransaction(
                     _nonce,
                     _gasPrice,
                     _gasLimit,
                     _contractAddress,
                     _value,
-                    _encodedFunction
-            );
-            //签名Transaction，这里要对交易做签名
-            byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
-            String hexValue = Numeric.toHexString(signMessage);
+                    _encodedFunction);
+            String hexValue;
+            if (htgContext.getConverterCoreApi() != null && !htgContext.getConverterCoreApi().isLocalSign()) {
+                hexValue = htgContext.getConverterCoreApi().signRawTransactionByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
+                        _from, _nonce, _gasPrice, _gasLimit, _contractAddress, _value, _encodedFunction);
+            } else {
+                Credentials credentials = Credentials.create(_privateKey);
+                //签名Transaction，这里要对交易做签名
+                byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
+                hexValue = Numeric.toHexString(signMessage);
+            }
+
             //发送交易
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
@@ -1020,4 +1069,59 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         return ethSendTransaction;
     }
 
+    public boolean isReSyncBlock() {
+        return reSyncBlock;
+    }
+
+    public void setReSyncBlock(boolean reSyncBlock) {
+        this.reSyncBlock = reSyncBlock;
+    }
+
+    static class TxKey {
+        private String txHash;
+        private long nativeId;
+        private HtgWalletApi htgWalletApi;
+
+        public TxKey(String txHash, HtgWalletApi htgWalletApi) {
+            this.txHash = txHash;
+            this.htgWalletApi = htgWalletApi;
+            this.nativeId = htgWalletApi.htgContext.getConfig().getChainIdOnHtgNetwork();
+        }
+
+        public String getTxHash() {
+            return txHash;
+        }
+
+        public void setTxHash(String txHash) {
+            this.txHash = txHash;
+        }
+
+        public HtgWalletApi getHtgWalletApi() {
+            return htgWalletApi;
+        }
+
+        public void setHtgWalletApi(HtgWalletApi htgWalletApi) {
+            this.htgWalletApi = htgWalletApi;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TxKey txKey = (TxKey) o;
+
+            if (nativeId != txKey.nativeId) return false;
+            if (!txHash.equals(txKey.txHash)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = txHash.hashCode();
+            result = 31 * result + (int) (nativeId ^ (nativeId >>> 32));
+            return result;
+        }
+    }
 }

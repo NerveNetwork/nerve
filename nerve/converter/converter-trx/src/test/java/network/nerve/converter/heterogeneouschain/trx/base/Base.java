@@ -94,6 +94,7 @@ public class Base {
         cfg.setChainIdOnHtgNetwork(100000001);
         cfg.setSymbol("TRX");
         context.setConfig(cfg);
+        context.SET_VERSION(VERSION);
         BeanUtilTest.setBean(walletApi, "htgContext", context);
         wrapper = ApiWrapper.ofShasta("3333333333333333333333333333333333333333333333333333333333333333");
         walletApi.setWrapper(wrapper);
@@ -174,10 +175,10 @@ public class Base {
             System.err.println(String.format("[%s]交易验证失败，原因: %s", txType, estimateSun.getRevertReason()));
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
         }
-        BigInteger feeLimit = TRX_100;
-        if (estimateSun.getSunUsed() > 0) {
-            feeLimit = BigInteger.valueOf(estimateSun.getSunUsed());
-        }
+        BigInteger feeLimit = TRX_100.multiply(BigInteger.valueOf(5));
+        //if (estimateSun.getSunUsed() > 0) {
+        //    feeLimit = BigInteger.valueOf(estimateSun.getSunUsed());
+        //}
         System.out.println(String.format("交易类型: %s, 估算的feeLimit: %s", txType, TrxUtil.convertSunToTrx(feeLimit).toPlainString()));
         value = value == null ? BigInteger.ZERO : value;
         String encodedHex = FunctionEncoder.encode(txFunction);

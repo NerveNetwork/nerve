@@ -27,11 +27,13 @@ package io.nuls.account.service;
 import io.nuls.account.model.bo.Account;
 import io.nuls.account.model.bo.AccountKeyStore;
 import io.nuls.account.model.bo.Chain;
+import io.nuls.base.data.Transaction;
 import io.nuls.base.signture.BlockSignature;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.exception.NulsException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 账户模块提供给外部的服务接口定义
@@ -47,7 +49,7 @@ public interface AccountService {
      * all the accounts are encrypted by the same password
      * if the password is NULL or "", the accounts will be unencrypted.
      *
-     * @param chain  链ID
+     * @param chain    链ID
      * @param count    想要创建的账户个数
      * @param count    the number of account you want to create.
      * @param password the password of the accounts.
@@ -76,6 +78,7 @@ public interface AccountService {
     /**
      * 获取指定链所有账户集合
      * Gets all account sets in the specified chain
+     *
      * @param chainId
      * @return
      */
@@ -272,4 +275,13 @@ public interface AccountService {
      * @throws NulsException nulsException
      */
     BlockSignature signBlockDigest(byte[] digest, int chainId, String address, String password) throws NulsException;
+
+    String signature(byte[] data, int chainId, String address, String password, Map<String, Object> extend) throws Exception;
+
+    String blockSignature(byte[] hash, int chainId, String address, String password, Map<String, Object> extend) throws Exception;
+
+    String getPublicKey(String address) throws Exception;
+
+    String eciesDecrypt(String data, int chainId, String address, String password, Map<String, Object> extend) throws NulsException;
+
 }
