@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>module</artifactId>
+        <groupId>network.nerve</groupId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>network.nerve</groupId>
+    <artifactId>nerve-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+        <!-- common-tools -->
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>jakarta.activation</groupId>
+                    <artifactId>jakarta.activation-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- rpc-tools -->
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-core-rpc</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+        <!-- storage-tools -->
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-core-rockdb</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+        <!-- base-tools -->
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-base</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-base-api-provider</artifactId>
+            <version>${core.version}</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>nuls-base-protocol-update</artifactId>
+            <version>${core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.6</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.nuls.v2</groupId>
+            <artifactId>sdk4j</artifactId>
+            <version>1.1.7.RELEASE</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <artifactId>nuls-base-api-provider</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.jaxrs</groupId>
+                    <artifactId>jackson-jaxrs-json-provider</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.nuls.v2</groupId>
+                    <artifactId>nuls-core-rpc</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.nuls.v2</groupId>
+                    <artifactId>nuls-core-rockdb</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-core</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-base</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>nuls-core-h2</artifactId>
+                    <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mybatis</groupId>
+                    <artifactId>mybatis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.42.Final</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.13.3</version>
+        </dependency>
+
+    </dependencies>
+</project>

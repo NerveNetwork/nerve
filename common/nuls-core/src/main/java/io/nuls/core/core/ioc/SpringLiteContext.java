@@ -25,6 +25,7 @@
 package io.nuls.core.core.ioc;
 
 import io.nuls.core.basic.InitializingBean;
+import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.core.annotation.*;
 import io.nuls.core.core.config.ConfigSetting;
 import io.nuls.core.core.config.ConfigurationLoader;
@@ -91,7 +92,7 @@ public class SpringLiteContext {
         Log.info("spring lite scan package : " + Arrays.toString(packName));
         Set<Class> classes = new HashSet<>(ScanUtil.scan("io.nuls.core.core.config"));
         Arrays.stream(packName).forEach(pack -> {
-            Arrays.stream(pack.split(",")).forEach(p->{
+            Arrays.stream(pack.split(",")).forEach(p -> {
                 classes.addAll(ScanUtil.scan(p));
             });
 
@@ -118,6 +119,8 @@ public class SpringLiteContext {
             Class<?> cls = BEAN_TYPE_MAP.get(key1);
             Configuration configuration = cls.getAnnotation(Configuration.class);
             if (configuration != null) {
+                String domain = configuration.domain();
+                //String mappingDomain = BaseConstant.ROLE_MAPPING.getOrDefault(domain, domain);
                 Set<Field> fields = getFieldSet(cls);
                 fields.forEach(field -> {
                     Value annValue = field.getAnnotation(Value.class);
@@ -129,9 +132,12 @@ public class SpringLiteContext {
                     boolean readPersist = persist != null;
                     ConfigurationLoader.ConfigItem configItem;
                     if (readPersist) {
-                        configItem = configLoader.getConfigItemForPersist(configuration.domain(), key);
+                        configItem = configLoader.getConfigItemForPersist(domain, key);
                     } else {
-                        configItem = configLoader.getConfigItem(configuration.domain(), key);
+                        configItem = configLoader.getConfigItem(domain, key);
+                    }
+                    if ("nerve-core".equalsIgnoreCase(domain)) {
+                        configItem = configLoader.getConfigItemForCore(key);
                     }
                     if (configItem == null) {
                         Log.warn("config item :{} not setting", key);
@@ -203,7 +209,7 @@ public class SpringLiteContext {
         BEAN_OK_MAP.entrySet().stream()
 //                .sorted((e1, e2) ->
 //                        getOrderByClass(e1.getValue().getClass()) > getOrderByClass(e2.getValue().getClass()) ? 1 : -1)
-                .sorted(Comparator.comparing(d->getOrderByClass(d.getValue().getClass())))
+                .sorted(Comparator.comparing(d -> getOrderByClass(d.getValue().getClass())))
                 .forEach(entry -> {
                     Object bean = entry.getValue();
                     if (bean instanceof InitializingBean) {
@@ -252,7 +258,8 @@ public class SpringLiteContext {
      * 检查某个对象的某个属性，如果对象被标记了Autowired注解，则去相应的依赖，并将依赖赋值给对象的该属性
      * Check an attribute of an object, and if the object is marked with Autowired annotations,
      * it is dependent and will depend on the attribute that is assigned to the object.
-     *  @param obj   bean对象
+     *
+     * @param obj   bean对象
      * @param field 对象的一个属性
      */
     private static void injectionBeanField(Object obj, Field field) throws Exception {
@@ -443,7 +450,8 @@ public class SpringLiteContext {
         } else {
             try {
                 bean = clazz.getDeclaredConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException e) {
                 Log.error(e.getMessage(), e);
                 throw new NulsException(e);
             }

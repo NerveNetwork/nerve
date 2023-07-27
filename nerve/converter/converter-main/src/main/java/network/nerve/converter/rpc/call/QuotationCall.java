@@ -93,6 +93,8 @@ public class QuotationCall {
             return new BigDecimal("0.0001815");
         } else if ("REI_PRICE".equals(oracleKey)){
             return new BigDecimal("0.1993");
+        } else if ("EOS_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.7366");
         }*/
         /************************************************/
         try {

@@ -315,7 +315,6 @@ public class StableAddLiquidityHandlerTest {
     }
 
     private JunitCase getCase2() throws Exception {
-        //TODO pierre 异常case
         String caseDesc = "异常-添加流动性";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();

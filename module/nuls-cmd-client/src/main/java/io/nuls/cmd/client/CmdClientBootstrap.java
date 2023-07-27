@@ -1,5 +1,6 @@
 package io.nuls.cmd.client;
 
+import ch.qos.logback.classic.Level;
 import io.nuls.base.api.provider.Provider;
 import io.nuls.base.api.provider.ServiceManager;
 import io.nuls.base.basic.AddressTool;
@@ -17,6 +18,7 @@ import io.nuls.core.rpc.util.AddressPrefixDatas;
  */
 public class CmdClientBootstrap {
     public static void main(String[] args) {
+        Log.BASIC_LOGGER.getLogger().setLevel(Level.ERROR);
         NulsRpcModuleBootstrap.printLogo("/cli-logo");
         ConfigurationLoader configurationLoader = new ConfigurationLoader();
         configurationLoader.load();

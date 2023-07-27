@@ -610,7 +610,7 @@ public class ConnectManager {
                 throw new Exception("Connection module not started");
             }
             int poolSize = Constants.THREAD_POOL_SIZE;
-            if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name)) {
+            if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name) || "nerve-core".equals(ModuleInfo.name)) {
                 poolSize = poolSize * 2;
             }
             channel = getConnectByUrl(role, poolSize);
@@ -628,9 +628,10 @@ public class ConnectManager {
             throw new Exception("Connection module not started:" + role);
         }
         int poolSize = Constants.THREAD_POOL_SIZE;
-        if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name)) {
+        if ("block".equals(ModuleInfo.name) || "transaction".equals(ModuleInfo.name) || "consensus".equals(ModuleInfo.name) || "nerve-core".equals(ModuleInfo.name)) {
             poolSize = poolSize * 2;
         }
+        //Log.error("pierre test==={}", 1);
         Channel channel = createConnect(url, poolSize);
         channel = cacheConnect(role, channel, true);
         return channel;
@@ -657,6 +658,7 @@ public class ConnectManager {
         if (ROLE_CHANNEL_MAP.containsKey(role)) {
             return ROLE_CHANNEL_MAP.get(role);
         }
+        //Log.error("pierre test==={}", 2);
         Channel channel = createConnect(url, poolSize);
         channel = cacheConnect(role, channel, true);
         return channel;
@@ -667,7 +669,7 @@ public class ConnectManager {
         如 果是第一次连接，则先放入集合
         If it's the first connection, put it in the collection first
          */
-
+        //Log.error("pierre test==={}, url: {}", 4, url);
         Channel channel = NettyClient.createConnect(url, poolSize);
         long start = NulsDateUtils.getCurrentTimeMillis();
         while (channel == null || !channel.isOpen()) {
@@ -692,14 +694,22 @@ public class ConnectManager {
         connectData.getThreadPool().execute(new ResponseAutoProcessor(connectData));
         connectData.getThreadPool().execute(new RequestOnlyProcessor(connectData));
         connectData.getThreadPool().execute(new RequestOnlyProcessor(connectData));
+        //Log.error("pierre test==={}", channel.toString());
         CHANNEL_DATA_MAP.put(channel, connectData);
     }
 
+    public static void pierreTestPrintRoleChannelMap() {
+        ROLE_CHANNEL_MAP.entrySet().stream().forEach(e -> {
+            Log.warn("role channels - role: {}, channel: {}", e.getKey(), e.getValue().toString());
+        });
+    }
     /**
      * 停止或断开一个连接,清除该连接相关信息
      * Stop or disconnect a connection
      */
     public static void disConnect(SocketChannel channel) {
+        //Log.error("pierre test===8, remove channel: {}", channel.toString());
+        //pierreTestPrintRoleChannelMap();
         if (!ROLE_CHANNEL_MAP.values().contains(channel)) {
             return;
         }
@@ -797,10 +807,20 @@ public class ConnectManager {
         if (!ROLE_CHANNEL_MAP.containsKey(role)
                 || (isSender && role.compareTo(LOCAL.getAbbreviation()) > 0)
                 || (!isSender && role.compareTo(LOCAL.getAbbreviation()) < 0)) {
+            //Log.error("pierre test===6 role:{}, channel: {}, isSender: {}", role, channel.toString(), isSender);
             createConnectData(channel);
             ROLE_CHANNEL_MAP.put(role, channel);
             return channel;
         }
+        if (!nerveCoreChannel && !isSender && LOCAL.getAbbreviation().equalsIgnoreCase(role) && role.equalsIgnoreCase(ModuleE.NC.abbr)) {
+            //Log.error("pierre test===7 role:{}, channel: {}, isSender: {}", role, channel.toString(), isSender);
+            createConnectData(channel);
+            ROLE_CHANNEL_MAP.put(role, channel);
+            nerveCoreChannel = true;
+            return channel;
+        }
         return ROLE_CHANNEL_MAP.get(role);
     }
+
+    public static boolean nerveCoreChannel = false;
 }

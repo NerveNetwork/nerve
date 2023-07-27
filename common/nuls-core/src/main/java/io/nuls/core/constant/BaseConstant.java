@@ -1,5 +1,8 @@
 package io.nuls.core.constant;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author tag
  */
@@ -97,4 +100,6 @@ public class BaseConstant {
      * 模块统一交易打包处理接口
      */
     public static final String TX_PACKPRODUCE = "txPackProduce";
+
+    public static final List<String> NERVE_CORE_DOMAINS = new ArrayList<>();
 }

@@ -1,5 +1,6 @@
 package network.nerve.converter.heterogeneouschain.trx.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnknownFieldSet;
 import io.nuls.core.crypto.HexUtil;
@@ -14,6 +15,7 @@ import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxTransaction;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
+import org.bouncycastle.jcajce.provider.digest.SHA256;
 import org.bouncycastle.jcajce.provider.digest.SHA256.Digest;
 import org.junit.Before;
 import org.junit.Test;
@@ -430,7 +432,7 @@ public class TrxWalletApiTest extends Base {
 
     protected void setMainTest() {
         list = new ArrayList<>();
-        list.add("???");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("0000000000000000000000000000000000000000000000000000000000000000");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
         list.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
         list.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
 
@@ -455,6 +457,120 @@ public class TrxWalletApiTest extends Base {
 
         String hash = this.sendTRC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
+    }
+
+    @Test
+    public void sendTRXWithdrawBySignDataTest() throws Exception {
+        setMainTest();
+        setMain();
+        // 私钥
+        this.priKey = "";
+        this.address = new KeyPair(priKey).toBase58CheckAddress();
+        // nerve hash
+        String txKey = "f90bb0f92e6600b201ec2488d47bbe2de275f8e3b0a5f6d38d52bc9b25bddc65";
+        // 接收者地址
+        String toAddress = "TUusCr6jucCQKGdotB6fiSssemj4YaFFJ6";
+        // trx数量
+        String value = "1881.640658";
+        String signData = "e64db52883ff3a2e0a3b6c39fdee5c8ad7cc66cf3a6d481501d5f19fde1c44f9785b6fd5623b4eb70290b6dda015a04fef9e8148b968edfd4fd9adbb362550a61be3e0289643aed5e276031be9462dd38f41f3d8064856353ad357e9fd73f0b044326d0f28c60bf044e7074def63a53a8020f1aa7568c38962396d7c89b52d38fd1b175ae6fb03501c6fe9da7f364b25b9a1e69ffb3bcee32df5ca223edc1f38b1da2a1c238e8d06b4d88b6f893cdaec19d1bc5a44e7ea94fbcc012e398b8cfb20741ba214c0152fb443807f25ef65a468e374ddd7f732968a391a008d23f9cfe48c614a3bc0b63d7e105560d4982b126c7729ac3c2ee89ec117ad063c2772425fcdf71ce423630464b3e0d8071059d0df738637a408549e02ea5400314c1287b313d6b020bb165bb76e70e595eed5326d12ed107a07029bc54229013a3dab772a3379591bb7d84c6c033b7f5d59741d5a82202d017d1113aca632d8f86185872f82242ff8285637811081daf99e4e0eb16cc4f7212ecc27705c5ab814710ec8e170fb1be91cec76a088b22af43e857d001af8f7578bea657c178edc86d860af769e921d92f617189b5e5086beac53b708ede7ab65757bf129f891472f7b3d9ebe22e7319b771b567ea34f57a1e619f0703e7842590c487390c1bc756d2fc033e32ff2a8ad2b552737a251b5f17114db733999b65fc6e1eb15a027f125f518cc0a8f2df258297b1bb577203a0764f8556ba19060055c28871bd85e7a9563143c0b7b9a0046ac306617a14d67e5687833697d6b3f39130f76aff62b814c1c9ae62105b4a9b61f21d81b619ba491ad57f944c31625a1e11dac7dff7c0111ab31a32d2d940b6b603a5d0c145f7d3f99551d54944b3f7b9e75b9b3cb06cba2799472e288026d831c465b1c1c";
+
+        String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
+        System.out.println(String.format("TRX提现%s个，hash: %s", value, hash));
+    }
+
+    @Test
+    public void sendTRXWithdrawBySignDataTest2() throws Exception {
+        setMainTest();
+        setMain();
+        // 私钥
+        this.priKey = "";
+        this.address = new KeyPair(priKey).toBase58CheckAddress();
+        // nerve hash
+        String txKey = "f90bb0f92e6600b201ec2488d47bbe2de275f8e3b0a5f6d38d52bc9b25bddc65";
+        // 接收者地址
+        String toAddress = "TUusCr6jucCQKGdotB6fiSssemj4YaFFJ6";
+        // trx数量
+        String value = "1881.640658";
+        String signData = "e64db52883ff3a2e0a3b6c39fdee5c8ad7cc66cf3a6d481501d5f19fde1c44f9785b6fd5623b4eb70290b6dda015a04fef9e8148b968edfd4fd9adbb362550a61be3e0289643aed5e276031be9462dd38f41f3d8064856353ad357e9fd73f0b044326d0f28c60bf044e7074def63a53a8020f1aa7568c38962396d7c89b52d38fd1b175ae6fb03501c6fe9da7f364b25b9a1e69ffb3bcee32df5ca223edc1f38b1da2a1c238e8d06b4d88b6f893cdaec19d1bc5a44e7ea94fbcc012e398b8cfb20741ba214c0152fb443807f25ef65a468e374ddd7f732968a391a008d23f9cfe48c614a3bc0b63d7e105560d4982b126c7729ac3c2ee89ec117ad063c2772425fcdf71ce423630464b3e0d8071059d0df738637a408549e02ea5400314c1287b313d6b020bb165bb76e70e595eed5326d12ed107a07029bc54229013a3dab772a3379591bb7d84c6c033b7f5d59741d5a82202d017d1113aca632d8f86185872f82242ff8285637811081daf99e4e0eb16cc4f7212ecc27705c5ab814710ec8e170fb1be91cec76a088b22af43e857d001af8f7578bea657c178edc86d860af769e921d92f617189b5e5086beac53b708ede7ab65757bf129f891472f7b3d9ebe22e7319b771b567ea34f57a1e619f0703e7842590c487390c1bc756d2fc033e32ff2a8ad2b552737a251b5f17114db733999b65fc6e1eb15a027f125f518cc0a8f2df258297b1bb577203a0764f8556ba19060055c28871bd85e7a9563143c0b7b9a0046ac306617a14d67e5687833697d6b3f39130f76aff62b814c1c9ae62105b4a9b61f21d81b619ba491ad57f944c31625a1e11dac7dff7c0111ab31a32d2d940b6b603a5d0c145f7d3f99551d54944b3f7b9e75b9b3cb06cba2799472e288026d831c465b1c1c";
+
+        BigInteger feeLimit = TRX_100.multiply(BigInteger.valueOf(5));
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(6)).toBigInteger();
+        Function function = getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, signData);
+        String encodedHex = FunctionEncoder.encode(function);
+        Contract.TriggerSmartContract trigger =
+                Contract.TriggerSmartContract.newBuilder()
+                        .setOwnerAddress(ApiWrapper.parseAddress(address))
+                        .setContractAddress(ApiWrapper.parseAddress(multySignContractAddress))
+                        .setData(ApiWrapper.parseHex(encodedHex))
+                        .setCallValue(0)
+                        .build();
+
+        Response.TransactionExtention txnExt = wrapper.blockingStub.triggerContract(trigger);
+        TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
+        builder.setFeeLimit(feeLimit.longValue());
+        Chain.Transaction txn = builder.build();
+        System.out.println(String.format("TRX签名前 hash: %s", TrxUtil.calcTxHash(txn)));
+        String txStr = Numeric.toHexStringNoPrefix(txn.toByteArray());
+        String signTronTxData = HexUtil.encode(tronTxSign(priKey, HexUtil.decode(txStr)));
+        Chain.Transaction signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signTronTxData))).build();
+        Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
+        if (!ret.getResult()) {
+            System.out.println(String.format("调用合约交易广播失败, 原因: %s", ret.getMessage().toStringUtf8()));
+        } else {
+            System.out.println(String.format("TRX提现%s个，hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
+        }
+    }
+
+    /**
+     * TRX转账
+     */
+    @Test
+    public void transferTrxSignMachine() throws Exception {
+        setMain();
+        this.from = "TRJGmWwGVxswHmwQRepah75ouvDzMCwbv4";
+        this.fromPriKey = "???";
+        String to = "TMZBDFxu5WE8VwYSj2p3vVuBxxKMSqZDc8";
+        to = TrxUtil.ethAddress2trx(to);
+        String value = "0.1";
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(6)).toBigInteger();
+        Response.TransactionExtention txnExt = wrapper.transfer(from, to, bValue.longValue());
+
+        TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
+        builder.setFeeLimit(TRX_10.longValue());
+        Chain.Transaction txn = builder.build();
+        System.out.println(String.format("TRX签名前 hash: %s", TrxUtil.calcTxHash(txn)));
+        String txStr = Numeric.toHexStringNoPrefix(txn.toByteArray());
+        String signTronTxData = HexUtil.encode(tronTxSign(fromPriKey, HexUtil.decode(txStr)));
+        Chain.Transaction signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signTronTxData))).build();
+        Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
+        if (!ret.getResult()) {
+            System.out.println(String.format("调用合约交易广播失败, 原因: %s", ret.getMessage().toStringUtf8()));
+        } else {
+            System.out.println(String.format("TRX转账%s个，hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
+        }
+    }
+
+    public static final byte[] tronTxSign(String prikey, byte[] bytes) throws Exception {
+        Chain.Transaction txn = Chain.Transaction.parseFrom(bytes);
+        byte[] txid = calculateTransactionHash(txn.getRawData().toByteArray());
+        SECP256K1.KeyPair kp = SECP256K1.KeyPair.create(SECP256K1.PrivateKey.create(Bytes32.fromHexString(prikey)));
+        SECP256K1.Signature sig = SECP256K1.sign(Bytes32.wrap(txid), kp);
+        return sig.encodedBytes().toArray();
+    }
+
+    private static byte[] calculateTransactionHash(byte[] bytes) {
+        SHA256.Digest digest = new SHA256.Digest();
+        digest.update(bytes);
+        byte[] txid = digest.digest();
+        return txid;
+    }
+
+    public static String calcTxHash(Chain.Transaction tx) {
+        SHA256.Digest digest = new SHA256.Digest();
+        digest.update(tx.getRawData().toByteArray());
+        byte[] txid = digest.digest();
+        String txHash = Numeric.toHexString(txid);
+        return txHash;
     }
 
 
@@ -605,12 +721,12 @@ public class TrxWalletApiTest extends Base {
         //Function function = new Function("transfer", Arrays.asList(new Address(to), new Uint256(new BigDecimal(value).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger())), Arrays.asList(new TypeReference<Type>() {}));
 
         Function function = TrxUtil.getCreateOrSignWithdrawFunction(
-                "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534",
-                "TMKPjep6FqqsKnSijrfSkbBAsdYuTvE7m9",
-                new BigInteger("997000"),
-                true,
-                "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
-                "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c"
+                "51accb61ebe0fa14a2f259d2224c580a63ce5df0df5b89e3ea12444605c84189",
+                "TWpetJ3ANyaYe2uKkae3Q5YB5pjqfodZt4",
+                new BigInteger("1028199075"),
+                false,
+                "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
+                "e5af7b2772def4f4df57cf8fef0460957ac5a245ce2796499f68c9b4ecf3af5b311c1828dbc446d9fe67d03b68b9c63df2b6bc00fa12072f95765111c32b6bf71cc29b9cee786fdea44b87e609329c3b89b4bbd37cc8db6499410e1fd1ef203b1d281068ac4756416630139338d304564b9ab07526fdc80d26bff29388dc6ab93d1c96a722b42c3451aa7666dd6242fcc144dda4703e175efab4fea8783d18e2ca1e7b0b3f30135e5e423f2602511598eb54713d527cdf9fce13247ef79ce83794d61c1a22faacbaa8189a12cb5b3fec2a8cb6cecafc34aae5873aba42c2ea929302b06bec3532c711b7975528cf65172409882e715f18b7608bd7c761d866cba63e571bd31d6671505b3bbf484a56deedfd9d35fd484f1371bcdbe5b5ff06aeec2da6ac01ebe8d90b52d1ec6303e0dda5036c38a2244f13c23175b1f7f396a031e34b641c0dc3caa75af03a54e42f3ec61ad61298aca6d751727c74119f0f775d3309dffb1ab085df6ce27d140740bf91a387d73df25ab6e61588c77e3dace43834a1dff31bcca2633c7ff49f2207761fabb83caacb72aee9b8ec559f5108ad1e91ec43a99658cce664cbb3edacae1f422e2801d5d061a209ad2971afa2041398ee20b0cd321b2a13cab24fa3c9a081fe23043a33b40b490ab93520428f235bc2181abe4a264a51f207d776e1eb19e8900e123db1a2189c1580d66ae9dcaa8d8d5a7c3a61b2f81c1e7796651f772522f95e6d49f087bc458396f8538e897eb6b7d3c981a176dd4b3798195561b77d953d8b85b819972ebfb7a45db83e0d32f8bce7f44806125b2e1c12afb0cfc579cc5c9bc5fd55918a8e50ae848c25e272b93a0a80d61faae4d7646b3e3193c159722a6df3e0a4e0c4edd172daf01202b95abc078f59455ce9071b1b"
         );
         //Function function = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)));
         System.out.println(FunctionEncoder.encode(function));
@@ -848,39 +964,39 @@ public class TrxWalletApiTest extends Base {
                 BigInteger value = txInfo.getValue();
                 Chain.Transaction.Contract.ContractType type = txInfo.getType();
                 //if ("TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t".equals(to)) {
-                    if(StringUtils.isBlank(input)) {
-                        continue;
-                    }
-                    input = Numeric.cleanHexPrefix(input);
-                    if (input.length() < 8) {
-                        continue;
-                    }
-                    String methodHash;
-                    if ((methodHash = HEX_PREFIX + input.substring(0, 8)).equals(TrxConstant.METHOD_HASH_TRANSFER)) {
-                        try {
-                            List<Object> objects = TrxUtil.parseTRC20TransferInput(input);
-                            if (objects.isEmpty() || objects.size() != 2)
-                                continue;
-                            String toAddress = objects.get(0).toString();
-                            BigInteger newValue = (BigInteger) objects.get(1);
-                            List<Object> oldObjs = parseInput(input, INPUT_TRC20_TRANSFER);
-                            BigInteger oldValue = (BigInteger) oldObjs.get(1);
-                            System.out.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, Arrays.toString(oldObjs.toArray())));
-                            System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(objects.toArray())));
-                            if (newValue.compareTo(oldValue) == 0) {
-                                System.out.println("success");
-                            } else {
-                                System.err.println("===============================error===============================");
-                            }
-                            System.out.println();
-                        } catch (Exception e) {
-                            //e.printStackTrace();
-                            System.err.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, "error"));
-                            System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(TrxUtil.parseTRC20TransferInput(input).toArray())));
-                            System.out.println();
+                if(StringUtils.isBlank(input)) {
+                    continue;
+                }
+                input = Numeric.cleanHexPrefix(input);
+                if (input.length() < 8) {
+                    continue;
+                }
+                String methodHash;
+                if ((methodHash = HEX_PREFIX + input.substring(0, 8)).equals(TrxConstant.METHOD_HASH_TRANSFER)) {
+                    try {
+                        List<Object> objects = TrxUtil.parseTRC20TransferInput(input);
+                        if (objects.isEmpty() || objects.size() != 2)
+                            continue;
+                        String toAddress = objects.get(0).toString();
+                        BigInteger newValue = (BigInteger) objects.get(1);
+                        List<Object> oldObjs = parseInput(input, INPUT_TRC20_TRANSFER);
+                        BigInteger oldValue = (BigInteger) oldObjs.get(1);
+                        System.out.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, Arrays.toString(oldObjs.toArray())));
+                        System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(objects.toArray())));
+                        if (newValue.compareTo(oldValue) == 0) {
+                            System.out.println("success");
+                        } else {
+                            System.err.println("===============================error===============================");
                         }
-
+                        System.out.println();
+                    } catch (Exception e) {
+                        //e.printStackTrace();
+                        System.err.println(String.format("hash: %s, contract: %s, data: %s, old", trxTxHash, to, "error"));
+                        System.out.println(String.format("hash: %s, contract: %s, data: %s, new", trxTxHash, to, Arrays.toString(TrxUtil.parseTRC20TransferInput(input).toArray())));
+                        System.out.println();
                     }
+
+                }
                 if (methodHash.equals(TrxConstant.METHOD_HASH_TRANSFER_FROM)) {
                     try {
                         List<Object> objects = TrxUtil.parseTRC20TransferFromInput(input);
@@ -1108,11 +1224,19 @@ public class TrxWalletApiTest extends Base {
         System.out.println(HexUtil.encode(signedTxn.toByteArray()));
     }
 
-    private static byte[] calculateTransactionHash(byte[] bytes) {
-        Digest digest = new Digest();
-        digest.update(bytes);
-        byte[] txid = digest.digest();
-        return txid;
+    @Test
+    public void txInputCrossOutIIDecoderTest() throws JsonProcessingException {
+        String input = "38615bb000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000005f5e100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000264e4552564565706236356d466f78655866514e354b67654b7852546675664b656b42416e33430000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002c63623939313934642d336233302d346434362d623336352d6666613163663232376162642d2d2d4e41424f580000000000000000000000000000000000000000";
+        List<Object> typeList = TrxUtil.parseInput(input, TrxConstant.INPUT_CROSS_OUT_II);
+        //System.out.println(JSONUtils.obj2PrettyJson(typeList));
+        for (Object obj : typeList) {
+            if (obj instanceof byte[]) {
+                System.out.println(Numeric.toHexStringNoPrefix((byte[]) obj));
+                continue;
+            }
+            System.out.println(obj.toString());
+        }
+
     }
 
     @Test
@@ -1157,41 +1281,48 @@ public class TrxWalletApiTest extends Base {
                     "address": "TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK"
         }
         }*/
-        String txHash = "df1757e63f9efbe2bfd8f70a25462cb6b3a02a75bfcaa2d5dc6e8e02408e0e18";
-        String toAddress = "TG8o48ycgUCB7UJd46cSnxSJybWwTHmRpm";
-        String valueStr = "12300";
+        setMain();
+        String txHash = "51accb61ebe0fa14a2f259d2224c580a63ce5df0df5b89e3ea12444605c84189";
+        String toAddress = "TWpetJ3ANyaYe2uKkae3Q5YB5pjqfodZt4";
+        String valueStr = "1028199075";
         BigInteger value = new BigInteger(valueStr);
-        Boolean isContractAsset = true;
-        String contractAddressERC20 = "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ";
-        //String signed = "94cb881c719d18933bbb35c6583bee4f9453632f26ccb0db5ddbdef841fdb8563b0f04afc9c46d888a9826ee74a12ee249738d1d9e0fe222c1154bfc9cfd8e001b";
-        String signed = "3489ae647e79f041c40c5e4d040fb1dcf36b844cb910b45ed4e6d1659b9d7dd80055fcfb6232f922a01ca27e3500530e56b64293c106e938a98eb480732604a11c";
-        //String signed = "f9586f12e5039a1bc3403b136c484936cf81541f9f425679b6f85140285386b55b40edf3fdae4f5bfa3e1b6284424bbc19515feadd49a8086a45e5cbd5f67b6c1b";
+        Boolean isContractAsset = false;
+        String contractAddressERC20 = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb";
 
-        String vHash = TrxUtil.encoderWithdraw(context, txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION());
-        System.out.println(String.format("[验证签名] 提现数据: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
-        System.out.println(String.format("[验证签名] 提现vHash: %s", vHash));
-        byte[] hashBytes = org.web3j.utils.Numeric.hexStringToByteArray(vHash);
+        String signed10 = "e5af7b2772def4f4df57cf8fef0460957ac5a245ce2796499f68c9b4ecf3af5b311c1828dbc446d9fe67d03b68b9c63df2b6bc00fa12072f95765111c32b6bf71cc29b9cee786fdea44b87e609329c3b89b4bbd37cc8db6499410e1fd1ef203b1d281068ac4756416630139338d304564b9ab07526fdc80d26bff29388dc6ab93d1c96a722b42c3451aa7666dd6242fcc144dda4703e175efab4fea8783d18e2ca1e7b0b3f30135e5e423f2602511598eb54713d527cdf9fce13247ef79ce83794d61c1a22faacbaa8189a12cb5b3fec2a8cb6cecafc34aae5873aba42c2ea929302b06bec3532c711b7975528cf65172409882e715f18b7608bd7c761d866cba63e571bd31d6671505b3bbf484a56deedfd9d35fd484f1371bcdbe5b5ff06aeec2da6ac01ebe8d90b52d1ec6303e0dda5036c38a2244f13c23175b1f7f396a031e34b641c0dc3caa75af03a54e42f3ec61ad61298aca6d751727c74119f0f775d3309dffb1ab085df6ce27d140740bf91a387d73df25ab6e61588c77e3dace43834a1dff31bcca2633c7ff49f2207761fabb83caacb72aee9b8ec559f5108ad1e91ec43a99658cce664cbb3edacae1f422e2801d5d061a209ad2971afa2041398ee20b0cd321b2a13cab24fa3c9a081fe23043a33b40b490ab93520428f235bc2181abe4a264a51f207d776e1eb19e8900e123db1a2189c1580d66ae9dcaa8d8d5a7c3a61b2f81c1e7796651f772522f95e6d49f087bc458396f8538e897eb6b7d3c981a176dd4b3798195561b77d953d8b85b819972ebfb7a45db83e0d32f8bce7f44806125b2e1c12afb0cfc579cc5c9bc5fd55918a8e50ae848c25e272b93a0a80d61faae4d7646b3e3193c159722a6df3e0a4e0c4edd172daf01202b95abc078f59455ce9071b1b";
+        for (int i = 0; i < 10; i++) {
+            //String signed = "94cb881c719d18933bbb35c6583bee4f9453632f26ccb0db5ddbdef841fdb8563b0f04afc9c46d888a9826ee74a12ee249738d1d9e0fe222c1154bfc9cfd8e001b";
+            //String signed = "3489ae647e79f041c40c5e4d040fb1dcf36b844cb910b45ed4e6d1659b9d7dd80055fcfb6232f922a01ca27e3500530e56b64293c106e938a98eb480732604a11c";
+            //String signed = "f9586f12e5039a1bc3403b136c484936cf81541f9f425679b6f85140285386b55b40edf3fdae4f5bfa3e1b6284424bbc19515feadd49a8086a45e5cbd5f67b6c1b";
+            String signed = signed10.substring(0 + i * 130, 130 * (i + 1));
 
-        signed = Numeric.cleanHexPrefix(signed);
-        if (signed.length() != 130) {
-            return;
-        }
-        String r = "0x" + signed.substring(0, 64);
-        String s = "0x" + signed.substring(64, 128);
-        int v = Integer.parseInt(signed.substring(128), 16);
-        if (v >= 27) {
-            v -= 27;
-        }
-        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
-        BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
-        if (recover != null) {
-            String address = "0x" + Keys.getAddress(recover);
-            System.out.println(address);
-            System.out.println(ethAddress2trx(address));
+            String vHash = TrxUtil.encoderWithdraw(context, txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION());
+            System.out.println(String.format("[验证签名] 提现数据: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
+            System.out.println(String.format("[验证签名] 提现vHash: %s", vHash));
+            byte[] hashBytes = org.web3j.utils.Numeric.hexStringToByteArray(vHash);
+
+            signed = Numeric.cleanHexPrefix(signed);
+            if (signed.length() != 130) {
+                return;
+            }
+            String r = "0x" + signed.substring(0, 64);
+            String s = "0x" + signed.substring(64, 128);
+            int v = Integer.parseInt(signed.substring(128), 16);
+            if (v >= 27) {
+                v -= 27;
+            }
+            ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+            BigInteger recover = Sign.recoverFromSignature(v, signature, hashBytes);
+            if (recover != null) {
+                String address = "0x" + Keys.getAddress(recover);
+                System.out.println(address);
+                System.out.println(ethAddress2trx(address));
+            }
+
+            System.out.println("----------------");
+            System.out.println();
         }
 
-        System.out.println("----------------");
-        System.out.println();
     }
 
     public static SECP256K1.KeyPair createPair(String prikey) {

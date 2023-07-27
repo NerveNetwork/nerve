@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
  * @author tag
  * */
 public class FormatValidUtils {
-    private static final String NULS = "NULS";
+    public static final String NULS = "NULS";
 
     /**
      *  Check the difficulty of the password

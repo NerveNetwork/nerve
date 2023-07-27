@@ -226,7 +226,10 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        proposalTxHashList.add(new String[]{"NERVE", "a4b0a5c7d3f5a2edd4a0fabe652c1f4110167816fb7aea9d53da6cb75f9ece64"});
+        proposalTxHashList.add(new String[]{"NERVE", "5cf7ca1b261cbea19c8f806bf4a695aa2c1b1817ee959ee47f77bd0ab0ac3776"});
+        proposalTxHashList.add(new String[]{"NERVE", "84cd52fc1bc9284e1b55ca487ee743fe7f9f8b79e6d4bc7414f6ed625c1b9464"});
+        proposalTxHashList.add(new String[]{"NERVE", "f34e1463b6bff60336c6ae4a20feef714eb8459d80d8e82a7375b988e3e55b1a"});
+        proposalTxHashList.add(new String[]{"NERVE", "3a85d8bf088cf26ff9400df274a1346acdb9c7c422264a9039009af50340d1ef"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
@@ -237,11 +240,6 @@ public class VirtualBankUtilTest {
         //list.add(new String[]{"NERVEepb6bt22V1LgaWavLNPEyTKbayCD58xo4", "03501d23db2f62863d89631168d427d3cc5f8b4a28fbb643e26695ae6cd5fdcc4b,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
 
         Map<String, String> nonceMap = new HashMap<>();
-        nonceMap.put("NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "49c90491a17d9722");
-        nonceMap.put("NERVEepb6gVC8TBCioYHK6PPLKYk9aoXH8eGbV", "d55a173fbaef7c7e");
-        nonceMap.put("NERVEepb6bT6dAfEtY9Z4c38Khawdr4LKZNais", "f6f8d219418801dd");
-        nonceMap.put("NERVEepb6eKxoK6ZmKhhDK4oZkuXnUMxZfCta4", "6837d657cdc07cb9");
-        nonceMap.put("NERVEepb6exLKu4eJkHCekXicn7YpDa3hzHGvt", "3f130c18626862cc");
         for (String[] proposalInfo : proposalTxHashList) {
             String chainName = proposalInfo[0];
             String proposalHash = proposalInfo[1];

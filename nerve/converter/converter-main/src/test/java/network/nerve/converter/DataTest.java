@@ -50,6 +50,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
+import static network.nerve.converter.utils.ConverterDBUtil.bytesToString;
+import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
+
 /**
  * @author: PierreLuo
  * @date: 2021/7/21
@@ -83,15 +86,13 @@ public class DataTest {
 
     @Test
     public void testCVTableTx() throws Exception {
-        // e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26
-        // ce728bae5c93c5ccd65422bf8303ba90315cdb405517a7ec0da497112e6423cb
-        String hash = "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26";
-        RocksDBService.init("/Users/pierreluo/Nuls/cv03");
-        byte[] bytes = RocksDBService.get("cv_table_tx_9", HexUtil.decode(hash));
-        System.out.println(HexUtil.encode(bytes));
-        Transaction tx = new Transaction();
-        tx.parse(bytes, 0);
-        System.out.println(tx.format(ConfirmWithdrawalTxData.class));
+        //String hash = "f352fa38e8832f8647955514c349611eb2ba87e86a29a5c23b2439846e19117c";//9-625
+        //String hash = "556698105bcc7e8e58887af084feda708b008185f9a8240982438d7db5a08db2";//9-627
+        String hash = "a4b0a5c7d3f5a2edd4a0fabe652c1f4110167816fb7aea9d53da6cb75f9ece64";
+        RocksDBService.init("/Users/pierreluo/Nuls/cvProposal");
+        //byte[] bytes = RocksDBService.get("cv_proposal_exe_9", stringToBytes(hash));
+        byte[] bytes = RocksDBService.get("cv_async_processed_9", stringToBytes("PROPOSAL_EXE_PREFIX_" + hash));
+        System.out.println(bytesToString(bytes));
     }
 
     @Test

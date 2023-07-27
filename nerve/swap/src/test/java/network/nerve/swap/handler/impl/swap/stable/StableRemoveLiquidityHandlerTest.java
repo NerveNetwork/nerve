@@ -190,7 +190,6 @@ public class StableRemoveLiquidityHandlerTest {
     }
 
     protected JunitCase getCase1() throws Exception {
-        //TODO pierre 异常case
         String caseDesc = "异常-移除流动性";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();

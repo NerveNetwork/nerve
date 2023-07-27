@@ -192,7 +192,14 @@ public abstract class RpcModule implements InitializingBean {
 //                return true;
 //            }
             try {
-                Response cmdResp = ResponseMessageProcessor.requestAndResponse(module.getName(), "listenerDependenciesReady", MapUtils.beanToLinkedMap(this.moduleInfo()),1000L);
+                Map<String, Object> params = MapUtils.beanToLinkedMap(this.moduleInfo());
+                Response cmdResp;
+                //if (ModuleE.NC.name.equalsIgnoreCase(module.getName())) {
+                //    cmdResp = this.requestAndResponse(module.getName(), "listenerDependenciesReady", params, 1000L);
+                //} else {
+                //    cmdResp = ResponseMessageProcessor.requestAndResponse(module.getName(), "listenerDependenciesReady", params, 1000L);
+                //}
+                cmdResp = ResponseMessageProcessor.requestAndResponse(module.getName(), "listenerDependenciesReady", params, 1000L);
                 if (cmdResp.isSuccess()) {
                     followerList.put(module, Boolean.TRUE);
 //                    Log.info("notify follower {} is Ready success", module);

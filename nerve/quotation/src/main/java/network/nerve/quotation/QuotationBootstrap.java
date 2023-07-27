@@ -53,13 +53,8 @@ public class QuotationBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                Module.build(ModuleE.NW),
-                Module.build(ModuleE.TX),
-                Module.build(ModuleE.CS),
-                Module.build(ModuleE.AC),
-                Module.build(ModuleE.BL),
+                Module.build(ModuleE.NC),
                 Module.build(ModuleE.SW),
-                new Module(ModuleE.PU.abbr, ROLE)
         };
     }
 
@@ -93,8 +88,8 @@ public class QuotationBootstrap extends RpcModule {
     public boolean doStart() {
         try {
             chainManager.runChain();
-            while (!isDependencieReady(ModuleE.NW.abbr)){
-                LoggerUtil.LOG.debug("wait depend modules ready");
+            while (!isDependencieReady(ModuleE.NC.abbr)){
+                LoggerUtil.LOG.info("wait nerve-core modules ready");
                 Thread.sleep(2000L);
             }
             LoggerUtil.LOG.info("Transaction Ready...");
@@ -115,19 +110,13 @@ public class QuotationBootstrap extends RpcModule {
 
     @Override
     public void onDependenciesReady(Module module) {
-        if (ModuleE.TX.abbr.equals(module.getName())) {
+        if (ModuleE.NC.abbr.equals(module.getName())) {
             chainManager.registerTx();
             LoggerUtil.LOG.info("register tx ...");
-        }
-        if (ModuleE.NW.abbr.equals(module.getName())) {
             RegisterHelper.registerMsg(ProtocolGroupManager.getOneProtocol());
             LoggerUtil.LOG.info("register msg ...");
-        }
-        if (ModuleE.PU.abbr.equals(module.getName())) {
             chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             LoggerUtil.LOG.info("register protocol ...");
-        }
-        if (ModuleE.BL.abbr.equals(module.getName())) {
             chainManager.getChainMap().values().forEach(QuotationCall::subscriptionNewBlockHeight);
             Log.info("subscription new block height");
         }
@@ -189,6 +178,8 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setProtocol22Height(protocol22Height);
             long protocol24Height = Long.parseLong(map.get("protocol24Height").toString());
             quConfig.setProtocol24Height(protocol24Height);
+            long protocol26Height = Long.parseLong(map.get("protocol26Height").toString());
+            quConfig.setProtocol26Height(protocol26Height);
 
         } catch (Exception e) {
             Log.error(e);
@@ -230,6 +221,7 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.protocol21Height = quConfig.getProtocol21Height();
         QuotationContext.protocol22Height = quConfig.getProtocol22Height();
         QuotationContext.protocol24Height = quConfig.getProtocol24Height();
+        QuotationContext.protocol26Height = quConfig.getProtocol26Height();
 
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

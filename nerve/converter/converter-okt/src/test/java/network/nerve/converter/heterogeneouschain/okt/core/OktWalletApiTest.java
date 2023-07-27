@@ -452,20 +452,16 @@ public class OktWalletApiTest extends Base {
     @Test
     public void managerAdd() throws Exception {
         // 正式网环境数据
-        setMainData();
+        //setMainData();
+        setLocalTest();
         // GasPrice准备
         long gasPriceGwei = 1L;
         htgContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
-        String[] adds = new String[]{
-                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
-                "0x16525740c7bc9ca4b83532dfb894bd4f42c5ade1", "0x15cb37aa4d55d5a0090966bef534c89904841065",
-                "0x66fb6d6df71bbbf1c247769ba955390710da40a5", "0x659ec06a7aedf09b3602e48d0c23cd3ed8623a88",
-                "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1", "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
-                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0xaff68cd458539a16b932748cf4bdd53bf196789f",
-                "0x10c17be7b6d3e1f424111c8bddf221c9557728b0", "0x17e61e0176ad8a88cac5f786ca0779de87b3043b"
+        String txKey = "aaa4000000000000000000000000000000000000000000000000000000000000";
+        String[] adds = new String[]{};
+        String[] removes = new String[]{
+                "0x8f05ae1c759b8db56ff8124a89bb1305ece17b65"
         };
-        String[] removes = new String[]{};
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);

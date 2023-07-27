@@ -102,6 +102,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
             if (frame instanceof CloseWebSocketFrame) {
                 ch.close();
             } else if (msg instanceof TextWebSocketFrame) {
+                //Log.error("pierre test===11 client read, channel: {}", ctx.channel().toString());
                 TextWebSocketFrame txMsg = (TextWebSocketFrame) msg;
                 ByteBuf content = txMsg.content();
                 byte[] bytes = new byte[content.readableBytes()];
@@ -113,6 +114,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
                 if (messageType.equals(MessageType.Response)
                         || messageType.equals(MessageType.NegotiateConnectionResponse)
                         || messageType.equals(MessageType.Ack)) {
+                    //Log.error("pierre test===12 client");
                     responseExecutorService.execute(messageHandler);
                 } else {
                     if (messageType.equals(MessageType.Request)) {
@@ -125,11 +127,13 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
                             }
                         }
                         messageHandler.setRequest(request);
+                        //Log.error("pierre test===13 client");
                         requestExecutorService.execute(messageHandler);
                     } else if (messageType.equals(MessageType.RequestOnly)) {
                         Request request = JSONUtils.map2pojo((Map) message.getMessageData(), Request.class);
                         ConnectData connectData = ConnectManager.CHANNEL_DATA_MAP.get(ctx.channel());
                         int messageSize = bytes.length;
+                        //Log.info("-=-=get=-=- client: {} ",ctx.channel().toString());
                         if (!connectData.requestOnlyQueueReachLimit()) {
                             connectData.getRequestOnlyQueue().offer(new RequestOnly(request, messageSize));
                             connectData.addRequestOnlyQueueMemSize(messageSize);
@@ -137,6 +141,7 @@ public class ClientHandler extends SimpleChannelInboundHandler<Object> {
                             Log.debug("RequestOnly队列缓存已满，丢弃新接收到的消息，messageId:{},队列所占内存：{}", message.getMessageID(), connectData.getRequestOnlyQueueMemSize());
                         }
                     } else {
+                        //Log.error("pierre test===14 client");
                         requestExecutorService.execute(messageHandler);
                     }
                 }

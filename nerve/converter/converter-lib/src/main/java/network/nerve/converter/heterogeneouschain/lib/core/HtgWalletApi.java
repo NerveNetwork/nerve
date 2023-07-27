@@ -648,7 +648,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 return TX_RECEIPT_CACHE.get(new TxKey(txHash, this));
             }
         } catch (Exception e) {
-            htgContext.logger().error("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
+            htgContext.logger().warn("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
             return null;
         }
     }

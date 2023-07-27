@@ -9,13 +9,13 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
 import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.cache.StableSwapPairCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.help.LedgerAssetRegisterHelper;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
 import network.nerve.swap.model.NerveToken;
@@ -44,6 +44,8 @@ public class CreateStablePairTxProcessor implements TransactionProcessor {
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
     @Autowired
     private SwapExecuteResultStorageService swapExecuteResultStorageService;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public int getType() {
@@ -87,7 +89,7 @@ public class CreateStablePairTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 String symbol = txData.getSymbol();
-                if (StringUtils.isNotBlank(symbol) && !FormatValidUtils.validTokenNameOrSymbol(symbol)) {
+                if (StringUtils.isNotBlank(symbol) && !SwapUtils.validTokenNameOrSymbol(symbol, swapHelper.isSupportProtocol26())) {
                     logger.error("INVALID_SYMBOL! hash-{}", tx.getHash().toHex());
                     failsList.add(tx);
                     errorCode = SwapErrorCode.INVALID_SYMBOL.getCode();

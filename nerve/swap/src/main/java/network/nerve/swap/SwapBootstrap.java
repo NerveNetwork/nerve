@@ -55,7 +55,6 @@ import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
-import network.nerve.swap.model.dto.stable.StableSwapPairDTO;
 import network.nerve.swap.rpc.call.BlockCall;
 import network.nerve.swap.rpc.call.TransactionCall;
 import network.nerve.swap.storage.SwapStablePairStorageService;
@@ -163,11 +162,22 @@ public class SwapBootstrap extends RpcModule {
             Log.error("Failed to get height_1_24_0", e);
             throw new RuntimeException(e);
         }
+        try {
+            long heightVersion1_26_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_26_0"));
+            SwapContext.PROTOCOL_1_26_0 = heightVersion1_26_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_26_0", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public boolean doStart() {
         try {
+            while (!isDependencieReady(ModuleE.NC.abbr)){
+                Log.info("wait nerve-core modules ready");
+                Thread.sleep(2000L);
+            }
             TransactionDispatcher dispatcher = SpringLiteContext.getBean(TransactionDispatcher.class);
             TransactionCommitAdvice commitAdvice = SpringLiteContext.getBean(TransactionCommitAdvice.class);
             TransactionRollbackAdvice rollbackAdvice = SpringLiteContext.getBean(TransactionRollbackAdvice.class);
@@ -186,7 +196,7 @@ public class SwapBootstrap extends RpcModule {
     @Override
     public void onDependenciesReady(Module module) {
         Log.info("dependencies [{}] ready", module.getName());
-        if (module.getName().equals(ModuleE.TX.abbr)) {
+        if (module.getName().equals(ModuleE.NC.abbr)) {
             Map<Integer, Chain> chainMap = chainManager.getChainMap();
             for (Chain chain : chainMap.values()) {
                 int chainId = chain.getConfig().getChainId();
@@ -195,16 +205,9 @@ public class SwapBootstrap extends RpcModule {
                 setSwapGenerateTxTypes(chainId);
                 Log.info("register tx type to tx module, chain id is {}, result is {}", chainId, registerTx);
             }
-        }
-        if (ModuleE.NW.abbr.equals(module.getName())) {
             RegisterHelper.registerMsg(ProtocolGroupManager.getOneProtocol());
-        }
-        if (ModuleE.PU.abbr.equals(module.getName())) {
             chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             Log.info("register to protocol-update module");
-        }
-
-        if (ModuleE.BL.abbr.equals(module.getName())) {
             chainManager.getChainMap().values().forEach(BlockCall::subscriptionNewBlockHeight);
             Log.info("subscription new block height");
         }
@@ -225,12 +228,7 @@ public class SwapBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                Module.build(ModuleE.TX),
-                Module.build(ModuleE.NW),
-                Module.build(ModuleE.LG),
-                Module.build(ModuleE.BL),
-                Module.build(ModuleE.AC),
-                new Module(ModuleE.PU.abbr, ROLE)
+                Module.build(ModuleE.NC),
         };
     }
 

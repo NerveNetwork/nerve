@@ -28,11 +28,9 @@ import io.nuls.base.data.*;
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rpc.info.Constants;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
@@ -62,7 +60,6 @@ import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import org.web3j.utils.Numeric;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -421,6 +418,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_24_0;
     }
 
+    @Override
+    public boolean isProtocol26() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_26_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -595,22 +597,21 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean checkNetworkRunning(int hChainId) {
         // 101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
-        // 108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
+        // 108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH, 118 GoerliETH
         // 119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK
-        //skippedNetworks.add(101);
-        //skippedNetworks.add(103);
-        //skippedNetworks.add(105);
-        //skippedNetworks.addAll(List.of(106, 107, 109, 110));
-        //skippedNetworks.add(108);
-        //skippedNetworks.add(111);
-        //skippedNetworks.add(112);
-        //skippedNetworks.add(113);
-        //skippedNetworks.add(114);
-        //skippedNetworks.add(115);
-        //skippedNetworks.add(116);
-        //skippedNetworks.add(117);
-        //skippedNetworks.addAll(List.of(118, 119, 120, 121, 122, 123));
-        //skippedNetworks.remove(108);
+        /*skippedNetworks.add(101);
+        skippedNetworks.add(103);
+        skippedNetworks.add(105);
+        skippedNetworks.addAll(List.of(106, 107, 109, 110));
+        skippedNetworks.add(108);
+        skippedNetworks.add(111);
+        skippedNetworks.add(112);
+        skippedNetworks.add(113);
+        skippedNetworks.add(114);
+        skippedNetworks.add(115);
+        skippedNetworks.add(116);
+        skippedNetworks.add(117);
+        skippedNetworks.addAll(List.of(119, 120, 121, 122, 123));*/
         if (nerveChain.getChainId() == 5 && skippedNetworks.contains(hChainId)) {
             return false;
         }

@@ -1,5 +1,6 @@
 package io.nuls.core.core.config;
 
+import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.config.persist.PersistManager;
 import io.nuls.core.log.Log;
@@ -41,7 +42,7 @@ public class ConfigurationLoader {
             this.value = value;
         }
 
-        public String  getValue() {
+        public String getValue() {
             return value;
         }
 
@@ -175,7 +176,7 @@ public class ConfigurationLoader {
 
     public String getValue(String domain, String key) {
         ConfigItem configItem = getConfigItem(domain, key);
-        if(configItem == null){
+        if (configItem == null) {
             return null;
         }
         return configItem.value;
@@ -205,6 +206,25 @@ public class ConfigurationLoader {
             return res;
         }
         ConfigItem item = configData.get(domain).get(key);
+        if (item == null) {
+            ConfigItem res = getConfigItemForGolbal(key);
+            return res;
+        }
+        return item;
+    }
+
+    public ConfigItem getConfigItemForCore(String key) {
+        ConfigItem item = null;
+        for (String ncDomain : BaseConstant.NERVE_CORE_DOMAINS) {
+            if (!configData.containsKey(ncDomain)) {
+                continue;
+            } else {
+                item = configData.get(ncDomain).get(key);
+            }
+            if (item != null) {
+                return item;
+            }
+        }
         if (item == null) {
             ConfigItem res = getConfigItemForGolbal(key);
             return res;

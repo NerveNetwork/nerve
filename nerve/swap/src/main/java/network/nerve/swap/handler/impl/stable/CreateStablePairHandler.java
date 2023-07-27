@@ -32,13 +32,13 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
 import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.stable.StableSwapTempPairManager;
 import network.nerve.swap.model.Chain;
@@ -47,6 +47,7 @@ import network.nerve.swap.model.bo.BatchInfo;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.dto.LedgerAssetDTO;
 import network.nerve.swap.model.txdata.stable.CreateStablePairData;
+import network.nerve.swap.utils.SwapUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -67,6 +68,8 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
     private ChainManager chainManager;
     @Autowired
     private LedgerAssetCache ledgerAssetCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Integer txType() {
@@ -97,7 +100,7 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
                 throw new NulsException(SwapErrorCode.INVALID_COINS);
             }
             String symbol = txData.getSymbol();
-            if (StringUtils.isNotBlank(symbol) && !FormatValidUtils.validTokenNameOrSymbol(symbol)) {
+            if (StringUtils.isNotBlank(symbol) && !SwapUtils.validTokenNameOrSymbol(symbol, swapHelper.isSupportProtocol26())) {
                 logger.error("INVALID_SYMBOL! hash-{}", txHash.toHex());
                 throw new NulsException(SwapErrorCode.INVALID_SYMBOL);
             }

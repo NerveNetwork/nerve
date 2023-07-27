@@ -67,6 +67,7 @@ public class NettyClient {
                     });
             Channel ch = b.connect(webSocketURI.getHost(), webSocketURI.getPort()).sync().channel();
             handler.handshakeFuture().sync();
+            //Log.warn("pierre test===[NettyClient] createConnect, uri: {}, channel: {}", uri, ch.toString());
             ResponseMessageProcessor.handshake(ch);
             return ch;
         } catch (Exception e) {

@@ -92,13 +92,8 @@ public class ApiBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                new Module(ModuleE.CS.abbr, ROLE),
-                new Module(ModuleE.BL.abbr, ROLE),
-                new Module(ModuleE.AC.abbr, ROLE),
-                new Module(ModuleE.TX.abbr, ROLE),
-                new Module(ModuleE.LG.abbr, ROLE),
+                Module.build(ModuleE.NC),
                 Module.build(ModuleE.CV),
-                Module.build(ModuleE.NW)
         };
     }
 

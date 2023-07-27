@@ -36,7 +36,6 @@ import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import network.nerve.swap.cache.LedgerAssetCache;
@@ -45,6 +44,7 @@ import network.nerve.swap.cache.SwapPairCache;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.context.SwapContext;
 import network.nerve.swap.handler.SwapInvoker;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.*;
 import network.nerve.swap.manager.stable.StableSwapTempPairManager;
 import network.nerve.swap.model.Chain;
@@ -99,6 +99,8 @@ public class SwapServiceImpl implements SwapService {
     private SwapPairCache swapPairCache;
     @Autowired
     private StableSwapPairCache stableSwapPairCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Result begin(int chainId, long blockHeight, long blockTime, String preStateRoot) {
@@ -465,7 +467,7 @@ public class SwapServiceImpl implements SwapService {
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
         }
-        if (StringUtils.isNotBlank(symbol) && !FormatValidUtils.validTokenNameOrSymbol(symbol)) {
+        if (StringUtils.isNotBlank(symbol) && !SwapUtils.validTokenNameOrSymbol(symbol, swapHelper.isSupportProtocol26())) {
             logger.error("INVALID_SYMBOL!");
             return Result.getFailed(SwapErrorCode.INVALID_SYMBOL);
         }

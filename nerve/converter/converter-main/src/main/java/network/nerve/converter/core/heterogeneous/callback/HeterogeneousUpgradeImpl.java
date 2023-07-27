@@ -37,6 +37,7 @@ import network.nerve.converter.storage.VirtualBankStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static network.nerve.converter.config.ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST;
@@ -76,6 +77,12 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
                 ConverterContext.VIRTUAL_BANK_AGENT_TOTAL - ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT;
 
         // 版本升级 从虚拟银行移除非配置的种子节点成员
+        //try {
+        //    nerveChain.getLogger().warn("pierre test===3 chain info: {}, {}", nerveChain.getCurrentHeterogeneousVersion(), Arrays.toString(ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.toArray()));
+        //    nerveChain.getLogger().warn("pierre test===3 current virtualBankMap: {}", JSONUtils.obj2json(nerveChain.getMapVirtualBank()));
+        //} catch (Exception e) {
+        //    nerveChain.getLogger().warn("MapVirtualBank log print error ");
+        //}
         List<VirtualBankDirector> listOutDirector = new ArrayList<>();
         for(VirtualBankDirector director : nerveChain.getMapVirtualBank().values()) {
             if(!director.getSeedNode()){

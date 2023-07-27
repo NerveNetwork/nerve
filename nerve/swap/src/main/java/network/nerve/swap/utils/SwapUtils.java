@@ -19,6 +19,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.ArraysTool;
+import io.nuls.core.model.FormatValidUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.model.message.MessageUtil;
@@ -48,12 +49,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.nuls.core.model.FormatValidUtils.NULS;
 import static network.nerve.swap.constant.SwapConstant.*;
 import static network.nerve.swap.constant.SwapErrorCode.*;
 import static network.nerve.swap.context.SwapContext.stableCoinGroup;
@@ -1120,5 +1123,29 @@ public class SwapUtils {
             errorCode = CommonCodeConstanst.DATA_ERROR;
         }
         return errorCode;
+    }
+
+    /**
+     * token命名规则:只允许使用大、小写字母、数字、下划线（下划线不能在两端）1~20字节
+     * @param name   token
+     * @return       验证结果
+     */
+    public static boolean validTokenNameOrSymbol(String name, boolean isProtocol26) {
+        if (!isProtocol26) {
+            return FormatValidUtils.validTokenNameOrSymbol(name);
+        }
+        if (StringUtils.isBlank(name)) {
+            return false;
+        }
+
+        if(name.equals(NULS)) {
+            return false;
+        }
+
+        byte[] aliasBytes = name.getBytes(StandardCharsets.UTF_8);
+        if (aliasBytes.length < 1 || aliasBytes.length > 20) {
+            return false;
+        }
+        return name.matches("^([a-zA-Z0-9]+[a-zA-Z0-9_]*[a-zA-Z0-9]+)|[a-zA-Z0-9]+${1,20}");
     }
 }

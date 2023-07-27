@@ -55,7 +55,8 @@ public enum ModuleE {
     DXA("dex-api", Constant.DEXAPI, ModuleE.DOMAIN),
     QU("qu", Constant.QUOTATION, ModuleE.DOMAIN),
     CV("cv", Constant.CONVERTER, ModuleE.DOMAIN),
-    SW("sw", Constant.SWAP, ModuleE.DOMAIN);
+    SW("sw", Constant.SWAP, ModuleE.DOMAIN),
+    NC("nc", Constant.NERVE_CORE, ModuleE.DOMAIN);
 
 
     public static final String DOMAIN = "Nuls";
@@ -101,6 +102,8 @@ public enum ModuleE {
         public static final String CONVERTER = "converter";
 
         public static final String SWAP = "swap";
+
+        public static final String NERVE_CORE = "nerve-core";
     }
 
     public final String abbr;

@@ -168,6 +168,10 @@ public class ConverterContext {
      */
     public static long PROTOCOL_1_24_0 = 0L;
     /**
+     * v1.26.0 协议升级高度
+     */
+    public static long PROTOCOL_1_26_0 = 0L;
+    /**
      * 0=local,1=signatrue-machine
      */
     public static long SIG_MODE = 0L;

@@ -207,7 +207,6 @@ public class StableSwapTokenHandlerTest {
     }
 
     protected JunitCase getCase1() throws Exception {
-        //TODO pierre 异常case
         String caseDesc = "异常-币币交易";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();

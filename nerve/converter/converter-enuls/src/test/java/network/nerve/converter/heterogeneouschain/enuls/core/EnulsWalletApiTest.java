@@ -1100,6 +1100,67 @@ public class EnulsWalletApiTest extends Base {
         }
     }
 
+    @Test
+    public void erc20TransferFromEstimateGasTest() throws Exception {
+        String sender = "0xcC81d3B057c16DFfe778D2d342CfF40d33bD69A7";
+        String contractAddress = "0x214Ce4BF95c894aac9b991f4378bDaF8DEd28065";
+        BigInteger convertAmount = new BigDecimal("0.01").movePointRight(2).toBigInteger();
+        String from = "0x267569C6893EA7eFF9Da3ac120859c49a1EE485A";
+        String to = "0x29b4abb0f8734EA672a0e82FA47998F710B6A07a";
+
+        Function function = new Function(
+                "transferFrom",
+                Arrays.asList(new Address(from),new Address(to), new Uint256(convertAmount)),
+                Arrays.asList(new TypeReference<Type>() {
+                }));
+
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        BigInteger value = null;
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                sender,
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+    @Test
+    public void txEstimateGasTest() throws Exception {
+        setMain();
+        String contractAddress = "0x72743a08215dd9b8be0e9d0933c4f55176ace254";
+        String encodedFunction = "0x6a62784200000000000000000000000017bf829ca1a476144b8c30e84e29d7bc08a7675c";
+
+        BigInteger value = new BigDecimal("1").movePointRight(18).toBigInteger();
+        org.web3j.protocol.core.methods.request.Transaction tx = new org.web3j.protocol.core.methods.request.Transaction(
+                "0x17bf829ca1a476144b8c30e84e29d7bc08a7675c",
+                null,
+                null,
+                null,
+                contractAddress,
+                value,
+                encodedFunction
+        );
+        System.out.println(String.format("encodedFunction: %s", encodedFunction));
+        EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
+        if(estimateGas.getResult() != null) {
+            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+        } else {
+            System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
+        }
+    }
+
+
     static class MockHtgERC20Helper extends HtgERC20Helper {
         @Override
         public boolean isERC20(String address, HeterogeneousTransactionBaseInfo po) {

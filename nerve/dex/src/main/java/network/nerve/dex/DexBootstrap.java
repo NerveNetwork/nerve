@@ -59,11 +59,7 @@ public class DexBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                Module.build(ModuleE.TX),
-                Module.build(ModuleE.LG),
-                Module.build(ModuleE.CC),
-                Module.build(ModuleE.AC),
-                new Module(ModuleE.PU.abbr, ROLE)
+                Module.build(ModuleE.NC),
         };
     }
 
@@ -182,11 +178,10 @@ public class DexBootstrap extends RpcModule {
 
     @Override
     public void onDependenciesReady(Module module) {
-        //向交易模块注册DEX模块交易
-        LoggerUtil.dexLog.info("dexlog info ====== >");
-        if (module.getName().equals(ModuleE.TX.abbr)) {
-            boolean b = RegisterHelper.registerTx(dexConfig.getChainId(), ProtocolGroupManager.getCurrentProtocol(dexConfig.getChainId()));
-        } else if (ModuleE.PU.abbr.equals(module.getName())) {
+        if (module.getName().equals(ModuleE.NC.abbr)) {
+            //向交易模块注册DEX模块交易
+            LoggerUtil.dexLog.info("dexlog info ====== >");
+            RegisterHelper.registerTx(dexConfig.getChainId(), ProtocolGroupManager.getCurrentProtocol(dexConfig.getChainId()));
             //注册账户模块相关交易
             RegisterHelper.registerProtocol(dexConfig.getChainId());
         }

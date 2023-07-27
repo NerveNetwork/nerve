@@ -54,6 +54,7 @@ import network.nerve.quotation.util.TimeUtil;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: Loki
@@ -147,14 +148,21 @@ public class QuotationProcessor implements TransactionProcessor {
              * 存db时将前缀与该key组合, 将值存入(或加入已有的)NodeQuotationsPO数据中
              */
             Map<String, List<NodeQuotationPO>> saveMap = new HashMap<>();
+            Map<String, Set<String>> txPriceMap = new HashMap<>();
             for (Transaction tx : txs) {
                 Quotation quotation = CommonUtil.getInstance(tx.getTxData(), Quotation.class);
                 if (QuotationConstant.QUOTE_TXDATA_TYPE == quotation.getType()) {
+                    String hash = tx.getHash().toHex();
                     Prices prices = CommonUtil.getInstance(quotation.getData(), Prices.class);
                     for (Price price : prices.getPrices()) {
                         List<NodeQuotationPO> list = saveMap.computeIfAbsent(price.getKey(), k -> new ArrayList<>());
+                        Set<String> hashes = txPriceMap.computeIfAbsent(price.getKey(), k -> new HashSet<>());
+                        if (!hashes.add(hash)) {
+                            chain.getLogger().warn("[Quotation] 交易hash重复存储 General-quotation hash: {}, key:{}, price:{}", hash, price.getKey(), price.getValue());
+                            continue;
+                        }
                         NodeQuotationPO nodeQuotationPO = new NodeQuotationPO();
-                        nodeQuotationPO.setTxHash(tx.getHash().toHex());
+                        nodeQuotationPO.setTxHash(hash);
                         nodeQuotationPO.setBlockTime(tx.getTime());
                         nodeQuotationPO.setPrice(price.getValue());
                         nodeQuotationPO.setToken(price.getKey());
@@ -167,7 +175,14 @@ public class QuotationProcessor implements TransactionProcessor {
                 String key = CommonUtil.assembleKey(keyPrefix, entry.getKey());
                 NodeQuotationWrapperPO nqWrapperPO = quotationStorageService.getNodeQuotationsBykey(chain, key);
                 if (null != nqWrapperPO && null != nqWrapperPO.getList() && !nqWrapperPO.getList().isEmpty()) {
-                    nqWrapperPO.getList().addAll(entry.getValue());
+                    //nqWrapperPO.getList().addAll(entry.getValue());
+                    List<NodeQuotationPO> list = nqWrapperPO.getList();
+                    Set<String> txHashSet = list.stream().map(n -> n.getTxHash()).collect(Collectors.toSet());
+                    entry.getValue().stream().forEach(nodeQuotationPO -> {
+                        if (!txHashSet.contains(nodeQuotationPO.getTxHash())) {
+                            list.add(nodeQuotationPO);
+                        }
+                    });
                 } else {
                     nqWrapperPO = new NodeQuotationWrapperPO(entry.getValue());
                 }

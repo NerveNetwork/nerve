@@ -162,6 +162,21 @@
             <artifactId>converter-zk</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-eos</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-zkpolygon</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-linea</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

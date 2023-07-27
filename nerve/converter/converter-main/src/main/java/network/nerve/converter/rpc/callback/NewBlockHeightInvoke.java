@@ -2,11 +2,14 @@ package network.nerve.converter.rpc.callback;
 
 import io.nuls.core.constant.SyncStatusEnum;
 import io.nuls.core.core.ioc.SpringLiteContext;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.invoke.BaseInvoke;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.model.bo.Chain;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGHT;
@@ -51,7 +54,6 @@ public class NewBlockHeightInvoke extends BaseInvoke {
         long height = Long.valueOf(hashMap.get("value").toString());
         long time = Long.valueOf(hashMap.get("time").toString());
 
-
         LOG.debug("[订阅事件]最新区块高度:{} blockTime:{} syncStatus:{}", height, time, syncStatusEnum.name());
         LATEST_BLOCK_HEIGHT = height;
         chain.getLatestBasicBlock().setHeight(height);
@@ -62,5 +64,13 @@ public class NewBlockHeightInvoke extends BaseInvoke {
             return;
         }
         virtualBankService.recordVirtualBankChanges(chain);
+        //try {
+        //    chain.getLogger().warn("pierre test===chain htg version: {}", chain.getCurrentHeterogeneousVersion());
+        //    chain.getMapVirtualBank().values().forEach(e -> {
+        //        chain.getLogger().warn("pierre test===bank member: {}", e.getSignAddress());
+        //    });
+        //} catch (Exception e) {
+        //    chain.getLogger().warn("MapVirtualBank log print error ");
+        //}
     }
 }

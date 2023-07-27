@@ -210,7 +210,15 @@ public class ConverterBootstrap extends RpcModule {
             ConverterContext.PROTOCOL_1_24_0 = heightVersion1_24_0;
             ConverterContext.protocolHeightMap.put(24, heightVersion1_24_0);
         } catch (Exception e) {
-            Log.warn("Failed to get height_1_4_0", e);
+            Log.warn("Failed to get height_1_24_0", e);
+        }
+        try {
+            long heightVersion1_26_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_26_0"));
+            // v1.26.0 协议升级高度
+            ConverterContext.PROTOCOL_1_26_0 = heightVersion1_26_0;
+            ConverterContext.protocolHeightMap.put(26, heightVersion1_26_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_26_0", e);
         }
         try {
             int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
@@ -223,6 +231,10 @@ public class ConverterBootstrap extends RpcModule {
     @Override
     public boolean doStart() {
         try {
+            while (!isDependencieReady(ModuleE.NC.abbr)){
+                Log.info("wait nerve-core modules ready");
+                Thread.sleep(2000L);
+            }
             Log.info("Converter Ready...");
             return true;
         } catch (Exception e) {
@@ -236,32 +248,20 @@ public class ConverterBootstrap extends RpcModule {
     @Override
     public void onDependenciesReady(Module module) {
         Log.info("dependencies [{}] ready", module.getName());
-        if (module.getName().equals(ModuleE.TX.abbr)) {
+        if (module.getName().equals(ModuleE.NC.abbr)) {
             Map<Integer, Chain> chainMap = chainManager.getChainMap();
             for (Chain chain : chainMap.values()) {
                 int chainId = chain.getChainId();
                 boolean registerTx = RegisterHelper.registerTx(chainId, ProtocolGroupManager.getCurrentProtocol(chainId));
                 Log.info("register tx type to tx module, chain id is {}, result is {}", chainId, registerTx);
             }
-        }
-        if (ModuleE.NW.abbr.equals(module.getName())) {
             RegisterHelper.registerMsg(ProtocolGroupManager.getOneProtocol());
-        }
-        if (ModuleE.PU.abbr.equals(module.getName())) {
-            chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             Log.info("register to protocol-update module");
-        }
-        if (ModuleE.BL.abbr.equals(module.getName())) {
-            chainManager.getChainMap().values().forEach(BlockCall::subscriptionNewBlockHeight);
+            chainManager.getChainMap().keySet().forEach(RegisterHelper::registerProtocol);
             Log.info("subscription new block height");
-        }
-
-        if (ModuleE.LG.abbr.equals(module.getName())) {
+            chainManager.getChainMap().values().forEach(BlockCall::subscriptionNewBlockHeight);
             Log.info("onDependenciesReady ledger");
             heterogeneousChainManager.init2LedgerAsset();
-        }
-
-        if (ModuleE.CS.abbr.equals(module.getName())) {
             // 获取种子节点个数
             // 根据协议来
             Chain chain = chainManager.getChainMap().get(converterConfig.getChainId());
@@ -298,13 +298,7 @@ public class ConverterBootstrap extends RpcModule {
     @Override
     public Module[] declareDependent() {
         return new Module[]{
-                Module.build(ModuleE.CS),
-                Module.build(ModuleE.TX),
-                Module.build(ModuleE.NW),
-                Module.build(ModuleE.LG),
-                Module.build(ModuleE.BL),
-                Module.build(ModuleE.AC),
-                new Module(ModuleE.PU.abbr, ROLE),
+                Module.build(ModuleE.NC),
                 new Module(ModuleE.QU.abbr, ROLE)
         };
     }

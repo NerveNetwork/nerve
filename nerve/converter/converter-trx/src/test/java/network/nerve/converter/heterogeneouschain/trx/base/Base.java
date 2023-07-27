@@ -106,7 +106,7 @@ public class Base {
             walletApi.getWrapper().close();
         }
         wrapper = new ApiWrapper("tron.nerve.network:50051", "tron.nerve.network:50061", "3333333333333333333333333333333333333333333333333333333333333333");
-        //wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "76f3c2b5-357a-4e6c-aced-9e1c42179717");
+        //wrapper = ApiWrapper.ofMainnet("3333333333333333333333333333333333333333333333333333333333333333", "18765dbb-a9a5-47cc-83b3-0403d0625093");
         walletApi.setWrapper(wrapper);
         walletApi.setRpcAddress("endpoint:tron.nerve.network");
         context.config.setChainIdOnHtgNetwork(100000002);
@@ -125,6 +125,12 @@ public class Base {
         BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(6)).toBigInteger();
         String vHash = TrxUtil.encoderWithdraw(context, txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, VERSION);
         String signData = this.ethSign(vHash, signCount);
+        Function function = getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
+    protected String sendMainAssetWithdrawBySignData(String txKey, String toAddress, String value, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(6)).toBigInteger();
         Function function = getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, TrxConstant.ZERO_ADDRESS, signData);
         return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }

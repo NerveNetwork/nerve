@@ -506,6 +506,13 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             }
             for(String pubkey : INIT_VIRTUAL_BANK_PUBKEY_LIST){
                 if(pubkey.equals(agentBasic.getPubKey())){
+                    //try {
+                    //    chain.getLogger().warn("pierre test===2 chain info: {}, {}", chain.getCurrentHeterogeneousVersion(), Arrays.toString(ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.toArray()));
+                    //    chain.getLogger().warn("pierre test===2 current virtualBankMap: {}", JSONUtils.obj2json(chain.getMapVirtualBank()));
+                    //    chain.getLogger().warn("pierre test===2 remove sign address: {}", agentBasic.getPackingAddress());
+                    //} catch (Exception e) {
+                    //    chain.getLogger().warn("MapVirtualBank log print error ");
+                    //}
                     VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
                     // 种子节点打包地址,节点地址 奖励地址 设为一致
                     virtualBankDirector.setAgentHash(agentBasic.getAgentHash());

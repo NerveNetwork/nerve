@@ -250,6 +250,7 @@ public interface HtgConstant {
     BigInteger GWEI_20 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_30 = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_100 = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
+    BigInteger GWEI_150 = BigInteger.valueOf(150L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_200 = BigInteger.valueOf(200L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_300 = BigInteger.valueOf(300L).multiply(BigInteger.TEN.pow(9));
     BigInteger GWEI_750 = BigInteger.valueOf(750L).multiply(BigInteger.TEN.pow(9));

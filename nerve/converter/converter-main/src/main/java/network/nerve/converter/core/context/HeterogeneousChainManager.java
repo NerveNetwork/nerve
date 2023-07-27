@@ -220,9 +220,9 @@ public class HeterogeneousChainManager {
             ledgerAssetRegisterHelper.crossChainAssetReg(chainId, FIRST_HETEROGENEOUS_ASSET_CHAIN_ID, assetInfo.getAssetId(),
                     assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());
             heterogeneousChainInfoStorageService.init2LedgerAssetCompleted();
+            logger().info("完成初始化异构链主资产到账本");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        logger().info("完成初始化异构链主资产到账本");
     }
 }

@@ -24,12 +24,14 @@
 
 package network.nerve.converter.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.core.api.ConverterCoreApi;
@@ -224,6 +226,14 @@ public class VirtualBankUtil {
             return;
         }
         for (VirtualBankDirector director : directorList) {
+            //try {
+            //    chain.getLogger().warn("pierre test===chain info: {}, {}", chain.getCurrentHeterogeneousVersion(), Arrays.toString(ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.toArray()));
+            //    chain.getLogger().warn("pierre test===current virtualBankMap: {}", JSONUtils.obj2json(virtualBankMap));
+            //    chain.getLogger().warn("pierre test===remove sign address: {}", director.getSignAddress());
+            //} catch (Exception e) {
+            //    chain.getLogger().warn("MapVirtualBank log print error ");
+            //}
+
             virtualBankMap.remove(director.getSignAddress());
             virtualBankStorageService.deleteBySignAddress(chain, director.getSignAddress());
         }

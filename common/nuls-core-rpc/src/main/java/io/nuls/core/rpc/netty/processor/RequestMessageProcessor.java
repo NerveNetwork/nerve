@@ -60,6 +60,7 @@ public class RequestMessageProcessor {
 
         //握手成功之后保存channel与角色的对应信息
         NegotiateConnection negotiateConnection = JSONUtils.map2pojo((Map) message.getMessageData(), NegotiateConnection.class);
+        //Log.error("pierre test==={}, negotiateConnection: {}, channel: {}", 3, negotiateConnection.getAbbreviation(), channel.toString());
         ConnectManager.cacheConnect(negotiateConnection.getAbbreviation(), channel, false);
     }
 

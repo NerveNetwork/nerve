@@ -100,6 +100,8 @@ public class Base {
         //Web3j web3j = Web3j.build(new HttpService(ethRpcAddress, okHttpClient));
         //String ethRpcAddress = "https://endpoints.omniatech.io/v1/bsc/testnet/public";// https://bsctestapi.terminet.io/rpc https://bsc-testnet.public.blastapi.io
         String ethRpcAddress = "https://bsc-testnet.public.blastapi.io";// https://bsctestapi.terminet.io/rpc https://bsc-testnet.public.blastapi.io
+        //String ethRpcAddress = "https://bsc-testnet.publicnode.com";
+        //String ethRpcAddress = "https://endpoints.omniatech.io/v1/bsc/testnet/public";
         Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         htgWalletApi = new HtgWalletApi();
         htgWalletApi.setWeb3j(web3j);

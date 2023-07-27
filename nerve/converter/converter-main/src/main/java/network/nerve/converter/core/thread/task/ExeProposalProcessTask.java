@@ -92,7 +92,7 @@ public class ExeProposalProcessTask implements Runnable {
     private ComponentSignStorageService componentSignStorageService = SpringLiteContext.getBean(ComponentSignStorageService.class);
     private TxSubsequentProcessStorageService txSubsequentProcessStorageService = SpringLiteContext.getBean(TxSubsequentProcessStorageService.class);
     private RechargeStorageService rechargeStorageService = SpringLiteContext.getBean(RechargeStorageService.class);
-
+    private ProposalExeStorageService proposalExeStorageService = SpringLiteContext.getBean(ProposalExeStorageService.class);
 
     @Override
     public void run() {
@@ -102,7 +102,8 @@ public class ExeProposalProcessTask implements Runnable {
                 // 只取出,不移除头部元素
                 ExeProposalPO pendingPO = exeProposalQueue.peekFirst();
                 NulsHash hash = pendingPO.getProposalTxHash();
-                if (null != asyncProcessedTxStorageService.getProposalExe(chain, hash.toHex())) {
+                if (null != proposalExeStorageService.find(chain, hash.toHex())
+                        || null != asyncProcessedTxStorageService.getProposalExe(chain, hash.toHex())) {
                     // 判断已执行过, 从队列中移除, 并从持久库中移除
                     // 执行成功移除队列头部元素
                     exeProposalQueue.remove();

@@ -40,6 +40,9 @@
         <module>converter-ethw</module>
         <module>converter-rei</module>
         <module>converter-zk</module>
+        <module>converter-eos</module>
+        <module>converter-zkpolygon</module>
+        <module>converter-linea</module>
 
     </modules>
 

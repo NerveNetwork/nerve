@@ -57,6 +57,11 @@
                 <artifactId>nuls-base-protocol-update</artifactId>
                 <version>${base.version}</version>
             </dependency>
+            <dependency>
+                <groupId>network.nerve</groupId>
+                <artifactId>nerve-core</artifactId>
+                <version>${core.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

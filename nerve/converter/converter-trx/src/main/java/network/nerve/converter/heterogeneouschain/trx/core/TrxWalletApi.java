@@ -320,7 +320,12 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
 
     public Response.TransactionInfo getTransactionReceipt(String txHash) throws Exception {
-        return TX_RECEIPT_CACHE.get(new TxKey(txHash, this));
+        try {
+            return TX_RECEIPT_CACHE.get(new TxKey(txHash, this));
+        } catch (Exception e) {
+            getLog().warn("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
+            return null;
+        }
     }
 
     private Response.TransactionInfo getTransactionReceiptReal(String txHash) throws Exception {
@@ -426,7 +431,12 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
      * 获取交易详情
      */
     public Chain.Transaction getTransactionByHash(String txHash) throws Exception {
-        return TX_CACHE.get(new TxKey(txHash, this));
+        try {
+            return TX_CACHE.get(new TxKey(txHash, this));
+        } catch (Exception e) {
+            getLog().error("[{}] Transaction[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
+            return null;
+        }
     }
 
     private Chain.Transaction getTransactionByHashReal(String txHash) throws Exception {
