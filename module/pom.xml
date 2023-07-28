@@ -24,6 +24,7 @@
 <!--        <module>nuls-network</module>-->
 <!--        <module>nuls-protocol-update</module>-->
 <!--        <module>nuls-transaction</module>-->
+        <module>nerve-core</module>
         <module>nuls-cmd-client</module>
         <module>nuls-api</module>
     </modules>
