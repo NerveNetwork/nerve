@@ -45,7 +45,7 @@ public class ModuleHelper {
 //        supportProtocolUpdate = enableProtocolUpdate(module);
         supportProtocolUpdate = true;
         supportSmartContract = enableSmartContract(module);
-        supportCrossChain = enableCrossChain(module);
+        supportCrossChain = true;
         Log.info("----------------ModuleHelper----------------");
         Log.info("module-" + module.toString());
         Log.info("supportProtocolUpdate-"+supportProtocolUpdate);

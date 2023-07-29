@@ -15,7 +15,7 @@ chainId=9
 assetsId=1
 
 [nuls-api]
-moduleDynamicDependent=protocol-update,cross-chain,converter,swap
+moduleDynamicDependent=nerve-core,converter,swap
 #httpServer的启动ip
 serverIp=0.0.0.0
 #httpServer的启动port
