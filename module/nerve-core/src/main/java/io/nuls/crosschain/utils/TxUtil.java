@@ -227,6 +227,7 @@ public class TxUtil {
         int chainId = chain.getChainId();
         NulsHash hash = ctx.getHash();
         try {
+//            chain.getLogger().debug("-==-:: {}", ctx.getHash().toHex());
             Map packerInfo = ConsensusCall.getPackerInfo(chain);
             String password = (String) packerInfo.get(ParamConstant.PARAM_PASSWORD);
             String address = (String) packerInfo.get(ParamConstant.PARAM_ADDRESS);
@@ -241,6 +242,7 @@ public class TxUtil {
             CtxStatusPO ctxStatusPO = new CtxStatusPO(ctx, TxStatusEnum.UNCONFIRM.getStatus());
             //如果本节点是共识节点，则需要签名并做拜占庭，否则只需广播本地收集到的签名信息
             if (!StringUtils.isBlank(address) && chain.getVerifierList().contains(address)) {
+//                chain.getLogger().debug("-==-:: {}", ctx.getHash().toHex());
                 BroadCtxSignMessage message = new BroadCtxSignMessage();
                 message.setLocalHash(hash);
                 TransactionSignature transactionSignature = new TransactionSignature();
@@ -271,8 +273,10 @@ public class TxUtil {
                     message.setSignature(p2PHKSignature.serialize());
                 }
                 MessageUtil.signByzantineInChain(chain, ctx, transactionSignature, packers, hash);
+//                chain.getLogger().debug("-==-:: broadcast{}", ctx.getHash().toHex());
                 NetWorkCall.broadcast(chainId, message, CommandConstant.BROAD_CTX_SIGN_MESSAGE, false);
             } else {
+//                chain.getLogger().debug("-==-:: save status {}", ctx.getHash().toHex());
                 ctxStatusService.save(hash, ctxStatusPO, chainId);
             }
             //将收到的签名消息加入消息队列
@@ -280,7 +284,7 @@ public class TxUtil {
                 chain.getLogger().debug("将本跨链交易:{}已收到的签名放入消息队列中", hash.toHex());
                 chain.getSignMessageByzantineQueue().addAll(chain.getFutureMessageMap().remove(hash));
             }
-        } catch (NulsException | IOException e) {
+        } catch (Exception e) {
             chain.getLogger().error(e);
         }
     }
