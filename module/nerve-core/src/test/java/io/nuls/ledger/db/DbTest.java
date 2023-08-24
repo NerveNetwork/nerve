@@ -26,6 +26,8 @@ package io.nuls.ledger.db;
 import io.nuls.core.log.Log;
 import io.nuls.core.model.ByteUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
+import io.nuls.crosschain.base.model.bo.txdata.RegisteredChainMessage;
+import io.nuls.crosschain.constant.NulsCrossChainConstant;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,7 +41,7 @@ public class DbTest {
     @BeforeClass
     public static void before() {
         Log.info("init");
-        RocksDBService.init("/Users/pierreluo/Nuls/NERVE/data_ledger/");
+        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/data-35446352-orgin/cross-chain/");
         System.out.println();
     }
 
@@ -48,6 +50,14 @@ public class DbTest {
         byte[] stream = RocksDBService.get("chain_block_height", ByteUtils.intToBytes(9));
         long height = ByteUtils.byteToLong(stream);
         System.out.println(height);
+    }
+
+    @Test
+    public void testCrossChainDB() throws Exception {
+        byte[] messageBytes = RocksDBService.get("registered_chain", NulsCrossChainConstant.DB_NAME_REGISTERED_CHAIN.getBytes());
+        RegisteredChainMessage registeredChainMessage = new RegisteredChainMessage();
+        registeredChainMessage.parse(messageBytes,0);
+        System.out.println();
     }
 
     @Test

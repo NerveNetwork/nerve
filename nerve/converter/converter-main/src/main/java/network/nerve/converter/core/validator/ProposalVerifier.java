@@ -151,6 +151,10 @@ public class ProposalVerifier {
                 validBankVoteRange(chain, rangeType);
                 validCoinForSwap(chain, txData.getContent(), txData.getAddress());
                 break;
+            case REMOVECOIN:
+                validBankVoteRange(chain, rangeType);
+                validRemoveCoinForSwap(chain, txData.getContent(), txData.getAddress());
+                break;
             case MANAGE_STABLE_PAIR_FOR_SWAP_TRADE:
                 validBankVoteRange(chain, rangeType);
                 validStableSwap(chain, txData.getAddress());
@@ -191,6 +195,41 @@ public class ProposalVerifier {
         boolean legalCoin = SwapCall.isLegalCoinForAddStable(chain.getChainId(), stablePairAddress, assetChainId, assetId);
         if (!legalCoin) {
             chain.getLogger().error("[提案添加币种] 币种不合法. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    private void validRemoveCoinForSwap(Chain chain, String content, byte[] stablePairAddressBytes) throws NulsException {
+        boolean success = false;
+        int assetChainId = 0, assetId = 0;
+        do {
+            if (StringUtils.isBlank(content)) {
+                break;
+            }
+            try {
+                String[] split = content.split("-");
+                if (split.length < 2) {
+                    break;
+                }
+                assetChainId = Integer.parseInt(split[0].trim());
+                assetId = Integer.parseInt(split[1].trim());
+            } catch (Exception e) {
+                chain.getLogger().error(e);
+                break;
+            }
+            if (assetChainId == 0 || assetId == 0) {
+                break;
+            }
+            success = true;
+        } while (false);
+        if (!success) {
+            chain.getLogger().error("[提案移除币种] 币种信息缺失. content:{}", content);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+        String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
+        boolean legalCoin = SwapCall.isLegalCoinForRemoveStable(chain.getChainId(), stablePairAddress, assetChainId, assetId);
+        if (!legalCoin) {
+            chain.getLogger().error("[提案移除币种] 币种不合法. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

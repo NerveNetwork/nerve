@@ -25,7 +25,6 @@ package network.nerve.swap.model.vo;
 
 import network.nerve.swap.model.NerveToken;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -40,21 +39,33 @@ public class StableCoinVo {
     private String lpToken;
     private Map<String, Integer> groupCoin;
 
-    public StableCoinVo(String address, NerveToken lpToken, Set<NerveToken> groupCoinSet) {
+    public StableCoinVo(String address, NerveToken lpToken, Map<NerveToken, Boolean> groupCoinSet) {
         this.address = address;
         this.lpToken = lpToken.str();
         this.groupCoin = new HashMap<>();
-        for (NerveToken token : groupCoinSet) {
-            this.groupCoin.put(token.str(), 1);
-        }
+        groupCoinSet.entrySet().forEach(e -> {
+            if (e.getValue()) {
+                this.groupCoin.put(e.getKey().str(), 2);
+            } else {
+                this.groupCoin.put(e.getKey().str(), 1);
+            }
+        });
     }
 
-    public StableCoinVo(String address, NerveToken lpToken, NerveToken[] coins) {
+    public StableCoinVo(String address, NerveToken lpToken, NerveToken[] coins, boolean[] removes) {
+        if (removes == null) {
+            removes = new boolean[coins.length];
+        }
         this.address = address;
         this.lpToken = lpToken.str();
         this.groupCoin = new HashMap<>();
-        for (NerveToken token : coins) {
-            this.groupCoin.put(token.str(), 1);
+        for (int i = 0; i < coins.length; i++) {
+            NerveToken token = coins[i];
+            if (removes[i]) {
+                this.groupCoin.put(token.str(), 2);
+            } else {
+                this.groupCoin.put(token.str(), 1);
+            }
         }
     }
 

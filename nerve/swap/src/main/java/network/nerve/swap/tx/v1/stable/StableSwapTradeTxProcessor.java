@@ -12,6 +12,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.impl.stable.StableSwapTradeHandler;
@@ -25,16 +26,15 @@ import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.business.TradePairBus;
 import network.nerve.swap.model.business.stable.StableSwapTradeBus;
 import network.nerve.swap.model.dto.stable.StableSwapTradeDTO;
+import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.model.txdata.stable.StableSwapTradeData;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
 import network.nerve.swap.utils.SwapDBUtil;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Niels
@@ -84,13 +84,16 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 logger.info("[commit] Stable Swap Trade, hash: {}", tx.getHash().toHex());
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
+                StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
+                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
+                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+                //StableSwapPairPo pair = stablePair.getPair();
+                //NerveToken[] coins = pair.getCoins();
+                //result.setExtend(JSONUtils.obj2json(Arrays.asList(coins).stream().map(c -> c.str()).collect(Collectors.toList())));
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
-                StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
-                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
-                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 // 更新Pair的资金池和发行总量
                 stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }

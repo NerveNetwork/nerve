@@ -35,6 +35,7 @@ import io.nuls.cmd.client.processor.consensus.*;
 import io.nuls.cmd.client.processor.converter.*;
 import io.nuls.cmd.client.processor.crosschain.CreateCrossTxProcessor;
 import io.nuls.cmd.client.processor.crosschain.GetCrossTxStateProcessor;
+import io.nuls.cmd.client.processor.crosschain.RehandleCrossTxProcessor;
 import io.nuls.cmd.client.processor.dex.CreateTradingProcess;
 import io.nuls.cmd.client.processor.dex.EditTradingProcess;
 import io.nuls.cmd.client.processor.dex.QueryTradingProcess;
@@ -232,6 +233,7 @@ public class CommandHandler implements InitializingBean {
 //        register(getBean(GetCrossChainRegisterInfoProcessor.class));
 //        register(getBean(GetCrossAssetInfoProcessor.class));
         register(getBean(GetCrossTxStateProcessor.class));
+        register(getBean(RehandleCrossTxProcessor.class));
 
 
         register(getBean(CreateTradingProcess.class));

@@ -411,6 +411,18 @@ public class SwapUtils {
         // 计算用户获取的LP资产
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
+        // add by pierre at 2023/8/16，币种状态检查
+        NerveToken[] coins = pairPo.getCoins();
+        boolean[] removes = pairPo.getRemoves();
+        if (removes != null) {
+            for (int i = 0; i < amounts.length; i++) {
+                if (amounts[i].compareTo(BigInteger.ZERO) > 0 && removes[i]) {
+                    SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(SwapErrorCode.INVALID_COINS);
+                }
+            }
+        }
+        // end code by pierre
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         BigInteger[] balances = stablePair.getBalances();
         BigInteger totalSupply = stablePair.totalSupply();
@@ -516,6 +528,17 @@ public class SwapUtils {
         BigInteger totalSupply = stablePair.totalSupply();
         // 检查indexs合法与重复
         NerveToken[] coins = pairPo.getCoins();
+        // add by pierre at 2023/8/16，币种状态检查
+        boolean[] removes = pairPo.getRemoves();
+        if (removes != null) {
+            for (int index : indexes) {
+                if (removes[index]) {
+                    SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[index].str());
+                    throw new NulsException(SwapErrorCode.INVALID_COINS);
+                }
+            }
+        }
+        // end code by pierre
         int lengthOfCoins = coins.length;
         int lengthOfIndexes = indexes.length;
         // 检查参数中`indexs`是否合法
@@ -661,6 +684,21 @@ public class SwapUtils {
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         NerveToken[] coins = pairPo.getCoins();
         int length = coins.length;
+        // add by pierre at 2023/8/16，币种状态检查
+        boolean[] removes = pairPo.getRemoves();
+        if (removes != null) {
+            for (int i = 0; i < length; i++) {
+                if (amountsIn[i].compareTo(BigInteger.ZERO) > 0 && removes[i]) {
+                    SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(INVALID_COINS);
+                }
+            }
+            if (removes[tokenOutIndex]) {
+                SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[tokenOutIndex].str());
+                throw new NulsException(INVALID_COINS);
+            }
+        }
+        // end code by pierre
         BigInteger[] changeBalances = new BigInteger[length];
         BigInteger[] balances = stablePair.getBalances();
         // 把精度填充到18位

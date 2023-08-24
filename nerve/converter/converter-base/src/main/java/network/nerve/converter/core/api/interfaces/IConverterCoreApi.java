@@ -168,9 +168,13 @@ public interface IConverterCoreApi {
      */
     boolean isProtocol24();
     /**
-     * 是否支持协议25 v1.25.0
+     * 是否支持协议26 v1.26.0
      */
     boolean isProtocol26();
+    /**
+     * 是否支持协议27 v1.27.0
+     */
+    boolean isProtocol27();
 
 
     /**

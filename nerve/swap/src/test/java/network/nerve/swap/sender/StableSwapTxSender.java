@@ -51,11 +51,9 @@ public class StableSwapTxSender extends ApiTxSender {
     private static final int chainId = 9;
 
     public static void main(String[] args) throws Exception {
-        String coins = "9-446,9-455,9-459,9-460";
-        String lpName = "IOTXN";
-//        new FarmTxSender().sendUpdateTx(farmHash, BigInteger.valueOf(100000000), 0, BigInteger.ZERO, 10000, 5, 1);
+        String coins = "9-696,9-697";
+        String lpName = "nercN";
         new StableSwapTxSender().createStableSwap(coins, lpName);
-
     }
 
     private void createStableSwap(String coins, String lpName) throws Exception {

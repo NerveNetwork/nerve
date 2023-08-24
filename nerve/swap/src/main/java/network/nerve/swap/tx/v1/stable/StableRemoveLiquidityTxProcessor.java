@@ -11,6 +11,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.parse.JSONUtils;
 import network.nerve.swap.constant.SwapConstant;
 import network.nerve.swap.constant.SwapErrorCode;
 import network.nerve.swap.handler.impl.stable.StableRemoveLiquidityHandler;
@@ -19,18 +20,18 @@ import network.nerve.swap.help.IStablePair;
 import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.model.Chain;
+import network.nerve.swap.model.NerveToken;
 import network.nerve.swap.model.bo.SwapResult;
 import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
 import network.nerve.swap.model.dto.stable.StableRemoveLiquidityDTO;
+import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.model.txdata.stable.StableRemoveLiquidityData;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
 import network.nerve.swap.utils.SwapDBUtil;
 import network.nerve.swap.utils.SwapUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Niels
@@ -75,16 +76,19 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[{}][commit] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
-                // 从执行结果中提取业务数据
-                SwapResult result = swapResultMap.get(tx.getHash().toHex());
-                swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
-                if (!result.isSuccess()) {
-                    continue;
-                }
                 CoinData coinData = tx.getCoinDataInstance();
                 StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
                 String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+                //StableSwapPairPo pair = stablePair.getPair();
+                //NerveToken[] coins = pair.getCoins();
+                // 从执行结果中提取业务数据
+                SwapResult result = swapResultMap.get(tx.getHash().toHex());
+                //result.setExtend(JSONUtils.obj2json(Arrays.asList(coins).stream().map(c -> c.str()).collect(Collectors.toList())));
+                swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
+                if (!result.isSuccess()) {
+                    continue;
+                }
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
                 //logger.info("[{}]remove bus: {}", blockHeader.getHeight(), bus.toString());
                 // 更新Pair的资金池和发行总量

@@ -13,6 +13,7 @@ public class StableSwapPairPo {
     private NerveToken tokenLP;
     private NerveToken[] coins;
     private int[] decimalsOfCoins;
+    private boolean[] removes;
 
     public StableSwapPairPo(byte[] address) {
         this.address = address;
@@ -50,12 +51,21 @@ public class StableSwapPairPo {
         this.decimalsOfCoins = decimalsOfCoins;
     }
 
+    public boolean[] getRemoves() {
+        return removes;
+    }
+
+    public void setRemoves(boolean[] removes) {
+        this.removes = removes;
+    }
+
     @Override
     public StableSwapPairPo clone() {
         StableSwapPairPo po = new StableSwapPairPo(address);
         po.setTokenLP(tokenLP);
         po.setCoins(coins);
         po.setDecimalsOfCoins(decimalsOfCoins);
+        po.setRemoves(removes);
         return po;
     }
 
@@ -74,6 +84,8 @@ public class StableSwapPairPo {
         sb.append("]");
         sb.append(",\"decimalsOfCoins\":")
             .append(Arrays.toString(decimalsOfCoins));
+        sb.append(",\"removes\":")
+            .append(removes == null ? Arrays.toString(new boolean[coins.length]) : Arrays.toString(removes));
         sb.append("}");
         return sb.toString();
     }

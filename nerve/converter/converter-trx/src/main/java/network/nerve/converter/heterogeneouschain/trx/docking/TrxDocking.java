@@ -1339,8 +1339,8 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
         }
         if (estimateSun.getSunUsed() > 0) {
-            // 放大到1.3倍
-            feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_1_DOT_3).toBigInteger();
+            // 放大到3倍
+            feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_3).toBigInteger();
         }
         TrxSendTransactionPo trxSendTransactionPo = trxWalletApi.callContract(fromAddress, priKey, htgContext.MULTY_SIGN_ADDRESS(), feeLimit, txFunction, BigInteger.ZERO);
         String htTxHash = trxSendTransactionPo.getTxHash();

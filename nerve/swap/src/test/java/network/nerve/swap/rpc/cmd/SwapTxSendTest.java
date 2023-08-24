@@ -155,7 +155,7 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQgXEUeyJCtmcoJ7V5N7JSo1hcDGPeu";
+    protected String stablePairAddress = "TNVTdTSQnkZSmDoU2S3pyBnK8iRBP9KFw4pww";
 
     protected NerveToken U1D = new NerveToken(5, 3);
     protected NerveToken U2D = new NerveToken(5, 4);
@@ -205,6 +205,36 @@ public class SwapTxSendTest {
         //swap_lp_goat9usdx_bnb = this.getPairLPToken(goat9_bnb.str(), usdx_bnb.str());
         //swap_lp_nvt8safemoon9 = this.getPairLPToken(nvt.str(), safemoon9_bnb.str());
         //swap_lp_goat9safemoon9 = this.getPairLPToken(goat9_bnb.str(), safemoon9_bnb.str());
+    }
+
+    @Test
+    public void chainAssetTxRegisterTest() throws Exception {
+        //chainAssetTxRegister("U1D", 18);
+        //chainAssetTxRegister("U2D", 18);
+        //chainAssetTxRegister("U3D", 18);
+        //chainAssetTxRegister("U4D", 18);
+        chainAssetTxRegister("U7D", 18);
+    }
+
+    private void chainAssetTxRegister(String asset, int decimals) throws Exception {
+        // Build params map
+        Map<String, Object> params = new HashMap<>();
+        params.put("assetSymbol", asset);
+        params.put("assetName", asset);
+        params.put("initNumber", 100000000);
+        params.put("decimalPlace", decimals);
+        params.put("txCreatorAddress", address31);
+        params.put("assetOwnerAddress", address31);
+        params.put("password", "nuls123456");
+        Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
+        if (!response.isSuccess()) {
+            Log.error("资产[{}-{}]创建失败, error: {}", asset, decimals, JSONUtils.obj2PrettyJson(response));
+        } else {
+            Map chainAssetTxReg = (Map)((Map) response.getResponseData()).get("chainAssetTxReg");
+            String txHash = (String) chainAssetTxReg.get("txHash");
+            Log.info("资产[{}-{}]创建成功, txHash: {}", asset, decimals, txHash);
+            TimeUnit.MILLISECONDS.sleep(6000);
+        }
     }
 
     private NerveToken findAssetIdByAddress(int heterogeneousChainId, String contractAddress) throws Exception {
@@ -573,15 +603,14 @@ public class SwapTxSendTest {
         // U4D[5-5] decimals: 18, initNumber: 100000000, type: 1
         // UDN[5-6] decimals: 18, initNumber: 0, type: 10
         Map<String, Object> params = new HashMap<>();
-        params.put("coins", new String[]{"5-11","5-13","5-14"});
+        params.put("coins", new String[]{"5-17","5-22","5-18","5-23", "5-19","5-20"});
         params.put("symbol", "UDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
     }
 
     @Test
     public void stableAddressTest() {
-        // TNVTdTSQgdDqnHaDYM5M5uxiLFR4Ldn43Eqi6
-        NulsHash txHash = NulsHash.fromHex("ffcb8c0a87487f94d4f5acab5e84a4e01f2752f5fb3594f6e3242e7e22a00f4f");
+        NulsHash txHash = NulsHash.fromHex("c3f6fbe46454d4b8c3a7b2c3d8e197f01bc17010ed223438c20eec217505ecfa");
         byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         System.out.println(stablePairAddress);
@@ -600,12 +629,15 @@ public class SwapTxSendTest {
     @Test
     public void stableSwapAddLiquidity() throws Exception {
         String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
-        String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
-        String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
+        String amount2 = new BigDecimal("600").scaleByPowerOfTen(6).toPlainString();
+        String amount3 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
+        String amount4 = new BigDecimal("800").scaleByPowerOfTen(8).toPlainString();
+        String amount5 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
+        String amount6 = new BigDecimal("800").scaleByPowerOfTen(18).toPlainString();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amounts", new String[]{amount1, amount2, amount3});
-        params.put("tokens", new String[]{"5-11", new NerveToken(5, 13).str(), new NerveToken(5, 14).str()});
+        params.put("amounts", new String[]{amount1, amount2, amount3, amount4, amount5, amount6});
+        params.put("tokens", new String[]{"5-17", "5-22", "5-18", "5-23", "5-19", "5-20"});
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address22);
@@ -657,13 +689,13 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountLP", "700000000000000000000");
-        params.put("tokenLPStr", stable_swap_lp.str());
-        params.put("receiveOrderIndexs", new int[]{0, 2, 3, 1});
+        params.put("amountLP", "23000000000000000000");
+        params.put("tokenLPStr", "5-26");
+        params.put("receiveOrderIndexs", new int[]{3});
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address32);
-        this.sendTx(address32, STABLE_SWAP_REMOVE_LIQUIDITY, params);
+        this.sendTx(address22, STABLE_SWAP_REMOVE_LIQUIDITY, params);
     }
 
     @Parameters(value = {
@@ -687,9 +719,9 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountsIn", new String[]{new BigDecimal("251").movePointRight(18).toPlainString()});
-        params.put("tokensIn", new String[]{"5-15"});
-        params.put("tokenOutIndex", 2);
+        params.put("amountsIn", new String[]{new BigDecimal("23").movePointRight(8).toPlainString()});
+        params.put("tokensIn", new String[]{"5-22"});
+        params.put("tokenOutIndex", 3);
         //params.put("feeTo", address51);
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
@@ -716,7 +748,7 @@ public class SwapTxSendTest {
 
     @Test
     public void getResult() throws Exception {
-        String hash = "f22cc7b28acdb43ba66e262c09dd08d5eb6fb8443a2660d23c7b0941a620fdf2";
+        String hash = "83bc90744fa72c7748c3cdec94353b8221a6e9d6c63376d1c013136fdd91e3ea";
         Map map = this.getSwapResultInfo(hash);
         System.out.println(JSONUtils.obj2PrettyJson(map));
         System.out.println();
@@ -893,11 +925,34 @@ public class SwapTxSendTest {
         params.put(Constants.CHAIN_ID, chainId);
 
         params.put("type", (byte) 9);// ProposalTypeEnum.ADDCOIN
-        params.put("content", "5-15");
+        params.put("content", "5-27");
         params.put("businessAddress", stablePairAddress);// stablePairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
         params.put("remark", "稳定币增加币种测试");
-        params.put("address", "TNVTdTSPLEqKWrM7sXUciM2XbYPoo3xDdMtPd");
+        params.put("address", "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV");
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+    @Test
+    public void proposalRemoveCoin() throws Exception {
+        //账户已存在则覆盖 If the account exists, it covers.
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", (byte) 12);// ProposalTypeEnum.REMOVECOIN
+        params.put("content", "5-23");
+        params.put("businessAddress", stablePairAddress);// stablePairAddress
+        params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
+        params.put("remark", "稳定币移除币种测试");
+        params.put("address", "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV");
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
@@ -938,7 +993,6 @@ public class SwapTxSendTest {
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
 
-        stablePairAddress = "TNVTdTSQhjApa89MuogupqdskeZ3Bkaxh3ruR";
         params.put("type", (byte) 10);// ProposalTypeEnum.ADD_STABLE_FOR_SWAP_TRADE
         params.put("businessAddress", stablePairAddress);// stablePairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
@@ -1011,9 +1065,9 @@ public class SwapTxSendTest {
         getBalanceByAddress("address31-用户地址", address31);
         //getBalanceByAddress("address32-接收地址", address32);
         //getBalanceByAddress("Swap-pair地址", SwapUtils.getStringPairAddress(chainId, dxa8_bnb, usdx_bnb));
-        getBalanceByAddress("Stable-Swap-pair地址", stablePairAddress);
+        //getBalanceByAddress("Stable-Swap-pair地址", stablePairAddress);
         //getBalanceByAddress("接收手续费的系统地址", awardFeeSystemAddress);
-        getBalanceByAddress("address51-接收手续费的交易指定地址", address51);
+        //getBalanceByAddress("address51-接收手续费的交易指定地址", address51);
     }
 
     protected void getBalanceByAddress(String address) throws Exception {
@@ -1037,11 +1091,13 @@ public class SwapTxSendTest {
         //this.balanceInfoPrint("HT-资产HUSD", husd_18, address);
         //this.balanceInfoPrint("OKT-资产OKUSD", okusd_8, address);
 
-        this.balanceInfoPrint("U1D资产", U1D, address);
-        this.balanceInfoPrint("U2D资产", U2D, address);
-        this.balanceInfoPrint("U3D资产", U3D, address);
-        this.balanceInfoPrint("U4D资产", U4D, address);
-        this.balanceInfoPrint("Stable-LP资产", stable_swap_lp, address);
+        this.balanceInfoPrint("U1D资产", new NerveToken(5, 17), address);
+        this.balanceInfoPrint("U2D资产", new NerveToken(5, 18), address);
+        this.balanceInfoPrint("U3D资产", new NerveToken(5, 19), address);
+        this.balanceInfoPrint("U4D资产", new NerveToken(5, 20), address);
+        this.balanceInfoPrint("U5D资产", new NerveToken(5, 22), address);
+        this.balanceInfoPrint("U6D资产", new NerveToken(5, 23), address);
+        this.balanceInfoPrint("Stable-LP资产", new NerveToken(5, 21), address);
 
         //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
         //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);

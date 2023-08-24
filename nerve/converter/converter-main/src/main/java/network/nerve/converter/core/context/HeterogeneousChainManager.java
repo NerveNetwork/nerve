@@ -223,6 +223,8 @@ public class HeterogeneousChainManager {
             logger().info("完成初始化异构链主资产到账本");
         } catch (Exception e) {
             throw new RuntimeException(e);
+            //TODO pierre test
+            //e.printStackTrace();
         }
     }
 }

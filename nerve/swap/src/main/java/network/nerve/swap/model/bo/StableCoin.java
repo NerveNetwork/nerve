@@ -26,6 +26,7 @@ package network.nerve.swap.model.bo;
 import network.nerve.swap.model.NerveToken;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import static io.protostuff.ByteString.EMPTY_STRING;
@@ -37,9 +38,9 @@ import static io.protostuff.ByteString.EMPTY_STRING;
 public class StableCoin {
 
     private String address;
-    private Set<NerveToken> groupCoin;
+    private Map<NerveToken, Boolean> groupCoin;
 
-    public StableCoin(String address, Set<NerveToken> groupCoin) {
+    public StableCoin(String address, Map<NerveToken, Boolean> groupCoin) {
         this.address = address;
         this.groupCoin = groupCoin;
     }
@@ -48,16 +49,20 @@ public class StableCoin {
         return address;
     }
 
-    public Set<NerveToken> getGroupCoin() {
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public Map<NerveToken, Boolean> getGroupCoin() {
         return groupCoin;
     }
 
-    public void setGroupCoin(Set<NerveToken> groupCoin) {
+    public void setGroupCoin(Map<NerveToken, Boolean> groupCoin) {
         this.groupCoin = groupCoin;
     }
 
     public void clear() {
         this.address = EMPTY_STRING;
-        this.groupCoin = Collections.EMPTY_SET;
+        this.groupCoin = Collections.EMPTY_MAP;
     }
 }

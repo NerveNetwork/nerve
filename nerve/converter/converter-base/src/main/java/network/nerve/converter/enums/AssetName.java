@@ -57,7 +57,11 @@ public enum AssetName {
     ZK(123, 18),
     EOS(124, 18),
     ZKPOLYGON(125, 18),
-    LINEA(126, 18);
+    LINEA(126, 18),
+    CELO(127, 18),
+    ETC(128, 18),
+    BASE(129, 18),
+    SCROLL(130, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

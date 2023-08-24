@@ -208,6 +208,13 @@ public class ExeProposalProcessTask implements Runnable {
                                 ProposalTypeEnum.ADDCOIN,
                                 proposalPO.getHash().toHex());
                         break;
+                    case REMOVECOIN:
+                        // swap模块 稳定币兑换交易对 - 移除币种
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                                ProposalTypeEnum.REMOVECOIN,
+                                proposalPO.getHash().toHex());
+                        break;
                     case MANAGE_STABLE_PAIR_FOR_SWAP_TRADE:
                         // swap模块 管理稳定币交易对-用于Swap交易
                         publishProposalConfirmed(proposalPO, pendingPO);

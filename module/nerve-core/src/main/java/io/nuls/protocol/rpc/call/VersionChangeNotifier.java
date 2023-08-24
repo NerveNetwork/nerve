@@ -27,13 +27,6 @@ public class VersionChangeNotifier {
         long begin = System.nanoTime();
         List<String> noticedModule = new ArrayList<>();
         noticedModule.add(ModuleE.NC.abbr);
-        if (ModuleHelper.isSupportSmartContract()) {
-            noticedModule.add(ModuleE.SC.abbr);
-        }
-        if (ModuleHelper.isSupportCrossChain()) {
-            //noticedModule.add(ModuleE.CC.abbr);
-            noticedModule.add(ModuleE.CM.abbr);
-        }
         for (String module : noticedModule) {
             long l = System.nanoTime();
             Map<String, Object> params = new HashMap<>(4);

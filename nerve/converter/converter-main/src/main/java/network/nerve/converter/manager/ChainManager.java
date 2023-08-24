@@ -120,6 +120,8 @@ public class ChainManager {
             ProtocolLoader.load(chainId);
             if(chainId == converterConfig.getChainId()) {
                 converterCoreApi.setNerveChain(chain);
+                //TODO pierre test
+                //converterCoreApi.setCurrentHeterogeneousVersionII();
             }
         }
     }

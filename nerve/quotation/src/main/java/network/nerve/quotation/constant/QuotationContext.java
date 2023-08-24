@@ -79,6 +79,7 @@ public class QuotationContext {
     public static long protocol22Height = 0L;
     public static long protocol24Height = 0L;
     public static long protocol26Height = 0L;
+    public static long protocol27Height = 0L;
 
     /**
      * 日志实例

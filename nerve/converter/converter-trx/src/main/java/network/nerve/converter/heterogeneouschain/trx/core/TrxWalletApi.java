@@ -13,6 +13,7 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.core.ExceptionFunction;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.utils.HttpClientUtil;
@@ -154,6 +155,9 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     if (StringUtils.isBlank(apiUrl)) {
                         break;
                     }
+                    getLog().info("检查到需更改RPC服务 {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    TX_CACHE.invalidateAll();
+                    TX_RECEIPT_CACHE.invalidateAll();
                     this.changeApi(apiUrl);
                     this.rpcVersion = _version.intValue();
                     urlFromThirdPartyForce = true;
@@ -326,6 +330,11 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             getLog().warn("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
             return null;
         }
+    }
+
+    public void refreshCache(String txHash) {
+        TX_CACHE.refresh(new TxKey(txHash, this));
+        TX_RECEIPT_CACHE.refresh(new TxKey(txHash, this));
     }
 
     private Response.TransactionInfo getTransactionReceiptReal(String txHash) throws Exception {
@@ -581,11 +590,11 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                 signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signData))).build();
             } else {
                 signedTxn = wrapper.signTransaction(txn, new KeyPair(_privateKey));
-                Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
-                if (!ret.getResult()) {
-                    getLog().error("[{}]调用合约交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
-                    return null;
-                }
+            }
+            Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
+            if (!ret.getResult()) {
+                getLog().error("[{}]调用合约交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
+                return null;
             }
 
             return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), _from, _contractAddress, _value, _encodedFunction, _feeLimit);

@@ -62,9 +62,9 @@ public class StableCoinGroup {
         this.swapConfig = swapConfig;
     }
 
-    public void add(String stablePairAddress, NerveToken[] coins) {
+    public void add(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
         loadCache();
-        this._add(stablePairAddress, coins);
+        this._add(stablePairAddress, coins, removes);
         this.addressList.add(stablePairAddress);
     }
 
@@ -81,10 +81,10 @@ public class StableCoinGroup {
     public int groupIndex(NerveToken token1, NerveToken token2) {
         loadCache();
         int index = 0;
-        Set<NerveToken> groupCoin;
+        Map<NerveToken, Boolean> groupCoin;
         for (StableCoin group : groupList) {
             groupCoin = group.getGroupCoin();
-            if (groupCoin.contains(token1) && groupCoin.contains(token2)) {
+            if (groupCoin.containsKey(token1) && groupCoin.containsKey(token2)) {
                 return index;
             }
             index++;
@@ -103,15 +103,19 @@ public class StableCoinGroup {
         return address;
     }
 
-    public void updateStableCoin(String stablePairAddress, NerveToken[] coins) {
+    public void updateStableCoin(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
         loadCache();
         Integer index = stableIndexMap.get(stablePairAddress);
         if (index == null)
             return;
         StableCoin stableCoin = groupList.get(index);
-        Set<NerveToken> stableCoinGroup = new HashSet<>();
-        for (NerveToken coin : coins) {
-            stableCoinGroup.add(coin);
+        if (removes == null) {
+            removes = new boolean[coins.length];
+        }
+        Map<NerveToken, Boolean> stableCoinGroup = new HashMap<>();
+        for (int i = 0; i < coins.length; i++) {
+            NerveToken coin = coins[i];
+            stableCoinGroup.put(coin, removes[i]);
         }
         stableCoin.setGroupCoin(stableCoinGroup);
     }
@@ -121,13 +125,17 @@ public class StableCoinGroup {
         return groupList;
     }
 
-    private void _add(String stablePairAddress, NerveToken[] coins) {
+    private void _add(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
         if (stableIndexMap.containsKey(stablePairAddress)) {
             return;
         }
-        Set<NerveToken> stableCoinGroup = new HashSet<>();
-        for (NerveToken coin : coins) {
-            stableCoinGroup.add(coin);
+        if (removes == null) {
+            removes = new boolean[coins.length];
+        }
+        Map<NerveToken, Boolean> stableCoinGroup = new HashMap<>();
+        for (int i = 0; i < coins.length; i++) {
+            NerveToken coin = coins[i];
+            stableCoinGroup.put(coin, removes[i]);
         }
         groupList.add(new StableCoin(stablePairAddress, stableCoinGroup));
         stableIndexMap.put(stablePairAddress, stableIndex++);
@@ -150,7 +158,7 @@ public class StableCoinGroup {
                             cacheCompleted = false;
                             continue;
                         }
-                        this._add(stable, dto.getPo().getCoins());
+                        this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves());
                         swapStablePairStorageService.savePairForSwapTrade(stable);
                     }
                     if (cacheCompleted) {
@@ -176,7 +184,7 @@ public class StableCoinGroup {
             if (dto == null) {
                 continue;
             }
-            this._add(stable, dto.getPo().getCoins());
+            this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves());
         }
     }
 }

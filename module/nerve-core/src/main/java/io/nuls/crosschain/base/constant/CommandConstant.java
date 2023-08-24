@@ -58,4 +58,5 @@ public interface CommandConstant {
      * */
     String  CIRCULATION_MESSAGE = "recvCirculat";
 
+    String CROSS_TX_REHANDLE_MESSAGE = "ctxRehandle";
 }

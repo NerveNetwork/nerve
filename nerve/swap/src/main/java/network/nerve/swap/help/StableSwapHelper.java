@@ -83,6 +83,44 @@ public class StableSwapHelper {
         return true;
     }
 
+    public boolean isLegalCoinForRemoveStable(int chainId, String stablePairAddress, int assetChainId, int assetId) throws NulsException {
+        SwapContext.logger.debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
+        LedgerAssetDTO asset = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
+        if (asset == null) {
+            SwapContext.logger.error("资产不存在. {}-{}-{}", chainId, assetChainId, assetId);
+            return false;
+        }
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            SwapContext.logger.error("交易对不存在. {}", stablePairAddress);
+            return false;
+        }
+        // 检查移除资产逻辑，存在于池中，并且资产数量为0
+        boolean isExist = false;
+        NerveToken[] coins = pairPo.getCoins();
+        NerveToken coin;
+        int index = 0;
+        for (int i = 0, len = coins.length; i < len; i++) {
+            coin = coins[i];
+            if (coin.getChainId() == assetChainId && coin.getAssetId() == assetId) {
+                isExist = true;
+                index = i;
+                break;
+            }
+        }
+        if (!isExist) {
+            SwapContext.logger.error("资产不存在于交易对中. {}-{}-{}, stablePairAddress: {}", chainId, assetChainId, assetId, stablePairAddress);
+            return false;
+        }
+        StableSwapPairBalancesPo pairBalances = swapStablePairBalancesStorageService.getPairBalances(stablePairAddress);
+        BigInteger[] balances = pairBalances.getBalances();
+        if (balances[index].compareTo(BigInteger.ZERO) > 0) {
+            SwapContext.logger.error("交易对中此资产金额不为0. amount: {}, stablePairAddress: {}", balances[index], stablePairAddress);
+            return false;
+        }
+        return true;
+    }
+
     public boolean isLegalStable(int chainId, String stablePairAddress) throws NulsException {
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
@@ -108,6 +146,14 @@ public class StableSwapHelper {
         int[] newDecimalsOfCoins = Arrays.copyOf(pairPo.getDecimalsOfCoins(), length + 1);
         newDecimalsOfCoins[length] = newAsset.getDecimalPlace();
         pairPo.setDecimalsOfCoins(newDecimalsOfCoins);
+        boolean[] removes = pairPo.getRemoves();
+        if (removes == null) {
+            removes = new boolean[length + 1];
+        } else {
+            removes = Arrays.copyOf(removes, length + 1);
+        }
+        removes[length] = false;
+        pairPo.setRemoves(removes);
         swapStablePairStorageService.savePair(address, pairPo);
 
         StableSwapPairBalancesPo pairBalancesPo = swapStablePairBalancesStorageService.getPairBalances(stablePairAddress);
@@ -119,7 +165,92 @@ public class StableSwapHelper {
 
         // 更新缓存
         stableSwapPairCache.reload(stablePairAddress);
-        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, removes);
+        SwapContext.logger.info("[Commit AddCoinForStable] stablePairAddress: {}, new coin: {}", stablePairAddress, newCoin.str());
+        return true;
+    }
+
+    /**
+     * 设置移除状态
+     */
+    public boolean removeCoinForStableV2(int chainId, String stablePairAddress, int assetChainId, int assetId, String status) throws Exception {
+        byte[] address = AddressTool.getAddress(stablePairAddress);
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            return false;
+        }
+        // 移除多链路由池的币种
+        NerveToken removeCoin = new NerveToken(assetChainId, assetId);
+        NerveToken[] coins = pairPo.getCoins();
+        int length = coins.length;
+        boolean[] removes = pairPo.getRemoves();
+        if (removes == null) {
+            removes = new boolean[length];
+        }
+
+        int removeIndex = Integer.MAX_VALUE;
+        for (int i = 0; i < length; i++) {
+            if (coins[i].equals(removeCoin)) {
+                removeIndex = i;
+                break;
+            }
+        }
+        if ("recovery".equalsIgnoreCase(status)) {
+            removes[removeIndex] = false;
+        } else {
+            removes[removeIndex] = true;
+        }
+        pairPo.setRemoves(removes);
+        swapStablePairStorageService.savePair(address, pairPo);
+        // 更新缓存
+        stableSwapPairCache.reload(stablePairAddress);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, coins, removes);
+        SwapContext.logger.info("[Commit [{}]CoinForStable] stablePairAddress: {}, {} coin: {}", status, stablePairAddress, status, removeCoin.str());
+        return true;
+    }
+
+    /**
+     * 数组缩短，index被改变，造成未知影响，弃用，保留代码
+     */
+    private boolean removeCoinForStableV1(int chainId, String stablePairAddress, int assetChainId, int assetId) throws Exception {
+        byte[] address = AddressTool.getAddress(stablePairAddress);
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            return false;
+        }
+        // 移除多链路由池的币种
+        NerveToken removeCoin = new NerveToken(assetChainId, assetId);
+        NerveToken[] coins = pairPo.getCoins();
+        int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
+        StableSwapPairBalancesPo pairBalancesPo = swapStablePairBalancesStorageService.getPairBalances(stablePairAddress);
+        BigInteger[] balances = pairBalancesPo.getBalances();
+
+        int length = coins.length;
+        NerveToken[] newCoins = new NerveToken[length - 1];
+        int[] newDecimalsOfCoins = new int[length - 1];
+        BigInteger[] newBalances = new BigInteger[length - 1];
+        int newIndex = 0;
+        NerveToken coin;
+        for (int i = 0; i < length; i++) {
+            coin = coins[i];
+            if (coin.equals(removeCoin)) {
+                continue;
+            }
+            newCoins[newIndex] = coin;
+            newDecimalsOfCoins[newIndex] = decimalsOfCoins[i];
+            newBalances[newIndex] = balances[i];
+            newIndex++;
+        }
+        pairPo.setCoins(newCoins);
+        pairPo.setDecimalsOfCoins(newDecimalsOfCoins);
+        pairBalancesPo.setBalances(newBalances);
+        swapStablePairStorageService.savePair(address, pairPo);
+        swapStablePairBalancesStorageService.savePairBalances(stablePairAddress, pairBalancesPo);
+
+        // 更新缓存
+        stableSwapPairCache.reload(stablePairAddress);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, null);
+        SwapContext.logger.info("[Commit RemoveCoinForStable] stablePairAddress: {}, remove coin: {}", stablePairAddress, removeCoin.str());
         return true;
     }
 
@@ -132,7 +263,7 @@ public class StableSwapHelper {
             return false;
         }
         NerveToken[] coins = pairPo.getCoins();
-        SwapContext.stableCoinGroup.add(stablePairAddress, coins);
+        SwapContext.stableCoinGroup.add(stablePairAddress, coins, pairPo.getRemoves());
         return true;
     }
 

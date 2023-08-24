@@ -209,6 +209,33 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
+    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_REMOVE_STABLE, version = 1.0, description = "检查在稳定币兑换池中移除的币种是否合法")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response checkLegalCoinForRemoveStable(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            Integer assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            logger().debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
+            boolean legalCoin = stableSwapHelper.isLegalCoinForRemoveStable(chainId, stablePairAddress, assetChainId, assetId);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
     @CmdAnnotation(cmd = IS_LEGAL_STABLE, version = 1.0, description = "检查稳定币交易对是否合法")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
@@ -274,6 +301,34 @@ public class SwapCmd extends BaseCmd {
             Integer assetChainId = Integer.parseInt(params.get("assetChainId").toString());
             Integer assetId = Integer.parseInt(params.get("assetId").toString());
             boolean legalCoin = stableSwapHelper.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = REMOVE_COIN_FOR_STABLE, version = 1.0, description = "在稳定币兑换池中移除币种")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
+            @Parameter(parameterName = "status", parameterType = "String", parameterDes = "移除/恢复"),
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    }))
+    public Response removeCoinForStable(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            Integer assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            String status = (String) params.get("status");
+            boolean legalCoin = stableSwapHelper.removeCoinForStableV2(chainId, stablePairAddress, assetChainId, assetId, status);
             Map<String, Object> resultData = new HashMap<>();
             resultData.put("value", legalCoin);
             return success(resultData);
@@ -1032,7 +1087,7 @@ public class SwapCmd extends BaseCmd {
                 } else if (chainId == 9 && SwapConstant.UNAVAILABLE_STABLE_PAIR.equalsIgnoreCase(stableAddress)) {
                     continue;
                 }
-                resultList.add(new StableCoinVo(stableAddress, stableSwapPairCache.get(stableAddress).getPo().getTokenLP(), dto.getPo().getCoins()));
+                resultList.add(new StableCoinVo(stableAddress, stableSwapPairCache.get(stableAddress).getPo().getTokenLP(), dto.getPo().getCoins(), dto.getPo().getRemoves()));
             }
             return success(resultList);
         } catch (Exception e) {

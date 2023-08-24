@@ -55,7 +55,9 @@ public enum ProposalTypeEnum {
 
     MANAGE_STABLE_PAIR_FOR_SWAP_TRADE((byte) 10),
 
-    MANAGE_SWAP_PAIR_FEE_RATE((byte) 11);
+    MANAGE_SWAP_PAIR_FEE_RATE((byte) 11),
+
+    REMOVECOIN((byte) 12);
 
     private byte value;
     private static Map<Byte, ProposalTypeEnum> map;

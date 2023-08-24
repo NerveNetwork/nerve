@@ -95,6 +95,10 @@ public class QuotationCall {
             return new BigDecimal("0.1993");
         } else if ("EOS_PRICE".equals(oracleKey)){
             return new BigDecimal("0.7366");
+        } else if ("CELO_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.5106");
+        } else if ("ETC_PRICE".equals(oracleKey)){
+            return new BigDecimal("18.0031");
         }*/
         /************************************************/
         try {

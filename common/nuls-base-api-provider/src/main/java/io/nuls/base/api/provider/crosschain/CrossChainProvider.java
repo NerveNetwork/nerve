@@ -28,4 +28,11 @@ public interface CrossChainProvider {
     Result<Integer> getCrossTxState(GetCrossTxStateReq req);
 
     Result<List> getRegisteredChainInfoList();
+
+    /**
+     * 给全网发信号，对指定跨链交易重新进行拜赞庭验证
+     * @param req
+     * @return
+     */
+    Result<String> rehandleCtx(RehandleCtxReq req);
 }

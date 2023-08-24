@@ -161,7 +161,9 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
 
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
-        if (converterCoreApi.isProtocol24()) {
+        if (converterCoreApi.isProtocol27()) {
+            return commitProtocol27(chainId, txs, blockHeader, syncStatus, true);
+        } else if (converterCoreApi.isProtocol24()) {
             return commitProtocol24(chainId, txs, blockHeader, syncStatus, true);
         } else if (converterCoreApi.isProtocol16()) {
             return commitProtocol16(chainId, txs, blockHeader, syncStatus, true);
@@ -173,7 +175,9 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
 
     @Override
     public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
-        if (converterCoreApi.isProtocol24()) {
+        if (converterCoreApi.isProtocol27()) {
+            return rollbackProtocol27(chainId, txs, blockHeader, true);
+        } else if (converterCoreApi.isProtocol24()) {
             return rollbackProtocol24(chainId, txs, blockHeader, true);
         } else if (converterCoreApi.isProtocol16()) {
             return rollbackProtocol16(chainId, txs, blockHeader, true);
@@ -222,7 +226,7 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         int assetChainId = Integer.parseInt(split[0].trim());
                         int assetId = Integer.parseInt(split[1].trim());
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
-                        SwapCall.addCoinForAddStable(chainId, stablePairAddress, assetChainId, assetId);
+                        SwapCall.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
                     }
                 }
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
@@ -370,7 +374,7 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         int assetChainId = Integer.parseInt(split[0].trim());
                         int assetId = Integer.parseInt(split[1].trim());
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
-                        SwapCall.addCoinForAddStable(chainId, stablePairAddress, assetChainId, assetId);
+                        SwapCall.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
                     } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE) {
                         // 执行管理稳定币交易对-用于Swap交易
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
@@ -466,7 +470,119 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         int assetChainId = Integer.parseInt(split[0].trim());
                         int assetId = Integer.parseInt(split[1].trim());
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
-                        SwapCall.addCoinForAddStable(chainId, stablePairAddress, assetChainId, assetId);
+                        SwapCall.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE) {
+                        // 执行管理稳定币交易对-用于Swap交易
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        if ("REMOVE".equals(po.getContent())) {
+                            SwapCall.removeStablePairForSwapTrade(chainId, stablePairAddress);
+                        } else {
+                            SwapCall.addStablePairForSwapTrade(chainId, stablePairAddress);
+                        }
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE) {
+                        // SWAP交易对手续费定制
+                        Integer feeRate = Integer.parseInt(po.getContent());
+                        String swapPairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.updateSwapPairFeeRate(chainId, swapPairAddress, feeRate);
+                    }
+                }
+                if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
+                    if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
+                            txData.getType() == ProposalTypeEnum.EXPELLED.value() ||
+                            txData.getType() == ProposalTypeEnum.REFUND.value() ||
+                            txData.getType() == ProposalTypeEnum.WITHDRAW.value()) {
+                        if (null == docking) {
+                            docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+                        }
+                        docking.txConfirmedCompleted(heterogeneousTxHash, blockHeader.getHeight(), proposalHash.toHex());
+
+                        // 补贴手续费
+                        if (txData.getType() == ProposalTypeEnum.UPGRADE.value() ||
+                                txData.getType() == ProposalTypeEnum.REFUND.value() ) {
+                            //放入后续处理队列, 可能发起手续费补贴交易
+                            TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
+                            pendingPO.setTx(tx);
+                            pendingPO.setBlockHeader(blockHeader);
+                            pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
+                            txSubsequentProcessStorageService.save(chain, pendingPO);
+                            chain.getPendingTxQueue().offer(pendingPO);
+                        }
+                    }
+                }
+                boolean rs = proposalExeStorageService.save(chain, proposalHash.toHex(), tx.getHash().toHex());
+                if (!rs) {
+                    chain.getLogger().error("[commit] 确认提案执行交易 保存失败 hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
+                    throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
+                }
+                chain.getLogger().info("[commit] 确认提案执行交易 hash:{} proposalType:{}",
+                        tx.getHash().toHex(), ProposalTypeEnum.getEnum(txData.getType()));
+            }
+            return true;
+        } catch (Exception e) {
+            chain.getLogger().error(e);
+            if (failRollback) {
+                rollbackProtocol16(chainId, txs, blockHeader, false);
+            }
+            return false;
+        }
+    }
+
+    private boolean commitProtocol27(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus, boolean failRollback) {
+        if (txs.isEmpty()) {
+            return true;
+        }
+        Chain chain = chainManager.getChain(chainId);
+        try {
+            boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
+            for (Transaction tx : txs) {
+                ConfirmProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmProposalTxData.class);
+                int heterogeneousChainId;
+                String heterogeneousTxHash;
+                IHeterogeneousChainDocking docking = null;
+                NulsHash proposalHash;
+                if (txData.getType() == ProposalTypeEnum.UPGRADE.value()) {
+                    ConfirmUpgradeTxData upgradeTxData = ConverterUtil.getInstance(txData.getBusinessData(), ConfirmUpgradeTxData.class);
+                    heterogeneousChainId = upgradeTxData.getHeterogeneousChainId();
+                    heterogeneousTxHash = upgradeTxData.getHeterogeneousTxHash();
+                    proposalHash = upgradeTxData.getNerveTxHash();
+                    // 更新合约版本号
+                    ProposalPO po = this.proposalStorageService.find(chain, proposalHash);
+                    String[] split = po.getContent().split("-");
+                    byte newVersion = Integer.valueOf(split[1].trim()).byteValue();
+                    docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
+                    // 兼容非以太系地址 update by pierre at 2021/11/16
+                    String newMultySignAddress = docking.getAddressString(upgradeTxData.getAddress());
+                    // 通知异构链更新多签合约
+                    docking.updateMultySignAddressProtocol16(newMultySignAddress, newVersion);
+                    // 持久化更新多签合约
+                    heterogeneousChainManager.updateMultySignAddress(heterogeneousChainId, newMultySignAddress);
+                }else{
+                    ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
+                    heterogeneousChainId = businessData.getHeterogeneousChainId();
+                    heterogeneousTxHash = businessData.getHeterogeneousTxHash();
+                    proposalHash = businessData.getProposalTxHash();
+                    ProposalPO po = this.proposalStorageService.find(chain, proposalHash);
+                    if(ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED){
+                        // 重置执行撤银行节点提案标志
+                        heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.ADDCOIN) {
+                        // 执行币种添加到稳定币兑换交易对里
+                        String[] split = po.getContent().split("-");
+                        int assetChainId = Integer.parseInt(split[0].trim());
+                        int assetId = Integer.parseInt(split[1].trim());
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.addCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
+                    }  else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.REMOVECOIN) {
+                        // 执行币种移除稳定币兑换交易对
+                        String[] split = po.getContent().split("-");
+                        int assetChainId = Integer.parseInt(split[0].trim());
+                        int assetId = Integer.parseInt(split[1].trim());
+                        String status = "REMOVE";
+                        if (split.length > 2 && "recovery".equalsIgnoreCase(split[2])) {
+                            status = "RECOVERY";
+                        }
+                        String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
+                        SwapCall.removeCoinForStable(chainId, stablePairAddress, assetChainId, assetId, status);
                     } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE) {
                         // 执行管理稳定币交易对-用于Swap交易
                         String stablePairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
@@ -596,6 +712,10 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
     }
 
     private boolean rollbackProtocol24(int chainId, List<Transaction> txs, BlockHeader blockHeader, boolean failCommit) {
+        return true;
+    }
+
+    private boolean rollbackProtocol27(int chainId, List<Transaction> txs, BlockHeader blockHeader, boolean failCommit) {
         return true;
     }
 }

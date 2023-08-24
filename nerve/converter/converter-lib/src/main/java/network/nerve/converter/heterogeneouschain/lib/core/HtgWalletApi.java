@@ -161,6 +161,8 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                         break;
                     }
                     getLog().info("检查到需更改RPC服务 {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    TX_CACHE.invalidateAll();
+                    TX_RECEIPT_CACHE.invalidateAll();
                     this.changeApi(apiUrl);
                     this.rpcVersion = _version.intValue();
                     this.urlFromThirdPartyForce = true;
@@ -651,6 +653,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             htgContext.logger().warn("[{}] Transaction Receipt[{}] Cache error: {}", htgContext.getConfig().getSymbol(), txHash, e.getMessage());
             return null;
         }
+    }
+
+    public void refreshCache(String txHash) {
+        TX_CACHE.refresh(new TxKey(txHash, this));
+        TX_RECEIPT_CACHE.refresh(new TxKey(txHash, this));
     }
 
     private TransactionReceipt getTxReceiptReal(String txHash) throws Exception {

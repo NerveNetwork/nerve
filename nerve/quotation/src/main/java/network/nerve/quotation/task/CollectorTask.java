@@ -222,6 +222,13 @@ public class CollectorTask implements Runnable {
                         }
                     }
 
+                    if (ANCHOR_TOKEN_CELO.equals(anchorToken)
+                            || ANCHOR_TOKEN_ETC.equals(anchorToken)) {
+                        if (blockHeight < protocol27Height) {
+                            continue;
+                        }
+                    }
+
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
                 }

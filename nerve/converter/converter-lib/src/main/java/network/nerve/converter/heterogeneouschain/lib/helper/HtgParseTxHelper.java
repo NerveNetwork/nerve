@@ -232,6 +232,7 @@ public class HtgParseTxHelper implements BeanInitial {
             logger.error("解析充值交易错误, 区块高度解析失败, 交易hash: {}, BlockNumberRaw: {}, BlockHash: {}", txHash, tx.getBlockNumberRaw(), tx.getBlockHash());
             TransactionReceipt txReceipt = null;
             try {
+                htgWalletApi.refreshCache(txHash);
                 txReceipt = htgWalletApi.getTxReceipt(txHash);
                 return txReceipt.getBlockNumber();
             } catch (Exception ex) {

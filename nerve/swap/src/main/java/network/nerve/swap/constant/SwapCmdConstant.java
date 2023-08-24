@@ -34,9 +34,11 @@ public interface SwapCmdConstant {
     String SWAP_RESULT_INFO = "sw_swap_result_info";
 
     String IS_LEGAL_COIN_FOR_ADD_STABLE = "sw_is_legal_coin_for_add_stable";
+    String IS_LEGAL_COIN_FOR_REMOVE_STABLE = "sw_is_legal_coin_for_remove_stable";
     String IS_LEGAL_STABLE = "sw_is_legal_stable";
     String IS_LEGAL_SWAP_FEE_RATE = "sw_is_legal_swap_fee_rate";
     String ADD_COIN_FOR_STABLE = "sw_add_coin_for_stable";
+    String REMOVE_COIN_FOR_STABLE = "sw_remove_coin_for_stable";
     String UPDATE_SWAP_PAIR_FEE_RATE = "sw_update_swap_pair_fee_rate";
     String ADD_STABLE_FOR_SWAP_TRADE = "sw_add_stable_for_swap_trade";
     String REMOVE_STABLE_FOR_SWAP_TRADE = "sw_remove_stable_for_swap_trade";

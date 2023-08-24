@@ -43,6 +43,10 @@
         <module>converter-eos</module>
         <module>converter-zkpolygon</module>
         <module>converter-linea</module>
+        <module>converter-celo</module>
+        <module>converter-etc</module>
+        <module>converter-basechain</module>
+        <module>converter-scroll</module>
 
     </modules>
 

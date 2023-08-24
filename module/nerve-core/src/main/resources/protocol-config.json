@@ -308,6 +308,11 @@
         "name": "io.nuls.block.message.TxGroupMessage",
         "protocolCmd": "txs",
         "handlers": "TxGroupHandlerV1"
+      },
+      {
+        "name": "io.nuls.crosschain.base.message.CrossTxRehandleMessage",
+        "protocolCmd": "ctxRehandle",
+        "handlers": "CrossTxRehandleMsgHandlerV1"
       }
     ],
     "invalidTxs": "",
