@@ -126,7 +126,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             NerveToken[] coins = pairPo.getCoins();
 
             // 整合计算数据
-            StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
+            StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
             //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
             // 装填执行结果
             result.setTxType(txType());
@@ -209,7 +209,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             NerveToken[] coins = pairPo.getCoins();
 
             // 整合计算数据
-            StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
+            StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
             //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
             // 装填执行结果
             result.setTxType(txType());

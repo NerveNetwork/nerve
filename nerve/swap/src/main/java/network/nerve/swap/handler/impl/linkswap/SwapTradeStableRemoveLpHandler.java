@@ -175,7 +175,7 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             List<TradePairBus> pairBuses = swapTradeBus.getTradePairBuses();
             TradePairBus lastPairBus = pairBuses.get(pairBuses.size() - 1);
             BigInteger liquidity = lastPairBus.getAmountOut();// 销毁的LP资产
-            StableRemoveLiquidityBus stableRemoveLiquidityBus = SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, liquidity, new byte[]{(byte) targetIndex}, stablePairAddressBytes, txData.getTo());
+            StableRemoveLiquidityBus stableRemoveLiquidityBus = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, new byte[]{(byte) targetIndex}, stablePairAddressBytes, txData.getTo());
 
             // 装填执行结果
             result.setTxType(txType());

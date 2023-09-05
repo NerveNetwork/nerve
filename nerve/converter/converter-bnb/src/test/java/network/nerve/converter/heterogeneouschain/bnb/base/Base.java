@@ -78,18 +78,82 @@ public class Base {
     protected List<String> list;
     protected BnbContext htgContext;
 
+    String testEthRpcAddress = "https://bsc-testnet.public.blastapi.io";
+    int testChainId = 97;
+    //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
+    //String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
+    //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
+    //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";//1
+    //String mainEthRpcAddress = "https://bsc-dataseed2.binance.org/";
+    //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";//1
+    //String mainEthRpcAddress = "https://bsc-dataseed3.binance.org/";
+    String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";//1
+    int mainChainId = 56;
+
     @BeforeClass
     public static void initClass() {
         Log.info("init");
     }
+
     @Before
     public void setUp() throws Exception {
-        /*
+        htgWalletApi = new HtgWalletApi();
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
+        htgContext = new BnbContext();
+        htgContext.setLogger(Log.BASIC_LOGGER);
+        HeterogeneousCfg cfg = new HeterogeneousCfg();
+        cfg.setChainIdOnHtgNetwork(testChainId);
+        htgContext.setConfig(cfg);
+        BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
+    }
+
+    protected void setTestProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(testChainId);
+    }
+
+    protected void setMain() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
+    }
+
+    protected void setMainProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
+    }
+
+
+    /*@Before
+    public void setUp() throws Exception {
+        *//*
          "commonRpcAddress": "https://data-seed-prebsc-2-s3.binance.org:8545/",
          "mainRpcAddress": "http://data-seed-prebsc-1-s2.binance.org:8545/",
          "orderRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s1.binance.org:8545/",
          "standbyRpcAddresses": "https://data-seed-prebsc-1-s3.binance.org:8545/,https://data-seed-prebsc-2-s3.binance.org:8545/",
-         */
+         *//*
         // 删除
         // 1-s2, 2-s1, 2-s2
         //String ethRpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
@@ -119,13 +183,13 @@ public class Base {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        /*
+        *//*
          "commonRpcAddress": "https://bsc-dataseed.binance.org/",
          "mainRpcAddress": "https://bsc-dataseed1.binance.org/",
          "orderRpcAddresses": "https://bsc-dataseed.binance.org/,https://bsc-dataseed1.binance.org/,https://bsc-dataseed2.binance.org/,https://bsc-dataseed3.binance.org/",
          "standbyRpcAddresses": "https://bsc-dataseed1.defibit.io/,https://bsc-dataseed4.defibit.io/,https://bsc-dataseed3.ninicoin.io/,https://bsc-dataseed4.ninicoin.io/",
 0xfaf436543661419de222536e518833ce5a1ed4dc
-         */
+         *//*
         //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
         String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
         //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
@@ -142,7 +206,7 @@ public class Base {
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
         htgContext.config.setChainIdOnHtgNetwork(56);
-    }
+    }*/
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
         return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress);

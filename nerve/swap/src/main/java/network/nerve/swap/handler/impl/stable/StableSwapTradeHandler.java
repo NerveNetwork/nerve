@@ -158,7 +158,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             BigInteger[] amountsIn = dto.getAmountsIn();
             for (int i = 0; i < length; i++) {
                 BigInteger amountIn = amountsIn[i];
-                if (BigInteger.ZERO.equals(amountIn)) {
+                if (BigInteger.ZERO.compareTo(amountIn) == 0) {
                     continue;
                 }
                 NerveToken tokenIn = coins[i];
@@ -241,7 +241,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             BigInteger[] amountsIn = dto.getAmountsIn();
             for (int i = 0; i < length; i++) {
                 BigInteger amountIn = amountsIn[i];
-                if (BigInteger.ZERO.equals(amountIn)) {
+                if (BigInteger.ZERO.compareTo(amountIn) == 0) {
                     continue;
                 }
                 NerveToken tokenIn = coins[i];

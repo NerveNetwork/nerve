@@ -40,7 +40,6 @@ maxInCount=300
 #最大出网连接数
 maxOutCount=50
 reverseCheck=0
-
 [account]
 blockAccountManager=NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt
 keystoreFolder=/keystore/backup
@@ -162,6 +161,7 @@ height_1_24_0=42500000
 height_1_25_0=45890000
 height_1_26_0=47200000
 height_1_27_0=48320000
+height_1_28_0=48830000
 
 [nuls-api]
 #httpServer的启动ip

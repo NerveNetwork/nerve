@@ -20,10 +20,7 @@ import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.DynamicArray;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.*;
 import org.web3j.protocol.core.DefaultBlockParameterName;
@@ -848,6 +845,21 @@ public class MaticWalletApiTest extends Base {
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+    }
+
+    @Test
+    public void callViewTest() throws Exception {
+        setMain();
+        String contractAddress = "0x75dC8e5F50C8221a82CA6aF64aF811caA983B65f";
+        List<Type> symbolResult = htgWalletApi.callViewFunction(contractAddress, new Function(
+                "uln",
+                List.of(),
+                List.of(new TypeReference<Address>() {})));
+        if (symbolResult.isEmpty()) {
+            return;
+        }
+        String symbol = symbolResult.get(0).getValue().toString();
+        System.out.println("|" + symbol + "|");
     }
 
     @Test

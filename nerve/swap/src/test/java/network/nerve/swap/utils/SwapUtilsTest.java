@@ -34,6 +34,14 @@ import static network.nerve.swap.constant.SwapConstant.BI_3;
 public class SwapUtilsTest {
 
     @Test
+    public void stableAddressTest() {
+        NulsHash txHash = NulsHash.fromHex("49c9bbaef9845d30f0b260b602f331b28e3d5ff12791c66dab9aa41a5cc4343d");
+        byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
+        String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
+        System.out.println(stablePairAddress);
+    }
+
+    @Test
     public void getStringPairAddress() {
         List<JunitCase> items = new ArrayList<>();
         items.add(new JunitCase("case0", null, new Object[]{9, new NerveToken(1, 1), new NerveToken(9, 1)}, "NERVEepb7JCJ3LUjfDw2aM61HZcSs1zEoA4ars", false, null, NerveCallback.NULL_CALLBACK));

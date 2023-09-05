@@ -108,9 +108,9 @@ public class Protocol27Test {
         // 配置每个链的新旧多签合约
         Map<Integer, String[]> map = new HashMap<>();
         // 前旧后新
-        map.put(127, new String[]{"0xxx", "0xxx"});
-        map.put(128, new String[]{"0xxx", "0xxx"});
-        map.put(129, new String[]{"0xxx", "0xxx"});
+        map.put(127, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
+        map.put(128, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
+        map.put(129, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
         return map;
     }
 
@@ -149,10 +149,12 @@ public class Protocol27Test {
 
         String txKey = "aaa2000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
-                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f", "0x66fb6d6df71bbbf1c247769ba955390710da40a5",
-                "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d", "0xaff68cd458539a16b932748cf4bdd53bf196789f", "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
-                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1", "0x8255a0e99456f45f8b85246ef6a9b1895c784c9f",
-                "0x25955965648cd5c017d6d4644bf65830645ef2f2", "0x5fbf7793196efbf7066d99fa29dc64dc23052451", "0x10c17be7b6d3e1f424111c8bddf221c9557728b0"
+                "0xb12a6716624431730c3ef55f80c458371954fa52", "0x1f13e90daa9548defae45cd80c135c183558db1f",
+                "0x66fb6d6df71bbbf1c247769ba955390710da40a5", "0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d",
+                "0xaff68cd458539a16b932748cf4bdd53bf196789f", "0xc8dcc24b09eed90185dbb1a5277fd0a389855dae",
+                "0xa28035bb5082f5c00fa4d3efc4cb2e0645167444", "0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1",
+                "0x8255a0e99456f45f8b85246ef6a9b1895c784c9f", "0x25955965648cd5c017d6d4644bf65830645ef2f2",
+                "0x10c17be7b6d3e1f424111c8bddf221c9557728b0", "0x5fbf7793196efbf7066d99fa29dc64dc23052451"
         };
         String[] removes = new String[]{};
         int txCount = 1;

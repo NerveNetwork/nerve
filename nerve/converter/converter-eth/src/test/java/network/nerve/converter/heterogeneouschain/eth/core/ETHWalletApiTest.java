@@ -1391,14 +1391,14 @@ public class ETHWalletApiTest extends Base {
         //System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         //System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
         // eth的usdt价格
-        ethUsdt = new BigDecimal("1878.14");
+        ethUsdt = new BigDecimal("1690.14");
         // gas Gwei
-        price = "0.0015";
+        price = "19";
         System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
-        gasCost(280000);
-        //gasCost(1200000);
-        //gasCost(800000);
-        //gasCost(520000);
+        //gasCost(280000);
+        gasCost(2310000);
+        gasCost(3000000);
+        gasCost(9000000);
         //gasCost(400000);
         //gasCost(380000);
         //gasCost(350000);

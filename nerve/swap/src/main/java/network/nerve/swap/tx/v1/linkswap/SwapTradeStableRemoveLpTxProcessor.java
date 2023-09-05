@@ -189,7 +189,7 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                 }
                 List<TradePairBus> pairBuses = swapTradeBus.getTradePairBuses();
                 TradePairBus lastPairBus = pairBuses.get(pairBuses.size() - 1);
-                SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, lastPairBus.getAmountOut(), new byte[]{(byte) targetIndex}, stablePairAddressBytes, txData.getTo());
+                SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, lastPairBus.getAmountOut(), new byte[]{(byte) targetIndex}, stablePairAddressBytes, txData.getTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

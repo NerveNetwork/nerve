@@ -1889,6 +1889,8 @@ public class TxSendTest {
         outputs.add(new CoinDTO(packageAddressZP, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
         outputs.add(new CoinDTO(packageAddressNE, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
         outputs.add(new CoinDTO(packageAddressHF, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
+        outputs.add(new CoinDTO("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
 
         BigInteger inAmount = BigInteger.valueOf(10_0000L);
         for (CoinDTO dto : outputs) {
@@ -1906,11 +1908,11 @@ public class TxSendTest {
 
     @Test
     public void transferOne() throws Exception {
-        String from = address31;
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
-        String value = "100000000";
+        String from = address21;
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
+        String value = "1000000";
         int assetChainId = 5;
-        int assetId = 23;
+        int assetId = 1;
         int decimals = 8;
 
         Map transferMap = new HashMap();
@@ -2465,7 +2467,7 @@ public class TxSendTest {
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
-        params.put("proposalTxHash", "8bb27564ee46d66b8efed345732b3b3614c829522b3070ba1946d63d578f27f0");
+        params.put("proposalTxHash", "4fad8e74be7d0c662a5640985b8449a74fed9e0faff31d5521c3877b4e95e009");
         params.put("choice", ProposalVoteChoiceEnum.FAVOR.value());
         params.put("remark", "投票remark");
         params.put("address", agentAddress);

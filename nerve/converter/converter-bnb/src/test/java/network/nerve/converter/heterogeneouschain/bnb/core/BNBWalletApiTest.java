@@ -1251,7 +1251,8 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(70437);
+        setMain();// 1692719916
+        Long height = Long.valueOf(31079341);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
     }
@@ -1290,9 +1291,10 @@ public class BnbWalletApiTest extends Base {
     }
 
     @Test
-    public void getTestNetTxReceipt() throws Exception {
+    public void getTxReceipt() throws Exception {
+        setMain();
         // 直接调用erc20合约
-        String directTxHash = "0xf79ab90e54716d2201246008321121e014047c0430194290028ec8974571a978";
+        String directTxHash = "0xb4992925f9b5f534ec6a26ec89fd07220b3f258ff51de6efecb6cd2142cbfef9";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }
@@ -1740,9 +1742,9 @@ public class BnbWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
-        //setMain();
+        setMain();
         // 直接调用erc20合约
-        String directTxHash = "0xf33d7958967d36331eb20eafb23e49dcfcbddb5f925b6b23608cb5fd74a1433c";
+        String directTxHash = "0xb4992925f9b5f534ec6a26ec89fd07220b3f258ff51de6efecb6cd2142cbfef9";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(tx.getBlockNumberRaw() + "---" + txReceipt.getBlockNumberRaw());

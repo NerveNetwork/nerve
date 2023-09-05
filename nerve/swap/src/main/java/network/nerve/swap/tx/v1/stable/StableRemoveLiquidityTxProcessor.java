@@ -163,7 +163,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                 txData.parse(tx.getTxData(), 0);
                 CoinData coinData = tx.getCoinDataInstance();
                 StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
-                SwapUtils.calStableRemoveLiquidityBusiness(chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
+                SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);
@@ -210,7 +210,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                     errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
                     continue;
                 }
-                SwapUtils.calStableRemoveLiquidityBusinessP21(chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
+                SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, dto.getLiquidity(), txData.getIndexs(), dto.getPairAddress(), txData.getTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

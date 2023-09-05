@@ -164,6 +164,7 @@ height_1_24_0=28720000
 height_1_25_0=31660000
 height_1_26_0=32800000
 height_1_27_0=34040000
+height_1_28_0=340400000
 
 [nuls-api]
 #httpServer的启动ip
