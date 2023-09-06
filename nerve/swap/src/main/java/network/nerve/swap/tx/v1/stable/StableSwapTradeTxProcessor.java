@@ -84,16 +84,13 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 logger.info("[commit] Stable Swap Trade, hash: {}", tx.getHash().toHex());
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
-                StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
-                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
-                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
-                //StableSwapPairPo pair = stablePair.getPair();
-                //NerveToken[] coins = pair.getCoins();
-                //result.setExtend(JSONUtils.obj2json(Arrays.asList(coins).stream().map(c -> c.str()).collect(Collectors.toList())));
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
+                StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
+                String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
+                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 // 更新Pair的资金池和发行总量
                 stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }

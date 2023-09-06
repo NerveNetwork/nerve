@@ -230,7 +230,10 @@ public class TransactionController {
                 return RpcResult.dataNotFound();
             }
 
-
+            int type = extractTxTypeFromTx(txHex);
+            if (type == SWAP_TRADE_STABLE_COIN) {
+                return RpcResult.paramError("This transaction is suspended");
+            }
             Result result = transactionTools.newTx(chainId, txHex);
 
             if (result.isSuccess()) {
@@ -272,6 +275,10 @@ public class TransactionController {
         try {
             if (!Context.isChainExist(chainId)) {
                 return RpcResult.dataNotFound();
+            }
+            int type = extractTxTypeFromTx(txHex);
+            if (type == SWAP_TRADE_STABLE_COIN) {
+                return RpcResult.paramError("This transaction is suspended");
             }
             Result result = transactionTools.newTx(chainId, txHex);
             if (result.isSuccess()) {

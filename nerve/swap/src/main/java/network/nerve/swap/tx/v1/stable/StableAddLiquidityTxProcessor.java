@@ -77,17 +77,14 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[{}][commit] Stable Swap Add Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
-                StableAddLiquidityDTO dto = stableAddLiquidityHandler.getStableAddLiquidityInfo(chainId, tx.getCoinDataInstance(), iPairFactory);
-                IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
-                //StableSwapPairPo pair = stablePair.getPair();
-                //NerveToken[] coins = pair.getCoins();
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
-                //result.setExtend(JSONUtils.obj2json(Arrays.asList(coins).stream().map(c -> c.str()).collect(Collectors.toList())));
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
+                StableAddLiquidityDTO dto = stableAddLiquidityHandler.getStableAddLiquidityInfo(chainId, tx.getCoinDataInstance(), iPairFactory);
+                IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
                 StableAddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableAddLiquidityBus.class);
                 //logger.info("[{}]processor add bus: {}", blockHeader.getHeight(), bus.toString());
                 // 更新Pair的资金池和发行总量

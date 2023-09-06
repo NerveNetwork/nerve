@@ -76,19 +76,16 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[{}][commit] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
-                CoinData coinData = tx.getCoinDataInstance();
-                StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
-                String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
-                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
-                //StableSwapPairPo pair = stablePair.getPair();
-                //NerveToken[] coins = pair.getCoins();
                 // 从执行结果中提取业务数据
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
-                //result.setExtend(JSONUtils.obj2json(Arrays.asList(coins).stream().map(c -> c.str()).collect(Collectors.toList())));
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
+                CoinData coinData = tx.getCoinDataInstance();
+                StableRemoveLiquidityDTO dto = stableRemoveLiquidityHandler.getStableRemoveLiquidityInfo(chainId, coinData);
+                String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
+                IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
                 //logger.info("[{}]remove bus: {}", blockHeader.getHeight(), bus.toString());
                 // 更新Pair的资金池和发行总量
