@@ -24,8 +24,9 @@ public class FarmPoolPO {
     private BigInteger stakeTokenBalance = BigInteger.ZERO;
     private BigInteger totalSyrupAmount = BigInteger.ZERO;
     private boolean modifiable; //0不可以修改，1可以修改
-    private long withdrawLockTime;
+    private long withdrawLockTime;//质押资产退出后，时间锁定
     private Long stopHeight;
+    private long syrupLockTime;//领取奖励后，奖励资产时间锁定
 
     public BigInteger getTotalSyrupAmount() {
         return totalSyrupAmount;
@@ -147,6 +148,14 @@ public class FarmPoolPO {
         this.stopHeight = stopHeight;
     }
 
+    public long getSyrupLockTime() {
+        return syrupLockTime;
+    }
+
+    public void setSyrupLockTime(long syrupLockTime) {
+        this.syrupLockTime = syrupLockTime;
+    }
+
     public FarmPoolPO copy() {
         FarmPoolPO po = new FarmPoolPO();
         po.setLockedTime(this.getLockedTime());
@@ -164,6 +173,7 @@ public class FarmPoolPO {
         po.setWithdrawLockTime(this.withdrawLockTime);
         po.setModifiable(this.modifiable);
         po.setStopHeight(this.stopHeight);
+        po.setSyrupLockTime(this.syrupLockTime);
         return po;
     }
 

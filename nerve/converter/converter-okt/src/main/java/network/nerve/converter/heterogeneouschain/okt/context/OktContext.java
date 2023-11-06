@@ -44,7 +44,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_1;
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_DOT_1;
 
 /**
@@ -118,6 +117,11 @@ public class OktContext extends HtgContext implements Serializable {
     }
 
     private BigInteger HTG_GAS_PRICE;
+
+    @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
+    }
 
     @Override
     public IConverterCoreApi getConverterCoreApi() {

@@ -99,6 +99,8 @@ public class QuotationCall {
             return new BigDecimal("0.5106");
         } else if ("ETC_PRICE".equals(oracleKey)){
             return new BigDecimal("18.0031");
+        } else if ("BRISE_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.0000001382");
         }*/
         /************************************************/
         try {

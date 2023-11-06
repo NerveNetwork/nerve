@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuls.base.basic.AddressTool;
+import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
@@ -243,6 +244,18 @@ public class LoadJsonFileTest {
         BigInteger divide = num.divide(BigInteger.valueOf(2));
         System.out.println(divide.toString());
         System.out.println(divide.toByteArray().length);
+
+    }
+
+    @Test
+    public void transactionSignatureTest() throws NulsException {
+        String signData = "21039ec7b0a2268210969f30e3dfefb2aceb6eef5213e75d33e998ddacce196f893147304502207fbeaf36476f7f20f37770cb5ca65290667ce28956e9762c478d199ccb6ecf95022100dab323d44af853ade23d0bd6211625ea9bd9abdebeae00529a0ee81140c011ff";
+        TransactionSignature signature = new TransactionSignature();
+        signature.parse(HexUtil.decode(signData), 0);
+        List<P2PHKSignature> p2PHKSignatures = signature.getP2PHKSignatures();
+        for (P2PHKSignature s : p2PHKSignatures) {
+            System.out.println(String.format("pubkey: %s, signData: %s", HexUtil.encode(s.getPublicKey()), HexUtil.encode(s.getSignData().getSignBytes())));
+        }
 
     }
 

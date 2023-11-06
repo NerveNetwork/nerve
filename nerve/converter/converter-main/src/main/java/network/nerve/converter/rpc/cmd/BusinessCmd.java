@@ -37,10 +37,12 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.ObjectUtils;
+import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.config.AccountConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
@@ -105,6 +107,8 @@ public class BusinessCmd extends BaseCmd {
     private ConfirmWithdrawalStorageService confirmWithdrawalStorageService;
     @Autowired
     private ConverterCoreApi converterCoreApi;
+    @Autowired
+    private AccountConfig accountConfig;
 
     @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
     @Parameters(value = {
@@ -138,6 +142,11 @@ public class BusinessCmd extends BaseCmd {
             chain = chainManager.getChain((Integer) params.get("chainId"));
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            String password = (String) params.get("password");
+            String address = (String) params.get("address");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
             }
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
@@ -201,6 +210,11 @@ public class BusinessCmd extends BaseCmd {
             }
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            String password = (String) params.get("password");
+            String address = (String) params.get("address");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
             }
             Integer feeChainId = (Integer) params.get("feeChainId");
             if (feeChainId == null) {
@@ -363,6 +377,11 @@ public class BusinessCmd extends BaseCmd {
             ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("type"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
             ObjectUtils.canNotEmpty(params.get("content"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            String password = (String) params.get("password");
+            String address = (String) params.get("address");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain((Integer) params.get("chainId"));
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -370,6 +389,7 @@ public class BusinessCmd extends BaseCmd {
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
             }
+
             // parse params
             JSONUtils.getInstance().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             ProposalTxDTO proposalTxDTO = JSONUtils.map2pojo(params, ProposalTxDTO.class);
@@ -377,7 +397,7 @@ public class BusinessCmd extends BaseCmd {
 
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
-            signAccountDTO.setPassword((String) params.get("password"));
+            signAccountDTO.setPassword(password);
             proposalTxDTO.setSignAccountDTO(signAccountDTO);
             Transaction tx = assembleTxService.createProposalTx(chain, proposalTxDTO);
             Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
@@ -436,6 +456,11 @@ public class BusinessCmd extends BaseCmd {
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
             }
+            String password = (String) params.get("password");
+            String address = (String) params.get("address");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             int heterogeneousChainId = ((Integer) params.get("heterogeneousChainId")).byteValue();
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
@@ -488,6 +513,11 @@ public class BusinessCmd extends BaseCmd {
             }
             if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
                 throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            String password = (String) params.get("password");
+            String address = (String) params.get("address");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
             }
             String proposalTxHash = (String) params.get("proposalTxHash");
             byte choice = ((Integer) params.get("choice")).byteValue();
@@ -665,7 +695,7 @@ public class BusinessCmd extends BaseCmd {
             } else {
                 String txHash = params.get("hash").toString();
                 Transaction tx = TransactionCall.getConfirmedTx(chain, txHash);
-                if(null == tx) {
+                if (null == tx) {
                     throw new NulsRuntimeException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
                 }
                 TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
@@ -721,6 +751,7 @@ public class BusinessCmd extends BaseCmd {
             return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
         }
     }
+
     @CmdAnnotation(cmd = ConverterCmdConstant.CANCEL_HTG_TX, version = 1.0, description = "取消虚拟银行发出的异构链网络交易")
     @Parameters(value = {
             @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),

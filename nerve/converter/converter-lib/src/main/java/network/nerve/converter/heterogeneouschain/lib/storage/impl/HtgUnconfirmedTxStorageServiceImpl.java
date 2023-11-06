@@ -38,15 +38,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
+
 /**
  * @author: Mimi
  * @date: 2020-02-20
  */
 public class HtgUnconfirmedTxStorageServiceImpl implements HtgUnconfirmedTxStorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX = "UNCONFIRMED_TX-";
-    private final byte[] UNCONFIRMED_TX_ALL_KEY = ConverterDBUtil.stringToBytes("UNCONFIRMED_TX-ALL");
+    private final byte[] UNCONFIRMED_TX_ALL_KEY = stringToBytes("UNCONFIRMED_TX-ALL");
+    private final String MERGE_KEY_PREFIX;
+    private final byte[] MERGE_UNCONFIRMED_TX_ALL_KEY;
     private Object version = new Object();
     private Object delete = new Object();
 
@@ -54,6 +58,40 @@ public class HtgUnconfirmedTxStorageServiceImpl implements HtgUnconfirmedTxStora
     public HtgUnconfirmedTxStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX = htgChainId + "_UNCONFIRMED_TX-";
+        this.MERGE_UNCONFIRMED_TX_ALL_KEY = stringToBytes(htgChainId + "_UNCONFIRMED_TX-ALL");
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private byte[] UNCONFIRMED_TX_ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_UNCONFIRMED_TX_ALL_KEY;
+        } else {
+            return UNCONFIRMED_TX_ALL_KEY;
+        }
+    }
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
     }
 
     @Override
@@ -65,21 +103,21 @@ public class HtgUnconfirmedTxStorageServiceImpl implements HtgUnconfirmedTxStora
         if (htgContext.logger().isDebugEnabled()) {
             htgContext.logger().debug("保存未确认交易[{}], 详情: {}", htTxHash, po.toString());
         }
-        boolean result = ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + htTxHash), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX() + htTxHash), po);
         if (result) {
-            StringListPo setPo = ConverterDBUtil.getModel(baseArea, UNCONFIRMED_TX_ALL_KEY, StringListPo.class);
+            StringListPo setPo = ConverterDBUtil.getModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), StringListPo.class);
             if (setPo == null) {
                 setPo = new StringListPo();
                 List<String> list = new ArrayList<>();
                 list.add(po.getTxHash());
                 setPo.setCollection(list);
-                result = ConverterDBUtil.putModel(baseArea, UNCONFIRMED_TX_ALL_KEY, setPo);
+                result = ConverterDBUtil.putModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), setPo);
             } else {
                 List<String> list = setPo.getCollection();
                 Set<String> set = new HashSet<>(list);
                 if (!set.contains(po.getTxHash())) {
                     list.add(po.getTxHash());
-                    result = ConverterDBUtil.putModel(baseArea, UNCONFIRMED_TX_ALL_KEY, setPo);
+                    result = ConverterDBUtil.putModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), setPo);
                 } else {
                     result = true;
                 }
@@ -108,24 +146,24 @@ public class HtgUnconfirmedTxStorageServiceImpl implements HtgUnconfirmedTxStora
 
     @Override
     public HtgUnconfirmedTxPo findByTxHash(String htTxHash) {
-        return ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + htTxHash), HtgUnconfirmedTxPo.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX() + htTxHash), HtgUnconfirmedTxPo.class);
     }
 
     @Override
     public void deleteByTxHash(String htTxHash) throws Exception {
         synchronized (delete) {
-            RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + htTxHash));
-            StringListPo setPo = ConverterDBUtil.getModel(baseArea, UNCONFIRMED_TX_ALL_KEY, StringListPo.class);
+            RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + htTxHash));
+            StringListPo setPo = ConverterDBUtil.getModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), StringListPo.class);
             if (setPo != null) {
                 setPo.getCollection().remove(htTxHash);
-                ConverterDBUtil.putModel(baseArea, UNCONFIRMED_TX_ALL_KEY, setPo);
+                ConverterDBUtil.putModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), setPo);
             }
         }
     }
 
     @Override
     public List<HtgUnconfirmedTxPo> findAll() {
-        StringListPo setPo = ConverterDBUtil.getModel(baseArea, UNCONFIRMED_TX_ALL_KEY, StringListPo.class);
+        StringListPo setPo = ConverterDBUtil.getModel(baseArea(), UNCONFIRMED_TX_ALL_KEY(), StringListPo.class);
         if (setPo == null) {
             return null;
         }

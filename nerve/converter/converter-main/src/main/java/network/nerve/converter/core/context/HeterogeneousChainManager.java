@@ -28,10 +28,15 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
+import io.nuls.core.model.ArraysTool;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rockdb.manager.RocksDBManager;
+import io.nuls.core.rockdb.util.DBUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
+import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
 import network.nerve.converter.core.heterogeneous.register.HeterogeneousChainRegister;
@@ -41,7 +46,11 @@ import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.storage.HeterogeneousChainInfoStorageService;
+import network.nerve.converter.utils.ConverterDBUtil;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksIterator;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -66,6 +75,9 @@ public class HeterogeneousChainManager {
     private HeterogeneousDockingManager heterogeneousDockingManager;
     @Autowired
     private LedgerAssetRegisterHelper ledgerAssetRegisterHelper;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
+
     private boolean isInited = false;
 
     private final Map<String, Integer> heterogeneousChainIdRuleMap = new HashMap<>();
@@ -152,13 +164,49 @@ public class HeterogeneousChainManager {
                     return 0;
                 }
             });
+            File dir = DBUtils.loadDataPath(converterConfig.getTxDataRoot());
+            String dataPath = dir.getPath();
             for (IHeterogeneousChainRegister register : registerList) {
                 int chainId = register.getChainId();
                 HeterogeneousCfg heterogeneousCfg = chain.getHeterogeneousCfg(chainId, 1);
                 if (heterogeneousCfg == null)
                     continue;
                 // 执行异构链的初始化函数
-                register.init(heterogeneousCfg, chain.getLogger());
+                String dbName = register.init(heterogeneousCfg, chain.getLogger());
+                // add by pierre at 2023/9/5 数据库合并
+                do {
+                    //检查此链DB是否已合并
+                    boolean hadDBMerged = heterogeneousChainInfoStorageService.hadDBMerged(chainId);
+                    if (hadDBMerged) {
+                        logger().info("[{}]链DB[{}]已合并至[{}]", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        converterCoreApi.setDbMergedStatus(chainId);
+                        break;
+                    }
+                    //检查在表列表中是否存在此链DB，不存在则使用合并表，此链DB打上已合并标记
+                    RocksDB table = RocksDBManager.getTable(dbName);
+                    if (table == null) {
+                        logger().info("[{}]链DB使用合并表[{}]", AssetName.getEnum(chainId).name(), ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
+                        converterCoreApi.setDbMergedStatus(chainId);
+                        break;
+                    }
+                    byte[] prefix = ConverterDBUtil.stringToBytes(chainId + "_");
+                    //此链DB执行合并
+                    RocksIterator iterator = table.newIterator();
+                    int count = 0;
+                    for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
+                        RocksDBManager.put(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, ArraysTool.concatenate(prefix, iterator.key()), iterator.value());
+                        count++;
+                    }
+                    //此链DB打上已合并标记
+                    logger().info("[{}]链DB[{}]已合并至[{}]，数目: {}", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, count);
+                    heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
+                    converterCoreApi.setDbMergedStatus(chainId);
+                    RocksDBManager.destroyTable(dbName);
+                    File tableFile = new File(dataPath + File.separator + dbName);
+                    tableFile.delete();
+                } while (false);
+                // end code by pierre
                 HeterogeneousChainInfo chainInfo = register.getChainInfo();
                 // 保存异构链symbol和chainId的关系
                 heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
@@ -196,6 +244,15 @@ public class HeterogeneousChainManager {
                 }
                 heterogeneousDockingManager.addProtocol(chainId, protocolHeight, heterogeneousCfg.getSymbol());
             }
+            //执行数据库合并操作
+            //遍历注册的链DB名称
+            //Map<Integer, String> chainDBNameMap = converterCoreApi.chainDBNameMap();
+            ////检查此链DB是否已合并
+            //Set<Map.Entry<Integer, String>> entries = chainDBNameMap.entrySet();
+            //for (Map.Entry<Integer, String> entry : entries) {
+            //    Integer hChainId = entry.getKey();
+            //
+            //}
         }
 
     }

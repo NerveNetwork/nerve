@@ -35,8 +35,8 @@ public class SwapUtilsTest {
 
     @Test
     public void stableAddressTest() {
-        NulsHash txHash = NulsHash.fromHex("49c9bbaef9845d30f0b260b602f331b28e3d5ff12791c66dab9aa41a5cc4343d");
-        byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
+        NulsHash txHash = NulsHash.fromHex("fd2506674f788829d2c03409f7e72c307374ca688e87444ea041624e8b96be82");
+        byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 9, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         System.out.println(stablePairAddress);
     }

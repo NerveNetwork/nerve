@@ -119,6 +119,11 @@ public class OneContext extends HtgContext implements Serializable {
     private BigInteger HTG_GAS_PRICE;
 
     @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
+    }
+
+    @Override
     public IConverterCoreApi getConverterCoreApi() {
         return converterCoreApi;
     }

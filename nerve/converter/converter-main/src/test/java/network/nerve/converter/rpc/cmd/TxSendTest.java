@@ -22,6 +22,7 @@ import network.nerve.converter.heterogeneouschain.avax.context.AvaxContext;
 import network.nerve.converter.heterogeneouschain.basechain.context.BaseChainContext;
 import network.nerve.converter.heterogeneouschain.bch.context.BchContext;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
+import network.nerve.converter.heterogeneouschain.brise.context.BriseContext;
 import network.nerve.converter.heterogeneouschain.celo.context.CeloContext;
 import network.nerve.converter.heterogeneouschain.cro.context.CroContext;
 import network.nerve.converter.heterogeneouschain.enuls.context.EnulsContext;
@@ -150,6 +151,11 @@ public class TxSendTest {
     String packageAddressPrivateKey8 = "CCF560337BA3DE2A76C1D08825212073B299B115474B65DE4B38B587605FF7F2";
 
     Map<String, Object> pMap;
+
+    /** brise testnet */
+    static String USDT_BRISE = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
+    static String USD18_BRISE = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
+    static String NVT_BRISE_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
 
     /** scroll testnet */
     static String USDT_SCROLL = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
@@ -375,6 +381,7 @@ public class TxSendTest {
     EtcContext etcContext = new EtcContext();
     BaseChainContext baseChainContext = new BaseChainContext();
     ScrollContext scrollContext = new ScrollContext();
+    BriseContext briseContext = new BriseContext();
 
     static int ethChainId = 101;
     static int bnbChainId = 102;
@@ -536,12 +543,14 @@ public class TxSendTest {
         this.balanceInfoPrint("　主资产NVT", new NerveAssetInfo(chainId, assetId), address, 8);
         //this.balanceInfoPrint("资产 USDTN", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("资产 NVT_USDTN_LP", new NerveAssetInfo(5, 4), address, 18);
-        //this.balanceInfoPrint("资产 BNB", new NerveAssetInfo(5, 3), address, 18);
-        this.balanceInfoPrint("资产 OKT", new NerveAssetInfo(5, 2), address, 18);
-        this.balanceInfoPrint("资产 CELO", new NerveAssetInfo(5, 3), address, 18);
-        this.balanceInfoPrint("资产 ETC", new NerveAssetInfo(5, 4), address, 18);
-        this.balanceInfoPrint("资产 Base-ETH", new NerveAssetInfo(5, 5), address, 18);
-        this.balanceInfoPrint("资产 Scroll-ETH", new NerveAssetInfo(5, 6), address, 18);
+        this.balanceInfoPrint("资产 BNB", new NerveAssetInfo(5, 2), address, 18);
+        this.balanceInfoPrint("资产 OKT", new NerveAssetInfo(5, 3), address, 18);
+        this.balanceInfoPrint("资产 BRISE", new NerveAssetInfo(5, 4), address, 18);
+        //this.balanceInfoPrint("资产 EOS", new NerveAssetInfo(5, 4), address, 18);
+        //this.balanceInfoPrint("资产 CELO", new NerveAssetInfo(5, 5), address, 18);
+        //this.balanceInfoPrint("资产 ETC", new NerveAssetInfo(5, 4), address, 18);
+        //this.balanceInfoPrint("资产 Base-ETH", new NerveAssetInfo(5, 5), address, 18);
+        //this.balanceInfoPrint("资产 Scroll-ETH", new NerveAssetInfo(5, 6), address, 18);
         //this.balanceInfoPrint("资产 LINEA-ETH", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("资产 EOS", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("资产 POLYGON-ETH", new NerveAssetInfo(5, 4), address, 18);
@@ -559,8 +568,8 @@ public class TxSendTest {
         //this.balanceInfoPrint("资产 ZK-ETH", new NerveAssetInfo(5, 3), address, 18);
         //this.balanceInfoPrint("资产 USDX(bsc)", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("资产 BUSD(bsc)", new NerveAssetInfo(5, 7), address, 18);
-        this.balanceInfoPrint("资产 USDX(okt)", new NerveAssetInfo(5, 7), address, 6);
-        this.balanceInfoPrint("资产 USDT(okt)", new NerveAssetInfo(5, 8), address, 6);
+        this.balanceInfoPrint("资产 USDX(okt)", new NerveAssetInfo(5, 5), address, 6);
+        this.balanceInfoPrint("资产 USDT(okt)", new NerveAssetInfo(5, 6), address, 6);
         //this.balanceInfoPrint("资产 USDT(trx)", new NerveAssetInfo(5, 10), address, 6);
         //this.balanceInfoPrint("资产 USDT(iotx)", new NerveAssetInfo(5, 8), address, 6);
         //this.balanceInfoPrint("资产 USD18(iotx)", new NerveAssetInfo(5, 9), address, 18);
@@ -580,18 +589,20 @@ public class TxSendTest {
         //this.balanceInfoPrint("资产 USD18(ethw)", new NerveAssetInfo(5, 5), address, 18);
         //this.balanceInfoPrint("资产 USDT(zk)", new NerveAssetInfo(5, 4), address, 6);
         //this.balanceInfoPrint("资产 USD18(zk)", new NerveAssetInfo(5, 5), address, 18);
-        //this.balanceInfoPrint("资产 USDT(eos)", new NerveAssetInfo(5, 7), address, 6);
-        //this.balanceInfoPrint("资产 USD18(eos)", new NerveAssetInfo(5, 8), address, 18);
+        //this.balanceInfoPrint("资产 USDT(eos)", new NerveAssetInfo(5, 10), address, 6);
+        //this.balanceInfoPrint("资产 USD18(eos)", new NerveAssetInfo(5, 11), address, 18);
         //this.balanceInfoPrint("资产 USDT(zkpolygon)", new NerveAssetInfo(5, 9), address, 6);
         //this.balanceInfoPrint("资产 USD18(zkpolygon)", new NerveAssetInfo(5, 10), address, 18);
-        this.balanceInfoPrint("资产 USDT(celo)", new NerveAssetInfo(5, 9), address, 6);
-        this.balanceInfoPrint("资产 USD18(celo)", new NerveAssetInfo(5, 10), address, 18);
-        this.balanceInfoPrint("资产 USDT(etc)", new NerveAssetInfo(5, 11), address, 6);
-        this.balanceInfoPrint("资产 USD18(etc)", new NerveAssetInfo(5, 12), address, 18);
-        this.balanceInfoPrint("资产 USDT(base)", new NerveAssetInfo(5, 13), address, 6);
-        this.balanceInfoPrint("资产 USD18(base)", new NerveAssetInfo(5, 14), address, 18);
-        this.balanceInfoPrint("资产 USDT(scroll)", new NerveAssetInfo(5, 15), address, 6);
-        this.balanceInfoPrint("资产 USD18(scroll)", new NerveAssetInfo(5, 16), address, 18);
+        //this.balanceInfoPrint("资产 USDT(celo)", new NerveAssetInfo(5, 12), address, 6);
+        //this.balanceInfoPrint("资产 USD18(celo)", new NerveAssetInfo(5, 13), address, 18);
+        //this.balanceInfoPrint("资产 USDT(etc)", new NerveAssetInfo(5, 11), address, 6);
+        //this.balanceInfoPrint("资产 USD18(etc)", new NerveAssetInfo(5, 12), address, 18);
+        //this.balanceInfoPrint("资产 USDT(base)", new NerveAssetInfo(5, 13), address, 6);
+        //this.balanceInfoPrint("资产 USD18(base)", new NerveAssetInfo(5, 14), address, 18);
+        //this.balanceInfoPrint("资产 USDT(scroll)", new NerveAssetInfo(5, 15), address, 6);
+        //this.balanceInfoPrint("资产 USD18(scroll)", new NerveAssetInfo(5, 16), address, 18);
+        this.balanceInfoPrint("资产 USDT(brise)", new NerveAssetInfo(5, 7), address, 6);
+        this.balanceInfoPrint("资产 USD18(brise)", new NerveAssetInfo(5, 8), address, 18);
 
         //this.balanceInfoPrint("Tron-资产TRX", this.findAssetIdByHeterogeneousId(trxChainId, heterogeneousAssetId), address);
         //this.balanceInfoPrint("Tron-资产DX", this.findAssetIdByAddress(trxChainId, DX_TRX_6), address);
@@ -694,6 +705,18 @@ public class TxSendTest {
     }
 
     @Test
+    public void withdrawalBrise() throws Exception {
+        int htgChainId = briseContext.HTG_CHAIN_ID();
+        String from = address31;
+        String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        // 主资产 数量
+        BigInteger value = new BigDecimal("0.0002").movePointRight(18).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
+        NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
+        this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
+    }
+
+    @Test
     public void withdrawalScrollETH() throws Exception {
         int htgChainId = scrollContext.HTG_CHAIN_ID();
         String from = address31;
@@ -768,10 +791,10 @@ public class TxSendTest {
     public void withdrawalEOS() throws Exception {
         int htgChainId = eosContext.HTG_CHAIN_ID();
         String from = address31;
-        String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
+        String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         // 主资产 数量
-        BigInteger value = new BigDecimal("0.005").movePointRight(18).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(2_0000_0000L).toString());
+        BigInteger value = new BigDecimal("0.001").movePointRight(18).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
         NerveAssetInfo assetInfo = this.findAssetIdByHeterogeneousId(htgChainId, heterogeneousAssetId);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1116,28 +1139,28 @@ public class TxSendTest {
 
     @Test
     public void withdrawalUSDT() throws Exception {
-        int htgChainId = scrollContext.HTG_CHAIN_ID();
-        String contract = USDT_SCROLL;
+        int htgChainId = briseContext.HTG_CHAIN_ID();
+        String contract = USDT_BRISE;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // USDT数量 1.123456
         BigInteger value = new BigDecimal("0.823456").scaleByPowerOfTen(6).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
 
     @Test
     public void withdrawalUSD18() throws Exception {
-        int htgChainId = scrollContext.HTG_CHAIN_ID();
-        String contract = USD18_SCROLL;
+        int htgChainId = briseContext.HTG_CHAIN_ID();
+        String contract = USD18_BRISE;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // USD18数量
-        BigInteger value = new BigDecimal("1234.123456789123456789").scaleByPowerOfTen(18).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
+        BigInteger value = new BigDecimal("1230.123456789123456789").scaleByPowerOfTen(18).toBigInteger();
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, htgChainId, assetInfo);
     }
@@ -1186,14 +1209,14 @@ public class TxSendTest {
     @Test
     public void withdrawalNVT() throws Exception {
         int feeChainId = chainId;
-        int htgChainId = scrollContext.HTG_CHAIN_ID();
-        String contract = NVT_SCROLL_MINTER;
+        int htgChainId = briseContext.HTG_CHAIN_ID();
+        String contract = NVT_BRISE_MINTER;
         String from = address31;
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         //String to = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
         // NVT数量
         BigInteger value = new BigDecimal("20").movePointRight(8).toBigInteger();
-        BigInteger fee = new BigInteger(Long.valueOf(10_0000_0000L).toString());
+        BigInteger fee = new BigInteger(Long.valueOf(1_0000_0000L).toString());
         NerveAssetInfo assetInfo = findAssetIdByAddress(htgChainId, contract);
         this.withdrawalByParams(from, to, value, fee, feeChainId, htgChainId, assetInfo);
     }
@@ -1288,7 +1311,7 @@ public class TxSendTest {
         regERC20(oktChainId, "USDT", USDT_OKT, 6);
         //regERC20(htChainId, "USDX", USDX_HT, 6);
         //regERC20(htChainId, "GOAT", GOAT_HT, 9);
-
+        //regERC20(maticChainId, "USDT", USDT_MATIC, 6);
 
         /*regERC20(bnbChainId, "BUG", BUG_BNB_18, 18);
         regERC20(ethChainId, "USDX", USDX, 6);*/
@@ -1343,14 +1366,16 @@ public class TxSendTest {
         //regERC20(zkpolygonContext.HTG_CHAIN_ID(), "USD18", USD18_ZKP, 18);
         //regERC20(lineaContext.HTG_CHAIN_ID(), "USDT", USDT_LINEA, 6);
         //regERC20(lineaContext.HTG_CHAIN_ID(), "USD18", USD18_LINEA, 18);
-        regERC20(celoContext.HTG_CHAIN_ID(), "USDT", USDT_CELO, 6);
-        regERC20(celoContext.HTG_CHAIN_ID(), "USD18", USD18_CELO, 18);
-        regERC20(etcContext.HTG_CHAIN_ID(), "USDT", USDT_ETC, 6);
-        regERC20(etcContext.HTG_CHAIN_ID(), "USD18", USD18_ETC, 18);
-        regERC20(baseChainContext.HTG_CHAIN_ID(), "USDT", USDT_BASECHAIN, 6);
-        regERC20(baseChainContext.HTG_CHAIN_ID(), "USD18", USD18_BASECHAIN, 18);
-        regERC20(scrollContext.HTG_CHAIN_ID(), "USDT", USDT_SCROLL, 6);
-        regERC20(scrollContext.HTG_CHAIN_ID(), "USD18", USD18_SCROLL, 18);
+        //regERC20(celoContext.HTG_CHAIN_ID(), "USDT", USDT_CELO, 6);
+        //regERC20(celoContext.HTG_CHAIN_ID(), "USD18", USD18_CELO, 18);
+        //regERC20(etcContext.HTG_CHAIN_ID(), "USDT", USDT_ETC, 6);
+        //regERC20(etcContext.HTG_CHAIN_ID(), "USD18", USD18_ETC, 18);
+        //regERC20(baseChainContext.HTG_CHAIN_ID(), "USDT", USDT_BASECHAIN, 6);
+        //regERC20(baseChainContext.HTG_CHAIN_ID(), "USD18", USD18_BASECHAIN, 18);
+        //regERC20(scrollContext.HTG_CHAIN_ID(), "USDT", USDT_SCROLL, 6);
+        //regERC20(scrollContext.HTG_CHAIN_ID(), "USD18", USD18_SCROLL, 18);
+        regERC20(briseContext.HTG_CHAIN_ID(), "USDT", USDT_BRISE, 6);
+        regERC20(briseContext.HTG_CHAIN_ID(), "USD18", USD18_BRISE, 18);
 
         //regERC20(ethChainId, "ENVT", ENVT, 18);
         //regERC20(ethChainId, "DAI", DAI, 18);
@@ -1396,7 +1421,7 @@ public class TxSendTest {
     @Test
     public void mainAssetReg() throws Exception {
         // BNB
-        //regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
+        regHeterogeneousMainAsset(bnbContext.HTG_CHAIN_ID);
         // HT
         //regHeterogeneousMainAsset(htContext.HTG_CHAIN_ID);
         // OKT
@@ -1442,19 +1467,21 @@ public class TxSendTest {
         // LINEA
         //regHeterogeneousMainAsset(lineaContext.HTG_CHAIN_ID());
         // CELO
-        regHeterogeneousMainAsset(celoContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(celoContext.HTG_CHAIN_ID());
         // ETC
-        regHeterogeneousMainAsset(etcContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(etcContext.HTG_CHAIN_ID());
         // BASE
-        regHeterogeneousMainAsset(baseChainContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(baseChainContext.HTG_CHAIN_ID());
         // SCROLL
-        regHeterogeneousMainAsset(scrollContext.HTG_CHAIN_ID());
+        //regHeterogeneousMainAsset(scrollContext.HTG_CHAIN_ID());
+        // BRISE
+        regHeterogeneousMainAsset(briseContext.HTG_CHAIN_ID());
     }
 
     @Test
     public void bindContractAssetReg() throws Exception {
 
-        //bindERC20(bnbChainId, "NVT", NVT_BNB_MINTER, 8, 5, 1);
+        bindERC20(bnbChainId, "NVT", NVT_BNB_MINTER, 8, 5, 1);
         bindERC20(oktChainId, "NVT", NVT_OKT_MINTER, 8, 5, 1);
         //bindERC20(oktChainId, "USDX", USDX_OKT_MINTER, 6, 5, 7);
         //bindERC20(oktChainId, "BNB", BNB_OKT_MINTER, 18, 5, 3);
@@ -1488,10 +1515,11 @@ public class TxSendTest {
         //bindERC20(eosContext.HTG_CHAIN_ID(), "NVT", NVT_EOS_MINTER, 8, 5, 1);
         //bindERC20(zkpolygonContext.HTG_CHAIN_ID(), "NVT", NVT_ZKP_MINTER, 8, 5, 1);
         //bindERC20(lineaContext.HTG_CHAIN_ID(), "NVT", NVT_LINEA_MINTER, 8, 5, 1);
-        bindERC20(celoContext.HTG_CHAIN_ID(), "NVT", NVT_CELO_MINTER, 8, 5, 1);
-        bindERC20(etcContext.HTG_CHAIN_ID(), "NVT", NVT_ETC_MINTER, 8, 5, 1);
-        bindERC20(baseChainContext.HTG_CHAIN_ID(), "NVT", NVT_BASECHAIN_MINTER, 8, 5, 1);
-        bindERC20(scrollContext.HTG_CHAIN_ID(), "NVT", NVT_SCROLL_MINTER, 8, 5, 1);
+        //bindERC20(celoContext.HTG_CHAIN_ID(), "NVT", NVT_CELO_MINTER, 8, 5, 1);
+        //bindERC20(etcContext.HTG_CHAIN_ID(), "NVT", NVT_ETC_MINTER, 8, 5, 1);
+        //bindERC20(baseChainContext.HTG_CHAIN_ID(), "NVT", NVT_BASECHAIN_MINTER, 8, 5, 1);
+        //bindERC20(scrollContext.HTG_CHAIN_ID(), "NVT", NVT_SCROLL_MINTER, 8, 5, 1);
+        bindERC20(briseContext.HTG_CHAIN_ID(), "NVT", NVT_BRISE_MINTER, 8, 5, 1);
 
         //bindERC20(bnbChainId, "ETH", ETH_BNB_MINTER, 18, 5, 2);
         //bindERC20(htChainId, "ETH", ETH_HT_MINTER, 18, 5, 2);
@@ -1889,8 +1917,8 @@ public class TxSendTest {
         outputs.add(new CoinDTO(packageAddressZP, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
         outputs.add(new CoinDTO(packageAddressNE, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
         outputs.add(new CoinDTO(packageAddressHF, chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
-        outputs.add(new CoinDTO("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
-        outputs.add(new CoinDTO("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
+        //outputs.add(new CoinDTO("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
+        //outputs.add(new CoinDTO("TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA", chainId, 1, BigInteger.valueOf(10000_0000_0000L), password, 0));
 
         BigInteger inAmount = BigInteger.valueOf(10_0000L);
         for (CoinDTO dto : outputs) {

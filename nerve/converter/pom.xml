@@ -47,6 +47,7 @@
         <module>converter-etc</module>
         <module>converter-basechain</module>
         <module>converter-scroll</module>
+        <module>converter-brise</module>
 
     </modules>
 

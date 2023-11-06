@@ -118,7 +118,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // 存放日志实例
             EthContext.setLogger(logger);
@@ -131,10 +131,9 @@ public class EthRegister implements IHeterogeneousChainRegister {
             initEthWalletRPC();
             // 存放nerveChainId
             EthContext.NERVE_CHAINID = converterConfig.getChainId();
-            RocksDBService.createTable(EthDBConstant.DB_ETH);
-            // 初始化待确认任务队列
-            initUnconfirmedTxQueue();
+            //RocksDBService.createTable(EthDBConstant.DB_ETH);
         }
+        return EthDBConstant.DB_ETH;
     }
 
     private void initDefualtAPI() throws NulsException {
@@ -205,15 +204,18 @@ public class EthRegister implements IHeterogeneousChainRegister {
         ethCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
         // 存放CORE查询API实例
         EthContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
+        EthContext.getConverterCoreApi().addChainDBName(getChainId(), EthDBConstant.DB_ETH);
         // 更新多签地址
         EthContext.MULTY_SIGN_ADDRESS = multiSigAddress;
         // 保存当前多签地址到多签地址历史列表中
-        ethMultiSignAddressHistoryStorageService.save(multiSigAddress);
+        //ethMultiSignAddressHistoryStorageService.save(multiSigAddress);
         // 合约未升级时，使用当前的任务处理流程
         if (!isUpgradeContract()) {
             // 初始化任务工作池
             initScheduled();
         }
+        // 初始化待确认任务队列
+        //initUnconfirmedTxQueue();
         logger().info("ETH注册完成.");
     }
 

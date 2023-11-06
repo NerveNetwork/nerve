@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.bnb.dbtest;
 
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
+import io.nuls.core.rockdb.manager.RocksDBManager;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.bnb.constant.BnbDBConstant;
 import network.nerve.converter.heterogeneouschain.bnb.context.BnbContext;
@@ -46,7 +47,7 @@ public class DbTest {
     public static void before() {
         Log.info("init");
         context.setLogger(Log.BASIC_LOGGER);
-        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/nerve/converter/converter-htn/src/test/resources/data/converter/");
+        RocksDBService.init("/Users/pierreluo/IdeaProjects/nerve-network/data/converter");
     }
 
     @Test
@@ -106,4 +107,5 @@ public class DbTest {
         HtgUnconfirmedTxStorageServiceImpl unconfirmedTxDB = new HtgUnconfirmedTxStorageServiceImpl(context, BnbDBConstant.DB_BNB);
         System.out.println(JSONUtils.obj2PrettyJson(unconfirmedTxDB.findAll()));
     }
+
 }

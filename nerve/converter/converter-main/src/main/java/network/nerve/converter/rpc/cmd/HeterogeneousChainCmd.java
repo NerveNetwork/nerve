@@ -35,6 +35,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
 import io.nuls.core.rpc.model.message.Response;
+import network.nerve.converter.config.AccountConfig;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
@@ -86,6 +87,10 @@ public class HeterogeneousChainCmd extends BaseCmd {
     private ConverterConfig converterConfig;
     @Autowired
     private ConverterCoreApi converterCoreApi;
+
+    @Autowired
+    private AccountConfig accountConfig;
+
 
     @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO, version = 1.0, description = "异构链资产信息查询")
     @Parameters(value = {
@@ -367,8 +372,12 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String remark = (String) params.get("remark");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            contractAddress = addressToLowerCase(contractAddress.trim());
 
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+
+            contractAddress = addressToLowerCase(contractAddress.trim());
 
             chain = chainManager.getChain(chainId);
             if (null == chain) {
@@ -566,6 +575,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String contractAddress = (String) params.get("contractAddress");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             contractAddress = addressToLowerCase(contractAddress.trim());
 
 
@@ -639,6 +651,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String contractAddress = (String) params.get("contractAddress");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             contractAddress = addressToLowerCase(contractAddress.trim());
 
             chain = chainManager.getChain(chainId);
@@ -737,7 +752,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -829,6 +846,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String remark = (String) params.get("remark");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -896,6 +916,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             String remark = (String) params.get("remark");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -1055,7 +1078,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -1148,7 +1173,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -1229,7 +1256,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -1310,7 +1339,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
@@ -1391,7 +1422,9 @@ public class HeterogeneousChainCmd extends BaseCmd {
             Integer nerveAssetId = (Integer) params.get("nerveAssetId");
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
             chain = chainManager.getChain(chainId);
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);

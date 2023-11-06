@@ -39,6 +39,7 @@ import java.util.*;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.EMPTY_STRING;
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.ZERO_BYTES;
+import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
 /**
  * @author: Mimi
@@ -46,16 +47,73 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  */
 public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX = "ERC20-";
     private final String KEY_ASSETID_PREFIX = "ERC20_ASSETID-";
     private final String KEY_SYMBOL_PREFIX = "ERC20_SYMBOL-";
-    private final byte[] MAX_ASSETID_KEY = ConverterDBUtil.stringToBytes("ERC20-MAX_ASSETID");
+    private final byte[] MAX_ASSETID_KEY = stringToBytes("ERC20-MAX_ASSETID");
+    private final String MERGE_KEY_PREFIX;
+    private final String MERGE_KEY_ASSETID_PREFIX;
+    private final String MERGE_KEY_SYMBOL_PREFIX;
+    private final byte[] MERGE_MAX_ASSETID_KEY;
 
     private final HtgContext htgContext;
     public HtgERC20StorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX = htgChainId + "_ERC20-";
+        this.MERGE_KEY_ASSETID_PREFIX = htgChainId + "_ERC20_ASSETID-";
+        this.MERGE_KEY_SYMBOL_PREFIX = htgChainId + "_ERC20_SYMBOL-";
+        this.MERGE_MAX_ASSETID_KEY = stringToBytes(htgChainId + "_ERC20-MAX_ASSETID");
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private String KEY_ASSETID_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_ASSETID_PREFIX;
+        } else {
+            return KEY_ASSETID_PREFIX;
+        }
+    }
+    private String KEY_SYMBOL_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_SYMBOL_PREFIX;
+        } else {
+            return KEY_SYMBOL_PREFIX;
+        }
+    }
+    private byte[] MAX_ASSETID_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_MAX_ASSETID_KEY;
+        } else {
+            return MAX_ASSETID_KEY;
+        }
+    }
+
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
     }
 
     @Override
@@ -74,27 +132,27 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
             address = EMPTY_STRING;
             addressBytes = ZERO_BYTES;
         } else {
-            addressBytes = ConverterDBUtil.stringToBytes(address);
+            addressBytes = stringToBytes(address);
         }
-        values.put(ConverterDBUtil.stringToBytes(KEY_PREFIX + address), ConverterDBUtil.getModelSerialize(po));
-        values.put(ConverterDBUtil.stringToBytes(KEY_ASSETID_PREFIX + po.getAssetId()), addressBytes);
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + po.getSymbol()), StringSetPo.class);
+        values.put(stringToBytes(KEY_PREFIX() + address), ConverterDBUtil.getModelSerialize(po));
+        values.put(stringToBytes(KEY_ASSETID_PREFIX() + po.getAssetId()), addressBytes);
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + po.getSymbol()), StringSetPo.class);
         if (setPo == null) {
             setPo = new StringSetPo();
             Set<String> set = new HashSet<>();
             set.add(address);
             setPo.setCollection(set);
-            values.put(ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + po.getSymbol()), ConverterDBUtil.getModelSerialize(setPo));
+            values.put(stringToBytes(KEY_SYMBOL_PREFIX() + po.getSymbol()), ConverterDBUtil.getModelSerialize(setPo));
         } else {
             Set<String> set = setPo.getCollection();
             if (set.add(address)) {
-                values.put(ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + po.getSymbol()), ConverterDBUtil.getModelSerialize(setPo));
+                values.put(stringToBytes(KEY_SYMBOL_PREFIX() + po.getSymbol()), ConverterDBUtil.getModelSerialize(setPo));
             }
         }
-        RocksDBService.batchPut(baseArea, values);
-        //ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX + po.getAddress()), po);
-        //RocksDBService.put(baseArea, stringToBytes(KEY_ASSETID_PREFIX + po.getAssetId()), stringToBytes(po.getAddress()));
-        //RocksDBService.put(baseArea, stringToBytes(KEY_SYMBOL_PREFIX + po.getSymbol()), stringToBytes(po.getAddress()));
+        RocksDBService.batchPut(baseArea(), values);
+        //ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX() + po.getAddress()), po);
+        //RocksDBService.put(baseArea(), stringToBytes(KEY_ASSETID_PREFIX() + po.getAssetId()), stringToBytes(po.getAddress()));
+        //RocksDBService.put(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + po.getSymbol()), stringToBytes(po.getAddress()));
         return 1;
     }
 
@@ -103,7 +161,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
         if (StringUtils.isBlank(address)) {
             address = EMPTY_STRING;
         }
-        HtgERC20Po po = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address), HtgERC20Po.class);
+        HtgERC20Po po = ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX() + address), HtgERC20Po.class);
         if (po == null) {
             return null;
         }
@@ -119,7 +177,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
         }
         this.deleteAddressByAssetId(po.getAssetId());
         this.deleteAddressBySymbol(po.getSymbol(), address);
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + address));
     }
 
     @Override
@@ -127,7 +185,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
         if (StringUtils.isBlank(address)) {
             address = EMPTY_STRING;
         }
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX() + address));
         if (bytes == null) {
             return false;
         }
@@ -154,7 +212,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
     @Override
     public String findAddressByAssetId(int assetId) {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_ASSETID_PREFIX + assetId));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_ASSETID_PREFIX() + assetId));
         if (bytes == null) {
             return null;
         }
@@ -162,12 +220,12 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
     }
 
     private void deleteAddressByAssetId(int assetId) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_ASSETID_PREFIX + assetId));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_ASSETID_PREFIX() + assetId));
     }
 
     @Override
     public boolean isExistsByAssetId(int assetId) {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_ASSETID_PREFIX + assetId));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_ASSETID_PREFIX() + assetId));
         if (bytes == null) {
             return false;
         }
@@ -188,16 +246,16 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
     }
 
     private void deleteAddressBySymbol(String symbol, String address) throws Exception {
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol), StringSetPo.class);
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + symbol), StringSetPo.class);
         if (setPo != null) {
             setPo.getCollection().remove(address);
-            ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol), setPo);
+            ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + symbol), setPo);
         }
     }
 
     @Override
     public Set<String> findAddressBySymbol(String symbol) {
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol), StringSetPo.class);
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + symbol), StringSetPo.class);
         if (setPo == null) {
             return null;
         }
@@ -206,7 +264,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
     @Override
     public boolean isExistsBySymbol(String symbol) {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_SYMBOL_PREFIX + symbol));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_SYMBOL_PREFIX() + symbol));
         if (bytes == null) {
             return false;
         }
@@ -215,12 +273,12 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
 
     @Override
     public void saveMaxAssetId(int maxAssetId) throws Exception {
-        RocksDBService.put(baseArea, MAX_ASSETID_KEY, ByteUtils.intToBytes(maxAssetId));
+        RocksDBService.put(baseArea(), MAX_ASSETID_KEY(), ByteUtils.intToBytes(maxAssetId));
     }
 
     @Override
     public int getMaxAssetId() throws Exception {
-        byte[] bytes = RocksDBService.get(baseArea, MAX_ASSETID_KEY);
+        byte[] bytes = RocksDBService.get(baseArea(), MAX_ASSETID_KEY());
         if(bytes == null) {
             int maxAssetId = 1;
             saveMaxAssetId(maxAssetId);

@@ -88,9 +88,7 @@ public abstract class HtgContext {
     public abstract void setLogger(NulsLogger logger);
     public abstract void setConfig(HeterogeneousCfg config);
 
-    public void setNERVE_CHAINID(int NERVE_CHAINID) {
-        throw new RuntimeException("Not Support.");
-    }
+    public abstract void setNERVE_CHAINID(int NERVE_CHAINID);
     /**
      * 当前异构链是否支持合约的pending查询
      */

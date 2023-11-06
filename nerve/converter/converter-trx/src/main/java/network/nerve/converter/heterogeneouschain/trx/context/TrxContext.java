@@ -24,10 +24,8 @@
 package network.nerve.converter.heterogeneouschain.trx.context;
 
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.enums.AssetName;
-import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
@@ -44,9 +42,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_DOT_1;
 
 /**
  * @author: Mimi
@@ -106,6 +101,11 @@ public class TrxContext extends HtgContext implements Serializable {
 
     public void setLogger(NulsLogger logger) {
         this.logger = logger;
+    }
+
+    @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
     }
 
     @Override

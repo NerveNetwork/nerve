@@ -35,29 +35,73 @@ import network.nerve.converter.utils.ConverterDBUtil;
 import java.util.HashSet;
 import java.util.Set;
 
+import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
+
 /**
  * @author: Mimi
  * @date: 2020-03-17
  */
 public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSignAddressHistoryStorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX = "MSADDRESS-";
     private final String VERSION_KEY_PREFIX = "VMSADDRESS";
-    private final byte[] ALL_KEY = ConverterDBUtil.stringToBytes("MSADDRESS-ALL");
+    private final byte[] ALL_KEY = stringToBytes("MSADDRESS-ALL");
+    private final String MERGE_KEY_PREFIX;
+    private final String MERGE_VERSION_KEY_PREFIX;
+    private final byte[] MERGE_ALL_KEY;
 
     private final HtgContext htgContext;
     public HtgMultiSignAddressHistoryStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX = htgChainId + "_MSADDRESS-";
+        this.MERGE_VERSION_KEY_PREFIX = htgChainId + "_VMSADDRESS";
+        this.MERGE_ALL_KEY = stringToBytes(htgChainId + "_MSADDRESS-ALL");
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private String VERSION_KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_VERSION_KEY_PREFIX;
+        } else {
+            return VERSION_KEY_PREFIX;
+        }
+    }
+    private byte[] ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_ALL_KEY;
+        } else {
+            return ALL_KEY;
+        }
     }
 
     public void saveVersion(byte version) throws Exception {
-        RocksDBService.put(baseArea, ConverterDBUtil.stringToBytes(VERSION_KEY_PREFIX), new byte[]{version});
+        RocksDBService.put(baseArea(), stringToBytes(VERSION_KEY_PREFIX()), new byte[]{version});
     }
 
     public byte getVersion() {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(VERSION_KEY_PREFIX));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(VERSION_KEY_PREFIX()));
         if (bytes == null || bytes.length == 0) {
             return 0;
         } else {
@@ -65,25 +109,30 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
         }
     }
 
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
+
     @Override
     public int save(String address) throws Exception {
         if (StringUtils.isBlank(address)) {
             return 0;
         }
-        boolean result = RocksDBService.put(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address), HtgConstant.EMPTY_BYTE);
+        boolean result = RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX() + address), HtgConstant.EMPTY_BYTE);
         if (result) {
-            StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+            StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
             if(setPo == null) {
                 setPo = new StringSetPo();
                 Set<String> set = new HashSet<>();
                 set.add(address);
                 setPo.setCollection(set);
-                result = ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+                result = ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
             } else {
                 Set<String> set = setPo.getCollection();
                 if(!set.contains(address)) {
                     set.add(address);
-                    result = ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+                    result = ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
                 } else {
                     result = true;
                 }
@@ -94,7 +143,7 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
 
     @Override
     public boolean isExist(String address) {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX() + address));
         if(bytes == null) {
             return false;
         }
@@ -103,17 +152,17 @@ public class HtgMultiSignAddressHistoryStorageServiceImpl implements HtgMultiSig
 
     @Override
     public void deleteByAddress(String address) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + address));
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
         if(setPo != null) {
             setPo.getCollection().remove(address);
-            ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+            ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
         }
     }
 
     @Override
     public Set<String> findAll() {
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
         if (setPo == null) {
             return null;
         }

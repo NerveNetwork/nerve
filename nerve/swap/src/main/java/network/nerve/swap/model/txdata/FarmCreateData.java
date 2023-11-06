@@ -23,6 +23,8 @@ public class FarmCreateData extends BaseNulsData {
     private boolean modifiable;
     private long withdrawLockTime;
 
+    private long syrupLockTime;
+
     @Override
     protected void serializeToStream(NulsOutputStreamBuffer stream) throws IOException {
         stream.writeUint16(stakeToken.getChainId());
@@ -36,6 +38,9 @@ public class FarmCreateData extends BaseNulsData {
         if (withdrawLockTime > 0 || modifiable) {
             stream.writeBoolean(modifiable);
             stream.writeInt64(withdrawLockTime);
+        }
+        if (syrupLockTime > 0) {
+            stream.writeInt64(syrupLockTime);
         }
     }
 
@@ -51,7 +56,9 @@ public class FarmCreateData extends BaseNulsData {
             this.modifiable = byteBuffer.readBoolean();
             this.withdrawLockTime = byteBuffer.readInt64();
         }
-
+        if (!byteBuffer.isFinished()) {
+            this.syrupLockTime = byteBuffer.readInt64();
+        }
     }
 
     @Override
@@ -64,6 +71,9 @@ public class FarmCreateData extends BaseNulsData {
         size += SerializeUtils.sizeOfInt64();
         if (withdrawLockTime > 0 || modifiable) {
             size += SerializeUtils.sizeOfBoolean();
+            size += SerializeUtils.sizeOfInt64();
+        }
+        if(syrupLockTime > 0){
             size += SerializeUtils.sizeOfInt64();
         }
         return size;
@@ -131,5 +141,13 @@ public class FarmCreateData extends BaseNulsData {
 
     public void setModifiable(boolean modifiable) {
         this.modifiable = modifiable;
+    }
+
+    public long getSyrupLockTime() {
+        return syrupLockTime;
+    }
+
+    public void setSyrupLockTime(long syrupLockTime) {
+        this.syrupLockTime = syrupLockTime;
     }
 }

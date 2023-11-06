@@ -290,10 +290,13 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
 
         if (blockHeight >= SwapContext.PROTOCOL_1_16_0 && bus.getStakingBalanceOld().compareTo(BigInteger.ZERO) == 0 && farm.getStakeTokenBalance().compareTo(BigInteger.ZERO) > 0) {
             BigInteger allHeight = farm.getSyrupTokenBalance().divide(farm.getSyrupPerBlock());
-            farm.setStopHeight(blockHeight + allHeight.longValue());
+            //新的协议业务，当第一笔委托早于起始高度时，使用startHeight计算stopHeight，这样更准确
+            if (blockHeight >= SwapContext.PROTOCOL_1_29_0 && farm.getStartBlockHeight() > blockHeight) {
+                farm.setStopHeight(farm.getStartBlockHeight() + allHeight.longValue());
+            } else {
+                farm.setStopHeight(blockHeight + allHeight.longValue());
+            }
         }
-        //todo 新的协议业务，当第一笔委托早于起始高度时，使用startHeight计算stopHeight，这样更准确
-        
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
         bus.setLastRewardBlockNew(farm.getLastRewardBlock());

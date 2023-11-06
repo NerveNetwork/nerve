@@ -61,7 +61,8 @@ public enum AssetName {
     CELO(127, 18),
     ETC(128, 18),
     BASE(129, 18),
-    SCROLL(130, 18);
+    SCROLL(130, 18),
+    BRISE(131, 18);
 
     // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
     private int chainId;

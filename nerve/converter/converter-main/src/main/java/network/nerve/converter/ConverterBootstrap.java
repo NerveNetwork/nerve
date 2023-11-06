@@ -226,7 +226,15 @@ public class ConverterBootstrap extends RpcModule {
             ConverterContext.PROTOCOL_1_27_0 = heightVersion1_27_0;
             ConverterContext.protocolHeightMap.put(27, heightVersion1_27_0);
         } catch (Exception e) {
-            Log.warn("Failed to get height_1_26_0", e);
+            Log.warn("Failed to get height_1_27_0", e);
+        }
+        try {
+            long heightVersion1_29_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_29_0"));
+            // v1.29.0 协议升级高度
+            ConverterContext.PROTOCOL_1_29_0 = heightVersion1_29_0;
+            ConverterContext.protocolHeightMap.put(29, heightVersion1_29_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_29_0", e);
         }
         try {
             int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
@@ -362,6 +370,8 @@ public class ConverterBootstrap extends RpcModule {
         RocksDBService.createTable(ConverterDBConstant.DB_MODULE_CONGIF);
         // 异构链基本信息表
         RocksDBService.createTable(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN_INFO);
+        // 异构链数据表
+        RocksDBService.createTable(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
     }
 
     /**

@@ -86,11 +86,15 @@ public class AddressToolTest {
 
     @Test
     public void testGetBytesAddress() {
-        for (int i = 0; i < 10; i++) {
-            String address = AddressTool.getStringAddressByBytes(AddressTool.getAddress(new ECKey().getPubKey(), 5));
-            byte[] real = AddressTool.getAddress(address);
-            System.out.println("args{\"" + address + "\"},\"" + HexUtil.encode(real) + "\"");
-        }
+//        for (int i = 0; i < 10; i++) {
+            String pubs = "0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0,020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5";
+            String arr[] = pubs.split(",");
+            for(String pub:arr) {
+                String address = AddressTool.getStringAddressByBytes(AddressTool.getAddress(HexUtil.decode(pub), 1));
+                byte[] real = AddressTool.getAddress(address);
+                System.out.println("args{\"" + address + "\"},\"" + HexUtil.encode(real) + "\"");
+            }
+
     }
 
     @Test

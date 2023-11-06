@@ -115,6 +115,7 @@ public class BlockSynchronizer implements Runnable {
         try {
             BlockStorageService blockStorageService = SpringLiteContext.getBean(BlockStorageService.class);
             long latestHeight = blockStorageService.queryLatestHeight(chainId);
+
             BlockHeaderPo blockHeaderPo = blockStorageService.query(chainId, latestHeight);
             //如果上一次同步时保存区块报错,有可能本地的最新区块头数据是不准确的,需要进行验证
             if (!blockHeaderPo.isComplete()) {

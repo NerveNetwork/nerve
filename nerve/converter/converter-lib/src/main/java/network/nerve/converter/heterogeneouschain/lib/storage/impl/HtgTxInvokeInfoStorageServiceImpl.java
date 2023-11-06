@@ -45,35 +45,92 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
  */
 public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX_NERVE_COMPLETED = "TXINVOKE-NC-";
     private final String KEY_PREFIX_NERVE_SENT = "TXINVOKE-NS-";
     private final String KEY_PREFIX_ETH_PO = "TXINVOKE-P-";
     private final byte[] WAITING_TX_ALL_KEY = stringToBytes("TXINVOKE-P-ALL");
+    private final String MERGE_KEY_PREFIX_NERVE_COMPLETED;
+    private final String MERGE_KEY_PREFIX_NERVE_SENT;
+    private final String MERGE_KEY_PREFIX_ETH_PO;
+    private final byte[] MERGE_WAITING_TX_ALL_KEY;
 
     private final HtgContext htgContext;
     public HtgTxInvokeInfoStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX_NERVE_COMPLETED = htgChainId + "_TXINVOKE-NC-";
+        this.MERGE_KEY_PREFIX_NERVE_SENT = htgChainId + "_TXINVOKE-NS-";
+        this.MERGE_KEY_PREFIX_ETH_PO = htgChainId + "_TXINVOKE-P-";
+        this.MERGE_WAITING_TX_ALL_KEY = stringToBytes(htgChainId + "_TXINVOKE-P-ALL");
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX_NERVE_COMPLETED() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_NERVE_COMPLETED;
+        } else {
+            return KEY_PREFIX_NERVE_COMPLETED;
+        }
+    }
+    private String KEY_PREFIX_NERVE_SENT() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_NERVE_SENT;
+        } else {
+            return KEY_PREFIX_NERVE_SENT;
+        }
+    }
+    private String KEY_PREFIX_ETH_PO() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_ETH_PO;
+        } else {
+            return KEY_PREFIX_ETH_PO;
+        }
+    }
+    private byte[] WAITING_TX_ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_WAITING_TX_ALL_KEY;
+        } else {
+            return WAITING_TX_ALL_KEY;
+        }
+    }
+
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
     }
 
     @Override
     public int save(String nerveTxHash, HtgWaitingTxPo po) throws Exception {
-        boolean result = ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + nerveTxHash), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + nerveTxHash), po);
         if (result) {
-            StringListPo setPo = ConverterDBUtil.getModel(baseArea, WAITING_TX_ALL_KEY, StringListPo.class);
+            StringListPo setPo = ConverterDBUtil.getModel(baseArea(), WAITING_TX_ALL_KEY(), StringListPo.class);
             if (setPo == null) {
                 setPo = new StringListPo();
                 List<String> list = new ArrayList<>();
                 list.add(nerveTxHash);
                 setPo.setCollection(list);
-                result = ConverterDBUtil.putModel(baseArea, WAITING_TX_ALL_KEY, setPo);
+                result = ConverterDBUtil.putModel(baseArea(), WAITING_TX_ALL_KEY(), setPo);
             } else {
                 List<String> list = setPo.getCollection();
                 Set<String> set = new HashSet<>(list);
                 if (!set.contains(nerveTxHash)) {
                     list.add(nerveTxHash);
-                    result = ConverterDBUtil.putModel(baseArea, WAITING_TX_ALL_KEY, setPo);
+                    result = ConverterDBUtil.putModel(baseArea(), WAITING_TX_ALL_KEY(), setPo);
                 } else {
                     result = true;
                 }
@@ -84,16 +141,16 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
 
     @Override
     public HtgWaitingTxPo findEthWaitingTxPo(String nerveTxHash) {
-        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + nerveTxHash), HtgWaitingTxPo.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + nerveTxHash), HtgWaitingTxPo.class);
     }
 
     @Override
     public void deleteByTxHash(String nerveTxHash) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + nerveTxHash));
-        StringListPo setPo = ConverterDBUtil.getModel(baseArea, WAITING_TX_ALL_KEY, StringListPo.class);
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + nerveTxHash));
+        StringListPo setPo = ConverterDBUtil.getModel(baseArea(), WAITING_TX_ALL_KEY(), StringListPo.class);
         if (setPo != null) {
             setPo.getCollection().remove(nerveTxHash);
-            ConverterDBUtil.putModel(baseArea, WAITING_TX_ALL_KEY, setPo);
+            ConverterDBUtil.putModel(baseArea(), WAITING_TX_ALL_KEY(), setPo);
         }
     }
 
@@ -102,7 +159,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
         if (StringUtils.isBlank(nerveTxHash)) {
             return false;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + nerveTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + nerveTxHash));
         if (bytes == null) {
             return false;
         }
@@ -111,7 +168,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
 
     @Override
     public List<HtgWaitingTxPo> findAllWaitingTxPo() {
-        StringListPo setPo = ConverterDBUtil.getModel(baseArea, WAITING_TX_ALL_KEY, StringListPo.class);
+        StringListPo setPo = ConverterDBUtil.getModel(baseArea(), WAITING_TX_ALL_KEY(), StringListPo.class);
         if (setPo == null) {
             return null;
         }
@@ -125,7 +182,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
 
     @Override
     public int saveSentEthTx(String nerveTxHash) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE_SENT + nerveTxHash), HtgConstant.EMPTY_BYTE);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_NERVE_SENT() + nerveTxHash), HtgConstant.EMPTY_BYTE);
         return 0;
     }
 
@@ -134,7 +191,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
         if (StringUtils.isBlank(nerveTxHash)) {
             return false;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_NERVE_SENT + nerveTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_NERVE_SENT() + nerveTxHash));
         if (bytes == null) {
             return false;
         }
@@ -143,12 +200,12 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
 
     @Override
     public void deleteSentEthTx(String nerveTxHash) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_NERVE_SENT + nerveTxHash));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_NERVE_SENT() + nerveTxHash));
     }
 
     @Override
     public int saveCompletedNerveTx(String nerveTxHash) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE_COMPLETED + nerveTxHash), HtgConstant.EMPTY_BYTE);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_NERVE_COMPLETED() + nerveTxHash), HtgConstant.EMPTY_BYTE);
         return 0;
     }
 
@@ -157,7 +214,7 @@ public class HtgTxInvokeInfoStorageServiceImpl implements HtgTxInvokeInfoStorage
         if (StringUtils.isBlank(nerveTxHash)) {
             return false;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_NERVE_COMPLETED + nerveTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_NERVE_COMPLETED() + nerveTxHash));
         if (bytes == null) {
             return false;
         }

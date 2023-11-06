@@ -182,6 +182,8 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setProtocol26Height(protocol26Height);
             long protocol27Height = Long.parseLong(map.get("protocol27Height").toString());
             quConfig.setProtocol27Height(protocol27Height);
+            long protocol29Height = Long.parseLong(map.get("protocol29Height").toString());
+            quConfig.setProtocol29Height(protocol29Height);
 
         } catch (Exception e) {
             Log.error(e);
@@ -225,6 +227,7 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.protocol24Height = quConfig.getProtocol24Height();
         QuotationContext.protocol26Height = quConfig.getProtocol26Height();
         QuotationContext.protocol27Height = quConfig.getProtocol27Height();
+        QuotationContext.protocol29Height = quConfig.getProtocol29Height();
 
         LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
         LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);

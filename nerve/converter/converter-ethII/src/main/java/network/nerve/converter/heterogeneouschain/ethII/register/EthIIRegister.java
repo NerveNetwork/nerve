@@ -113,18 +113,17 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
             // 初始化实例
             initBean();
-            // 初始化待确认任务队列
-            initUnconfirmedTxQueue();
             // 初始化地址过滤集合
             initFilterAddresses();
             // 初始化升级切换操作的函数，当动态升级合约交易确认时，将调用设置的匿名函数
             initUpgradeSwitchFunction();
         }
+        return EthDBConstant.DB_ETH;
     }
 
     private void initBean() {
@@ -247,6 +246,9 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
         if (isUpgradeContract() && !this.newProcessActivated) {
             htgUpgradeContractSwitchHelper.switchProcessor(EthContext.MULTY_SIGN_ADDRESS);
         }
+        // 初始化待确认任务队列
+        initUnconfirmedTxQueue();
+        EthContext.getConverterCoreApi().addChainDBName(getChainId(), EthDBConstant.DB_ETH);
         EthIIContext.getLogger().info("ETH II 注册完成.");
     }
 

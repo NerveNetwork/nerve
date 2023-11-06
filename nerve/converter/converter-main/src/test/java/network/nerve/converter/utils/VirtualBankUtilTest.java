@@ -7,6 +7,7 @@ import io.nuls.base.signture.MultiSignTxSignature;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.util.NulsDateUtils;
@@ -21,6 +22,7 @@ import network.nerve.converter.model.txdata.VoteProposalTxData;
 import network.nerve.converter.model.txdata.WithdrawalTxData;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -226,8 +228,11 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        proposalTxHashList.add(new String[]{"NERVE", "920cf8d39242d0f182d622a0d725b598e3b2f726d266bdb5011b67a3e50149e1"});
-        proposalTxHashList.add(new String[]{"NERVE", "4bf20cb4f713204e8501592f629e4519f276730566475fd493b13eec3389b0fb"});
+        proposalTxHashList.add(new String[]{"多链路由NEST移除eth",     "5ecbc748763ba6251f1975551863d88f0c0cd7dc7610eaa8a0a2801ee1b78741"});
+        proposalTxHashList.add(new String[]{"多链路由NEST移除bsc",     "358095c3fb7429fc7af24710034318a1fe80315d07278d11ec450fc973cc7c8e"});
+        proposalTxHashList.add(new String[]{"多链路由NEST移除heco",    "e06525e01e5045479757580d3b227b9d217c6d74f32d1f7a6affc169e3cd744f"});
+        proposalTxHashList.add(new String[]{"多链路由NEST移除polygon", "98a1205aa3184051f75fb642c06d2d2e562a69679941b940e51a42439bb8c4d7"});
+        proposalTxHashList.add(new String[]{"多链路由NEST添加eth",     "6fef23b383a8b697058713a29ce7958928fb37c867e6346ac23725304e17a29d"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
@@ -242,6 +247,7 @@ public class VirtualBankUtilTest {
             String chainName = proposalInfo[0];
             String proposalHash = proposalInfo[1];
             NulsHash proposalTxHash = NulsHash.fromHex(proposalHash);
+            StringBuilder sb = new StringBuilder();
             for (String[] multiAddress : list) {
                 String address = multiAddress[0];
                 String pubkeys = multiAddress[1];
@@ -291,9 +297,12 @@ public class VirtualBankUtilTest {
                 String hash = tx.getHash().toHex();
                 nonce = hash.substring(hash.length() - 16, hash.length());
                 nonceMap.put(address, nonce);
-                System.out.println(String.format("发起链: %s, 多签地址: %s, 交易hash: %s, nextNonce: %s, 交易Hex: %s", chainName, address, hash, nonce, HexUtil.encode(tx.serialize())));
+                String txInfo = String.format("发起链: %s, 多签地址: %s, 交易hash: %s, nextNonce: %s, 交易Hex: %s", chainName, address, hash, nonce, HexUtil.encode(tx.serialize()));
+                sb.append(txInfo).append("\n");
+                System.out.println(txInfo);
                 System.out.println();
             }
+            IoUtils.writeString(new File("/Users/pierreluo/IdeaProjects/nerve-network/nerve/converter/converter-main/src/test/resources/proposal/" + chainName + ".txt"), sb.toString(), StandardCharsets.UTF_8.name());
         }
 
     }

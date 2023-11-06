@@ -51,6 +51,7 @@ public class HeterogeneousChainInfoStorageServiceImpl implements HeterogeneousCh
 
     private final String baseArea = ConverterDBConstant.DB_HETEROGENEOUS_CHAIN_INFO;
     private final String KEY_PREFIX = "HETEROGENEOUS_CHAIN_INFO-";
+    private final String CHAIN_MERGE_DB_PREFIX = "CHAIN_MERGE_DB-";
     private final byte[] ALL_KEY = stringToBytes("HETEROGENEOUS_CHAIN_INFO-ALL");
     private final byte[] HAD_INIT_2_LEDGER_ASSET_KEY = stringToBytes("HETEROGENEOUS-HAD_INIT_2_LEDGER_ASSET");
 
@@ -130,5 +131,19 @@ public class HeterogeneousChainInfoStorageServiceImpl implements HeterogeneousCh
     @Override
     public void init2LedgerAssetCompleted() throws Exception {
         RocksDBService.put(baseArea, HAD_INIT_2_LEDGER_ASSET_KEY, EthConstant.EMPTY_BYTE);
+    }
+
+    @Override
+    public boolean hadDBMerged(int hChainId) {
+        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(CHAIN_MERGE_DB_PREFIX + hChainId));
+        if (bytes == null) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void markMergedChainDB(int hChainId) throws Exception {
+        RocksDBService.put(baseArea, stringToBytes(CHAIN_MERGE_DB_PREFIX + hChainId), EthConstant.EMPTY_BYTE);
     }
 }

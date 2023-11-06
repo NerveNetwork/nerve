@@ -40,21 +40,67 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
  */
 public class HtgTxRelationStorageServiceImpl implements HtgTxRelationStorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX_NERVE = "TXRELATION-N-";
     private final String KEY_PREFIX_HT = "TXRELATION-E-";
     private final String KEY_PREFIX_HT_PO = "TXRELATION-P-";
+    private final String MERGE_KEY_PREFIX_NERVE;
+    private final String MERGE_KEY_PREFIX_HT;
+    private final String MERGE_KEY_PREFIX_HT_PO;
 
     private final HtgContext htgContext;
     public HtgTxRelationStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX_NERVE = htgChainId + "_TXRELATION-N-";
+        this.MERGE_KEY_PREFIX_HT = htgChainId + "_TXRELATION-E-";
+        this.MERGE_KEY_PREFIX_HT_PO = htgChainId + "_TXRELATION-P-";
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX_NERVE() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_NERVE;
+        } else {
+            return KEY_PREFIX_NERVE;
+        }
+    }
+    private String KEY_PREFIX_HT() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_HT;
+        } else {
+            return KEY_PREFIX_HT;
+        }
+    }
+    private String KEY_PREFIX_HT_PO() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_HT_PO;
+        } else {
+            return KEY_PREFIX_HT_PO;
+        }
+    }
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
     }
 
     @Override
     public int save(String htTxHash, String nerveTxHash, HtgSendTransactionPo ethTxPo) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_HT + htTxHash), stringToBytes(nerveTxHash));
-        ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_HT_PO + htTxHash), ethTxPo);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_HT() + htTxHash), stringToBytes(nerveTxHash));
+        ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX_HT_PO() + htTxHash), ethTxPo);
         return 1;
     }
 
@@ -63,7 +109,7 @@ public class HtgTxRelationStorageServiceImpl implements HtgTxRelationStorageServ
         if (StringUtils.isBlank(htTxHash)) {
             return null;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_HT + htTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_HT() + htTxHash));
         if (bytes == null) {
             return null;
         }
@@ -72,18 +118,18 @@ public class HtgTxRelationStorageServiceImpl implements HtgTxRelationStorageServ
 
     @Override
     public HtgSendTransactionPo findEthSendTxPo(String htTxHash) {
-        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_HT_PO + htTxHash), HtgSendTransactionPo.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX_HT_PO() + htTxHash), HtgSendTransactionPo.class);
     }
 
     @Override
     public void deleteByTxHash(String htTxHash) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_HT + htTxHash));
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_HT_PO + htTxHash));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_HT() + htTxHash));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_HT_PO() + htTxHash));
     }
 
     @Override
     public int saveNerveTxHash(String nerveTxHash) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash), HtgConstant.EMPTY_BYTE);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_NERVE() + nerveTxHash), HtgConstant.EMPTY_BYTE);
         return 0;
     }
 
@@ -92,7 +138,7 @@ public class HtgTxRelationStorageServiceImpl implements HtgTxRelationStorageServ
         if (StringUtils.isBlank(nerveTxHash)) {
             return false;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_NERVE() + nerveTxHash));
         if (bytes == null) {
             return false;
         }

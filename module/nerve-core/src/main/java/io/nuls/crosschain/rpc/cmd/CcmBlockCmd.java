@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Component
 @NerveCoreCmd(module = ModuleE.CC)
-public class BlockCmd extends BaseCmd {
+public class CcmBlockCmd extends BaseCmd {
     @Autowired
     private BlockService service;
     /**

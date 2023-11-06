@@ -81,7 +81,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
             // 初始化实例
@@ -96,12 +96,11 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
             initEthWalletRPC();
             // 存放nerveChainId
             getHtgContext().setNERVE_CHAINID(getConverterConfig().getChainId());
-            RocksDBService.createTable(DBName());
-            // 初始化待确认任务队列
-            initUnconfirmedTxQueue();
+            //RocksDBService.createTable(DBName());
             // 初始化地址过滤集合
             initFilterAddresses();
         }
+        return DBName();
     }
 
     private void initBean() {
@@ -139,10 +138,13 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
             htgCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
             // 存放CORE查询API实例
             getHtgContext().setConverterCoreApi(registerInfo.getConverterCoreApi());
+            getHtgContext().getConverterCoreApi().addChainDBName(getChainId(), DBName());
             // 更新多签地址
             getHtgContext().SET_MULTY_SIGN_ADDRESS(multiSigAddress);
             // 保存当前多签地址到多签地址历史列表中
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
+            // 初始化待确认任务队列
+            initUnconfirmedTxQueue();
             // 初始化交易等待任务队列
             initWaitingTxQueue();
             // 启动新流程的工作任务池

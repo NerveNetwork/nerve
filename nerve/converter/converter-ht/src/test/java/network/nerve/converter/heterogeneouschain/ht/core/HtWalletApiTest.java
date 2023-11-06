@@ -1022,6 +1022,16 @@ public class HtWalletApiTest extends Base {
         System.out.println();
     }
 
+    @Test
+    public void isMinterERC20() throws Exception {
+        String multy = "0x19d90d3c8eb0c0b3e3093b054031ff1ca81704b8";
+        String erc20 = "0x02e1afeef2a25eabd0362c4ba2dc6d20ca638151";
+        Function isMinterERC20Function = HtgUtil.getIsMinterERC20Function(erc20);
+        List<Type> valueTypes = htgWalletApi.callViewFunction(multy, isMinterERC20Function, true);
+        boolean isMinterERC20 = Boolean.parseBoolean(valueTypes.get(0).getValue().toString());
+        System.out.println(isMinterERC20);
+    }
+
     private List<Token20TransferDTO> parseToken20Transfer(Transaction ethTx, HtgWalletApi htgWalletApi) throws Exception {
         try {
             List<Token20TransferDTO> resultList = new ArrayList<>();

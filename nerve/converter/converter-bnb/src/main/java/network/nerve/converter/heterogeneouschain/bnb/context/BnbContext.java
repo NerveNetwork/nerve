@@ -122,6 +122,11 @@ public class BnbContext extends HtgContext implements Serializable {
     public BigInteger[] gasPriceOrders = new BigInteger[6];
 
     @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
+    }
+
+    @Override
     public IConverterCoreApi getConverterCoreApi() {
         return converterCoreApi;
     }

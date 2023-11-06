@@ -106,7 +106,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
     }
 
     @Override
-    public void init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
+    public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             // 存放日志实例
             trxContext.setLogger(logger);
@@ -121,12 +121,11 @@ public class TrxRegister implements IHeterogeneousChainRegister {
             initTrxWalletRPC();
             // 存放nerveChainId
             trxContext.NERVE_CHAINID = converterConfig.getChainId();
-            RocksDBService.createTable(TrxDBConstant.DB_TRX);
-            // 初始化待确认任务队列
-            initUnconfirmedTxQueue();
+            //RocksDBService.createTable(TrxDBConstant.DB_TRX);
             // 初始化地址过滤集合
             initFilterAddresses();
         }
+        return TrxDBConstant.DB_TRX;
     }
 
     private void initBean() {
@@ -204,10 +203,13 @@ public class TrxRegister implements IHeterogeneousChainRegister {
             trxCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
             // 存放CORE查询API实例
             trxContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
+            trxContext.getConverterCoreApi().addChainDBName(getChainId(), TrxDBConstant.DB_TRX);
             // 更新多签地址
             trxContext.MULTY_SIGN_ADDRESS = multiSigAddress;
             // 保存当前多签地址到多签地址历史列表中
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
+            // 初始化待确认任务队列
+            initUnconfirmedTxQueue();
             // 初始化交易等待任务队列
             initWaitingTxQueue();
             // 启动新流程的工作任务池

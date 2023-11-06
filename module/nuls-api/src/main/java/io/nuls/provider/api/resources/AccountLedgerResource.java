@@ -158,9 +158,9 @@ public class AccountLedgerResource {
         try {
             String txHex = form.getTxHex();
             int type = extractTxTypeFromTx(txHex);
-            if (type == SWAP_TRADE_STABLE_COIN) {
-                return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "This transaction is suspended"));
-            }
+            //if (type == SWAP_TRADE_STABLE_COIN) {
+            //    return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "This transaction is suspended"));
+            //}
             Result result = null;
             switch (type) {
                 case CREATE_CONTRACT:
@@ -233,10 +233,10 @@ public class AccountLedgerResource {
         }
         try {
             String txHex = form.getTxHex();
-            int type = extractTxTypeFromTx(txHex);
-            if (type == SWAP_TRADE_STABLE_COIN) {
-                return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "This transaction is suspended"));
-            }
+            //int type = extractTxTypeFromTx(txHex);
+            //if (type == SWAP_TRADE_STABLE_COIN) {
+            //    return RpcClientResult.getFailed(new ErrorData(CommonCodeConstanst.PARAMETER_ERROR.getCode(), "This transaction is suspended"));
+            //}
             Result result = transactionTools.newTx(config.getChainId(), txHex);
             return ResultUtil.getRpcClientResult(result);
         } catch (Exception e) {

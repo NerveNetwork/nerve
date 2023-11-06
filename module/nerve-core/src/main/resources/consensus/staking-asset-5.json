@@ -71,5 +71,14 @@
     "simple": "NVT-ETHN-LP",
     "weight": 200,
     "stopHeight": 0
+  },
+  {
+    "assetId": "158",
+    "oracleKey": "NVTUSDCNLPKEY",
+    "canBePeriodically": false,
+    "decimal": 18,
+    "simple": "NVT-USDCN-LP",
+    "weight": 200,
+    "stopHeight": 0
   }
 ]

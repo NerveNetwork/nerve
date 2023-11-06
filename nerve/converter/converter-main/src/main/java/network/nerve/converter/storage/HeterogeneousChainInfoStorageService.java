@@ -70,4 +70,14 @@ public interface HeterogeneousChainInfoStorageService {
      */
     void init2LedgerAssetCompleted() throws Exception;
 
+    /**
+     * 异构链是否以完成DB合并
+     */
+    boolean hadDBMerged(int hChainId);
+
+    /**
+     * 标记异构链已完成DB合并
+     */
+    void markMergedChainDB(int hChainId) throws Exception;
+
 }

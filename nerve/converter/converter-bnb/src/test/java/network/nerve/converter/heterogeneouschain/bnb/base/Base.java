@@ -81,13 +81,13 @@ public class Base {
     String testEthRpcAddress = "https://bsc-testnet.public.blastapi.io";
     int testChainId = 97;
     //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
-    //String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
+    String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
     //String mainEthRpcAddress = "https://bsc-dataseed1.binance.org/";
     //String mainEthRpcAddress = "https://bsc-dataseed4.defibit.io/";//1
     //String mainEthRpcAddress = "https://bsc-dataseed2.binance.org/";
     //String mainEthRpcAddress = "https://bsc-dataseed3.ninicoin.io/";//1
     //String mainEthRpcAddress = "https://bsc-dataseed3.binance.org/";
-    String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";//1
+    //String mainEthRpcAddress = "https://bsc-dataseed4.ninicoin.io/";//1
     int mainChainId = 56;
 
     @BeforeClass
@@ -103,6 +103,7 @@ public class Base {
         htgWalletApi.setEthRpcAddress(testEthRpcAddress);
         htgContext = new BnbContext();
         htgContext.setLogger(Log.BASIC_LOGGER);
+        htgContext.SET_VERSION((byte) 3);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
         cfg.setChainIdOnHtgNetwork(testChainId);
         htgContext.setConfig(cfg);

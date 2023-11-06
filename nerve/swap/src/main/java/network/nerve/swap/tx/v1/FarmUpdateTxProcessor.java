@@ -113,7 +113,7 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                 farm.setTotalSyrupAmount(bus.getTotalSyrupAmountNew());
                 farm.setStopHeight(bus.getStopHeightNew());
                 farm.setWithdrawLockTime(bus.getWithdrawLockTimeNew() == null ? 0L : bus.getWithdrawLockTimeNew().longValue());
-
+                farm.setSyrupLockTime(bus.getSyrupLockTimeNew() == null ? 0L : bus.getSyrupLockTimeNew().longValue());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
             }
@@ -149,8 +149,8 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                 farm.setSyrupPerBlock(bus.getSyrupPerBlockOld());
                 farm.setTotalSyrupAmount(bus.getTotalSyrupAmountOld());
                 farm.setStopHeight(bus.getStopHeightOld());
-                farm.setWithdrawLockTime(bus.getWithdrawLockTimeOld()==null?0L: bus.getWithdrawLockTimeOld().longValue());
-
+                farm.setWithdrawLockTime(bus.getWithdrawLockTimeOld() == null ? 0L : bus.getWithdrawLockTimeOld().longValue());
+                farm.setSyrupLockTime(bus.getSyrupLockTimeOld() == null ? 0L : bus.getSyrupLockTimeOld().longValue());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
                 this.swapExecuteResultStorageService.delete(chainId, tx.getHash());

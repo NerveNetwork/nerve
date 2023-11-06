@@ -97,6 +97,11 @@ public class MetisContext extends HtgContext implements Serializable {
     //private final BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50_0000L);
 
     @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
+    }
+
+    @Override
     public int HTG_CHAIN_ID() {
         return HTG_CHAIN_ID;
     }

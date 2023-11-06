@@ -41,8 +41,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_2;
-
 /**
  * @author: Mimi
  * @date: 2020-02-26

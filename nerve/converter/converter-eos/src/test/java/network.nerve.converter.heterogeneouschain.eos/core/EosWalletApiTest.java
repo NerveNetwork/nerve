@@ -244,14 +244,14 @@ public class EosWalletApiTest extends Base {
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
-        setLocalTest();
+        setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // 初始化 账户
         setAccount_EFa1();
         // MainAsset数量
-        String sendAmount = "0.02";
+        String sendAmount = "0.002";
         // Nerve 接收地址
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, HtgConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
@@ -277,13 +277,13 @@ public class EosWalletApiTest extends Base {
         // 初始化 账户
         setAccount_EFa1();
         // ERC20 转账数量
-        String sendAmount = "0.1";// 1.123456, 1234.123456789123456789
+        String sendAmount = "2.3";// 1.123456, 1234.123456789123456789
         // 初始化 ERC20 地址信息
         //setErc20USDT();
         setErc20NVT();
         //setErc20USD18();
         // Nerve 接收地址
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger();
         Function allowanceFunction = new Function("allowance",
@@ -330,7 +330,7 @@ public class EosWalletApiTest extends Base {
         // 初始化 ERC20 地址信息
         setErc20NVT();
         // Nerve 接收地址
-        String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
         BigInteger mainValueBi = new BigDecimal(mainValue).movePointRight(18).toBigInteger();

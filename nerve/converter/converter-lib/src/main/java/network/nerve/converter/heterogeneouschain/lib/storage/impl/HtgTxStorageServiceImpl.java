@@ -36,14 +36,39 @@ import network.nerve.converter.utils.ConverterDBUtil;
  */
 public class HtgTxStorageServiceImpl implements HtgTxStorageService {
 
-    private final String baseArea;
+    private String baseArea;
     private final String KEY_PREFIX = "BROADCAST-";
-    private final String RECOVERY_KEY_PREFIX = "RECOVERY-";
+    private final String MERGE_KEY_PREFIX;
 
     private final HtgContext htgContext;
     public HtgTxStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        int htgChainId = htgContext.HTG_CHAIN_ID();
+        this.MERGE_KEY_PREFIX = htgChainId + "_BROADCAST-";
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
     }
 
     @Override
@@ -52,18 +77,18 @@ public class HtgTxStorageServiceImpl implements HtgTxStorageService {
             return 0;
         }
         String txHash = po.getTxHash();
-        boolean result = ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash), po);
         return result ? 1 : 0;
     }
 
     @Override
     public HeterogeneousTransactionInfo findByTxHash(String txHash) {
-        return ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash), HeterogeneousTransactionInfo.class);
+        return ConverterDBUtil.getModel(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash), HeterogeneousTransactionInfo.class);
     }
 
     @Override
     public void deleteByTxHash(String txHash) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash));
+        RocksDBService.delete(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash));
     }
 
 }

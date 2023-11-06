@@ -66,7 +66,7 @@ public class Base {
     protected String address = "";
     protected String priKey = "";
     protected String multySignContractAddress = "";
-    protected byte VERSION = 2;
+    protected byte VERSION = 3;
     protected HtgWalletApi htgWalletApi;
     protected List<String> list;
     protected HtContext htgContext;

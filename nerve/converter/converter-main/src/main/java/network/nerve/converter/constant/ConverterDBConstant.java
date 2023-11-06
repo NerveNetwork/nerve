@@ -49,6 +49,10 @@ public interface ConverterDBConstant {
      * 异构链基本信息表
      */
     String DB_HETEROGENEOUS_CHAIN_INFO = "cv_table_heterogeneous_chain_info";
+    /**
+     * 异构链数据表
+     */
+    String DB_HETEROGENEOUS_CHAIN = "cv_table_heterogeneous_chain";
 
     /**
      * 交易存储表名 前缀

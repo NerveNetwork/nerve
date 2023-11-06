@@ -197,6 +197,11 @@
             <artifactId>converter-scroll</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-brise</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

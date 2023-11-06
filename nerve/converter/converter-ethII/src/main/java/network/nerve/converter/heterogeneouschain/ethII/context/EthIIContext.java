@@ -97,6 +97,11 @@ public class EthIIContext extends HtgContext implements Serializable {
     }
 
     @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        EthContext.NERVE_CHAINID = NERVE_CHAINID;
+    }
+
+    @Override
     public void setConfig(HeterogeneousCfg config) {
         EthContext.setConfig(config);
     }

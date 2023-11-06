@@ -939,8 +939,8 @@ public class OktWalletApiTest extends Base {
 
     @Test
     public void getTx() throws Exception {
-        setMain();
-        String directTxHash = "0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1";
+        //setMain();
+        String directTxHash = "0xf169a140a8f44d37ad8b950029eca030e540695069fcf9528961a72f51e2f05d";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
     }
@@ -950,9 +950,9 @@ public class OktWalletApiTest extends Base {
         // 0x7f054ce8e7a3c2aaa1939275ef7f5246f0372f095d2a26b01dc723b74c495f39
         // 0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1
         //setMainProxy();
-        setMain();
+        //setMain();
         // 直接调用erc20合约
-        String directTxHash = "0xdb046601d0431c217e2a6e1a40bd17a7fff55364c57b8f20090b5db6be4a7cc1";
+        String directTxHash = "0xf169a140a8f44d37ad8b950029eca030e540695069fcf9528961a72f51e2f05d";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
     }

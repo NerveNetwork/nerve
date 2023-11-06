@@ -209,4 +209,10 @@ public interface IConverterCoreApi {
     String signUpgradeByMachine(long nativeId, String signerPubkey, String txKey, String upgradeContract, byte version) throws NulsException;
     String signRawTransactionByMachine(long nativeId, String signerPubkey, String from, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit, String to, BigInteger value, String data) throws Exception;
     String signTronRawTransactionByMachine(String signerPubkey, String txStr) throws Exception;
+
+    void addChainDBName(int hChainId, String dbName);
+    Map<Integer, String> chainDBNameMap();
+    void setDbMergedStatus(int hChainid);
+    boolean isDbMerged(int hChainid);
+    String mergedDBName();
 }

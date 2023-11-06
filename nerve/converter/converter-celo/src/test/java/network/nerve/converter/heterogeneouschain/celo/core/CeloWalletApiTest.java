@@ -283,7 +283,7 @@ public class CeloWalletApiTest extends Base {
         // 初始化 账户
         setAccount_5996();
         // MainAsset数量
-        String sendAmount = "0.001";
+        String sendAmount = "0.002";
         // Nerve 接收地址
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
@@ -311,11 +311,11 @@ public class CeloWalletApiTest extends Base {
         // 初始化 账户
         setAccount_5996();
         // ERC20 转账数量
-        String sendAmount = "2";// ,
+        String sendAmount = "1234.123456789123456789";// 1.123456, 1234.123456789123456789
         // 初始化 ERC20 地址信息
-        setErc20NVT();
+        //setErc20NVT();
         //setErc20USDT();
-        //setErc20USD18();
+        setErc20USD18();
         // Nerve 接收地址
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 

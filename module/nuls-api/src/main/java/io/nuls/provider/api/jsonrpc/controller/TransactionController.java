@@ -88,7 +88,37 @@ public class TransactionController {
     TransferService transferService = ServiceManager.get(TransferService.class);
 
     BlockService blockService = ServiceManager.get(BlockService.class);
+    @RpcMethod("getTxSerialization")
+    @ApiOperation(description = "根据hash获取交易序列化数据", order = 301)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hash", parameterDes = "交易hash")
+    })
+    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = TransactionDto.class))
+    public RpcResult getTxSerialization(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int chainId;
+        String txHash;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            txHash = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[txHash] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        if (StringUtils.isBlank(txHash) || !ValidateUtil.validHash(txHash)) {
+            return RpcResult.paramError("[txHash] is inValid");
+        }
 
+        Result<String> result = transactionTools.getTxSerialize(chainId, txHash);
+        return ResultUtil.getJsonRpcResult(result);
+    }
     @RpcMethod("getTx")
     @ApiOperation(description = "根据hash获取交易", order = 301)
     @Parameters({
@@ -230,10 +260,10 @@ public class TransactionController {
                 return RpcResult.dataNotFound();
             }
 
-            int type = extractTxTypeFromTx(txHex);
-            if (type == SWAP_TRADE_STABLE_COIN) {
-                return RpcResult.paramError("This transaction is suspended");
-            }
+            //int type = extractTxTypeFromTx(txHex);
+            //if (type == SWAP_TRADE_STABLE_COIN) {
+            //    return RpcResult.paramError("This transaction is suspended");
+            //}
             Result result = transactionTools.newTx(chainId, txHex);
 
             if (result.isSuccess()) {
@@ -276,10 +306,10 @@ public class TransactionController {
             if (!Context.isChainExist(chainId)) {
                 return RpcResult.dataNotFound();
             }
-            int type = extractTxTypeFromTx(txHex);
-            if (type == SWAP_TRADE_STABLE_COIN) {
-                return RpcResult.paramError("This transaction is suspended");
-            }
+            //int type = extractTxTypeFromTx(txHex);
+            //if (type == SWAP_TRADE_STABLE_COIN) {
+            //    return RpcResult.paramError("This transaction is suspended");
+            //}
             Result result = transactionTools.newTx(chainId, txHex);
             if (result.isSuccess()) {
                 return RpcResult.success(result.getData());

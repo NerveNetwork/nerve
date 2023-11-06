@@ -151,7 +151,7 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void getTxAndPublicKeyTest() throws Exception {
         setMain();
-        String txHash = "0xc78814a2c4b07f9f039738c7e56d8ad09ac737d8bbf0c460a48678987029292c";
+        String txHash = "0xae08823bbca0e4a66f3025c3084f8da332f08e94b357e8e3d7a2c4714b562160";
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         /*String data = "";
         if (StringUtils.isNotBlank(tx.getInput()) && !"0x".equals(tx.getInput().toLowerCase())) {

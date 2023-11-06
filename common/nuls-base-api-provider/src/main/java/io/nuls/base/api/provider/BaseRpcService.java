@@ -32,7 +32,7 @@ public abstract class BaseRpcService extends BaseService {
      */
     protected <T,R> Result<T> callRpc(String module,String method,Object req,Function<R,Result> callback) {
         Map<String, Object> params = MapUtils.beanToLinkedMap(req);
-        Log.debug("call {} rpc , method : {},param : {}",module,method,params);
+//        Log.debug("call {} rpc , method : {},param : {}",module,method,params);
         Response cmdResp;
         try {
             Long timeOut = null;
@@ -44,7 +44,7 @@ public abstract class BaseRpcService extends BaseService {
                 timeOut = Constants.TIMEOUT_TIMEMILLIS;
             }
             cmdResp = ResponseMessageProcessor.requestAndResponse(module, method, params, timeOut);
-            Log.debug("result : {}",cmdResp);
+//            Log.debug("result : {}",cmdResp);
         } catch (Exception e) {
             Log.warn("Calling remote interface failed. module:{} - interface:{} - message:{}", module, method, e.getMessage());
             return fail(RPC_ERROR_CODE,e.getMessage());

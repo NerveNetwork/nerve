@@ -33,6 +33,8 @@ public class FarmBus extends BaseBus {
     private Long withdrawLockTimeOld;
     private Long stopHeightOld;
     private Long stopHeightNew;
+    private Long syrupLockTimeOld;
+    private Long syrupLockTimeNew;
 
     public long getLastRewardBlockNew() {
         return lastRewardBlockNew;
@@ -208,5 +210,21 @@ public class FarmBus extends BaseBus {
 
     public void setStopHeightNew(Long stopHeightNew) {
         this.stopHeightNew = stopHeightNew;
+    }
+
+    public Long getSyrupLockTimeOld() {
+        return syrupLockTimeOld;
+    }
+
+    public void setSyrupLockTimeOld(Long syrupLockTimeOld) {
+        this.syrupLockTimeOld = syrupLockTimeOld;
+    }
+
+    public Long getSyrupLockTimeNew() {
+        return syrupLockTimeNew;
+    }
+
+    public void setSyrupLockTimeNew(Long syrupLockTimeNew) {
+        this.syrupLockTimeNew = syrupLockTimeNew;
     }
 }

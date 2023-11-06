@@ -44,7 +44,7 @@ public interface IHeterogeneousChainRegister {
     /**
      * 2. Nerve核心将调用此函数初始化异构链的数据，如初始化配置、DB
      */
-    void init(HeterogeneousCfg config, NulsLogger logger) throws Exception;
+    String init(HeterogeneousCfg config, NulsLogger logger) throws Exception;
 
     /**
      * 3. 获取异构链的基本信息，如chainId、symbol、初始多签地址

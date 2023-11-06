@@ -34,6 +34,7 @@ import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
+import network.nerve.converter.constant.ConverterDBConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
@@ -96,6 +97,8 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private Map<Integer, NerveAssetInfo> htgMainAssetMap = new HashMap<>(16);
     private Map<NerveAssetInfo, AssetName> htgMainAssetByNerveMap = new HashMap<>(16);
     private Set<String> skipTransactions = new HashSet<>();
+    private Map<Integer, String> chainDBNameMap = new HashMap<>();
+    private Map<Integer, Boolean> dbMergedChainMap = new HashMap<>();
     private volatile List<Runnable> htgConfirmTxHandlers = new ArrayList<>();
     private volatile List<Runnable> htgRpcAvailableHandlers = new ArrayList<>();
     private volatile List<Runnable> htgWaitingTxInvokeDataHandlers = new ArrayList<>();
@@ -691,5 +694,34 @@ public class ConverterCoreApi implements IConverterCoreApi {
         extend.put("method", "cvSignTronRawTransaction");
         extend.put("tx", txStr);
         return AccountCall.signature(nerveChain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(Numeric.cleanHexPrefix(signerPubkey), nerveChain.getChainId())), "pwd", "00", extend);
+    }
+
+    @Override
+    public void addChainDBName(int hChainId, String dbName) {
+        chainDBNameMap.put(hChainId, dbName);
+    }
+
+    @Override
+    public Map<Integer, String> chainDBNameMap() {
+        return chainDBNameMap;
+    }
+
+    @Override
+    public void setDbMergedStatus(int hChainid) {
+        dbMergedChainMap.put(hChainid, true);
+    }
+
+    @Override
+    public boolean isDbMerged(int hChainid) {
+        Boolean merged = dbMergedChainMap.get(hChainid);
+        if (merged == null) {
+            return false;
+        }
+        return merged;
+    }
+
+    @Override
+    public String mergedDBName() {
+        return ConverterDBConstant.DB_HETEROGENEOUS_CHAIN;
     }
 }

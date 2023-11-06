@@ -82,6 +82,7 @@ public class FarmCreateTxHelper {
         po.setSyrupTokenBalance(txData.getTotalSyrupAmount());
         po.setModifiable(txData.isModifiable());
         po.setWithdrawLockTime(txData.getWithdrawLockTime());
+        po.setSyrupLockTime(txData.getSyrupLockTime());
         return po;
     }
 

@@ -90,6 +90,11 @@ public class AvaxContext extends HtgContext implements Serializable {
     private volatile boolean availableRPC = true;
 
     @Override
+    public void setNERVE_CHAINID(int NERVE_CHAINID) {
+        this.NERVE_CHAINID = NERVE_CHAINID;
+    }
+
+    @Override
     public int HTG_CHAIN_ID() {
         return HTG_CHAIN_ID;
     }

@@ -45,33 +45,71 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
  */
 public class HtgAccountStorageServiceImpl implements HtgAccountStorageService {
 
-    private final String baseArea;
-    private final String KEY_PREFIX = "ACCOUNT-";
-    private final byte[] ACCOUNT_ALL_KEY = stringToBytes("ACCOUNT-ALL");
-
+    private String baseArea;
+    private final String KEY_PREFIX;
+    private final byte[] ACCOUNT_ALL_KEY;
+    private final String MERGE_KEY_PREFIX;
+    private final byte[] MERGE_ACCOUNT_ALL_KEY;
     private final HtgContext htgContext;
+
     public HtgAccountStorageServiceImpl(HtgContext htgContext, String baseArea) {
         this.htgContext = htgContext;
         this.baseArea = baseArea;
+        KEY_PREFIX = "ACCOUNT-";
+        ACCOUNT_ALL_KEY = stringToBytes("ACCOUNT-ALL");
+        MERGE_KEY_PREFIX = htgContext.HTG_CHAIN_ID() + "_" + KEY_PREFIX;
+        MERGE_ACCOUNT_ALL_KEY = stringToBytes(htgContext.HTG_CHAIN_ID() + "_ACCOUNT-ALL");
     }
 
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = htgContext.getConverterCoreApi().isDbMerged(htgContext.HTG_CHAIN_ID());
+        if (merged) {
+            this.baseArea = htgContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private byte[] ACCOUNT_ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_ACCOUNT_ALL_KEY;
+        } else {
+            return ACCOUNT_ALL_KEY;
+        }
+    }
+
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
+    
     @Override
     public int save(HtgAccount po) throws Exception {
         if (po == null) {
             return 0;
         }
-        boolean result = ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX + po.getAddress()), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX() + po.getAddress()), po);
         if (result) {
-            StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+            StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
             if (accountSetPo == null) {
                 accountSetPo = new StringSetPo();
                 Set<String> set = new HashSet<>();
                 set.add(po.getAddress());
                 accountSetPo.setCollection(set);
-                result = ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+                result = ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
             } else {
                 accountSetPo.getCollection().add(po.getAddress());
-                result = ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+                result = ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
             }
         }
         return result ? 1 : 0;
@@ -79,22 +117,22 @@ public class HtgAccountStorageServiceImpl implements HtgAccountStorageService {
 
     @Override
     public HtgAccount findByAddress(String address) {
-        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX + address), HtgAccount.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX() + address), HtgAccount.class);
     }
 
     @Override
     public void deleteByAddress(String address) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX + address));
-        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + address));
+        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
         if(accountSetPo != null) {
             accountSetPo.getCollection().remove(address);
-            ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+            ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
         }
     }
 
     @Override
     public List<HeterogeneousAccount> findAll() {
-        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
         if (accountSetPo == null) {
             return null;
         }

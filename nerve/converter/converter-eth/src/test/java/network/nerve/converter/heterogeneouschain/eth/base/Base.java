@@ -26,10 +26,18 @@ package network.nerve.converter.heterogeneouschain.eth.base;
 import io.nuls.core.log.Log;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.core.ETHWalletApi;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.util.Arrays;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 /**
  * @author: Mimi
@@ -59,10 +67,13 @@ public class Base {
         if(ethWalletApi.getWeb3j() != null) {
             ethWalletApi.getWeb3j().shutdown();
         }
-        //String mainEthRpcAddress = "https://mainnet.infura.io/v3/e51e9f10a4f647af81d5f083873f27a5";
-        String mainEthRpcAddress = "http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
+        String mainEthRpcAddress = "https://mainnet.infura.io/v3/840832a822b14c3b9c99ef8c6aac9e35";
+        //String mainEthRpcAddress = "https://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv";
         //String mainEthRpcAddress = "https://http-mainnet.hecochain.com";
-        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
         ethWalletApi.setWeb3j(web3j);
         ethWalletApi.setEthRpcAddress(mainEthRpcAddress);
     }
