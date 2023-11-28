@@ -27,7 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.core.constant.BaseConstant;
+import io.nuls.core.crypto.Base58;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.crypto.Sha256Hash;
 import io.nuls.core.crypto.Sha512Hash;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
@@ -37,11 +39,20 @@ import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
+import network.nerve.converter.heterogeneouschain.eth.utils.BTCUtilsTest;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
+import org.bitcoinj.core.Bech32;
+import org.bitcoinj.core.NetworkParameters;
+import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.crypto.*;
+import org.bitcoinj.params.MainNetParams;
+import org.bitcoinj.script.Script;
+import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
+import org.bouncycastle.math.ec.FixedPointCombMultiplier;
+import org.bouncycastle.math.ec.custom.sec.SecP256K1Point;
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +62,9 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.*;
 
 import static io.nuls.core.crypto.ECKey.CURVE;
@@ -85,7 +98,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "8bc0ccc66694555540cd83ea63b4de9426fff7d48dbd273d97981e135d51b3a8";
+        String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -116,6 +129,8 @@ public class EthAccountTest extends Base {
         System.out.println(String.format("Test NULS address: %s", testAddress.toString()));
         Address nerveAddress = new Address(9, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(nEckey.getPubKey()));
         System.out.println(String.format("Nerve address: %s", nerveAddress.toString()));
+        Address testNerveAddress = new Address(5, BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(nEckey.getPubKey()));
+        System.out.println(String.format("Test Nerve address: %s", testNerveAddress.toString()));
         System.out.println();
 
 
@@ -243,6 +258,7 @@ public class EthAccountTest extends Base {
     }
 
 
+
     @Test
     public void NULSAddressByPubkey() {
         // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
@@ -252,27 +268,477 @@ public class EthAccountTest extends Base {
         // 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,
         // 028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
         // 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
-        AddressTool.addPrefix(18, "BBAI");
         List<String> pubList = new ArrayList<>();
-        //pubList.add("000000000000000000000000000000000000000000000000000000000000000000");
-        //pubList.add("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");
-        //pubList.add("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d");
-        //pubList.add("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0");
-        //pubList.add("03b9e15389e42e1fabf4694f8e9d2949dd82a461ed8563e1d3306b772248ae9206");
-        //pubList.add("02893771a18d17e10eabb08718f7da8e10a825ee19c33c8b36b13d95375f6f4a03");
-        //pubList.add("0377d7261ed7ce92c1e29ce9b09b697274efbdc65ecbe18d7b011455399681d7de");
-        pubList.add("0369b20002bc58c74cb6fd5ef564f603834393f53bed20c3314b4b7aba8286a7e0");
+        pubList.add("0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b");
+        pubList.add("02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d");
+        pubList.add("02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0");
 
         chainId = 1;
+        String pubkeys = "";
         for (String pubkey : pubList) {
-            //System.out.println("------");
-            //System.out.println(pubkey);
-            //System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
-            //System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 2)));
-            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
-            //System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+            pubkeys += pubkey + ",";
+        }
+        System.out.println(pubkeys);
+        System.out.println();
+        for (String pubkey : pubList) {
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
+        }
+        System.out.println();
+        for (String pubkey : pubList) {
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 2)));
+        }
+        System.out.println();
+        for (String pubkey : pubList) {
             System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 5)));
         }
+        System.out.println();
+        for (String pubkey : pubList) {
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
+        }
+        System.out.println();
+        for (String pubkey : pubList) {
+            System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+        }
+        System.out.println();
+    }
+
+    @Test
+    public void NULSAddressByPrikey() {
+        List<String> priList = new ArrayList<>();
+        priList.add("71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc");
+        priList.add("71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc");
+        priList.add("71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc");
+        chainId = 1;
+        String pubkeys = "", evmAddresses = "", testNulsAddresses = "";
+        for (String prikey : priList) {
+            io.nuls.core.crypto.ECKey nEckey = io.nuls.core.crypto.ECKey.fromPrivate(HexUtil.decode(Numeric.cleanHexPrefix(prikey)));
+            String pubkey = Numeric.toHexStringNoPrefix(nEckey.getPubKeyPoint().getEncoded(true));
+            System.out.println("------");
+            pubkeys += pubkey + ",";
+            evmAddresses += EthUtil.genEthAddressByCompressedPublickey(pubkey) + ",";
+            testNulsAddresses += AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 2)) + ",";
+            //System.out.println(pubkey);
+            System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 1)));
+            //System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 2)));
+            //System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 9)));
+            //System.out.println(EthUtil.genEthAddressByCompressedPublickey(pubkey));
+            //System.out.println(AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(pubkey, 5)));
+        }
+        System.out.println(pubkeys);
+        System.out.println(evmAddresses);
+        System.out.println(testNulsAddresses);
+    }
+
+    @Test
+    public void test0() throws Exception {
+        /*
+        String key = "xpub6H3W6JmYJXN49h5TfcVjLC3onS6uPeUTTJoVvRC8oG9vsTn2J8LwigLzq5tHbrwAzH9DGo6ThGUdWsqce8dGfwHVBxSbixjDADGGdzF7t2B";
+        byte[] decode = Base58.decode(key);
+        System.out.println("hex: " + HexUtil.encode(decode));
+        io.nuls.core.crypto.ECKey ecKey1 = io.nuls.core.crypto.ECKey.fromPublicOnly(decode);
+        System.out.println(String.format("converter1 from ETH's pubkey: %s", Numeric.toHexString(ecKey1.getPubKeyPoint().getEncoded(true))));
+        */
+
+        // 0488b21e05dd94e1d000000000e2869a9849f8d49b64f8dcc5cb374c10f9a288255907ce20f66af502b895b98b03cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc11534f24c60
+        //     cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115
+        // 0x04cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc1158190abf51fae206f0a1c825717ed512366620dad8c82b09807e7f27986e5c3fb
+        String pub = "02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
+        io.nuls.core.crypto.ECKey ecKey2 = io.nuls.core.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        System.out.println(String.format("converter1 from ETH's pubkey: %s", Numeric.toHexString(ecKey2.getPubKeyPoint().getEncoded(true))));
+        System.out.println(String.format("converter1 from ETH's pubkey: %s", Numeric.toHexString(ecKey2.getPubKeyPoint().getEncoded(false))));
+
+        String internalKey = "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
+        String outKey = "a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c";
+        String scriptKey = "5120a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c";
+        String address = "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr";
+
+        // 79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+
+        SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(outKey));
+        System.out.println("toBech32: " + segwitAddress.toBech32());
+        //
+        //Bech32.Bech32Data decode = Bech32.decode(address);
+        //System.out.println("data: " + HexUtil.encode(decode.data));
+        //System.out.println("hrp: " + decode.hrp);
+        //System.out.println("encoding: " + decode.encoding.toString());
+
+        //org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        //ecKey.decompress();
+        //ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        //System.out.println(HexUtil.encode(pubKeyPoint.getEncoded(true)));
+        //byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        //System.out.println(HexUtil.encode(x));
+        //byte[] t = taggedHash("TapTweak", x);
+        //
+        //BigInteger bigT = new BigInteger(t);
+        //ECPoint tMultiplyG = point_mul(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        //ECPoint Q = point_add(pubKeyPoint, tMultiplyG);
+
+        //BigInteger bigT = new BigInteger(1, t);
+        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        //ECPoint Q = pubKeyPoint.add(tMultiplyG);
+
+        //BigInteger bigT = new BigInteger(1, t);
+        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        //tMultiplyG = org.bitcoinj.core.ECKey.CURVE.validatePublicPoint(tMultiplyG);
+        //ECPoint Q = pubKeyPoint.add(tMultiplyG);
+
+        //org.bitcoinj.core.ECKey ecKeyT = org.bitcoinj.core.ECKey.fromPrivate(t);
+        //ECPoint Q = pubKeyPoint.add(ecKeyT.getPubKeyPoint());
+
+        //byte[] resultBytes = Q.getXCoord().getEncoded();
+        //System.out.println("resultBytes:" + HexUtil.encode(resultBytes));
+        //SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, resultBytes);
+        //System.out.println("toBech32: " + segwitAddress.toBech32());
+    }
+
+    @Test
+    public void testTapTweak() throws Exception {
+        test1();
+        //test2();
+        test3();
+        test4();
+        //test5();
+    }
+
+    //String pub = "02872aa57efbea3a0e1ec23eccb74bb9c64b9d35e4dc75319506ae52cc80b2391d";
+    String pub = "02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
+    @Test
+    public void test5() throws Exception {
+        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        byte[] t = taggedHash("TapTweak", x);
+
+        BigInteger bigT = new BigInteger(1, t);
+        org.bitcoinj.core.ECKey tKey = org.bitcoinj.core.ECKey.fromPrivate(bigT);
+        System.out.println(tKey.getPublicKeyAsHex());
+        ECPoint Q = pubKeyPoint.add(tKey.getPubKeyPoint());
+
+        byte[] resultBytes = Q.getXCoord().getEncoded();
+        System.out.println("resultBytes:" + HexUtil.encode(resultBytes));
+        SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(HexUtil.encode(resultBytes)));
+        System.out.println("toBech32: " + segwitAddress.toBech32());
+        System.out.println();
+
+    }
+
+    void printQxcoordAndSegwitAddress(ECPoint Q) {
+        byte[] resultBytes = Q.getXCoord().getEncoded();
+        System.out.println("resultBytes:" + HexUtil.encode(resultBytes));
+        SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(HexUtil.encode(resultBytes)));
+        System.out.println("toBech32: " + segwitAddress.toBech32());
+        System.out.println();
+    }
+    @Test
+    public void test2() throws Exception {
+        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        ecKey.decompress();
+        ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        byte[] t = taggedHash("TapTweak", x);
+
+        BigInteger bigT = new BigInteger(t);
+        ECPoint tMultiplyG = point_mul(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        ECPoint Q = point_add(pubKeyPoint, tMultiplyG);
+
+        printQxcoordAndSegwitAddress(Q);
+    }
+    @Test
+    public void test1() throws Exception {
+        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        byte[] t = taggedHash("TapTweak", x);
+        System.out.println("t: " + HexUtil.encode(t));
+
+        BigInteger bigT = new BigInteger(1, t);
+        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        ECPoint Q = pubKeyPoint.add(tMultiplyG);
+
+        printQxcoordAndSegwitAddress(Q);
+    }
+    /** taproot地址生成规则 (ECPoint.add方法错误，与taproot规则不兼容，原因未知)
+    Compute the public key P = privkey * G.
+    Let Pb be the serialization of P in x-only form.
+    Compute the tweak t = SHA256(SHA256("TapTweak") || SHA256("TapTweak") || Pb), interpreted as 32-byte big endian encoded integer.
+    Compute the tweaked public key Q = P + (t * G).
+    Let Qb be the serialization of Q in x-only form.
+    The address is bech32m_encode(payload=Qb, version=1).
+    */
+    @Test
+    public void test3() throws Exception {
+        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        byte[] t = taggedHash("TapTweak", x);
+
+        BigInteger bigT = new BigInteger(1, t);
+        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        tMultiplyG = org.bitcoinj.core.ECKey.CURVE.validatePublicPoint(tMultiplyG);
+        ECPoint Q = pubKeyPoint.add(tMultiplyG);
+
+        printQxcoordAndSegwitAddress(Q);
+    }
+
+    @Test
+    public void tweakHash() {
+        byte[] tweakHash = taggedHash("TapTweak", Numeric.hexStringToByteArray("cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115"));
+        System.out.println(Numeric.toHexStringNoPrefix(tweakHash).equals("2ca01ed85cf6b6526f73d39a1111cd80333bfdc00ce98992859848a90a6f0258"));
+    }
+    @Test
+    public void test4() throws Exception {
+        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode("02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115"));
+        //ecKey.decompress();
+        ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
+        byte[] x = pubKeyPoint.getXCoord().getEncoded();
+        byte[] y = pubKeyPoint.getYCoord().getEncoded();
+        byte[] t = taggedHash("TapTweak", x);
+        System.out.println("x: " + HexUtil.encode(x));
+        System.out.println("y: " + HexUtil.encode(y));
+        System.out.println("t: " + HexUtil.encode(t));
+
+        System.out.println("px: " + new BigInteger(1, x));
+        System.out.println("py: " + new BigInteger(1, y));
+        System.out.println("px hex: " + new BigInteger(1, x).toString(16));
+        System.out.println("py hex: " + new BigInteger(1, y).toString(16));
+        org.bitcoinj.core.ECKey tKey = org.bitcoinj.core.ECKey.fromPrivate(t);
+        //ECPoint ecPoint = org.bitcoinj.core.ECKey.publicPointFromPrivate(new BigInteger(t));
+        byte[] tweakX = tKey.getPubKeyPoint().getXCoord().getEncoded();
+        byte[] tweakY = tKey.getPubKeyPoint().getYCoord().getEncoded();
+        System.out.println("tx: " + new BigInteger(1, tweakX));
+        System.out.println("ty: " + new BigInteger(1, tweakY));
+        System.out.println("t pub: " + HexUtil.encode(tKey.getPubKey()));
+        BigInteger[] addRe = BTCUtilsTest.add(new BigInteger(1, x), new BigInteger(1, y), BigInteger.ONE,
+                new BigInteger(1, tweakX), new BigInteger(1, tweakY), BigInteger.ONE);
+        BigInteger[] toAffineRe = BTCUtilsTest.toAffine(addRe[0], addRe[1], addRe[2], null);
+        String outKey = toAffineRe[0].toString(16);
+        System.out.println("tweak pub: " + outKey);
+        //String internalKey = "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
+        //String outKey = "a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c";
+        //String scriptKey = "5120a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c";
+        //String address = "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr";
+
+        SegwitAddress segwitAddress = SegwitAddress.fromProgram(MainNetParams.get(), 1, HexUtil.decode(outKey));
+        System.out.println("toBech32: " + segwitAddress.toBech32());
+        System.out.println();
+
+
+    }
+
+    private static final BigInteger p = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16);
+
+    public static ECPoint point_mul(ECPoint P, BigInteger n) {
+        ECPoint R = null;
+        for (int i = 0; i < 256; i++) {
+            if ((n.shiftRight(i).and(BigInteger.ONE)).compareTo(BigInteger.ONE) == 0) {
+                R = point_add(R, P);
+            }
+            P = point_add(P, P);
+        }
+        return R;
+    }
+
+    public static BigInteger x(ECPoint p) {
+        return p.getXCoord().toBigInteger();
+    }
+
+    public static BigInteger y(ECPoint p) {
+        return p.getYCoord().toBigInteger();
+    }
+
+    public static ECPoint point_add(ECPoint P1, ECPoint P2) {
+        if (P1 == null) {
+            return P2;
+        }
+        if (P2 == null) {
+            return P1;
+        }
+        if (x(P1).compareTo(x(P2)) == 0 && (y(P1).compareTo(y(P2)) != 0))
+            return null;
+        BigInteger lam;
+        if (P1.equals(P2)) {
+            lam = (BigInteger.valueOf(3).multiply(x(P1).multiply(x(P1)).multiply((BigInteger.valueOf(2).multiply(y(P1))).modPow(p.subtract(BigInteger.valueOf(2)), p)))).mod(p);
+        } else {
+            lam = ((y(P2).subtract(y(P1))).multiply((x(P2).subtract(x(P1))).modPow(p.subtract(BigInteger.valueOf(2)), p))).mod(p);
+        }
+        BigInteger x3 = (lam.multiply(lam).subtract(x(P1)).subtract(x(P2))).mod(p);
+        return org.bitcoinj.core.ECKey.CURVE.getCurve().createPoint(x3, (lam.multiply(x(P1).subtract(x3)).subtract(y(P1))).mod(p));
+    }
+
+    public static byte[] taggedHash(String tag, byte[] msg) {
+        byte[] tagHash = Sha256Hash.hash(tag.getBytes());
+        System.out.println("tagHash===" + HexUtil.encode(tagHash));
+        byte[] doubleTagHash = Arrays.copyOf(tagHash, tagHash.length * 2);
+        System.arraycopy(tagHash, 0, doubleTagHash, tagHash.length, tagHash.length);
+        System.out.println("doubleTagHash===" + HexUtil.encode(doubleTagHash));
+        byte[] input = new byte[tagHash.length * 2 + msg.length];
+        System.arraycopy(doubleTagHash, 0, input, 0, doubleTagHash.length);
+        System.arraycopy(msg, 0, input, doubleTagHash.length, msg.length);
+        System.out.println("input===" + HexUtil.encode(input));
+        return Sha256Hash.hash(input);
+    }
+
+    public static byte[] taggedHash5(String tag, byte[] msg) throws Exception {
+        byte[] tagHash = Sha256Hash.hash(tag.getBytes());
+        byte[] input = new byte[tagHash.length + msg.length];
+        System.arraycopy(tagHash, 0, input, 0, tagHash.length);
+        System.arraycopy(msg, 0, input, tagHash.length, msg.length);
+        return Sha256Hash.hash(input);
+    }
+
+    public static byte[] taggedHash2(String tag, byte[] msg) throws Exception {
+        byte[] tagHash = Sha256Hash.hash(tag.getBytes());
+        String tagHashStr = HexUtil.encode(tagHash);
+        String input = tagHashStr + tagHashStr + HexUtil.encode(msg);
+        return Sha256Hash.hash(input.getBytes());
+    }
+
+    public static byte[] taggedHash3(String tag, byte[] msg) throws Exception {
+        byte[] tagHash = Sha256Hash.hash(tag.getBytes());
+        BigInteger tagHashBig = new BigInteger(1, tagHash);
+        BigInteger input = tagHashBig.add(tagHashBig).add(new BigInteger(1, msg));
+        return Sha256Hash.hash(input.toByteArray());
+    }
+
+    public static byte[] taggedHash4(String tag, byte[] msg) throws Exception {
+        byte[] tagHash = Sha256Hash.hash(tag.getBytes());
+        BigInteger tagHashBig = new BigInteger(tagHash);
+        BigInteger input = tagHashBig.add(tagHashBig).add(new BigInteger(msg));
+        return Sha256Hash.hash(input.toByteArray());
+    }
+
+    /**
+     * 隔离见证地址 原生
+     * @param pubKey
+     * @return
+     */
+    //public static String getBtcSegregatedWitnessAddress(byte[] pubKey) {
+    //    try {
+    //        PublicKey publicKey = new PublicKey(pubKey, PublicKeyType.SECP256K1);
+    //        String address = CoinType.BITCOIN.deriveAddressFromPublicKey(publicKey);
+    //        return address;
+    //    }catch (Exception e){
+    //        return "";
+    //    }
+    //}
+    //
+    ///**
+    // * 隔离见证地址 兼容
+    // * @param pubKey
+    // * @return
+    // */
+    //public static String getBtcSegregatedWitness2Address(byte[] pubKey) {
+    //    try {
+    //        PublicKey publicKey = new PublicKey(pubKey, PublicKeyType.SECP256K1);
+    //        String address = new BitcoinAddress(publicKey,CoinType.BITCOIN.p2shPrefix()).description();
+    //        return address;
+    //    }catch (Exception e){
+    //        return "";
+    //    }
+    //}
+
+    @Test
+    public void btcAddressTest() {
+        //getBtcSegregatedWitnessAddress("71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc");
+        getBtcSegregatedWitnessAddressByPubkey("03cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115");
+    }
+    /**
+     * 生成隔离见证地址兼容
+     * @param mnemonic
+     * @return
+     */
+    public static String getBtcSegregatedWitnessAddress(String prikey) {
+        String address = "";
+        try {
+            NetworkParameters networkParameters = MainNetParams.get();
+            BigInteger privkeybtc = new BigInteger(1, HexUtil.decode(prikey));
+            org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPrivate(privkeybtc);
+            SegwitAddress segwitAddress = SegwitAddress.fromKey(networkParameters, ecKey);
+            address = segwitAddress.toBech32();
+            System.out.println("隔离见证兼容地址："+address);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return address;
+    }
+
+    public static String getBtcSegregatedWitnessAddressByPubkey(String pubKey) {
+        String address = "";
+        try {
+            NetworkParameters networkParameters = MainNetParams.get();
+            org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(Numeric.hexStringToByteArray(pubKey));
+            SegwitAddress segwitAddress = SegwitAddress.fromKey(networkParameters, ecKey);
+            address = segwitAddress.toBech32();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return address;
+    }
+
+    @Test
+    public void btcPriTest() throws Exception {
+        //0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d:::KwdMAjGmerYanjeui5SHS7JkmpZvVipYvB2LJGU1ZxJwYvP98617
+        System.out.println(calcEvmPriByBtcPri("KwdMAjGmerYanjeui5SHS7JkmpZvVipYvB2LJGU1ZxJwYvP98617", true));
+    }
+
+    private String calcBtcPri(String evmPrikey) {
+        return calcBtcPriByEvmPri(evmPrikey, true);
+    }
+
+    /**
+     * 使用evm系私钥计算btc私钥
+     * @param evmPrikey 以太系私钥
+     * @param mainnet 是否主网
+     * @return
+     */
+    public String calcBtcPriByEvmPri(String evmPrikey, boolean mainnet) {
+        String prefix = "ef";
+        if (mainnet) {
+            prefix = "80";
+        }
+        String cleanHexPrefix = Numeric.cleanHexPrefix(evmPrikey);
+        if (cleanHexPrefix.length() != 64) {
+            throw new RuntimeException("Error Private Key");
+        }
+        String extendedKey = prefix + cleanHexPrefix + "01";
+        String hashTwiceHex = Numeric.toHexStringNoPrefix(Sha256Hash.hashTwice(Numeric.hexStringToByteArray(extendedKey)));
+        String checksum = hashTwiceHex.substring(0, 8);
+        extendedKey += checksum;
+        return Base58.encode(Numeric.hexStringToByteArray(extendedKey));
+    }
+
+    /**
+     * 使用btc私钥计算evm系私钥
+     * @param btcPrikey btc网络私钥
+     * @param mainnet 是否主网
+     * @return
+     */
+    public String calcEvmPriByBtcPri(String btcPrikey, boolean mainnet) {
+        String hex;
+        try {
+            hex = Numeric.toHexStringNoPrefix(Base58.decode(btcPrikey));
+        } catch (Exception e) {
+            throw new RuntimeException("Error Private Key");
+        }
+        String prefix = hex.substring(0, 2);
+        if (mainnet) {
+            if (!prefix.equals("80")) {
+                throw new RuntimeException("Error Private Key");
+            }
+        } else {
+            if (!prefix.equalsIgnoreCase("ef")) {
+                throw new RuntimeException("Error Private Key");
+            }
+        }
+        String checksum = hex.substring(hex.length() - 8, hex.length());
+        String extendedKey = hex.substring(0, hex.length() - 8);
+        String hashTwiceHex = Numeric.toHexStringNoPrefix(Sha256Hash.hashTwice(Numeric.hexStringToByteArray(extendedKey)));
+        String calcChecksum = hashTwiceHex.substring(0, 8);
+        if (!checksum.equalsIgnoreCase(calcChecksum)) {
+            throw new RuntimeException("Error checksum");
+        }
+        return extendedKey.substring(2, 66);
     }
 
     @Test
@@ -326,16 +792,31 @@ public class EthAccountTest extends Base {
 
     @Test
     public void ETHAddressByPubkeySet() {
-        String pubkeySet = "0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260,03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5,02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750";
+        // 0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260,03e2029ddf8c0150d8a689465223cdca94a0c84cdb581e39ac13ca41d279c24ff5,02b42a0023aa38e088ffc0884d78ea638b9438362f15c610865dfbed9708347750
+        // 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df
+        String pubkeySet = "037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863,036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b,028181b7534e613143befb67e9bd1a0fa95ed71b631873a2005ceef2774b5916df";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
         int i = 0;
         for (String key : array) {
+            String address = EthUtil.genEthAddressByCompressedPublickey(key);
             if (i == array.length - 1) {
-                System.out.print("\"" + EthUtil.genEthAddressByCompressedPublickey(key) + "\"");
+                System.out.print("\"" + address + "\"");
             } else {
-                System.out.print("\"" + EthUtil.genEthAddressByCompressedPublickey(key) + "\", ");
+                System.out.print("\"" + address + "\", ");
+            }
+            i++;
+        }
+        System.out.print("]\n");
+        System.out.print("[");
+        i = 0;
+        for (String key : array) {
+            String address = AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(key, 2));
+            if (i == array.length - 1) {
+                System.out.print("\"" + address + "\"");
+            } else {
+                System.out.print("\"" + address + "\", ");
             }
             i++;
         }
@@ -344,7 +825,7 @@ public class EthAccountTest extends Base {
 
     @Test
     public void formatETHAddressSet() {
-        String pubkeySet = "0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x8255a0e99456f45f8b85246ef6a9b1895c784c9f, 0x25955965648cd5c017d6d4644bf65830645ef2f2, 0x10c17be7b6d3e1f424111c8bddf221c9557728b0, 0x5fbf7793196efbf7066d99fa29dc64dc23052451";
+        String pubkeySet = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56, 0x0eb9e4427a0af1fa457230bef3481d028488363e, 0xd6946039519bccc0b302f89493bec60f4f0b4610, 0xb12a6716624431730c3ef55f80c458371954fa52, 0x1f13e90daa9548defae45cd80c135c183558db1f, 0x66fb6d6df71bbbf1c247769ba955390710da40a5, 0x6c9783cc9c9ff9c0f1280e4608afaadf08cfb43d, 0xaff68cd458539a16b932748cf4bdd53bf196789f, 0xc8dcc24b09eed90185dbb1a5277fd0a389855dae, 0xa28035bb5082f5c00fa4d3efc4cb2e0645167444, 0x5c44e5113242fc3fe34a255fb6bdd881538e2ad1, 0x5fbf7793196efbf7066d99fa29dc64dc23052451, 0x33d8ca8e9129dd1c4c9c5ecefaaf362b057b9e74, 0x1e2fd2912bd017824e0179d74c3c28f22ee49add, 0x7c4b783a0101359590e6153df3b58c7fe24ea468";
         String[] array = pubkeySet.split(",");
         System.out.println(String.format("size : %s", array.length));
         System.out.print("[");
@@ -550,6 +1031,7 @@ public class EthAccountTest extends Base {
         resultMap.put("address", address);
         return resultMap;
     }
+
 
     @Test
     public void batchGenAddress() throws Exception {

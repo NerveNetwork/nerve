@@ -530,15 +530,16 @@ public class ETHIIWalletApiTest extends BaseII {
     @Test
     public void sendERC20WithdrawBySignDataTest() throws Exception {
         setMainData();
-        String txKey = "bbb1024000000000000000000000000000000000000000000000000000000000";
+        htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
+        String txKey = "f95b54642994232ca3bb6d8d919ec770188c306ba05748fbc234c34edef456c0";
         // 接收者地址
-        String toAddress = "0x64CE6baa1144e307C68aF1a1fB2ecFe35A058052";
-        // 造币数量
-        String value = "13068492433.458328880192656953";
-        // 新的以太坊网络上的nabox合约
-        String erc20 = "0x03d1e72765545729a035e909edd9371a405f77fb";
+        String toAddress = "0xfb6f40b1f2ea93b41bf96fd2d7413333fa578a9a";
+        // 数量
+        String value = "5303.549827512204473162";
+        // token
+        String erc20 = "0x2ecba91da63c29ea80fbe7b52632ca2d1f8e5be0";
         int tokenDecimals = 18;
-        String signData = "???";
+        String signData = "b9d47a14ad309f2666bc5a74198e5e4bfe0fd50192ad563fca1aa2b5e1ca764d6e0c4a6bb2dc3728bc18839d8561d29ebcbb4e671aebe2ecb51837b7662f352d1b2a2bde0f13aad8e9346502eb2f5373cc838eaea92e9d4b307f5c3d3288576546134cda3cae3106fcac2742886b5073eacd8ea021c1ab09a8d02010250cb64bc71b16ec6a6c981cb5092f3b90940ff0fed006a1ef1ecfa0db40bfc56eb95f4fd8773bdac0bb9e3ba35eae2fb94bff4e410051893ebe6f1bc2cecfb0b6bac2cbdd9e1baff7d78ee2bb15a9639be618bbbc6fd9be1c52d2cc0c3a8ec744845a05f7002a12c5ae00cbc55af7cc53fc46f607dff60f52b4af0035ac397f81acc8655338201b9f4e256267558e45a3ae7cbfa313603550603643f2d6e92f3f3adb2c8ca47f1908d373effe535a8578a096c18cae85dfe2c9268d8a53af14865b84f2b04b9d2a1c18cdc6a4ae351d02545e55a0a304165d004740e7d3b8d39c699c7c75d1d4304757f84c350c40e8c8c95a7abf9c01c905c283c868252849c6882048c8fee40a911ba67ab6cd1194c7b89a17c160ab5b687870716f1379d9ad7fdcaef1e6e3410e331d7c5493e2bc69ff432b93bd37258c878e22e694478a928102734d4e0c2603711cb8911e1e89206e53d9552f704bbeb40eaad7e9b652745b79b6b345365fe758156bc15b111d3b4334a4e368f11191e5ed12c1bfc5412cf022f089729bd20efc981c52bc8c34ba7a5b7bf2b29f888857148f5c4e0c56fc1bd4310c1f08ee76c8a9fd751315dcf8657812b4533a48314bd5f13417bd1a727fcbcfeac0689079a518e01c49f74785c5effe533368048a711fae34ef9841c7cb217550252548ba0add22df37623bc88a78e4134b06720fb505cf46fac5edfded646cc4c19374ff85d5f0da1b";
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
         System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
     }

@@ -228,11 +228,7 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        proposalTxHashList.add(new String[]{"多链路由NEST移除eth",     "5ecbc748763ba6251f1975551863d88f0c0cd7dc7610eaa8a0a2801ee1b78741"});
-        proposalTxHashList.add(new String[]{"多链路由NEST移除bsc",     "358095c3fb7429fc7af24710034318a1fe80315d07278d11ec450fc973cc7c8e"});
-        proposalTxHashList.add(new String[]{"多链路由NEST移除heco",    "e06525e01e5045479757580d3b227b9d217c6d74f32d1f7a6affc169e3cd744f"});
-        proposalTxHashList.add(new String[]{"多链路由NEST移除polygon", "98a1205aa3184051f75fb642c06d2d2e562a69679941b940e51a42439bb8c4d7"});
-        proposalTxHashList.add(new String[]{"多链路由NEST添加eth",     "6fef23b383a8b697058713a29ce7958928fb37c867e6346ac23725304e17a29d"});
+        proposalTxHashList.add(new String[]{"多链路由eth添加scroll",     "22157d9d732ccf6e9792dea1236e766e9c09d45a1fcd54bceaa20123278f833a"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});

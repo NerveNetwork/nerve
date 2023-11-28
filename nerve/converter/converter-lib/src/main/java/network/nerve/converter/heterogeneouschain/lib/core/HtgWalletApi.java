@@ -660,6 +660,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         TX_RECEIPT_CACHE.refresh(new TxKey(txHash, this));
     }
 
+    public void clearCache() {
+        TX_CACHE.invalidateAll();
+        TX_RECEIPT_CACHE.invalidateAll();
+    }
+
     private TransactionReceipt getTxReceiptReal(String txHash) throws Exception {
         htgContext.logger().debug("[{}]real request network for getTxReceipt: {}", htgContext.getConfig().getSymbol(), txHash);
         return this.timeOutWrapperFunction("getTxReceipt", txHash, args -> {

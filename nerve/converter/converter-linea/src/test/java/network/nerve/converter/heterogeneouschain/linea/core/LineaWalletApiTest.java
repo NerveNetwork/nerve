@@ -949,7 +949,8 @@ public class LineaWalletApiTest extends Base {
 
     @Test
     public void getBlockHeaderByHeight() throws Exception {
-        Long height = Long.valueOf(1560320);
+        setMain();
+        Long height = Long.valueOf(904753);
         EthBlock.Block block = htgWalletApi.getBlockHeaderByHeight(height);
         System.out.println(block.getHash());
     }

@@ -213,6 +213,13 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BRISE-USDT",
           "desc": "BRISE相对USDT价格"
+        },
+        {
+          "key": "JNS_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "JNS-USDT",
+          "desc": "JNS相对USDT价格"
         }
       ]
     }

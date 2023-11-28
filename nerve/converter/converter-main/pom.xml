@@ -202,6 +202,16 @@
             <artifactId>converter-brise</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-janus</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>network.nerve</groupId>
+            <artifactId>converter-manta</artifactId>
+            <version>${nuls.v2.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>

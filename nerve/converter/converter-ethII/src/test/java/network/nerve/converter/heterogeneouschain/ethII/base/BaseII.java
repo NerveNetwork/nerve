@@ -125,7 +125,7 @@ public class BaseII {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
-        return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress, BigInteger.valueOf(18));
+        return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress, BigInteger.valueOf(1395));
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract, BigInteger nonce) throws Exception {

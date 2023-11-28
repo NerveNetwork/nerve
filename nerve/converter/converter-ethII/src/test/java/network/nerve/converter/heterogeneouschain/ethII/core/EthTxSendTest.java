@@ -46,20 +46,21 @@ public class EthTxSendTest {
 
     public static void main(String[] _args) throws Exception {
         String privateKey = "";
-        String gasPriceStr = "";
-        withdraw(privateKey, gasPriceStr);
+        String gasPriceStr = "22";
+        String nonce = "13";
+        transferSelf(privateKey, gasPriceStr, nonce);
     }
 
     public static void transferSelf(String... _args) throws Exception {
         String privateKey = _args[0];
         String gasPriceStr = _args[1];
         BigInteger nonce = new BigInteger(_args[2]);
-        Web3j web3j = Web3j.build(new HttpService("http://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv"));
+        Web3j web3j = Web3j.build(new HttpService("https://geth.nerve.network?d=1111&s=2222&p=asds45fgvbcv"));
         Credentials credentials = Credentials.create(privateKey);
         String from = credentials.getAddress();
         String to = from;
         BigInteger gasLimit = BigInteger.valueOf(21000L);
-        BigInteger gasPrice = new BigInteger(gasPriceStr).multiply(BigInteger.TEN.pow(9));
+        BigInteger gasPrice = new BigDecimal(gasPriceStr).movePointRight(9).toBigInteger();
         String data = "";
         RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce,

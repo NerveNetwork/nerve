@@ -6,12 +6,17 @@ import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.model.EthUnconfirmedTxPo;
+import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
+import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.junit.Test;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.Utils;
+import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.generated.Uint128;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
+import org.web3j.utils.Numeric;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +52,21 @@ public class EthUtilTest extends Base {
         System.out.println(txInfo.toString());
     }
 
+    @Test
+    public void decode() {
+        List<TypeReference<Type>> INPUT_UPGRADE = Utils.convert(
+                List.of(
+                        new TypeReference<DynamicBytes>(){},
+                        new TypeReference<Address>(){},
+                        new TypeReference<Uint128>(){},
+                        new TypeReference<Uint256>(){},
+                        new TypeReference<Uint256>(){}
+                )
+        );
+        String input = "0x75ceafe6000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000e4490b083300c79f00fc6f04c3736351340bd43d00000000000000000000000000000000000000000000000000354a6ba7a18000000000000000000000000000000000000000000000000000002e0d22e2926cec00000000000000000000000000000000000000000000000000000000655dd106000000000000000000000000000000000000000000000000000000000000002be5d7c2a44ffddf6b295a15c148167daaaf5cf34f0001f4b5bedd42000b71fdde22d3ee8a79bd49a568fc8f000000000000000000000000000000000000000000";
+        List<Object> objects = HtgUtil.parseInput(input, INPUT_UPGRADE);
+        System.out.println();
+    }
 
     @Test
     public void parseERC20() throws Exception {

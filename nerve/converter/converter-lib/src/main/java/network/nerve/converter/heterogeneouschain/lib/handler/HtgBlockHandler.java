@@ -132,6 +132,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 htgContext.logger().error("获取{}区块失败", htgContext.getConfig().getSymbol());
                 return;
             } else if (resultCode == 1) {
+                htgWalletApi.clearCache();
                 htgContext.logger().error("{}区块分叉", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;

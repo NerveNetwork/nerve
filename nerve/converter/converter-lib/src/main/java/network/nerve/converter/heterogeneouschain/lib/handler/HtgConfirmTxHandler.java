@@ -646,7 +646,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (txInfo == null) {
             return false;
         }
-        logger().info("[{}]检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
+        logger().info("[{}]检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}, gasPrice: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash, new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString());
         // 向HT网络请求验证
         boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {

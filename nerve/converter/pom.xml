@@ -48,6 +48,8 @@
         <module>converter-basechain</module>
         <module>converter-scroll</module>
         <module>converter-brise</module>
+        <module>converter-janus</module>
+        <module>converter-manta</module>
 
     </modules>
 

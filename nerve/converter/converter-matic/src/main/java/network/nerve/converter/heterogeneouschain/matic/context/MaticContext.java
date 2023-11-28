@@ -163,7 +163,10 @@ public class MaticContext extends HtgContext implements Serializable {
         if (HTG_GAS_PRICE == null) {
             HTG_GAS_PRICE = GWEI_30;
         }
-        HTG_GAS_PRICE = calcGasPrice(ethGasPrice, HTG_GAS_PRICE);
+        if (ethGasPrice == null) {
+            return;
+        }
+        HTG_GAS_PRICE = ethGasPrice;
     }
 
     @Override

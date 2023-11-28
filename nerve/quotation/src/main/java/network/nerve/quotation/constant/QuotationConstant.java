@@ -128,6 +128,7 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_CELO = "CELO-USDT";
     String ANCHOR_TOKEN_ETC = "ETC-USDT";
     String ANCHOR_TOKEN_BRISE = "BRISE-USDT";
+    String ANCHOR_TOKEN_JNS = "JNS-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

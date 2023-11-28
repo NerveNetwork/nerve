@@ -241,7 +241,9 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         bus.setTotalSyrupAmountOld(farm.getTotalSyrupAmount());
         bus.setWithdrawLockTimeOld(farm.getWithdrawLockTime());
         bus.setStopHeightOld(farm.getStopHeight());
-        bus.setSyrupLockTimeOld(farm.getSyrupLockTime());
+        if (SwapContext.PROTOCOL_1_29_0 <= blockHeight) {
+            bus.setSyrupLockTimeOld(farm.getSyrupLockTime());
+        }
         SwapUtils.updatePool(farm, blockHeight);
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
@@ -284,7 +286,9 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         }
 
         farm.setWithdrawLockTime(txData.getWithdrawLockTime());
-        farm.setSyrupLockTime(txData.getSyrupLockTime());
+        if (SwapContext.PROTOCOL_1_29_0 <= blockHeight) {
+            farm.setSyrupLockTime(txData.getSyrupLockTime());
+        }
         //更新池子信息
         batchInfo.getFarmTempManager().putFarm(farm);
 
@@ -296,7 +300,9 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         bus.setTotalSyrupAmountNew(farm.getTotalSyrupAmount());
         bus.setWithdrawLockTimeNew(farm.getWithdrawLockTime());
         bus.setStopHeightNew(farm.getStopHeight());
-        bus.setSyrupLockTimeNew(farm.getSyrupLockTime());
+        if (SwapContext.PROTOCOL_1_29_0 <= blockHeight) {
+            bus.setSyrupLockTimeNew(farm.getSyrupLockTime());
+        }
 
         result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
 
