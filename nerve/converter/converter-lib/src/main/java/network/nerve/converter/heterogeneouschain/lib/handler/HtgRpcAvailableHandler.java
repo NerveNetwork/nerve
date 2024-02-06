@@ -24,14 +24,12 @@
 package network.nerve.converter.heterogeneouschain.lib.handler;
 
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
-import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.MINUTES_1;
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.MINUTES_20;
 
 /**
  * @author: Mimi
@@ -39,7 +37,6 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  */
 public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
 
-    private HtgWalletApi htgWalletApi;
     private HtgLocalBlockHelper htgLocalBlockHelper;
     private HtgContext htgContext;
 
@@ -82,18 +79,10 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
                         break;
                     }
                     if (now - lastRecordTime > MINUTES_1) {
-                        String error = String.format("[%s]网络区块同步异常，本地区块高度: %s, 已有%s秒未同步区块，当前Api: %s, 请检查网络RPC服务",
+                        htgContext.logger().error("{}Network block synchronization exception, local block height: {}, Existing{}Block not synchronized in seconds, please check the networkRPCservice",
                                 htgContext.getConfig().getSymbol(),
                                 localBlockHeight,
-                                (now - lastRecordTime) / 1000,
-                                htgWalletApi.getCurrentRpcAddress());
-                        htgContext.logger().error(error);
-                        if (now - lastRecordTime > MINUTES_20) {
-                            htgContext.getConverterCoreApi().putWechatMsg(String.format("[%s]网络区块同步异常，本地区块高度: %s, 已超过20分钟未同步区块，当前Api: %s, 请检查网络RPC服务",
-                                    htgContext.getConfig().getSymbol(),
-                                    localBlockHeight,
-                                    htgWalletApi.getCurrentRpcAddress()));
-                        }
+                                (now - lastRecordTime) / 1000);
                         availableRPC = false;
                         break;
                     }

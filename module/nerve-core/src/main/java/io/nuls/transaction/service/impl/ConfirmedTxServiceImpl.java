@@ -14,7 +14,6 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.rpc.util.NulsDateUtils;
-import io.nuls.transaction.alarm.AlarmTxManager;
 import io.nuls.transaction.cache.PackablePool;
 import io.nuls.transaction.constant.TxConstant;
 import io.nuls.transaction.constant.TxErrorCode;
@@ -153,7 +152,6 @@ public class ConfirmedTxServiceImpl implements ConfirmedTxService {
         packablePool.clearPackableMapTxs(chain, txHashs);
         logger.debug("[Save Block] Total execution time:{} - height:{}, - Transaction quantity:{}" + TxUtil.nextLine(),
                 NulsDateUtils.getCurrentTimeMillis() - start, blockHeader.getHeight(), txList.size());
-        AlarmTxManager.offer(blockHeader,txList);
         return true;
     }
 

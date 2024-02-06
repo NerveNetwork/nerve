@@ -2,11 +2,7 @@ package network.nerve.converter.constant;
 
 import io.nuls.core.crypto.HexUtil;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author: Loki
@@ -97,39 +93,8 @@ public interface ConverterConstant {
     int FIRST_HETEROGENEOUS_ASSET_CHAIN_ID = 101;
     byte[] ZERO_BYTES = new byte[]{0};
     long MINUTES_5 = 5 * 60 * 1000L;
-    long MINUTES_30 = 30 * 60 * 1000L;
-    long MINUTES_60 = 60 * 60 * 1000L;
     String IN = "in";
     String OUT = "out";
     int SIG_MODE_LOCAL = 0;
     int SIG_MODE_MACHINE = 1;
-	
-	Map<Integer, BigDecimal> minBalances = Map.ofEntries(
-            Map.entry(101, new BigDecimal("0.1")),
-            Map.entry(102, new BigDecimal("0.2")),
-            Map.entry(103, new BigDecimal("0.5")),
-            Map.entry(104, new BigDecimal("0.2")),
-            Map.entry(105, new BigDecimal("30")),
-            Map.entry(106, new BigDecimal("1")),
-            Map.entry(107, new BigDecimal("0.2")),
-            Map.entry(108, new BigDecimal("300")),
-            Map.entry(109, new BigDecimal("30")),
-            Map.entry(110, new BigDecimal("0.5")),
-            Map.entry(111, new BigDecimal("0.1")),
-            Map.entry(112, new BigDecimal("0.5")),
-            Map.entry(113, new BigDecimal("0.2")),
-            Map.entry(114, new BigDecimal("100")),
-            Map.entry(115, new BigDecimal("0.1")),
-            Map.entry(116, new BigDecimal("10")),
-            Map.entry(117, new BigDecimal("0.2")),
-            Map.entry(118, new BigDecimal("0.2")),
-            Map.entry(119, new BigDecimal("0.2")),
-            Map.entry(120, new BigDecimal("1")),
-            Map.entry(121, new BigDecimal("1")),
-            Map.entry(122, new BigDecimal("1")),
-            Map.entry(123, new BigDecimal("0.2")),
-            Map.entry(124, new BigDecimal("2")),
-            Map.entry(125, new BigDecimal("0.1")),
-            Map.entry(126, new BigDecimal("0.1"))
-    );
 }

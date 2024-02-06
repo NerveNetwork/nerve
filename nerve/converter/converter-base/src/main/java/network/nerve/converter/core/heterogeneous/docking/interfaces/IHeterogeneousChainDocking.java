@@ -297,11 +297,11 @@ public interface IHeterogeneousChainDocking {
         return 0;
     }
 
-    default boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId, String remark) {
+    default boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
         return false;
     }
 
-    default boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId, String remark) {
+    default boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
         return false;
     }
 

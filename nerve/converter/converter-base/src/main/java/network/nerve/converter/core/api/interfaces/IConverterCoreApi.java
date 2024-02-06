@@ -208,7 +208,7 @@ public interface IConverterCoreApi {
     boolean checkNetworkRunning(int hChainId);
 
     boolean isLocalSign();
-    void putWechatMsg(String msg);
+
     String signWithdrawByMachine(long nativeId, String signerPubkey, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) throws NulsException;
     String signChangeByMachine(long nativeId, String signerPubkey, String txKey, String[] adds, int count, String[] removes, byte version) throws NulsException;
     String signUpgradeByMachine(long nativeId, String signerPubkey, String txKey, String upgradeContract, byte version) throws NulsException;

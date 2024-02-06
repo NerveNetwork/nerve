@@ -627,12 +627,12 @@ public class CfmTxSubsequentProcessTask implements Runnable {
                     // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
                     if (totalFeeInfo.isNvtAsset()) {
                         // validateNVTAs a handling fee
-                        enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFeeInfo.getFee()), callParm.getAssetId(), txHash);
+                        enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFeeInfo.getFee()), callParm.getAssetId());
                     } else {
                         BigDecimal feeAmount = new BigDecimal(converterCoreApi.checkDecimalsSubtractedToNerveForWithdrawal(totalFeeInfo.getHtgMainAssetName().chainId(), 1, totalFeeInfo.getFee()));
                         // Verify heterogeneous chain master assets as transaction fees
                         // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
-                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdrawByMainAssetProtocol15(totalFeeInfo.getHtgMainAssetName(), feeAmount, callParm.getAssetId(), txHash);
+                        enoughFeeOfWithdraw = docking.isEnoughFeeOfWithdrawByMainAssetProtocol15(totalFeeInfo.getHtgMainAssetName(), feeAmount, callParm.getAssetId());
                     }
                     if (!enoughFeeOfWithdraw) {
                         // Abnormal Count

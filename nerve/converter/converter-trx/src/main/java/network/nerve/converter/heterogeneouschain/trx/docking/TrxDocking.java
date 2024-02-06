@@ -867,17 +867,17 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     @Override
-    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId, String remark) {
-        return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId, remark);
+    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+        return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
     }
 
     @Override
+    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
         // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toTRX, PaymentBNBAs a handling fee
-    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId, String remark) {
         if (assetName == htgContext.ASSET_NAME()) {
-            return this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(amount, hAssetId, remark) != null;
+            return this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(amount, hAssetId) != null;
         } else {
-            return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId, remark);
+            return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId);
         }
     }
 
@@ -1011,9 +1011,9 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             BigDecimal need;
             // // When using other main assets of non withdrawal networks as transaction fees
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId(), nerveTxHash);
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
             } else {
-                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId(), nerveTxHash);
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
             }
             if (need == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
@@ -1075,9 +1075,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                String msg = String.format("[%s]不合法的%s网络的提现交易, ERC20[%s]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
-                htgContext.logger().warn(msg);
-                htgContext.getConverterCoreApi().putWechatMsg(msg);
+                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             po.setTo(toAddress);
@@ -1097,9 +1095,9 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             BigDecimal need;
             // // When using other main assets of non withdrawal networks as transaction fees
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId(), nerveTxHash);
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
             } else {
-                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId(), nerveTxHash);
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
             }
             if (need == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
@@ -1391,11 +1389,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         return htTxHash;
     }
 
-    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
-        return this.calcOtherMainAssetOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId, remark) != null;
+    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
+        return this.calcOtherMainAssetOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId) != null;
     }
 
-    private BigDecimal calcOtherMainAssetOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
+    private BigDecimal calcOtherMainAssetOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
         String otherSymbol = otherMainAssetName.toString();
         int otherDecimals = otherMainAssetName.decimals();
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
@@ -1415,33 +1413,27 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                     otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString());
             return needOtherMainAssetAmount;
         }
-        String warnMsg = String.format("[%s]手续费不足，remark: %s, 当前网络需要的%s: %s, 实际支出的%s: %s, 需要追加的%s: %s",
+        logger().warn("[{}]Insufficient transaction fees, currently required by the network{}: {}, Actual expenditure{}: {}, Additional Required{}: {}",
                 htgContext.getConfig().getSymbol(),
-                remark,
                 otherSymbol,
                 needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
                 otherSymbol,
                 otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
                 otherSymbol,
                 needOtherMainAssetAmount.subtract(otherMainAssetAmount).movePointLeft(otherDecimals).toPlainString());
-        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-        logger().warn(warnMsg);
         return null;
     }
 
-    private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId, String remark) {
+    private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
         BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15(htgContext);
         if (amount.compareTo(amountCalc) >= 0) {
             return amountCalc;
         }
-        String warnMsg = String.format("[%s]手续费不足，remark: %s, 当前网络需要的TRX: %s, 实际支出的TRX: %s, 需要追加的TRX: %s",
+        logger().warn("[{}]Insufficient transaction fees, currently required by the networkTRX: {}, Actual expenditureTRX: {}, Additional RequiredTRX: {}",
                 htgContext.getConfig().getSymbol(),
-                remark,
                 amountCalc.movePointLeft(6).toPlainString(),
                 amount.movePointLeft(6).toPlainString(),
                 amountCalc.subtract(amount).movePointLeft(6).toPlainString());
-        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-        logger().warn(warnMsg);
         return null;
     }
 

@@ -133,7 +133,7 @@ public interface ConsensusConstant {
     /**
      * Consensus Network Node Minimum proportion constant for normal block output60%
      */
-    int POC_NETWORK_NODE_PERCENT = 20;
+    int POC_NETWORK_NODE_PERCENT = 50;
     short POC_CONNECT_MAX_FAIL_TIMES = 100;
 
     String STACKING_CONFIG_FILE = "staking-asset";

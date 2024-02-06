@@ -160,9 +160,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
                     // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
                     if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                             && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                        String msg = String.format("[%s]不合法的%s网络的充值交易[5], ERC20[%s]已绑定NERVE资产，但合约内未注册", trxTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
-                        htgContext.logger().warn(msg);
-                        htgContext.getConverterCoreApi().putWechatMsg(msg);
+                        htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[5], ERC20[{}]BoundNERVEAssets, but not registered in the contract", trxTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                         break;
                     }
                     isDepositTx = true;
@@ -178,9 +176,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
         } while (false);
         if (isDepositTx) {
             if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
-                String msg = String.format("[充值地址异常] 交易[%s], [0]充值地址: %s", trxTxHash, po.getNerveAddress());
-                htgContext.logger().warn(msg);
-                htgContext.getConverterCoreApi().putWechatMsg(msg);
+                htgContext.logger().warn("[Abnormal recharge address] transaction[{}], [0]Recharge address: {}", trxTxHash, po.getNerveAddress());
                 return;
             }
             // add by pierre at 2022/6/29 Add recharge pause mechanism
@@ -235,9 +231,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
         String htTxHash = tx.getHash();
         // Calling for multiple signed contractscrossOutThe recharge method of functions
         if (!trxParseTxHelper.validationDepositByCrossOut(tx, po)) {
-            String msg = String.format("[%s]不合法的%s网络的充值交易[3]", htTxHash, htgContext.getConfig().getSymbol());
-            htgContext.logger().error(msg);
-            htgContext.getConverterCoreApi().putWechatMsg(msg);
+            htgContext.logger().error("[{}]Illegal{}Online recharge transactions[3]", htTxHash, htgContext.getConfig().getSymbol());
             return false;
         }
         if (!po.isIfContractAsset()) {
@@ -248,9 +242,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                String msg = String.format("[%s]不合法的%s网络的充值交易[4], ERC20[%s]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
-                htgContext.logger().warn(msg);
-                htgContext.getConverterCoreApi().putWechatMsg(msg);
+                htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[4], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 return false;
             }
             htgContext.logger().info("Listening to{}Network basedERC20Recharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
@@ -264,17 +256,13 @@ public class TrxAnalysisTxHelper implements BeanInitial {
         String htTxHash = tx.getHash();
         // Calling for multiple signed contractscrossOutThe recharge method of functions
         if (!trxParseTxHelper.validationDepositByCrossOutII(tx, null, po)) {
-            String msg = String.format("[%s]不合法的%s网络的充值II交易[0]", htTxHash, htgContext.getConfig().getSymbol());
-            htgContext.logger().error(msg);
-            htgContext.getConverterCoreApi().putWechatMsg(msg);
+            htgContext.logger().error("[{}]Illegal{}Network rechargeIItransaction[0]", htTxHash, htgContext.getConfig().getSymbol());
             return false;
         }
         // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
         if (po.isIfContractAsset() && htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                 && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-            String msg = String.format("[%s]不合法的%s网络的充值II交易[0], ERC20[%s]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
-            htgContext.logger().warn(msg);
-            htgContext.getConverterCoreApi().putWechatMsg(msg);
+            htgContext.logger().warn("[{}]Illegal{}Network rechargeIItransaction[0], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
             return false;
         }
         if (po.isDepositIIMainAndToken()) {
@@ -298,11 +286,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
         String trxTxHash = trxTxInfo.getHash();
         // inspectnerveTxHashIs it legal
         if (htgContext.getConverterCoreApi().getNerveTx(nerveTxHash) == null) {
-            String warnMsg = String.format("[%s]网络交易业务不合法[%s]!!! 未找到NERVE交易，类型: %s, Key: %s，请重点检查此交易！", htgContext.getConfig().getSymbol(), trxTxHash, txType, nerveTxHash);
-            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "1st");
-            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "2nd");
-            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "3rd");
-            htgContext.logger().warn(warnMsg);
+            htgContext.logger().warn("Illegal transaction business[{}], not foundNERVETransaction, Type: {}, Key: {}", trxTxHash, txType, nerveTxHash);
             return;
         }
         HtgUnconfirmedTxPo txPo = txPoFromDB;
@@ -354,9 +338,7 @@ public class TrxAnalysisTxHelper implements BeanInitial {
                     htgStorageHelper.saveTxInfo(txPo);
                 }
             } else {
-                String msg = String.format("[失败]没有解析到完成多签的事件[%s]交易[%s]", txType, trxTxHash);
-                htgContext.logger().error(msg);
-                htgContext.getConverterCoreApi().putWechatMsg(msg);
+                htgContext.logger().error("[fail]Failed to resolve the event of completing multiple signatures[{}]transaction[{}]", txType, trxTxHash);
                 txPo.setStatus(MultiSignatureStatus.FAILED);
             }
 

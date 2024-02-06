@@ -685,7 +685,7 @@ public class ExeProposalProcessTask implements Runnable {
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     BigInteger totalFee = assembleTxService.calculateRefundTotalFee(chain, proposalHash);
-                    boolean enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId(), callParm.getTxHash());
+                    boolean enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
                     if (!enoughFeeOfWithdraw) {
                         chain.getLogger().error("[withdraw] Withdrawal fee calculation, The handling fee is insufficient to cover the withdrawal fee. amount:{}", callParm.getValue());
                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);

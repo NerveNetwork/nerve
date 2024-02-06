@@ -156,9 +156,6 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                         break;
                     }
                     getLog().info("Checked that changes are neededRPCservice {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
-                    String msg = String.format("[%s]网络检查到需强制更改RPC服务, rpc check from third party, version: %s, url: %s, old api: %s", symbol(), _version.intValue(), apiUrl, this.rpcAddress);
-                    htgContext.getConverterCoreApi().putWechatMsg(msg);
-                    getLog().info(msg);
                     TX_CACHE.invalidateAll();
                     TX_RECEIPT_CACHE.invalidateAll();
                     this.changeApi(apiUrl);
@@ -362,7 +359,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     private <T, R> R timeOutWrapperFunction(String functionName, T arg, ExceptionFunction<T, R> fucntion) throws Exception {
         return this.timeOutWrapperFunctionReal(functionName, fucntion, 0, arg);
     }
-    private boolean timeOutExceed = false;
+
     private <T, R> R timeOutWrapperFunctionReal(String functionName, ExceptionFunction<T, R> fucntion, int times, T arg) throws Exception {
         try {
             this.checkIfResetApiWrapper(times);
@@ -379,14 +376,6 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             boolean isTimeOut = ConverterUtil.isTimeOutError(message);
             if (isTimeOut) {
                 getLog().error("{}: {} function [{}] time out", e.getClass().getName(), symbol(), functionName);
-                if (timeOutExceed || times > 10) {
-                    htgContext.getConverterCoreApi().putWechatMsg(String.format("请求超时大于10次, 异常[%s]: [%s]网络 time out, 当前Api: %s", e.getClass().getName(), symbol(), this.rpcAddress));
-                    timeOutExceed = true;
-                    Integer count = requestExceededMap.computeIfAbsent(this.rpcAddress, r -> 0);
-                    requestExceededMap.put(this.rpcAddress, count + 1);
-                    switchStandbyAPI(this.rpcAddress);
-                    throw e;
-                }
                 try {
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException ex) {
@@ -394,11 +383,6 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
-            String errorMsg = String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), message, this.rpcAddress);
-            if (message.contains("exceed") || message.contains("limit")) {
-                htgContext.getConverterCoreApi().putWechatMsg(String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), "request exceeded or limit", this.rpcAddress));
-            }
-            getLog().warn(errorMsg);
             String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
             if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
                 clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;

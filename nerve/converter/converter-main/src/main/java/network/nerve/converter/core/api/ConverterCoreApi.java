@@ -31,7 +31,6 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rpc.info.Constants;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
@@ -41,7 +40,6 @@ import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
@@ -707,11 +705,6 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return true;
     }
 
-    @Override
-    public void putWechatMsg(String msg) {
-        VirtualBankDirectorBalanceTask.putWechatMsg(msg);
-    }
-	
     @Override
     public boolean isLocalSign() {
         return ConverterContext.SIG_MODE == ConverterConstant.SIG_MODE_LOCAL;

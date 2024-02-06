@@ -904,10 +904,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
 
     @Override
-    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId, String remark) {
+    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
         BigInteger l1Fee = htgContext.getConverterCoreApi().getL1Fee(htgContext.HTG_CHAIN_ID());
         if (l1Fee.compareTo(BigInteger.ZERO) == 0) {
-            return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId, remark);
+            return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
         } else {
             IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
             BigDecimal nvtUsdPrice = coreApi.getUsdtPriceByAsset(AssetName.NVT);
@@ -921,19 +921,15 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             BigDecimal totalFeeOfNVT = l1FeeOfNVT.add(l2FeeOfNVT);
             totalFeeOfNVT = totalFeeOfNVT.divide(BigDecimal.TEN.pow(decimalsNVT), 0, RoundingMode.UP).movePointRight(decimalsNVT);
             if (nvtAmount.compareTo(totalFeeOfNVT) < 0) {
-                String warnMsg = String.format("[%s]提现手续费不足，nerveTxHash: %s, 当前网络需要的NVT: %s, 用户提供的NVT: %s, 需要追加的NVT: %s",
+                logger().info("[{}]Insufficient withdrawal fees, currently required by the networkNVT: {}, User providedNVT: {}, Additional RequiredNVT: {}",
                         htgContext.getConfig().getSymbol(),
-                        remark,
                         totalFeeOfNVT.movePointLeft(decimalsNVT).toPlainString(),
                         nvtAmount.movePointLeft(decimalsNVT).toPlainString(),
                         totalFeeOfNVT.subtract(nvtAmount).movePointLeft(decimalsNVT).toPlainString());
-                htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-                logger().warn(warnMsg);
                 return false;
             }
-            logger().info("[{}]提现手续费足够，nerveTxHash: %s, 当前网络需要的NVT: {}, 用户提供的NVT: {}",
+            logger().info("[{}]The withdrawal fee is sufficient for the current network needsNVT: {}, User providedNVT: {}",
                     htgContext.getConfig().getSymbol(),
-                    remark,
                     totalFeeOfNVT.movePointLeft(decimalsNVT).toPlainString(),
                     nvtAmount.movePointLeft(decimalsNVT).toPlainString());
             return true;
@@ -941,20 +937,20 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
     }
 
     @Override
-    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId, String remark) {
+    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
         BigInteger _l1Fee = htgContext.getConverterCoreApi().getL1Fee(htgContext.HTG_CHAIN_ID());
         if (_l1Fee.compareTo(BigInteger.ZERO) == 0) {
-            // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+            // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
             if (assetName == htgContext.ASSET_NAME()) {
-                return this.calcGasPriceOfWithdrawByMainAssetProtocol15(amount, hAssetId, remark) != null;
+                return this.calcGasPriceOfWithdrawByMainAssetProtocol15(amount, hAssetId) != null;
             } else {
-                return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId, remark);
+                return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId);
             }
         } else {
             IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
             BigDecimal ethUsdPrice = coreApi.getUsdtPriceByAsset(AssetName.ETH);
             BigDecimal l2UsdPrice = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
-            // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+            // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
             if (assetName == htgContext.ASSET_NAME()) {
                 int decimals = assetName.decimals();
                 // L2 fee
@@ -964,22 +960,18 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 BigDecimal totalFee = l1Fee.add(l2Fee);
                 String symbolNative = htgContext.getConfig().getSymbol();
                 if (amount.compareTo(totalFee) < 0) {
-                    String warnMsg = String.format("[%s]提现手续费不足，nerveTxHash: %s, 当前网络需要的%s: %s, 用户提供的%s: %s, 需要追加的%s: %s",
+                    logger().info("[{}]Insufficient withdrawal fees, currently required by the network{}: {}, User provided{}: {}, Additional Required{}: {}",
                             symbolNative,
-                            remark,
                             symbolNative,
                             totalFee.movePointLeft(decimals).toPlainString(),
                             symbolNative,
                             amount.movePointLeft(decimals).toPlainString(),
                             symbolNative,
                             totalFee.subtract(amount).movePointLeft(decimals).toPlainString());
-                    htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-                    logger().warn(warnMsg);
                     return false;
                 }
-                logger().info("[{}]提现手续费足够，nerveTxHash: {}, 当前网络需要的{}: {}, 用户提供的{}: {}",
+                logger().info("[{}]The withdrawal fee is sufficient for the current network needs{}: {}, User provided{}: {}",
                         symbolNative,
-                        remark,
                         symbolNative,
                         totalFee.movePointLeft(decimals).toPlainString(),
                         symbolNative,
@@ -996,22 +988,18 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 BigDecimal l1FeeOfPaid = ethUsdPrice.multiply(new BigDecimal(_l1Fee)).movePointRight(decimalsPaid).movePointLeft(decimalsNative).divide(payAssetUsdPrice, 0, RoundingMode.UP);
                 BigDecimal totalFeeOfPaid = l1FeeOfPaid.add(l2FeeOfPaid);
                 if (amount.compareTo(totalFeeOfPaid) < 0) {
-                    String warnMsg = String.format("[%s]提现手续费不足，nerveTxHash: %s, 当前网络需要的%s: %s, 用户提供的%s: %s, 需要追加的%s: %s",
+                    logger().info("[{}]Insufficient withdrawal fees, currently required by the network{}: {}, User provided{}: {}, Additional Required{}: {}",
                             htgContext.getConfig().getSymbol(),
-                            remark,
                             symbolPaid,
                             totalFeeOfPaid.movePointLeft(decimalsPaid).toPlainString(),
                             symbolPaid,
                             amount.movePointLeft(decimalsPaid).toPlainString(),
                             symbolPaid,
                             totalFeeOfPaid.subtract(amount).movePointLeft(decimalsPaid).toPlainString());
-                    htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-                    logger().warn(warnMsg);
                     return false;
                 }
-                logger().info("[{}]提现手续费足够，nerveTxHash: {}, 当前网络需要的{}: {}, 用户提供的{}: {}",
+                logger().info("[{}]The withdrawal fee is sufficient for the current network needs{}: {}, User provided{}: {}",
                         htgContext.getConfig().getSymbol(),
-                        remark,
                         symbolPaid,
                         totalFeeOfPaid.movePointLeft(decimalsPaid).toPlainString(),
                         symbolPaid,
@@ -1028,13 +1016,13 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
 
     @Override
     public String cancelHtgTx(String nonce, String priceGWei) throws Exception {
-        // 获取管理员账户
+        // Obtain administrator account
         HtgAccount account = (HtgAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         String fromAddress = account.getAddress();
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
         BigInteger gasPrice = new BigInteger(priceGWei).multiply(BigInteger.TEN.pow(9));
-        // 计算一个合适的gasPrice
+        // Calculate a suitablegasPrice
         gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), new BigDecimal(gasPrice)).toBigInteger();
         return htgWalletApi.sendMainAssetWithNonce(
                 fromAddress,
@@ -1446,7 +1434,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // Check the withdrawal fee for the new mechanism only after reaching the specified height
             if (coreApi.isSupportNewMechanismOfWithdrawalFee()) {
                 BigDecimal nvtAmount = new BigDecimal(coreApi.getFeeOfWithdrawTransaction(nerveTxHash).getFee());
-                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, po.getAssetId(), nerveTxHash);
+                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, po.getAssetId());
                 if (gasPrice == null) {
                     throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                 }
@@ -1527,9 +1515,9 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
             // When using other main assets of non withdrawal networks as transaction fees
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), new BigDecimal(feeInfo.getFee()), po.getAssetId(), nerveTxHash);
+                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), new BigDecimal(feeInfo.getFee()), po.getAssetId());
             } else {
-                gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(new BigDecimal(feeInfo.getFee()), po.getAssetId(), nerveTxHash);
+                gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(new BigDecimal(feeInfo.getFee()), po.getAssetId());
             }
             if (gasPrice == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
@@ -1592,9 +1580,7 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                String msg = String.format("[%s]不合法的%s网络的提现交易, ERC20[%s]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
-                htgContext.logger().warn(msg);
-                htgContext.getConverterCoreApi().putWechatMsg(msg);
+                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             // Convert the address to lowercase
@@ -1616,9 +1602,9 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             // When using other main assets of non withdrawal networks as transaction fees
             BigDecimal feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeInfo.getFee()));
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId(), nerveTxHash);
+                gasPrice = this.calcGasPriceOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
             } else {
-                gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId(), nerveTxHash);
+                gasPrice = this.calcGasPriceOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
             }
             if (gasPrice == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
@@ -1664,11 +1650,11 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         }
     }
 
-    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
-        return this.calcGasPriceOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId, remark) != null;
+    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
+        return this.calcGasPriceOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId) != null;
     }
 
-    private BigDecimal calcGasPriceOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
+    private BigDecimal calcGasPriceOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         BigDecimal otherMainAssetUSD = coreApi.getUsdtPriceByAsset(otherMainAssetName);
         BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
@@ -1687,9 +1673,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
             return gasPrice;
         }
         BigDecimal otherMainAssetAmountCalc = HtgUtil.calcOtherMainAssetOfWithdraw(otherMainAssetName, otherMainAssetUSD, new BigDecimal(htgContext.getEthGasPrice()), htgUSD, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
-        String warnMsg = String.format("[%s]提现手续费不足，nerveTxHash: %s, 当前网络需要的GasPrice: %s Gwei, 实际计算出的GasPrice: %s Gwei, 总共需要的%s: %s, 用户提供的%s: %s, 需要追加的%s: %s",
+        logger().warn("[{}]Insufficient withdrawal fees, currently required by the networkGasPrice: {} Gwei, Actual calculatedGasPrice: {} Gwei, Total required{}: {}, User provided{}: {}, Additional Required{}: {}",
                 htgContext.getConfig().getSymbol(),
-                remark,
                 new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
                 gasPriceStr,
                 otherSymbol,
@@ -1698,12 +1683,10 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 otherMainAssetAmount.movePointLeft(otherMainAssetName.decimals()).toPlainString(),
                 otherSymbol,
                 otherMainAssetAmountCalc.subtract(otherMainAssetAmount).movePointLeft(otherMainAssetName.decimals()).toPlainString());
-        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-        logger().warn(warnMsg);
         return null;
     }
 
-    private BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId, String remark) {
+    private BigDecimal calcGasPriceOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
         BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdrawByMainAssetProtocol15(amount, hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         String gasPriceStr = gasPrice.divide(BigDecimal.TEN.pow(9)).toPlainString();
         if (gasPrice != null && gasPrice.toBigInteger().compareTo(htgContext.getEthGasPrice()) >= 0) {
@@ -1716,9 +1699,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         BigDecimal amountCalc = HtgUtil.calcMainAssetOfWithdrawProtocol15(new BigDecimal(htgContext.getEthGasPrice()), hAssetId, htgContext.GAS_LIMIT_OF_WITHDRAW());
         int decimals = htgContext.getConfig().getDecimals();
         String symbol = htgContext.getConfig().getSymbol();
-        String warnMsg = String.format("[%s]提现手续费不足，nerveTxHash: %s, 当前网络需要的GasPrice: %s Gwei, 实际计算出的GasPrice: %s Gwei, 总共需要的%s: %s, 用户提供的%s: %s, 需要追加的%s: %s",
+        logger().warn("[{}]Insufficient withdrawal fees, currently required by the networkGasPrice: {} Gwei, Actual calculatedGasPrice: {} Gwei, Total required{}: {}, User provided{}: {}, Additional Required{}: {}",
                 htgContext.getConfig().getSymbol(),
-                remark,
                 new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString(),
                 gasPriceStr,
                 symbol,
@@ -1726,9 +1708,8 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
                 symbol,
                 amount.movePointLeft(decimals).toPlainString(),
                 symbol,
-                amountCalc.subtract(amount).movePointLeft(decimals).toPlainString());
-        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
-        logger().warn(warnMsg);
+                amountCalc.subtract(amount).movePointLeft(decimals).toPlainString()
+        );
         return null;
     }
 

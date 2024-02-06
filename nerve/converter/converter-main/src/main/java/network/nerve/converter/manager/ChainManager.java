@@ -78,6 +78,7 @@ import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
  */
 @Component
 public class ChainManager {
+
     @Autowired
     private ConfigStorageService configStorageService;
     @Autowired

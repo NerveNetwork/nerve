@@ -3,7 +3,6 @@ package io.nuls.transaction.rpc.call;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
-import io.nuls.core.log.Log;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
@@ -374,18 +373,5 @@ public class LedgerCall {
         }
     }
 
-    public static HashMap getAssetInfo(Chain chain,int assetChainId,int assetId) {
-        try {
-            Map<String, Object> params = new HashMap<>(TxConstant.INIT_CAPACITY_8);
-            params.put(Constants.VERSION_KEY_STR, TxConstant.RPC_VERSION);
-            params.put(Constants.CHAIN_ID, chain.getChainId());
-            params.put("assetChainId",assetChainId);
-            params.put("assetId",assetId);
-            HashMap result = (HashMap) TransactionCall.requestAndResponse(ModuleE.LG.abbr, "lg_get_asset", params);
-            return result;
-        } catch (Exception e) {
-            Log.error(e);
-            return null;
-        }
-    }
+
 }

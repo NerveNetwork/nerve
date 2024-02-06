@@ -252,9 +252,7 @@ public class TrxParseTxHelper implements BeanInitial {
                     // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
                     if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), txInfo.getAssetId())
                             && !isMinterERC20(txInfo.getContractAddress())) {
-                        String msg = String.format("[%s]不合法的%s网络的充值交易[6], ERC20[%s]已绑定NERVE资产，但合约内未注册", txHash, htgContext.getConfig().getSymbol(), txInfo.getContractAddress());
-                        htgContext.logger().warn(msg);
-                        htgContext.getConverterCoreApi().putWechatMsg(msg);
+                        logger().warn("[{}]Illegal{}Online recharge transactions[6], ERC20[{}]BoundNERVEAssets, but not registered in the contract", txHash, htgContext.getConfig().getSymbol(), txInfo.getContractAddress());
                         break;
                     }
                     isDeposit = true;

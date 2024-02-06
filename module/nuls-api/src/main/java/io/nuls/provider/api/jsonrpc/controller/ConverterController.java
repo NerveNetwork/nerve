@@ -516,34 +516,4 @@ public class ConverterController {
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_gasLimitOfHeterogeneousChains", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
-
-    @RpcMethod("filterWechatMsg")
-    @ApiOperation(description = "过滤微信通知", order = 615)
-    @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hashes", requestType = @TypeDescriptor(value = String.class), parameterDes = "txHash,用逗号隔开"),
-            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterDes = "操作类型, 0-add, 1-remove, 2-query")
-    })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
-    public RpcResult filterWechatMsg(List<Object> params) {
-        VerifyUtils.verifyParams(params, 2);
-        int i = 0;
-        int chainId = (int) params.get(i++);
-        String hashes = (String) params.get(i++);
-        Integer type = null;
-        if (params.size() > 2) {
-            type = (Integer) params.get(i++);
-        }
-        if (!Context.isChainExist(chainId)) {
-            return RpcResult.dataNotFound();
-        }
-        Map<String, Object> params1 = new HashMap<>();
-        params1.put("chainId", chainId);
-        params1.put("hashes", hashes);
-        if (type != null) {
-            params1.put("type", type);
-        }
-        Result<Map<String, Object>> result = converterTools.commonRequest("cv_filter_wechat_msg", params1);
-        return ResultUtil.getJsonRpcResult(result);
-    }
 }

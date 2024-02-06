@@ -51,7 +51,6 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.AgentBasic;
 import network.nerve.converter.model.bo.Chain;
@@ -71,7 +70,10 @@ import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -915,57 +917,6 @@ public class BusinessCmd extends BaseCmd {
             long height = Long.parseLong(params.get("height").toString());
             BlockHeader blockHeader = BlockCall.getBlockHeader(chain, height);
             this.retryVirtualBankProcessor(chain, confirmedTx, blockHeader, prepare);
-            map.put("value", true);
-            return success(map);
-        } catch (NulsRuntimeException e) {
-            errorLogProcess(chain, e);
-            return failed(e.getErrorCode());
-        } catch (NulsException e) {
-            errorLogProcess(chain, e);
-            return failed(e.getErrorCode());
-        } catch (Exception e) {
-            errorLogProcess(chain, e);
-            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
-        }
-    }
-
-    @CmdAnnotation(cmd = "cv_filter_wechat_msg", version = 1.0, description = "过滤微信通知")
-    @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hashes", requestType = @TypeDescriptor(value = String.class), parameterDes = "txHash,用逗号隔开"),
-            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterDes = "操作类型, 0-add, 1-remove, 2-query")
-
-    })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
-    })
-    )
-    public Response filterWechatMsg(Map params) {
-        Chain chain = null;
-        try {
-            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
-            ObjectUtils.canNotEmpty(params.get("hashes"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
-            chain = chainManager.getChain((Integer) params.get("chainId"));
-            if (null == chain) {
-                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
-            }
-            if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-                throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
-            }
-            Map<String, Object> map = new HashMap<>();
-            Integer type = ((Integer) params.get("type"));
-            if (type == null) {
-                type = 0;
-            }
-            String hashes = params.get("hashes").toString();
-            List<String> hashList = Arrays.stream(hashes.split(",")).map(hash -> hash.trim()).collect(Collectors.toList());
-            if (type.intValue() == 0) {
-                VirtualBankDirectorBalanceTask.addFileterHashes(hashList);
-            } else if (type.intValue() == 1){
-                VirtualBankDirectorBalanceTask.removeFileterHashes(hashList);
-            } else if (type.intValue() == 2){
-                map.put("data", VirtualBankDirectorBalanceTask.getFileterHashes());
-            }
             map.put("value", true);
             return success(map);
         } catch (NulsRuntimeException e) {
