@@ -18,7 +18,7 @@ public class ProposalPOTest {
     public void setUp() throws Exception {
         proposalPO = new ProposalPO();
         proposalPO.setType((byte)1);
-        proposalPO.setContent("阿斯蒂芬潜伏期发生的发达说得过去刚刚和");
+        proposalPO.setContent("The development of the latent period of Astifen is reasonable. Just now, it has been discussed with");
         proposalPO.setHash(NulsHash.fromHex("7c91f96cb4f069a61985710c08f6e773ee52c3632db6c4d5ab9028d7cc30151d"));
         proposalPO.setAddress(AddressTool.getAddress("tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24"));
         proposalPO.setHeterogeneousChainId(101);

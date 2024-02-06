@@ -39,12 +39,12 @@ public class TradingOrderPo extends BaseNulsData implements Comparable {
     private byte feeScale;
 
     private BigInteger leftQuoteAmount;
-    //记录当前订单更新时的nonce值
+    //Record the update of the current ordernoncevalue
     private byte[] nonce;
 
-    //冗余字段，记录剩余未成交的数量，不做底层存储
+    //Redundant fields that record the remaining number of outstanding transactions without underlying storage
     private BigInteger leftAmount;
-    //是否已经完全成交
+    //Has the transaction been fully completed
     private boolean over;
 
     public TradingOrderPo() {

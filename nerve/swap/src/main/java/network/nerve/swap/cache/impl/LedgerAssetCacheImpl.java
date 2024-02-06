@@ -39,7 +39,7 @@ import java.util.Map;
 @Component
 public class LedgerAssetCacheImpl implements LedgerAssetCache {
 
-    //不同的链地址不会相同，所以不再区分链
+    //Different chain addresses will not be the same, so chains will no longer be distinguished
     private Map<String, LedgerAssetDTO> CACHE_MAP = new HashMap<>();
 
     @Override

@@ -43,7 +43,7 @@ import java.util.Map;
 public class HuobiQuerier implements Querier {
 
     /**
-     * 获取交易对价格接口
+     * Obtain transaction pair price interface
      */
     private final String CMD = "/market/detail/merged?symbol=";
 
@@ -58,15 +58,15 @@ public class HuobiQuerier implements Querier {
             }
             String status = data.get("status").toString();
             if(!"ok".equals(status)){
-                chain.getLogger().error("Huobi 调用{}接口, Huobi获取价格失败, status:{}, {}", url, status, JSONUtils.obj2json(data));
+                chain.getLogger().error("Huobi call{}interface, HuobiFailed to obtain price, status:{}, {}", url, status, JSONUtils.obj2json(data));
                 return null;
             }
             Map<String, Object> tick = (Map<String, Object>) data.get("tick");
             BigDecimal res = new BigDecimal(String.valueOf(tick.get("close")));
-            chain.getLogger().info("Huobi 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            chain.getLogger().info("Huobi Obtaining transaction pairs[{}]price:{}", symbol.toUpperCase(), res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Huobi, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("Huobi, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

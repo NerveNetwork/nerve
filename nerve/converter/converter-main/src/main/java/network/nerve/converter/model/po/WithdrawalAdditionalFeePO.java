@@ -29,18 +29,18 @@ import java.math.BigInteger;
 import java.util.Map;
 
 /**
- * 针对一个提现交易, 记录对该交易追加的手续费 业务数据
+ * For a withdrawal transaction, Record the additional handling fee for the transaction Business data
  * @author: Loki
  * @date: 2020/9/29
  */
 public class WithdrawalAdditionalFeePO implements Serializable {
 
     /**
-     * 提现交易hash(原始交易)/或提案原路退回交易hash
+     * Withdrawal transactionshash(Original transaction)/Or propose to return the transaction via the original routehash
      */
     private String basicTxHash;
     /**
-     * k:追加的手续费交易hash, v:追加的金额
+     * k:Additional transaction feeshash, v:Additional amount
      */
     private Map<String, BigInteger> mapAdditionalFee;
 

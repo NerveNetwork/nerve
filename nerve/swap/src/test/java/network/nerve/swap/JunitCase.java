@@ -7,12 +7,12 @@ import network.nerve.swap.utils.NerveCallback;
  */
 public class JunitCase<T> {
     /**
-     * @param key     用例标识
-     * @param params  参数列表
-     * @param want    预期结果
-     * @param wantEx  预期是否抛出异常
-     * @param exClass 抛出的是什么异常
-     * @param message 打印信息
+     * @param key     Use case identification
+     * @param params  parameter list
+     * @param want    Expected results
+     * @param wantEx  Is an exception expected to be thrown
+     * @param exClass What exception is thrown
+     * @param message Print Information
      */
     public JunitCase(String key, T obj, Object[] params, Object want, boolean wantEx, Class<? extends Exception> exClass, NerveCallback callBack) {
         this.key = key;
@@ -21,23 +21,23 @@ public class JunitCase<T> {
         this.want = want;
         this.wantEx = wantEx;
         this.exClass = exClass;
-        this.message = key + "测试完成";
+        this.message = key + "Test completed";
         this.callBack = callBack;
     }
 
-    //用例标识
+    //Use case identification
     private String key;
-    //调用主体
+    //Calling the subject
     private T obj;
-    //    参数列表
+    //    parameter list
     private Object[] params;
-    //     预期结果
+    //     Expected results
     private Object want;
-    //     是否抛出异常
+    //     Is an exception thrown
     private boolean wantEx;
-    //     抛出的是什么异常
+    //     What exception is thrown
     private Class<? extends Exception> exClass;
-    //    打印信息
+    //    Print Information
     private String message;
 
     private NerveCallback callBack;

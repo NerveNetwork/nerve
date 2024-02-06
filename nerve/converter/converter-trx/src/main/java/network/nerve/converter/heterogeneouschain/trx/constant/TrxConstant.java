@@ -214,7 +214,7 @@ public interface TrxConstant {
     BigDecimal NUMBER_3 = new BigDecimal("3");
     BigDecimal NUMBER_1_DOT_3 = new BigDecimal("1.3");
     BigDecimal NUMBER_0_DOT_1 = new BigDecimal("0.1");
-    // 动态获取tron的能量单价
+    // Dynamic acquisitiontronEnergy unit price
     String chainParamsURL = "https://api.trongrid.io/wallet/getchainparameters";
 
 }

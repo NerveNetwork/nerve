@@ -103,7 +103,7 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 FarmBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), FarmBus.class);
-                //更新Farm
+                //updateFarm
                 FarmPoolPO farm = farmCache.get(bus.getFarmHash());
                 farm.setLastRewardBlock(bus.getLastRewardBlockNew());
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareNew());
@@ -140,7 +140,7 @@ public class FarmUpdateTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 FarmBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), FarmBus.class);
-                //更新Farm
+                //updateFarm
                 FarmPoolPO farm = farmCache.get(bus.getFarmHash());
                 farm.setLastRewardBlock(bus.getLastRewardBlockOld());
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareOld());

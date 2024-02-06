@@ -72,7 +72,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
     private transient CoinData coinDataInstance;
 
     /**
-     * 在区块中的顺序，存储在rocksDB中是无序的，保存区块时赋值，取出后根据此值排序
+     * Order in blocks, stored inrocksDBThe middle is unordered, assigned values when saving blocks, sorted based on this value after retrieval
      */
     private int inBlockIndex;
 
@@ -258,7 +258,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
     }
 
     /**
-     * 获取交易的手续费
+     * Obtaining transaction fees
      *
      * @return
      * @throws NulsException
@@ -283,7 +283,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
     }
 
     /**
-     * 判断交易是否为多签交易
+     * Determine whether the transaction is a multi signature transaction
      * Judging whether a transaction is a multi-signature transaction
      */
     public boolean isMultiSignTx() throws NulsException {
@@ -326,7 +326,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
     }
 
     /**
-     * 生成可视化交易字符串(格式化)
+     * Generate visual transaction strings(format)
      *
      * @return String
      * @throws Exception
@@ -368,7 +368,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
                         builder.append(String.format("\t\t\tassetChainId: %s", coinFrom.getAssetsChainId())).append(lineSeparator);
                         builder.append(String.format("\t\t\tassetId: %s", coinFrom.getAssetsId())).append(lineSeparator);
                         builder.append(String.format("\t\t\tnonce: %s", HexUtil.encode(coinFrom.getNonce()))).append(lineSeparator);
-                        builder.append(String.format("\t\t\tlocked: %s", coinFrom.getLocked())).append("\t(0普通交易，-1解锁金额交易（退出共识，退出委托))").append(lineSeparator);
+                        builder.append(String.format("\t\t\tlocked: %s", coinFrom.getLocked())).append("\t(0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation))").append(lineSeparator);
                         builder.append(lineSeparator);
                     }
                 }
@@ -387,7 +387,7 @@ public class Transaction extends BaseNulsData implements Cloneable {
                         builder.append(String.format("\t\t\tamount: %s", coinTo.getAmount())).append(lineSeparator);
                         builder.append(String.format("\t\t\tassetChainId: %s", coinTo.getAssetsChainId())).append(lineSeparator);
                         builder.append(String.format("\t\t\tassetId: %s", coinTo.getAssetsId())).append(lineSeparator);
-                        builder.append(String.format("\t\t\tlocked: %s", coinTo.getLockTime())).append("\t(解锁高度或解锁时间，-1为永久锁定)").append(lineSeparator);
+                        builder.append(String.format("\t\t\tlocked: %s", coinTo.getLockTime())).append("\t(Unlocking height or unlocking time,-1To permanently lock)").append(lineSeparator);
                         builder.append(lineSeparator);
                     }
                 }

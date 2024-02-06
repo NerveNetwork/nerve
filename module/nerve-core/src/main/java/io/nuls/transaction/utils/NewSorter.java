@@ -43,8 +43,8 @@ public class NewSorter {
                 continue;
             }
             if (val == -1) {
-                //新元素在老元素前面
-                //允许多次
+                //New elements come before old ones
+                //Allow multiple times
                 item.addFollower(po.hashCode());
                 po.addPreHash(item.hashCode());
                 if (item.getLevel() == 0 || item.getLevel() <= po.getLevel()) {
@@ -54,11 +54,11 @@ public class NewSorter {
                 }
             }
             if (val == 1) {
-                //新元素在老元素后面
-                //允许多次
+                //New elements come after old elements
+                //Allow multiple times
                 if (po.getLevel() > item.level) {
                 } else {
-                    //逐级增加level值
+                    //Gradually increaselevelvalue
                     int count = item.getLevel() - po.getLevel() + 1;
                     po.setLevel(po.getLevel() + count);
                     addPreItemLevel(resultMap, po.getPreHash(), count);
@@ -96,11 +96,11 @@ public class NewSorter {
 
         private T t;
 
-        //确定在这个元素之前的元素hash
+        //Determine the element before this elementhash
         private List<Integer> preHash;
-        //确定在这个元素之后的元素hash
+        //Identify the elements after this elementhash
         private List<Integer> followHash;
-        //        本元素的层级
+        //        The hierarchy of this element
         private int level;
 
         private long orderBy;

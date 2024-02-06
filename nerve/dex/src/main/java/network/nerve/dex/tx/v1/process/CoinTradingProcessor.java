@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 创建币对交易处理器
+ * Create a coin pair transaction processor
  */
 @Component("CoinTradingProcessorV1")
 public class CoinTradingProcessor implements TransactionProcessor {
@@ -57,8 +57,8 @@ public class CoinTradingProcessor implements TransactionProcessor {
 
 
     public void coinTradingCommit(Transaction tx) {
-        //底层保存币对信息
-        //创建币对盘口容器，并缓存
+        //Bottom level saving of coin pair information
+        //Create a coin to disk container and cache it
         CoinTrading coinTrading;
         AssetInfo assetInfo;
         try {
@@ -66,14 +66,14 @@ public class CoinTradingProcessor implements TransactionProcessor {
             coinTrading.parse(new NulsByteBuffer(tx.getTxData()));
             CoinTradingPo tradingPo = new CoinTradingPo(tx.getHash(), coinTrading);
 
-            //查询币对信息
+            //Query currency pair information
             assetInfo = dexManager.getAssetInfo(AssetInfo.toKey(tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId()));
             tradingPo.setBaseDecimal((byte) assetInfo.getDecimal());
             assetInfo = dexManager.getAssetInfo(AssetInfo.toKey(tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId()));
             tradingPo.setQuoteDecimal((byte) assetInfo.getDecimal());
-            //持久化
+            //Persistence
             coinTradingStorageService.save(tradingPo);
-            //同时持久化一个EditCoinTrading记录，供EditCoinTradingProcessor回滚时使用
+            //Simultaneously persisting aEditCoinTradingRecord, forEditCoinTradingProcessorUse during rollback
             EditCoinTradingPo editCoinTrading = new EditCoinTradingPo();
             editCoinTrading.setTxHash(tx.getHash());
             editCoinTrading.setScaleBaseDecimal(coinTrading.getScaleBaseDecimal());
@@ -82,7 +82,7 @@ public class CoinTradingProcessor implements TransactionProcessor {
             editCoinTrading.setMinQuoteAmount(coinTrading.getMinQuoteAmount());
             CoinTradingEditInfoPo editInfoPo = new CoinTradingEditInfoPo(editCoinTrading);
             coinTradingStorageService.saveEditInfo(tradingPo.getHash(), editInfoPo);
-            //添加到缓存
+            //Add to cache
             dexManager.addCoinTrading(tradingPo);
         } catch (NulsException e) {
             LoggerUtil.dexLog.error("Failure to CoinTrading commit, hash:" + tx.getHash().toHex());
@@ -111,7 +111,7 @@ public class CoinTradingProcessor implements TransactionProcessor {
     }
 
     /**
-     * 注册新币对交易放在第4位处理
+     * Registering new currency for transactions placed in the4Bit processing
      *
      * @return
      */

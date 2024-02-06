@@ -95,7 +95,7 @@ public class ConverterBootstrap extends RpcModule {
     @Override
     public void init() {
         try {
-            //增加地址工具类初始化
+            //Add address tool class initialization
             AddressTool.init(addressPrefixDatas);
             initDB();
             initProtocolUpdate();
@@ -113,9 +113,9 @@ public class ConverterBootstrap extends RpcModule {
         ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
         try {
             long heightVersion1_6_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_6_0"));
-            // 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+            // Third protocol upgrade height Withdrawal of heterogeneous chain handling fees changed to(custom(Not less than the minimum value) + Additional methods)
             ConverterContext.FEE_ADDITIONAL_HEIGHT = heightVersion1_6_0;
-            // 协议升级高度 修改提现和充值交易协议,增加异构链id
+            // Protocol upgrade height Modify withdrawal and recharge transaction agreements,Add heterogeneous chainsid
             ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = heightVersion1_6_0;
             ConverterContext.protocolHeightMap.put(6, heightVersion1_6_0);
         } catch (Exception e) {
@@ -123,7 +123,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_8_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_8_0"));
-            // v1.8.0 协议升级高度 支持火币生态链跨链
+            // v1.8.0 Protocol upgrade height Support cross chain of Huobi ecological chain
             ConverterContext.PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = heightVersion1_8_0;
             ConverterContext.protocolHeightMap.put(8, heightVersion1_8_0);
         } catch (Exception e) {
@@ -131,7 +131,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_11_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_11_0"));
-            // v1.11.0 协议升级高度 支持欧科生态链跨链
+            // v1.11.0 Protocol upgrade height Supporting the cross chain of the Euclidean ecosystem
             ConverterContext.PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = heightVersion1_11_0;
             ConverterContext.protocolHeightMap.put(11, heightVersion1_11_0);
         } catch (Exception e) {
@@ -139,7 +139,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_12_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_12_0"));
-            // v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
+            // v1.12.0 Protocol upgrade height Support transfer and partial destructionERC20
             ConverterContext.PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = heightVersion1_12_0;
             ConverterContext.protocolHeightMap.put(12, heightVersion1_12_0);
         } catch (Exception e) {
@@ -147,7 +147,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_13_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_13_0"));
-            // v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
+            // v1.13.0 Protocol upgrade height Support heterogeneous chainsERC20A new verification method for recharging, supportingHarmony,Polygon,KucoinCross chain ecological chain
             ConverterContext.PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = heightVersion1_13_0;
             ConverterContext.PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = heightVersion1_13_0;
             ConverterContext.PROTOCOL_13_POLYGON_CROSS_CHAIN_HEIGHT = heightVersion1_13_0;
@@ -158,7 +158,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_14_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_14_0"));
-            // v1.14.0 协议升级高度
+            // v1.14.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_14_0 = heightVersion1_14_0;
             ConverterContext.protocolHeightMap.put(14, heightVersion1_14_0);
         } catch (Exception e) {
@@ -166,7 +166,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_15_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_15_0"));
-            // v1.15.0 协议升级高度 支持波场生态链跨链
+            // v1.15.0 Protocol upgrade height Support cross chain of wave field ecosystem
             ConverterContext.PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = heightVersion1_15_0;
             ConverterContext.protocolHeightMap.put(15, heightVersion1_15_0);
         } catch (Exception e) {
@@ -174,7 +174,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_16_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_16_0"));
-            // v1.16.0 协议升级高度
+            // v1.16.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_16_0 = heightVersion1_16_0;
             ConverterContext.protocolHeightMap.put(16, heightVersion1_16_0);
         } catch (Exception e) {
@@ -182,7 +182,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_21_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_21_0"));
-            // v1.21.0 协议升级高度
+            // v1.21.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_21_0 = heightVersion1_21_0;
             ConverterContext.protocolHeightMap.put(21, heightVersion1_21_0);
         } catch (Exception e) {
@@ -190,7 +190,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_22_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_22_0"));
-            // v1.22.0 协议升级高度
+            // v1.22.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_22_0 = heightVersion1_22_0;
             ConverterContext.protocolHeightMap.put(22, heightVersion1_22_0);
         } catch (Exception e) {
@@ -198,7 +198,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_23_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_23_0"));
-            // v1.23.0 协议升级高度
+            // v1.23.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_23_0 = heightVersion1_23_0;
             ConverterContext.protocolHeightMap.put(23, heightVersion1_23_0);
         } catch (Exception e) {
@@ -206,7 +206,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_24_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_24_0"));
-            // v1.24.0 协议升级高度
+            // v1.24.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_24_0 = heightVersion1_24_0;
             ConverterContext.protocolHeightMap.put(24, heightVersion1_24_0);
         } catch (Exception e) {
@@ -214,7 +214,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_26_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_26_0"));
-            // v1.26.0 协议升级高度
+            // v1.26.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_26_0 = heightVersion1_26_0;
             ConverterContext.protocolHeightMap.put(26, heightVersion1_26_0);
         } catch (Exception e) {
@@ -222,7 +222,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_27_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_27_0"));
-            // v1.27.0 协议升级高度
+            // v1.27.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_27_0 = heightVersion1_27_0;
             ConverterContext.protocolHeightMap.put(27, heightVersion1_27_0);
         } catch (Exception e) {
@@ -230,7 +230,7 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_29_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_29_0"));
-            // v1.29.0 协议升级高度
+            // v1.29.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_29_0 = heightVersion1_29_0;
             ConverterContext.protocolHeightMap.put(29, heightVersion1_29_0);
         } catch (Exception e) {
@@ -238,11 +238,19 @@ public class ConverterBootstrap extends RpcModule {
         }
         try {
             long heightVersion1_30_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_30_0"));
-            // v1.30.0 协议升级高度
+            // v1.30.0 Protocol upgrade height
             ConverterContext.PROTOCOL_1_30_0 = heightVersion1_30_0;
             ConverterContext.protocolHeightMap.put(30, heightVersion1_30_0);
         } catch (Exception e) {
             Log.warn("Failed to get height_1_30_0", e);
+        }
+        try {
+            long heightVersion1_31_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_31_0"));
+            // v1.31.0 Protocol upgrade height
+            ConverterContext.PROTOCOL_1_31_0 = heightVersion1_31_0;
+            ConverterContext.protocolHeightMap.put(31, heightVersion1_31_0);
+        } catch (Exception e) {
+            Log.warn("Failed to get height_1_31_0", e);
         }
         try {
             int sigMode = Integer.parseInt(configurationLoader.getValue(ModuleE.Constant.ACCOUNT, "sigMode"));
@@ -286,8 +294,8 @@ public class ConverterBootstrap extends RpcModule {
             chainManager.getChainMap().values().forEach(BlockCall::subscriptionNewBlockHeight);
             Log.info("onDependenciesReady ledger");
             heterogeneousChainManager.init2LedgerAsset();
-            // 获取种子节点个数
-            // 根据协议来
+            // Obtain the number of seed nodes
+            // According to the agreement
             Chain chain = chainManager.getChainMap().get(converterConfig.getChainId());
             if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                 Result<Map> result = ConsensusCall.getConsensusConfig(converterConfig.getChainId());
@@ -300,7 +308,7 @@ public class ConverterBootstrap extends RpcModule {
             }
             ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED =
                     ConverterContext.VIRTUAL_BANK_AGENT_TOTAL - ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT;
-            chain.getLogger().debug("初始化: 虚拟银行总席位:{}, 虚拟银行种子成员数:{}, 虚拟银行非种子成员数:{}",
+            chain.getLogger().debug("initialization: Virtual Bank Total Seats:{}, Number of virtual bank seed members:{}, Number of non seed members of virtual bank:{}",
                     ConverterContext.VIRTUAL_BANK_AGENT_TOTAL,
                     ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT,
                     ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED);
@@ -338,7 +346,7 @@ public class ConverterBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化系统编码
+     * Initialize system encoding
      */
     private static void initSys() throws Exception {
         try {
@@ -366,49 +374,56 @@ public class ConverterBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化和注册异构链
+     * Initialize and register heterogeneous chains
      */
     private void initHeterogeneousChainInfo() throws Exception {
         heterogeneousChainManager.initHeterogeneousChainInfo();
     }
 
     private void initDB() throws Exception {
-        // 数据文件存储地址
+        // Data file storage address
         RocksDBService.init(converterConfig.getTxDataRoot());
         RocksDBService.createTable(ConverterDBConstant.DB_MODULE_CONGIF);
-        // 异构链基本信息表
+        // Basic Information Table of Heterogeneous Chain
         RocksDBService.createTable(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN_INFO);
-        // 异构链数据表
+        // Heterogeneous Chain Data Table
         RocksDBService.createTable(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
     }
 
     /**
-     * 初始化配置项上下文
+     * Initialize configuration item context
      */
     private void initConverterContext() {
-        // 触发初始化虚拟银行的区块高度
+        ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
+        try {
+            String awardFeeSystemAddressPublicKeyProtocol17 = configurationLoader.getValue(ModuleE.Constant.SWAP, "awardFeeSystemAddressPublicKeyProtocol17");
+            ConverterContext.AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0 = AddressTool.getAddressByPubKeyStr(awardFeeSystemAddressPublicKeyProtocol17, converterConfig.getChainId());
+        } catch (Exception e) {
+            Log.warn("Failed to get awardFeeSystemAddressPublicKeyProtocol17 on swap module cnf", e);
+        }
+        // Trigger the block height for initializing virtual banks
         ConverterContext.INIT_VIRTUAL_BANK_HEIGHT = converterConfig.getInitVirtualBankHeight();
-        // 手续费汇集分发公钥
+        // Collection and distribution of public keys for handling fees
         ConverterContext.FEE_PUBKEY = HexUtil.decode(converterConfig.getFeePubkey());
-        // 触发执行虚拟银行变更交易的高度周期
+        // Trigger the high cycle of executing virtual bank change transactions
         ConverterContext.EXECUTE_CHANGE_VIRTUAL_BANK_PERIODIC_HEIGHT = converterConfig.getExecuteChangeVirtualBankPeriodicHeight();
-        // 提现黑洞公钥
+        // Withdrawal of black hole public key
         ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY = HexUtil.decode(converterConfig.getBlackHolePublicKey());
-        // 虚拟银行共识节点总数（包含种子节点成员）
+        // Total number of consensus nodes in virtual banks（Include seed node members）
         ConverterContext.VIRTUAL_BANK_AGENT_TOTAL = converterConfig.getVirtualBankAgentTotal();
-        // 提案花费
+        // Proposal cost
         ConverterContext.PROPOSAL_PRICE = converterConfig.getProposalPrice();
-        // 签名拜占庭比例
+        // Signature Byzantine Ratio
         ConverterContext.BYZANTINERATIO = converterConfig.getByzantineRatio();
-        // 提案可投票持续区块数
+        // The number of blocks that can be voted on for a proposal
         ConverterContext.PROPOSAL_VOTE_TIME_BLOCKS = DAY_BLOCKS * converterConfig.getProposalVotingDays();
-        // 异构链交易手续费补贴 第一次协议升级高度
+        // Subsidy for transaction fees for heterogeneous chain transactions The height of the first protocol upgrade
         ConverterContext.FEE_EFFECTIVE_HEIGHT_FIRST = converterConfig.getFeeEffectiveHeightFirst();
-        // 第二次协议升级高度 异构链交易手续费补贴
+        // Second protocol upgrade height Subsidy for transaction fees for heterogeneous chain transactions
         ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND = converterConfig.getFeeEffectiveHeightSecond();
-        // 设置NVT价格key, 通过喂价模块获取价格
+        // set upNVTpricekey, Obtain prices through the pricing module
         ConverterContext.priceKeyMap.put(AssetName.NVT.name(), ORACLE_KEY_NVT_PRICE);
-        // 初始化虚拟银行公钥(异构链版本2开始)
+        // Initialize virtual bank public key(Heterogeneous Chain Version2start)
         List<String> seedPubKeyList = List.of(converterConfig.getInitVirtualBankPubKeyList().split(ConverterConstant.SEED_PUBKEY_SEPARATOR));
         for(String pubKey : seedPubKeyList) {
             ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.add(pubKey.toLowerCase());

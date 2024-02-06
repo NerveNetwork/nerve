@@ -37,7 +37,7 @@ public interface DistributionFeeStorageService {
     boolean save(Chain chain, DistributionFeePO po);
 
     /**
-     * 根据原始交易hash获取
+     * Based on the original transactionhashobtain
      * @param chain
      * @param hash
      * @return
@@ -45,7 +45,7 @@ public interface DistributionFeeStorageService {
     DistributionFeePO findByBasisTxHash(Chain chain, NulsHash hash);
 
     /**
-     * 根据原始交易hash删除
+     * Based on the original transactionhashdelete
      * @param chain
      * @param hash
      * @return

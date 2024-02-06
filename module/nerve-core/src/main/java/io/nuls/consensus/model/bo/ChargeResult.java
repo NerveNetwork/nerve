@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 交易手续费返回结果类
+ * Transaction fee return result class
  * Transaction Fee Return Result Class
  *
  * @author tag

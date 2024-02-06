@@ -22,7 +22,7 @@ import java.math.RoundingMode;
 import java.util.*;
 
 /**
- * dex模块，通用工具类
+ * dexModule, general tool class
  */
 public class DexUtil {
 
@@ -38,7 +38,7 @@ public class DexUtil {
     }
 
     /**
-     * 通过币对id信息生成key
+     * Through currency pairsidInformation generationkey
      *
      * @param chainId1
      * @param assetId1
@@ -51,7 +51,7 @@ public class DexUtil {
     }
 
     /**
-     * 获取base开头的币对id
+     * obtainbaseCoin pairs at the beginningid
      *
      * @param po
      * @return
@@ -82,7 +82,7 @@ public class DexUtil {
     }
 
     /**
-     * 生成成交交易的coinData
+     * Generating transactional transactionscoinData
      *
      * @return
      */
@@ -94,15 +94,15 @@ public class DexUtil {
     }
 
     /**
-     * 生成成交交易的from ,解锁用户锁定挂单剩余数量的币
-     * from的第一条数据强制为买单的解锁信息，第二条为卖单的解锁信息
+     * Generating transactional transactionsfrom ,Unlocking the remaining amount of coins locked by the user for order placement
+     * fromThe first piece of data is forced to be the unlocking information for buying orders, and the second piece is the unlocking information for selling orders
      *
      * @param tradingPo
      * @param buyOrder
      * @param sellOrder
      */
     public static void addCoinFrom(CoinTradingPo tradingPo, TradingOrderPo buyOrder, TradingOrderPo sellOrder, CoinData coinData) {
-        //添加买单from
+        //Add Purchase Orderfrom
         CoinFrom from1 = new CoinFrom();
         from1.setAssetsChainId(tradingPo.getQuoteAssetChainId());
         from1.setAssetsId(tradingPo.getQuoteAssetId());
@@ -112,7 +112,7 @@ public class DexUtil {
         from1.setLocked(DexConstant.ASSET_LOCK_TYPE);
         coinData.addFrom(from1);
 
-        //添加卖单from
+        //Add sales orderfrom
         CoinFrom from2 = new CoinFrom();
         from2.setAssetsChainId(tradingPo.getBaseAssetChainId());
         from2.setAssetsId(tradingPo.getBaseAssetId());
@@ -124,8 +124,8 @@ public class DexUtil {
     }
 
     /**
-     * 根据成交量，生成成交交易的to
-     * 生成to的顺序也是强制的，详细顺序见DexService.createDealTx
+     * Generate transaction volume based on transaction volumeto
+     * generatetoThe order is also mandatory, as detailed in the following orderDexService.createDealTx
      *
      * @param tradingPo
      * @param buyOrder
@@ -137,13 +137,13 @@ public class DexUtil {
         BigDecimal price = new BigDecimal(priceBigInteger).movePointLeft(tradingPo.getQuoteDecimal());
 
         if (buyOrder.getLeftAmount().compareTo(sellOrder.getLeftAmount()) == 0) {
-            //如果两边所剩交易币种余数量刚好相等
+            //If the remaining trading currencies on both sides are exactly equal in quantity
             return processWithEqual(coinData, tradingPo, price, buyOrder, sellOrder);
         } else if (buyOrder.getLeftAmount().compareTo(sellOrder.getLeftAmount()) < 0) {
-            //如果买单剩余交易币种数量少于卖单剩余数量
+            //If the remaining transaction currency quantity on the purchase order is less than the remaining quantity on the sell order
             return processBuyLess(coinData, tradingPo, price, buyOrder, sellOrder);
         } else {
-            //如果买单剩余交易币种数量大于卖单剩余数量，需要按照卖单实际剩余数量计算，可以兑换多少基础币种
+            //If the remaining transaction currency quantity on the purchase order is greater than the remaining quantity on the sale order, it needs to be calculated based on the actual remaining quantity on the sale order, and how much base currency can be exchanged
             return processSellLess(coinData, tradingPo, price, buyOrder, sellOrder);
         }
     }
@@ -151,13 +151,13 @@ public class DexUtil {
     private static Map<String, Object> processWithEqual(CoinData coinData, CoinTradingPo tradingPo, BigDecimal price,
                                                         TradingOrderPo buyOrder, TradingOrderPo sellOrder) {
         Map<String, Object> map = new HashMap<>();
-        //首先用卖单的交易币种剩余数量 * 单价 ，计算得到可以兑换到的计价币种总量
+        //First, use the remaining quantity of the transaction currency in the sales order * unit price Calculate the total amount of pricing currencies that can be exchanged
         BigDecimal amount = new BigDecimal(sellOrder.getLeftAmount()).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
-        BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
+        BigInteger quoteAmount = amount.toBigInteger();     //The total amount of pricing currencies that can ultimately be exchanged
 
         addDealCoinTo(map, coinData, tradingPo, quoteAmount, buyOrder, sellOrder.getLeftAmount(), sellOrder);
-        //交易完全成交后，也许买单会有剩余未花费的币，这时需要将剩余币退还给买单用户
+        //After the transaction is fully completed, there may be remaining coins that have not been spent on the purchase order, and the remaining coins need to be returned to the user who made the purchase order
         returnBuyLeftAmountCoinTo(coinData, tradingPo, buyOrder, buyOrder.getLeftQuoteAmount().subtract(quoteAmount));
 
         map.put("isBuyOver", true);
@@ -171,16 +171,16 @@ public class DexUtil {
     private static Map<String, Object> processBuyLess(CoinData coinData, CoinTradingPo tradingPo, BigDecimal price,
                                                       TradingOrderPo buyOrder, TradingOrderPo sellOrder) {
         Map<String, Object> map = new HashMap<>();
-        //如果买单剩余交易币种数量少于卖单剩余数量，那么卖单需要支付的数量就是买单剩余数量
-        //再用最终成交价格计算出买单应该支付多少计价货币给卖家
+        //If the remaining transaction currency quantity on the purchase order is less than the remaining quantity on the sell order, then the quantity to be paid on the sell order is the remaining quantity on the purchase order
+        //Calculate how much currency should be paid to the seller for the purchase order based on the final transaction price
         BigDecimal amount = new BigDecimal(buyOrder.getLeftAmount()).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
-        BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
+        BigInteger quoteAmount = amount.toBigInteger();     //The total amount of pricing currencies that can ultimately be exchanged
 
         addDealCoinTo(map, coinData, tradingPo, quoteAmount, buyOrder, buyOrder.getLeftAmount(), sellOrder);
-        //交易完全成交后，也许买单会有剩余未花费的币，这时需要将剩余币退还给买单用户
+        //After the transaction is fully completed, there may be remaining coins that have not been spent on the purchase order, and the remaining coins need to be returned to the user who made the purchase order
         returnBuyLeftAmountCoinTo(coinData, tradingPo, buyOrder, buyOrder.getLeftQuoteAmount().subtract(quoteAmount));
-        //检查卖单剩余币是否支持继续交易，支持则继续锁定，不支持则退还给卖家
+        //Check if the remaining coins in the sales order support continuing transactions. If yes, continue to lock them. If not, return them to the seller
         boolean isSellOver = addSellLeftAmountCoinTo(coinData, tradingPo, sellOrder, sellOrder.getLeftAmount().subtract(buyOrder.getLeftAmount()));
 
         map.put("isBuyOver", true);
@@ -194,13 +194,13 @@ public class DexUtil {
     private static Map<String, Object> processSellLess(CoinData coinData, CoinTradingPo tradingPo, BigDecimal price,
                                                        TradingOrderPo buyOrder, TradingOrderPo sellOrder) {
         Map<String, Object> map = new HashMap<>();
-        //如果买单剩余数量大于卖单剩余数量，则需要按照卖单剩余交易币种数量计算买单应该支付多少计价币
+        //If the remaining quantity of the purchase order is greater than the remaining quantity of the sell order, the amount of pricing currency to be paid for the purchase order needs to be calculated based on the remaining transaction currency quantity of the sell order
         BigDecimal amount = new BigDecimal(sellOrder.getLeftAmount()).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
-        BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
+        BigInteger quoteAmount = amount.toBigInteger();     //The total amount of pricing currencies that can ultimately be exchanged
 
         addDealCoinTo(map, coinData, tradingPo, quoteAmount, buyOrder, sellOrder.getLeftAmount(), sellOrder);
-        //检查买单剩余币是否支持继续交易，支持则继续锁定，不支持则退还给买家
+        //Check if the remaining coins on the purchase order support continuing transactions. If yes, continue to lock them. If not, return them to the buyer
         boolean isBuyOver = addBuyLeftAmountCoinTo(coinData, tradingPo, buyOrder, buyOrder.getLeftAmount().subtract(sellOrder.getLeftAmount()), buyOrder.getLeftQuoteAmount().subtract(quoteAmount));
         map.put("isBuyOver", isBuyOver);
         map.put("isSellOver", true);
@@ -211,31 +211,31 @@ public class DexUtil {
     }
 
     /**
-     * 添加成交交易必然生成的4条to记录
-     * 买单成交to
-     * 卖单成交to
-     * 买单手续费to
-     * 卖单手续费to
+     * Adding transactions that are inevitably generated4striptorecord
+     * Purchase transactionto
+     * Sales transactionto
+     * Payment handling feeto
+     * Selling order handling feeto
      */
     private static void addDealCoinTo(Map<String, Object> map, CoinData coinData, CoinTradingPo tradingPo,
                                       BigInteger quoteAmount, TradingOrderPo buyOrder,
                                       BigInteger baseAmount, TradingOrderPo sellOrder) {
-        //1.首先计算买卖双方各自需要支付的系统手续费，默认系统手续费为 2/10000
-        //若计算出手续费小于资产最小支持位数时，默认收取资产最小单位为手续费
+        //1.Firstly, calculate the system transaction fees that each buyer and seller need to pay. The default system transaction fee is 2/10000
+        //If the calculation shows that the handling fee is less than the minimum number of supported digits of the asset, the default unit for collecting the minimum asset is the handling fee
 
-        //卖方需要支付的系统手续费
+        //The system transaction fee that the seller needs to pay
         BigDecimal sellSysFee = new BigDecimal(quoteAmount).multiply(DexContext.sysFeeScaleDecimal).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
         if (sellSysFee.compareTo(BigDecimal.ONE) < 0) {
             sellSysFee = BigDecimal.ONE;
         }
-        //买方需要支付的系统手续费
+        //The system transaction fee that the buyer needs to pay
         BigDecimal buySysFee = new BigDecimal(baseAmount).multiply(DexContext.sysFeeScaleDecimal).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
         if (buySysFee.compareTo(BigDecimal.ONE) < 0) {
             buySysFee = BigDecimal.ONE;
         }
 
-        //2.若委托单上有设置运营节点收取手续费地址，也需要计算
-        //卖方需要支付的节点手续费
+        //2.If there is a service fee collection address set for the operation node on the commission form, it also needs to be calculated
+        //Node handling fees that the seller needs to pay
         BigDecimal sellNodeFee = BigDecimal.ZERO;
         if (sellOrder.getFeeAddress() != null && sellOrder.getFeeAddress().length > 0 && sellOrder.getFeeScale() > 0) {
             sellNodeFee = new BigDecimal(quoteAmount).multiply(new BigDecimal(sellOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
@@ -243,7 +243,7 @@ public class DexUtil {
                 sellNodeFee = BigDecimal.ONE;
             }
         }
-        //买方需要支付的节点手续费
+        //Node handling fees that the buyer needs to pay
         BigDecimal buyNodeFee = BigDecimal.ZERO;
         if (buyOrder.getFeeAddress() != null && buyOrder.getFeeAddress().length > 0 && buyOrder.getFeeScale() > 0) {
             buyNodeFee = new BigDecimal(baseAmount).multiply(new BigDecimal(buyOrder.getFeeScale())).divide(DexConstant.PROP, 0, RoundingMode.HALF_DOWN);
@@ -255,39 +255,39 @@ public class DexUtil {
         BigInteger sellFee = sellSysFee.add(sellNodeFee).toBigInteger();
         BigInteger buyFee = buySysFee.add(buyNodeFee).toBigInteger();
 
-        //生成交易的to，将成交后的币转到对方的账户上
-        //对方实际收到的数量，是减去了手续费之后的
+        //Generating transactionstoTransfer the traded currency to the other party's account
+        //The actual quantity received by the other party is after deducting the handling fee
         CoinTo to1, to2, to3, to4, to5 = null, to6 = null;
 
-        //卖方收到计价币种
+        //The seller receives the pricing currency
         to1 = new CoinTo(sellOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), quoteAmount.subtract(sellFee));
-        //买方收到交易币种
+        //Buyer receives transaction currency
         to2 = new CoinTo(buyOrder.getAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), baseAmount.subtract(buyFee));
-        //支付手续费
-        //卖方支付系统手续费
+        //Payment of handling fees
+        //Seller payment system transaction fees
         to3 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellSysFee.toBigInteger());
-        //买方支付系统手续费
+        //Buyer payment system transaction fee
         to4 = new CoinTo(DexContext.sysFeeAddress, tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buySysFee.toBigInteger());
 
-        //卖方支付节点手续费
+        //Seller pays node handling fees
         if (sellNodeFee.compareTo(BigDecimal.ZERO) > 0) {
             if (Arrays.equals(DexContext.sysFeeAddress, sellOrder.getFeeAddress())) {
-                //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
+                //If the system charges the same handling fee address as the node handling fee address, it will be merged directly
                 to3.setAmount(to3.getAmount().add(sellNodeFee.toBigInteger()));
             } else if (Arrays.equals(sellOrder.getAddress(), sellOrder.getFeeAddress())) {
-                //如果卖单地址和节点手续费地址配置一致，则直接合并
+                //If the configuration of the selling address and the node handling fee address are consistent, they will be merged directly
                 to1.setAmount(to1.getAmount().add(sellNodeFee.toBigInteger()));
             } else {
                 to5 = new CoinTo(sellOrder.getFeeAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), sellNodeFee.toBigInteger());
             }
         }
-        //买方支付节点手续费
+        //Buyer pays node handling fees
         if (buyNodeFee.compareTo(BigDecimal.ZERO) > 0) {
             if (Arrays.equals(DexContext.sysFeeAddress, buyOrder.getFeeAddress())) {
-                //如果系统收取手续费地址和节点手续费地址配置一致，则直接合并
+                //If the system charges the same handling fee address as the node handling fee address, it will be merged directly
                 to4.setAmount(to4.getAmount().add(buyNodeFee.toBigInteger()));
             } else if (Arrays.equals(buyOrder.getAddress(), buyOrder.getFeeAddress())) {
-                //如果买单地址和节点手续费地址配置一致，则直接合并
+                //If the billing address and node handling fee address configuration are consistent, they will be merged directly
                 to2.setAmount(to2.getAmount().add(buyNodeFee.toBigInteger()));
             } else {
                 to6 = new CoinTo(buyOrder.getFeeAddress(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), buyNodeFee.toBigInteger());
@@ -309,7 +309,7 @@ public class DexUtil {
     }
 
     /**
-     * 交易完全成交后，将买单剩余基础币数量退还给买单用户
+     * After the transaction is fully completed, the remaining amount of base currency on the purchase order will be returned to the user who made the purchase
      *
      * @param coinData
      * @param tradingPo
@@ -325,7 +325,7 @@ public class DexUtil {
         to.setLockTime(0);
 
         CoinTo to0 = coinData.getTo().get(0);
-        //存在一种极端情况，就是买家和卖家是同一个账户，这时就将剩余金额加在一起
+        //There is an extreme situation where the buyer and seller are on the same account, and the remaining amount is added together
         if (to0.getAssetsChainId() == to.getAssetsChainId() && to0.getAssetsId() == to.getAssetsId() && Arrays.equals(to0.getAddress(), to.getAddress())) {
             to0.setAmount(to0.getAmount().add(to.getAmount()));
         } else {
@@ -334,8 +334,8 @@ public class DexUtil {
     }
 
     private static boolean addBuyLeftAmountCoinTo(CoinData coinData, CoinTradingPo tradingPo, TradingOrderPo buyOrder, BigInteger leftAmount, BigInteger leftQuoteAmount) {
-        //如果剩余买单未成交的币已经小于一定数量时（最小成交额的1/10),
-        //或者剩余币数量已经无法购买到兑换币的最小单位则退还给用户，否则继续锁定
+        //If the remaining amount of unsold coins in the purchase order is already less than a certain amount（Minimum transaction amount1/10),
+        //If the remaining amount of coins cannot be purchased to the minimum unit of exchange currency, it will be returned to the user. Otherwise, it will continue to be locked
 
         boolean buyOver = false;
 
@@ -348,10 +348,10 @@ public class DexUtil {
             BigDecimal price = new BigDecimal(buyOrder.getPrice()).movePointLeft(tradingPo.getQuoteDecimal());
             BigDecimal sellDecimal = new BigDecimal(leftAmount);
             sellDecimal = sellDecimal.movePointLeft(tradingPo.getBaseDecimal());
-            sellDecimal = sellDecimal.multiply(price).movePointRight(tradingPo.getQuoteDecimal());      //总量 * 单价 = 总兑换数量
+            sellDecimal = sellDecimal.multiply(price).movePointRight(tradingPo.getQuoteDecimal());      //total * unit price = Total Exchange Quantity
             sellDecimal = sellDecimal.setScale(0, RoundingMode.DOWN);
-            //如果一个都不能兑换，则视为挂单已完全成交
-            //这里比较的时候为10，是因为包含手续费需要支付3-8个最小单位
+            //If none of them can be exchanged, it is considered that the order has been fully executed
+            //When comparing here10, because it includes handling fees that need to be paid3-8Minimum units
             if (sellDecimal.compareTo(BigDecimal.TEN) <= 0) {
                 buyOver = true;
             }
@@ -360,7 +360,7 @@ public class DexUtil {
         CoinTo to = new CoinTo(buyOrder.getAddress(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), leftQuoteAmount);
         if (buyOver) {
             CoinTo to0 = coinData.getTo().get(0);
-            //存在一种极端情况，就是买家和卖家是同一个账户，这时就将剩余金额加在一起
+            //There is an extreme situation where the buyer and seller are on the same account, and the remaining amount is added together
             if (to0.getAssetsChainId() == to.getAssetsChainId() && to0.getAssetsId() == to.getAssetsId() && Arrays.equals(to0.getAddress(), to.getAddress())) {
                 to0.setAmount(to0.getAmount().add(to.getAmount()));
             } else {
@@ -376,8 +376,8 @@ public class DexUtil {
 
 
     private static boolean addSellLeftAmountCoinTo(CoinData coinData, CoinTradingPo tradingPo, TradingOrderPo sellOrder, BigInteger leftAmount) {
-        //如果剩余卖单未成交的币已经小于一定数量时（最小成交额的1/10),
-        //或者剩余币数量已经无法购买到兑换币的最小单位则退还给用户，否则继续锁定
+        //If the remaining unsold coins are already less than a certain quantity（Minimum transaction amount1/10),
+        //If the remaining amount of coins cannot be purchased to the minimum unit of exchange currency, it will be returned to the user. Otherwise, it will continue to be locked
         boolean sellOver = false;
 
         if (leftAmount.compareTo(tradingPo.getMinBaseAmount().divide(BigInteger.TEN)) <= 0 || leftAmount.compareTo(BigInteger.TEN) <= 0) {
@@ -385,14 +385,14 @@ public class DexUtil {
         }
 
         if (!sellOver) {
-            //用卖单的价格作为最终成交价, 计算卖单剩余数量的交易币种，可以兑换多少基础币种
+            //Use the selling price as the final transaction price, Calculate the remaining transaction currency for the sales order and how much base currency can be exchanged
             BigDecimal price = new BigDecimal(sellOrder.getPrice()).movePointLeft(tradingPo.getQuoteDecimal());
             BigDecimal sellDecimal = new BigDecimal(leftAmount);
             sellDecimal = sellDecimal.movePointLeft(tradingPo.getBaseDecimal());
-            sellDecimal = sellDecimal.multiply(price).movePointRight(tradingPo.getQuoteDecimal());      //总量 * 单价 = 总兑换数量
+            sellDecimal = sellDecimal.multiply(price).movePointRight(tradingPo.getQuoteDecimal());      //total * unit price = Total Exchange Quantity
             sellDecimal = sellDecimal.setScale(0, RoundingMode.DOWN);
-            //如果一个都不能兑换，则视为挂单已完全成交
-            //这里比较的时候为10，是因为包含手续费需要支付3-8个最小单位
+            //If none of them can be exchanged, it is considered that the order has been fully executed
+            //When comparing here10, because it includes handling fees that need to be paid3-8Minimum units
             if (sellDecimal.compareTo(BigDecimal.TEN) <= 0) {
                 sellOver = true;
             }
@@ -401,7 +401,7 @@ public class DexUtil {
 
         if (sellOver) {
             CoinTo to1 = coinData.getTo().get(1);
-            //存在一种极端情况，就是买家和卖家是同一个账户，这时就将剩余金额加在一起
+            //There is an extreme situation where the buyer and seller are on the same account, and the remaining amount is added together
             if (to1.getAssetsChainId() == to.getAssetsChainId() && to1.getAssetsId() == to.getAssetsId() && Arrays.equals(to1.getAddress(), to.getAddress())) {
                 to1.setAmount(to1.getAmount().add(to.getAmount()));
             } else {
@@ -416,7 +416,7 @@ public class DexUtil {
     }
 
     /**
-     * 组装交易对txData
+     * Assembly transaction pairstxData
      *
      * @param param
      * @return

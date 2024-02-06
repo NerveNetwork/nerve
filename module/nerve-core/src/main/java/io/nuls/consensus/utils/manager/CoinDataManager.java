@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CoinData操作工具类
+ * CoinDataOperational tools
  * CoinData operation tool class
  *
  * @author tag
@@ -33,46 +33,46 @@ import java.util.Map;
 public class CoinDataManager {
 
     /**
-     * 组装CoinData
+     * assembleCoinData
      * Assemble CoinData
      *
-     * @param address  账户地址/Account address
+     * @param address  Account address/Account address
      * @param chain    chain info
-     * @param amount   金额/amount
-     * @param lockTime 锁定时间/lock time
-     * @param txSize   交易大小/transaction size
-     * @return 组装的CoinData/Assembled CoinData
+     * @param amount   money/amount
+     * @param lockTime Lock time/lock time
+     * @param txSize   Transaction size/transaction size
+     * @return AssembledCoinData/Assembled CoinData
      */
     public CoinData getCoinData(byte[] address, Chain chain, BigInteger amount, long lockTime, int txSize) throws NulsException {
         return getCoinData(address, chain, amount, lockTime, txSize, chain.getConfig().getAgentChainId(), chain.getConfig().getAgentAssetId());
     }
 
     /**
-     * 组装CoinData
+     * assembleCoinData
      * Assemble CoinData
      *
-     * @param address      账户地址/Account address
+     * @param address      Account address/Account address
      * @param chain        chain info
-     * @param amount       金额/amount
-     * @param lockTime     锁定时间/lock time
-     * @param txSize       交易大小/transaction size
-     * @param assetChainId 抵押资产所属ChainId
-     * @param assetId      抵押资产ID
-     * @return 组装的CoinData/Assembled CoinData
+     * @param amount       money/amount
+     * @param lockTime     Lock time/lock time
+     * @param txSize       Transaction size/transaction size
+     * @param assetChainId Mortgage asset ownershipChainId
+     * @param assetId      Mortgage assetsID
+     * @return AssembledCoinData/Assembled CoinData
      */
     public CoinData getCoinData(byte[] address, Chain chain, BigInteger amount, long lockTime, int txSize, int assetChainId, int assetId) throws NulsException {
         CoinData coinData = new CoinData();
         CoinTo to = new CoinTo(address, assetChainId, assetId, amount, lockTime);
         coinData.addTo(to);
         txSize += to.size();
-        //抵押资产金额
+        //Mortgage asset amount
         Map<String, Object> result = CallMethodUtils.getBalanceAndNonce(chain, AddressTool.getStringAddressByBytes(address), assetChainId, assetId);
         if (result == null) {
             throw new NulsException(ConsensusErrorCode.BANANCE_NOT_ENNOUGH);
         }
         byte[] nonce = RPCUtil.decode((String) result.get(ParameterConstant.PARAM_NONCE));
         BigInteger available = new BigInteger(result.get(ParameterConstant.PARAM_AVAILABLE).toString());
-        //验证账户余额是否足够
+        //Verify if the account balance is sufficient
         CoinFrom from = new CoinFrom(address, assetChainId, assetId, amount, nonce, (byte) 0);
         txSize += from.size();
 //        BigInteger fee;
@@ -93,7 +93,7 @@ public class CoinDataManager {
             }
             coinData.addFrom(from);
 
-            //计算手续费
+            //Calculate handling fees
 //            Map<String, Object> feeResult = CallMethodUtils.getBalanceAndNonce(chain, AddressTool.getStringAddressByBytes(address), feeAssetChainId, feeAssetId);
 //            if (feeResult == null) {
 //                throw new NulsException(ConsensusErrorCode.BANANCE_NOT_ENNOUGH);
@@ -113,16 +113,16 @@ public class CoinDataManager {
     }
 
     /**
-     * 组装解锁金额的CoinData（from中nonce为空）
+     * Assembly unlocking amountCoinData（frominnonceEmpty）
      * Assemble Coin Data for the amount of unlock (from non CE is empty)
      *
-     * @param address   账户地址/Account address
+     * @param address   Account address/Account address
      * @param chain     chain info
-     * @param amount    金额/amount
-     * @param lockTime  锁定时间/lock time
-     * @param txSize    交易大小/transaction size
-     * @param agentHash 节点HASH/agent hash
-     * @return 组装的CoinData/Assembled CoinData
+     * @param amount    money/amount
+     * @param lockTime  Lock time/lock time
+     * @param txSize    Transaction size/transaction size
+     * @param agentHash nodeHASH/agent hash
+     * @return AssembledCoinData/Assembled CoinData
      */
     public CoinData getReduceAgentDepositCoinData(byte[] address, Chain chain, BigInteger amount, long lockTime, int txSize, NulsHash agentHash) throws NulsException {
         int assetChainId = chain.getConfig().getAgentChainId();
@@ -160,17 +160,17 @@ public class CoinDataManager {
     }
 
     /**
-     * 组装解锁金额的CoinData（from中nonce为空）
+     * Assembly unlocking amountCoinData（frominnonceEmpty）
      * Assemble Coin Data for the amount of unlock (from non CE is empty)
      *
-     * @param address      账户地址/Account address
+     * @param address      Account address/Account address
      * @param chain        chain info
-     * @param amount       金额/amount
-     * @param lockTime     锁定时间/lock time
-     * @param txSize       交易大小/transaction size
-     * @param assetChainId 解锁的资产链ID
-     * @param assetId      解锁的资产ID
-     * @return 组装的CoinData/Assembled CoinData
+     * @param amount       money/amount
+     * @param lockTime     Lock time/lock time
+     * @param txSize       Transaction size/transaction size
+     * @param assetChainId Unlocked asset chainID
+     * @param assetId      Unlocked assetsID
+     * @return AssembledCoinData/Assembled CoinData
      */
     public CoinData getWithdrawCoinData(byte[] address, Chain chain, BigInteger amount, long lockTime, int txSize, int assetChainId, int assetId) throws NulsException {
         int feeAssetChainId = chain.getConfig().getAgentChainId();
@@ -219,12 +219,12 @@ public class CoinDataManager {
     }
 
     /**
-     * 根据节点地址组装停止节点的coinData
+     * Assemble stop nodes based on their addressescoinData
      * Assemble coinData of stop node according to node address
      *
      * @param chain    chain info
-     * @param address  agent address/节点地址
-     * @param lockTime The end point of the lock (lock start time + lock time) is the length of the lock before./锁定的结束时间点(锁定开始时间点+锁定时长)，之前为锁定的时长
+     * @param address  agent address/Node address
+     * @param lockTime The end point of the lock (lock start time + lock time) is the length of the lock before./Locked end time point(Lock start time point+Lock duration), previously locked for a certain duration
      * @return CoinData
      */
     public CoinData getStopAgentCoinData(Chain chain, byte[] address, long lockTime) throws NulsException {
@@ -241,12 +241,12 @@ public class CoinDataManager {
     }
 
     /**
-     * 组装节点CoinData锁定类型为时间或区块高度
+     * Assembly nodesCoinDataLock type is time or block height
      * Assembly node CoinData lock type is time or block height
      *
      * @param chain    chain info
-     * @param agent    agent info/节点
-     * @param lockTime lock time/锁定时间
+     * @param agent    agent info/node
+     * @param lockTime lock time/Lock time
      * @return CoinData
      */
     public CoinData getStopAgentCoinData(Chain chain, Agent agent, long lockTime) throws NulsException {

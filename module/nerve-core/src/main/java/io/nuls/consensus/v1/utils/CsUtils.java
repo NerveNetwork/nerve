@@ -47,7 +47,7 @@ public class CsUtils {
         if (startBlockHeader.getHeight() != 0L) {
             long roundIndex = bestRoundData.getRoundIndex();
             /*
-            本地最新区块所在轮次已经打包结束，则轮次下标需要加1,则需找到本地最新区块轮次中出的第一个块来计算下一轮的轮次信息
+            If the round of packaging for the latest local block has ended, the round index needs to be added1,Then it is necessary to find the first block from the latest local block round to calculate the next round information
             If the latest block in this area has been packaged, the subscription of the round will need to be added 1.
             */
             if (bestRoundData.getConsensusMemberCount() == bestRoundData.getPackingIndexOfRound() || NulsDateUtils.getCurrentTimeSeconds() >= bestRoundEndTime) {
@@ -60,11 +60,11 @@ public class CsUtils {
 
 
     /**
-     * 获取指定轮次前一轮打包的第一个区块
+     * Get the first block packaged in the previous round of the specified round
      * Gets the first block packaged in the previous round of the specified round
      *
      * @param chain      chain info
-     * @param roundIndex 轮次下标
+     * @param roundIndex Round index
      */
     public static BlockHeader GetFirstBlockOfPreRound(Chain chain, long roundIndex) {
         BlockHeader firstBlockHeader = null;

@@ -88,7 +88,7 @@ import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 public class AssembleTxServiceImpl implements AssembleTxService {
 
     /**
-     * 普通交易为非解锁交易：0，解锁金额交易（退出共识，退出委托）：-1
+     * Ordinary transactions are non unlocked transactions：0Unlock amount transaction（Exit consensus, exit delegation）：-1
      */
     private static final byte NORMAL_TX_LOCKED = 0;
 
@@ -209,10 +209,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public Transaction createRechargeTx(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException {
-        // 支持同时转入token和main
+        // Support simultaneous transfer intokenandmain
         Transaction tx = this.createRechargeTxWithoutSign(chain, rechargeTxDTO);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调验证器验证
+        // Verifier verification
         rechargeVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -220,7 +220,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         heterogeneousHashList.add(new HeterogeneousHash(rechargeTxDTO.getHeterogeneousChainId(), rechargeTxDTO.getOriginalTxHash()));
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        // 完成
+        // complete
         chain.getLogger().debug(tx.format(RechargeTxData.class));
         return tx;
     }
@@ -250,7 +250,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                         rechargeTxDTO.getAmount())
         );
         tos.add(coinTo);
-        // 同时充值token和main，增加main的支持
+        // Simultaneously rechargetokenandmain, increasemainSupport for
         if (rechargeTxDTO.isDepositII()) {
             NerveAssetInfo mainInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(rechargeTxDTO.getHeterogeneousChainId(), 1);
             CoinTo mainTo = new CoinTo(
@@ -288,7 +288,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction rechargeUnconfirmedTx(Chain chain, RechargeUnconfirmedTxData txData, long txTime) throws NulsException {
         Transaction tx = rechargeUnconfirmedTxWithoutSign(chain, txData, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调用验证器验证
+        // Call validator validation
         rechargeUnconfirmedVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -296,7 +296,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         heterogeneousHashList.add(txData.getOriginalTxHash());
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        // 完成
+        // complete
         chain.getLogger().debug(tx.format(RechargeUnconfirmedTxData.class));
         return tx;
     }
@@ -340,7 +340,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction oneClickCrossChainUnconfirmedTx(Chain chain, OneClickCrossChainUnconfirmedTxData txData, long txTime) throws NulsException {
         Transaction tx = oneClickCrossChainUnconfirmedTxWithoutSign(chain, txData, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调用验证器验证
+        // Call validator validation
         rechargeUnconfirmedVerifier.validateOneClickCrossChain(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -348,7 +348,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         heterogeneousHashList.add(txData.getOriginalTxHash());
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        // 完成
+        // complete
         chain.getLogger().debug(tx.format(OneClickCrossChainUnconfirmedTxData.class));
         return tx;
     }
@@ -407,7 +407,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createOneClickCrossChainTx(Chain chain, OneClickCrossChainUnconfirmedTxData dto, long txTime) throws NulsException {
         Transaction tx = this.createOneClickCrossChainTxWithoutSign(chain, dto, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调用验证器验证
+        // Call validator validation
         rechargeVerifier.validateOneClickCrossChain(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -415,7 +415,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         heterogeneousHashList.add(dto.getOriginalTxHash());
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        // 完成
+        // complete
         chain.getLogger().debug(tx.format(OneClickCrossChainTxData.class));
         return tx;
     }
@@ -434,7 +434,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         BigInteger mainAssetAmount = dto.getMainAssetAmount();
         BigInteger mainAssetFeeAmount = dto.getMainAssetFeeAmount();
         if (mainAssetFeeAmount.compareTo(mainAssetAmount) > 0) {
-            // 跨到目标链的手续费错误
+            // Transaction fee error across the target chain
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_FEE_ERROR);
         }
         int withdrawalAssetChainId, withdrawalAssetId;
@@ -456,7 +456,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
         byte[] withdrawalBlackhole = dto.getNerveToAddress();
         CoinData coinData = new CoinData();
-        //组装to
+        //assembleto
         List<CoinTo> tos = new ArrayList<>();
         CoinTo withdrawalCoinTo = new CoinTo(
                 dto.getNerveToAddress(),
@@ -469,7 +469,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                         withdrawalAmount)
         );
         tos.add(withdrawalCoinTo);
-        // 判断组装异构链补贴手续费暂存to
+        // Determine the temporary storage of subsidy fees for assembling heterogeneous chainsto
         CoinTo withdrawalFeeCoinTo = new CoinTo(
                 withdrawalFeeAddress,
                 feeAssetChainId,
@@ -481,10 +481,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                         feeAmount)
         );
         tos.add(withdrawalFeeCoinTo);
-        // 组装tipping
+        // assembletipping
         BigInteger tipping = dto.getTipping();
         if (tipping.compareTo(BigInteger.ZERO) > 0) {
-            // 合法的Nerve地址
+            // LegitimateNerveaddress
             if (!converterCoreApi.validNerveAddress(dto.getTippingAddress())) {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping address error:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), dto.getTippingAddress(), dto.getOriginalTxHash().getHeterogeneousHash());
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
@@ -494,7 +494,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping address setting error:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), dto.getTippingAddress(), dto.getOriginalTxHash().getHeterogeneousHash());
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
             }
-            // 不得大于跨链资产的10%
+            // Must not exceed the value of cross chain assets10%
             if (new BigDecimal(withdrawalAmount).multiply(HtgConstant.NUMBER_0_DOT_1).compareTo(new BigDecimal(tipping)) < 0) {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping exceed error:{}, crossValue:{}, heterogeneousHash:{}", dto.getOriginalTxHash().getHeterogeneousChainId(), tipping, withdrawalAmount, dto.getOriginalTxHash().getHeterogeneousHash());
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
@@ -533,7 +533,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createAddFeeCrossChainTx(Chain chain, AddFeeCrossChainTxDTO dto, long txTime) throws NulsException {
         Transaction tx = this.createAddFeeCrossChainTxWithoutSign(chain, dto, txTime);
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
-        // 调用验证器验证
+        // Call validator validation
         rechargeVerifier.validateAddFeeCrossChain(chain, tx);
         saveWaitingProcess(chain, tx);
 
@@ -541,7 +541,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         heterogeneousHashList.add(dto.getOriginalTxHash());
         BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        // 完成
+        // complete
         chain.getLogger().debug(tx.format(WithdrawalAddFeeByCrossChainTxData.class));
         return tx;
     }
@@ -564,7 +564,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
         }
         CoinData coinData = new CoinData();
-        //组装to
+        //assembleto
         List<CoinTo> tos = new ArrayList<>();
         CoinTo withdrawalFeeCoinTo = new CoinTo(
                 withdrawalFeeAddress,
@@ -595,28 +595,28 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 交易验证成功保存并广播签名,然后等待处理
+     * Transaction verification successful, save and broadcast signature,Then wait for processing
      *
      * @param chain
      * @param tx
      */
     private void saveWaitingProcess(Chain chain, Transaction tx) {
-        // 保存进txStorageService
+        // Save intxStorageService
         txStorageService.save(chain, new TransactionPO(tx));
-        // 如果待处理签名集合 中有此交易的签名列表 则拿出来放入处理队列
+        // If the signature set to be processed There is a signature list for this transaction in the Then take it out and put it in the processing queue
         List<UntreatedMessage> listMsg = chain.getFutureMessageMap().get(tx.getHash());
         if (null != listMsg) {
             for (UntreatedMessage msg : listMsg) {
                 chain.getSignMessageByzantineQueue().offer(msg);
             }
-            // 清空缓存的签名
+            // Clear cached signatures
             chain.getFutureMessageMap().remove(tx.getHash());
         }
     }
 
     @Override
     public Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException {
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(withdrawalTxDTO.getHeterogeneousChainId(), withdrawalTxDTO.getAssetChainId(), withdrawalTxDTO.getAssetId());
 
         String heterogeneousAddress = addressToLowerCase(withdrawalTxDTO.getHeterogeneousAddress());
@@ -641,10 +641,10 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL, txDataBytes, withdrawalTxDTO.getRemark());
         byte[] coinData = assembleWithdrawalCoinData(chain, withdrawalTxDTO);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), withdrawalTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalTxData.class));
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
         return tx;
     }
@@ -713,7 +713,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction processProposalTx(Chain chain, Transaction tx, Integer heterogeneousChainId, String heterogeneousTxHash) throws NulsException {
         proposalVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
-        //广播完整交易
+        //Broadcast complete transactions
         NewTxMessage newTxMessage = new NewTxMessage();
         newTxMessage.setTx(tx);
         NetWorkCall.broadcast(chain, newTxMessage, ConverterCmdConstant.NEW_TX_MESSAGE);
@@ -724,7 +724,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 heterogeneousChainId = txdata.getHeterogeneousChainId();
                 heterogeneousTxHash = txdata.getHeterogeneousTxHash();
             }
-            // 如果当前是虚拟银行节点, 直接开始处理.
+            // If it is currently a virtual banking node, Start processing directly.
             List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
             heterogeneousHashList.add(new HeterogeneousHash(heterogeneousChainId, heterogeneousTxHash));
             NulsHash txHash = tx.getHash();
@@ -742,7 +742,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     @Override
     public Transaction createProposalTx(Chain chain, ProposalTxDTO proposalTxDTO) throws NulsException {
         if (null == ProposalTypeEnum.getEnum(proposalTxDTO.getType())) {
-            //枚举
+            //enumeration
             throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
         }
         ProposalTxData txData = new ProposalTxData();
@@ -760,7 +760,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         String businessAddress = proposalTxDTO.getBusinessAddress();
         if (StringUtils.isNotBlank(businessAddress)) {
-            // 兼容非以太系地址 update by pierre at 2021/11/16
+            // Compatible with non Ethernet addresses update by pierre at 2021/11/16
             if (ProposalTypeEnum.getEnum(proposalTxDTO.getType()) == ProposalTypeEnum.UPGRADE) {
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(proposalTxDTO.getHeterogeneousChainId());
                 txData.setAddress(docking.getAddressBytes(businessAddress));
@@ -797,7 +797,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             throw new NulsException(ConverterErrorCode.PROPOSAL_TX_HASH_NULL);
         }
         if (null == ProposalVoteChoiceEnum.getEnum(choice)) {
-            //枚举
+            //enumeration
             throw new NulsException(ConverterErrorCode.PROPOSAL_VOTE_INVALID);
         }
         VoteProposalTxData voteProposalTxData = new VoteProposalTxData(proposalTxHash, choice);
@@ -819,7 +819,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     @Override
     public Transaction createConfirmProposalTx(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException {
         Transaction tx = this.createConfirmProposalTxWithoutSign(chain, confirmProposalTxData, txTime);
-        // 拜占庭交易流程
+        // Byzantine transaction process
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
         confirmProposalVerifier.validate(chain, tx);
         saveWaitingProcess(chain, tx);
@@ -856,7 +856,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     public Transaction createConfirmProposalTxWithoutSign(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException {
         ProposalTypeEnum typeEnum = ProposalTypeEnum.getEnum(confirmProposalTxData.getType());
         if (null == typeEnum) {
-            //枚举
+            //enumeration
             throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
         }
         byte[] txDataBytes;
@@ -915,9 +915,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
 
         chain.getLogger().debug(tx.format(HeterogeneousContractAssetRegPendingTxData.class));
@@ -945,9 +945,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
 
         chain.getLogger().debug(tx.format(HeterogeneousMainAssetRegTxData.class));
@@ -977,9 +977,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         SignAccountDTO signAccountDTO = new SignAccountDTO(from, password);
         byte[] coinData = assembleFeeCoinData(chain, signAccountDTO);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), signAccountDTO, tx);
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
 
         chain.getLogger().debug(tx.format(HeterogeneousMainAssetBindTxData.class));
@@ -989,7 +989,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     @Override
     public Transaction createHeterogeneousContractAssetRegCompleteTx(Chain chain, Transaction pendingTx) throws NulsException {
         if (pendingTx == null || pendingTx.getType() != TxType.HETEROGENEOUS_CONTRACT_ASSET_REG_PENDING) {
-            chain.getLogger().error("交易信息为空或类型不正确");
+            chain.getLogger().error("Transaction information is empty or the type is incorrect");
             throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
         }
         HeterogeneousContractAssetRegPendingTxData pendingTxData = new HeterogeneousContractAssetRegPendingTxData();
@@ -1013,7 +1013,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         tx.setRemark(pendingTx.getRemark());
         P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
 
-        // 调验证器验证
+        // Verifier verification
         heterogeneousContractAssetRegCompleteVerifier.validate(chain.getChainId(), tx);
         saveWaitingProcess(chain, tx);
         BroadcastHashSignMessage message = new BroadcastHashSignMessage();
@@ -1022,7 +1022,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         message.setType(tx.getType());
         NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
 
-        // 完成
+        // complete
         if (chain.getLogger().isDebugEnabled()) {
             chain.getLogger().debug(tx.format(HeterogeneousContractAssetRegCompleteTxData.class));
         }
@@ -1062,7 +1062,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装提现交易CoinData
+     * Assembly withdrawal transactionCoinData
      *
      * @param chain
      * @param withdrawalTxDTO
@@ -1076,7 +1076,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         int withdrawalAssetId = withdrawalTxDTO.getAssetId();
         int withdrawalAssetChainId = withdrawalTxDTO.getAssetChainId();
 
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         boolean isNvtFeeCoin = chain.getChainId() == withdrawalTxDTO.getFeeChainId();
         int feeAssetChainId, feeAssetId;
         if (isNvtFeeCoin) {
@@ -1093,23 +1093,23 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
         BigInteger amount = withdrawalTxDTO.getAmount();
         String address = withdrawalTxDTO.getSignAccount().getAddress();
-        //提现资产from
+        //Withdrawal of assetsfrom
         List<CoinFrom> listFrom = new ArrayList<>();
         if (withdrawalAssetChainId == feeAssetChainId && withdrawalAssetId == feeAssetId) {
-            // 提现资产和手续费资产一致时，合并成一条from
+            // When the withdrawal assets and handling fee assets are consistent, they are merged into one itemfrom
             CoinFrom withdrawalCoinFrom = getWithdrawalCoinFrom(chain, address, amount, withdrawalAssetChainId, withdrawalAssetId, withdrawalTxDTO.getDistributionFee());
             listFrom.add(withdrawalCoinFrom);
         } else {
             CoinFrom withdrawalCoinFrom = getWithdrawalCoinFrom(chain, address, amount, withdrawalAssetChainId, withdrawalAssetId, BigInteger.ZERO);
             listFrom.add(withdrawalCoinFrom);
-            // 只要不是当前链主资产 都要组装额外的coinFrom
+            // As long as it is not the current chain master asset All require additional assemblycoinFrom
             CoinFrom withdrawalFeeCoinFrom;
-            //手续费from 包含异构链补贴手续费
+            //Handling feesfrom Including heterogeneous chain subsidy handling fees
             withdrawalFeeCoinFrom = getWithdrawalFeeCoinFrom(chain, address, withdrawalTxDTO.getDistributionFee(), feeAssetChainId, feeAssetId);
 
             listFrom.add(withdrawalFeeCoinFrom);
         }
-        //组装to
+        //assembleto
         List<CoinTo> listTo = new ArrayList<>();
         CoinTo withdrawalCoinTo = new CoinTo(
                 AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId()),
@@ -1118,7 +1118,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 amount);
 
         listTo.add(withdrawalCoinTo);
-        // 判断组装异构链补贴手续费暂存to
+        // Determine the temporary storage of subsidy fees for assembling heterogeneous chainsto
         CoinTo withdrawalFeeCoinTo = new CoinTo(
                 AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId()),
                 feeAssetChainId,
@@ -1135,7 +1135,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
 
     /**
-     * 组装提现资产CoinFrom
+     * Assembling withdrawal assetsCoinFrom
      *
      * @param chain
      * @param address
@@ -1152,9 +1152,9 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             int withdrawalAssetChainId,
             int withdrawalAssetId,
             BigInteger withdrawalHeterogeneousFee) throws NulsException {
-        //提现资产
+        //Withdrawal of assets
         if (BigIntegerUtils.isEqualOrLessThan(amount, BigInteger.ZERO)) {
-            chain.getLogger().error("提现金额不能小于0, amount:{}", amount);
+            chain.getLogger().error("The withdrawal amount cannot be less than0, amount:{}", amount);
             throw new NulsException(ConverterErrorCode.PARAMETER_ERROR);
         }
         NonceBalance withdrawalNonceBalance = LedgerCall.getBalanceNonce(
@@ -1165,7 +1165,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         BigInteger withdrawalAssetBalance = withdrawalNonceBalance.getAvailable();
         amount = withdrawalHeterogeneousFee.add(amount);
         if (BigIntegerUtils.isLessThan(withdrawalAssetBalance, amount)) {
-            chain.getLogger().error("提现资产余额不足 chainId:{}, assetId:{}, withdrawal amount:{}, available balance:{} ",
+            chain.getLogger().error("Insufficient balance of withdrawn assets chainId:{}, assetId:{}, withdrawal amount:{}, available balance:{} ",
                     withdrawalAssetChainId, withdrawalAssetId, amount, withdrawalAssetBalance);
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
@@ -1180,7 +1180,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装提现交易手续费(包含链内打包手续费, 异构链补贴手续费)
+     * Assembly withdrawal transaction fees(Including in chain packaging fees, Heterogeneous chain subsidy handling fee)
      *
      * @param chain
      * @param address
@@ -1194,22 +1194,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 feeAssetChainId,
                 feeAssetId,
                 address);
-        // 本链资产余额
+        // Balance of assets in this chain
         BigInteger balance = currentChainNonceBalance.getAvailable();
 
-        // 总手续费 = 异构链转账(或签名)手续费[都以链内主资产结算]
+        // Total handling fee = Heterogeneous chain transfer(Or signature)Handling fees[All settle with the main assets in the chain]
         BigInteger totalFee = withdrawalHeterogeneousFee;
         if (BigIntegerUtils.isLessThan(balance, totalFee)) {
             chain.getLogger().error("Insufficient balance of withdrawal fee. amount to be paid:{}, available balance:{} ", totalFee, balance);
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
-        // 查询账本获取nonce值
+        // Query ledger to obtainnoncevalue
         byte[] nonce = currentChainNonceBalance.getNonce();
         return new CoinFrom(AddressTool.getAddress(address), feeAssetChainId, feeAssetId, totalFee, nonce, (byte) 0);
     }
 
     /**
-     * 组装提现交易打包手续费(只包含链内打包手续费)
+     * Assembly withdrawal transaction packaging fee(Only including in chain packaging fees)
      *
      * @param chain
      * @param address
@@ -1224,14 +1224,14 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 chainId,
                 assetId,
                 address);
-        // 本链资产余额
+        // Balance of assets in this chain
         BigInteger balance = currentChainNonceBalance.getAvailable();
-        //打包手续费
+        //Packaging handling fee
         if (BigIntegerUtils.isLessThan(balance, TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES)) {
             chain.getLogger().error("The balance is insufficient to cover the package fee");
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
-        // 查询账本获取nonce值
+        // Query ledger to obtainnoncevalue
         byte[] nonce = currentChainNonceBalance.getNonce();
 
         return new CoinFrom(
@@ -1245,7 +1245,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
 
     /**
-     * 组装补贴手续费交易CoinData
+     * Assembly subsidy handling fee transactionCoinData
      *
      * @param chain
      * @param listRewardAddress
@@ -1254,11 +1254,11 @@ public class AssembleTxServiceImpl implements AssembleTxService {
      */
     private byte[] assembleDistributionFeeCoinData(Chain chain, NulsHash basisTxHash, List<byte[]> listRewardAddress, boolean isProposal) throws NulsException {
         byte[] feeFromAdddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-        // 如果是提案 basisTxHash 是确认提案交易hash, 而非提案交易hash
+        // If it is a proposal basisTxHash It is to confirm the proposed transactionhash, Instead of proposing transactionshash
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, basisTxHash.toHex());
 
         if (isProposal) {
-            // 如果是提案 的补贴手续费, 需要获取提案交易
+            // If it is a proposal Subsidy handling fee, Need to obtain proposal transaction
             try {
                 ConfirmProposalTxData txData = ConverterUtil.getInstance(basicTx.getTxData(), ConfirmProposalTxData.class);
                 if (txData.getType() == REFUND.value()) {
@@ -1270,8 +1270,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 throw new NulsException(ConverterErrorCode.DESERIALIZE_ERROR);
             }
         }
-        // 要补贴的手续费总额
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // The total amount of handling fees to be subsidized
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         WithdrawalTotalFeeInfo distributionFee = calculateFee(chain, basicTx, isProposal);
         List<CoinFrom> listFrom = assembleDistributionFeeCoinFrom(chain, distributionFee, feeFromAdddress);
         List<CoinTo> listTo = assembleDistributionFeeCoinTo(chain, distributionFee, listRewardAddress);
@@ -1284,7 +1284,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装补贴手续费交易CoinFrom
+     * Assembly subsidy handling fee transactionCoinFrom
      *
      * @param chain
      * @param feeFromAdddress
@@ -1301,13 +1301,13 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             assetChainId = feeCoin.getAssetsChainId();
             assetId = feeCoin.getAssetsId();
         }
-        //查询手续费暂存地址余额够不够
+        //Check if the balance of the temporary storage address for handling fees is sufficient
         NonceBalance currentChainNonceBalance = LedgerCall.getBalanceNonce(
                 chain,
                 assetChainId,
                 assetId,
                 AddressTool.getStringAddressByBytes(feeFromAdddress));
-        // 查询账本获取nonce值
+        // Query ledger to obtainnoncevalue
         byte[] nonce = currentChainNonceBalance.getNonce();
         CoinFrom coinFrom = new CoinFrom(feeFromAdddress,
                 assetChainId,
@@ -1321,7 +1321,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装补贴手续费交易CoinTo
+     * Assembly subsidy handling fee transactionCoinTo
      *
      * @param chain
      * @param listRewardAddress
@@ -1338,12 +1338,12 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             assetChainId = feeCoin.getAssetsChainId();
             assetId = feeCoin.getAssetsId();
         }
-        // 计算 每个节点补贴多少手续费
+        // calculate How much commission is subsidized for each node
         BigInteger distributionFee = distributionFeeInfo.getFee();
         BigInteger count = BigInteger.valueOf(listRewardAddress.size());
         BigInteger amount = distributionFee.divide(count);
         Map<String, BigInteger> map = calculateDistributionFeeCoinToAmount(listRewardAddress, amount);
-        // 组装cointo
+        // assemblecointo
         List<CoinTo> listTo = new ArrayList<>();
         for (Map.Entry<String, BigInteger> entry : map.entrySet()) {
             CoinTo distributionFeeCoinTo = new CoinTo(
@@ -1368,7 +1368,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装不含CoinData的交易
+     * Assembly not includedCoinDataTransaction
      *
      * @param txData
      * @return
@@ -1395,7 +1395,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装交易，CoinData只包含手续费
+     * Assembly transactions,CoinDataOnly including handling fees
      *
      * @param chain
      * @param type
@@ -1412,7 +1412,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装手续费（CoinData）
+     * Assembly handling fee（CoinData）
      *
      * @param chain
      * @param signAccountDTO
@@ -1424,17 +1424,17 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 组装手续费（CoinData）
+     * Assembly handling fee（CoinData）
      *
      * @param chain
      * @param signAccountDTO
-     * @param extraFee       向公共手续费收集地址 支付额外的业务费用(例如提案费用等), 用于后续费用的补偿
+     * @param extraFee       Address for collecting public service fees Pay additional business expenses(For example, proposal fees, etc), Compensation for subsequent expenses
      * @return
      * @throws NulsException
      */
     private byte[] assembleFeeCoinData(Chain chain, SignAccountDTO signAccountDTO, BigInteger extraFee) throws NulsException {
         String address = signAccountDTO.getAddress();
-        //转账交易转出地址必须是本链地址
+        //The transfer transaction transfer address must be a local chain address
         if (!AddressTool.validAddress(chain.getChainId(), address)) {
             throw new NulsException(ConverterErrorCode.IS_NOT_CURRENT_CHAIN_ADDRESS);
         }
@@ -1455,7 +1455,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             chain.getLogger().error("The balance is insufficient to cover the package fee");
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
-        //查询账本获取nonce值
+        //Query ledger to obtainnoncevalue
         byte[] nonce = nonceBalance.getNonce();
         CoinFrom coinFrom = new CoinFrom(
                 AddressTool.getAddress(address),
@@ -1470,7 +1470,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
         List<CoinTo> tos = new ArrayList<>();
         if (greaterTranZero(extraFee)) {
-            // 额外费用 如果有
+            // additional costs If there is any
             if (BigIntegerUtils.isLessThan(balance, TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES.add(extraFee))) {
                 chain.getLogger().error("The balance is insufficient to cover the package fee and the extra fee");
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
@@ -1482,7 +1482,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     extraFee);
             tos.add(extraFeeCoinTo);
         } else {
-            // 如果没有额外费用组装到cointo ,则需要组装一个金额为0的coinTo, coinTo金额为0, from的金额成为手续费
+            // If there is no additional cost to assemble it intocointo ,Then it is necessary to assemble a product with an amount of0ofcoinTo, coinToThe amount is0, fromThe amount becomes a handling fee
             CoinTo coinTo = new CoinTo(
                     AddressTool.getAddress(address),
                     assetChainId,
@@ -1503,7 +1503,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     private byte[] assembleProposalFeeCoinData(Chain chain, int size, SignAccountDTO signAccountDTO, BigInteger extraFee) throws NulsException {
         String address = signAccountDTO.getAddress();
-        //转账交易转出地址必须是本链地址
+        //The transfer transaction transfer address must be a local chain address
         if (!AddressTool.validAddress(chain.getChainId(), address)) {
             throw new NulsException(ConverterErrorCode.IS_NOT_CURRENT_CHAIN_ADDRESS);
         }
@@ -1522,7 +1522,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             chain.getLogger().error("The balance is insufficient to cover the package fee");
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
-        //查询账本获取nonce值
+        //Query ledger to obtainnoncevalue
         byte[] nonce = nonceBalance.getNonce();
         CoinFrom coinFrom = new CoinFrom(
                 AddressTool.getAddress(address),
@@ -1565,7 +1565,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         if (!isProposal) {
             if (height >= ConverterContext.FEE_ADDITIONAL_HEIGHT) {
-                // 手续费为动态的, 即提现交易的支付的+追加的
+                // The handling fee is dynamic, Payment for withdrawal transactions+Additional
                 fee = calculateWithdrawalTotalFee(chain, basicTx);
             } else if (height >= ConverterContext.FEE_EFFECTIVE_HEIGHT_SECOND) {
                 fee = new WithdrawalTotalFeeInfo(ConverterConstant.DISTRIBUTION_FEE_10);
@@ -1575,7 +1575,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 fee = new WithdrawalTotalFeeInfo(ConverterConstant.DISTRIBUTION_FEE_10);
             }
         } else {
-            // 如果是提案原路退回,需要获取对它的手续费追加金额
+            // If the proposal is returned in its original way,Need to obtain the additional amount of handling fee for it
             if (height >= ConverterContext.FEE_ADDITIONAL_HEIGHT) {
                 ProposalPO proposalPO = proposalStorageService.find(chain, basicTx.getHash());
                 if (null != proposalPO && proposalPO.getType() == REFUND.value()) {
@@ -1590,7 +1590,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     @Override
     public WithdrawalTotalFeeInfo calculateFee(Chain chain, Transaction basisTx, boolean isProposal) throws NulsException {
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         return calculateFee(chain, null, basisTx, isProposal);
     }
 
@@ -1607,8 +1607,8 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     /**
-     * 获取提现交易支付的异构链手续费总额(不包含链内交易打包手续费)
-     * 提现交易中的手续费 + 对该交易追加的手续费(如果有)
+     * Obtain the total amount of heterogeneous chain transaction fees for withdrawal transaction payments(Excluding in chain transaction packaging fees)
+     * Handling fees in withdrawal transactions + Additional handling fees for this transaction(If there is any)
      *
      * @param chain
      * @param withdrawalTx
@@ -1618,7 +1618,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     @Override
     public WithdrawalTotalFeeInfo calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException {
         if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
-            // 协议15: 支持异构链主资产作为手续费
+            // protocol15: Support heterogeneous chain master assets as transaction fees
             return this.calculateWithdrawalTotalFeeProtocol15(chain, withdrawalTx);
         } else {
             return this._calculateWithdrawalTotalFee(chain, withdrawalTx);
@@ -1627,19 +1627,19 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     private WithdrawalTotalFeeInfo calculateWithdrawalTotalFeeProtocol15(Chain chain, Transaction withdrawalTx) throws NulsException {
         WithdrawalTotalFeeInfo info = new WithdrawalTotalFeeInfo();
-        // 修改手续费机制
+        // Modify the handling fee mechanism
         CoinData coinData = ConverterUtil.getInstance(withdrawalTx.getCoinData(), CoinData.class);
-        // 补贴手续费收集分发地址
+        // Subsidy handling fee collection and distribution address
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
         BigInteger feeTo = BigInteger.ZERO;
         for (CoinTo coinTo : coinData.getTo()) {
             if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-                // 该to是NVT或者异构链主资产
+                // ThistoyesNVTOr heterogeneous chain main assets
                 boolean nvtFeeAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                         && coinTo.getAssetsId() == chain.getConfig().getAssetId();
                 info.setNvtAsset(nvtFeeAsset);
                 if (!nvtFeeAsset) {
-                    // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+                    // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
                     AssetName htgMainAssetName;
                     boolean otherFeeAsset = (htgMainAssetName = converterCoreApi.getHtgMainAssetName(coinTo)) != null;
                     if (!otherFeeAsset) {
@@ -1647,13 +1647,13 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     }
                     info.setHtgMainAssetName(htgMainAssetName);
                 }
-                // 组装的补贴手续费的coinTo
+                // Subsidies for assembly and handling feescoinTo
                 feeTo = coinTo.getAmount();
                 info.setFeeCoin(coinTo);
                 break;
             }
         }
-        // 加上所有追加的手续费
+        // Plus all additional handling fees
         WithdrawalAdditionalFeePO po = txStorageService.getWithdrawalAdditionalFeePO(chain, withdrawalTx.getHash().toHex());
         if (null != po && null != po.getMapAdditionalFee()) {
             for (BigInteger fee : po.getMapAdditionalFee().values()) {
@@ -1666,22 +1666,22 @@ public class AssembleTxServiceImpl implements AssembleTxService {
 
     private WithdrawalTotalFeeInfo _calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException {
         CoinData coinData = ConverterUtil.getInstance(withdrawalTx.getCoinData(), CoinData.class);
-        // 补贴手续费收集分发地址
+        // Subsidy handling fee collection and distribution address
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
         BigInteger feeTo = BigInteger.ZERO;
         Coin feeCoin = null;
         for (CoinTo coinTo : coinData.getTo()) {
-            // 该to是当前链的主资产
+            // ThistoIt is the main asset of the current chain
             boolean currentChainAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                     && coinTo.getAssetsId() == chain.getConfig().getAssetId();
             if (currentChainAsset && Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-                // 组装的补贴手续费的coinTo
+                // Subsidies for assembly and handling feescoinTo
                 feeTo = coinTo.getAmount();
                 feeCoin = coinTo;
                 break;
             }
         }
-        // 加上所有追加的手续费
+        // Plus all additional handling fees
         WithdrawalAdditionalFeePO po = txStorageService.getWithdrawalAdditionalFeePO(chain, withdrawalTx.getHash().toHex());
         if (null != po && null != po.getMapAdditionalFee()) {
             for (BigInteger fee : po.getMapAdditionalFee().values()) {
@@ -1692,19 +1692,19 @@ public class AssembleTxServiceImpl implements AssembleTxService {
     }
 
     private Transaction withdrawalAdditionalFeeTxV0(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        // 验证参数
+        // Verify parameters
         String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
         if (StringUtils.isBlank(txHash)) {
             throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
         }
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
         if (null == basicTx) {
-            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            chain.getLogger().error("[Additional heterogeneous chain handling fees]The original transaction does not exist -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-            // 不是提现交易
-            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            // Not a withdrawal transaction
+            chain.getLogger().error("This transaction is not a withdrawal/Proposal transaction -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() == TxType.WITHDRAWAL) {
@@ -1713,23 +1713,23 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             byte[] withdrawalTxAddress = withdrawalTxCoinFrom.getAddress();
             byte[] sendAddress = AddressTool.getAddress(withdrawalAdditionalFeeTxDTO.getSignAccount().getAddress());
             if (!Arrays.equals(sendAddress, withdrawalTxAddress)) {
-                chain.getLogger().error("该提现交易与追加交易用户不匹配 -withdrawalAdditionalFeeTx, withdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
+                chain.getLogger().error("The withdrawal transaction does not match the user of the additional transaction -withdrawalAdditionalFeeTx, withdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
                         txHash,
                         AddressTool.getStringAddressByBytes(withdrawalTxAddress),
                         AddressTool.getStringAddressByBytes(sendAddress));
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED);
             }
-            // 判断该提现交易是否已经有对应的确认提现交易
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
 
             }
         } else if(basicTx.getType() == TxType.PROPOSAL){
             String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
             if (StringUtils.isNotBlank(confirmProposalHash)) {
-                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
             }
         }
@@ -1742,51 +1742,51 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
         if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
-            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            chain.getLogger().error("Additional amount error -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
 
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
         byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
         return tx;
     }
 
     /**
-     * 协议v1.13 任意地址可给跨链转出交易追加手续费
+     * protocolv1.13 Any address can add additional transaction fees for cross chain transfer transactions
      */
     private Transaction withdrawalAdditionalFeeTxV13(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        // 验证参数
+        // Verify parameters
         String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
         if (StringUtils.isBlank(txHash)) {
             throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
         }
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
         if (null == basicTx) {
-            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            chain.getLogger().error("[Additional heterogeneous chain handling fees]The original transaction does not exist -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-            // 不是提现交易
-            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            // Not a withdrawal transaction
+            chain.getLogger().error("This transaction is not a withdrawal/Proposal transaction -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() == TxType.WITHDRAWAL) {
-            // 判断该提现交易是否已经有对应的确认提现交易
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
             }
         } else if(basicTx.getType() == TxType.PROPOSAL){
             String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
             if (StringUtils.isNotBlank(confirmProposalHash)) {
-                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
             }
         }
@@ -1799,51 +1799,51 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
         if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
-            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            chain.getLogger().error("Additional amount error -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
 
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
         byte[] coinData = assembleFeeCoinData(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
         return tx;
     }
 
     /**
-     * 协议v1.15 支持异构链主资产作为手续费
+     * protocolv1.15 Support heterogeneous chain master assets as transaction fees
      */
     private Transaction withdrawalAdditionalFeeTxV15(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        // 修改手续费机制，支持异构链主资产作为手续费
-        // 验证参数
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
+        // Verify parameters
         String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
         if (StringUtils.isBlank(txHash)) {
             throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
         }
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
         if (null == basicTx) {
-            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            chain.getLogger().error("[Additional heterogeneous chain handling fees]The original transaction does not exist -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-            // 不是提现交易
-            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            // Not a withdrawal transaction
+            chain.getLogger().error("This transaction is not a withdrawal/Proposal transaction -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         int feeAssetChainId = chain.getConfig().getChainId();
         int feeAssetId = chain.getConfig().getAssetId();
         if (basicTx.getType() == TxType.WITHDRAWAL) {
-            // 判断该提现交易是否已经有对应的确认提现交易
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
             }
-            // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+            // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
             CoinData coinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
             byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
             Coin feeCoin = null;
@@ -1853,7 +1853,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     break;
                 }
             }
-            // 当前追加的手续费资产链ID
+            // The current additional transaction fee asset chainID
             int feeChainId = withdrawalAdditionalFeeTxDTO.getFeeChainId();
             boolean isAddNvtFeeCoin = feeChainId == chain.getChainId();
             if (!isAddNvtFeeCoin) {
@@ -1864,7 +1864,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 feeAssetChainId = htgMainAsset.getAssetChainId();
                 feeAssetId = htgMainAsset.getAssetId();
             }
-            // 追加的手续费资产，必须与提现交易的手续费资产一致
+            // The additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
             if (feeAssetChainId != feeCoin.getAssetsChainId() || feeAssetId != feeCoin.getAssetsId()) {
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR);
             }
@@ -1872,7 +1872,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         } else if(basicTx.getType() == TxType.PROPOSAL){
             String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
             if (StringUtils.isNotBlank(confirmProposalHash)) {
-                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
             }
         }
@@ -1885,51 +1885,51 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
         if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
-            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            chain.getLogger().error("Additional amount error -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
 
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
         byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
         return tx;
     }
 
     /**
-     * 协议v21 一键跨链
+     * protocolv21 One click cross chain
      */
     private Transaction withdrawalAdditionalFeeTxV21(Chain chain, WithdrawalAdditionalFeeTxDTO withdrawalAdditionalFeeTxDTO) throws NulsException {
-        // 修改手续费机制，支持异构链主资产作为手续费
-        // 验证参数
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
+        // Verify parameters
         String txHash = withdrawalAdditionalFeeTxDTO.getTxHash();
         if (StringUtils.isBlank(txHash)) {
             throw new NulsException(ConverterErrorCode.NULL_PARAMETER);
         }
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, txHash);
         if (null == basicTx) {
-            chain.getLogger().error("[追加异构链手续费]原始交易不存在 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            chain.getLogger().error("[Additional heterogeneous chain handling fees]The original transaction does not exist -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN) {
-            // 不是提现交易
-            chain.getLogger().error("该交易不是提现/提案交易 -withdrawalAdditionalFeeTx, hash:{}", txHash);
+            // Not a withdrawal transaction
+            chain.getLogger().error("This transaction is not a withdrawal/Proposal transaction -withdrawalAdditionalFeeTx, hash:{}", txHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         int feeAssetChainId = chain.getConfig().getChainId();
         int feeAssetId = chain.getConfig().getAssetId();
         if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
-            // 判断该提现交易是否已经有对应的确认提现交易
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
             }
-            // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+            // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
             CoinData coinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
             byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
             Coin feeCoin = null;
@@ -1939,7 +1939,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     break;
                 }
             }
-            // 当前追加的手续费资产链ID
+            // The current additional transaction fee asset chainID
             int feeChainId = withdrawalAdditionalFeeTxDTO.getFeeChainId();
             boolean isAddNvtFeeCoin = feeChainId == chain.getChainId();
             if (!isAddNvtFeeCoin) {
@@ -1950,7 +1950,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                 feeAssetChainId = htgMainAsset.getAssetChainId();
                 feeAssetId = htgMainAsset.getAssetId();
             }
-            // 追加的手续费资产，必须与提现交易的手续费资产一致
+            // The additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
             if (feeAssetChainId != feeCoin.getAssetsChainId() || feeAssetId != feeCoin.getAssetsId()) {
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR);
             }
@@ -1958,7 +1958,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         } else if(basicTx.getType() == TxType.PROPOSAL){
             String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
             if (StringUtils.isNotBlank(confirmProposalHash)) {
-                chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}", basicTx.getHash().toHex());
+                chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}", basicTx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.PROPOSAL_CONFIRMED);
             }
         }
@@ -1971,28 +1971,28 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
         BigInteger additionalFee = withdrawalAdditionalFeeTxDTO.getAmount();
         if (null == additionalFee || additionalFee.compareTo(BigInteger.ZERO) <= 0) {
-            chain.getLogger().error("追加金额错误 -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
+            chain.getLogger().error("Additional amount error -withdrawalAdditionalFeeTx, hash:{}, additionalFee:{}", txHash, additionalFee);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
 
         Transaction tx = assembleUnsignTxWithoutCoinData(TxType.WITHDRAWAL_ADDITIONAL_FEE, txDataBytes, withdrawalAdditionalFeeTxDTO.getRemark());
         byte[] coinData = assembleFeeCoinDataForWithdrawalAdditional(chain, withdrawalAdditionalFeeTxDTO.getSignAccount(), additionalFee, feeAssetChainId, feeAssetId);
         tx.setCoinData(coinData);
-        //签名
+        //autograph
         ConverterSignUtil.signTx(chain.getChainId(), withdrawalAdditionalFeeTxDTO.getSignAccount(), tx);
         chain.getLogger().debug(tx.format(WithdrawalAdditionalFeeTxData.class));
-        //广播
+        //broadcast
         TransactionCall.newTx(chain, tx);
         return tx;
     }
 
     /**
-     * 组装追加手续费交易的CoinData
+     * Assembly additional transaction feesCoinData
      *
      */
     private byte[] assembleFeeCoinDataForWithdrawalAdditional(Chain chain, SignAccountDTO signAccountDTO, BigInteger extraFee, int assetChainId, int assetId) throws NulsException {
         String address = signAccountDTO.getAddress();
-        //转账交易转出地址必须是本链地址
+        //The transfer transaction transfer address must be a local chain address
         if (!AddressTool.validAddress(chain.getChainId(), address)) {
             throw new NulsException(ConverterErrorCode.IS_NOT_CURRENT_CHAIN_ADDRESS);
         }
@@ -2007,7 +2007,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
             chain.getLogger().error("The balance is insufficient to cover the package fee");
             throw new NulsException(ConverterErrorCode.INSUFFICIENT_BALANCE);
         }
-        //查询账本获取nonce值
+        //Query ledger to obtainnoncevalue
         byte[] nonce = nonceBalance.getNonce();
         CoinFrom coinFrom = new CoinFrom(
                 AddressTool.getAddress(address),
@@ -2029,7 +2029,7 @@ public class AssembleTxServiceImpl implements AssembleTxService {
                     extraFee);
             tos.add(extraFeeCoinTo);
         } else {
-            // 如果没有额外费用组装到cointo ,则需要组装一个金额为0的coinTo, coinTo金额为0, from的金额成为手续费
+            // If there is no additional cost to assemble it intocointo ,Then it is necessary to assemble a product with an amount of0ofcoinTo, coinToThe amount is0, fromThe amount becomes a handling fee
             CoinTo coinTo = new CoinTo(
                     AddressTool.getAddress(address),
                     assetChainId,
@@ -2047,4 +2047,78 @@ public class AssembleTxServiceImpl implements AssembleTxService {
         }
     }
 
+    @Override
+    public Transaction createRechargeTxOfBtcSys(Chain chain, RechargeTxOfBtcSysDTO rechargeTxDTO) throws NulsException {
+        Transaction tx = this.createRechargeTxOfBtcSysWithoutSign(chain, rechargeTxDTO);
+        P2PHKSignature p2PHKSignature = ConverterSignUtil.signTxCurrentVirtualBankAgent(chain, tx);
+        // Verifier verification
+        rechargeVerifier.validateTxOfBtcSys(chain, tx);
+        saveWaitingProcess(chain, tx);
+
+        List<HeterogeneousHash> heterogeneousHashList = new ArrayList<>();
+        heterogeneousHashList.add(new HeterogeneousHash(rechargeTxDTO.getHtgChainId(), rechargeTxDTO.getHtgTxHash()));
+        BroadcastHashSignMessage message = new BroadcastHashSignMessage(tx, p2PHKSignature, heterogeneousHashList);
+        NetWorkCall.broadcast(chain, message, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+        // complete
+        chain.getLogger().debug(tx.format(RechargeTxData.class));
+        return tx;
+    }
+
+    @Override
+    public Transaction createRechargeTxOfBtcSysWithoutSign(Chain chain, RechargeTxOfBtcSysDTO dto) throws NulsException {
+        RechargeTxData txData = new RechargeTxData(dto.getHtgTxHash());
+        txData.setHeterogeneousChainId(dto.getHtgChainId());
+        if (dto.getExtend() != null) {
+            txData.setExtend(dto.getExtend());
+        }
+        List<CoinTo> tos = new ArrayList<>();
+        byte[] toAddress = AddressTool.getAddress(dto.getTo());
+        NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(
+                dto.getHtgChainId(),
+                dto.getHtgAssetId());
+        CoinTo coinTo = new CoinTo(
+                toAddress,
+                nerveAssetInfo.getAssetChainId(),
+                nerveAssetInfo.getAssetId(),
+                converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                        dto.getHtgChainId(),
+                        nerveAssetInfo.getAssetChainId(),
+                        nerveAssetInfo.getAssetId(),
+                        dto.getAmount())
+        );
+        tos.add(coinTo);
+        // There is a handling fee
+        if (StringUtils.isNotBlank(dto.getFeeTo()) && dto.getFee().compareTo(BigInteger.ZERO) > 0) {
+            CoinTo mainTo = new CoinTo(
+                    AddressTool.getAddress(dto.getFeeTo()),
+                    nerveAssetInfo.getAssetChainId(),
+                    nerveAssetInfo.getAssetId(),
+                    converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(
+                            dto.getHtgChainId(),
+                            nerveAssetInfo.getAssetChainId(),
+                            nerveAssetInfo.getAssetId(),
+                            dto.getFee())
+            );
+            tos.add(mainTo);
+        }
+
+        CoinData coinData = new CoinData();
+        coinData.setTo(tos);
+        byte[] coinDataBytes;
+        byte[] txDataBytes;
+        try {
+            txDataBytes = txData.serialize();
+            coinDataBytes = coinData.serialize();
+        } catch (IOException e) {
+            throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
+        }
+        Transaction tx = assembleUnsignTxWithoutCoinData(TxType.RECHARGE, txDataBytes, dto.getHtgTxTime());
+        tx.setCoinData(coinDataBytes);
+        if (StringUtils.isNotBlank(dto.getHtgFrom())) {
+            IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(dto.getHtgChainId());
+            HeterogeneousAssetInfo asset = docking.getMainAsset();
+            tx.setRemark(String.format("Chain: %s-%s, from: %s, originalTxHash: %s", asset.getChainId(), asset.getSymbol(), dto.getHtgFrom(), dto.getHtgTxHash()).getBytes(StandardCharsets.UTF_8));
+        }
+        return tx;
+    }
 }

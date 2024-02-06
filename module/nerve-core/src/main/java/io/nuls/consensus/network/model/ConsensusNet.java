@@ -44,7 +44,7 @@ public class ConsensusNet extends BaseNulsData {
     private String nodeId;
     private transient boolean hadConnect = false;
     private transient String address = "";
-    //获取有效连接的失败次数
+    //The number of failed attempts to obtain valid connections
     private transient int failTimes=0;
 
     public ConsensusNet(byte[] publicKey, String nodeId) {

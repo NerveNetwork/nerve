@@ -35,30 +35,30 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 
 /**
- * 跨链追加跨链手续费交易txData
+ * Cross chain additional cross chain handling fee transactiontxData
  *
  * @author: PierreLuo
  * @date: 2022/4/13
  */
 public class WithdrawalAddFeeByCrossChainTxData extends BaseNulsData {
     /**
-     * 异构链交易hash
+     * Heterogeneous Chain Tradinghash
      */
     private HeterogeneousHash htgTxHash;
     /**
-     * 异构链交易所在区块高度
+     * Heterogeneous chain exchanges at block height
      */
     private long heterogeneousHeight;
     /**
-     * 异构链网络中 充值的from地址
+     * In heterogeneous chain networks Rechargeablefromaddress
      */
     private String heterogeneousFromAddress;
     /**
-     * 要追加手续费的nerve提现交易hash
+     * Additional handling fees are requirednerveWithdrawal transactionshash
      */
     private String nerveTxHash;
     private String subExtend;
-    // 预留字段
+    // Reserved fields
     private byte[] extend;
 
     public WithdrawalAddFeeByCrossChainTxData() {

@@ -44,11 +44,13 @@ import network.nerve.converter.heterogeneouschain.lib.listener.HtgListener;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanMap;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgAccount;
+import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.Token20TransferDTO;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.impl.*;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import org.ethereum.crypto.ECKey;
+import org.springframework.beans.BeanUtils;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.*;
@@ -460,7 +462,7 @@ public class HtgUtil {
         sb.append(leftPadding(value.toString(16), "0", 64));
         sb.append(isContractAsset ? "01" : "00");
         sb.append(Numeric.cleanHexPrefix(erc20));
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -480,7 +482,7 @@ public class HtgUtil {
         for (String remove : removes) {
             sb.append(leftPadding(Numeric.cleanHexPrefix(remove), "0", 64));
         }
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -494,7 +496,7 @@ public class HtgUtil {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(upgradeContract));
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -543,19 +545,21 @@ public class HtgUtil {
     static BigDecimal SMALL = new BigDecimal("1.1");
 
     /**
-     * 在网络平均价格和用户提供的价格之间，取一个合适的值
+     * Choose an appropriate value between the average online price and the price provided by users
      */
     public static BigDecimal calcNiceGasPriceOfWithdraw(AssetName currentNetworkAssetName, BigDecimal gasPriceNetwork, BigDecimal gasPriceSupport) {
-        // OKT网络，用户给多少手续费，就花费多少手续费
+        /*// OKTOn the internet, the amount of transaction fees paid by users is the same as the amount of transaction fees spent
         if (currentNetworkAssetName == AssetName.OKT) {
             return gasPriceSupport;
-        } else if (currentNetworkAssetName == AssetName.KLAY) {
-            // KLAY网络，严格按照网络中设定的价格，不能多不能少
+        }*/
+
+        // KLAYThe internet strictly follows the prices set in the network, and cannot be too high or too low
+        if (currentNetworkAssetName == AssetName.KLAY) {
             return gasPriceNetwork;
         }
-        // 其他以太系异构网络，最大花费当前网络平均手续费的1.5倍
+        // The maximum cost for other heterogeneous Ethernet networks is the current average network transaction fee1.1times
         BigDecimal maximumPrice;
-        if ((maximumPrice = gasPriceNetwork.multiply(MAXIMUM)).compareTo(gasPriceSupport) <= 0) {
+        if ((maximumPrice = gasPriceNetwork.multiply(SMALL)).compareTo(gasPriceSupport) <= 0) {
             return maximumPrice;
         } else {
             return gasPriceSupport;
@@ -599,7 +603,7 @@ public class HtgUtil {
             gasLimit = gasLimit.subtract(BD_20K);
         }
         BigDecimal otherMainAssetAmount = calcOtherMainAssetByGasPrice(otherMainAsset, otherMainAssetUSD, gasPrice, currentMainAssetUSD, gasLimit);
-        // 当NVT作为手续费时，向上取整
+        // WhenNVTRound up as a handling fee
         if (otherMainAsset == AssetName.NVT) {
             otherMainAssetAmount = otherMainAssetAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
         }

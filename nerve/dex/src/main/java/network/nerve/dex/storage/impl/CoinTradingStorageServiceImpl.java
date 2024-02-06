@@ -20,7 +20,7 @@ public class CoinTradingStorageServiceImpl implements CoinTradingStorageService 
 
     @Override
     public void save(CoinTradingPo tradingPo) throws Exception {
-        //存储交易对实体信息
+        //Storing transaction pairs for entity information
         RocksDBService.put(DexDBConstant.DB_NAME_COIN_TRADING, tradingPo.getHash().getBytes(), tradingPo.serialize());
     }
 

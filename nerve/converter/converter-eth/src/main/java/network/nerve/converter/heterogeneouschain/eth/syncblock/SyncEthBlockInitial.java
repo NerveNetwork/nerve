@@ -33,7 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 /**
- * 多线程下载任务的启动器（不再使用）
+ * Launcher for multi-threaded download tasks（No longer in use）
  *
  * @author: Mimi
  * @date: 2019-11-12

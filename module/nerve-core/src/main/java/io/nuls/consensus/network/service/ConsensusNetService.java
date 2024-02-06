@@ -40,9 +40,9 @@ public interface ConsensusNetService {
 //    /**
 //     * @param consensusPubKeys
 //     * @param consensusAddrs,
-//     * @param updateType       1 增加  2 删除
+//     * @param updateType       1 increase  2 delete
 //     * @return
-//     * @description 更新共识列表, 增加或者减少节点时候调用. 只知道地址时候就只给地址
+//     * @description Update consensus list, Call when adding or reducing nodes. When you only know the address, just give the address
 //     */
 //    boolean updateConsensusList(int chainId, List<byte[]> consensusPubKeys, List<String> consensusAddrs, short updateType);
 //    /**
@@ -52,7 +52,7 @@ public interface ConsensusNetService {
 //     * @param consensusPubKeyList
 //     * @param consensusAddrList
 //     * @return
-//     * @description 在成为共识节点时候调用，有公钥的，不用在地址列表里。如果只有共识节点地址的，可以给地址列表consensusAddrList
+//     * @description Called when becoming a consensus node, those with a public key do not need to be in the address list. If there are only consensus node addresses, you can provide an address listconsensusAddrList
 //     */
 //    boolean initConsensusNetwork(int chainId, byte[] selfPubKey, byte[] selfPrivKey, List<byte[]> consensusPubKeyList, Set<String> consensusAddrList);
 
@@ -62,7 +62,7 @@ public interface ConsensusNetService {
      * @param selfPrivKey
      * @param consensusSeedPubKeyList
      * @return
-     * @description 自身从共识节点变为普通节点时候调用
+     * @description Called when transitioning from a consensus node to a regular node
      */
     boolean createConsensusNetwork(int chainId, byte[] selfPubKey, List<byte[]> consensusSeedPubKeyList, Set<String> consensusAddrList);
 
@@ -75,12 +75,12 @@ public interface ConsensusNetService {
 
     /**
      * @param chainId
-     * @description 自身从共识节点变为普通节点时候调用
+     * @description Called when transitioning from a consensus node to a regular node
      */
     void cleanConsensusNetwork(int chainId);
 
     /**
-     * 广播共识消息
+     * Broadcast consensus message
      *
      * @param chainId
      * @param cmd

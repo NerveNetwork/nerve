@@ -11,26 +11,26 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /***
- * 币对交易协议
+ * Coin to coin transaction agreement
  */
 public class CoinTrading extends TxData {
-    //交易对创建人
+    //Transaction pair creator
     private byte[] address;
-    //交易币种的chainId
+    //Transaction currencychainId
     private int baseAssetChainId;
-    //交易币种的assetId
+    //Transaction currencyassetId
     private int baseAssetId;
-    //交易币种允许最小交易小数位
+    //Transaction currency allows for minimum transaction decimal places
     private byte scaleBaseDecimal;
-    //计价币种的chainId
+    //Pricing currencychainId
     private int quoteAssetChainId;
-    //计价币种的assetId
+    //Pricing currencyassetId
     private int quoteAssetId;
-    //计价币种允许最小交易小数位
+    //Pricing currency allows for minimum transaction decimal places
     private byte scaleQuoteDecimal;
-    //最小卖单额
+    //Minimum order amount
     private BigInteger minBaseAmount;
-    //最小买单额
+    //Minimum purchase amount
     private BigInteger minQuoteAmount;
 
     @Override

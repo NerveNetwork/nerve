@@ -89,12 +89,12 @@ public class TxPackageServiceImpl implements TxPackageService {
     private String INITIAL_STATE_ROOT = "56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 
     /**
-     * 打包交易
-     * 适用于不包含智能合约交易的区块链
+     * package deal
+     * Suitable for blockchain transactions without smart contracts
      *
      * @param chain
-     * @param endtimestamp  打包截止时间
-     * @param maxTxDataSize 所有交易数据最大size
+     * @param endtimestamp  Packaging deadline
+     * @param maxTxDataSize Maximum transaction data for all transactionssize
      * @return
      */
     @Override
@@ -104,16 +104,16 @@ public class TxPackageServiceImpl implements TxPackageService {
         long packableTime = endtimestamp - startTime;
         long height = chain.getBestBlockHeight() + 1;
         List<TxPackageWrapper> packingTxList = new ArrayList<>();
-        //记录账本的孤儿交易,返回给共识的时候给过滤出去,因为在因高度变化而导致重新打包的时候,需要还原到待打包队列
+        //Record orphan transactions in the ledger,Filter out when returning to consensus,Because when repackaging due to height changes,Need to restore to the queue to be packaged
         Set<TxPackageWrapper> orphanTxSet = new HashSet<>();
-        //组装统一验证参数数据,key为各模块统一验证器cmd
+        //Assemble unified validation parameter data,keyUnify validators for each modulecmd
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
         NulsLogger log = chain.getLogger();
         try {
-            log.info("[Package start] 区块时间:{}, - height:{}, -打包总可用时间：{}, -可打包容量：{}B , - 当前待打包队列交易hash数:{}, - 待打包队列实际交易数:{}",
+            log.info("[Package start] Block time:{}, - height:{}, -Total available time for packaging：{}, -Packable capacity：{}B , - Current queue transactions to be packagedhashnumber:{}, - Actual number of transactions in the queue to be packaged:{}",
                     blockTime, height, packableTime, maxTxDataSize, packablePool.packableHashQueueSize(chain), packablePool.packableTxMapSize(chain));
             if (packableTime <= TxConstant.BASIC_PACKAGE_RESERVE_TIME) {
-                //直接打空块
+                //Directly hit the empty block
                 return null;
             }
             long collectTime = 0L, batchModuleTime = 0L;
@@ -123,16 +123,16 @@ public class TxPackageServiceImpl implements TxPackageService {
                 return null;
             }
             Map<String, Object> dataMap = (Map<String, Object>) rs.getData();
-            // Swap交易的执行状态 和 生成的系统交易
+            // SwapExecution status of transactions and System transactions generated
             String stateRoot = (String) dataMap.get("stateRoot");
             List<String> swapTxList = (List<String>) dataMap.get("swapTxList");
             if (log.isDebugEnabled()) {
                 collectTime = NulsDateUtils.getCurrentTimeMillis() - collectTimeStart;
             }
-            //模块验证交易
+            //Module verification transaction
             long batchStart = NulsDateUtils.getCurrentTimeMillis();
             List<String> allNewlyList = txService.txModuleValidatorPackable(chain, moduleVerifyMap, packingTxList, orphanTxSet, height, blockTime);
-            //模块统一验证使用总时间
+            //Total time for module unified verification usage
             if (log.isDebugEnabled()) {
                 batchModuleTime = NulsDateUtils.getCurrentTimeMillis() - batchStart;
             }
@@ -158,7 +158,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             }
 
 
-            // 处理需要打包时内部生成的交易
+            // Processing transactions generated internally when packaging is required
             if (!swapTxList.isEmpty()) {
                 packableTxs.addAll(swapTxList);
             }
@@ -166,7 +166,7 @@ public class TxPackageServiceImpl implements TxPackageService {
                 packableTxs.addAll(allNewlyList);
             }
 
-            //孤儿交易加回待打包队列去
+            //Add the orphan transaction back to the pending packaging queue
             txService.putBackPackablePool(chain, orphanTxSet);
             if (chain.getProtocolUpgrade().get()) {
                 processProtocolUpgrade(chain, packingTxList);
@@ -175,16 +175,16 @@ public class TxPackageServiceImpl implements TxPackageService {
 
             long current = NulsDateUtils.getCurrentTimeMillis();
             if (endtimestamp - current < TxConstant.BASIC_PACKAGE_RPC_RESERVE_TIME) {
-                //超时,留给最后数据组装和RPC传输时间不足
+                //overtime,Leave for final data assembly andRPCInsufficient transmission time
                 log.error("getPackableTxs time out, endtimestamp:{}, current:{}, endtimestamp-current:{}, reserveTime:{}",
                         endtimestamp, current, endtimestamp - current, TxConstant.BASIC_PACKAGE_RPC_RESERVE_TIME);
                 throw new NulsException(TxErrorCode.PACKAGE_TIME_OUT);
             }
             long totalTime = NulsDateUtils.getCurrentTimeMillis() - startTime;
-            log.debug("[打包时间统计] 总可用:{}ms, 总执行:{}, 总剩余:{}, 收集交易与账本验证:{}, 模块统一验证:{}",
+            log.debug("[Packaging time statistics] Total available:{}ms, Overall execution:{}, Total remaining:{}, Collect transactions and verify ledgers:{}, Unified module verification:{}",
                     packableTime, totalTime, packableTime - totalTime, collectTime, batchModuleTime);
 
-            log.info("[Package end] - height:{} - 本次打包交易数:{} - 当前待打包队列交易hash数:{}, - 待打包队列实际交易数:{}" + TxUtil.nextLine(),
+            log.info("[Package end] - height:{} - The number of packaged transactions this time:{} - Current queue transactions to be packagedhashnumber:{}, - Actual number of transactions in the queue to be packaged:{}" + TxUtil.nextLine(),
                     height, packableTxs.size(), packablePool.packableHashQueueSize(chain), packablePool.packableTxMapSize(chain));
             TxPackage txPackage = new TxPackage();
             txPackage.setList(packableTxs);
@@ -192,7 +192,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             return txPackage;
         } catch (Exception e) {
             log.error(e);
-            //可打包交易,孤儿交易,全加回去
+            //Packable transactions,Orphan Trading,Add it all back
             txService.putBackPackablePool(chain, packingTxList, orphanTxSet);
             return null;
         } finally {
@@ -202,19 +202,19 @@ public class TxPackageServiceImpl implements TxPackageService {
 
 
     /**
-     * 获取打包的交易, 并验证账本
+     * Get packaged transactions, And verify the ledger
      *
-     * @return false 表示直接出空块
+     * @return false Indicates direct output of empty blocks
      * @throws NulsException
      */
     private Result collectProcessTransactionsBasic(Chain chain, long blockTime, long endtimestamp, long maxTxDataSize, List<TxPackageWrapper> packingTxList,
                                                     Set<TxPackageWrapper> orphanTxSet, Map<String, List<String>> moduleVerifyMap, String preStateRoot) throws NulsException {
 
-        //SWAP通知标识,出现的第一个SWAP交易并且调用验证器通过时,有则只第一次时通知.
+        //SWAPNotification identifier,The first one that appearsSWAPWhen the transaction passes and the validator is called,If there is, only notify on the first attempt.
         boolean swapNotify = false;
-        //本次打包高度
+        //The height of this packaging
         long blockHeight = chain.getBestBlockHeight() + 1;
-        //向账本模块发送要批量验证coinData的标识
+        //Send batch verification to the ledger modulecoinDataIdentification of
         LedgerCall.coinDataBatchNotify(chain);
         int allCorssTxCount = 0, batchCorssTxCount = 0;
         long totalSize = 0L, totalSizeTemp = 0L;
@@ -222,12 +222,12 @@ public class TxPackageServiceImpl implements TxPackageService {
         Set<String> duplicatesVerify = new HashSet<>();
         List<TxPackageWrapper> currentBatchPackableTxs = new ArrayList<>();
         NulsLogger log = chain.getLogger();
-        // 打包在该区块中交易的时间, 要在区块时间的一定范围内.
+        // The time to package transactions in this block, Within a certain range of block time.
         long txTimeRangStart = blockTime - BLOCK_TX_TIME_RANGE_SEC;
         long txTimeRangEnd = blockTime + BLOCK_TX_TIME_RANGE_SEC;
-        // SWAP模块生成的系统交易集合
+        // SWAPThe system transaction set generated by the module
         List<String> swapGenerateTxs = new ArrayList<>();
-        // 系统交易相应的原始交易hash集合（SWAP模块生成的系统交易）
+        // The original transaction corresponding to the system transactionhashaggregate（SWAPSystem transactions generated by modules）
         List<String> swapOriginTxHashList = new ArrayList<>();
         String newStateRoot = preStateRoot;
 
@@ -236,14 +236,14 @@ public class TxPackageServiceImpl implements TxPackageService {
             long currentReserve = endtimestamp - currentTimeMillis;
             if (currentReserve <= TxConstant.BASIC_PACKAGE_RESERVE_TIME) {
                 if (log.isDebugEnabled()) {
-                    log.info("获取交易时间到,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
+                    log.info("Get transaction time up to,Entering the module validation phase: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
                             currentTimeMillis, endtimestamp, TxConstant.BASIC_PACKAGE_RESERVE_TIME, currentReserve);
                 }
                 backTempPackablePool(chain, currentBatchPackableTxs);
                 break;
             }
             if (currentReserve < TxConstant.BASIC_PACKAGE_RPC_RESERVE_TIME) {
-                //超时,留给最后数据组装和RPC传输时间不足
+                //overtime,Leave for final data assembly andRPCInsufficient transmission time
                 log.error("getPackableTxs time out, endtimestamp:{}, current:{}, endtimestamp-current:{}, reserveTime:{}",
                         endtimestamp, currentTimeMillis, currentReserve, TxConstant.BASIC_PACKAGE_RPC_RESERVE_TIME);
                 backTempPackablePool(chain, currentBatchPackableTxs);
@@ -252,13 +252,13 @@ public class TxPackageServiceImpl implements TxPackageService {
             if (chain.getProtocolUpgrade().get()) {
                 log.info("Protocol Upgrade Package stop -chain:{} -best block height", chain.getChainId(), chain.getBestBlockHeight());
                 backTempPackablePool(chain, currentBatchPackableTxs);
-                //放回可打包交易和孤儿
+                //Put back packable transactions and orphans
                 txService.putBackPackablePool(chain, packingTxList, orphanTxSet);
                 return Result.getFailed(TxErrorCode.DATA_ERROR);
             }
             if (packingTxList.size() >= TxConstant.BASIC_PACKAGE_TX_MAX_COUNT) {
                 if (log.isDebugEnabled()) {
-                    log.info("获取交易已达max count,进入模块验证阶段: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
+                    log.info("Obtaining transaction completedmax count,Entering the module validation phase: currentTimeMillis:{}, -endtimestamp:{}, -offset:{}, -remaining:{}",
                             currentTimeMillis, endtimestamp, TxConstant.BASIC_PACKAGE_RESERVE_TIME, endtimestamp - currentTimeMillis);
                 }
                 backTempPackablePool(chain, currentBatchPackableTxs);
@@ -271,35 +271,35 @@ public class TxPackageServiceImpl implements TxPackageService {
             try {
                 tx = packablePool.poll(chain);
                 if (tx == null && batchProcessListSize == 0) {
-                    // 6.28 重置成打包无交易,等待模式
+                    // 6.28 Reset to Pack No Transactions,Waiting mode
                     Thread.sleep(10L);
                     continue;
                 } else if (tx == null && batchProcessListSize > 0) {
-                    //达到处理该批次的条件
+                    //Meet the conditions for processing this batch
                     process = true;
                 } else if (tx != null) {
                     if (null != confirmedTxStorageService.getTx(chain.getChainId(), tx.getHash())) {
-                        //交易已确认过
+                        //Transaction confirmed
                         txService.baseClearTx(chain, tx);
                         continue;
                     }
                     if (!duplicatesVerify.add(tx.getHash().toHex())) {
-                        //加入不进去表示已存在
+                        //If you don't join, it means it already exists
                         continue;
                     }
                     long txSize = tx.size();
                     if ((totalSizeTemp + txSize) > maxTxDataSize) {
                         packablePool.offerFirstOnlyHash(chain, tx);
-                        log.info("交易已达最大容量, 实际值: {}, totalSizeTemp:{}, 当前交易size：{} - 预定最大值maxTxDataSize:{}, txhash:{}", totalSize, totalSizeTemp, txSize, maxTxDataSize, tx.getHash().toHex());
+                        log.info("The transaction has reached its maximum capacity, actual value: {}, totalSizeTemp:{}, Current transactionsize：{} - Reserve maximum valuemaxTxDataSize:{}, txhash:{}", totalSize, totalSizeTemp, txSize, maxTxDataSize, tx.getHash().toHex());
                         maxDataSize = true;
                         if (batchProcessListSize == 0) {
                             break;
                         }
-                        //达到处理该批次的条件
+                        //Meet the conditions for processing this batch
                         process = true;
                     } else {
                         if (ModuleE.CS.abbr.equals(ResponseMessageProcessor.TX_TYPE_MODULE_MAP.get(tx.getType()))) {
-                            // 如果是共识模块的交易, 先验证交易时间, 在区块时间的一定范围内
+                            // If it is a consensus module transaction, Verify transaction time first, Within a certain range of block time
                             long txTime = tx.getTime();
                             if (txTime < txTimeRangStart || txTime > txTimeRangEnd) {
                                 chain.getLogger().error("[TxPackage] The transction time does not match the block time, blockTime:{}, txTime:{}, range:±{}",
@@ -307,15 +307,15 @@ public class TxPackageServiceImpl implements TxPackageService {
                                 continue;
                             }
                         }
-                        //限制跨链交易数量
+                        //Limit the number of cross chain transactions
                         if (ModuleE.CC.abbr.equals(ResponseMessageProcessor.TX_TYPE_MODULE_MAP.get(tx.getType()))) {
                             if (allCorssTxCount + (++batchCorssTxCount) >= TxConstant.BASIC_PACKAGE_CROSS_TX_MAX_COUNT) {
-                                //限制单个区块包含的跨链交易总数，超过跨链交易最大个数，放回去, 然后停止获取交易
+                                //Limit the total number of cross chain transactions contained in a single block. If the maximum number of cross chain transactions is exceeded, put it back, Then stop obtaining transactions
                                 packablePool.add(chain, tx);
                                 if (batchProcessListSize == 0) {
                                     break;
                                 }
-                                //达到处理该批次的条件
+                                //Meet the conditions for processing this batch
                                 process = true;
                             }
                         }
@@ -324,7 +324,7 @@ public class TxPackageServiceImpl implements TxPackageService {
                             txHex = RPCUtil.encode(tx.serialize());
                         } catch (Exception e) {
                             log.warn(e.getMessage(), e);
-                            log.error("丢弃获取hex出错交易, txHash:{}, - type:{}, - time:{}", tx.getHash().toHex(), tx.getType(), tx.getTime());
+                            log.error("Discard acquisitionhexWrong transaction, txHash:{}, - type:{}, - time:{}", tx.getHash().toHex(), tx.getType(), tx.getTime());
                             txService.clearInvalidTx(chain, tx);
                             continue;
                         }
@@ -335,12 +335,12 @@ public class TxPackageServiceImpl implements TxPackageService {
                             batchProcessList.add(txHex);
                             currentBatchPackableTxs.add(txPackageWrapper);
                             if (batchProcessList.size() == TxConstant.BASIC_PACKAGE_VERIFY_COINDATA_BATCH) {
-                                //达到处理该批次的条件
+                                //Meet the conditions for processing this batch
                                 process = true;
                             }
                         }
                     }
-                    //总大小加上当前批次各笔交易大小
+                    //Total size plus the size of each transaction in the current batch
                     totalSizeTemp += txSize;
                 }
                 if (process) {
@@ -353,19 +353,19 @@ public class TxPackageServiceImpl implements TxPackageService {
                         String moduleCode = txRegister.getModuleCode();
                         boolean isSwapTx = moduleCode.equals(ModuleE.SW.abbr);
                         if (isSwapTx) {
-                            // 出现SWAP交易,且通知标识为false,则先调用通知
+                            // appearSWAPtransaction,And the notification identifier isfalse,Then call the notification first
                             if (!swapNotify) {
-                                log.info("[{}]开始Swap模块-打包, {}, {}", blockHeight, blockTime, preStateRoot);
+                                log.info("[{}]startSwapmodule-pack, {}, {}", blockHeight, blockTime, preStateRoot);
                                 SwapCall.swapBatchBegin(chain, blockHeight, blockTime, preStateRoot, 0);
                                 swapNotify = true;
                             }
                             try {
-                                // 调用执行SWAP交易
-                                log.info("[{}]处理Swap交易-打包, {}, {}", blockHeight, blockTime, txPackageWrapper.getTxHex());
+                                // Call ExecutionSWAPtransaction
+                                log.info("[{}]handleSwaptransaction-pack, {}, {}", blockHeight, blockTime, txPackageWrapper.getTxHex());
                                 Map<String, Object> invokeContractRs = SwapCall.invoke(chain, txPackageWrapper.getTxHex(), blockHeight, blockTime, 0);
                                 List<String> txList = (List<String>) invokeContractRs.get("txList");
                                 if (txList != null && !txList.isEmpty()) {
-                                    log.info("[{}]得到生成交易_Swap模块-打包, {}, {}", blockHeight, blockTime, Arrays.toString(txList.toArray()));
+                                    log.info("[{}]Obtain generated transactions_Swapmodule-pack, {}, {}", blockHeight, blockTime, Arrays.toString(txList.toArray()));
                                     swapGenerateTxs.addAll(txList);
                                     String txHash = transaction.getHash().toString();
                                     for (int i = 0, size = txList.size(); i < size; i++) {
@@ -379,17 +379,17 @@ public class TxPackageServiceImpl implements TxPackageService {
                             }
                         }
                         totalSize += transaction.getSize();
-                        //计算跨链交易的数量
+                        //Calculate the number of cross chain transactions
                         if (ModuleE.CC.abbr.equals(ResponseMessageProcessor.TX_TYPE_MODULE_MAP.get(transaction.getType()))) {
                             allCorssTxCount++;
                         }
-                        //根据模块的统一验证器名，对所有交易进行分组，准备进行各模块的统一验证
+                        //According to the unified validator name of the module, group all transactions and prepare for unified verification of each module
                         TxUtil.moduleGroups(moduleVerifyMap, txRegister, RPCUtil.encode(transaction.serialize()));
                     }
-                    //更新到当前最新区块交易大小总值
+                    //Update to the latest total block transaction size
                     totalSizeTemp = totalSize;
                     packingTxList.addAll(currentBatchPackableTxs);
-                    //批次结束重置数据
+                    //Batch end reset data
                     batchProcessList.clear();
                     currentBatchPackableTxs.clear();
                     batchCorssTxCount = 0;
@@ -399,20 +399,20 @@ public class TxPackageServiceImpl implements TxPackageService {
                 }
             } catch (Exception e) {
                 currentBatchPackableTxs.clear();
-                log.error("打包交易异常, txHash:{}, - type:{}, - time:{}", tx.getHash().toHex(), tx.getType(), tx.getTime());
+                log.error("Packaging transaction exception, txHash:{}, - type:{}, - time:{}", tx.getHash().toHex(), tx.getType(), tx.getTime());
                 log.error(e);
                 continue;
             }
         }
-        /** SWAP 当通知标识为true, 则表明有SWAP交易被调用执行*/
+        /** SWAP When the notification identifier istrue, It indicates that there isSWAPTransaction called for execution*/
         if (swapNotify) {
-            Log.info("收集交易");
+            Log.info("Collect transactions");
             Map<String, Object> batchEnd = SwapCall.swapBatchEnd(chain, blockHeight, 0);
             newStateRoot = (String) batchEnd.get("stateRoot");
-            log.info("[{}]结束Swap模块-打包, {}, {}", blockHeight, blockTime, newStateRoot);
+            log.info("[{}]finishSwapmodule-pack, {}, {}", blockHeight, blockTime, newStateRoot);
         }
         if (log.isDebugEnabled()) {
-            log.debug("收集交易 -count:{} - data size:{}",
+            log.debug("Collect transactions -count:{} - data size:{}",
                     packingTxList.size(), totalSize);
         }
         Map<String, Object> result = new HashMap<>();
@@ -432,7 +432,7 @@ public class TxPackageServiceImpl implements TxPackageService {
      */
     private void verifyLedgerBasic(Chain chain, List<String> batchProcessList, List<TxPackageWrapper> currentBatchPackableTxs,
                                    Set<TxPackageWrapper> orphanTxSet) throws NulsException {
-        //开始处理
+        //Start processing
         Map verifyCoinDataResult = LedgerCall.verifyCoinDataBatchPackaged(chain, batchProcessList);
         List<String> failHashs = (List<String>) verifyCoinDataResult.get("fail");
         List<String> orphanHashs = (List<String>) verifyCoinDataResult.get("orphan");
@@ -445,7 +445,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             while (it.hasNext()) {
                 TxPackageWrapper txPackageWrapper = it.next();
                 Transaction transaction = txPackageWrapper.getTx();
-                //去除账本验证失败的交易
+                //Remove transactions with failed ledger verification
                 for (String hash : failHashs) {
                     String hashStr = transaction.getHash().toHex();
                     if (hash.equals(hashStr)) {
@@ -454,7 +454,7 @@ public class TxPackageServiceImpl implements TxPackageService {
                         continue removeAndGo;
                     }
                 }
-                //去除孤儿交易, 同时把孤儿交易放入孤儿池
+                //Remove orphan transactions, Simultaneously placing orphan transactions into the orphan pool
                 for (String hash : orphanHashs) {
                     String hashStr = transaction.getHash().toHex();
                     if (hash.equals(hashStr)) {
@@ -468,15 +468,15 @@ public class TxPackageServiceImpl implements TxPackageService {
     }
 
     /**
-     * 打包时如遇协议升级, 将交易放回未处理队列,重新处理
+     * If there is a protocol upgrade during packaging, Put the transaction back into the unprocessed queue,Reprocessing
      */
     private void processProtocolUpgrade(Chain chain, List<TxPackageWrapper> packingTxList) throws NulsException {
-        //协议升级直接打空块,取出的交易，倒序放入新交易处理队列
+        //Protocol upgrade directly hits empty blocks,Retrieved transactions are placed in reverse order in the new transaction processing queue
         int size = packingTxList.size();
         for (int i = size - 1; i >= 0; i--) {
             TxPackageWrapper txPackageWrapper = packingTxList.get(i);
             Transaction tx = txPackageWrapper.getTx();
-            //执行交易基础验证
+            //Perform basic transaction verification
             TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
             if (null == txRegister) {
                 chain.getLogger().error(new NulsException(TxErrorCode.TX_TYPE_INVALID));
@@ -488,7 +488,7 @@ public class TxPackageServiceImpl implements TxPackageService {
     }
 
     /**
-     * 打包时,从待打包队列获取交易阶段,会产生临时交易列表,在中断获取交易时需要把遗留的临时交易还回待打包队列
+     * When packaging,Retrieve transaction stages from the queue to be packaged,Will generate a temporary transaction list,When interrupting the acquisition of transactions, it is necessary to return the remaining temporary transactions to the queue for packaging
      */
     private void backTempPackablePool(Chain chain, List<TxPackageWrapper> listTx) {
         for (int i = listTx.size() - 1; i >= 0; i--) {
@@ -497,7 +497,7 @@ public class TxPackageServiceImpl implements TxPackageService {
     }
 
     /**
-     * 验证区块中只允许有一个的交易不能有多个
+     * Only one transaction is allowed in the verification block, and there cannot be multiple transactions
      */
     public void verifySysTxCount(Set<Integer> onlyOneTxTypes, int type) throws NulsException {
         switch (type) {
@@ -519,54 +519,54 @@ public class TxPackageServiceImpl implements TxPackageService {
         BlockHeader blockHeader = TxUtil.getInstanceRpcStr(blockHeaderStr, BlockHeader.class);
         long blockHeight = blockHeader.getHeight();
         long blockTime = blockHeader.getTime();
-        LoggerUtil.LOG.debug("[验区-区块时间]:{}, 高度:{}", blockTime, blockHeight);
+        LoggerUtil.LOG.debug("[Inspection area-Block time]:{}, height:{}", blockTime, blockHeight);
         boolean isLogDebug = log.isDebugEnabled();
         if (isLogDebug) {
-            log.debug("[验区块交易] 开始 -----高度:{} -----区块交易数:{}", blockHeight, txStrList.size());
+            log.debug("[Verify block transactions] start -----height:{} -----Number of block transactions:{}", blockHeight, txStrList.size());
         }
-        //验证区块中只允许有一个的交易不能有多个
+        //Only one transaction is allowed in the verification block, and there cannot be multiple transactions
         Set<Integer> onlyOneTxTypes = new HashSet<>();
-        //SWAP通知标识,出现的第一个SWAP交易并且调用验证器通过时,有则只第一次时通知.
+        //SWAPNotification identifier,The first one that appearsSWAPWhen the transaction passes and the validator is called,If there is, only notify on the first attempt.
         boolean swapNotify = false;
         List<TxVerifyWrapper> txList = new ArrayList<>();
-        //组装统一验证参数数据,key为各模块统一验证器cmd
+        //Assemble unified validation parameter data,keyUnify validators for each modulecmd
         Map<String, List<String>> moduleVerifyMap = new HashMap<>(TxConstant.INIT_CAPACITY_8);
         List<byte[]> keys = new ArrayList<>();
         int totalSize = 0;
-        // 打包在该区块中交易的时间, 要在区块时间的一定范围内.
+        // The time to package transactions in this block, Within a certain range of block time.
         long txTimeRangStart = blockTime - BLOCK_TX_TIME_RANGE_SEC;
         long txTimeRangEnd = blockTime + BLOCK_TX_TIME_RANGE_SEC;
-        // SWAP模块生成的系统交易集合
+        // SWAPThe system transaction set generated by the module
         List<String> swapGenerateTxs = new ArrayList<>();
         List<String> swapGenerateTxsByVerify = new ArrayList<>();
 
-        log.info("区块交易列表-验证: {}", Arrays.toString(txStrList.toArray()));
+        log.info("Block transaction list-validate: {}", Arrays.toString(txStrList.toArray()));
         for (String txStr : txStrList) {
             Transaction tx = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
             int type = tx.getType();
             TxRegister txRegister = TxManager.getTxRegister(chain, type);
             boolean isUnSystemSwapTx = TxManager.isUnSystemSwap(txRegister);
             if (isUnSystemSwapTx) {
-                // 出现SWAP交易,且通知标识为false,则先调用通知
+                // appearSWAPtransaction,And the notification identifier isfalse,Then call the notification first
                 if (!swapNotify) {
-                    log.info("[{}]开始Swap模块-验证, {}, {}", blockHeight, blockTime, preStateRoot);
+                    log.info("[{}]startSwapmodule-validate, {}, {}", blockHeight, blockTime, preStateRoot);
                     SwapCall.swapBatchBegin(chain, blockHeight, blockTime, preStateRoot, 1);
                     swapNotify = true;
                 }
-                // 调用执行SWAP交易
-                log.info("[{}]处理Swap交易-验证, {}, {}", blockHeight, blockTime, txStr);
+                // Call ExecutionSWAPtransaction
+                log.info("[{}]handleSwaptransaction-validate, {}, {}", blockHeight, blockTime, txStr);
                 Map<String, Object> invokeContractRs = SwapCall.invoke(chain, txStr, blockHeight, blockTime, 1);
                 List<String> swapTxList = (List<String>) invokeContractRs.get("txList");
                 if (swapTxList != null && !swapTxList.isEmpty()) {
-                    log.info("[{}]得到生成交易_Swap模块-验证, {}, {}", blockHeight, blockTime, Arrays.toString(swapTxList.toArray()));
+                    log.info("[{}]Obtain generated transactions_Swapmodule-validate, {}, {}", blockHeight, blockTime, Arrays.toString(swapTxList.toArray()));
                     swapGenerateTxsByVerify.addAll(swapTxList);
                 }
             } else if (TxManager.isSystemSwap(txRegister)) {
-                // 筛选出SWAP系统交易集合
+                // Filter outSWAPSystem transaction set
                 swapGenerateTxs.add(txStr);
             }
             if (ModuleE.CS.abbr.equals(ResponseMessageProcessor.TX_TYPE_MODULE_MAP.get(type))) {
-                // 如果是共识模块的交易, 先验证交易时间, 在区块时间的一定范围内
+                // If it is a consensus module transaction, Verify transaction time first, Within a certain range of block time
                 long txTime = tx.getTime();
                 if (txTime < txTimeRangStart || txTime > txTimeRangEnd) {
                     chain.getLogger().error("[verifyBlockTx] The transction time does not match the block time, blockTime:{}, txTime:{}, range:±{}",
@@ -589,21 +589,21 @@ public class TxPackageServiceImpl implements TxPackageService {
             throw new NulsException(TxErrorCode.TX_CONFIRMED);
         }
 
-        //验证本地没有的交易
+        //Verify transactions that are not available locally
         List<Future<Boolean>> futures = new ArrayList<>();
         verifyNonLocalTxs(chain, futures, keys, txList, blockHeight);
         keys = null;
 
-        //验证账本
+        //Verify ledger
         long coinDataV = NulsDateUtils.getCurrentTimeMillis();
         if (!LedgerCall.verifyBlockTxsCoinData(chain, txStrList, blockHeight)) {
             throw new NulsException(TxErrorCode.TX_LEDGER_VERIFY_FAIL);
         }
         if (isLogDebug) {
-            log.debug("[验区块交易] coinData -距方法开始的时间:{}，-验证时间:{}",
+            log.debug("[Verify block transactions] coinData -Time from the start of the method:{},-Verification time:{}",
                     NulsDateUtils.getCurrentTimeMillis() - s1, NulsDateUtils.getCurrentTimeMillis() - coinDataV);
         }
-        //模块统一验证器
+        //Module Unified Verifier
         long moduleV = NulsDateUtils.getCurrentTimeMillis();
         Iterator<Map.Entry<String, List<String>>> it = moduleVerifyMap.entrySet().iterator();
         while (it.hasNext()) {
@@ -616,20 +616,20 @@ public class TxPackageServiceImpl implements TxPackageService {
             }
         }
 
-        // 本节点验证区块产生的stateRoot
+        // The validation block generated by this nodestateRoot
         String verifyStateRoot = preStateRoot;
-        /** SWAP 当通知标识为true, 则表明有SWAP交易被调用执行*/
+        /** SWAP When the notification identifier istrue, It indicates that there isSWAPTransaction called for execution*/
         if (swapNotify) {
-            Log.info("验证区块");
+            Log.info("Verify Block");
             Map<String, Object> batchEnd = SwapCall.swapBatchEnd(chain, blockHeight, 1);
             verifyStateRoot = (String) batchEnd.get("stateRoot");
-            log.info("[{}]结束Swap模块-验证, {}, {}", blockHeight, blockTime, verifyStateRoot);
+            log.info("[{}]finishSwapmodule-validate, {}, {}", blockHeight, blockTime, verifyStateRoot);
         }
-        // 打包的stateRoot
+        // packagedstateRoot
         String stateRoot = RPCUtil.encode(blockHeader.getExtendsData().getStateRoot());
-        // 当打包的stateRoot是null时，说明区块中没有swap交易
+        // When packagedstateRootyesnullWhen, it indicates that there is no block in the blockswaptransaction
         if (stateRoot == null) {
-            // 此时验证区块的stateRoot非空的话，必须是初始StateRoot
+            // At this point, verify the block'sstateRootIf it is not empty, it must be the initialStateRoot
             if (verifyStateRoot != null && !INITIAL_STATE_ROOT.equals(verifyStateRoot)) {
                 log.warn("swap stateRoot error.");
                 throw new NulsException(TxErrorCode.SWAP_VERIFY_STATE_ROOT_FAIL);
@@ -643,20 +643,20 @@ public class TxPackageServiceImpl implements TxPackageService {
             throw new NulsException(TxErrorCode.SWAP_VERIFY_GENERATE_TXS_FAIL);
         }
 
-        // 验证打包时生成的交易
-        // 分组 将所有交易分组 包含原始交易和打包时生成的交易
+        // Verify transactions generated during packaging
+        // grouping Group all transactions Include original transactions and transactions generated during packaging
         Map<String, List> packProduceCallMap = packProduceProcess(chain, txList, blockHeight);
         verifyNewProduceTx(chain, packProduceCallMap, blockHeight, blockHeader.getTime());
 
         if (isLogDebug) {
-            log.debug("[验区块交易] 模块统一验证时间:{}", NulsDateUtils.getCurrentTimeMillis() - moduleV);
-            log.debug("[验区块交易] 模块统一验证 -距方法开始的时间:{}", NulsDateUtils.getCurrentTimeMillis() - s1);
+            log.debug("[Verify block transactions] Module Unified Verification Time:{}", NulsDateUtils.getCurrentTimeMillis() - moduleV);
+            log.debug("[Verify block transactions] Unified module verification -Time from the start of the method:{}", NulsDateUtils.getCurrentTimeMillis() - s1);
         }
-        //检查[验证本地没有的交易]的多线程处理结果
+        //inspect[Verify transactions that are not available locally]Multithreaded processing results for
         checkbaseValidateResult(chain, futures);
 
         if (isLogDebug) {
-            log.debug("[验区块交易] 合计执行时间:{}, 交易总size:{} - 高度:{} - 区块交易数:{}, " + TxUtil.nextLine(),
+            log.debug("[Verify block transactions] Total execution time:{}, Total transaction amountsize:{} - height:{} - Number of block transactions:{}, " + TxUtil.nextLine(),
                     NulsDateUtils.getCurrentTimeMillis() - s1, totalSize, blockHeight, txStrList.size());
         }
         return true;
@@ -677,7 +677,7 @@ public class TxPackageServiceImpl implements TxPackageService {
 
     private Map<String, List> packProduceProcess(Chain chain, List<TxVerifyWrapper> txList, long height) {
         Iterator<TxVerifyWrapper> iterator = txList.iterator();
-        // K: 模块code V:{k: 原始交易hash, v:原始交易字符串}
+        // K: modulecode V:{k: Original transactionhash, v:Original transaction string}
         Map<String, List> packProduceCallMap = TxManager.getGroup(chain);
 
         while (iterator.hasNext()) {
@@ -687,7 +687,7 @@ public class TxPackageServiceImpl implements TxPackageService {
             if (txRegister.getPackProduce()) {
                 List<TxVerifyWrapper> listCallTxs = packProduceCallMap.computeIfAbsent(txRegister.getModuleCode(), k -> new ArrayList<>());
                 listCallTxs.add(txVerifyWrapper);
-                LoggerUtil.LOG.debug("验证区块时模块内部处理生成, 原始交易hash:{}, 高度:{}, moduleCode:{}", tx.getHash().toHex(), height, txRegister.getModuleCode());
+                LoggerUtil.LOG.debug("Internal module processing generation during block validation, Original transactionhash:{}, height:{}, moduleCode:{}", tx.getHash().toHex(), height, txRegister.getModuleCode());
             }
         }
         return packProduceCallMap;
@@ -703,13 +703,13 @@ public class TxPackageServiceImpl implements TxPackageService {
                 txHexList.add(wrapper.getTxStr());
             }
             String moduleCode = entry.getKey();
-            // 没有异常表示验证通过
+            // No exceptions indicate verification passed
             TransactionCall.packProduce(chain, BaseConstant.TX_PACKPRODUCE, moduleCode, txHexList, height, blockTime, VERIFY);
         }
     }
 
     /**
-     * 验证是否含有已确认交易
+     * Verify if there are confirmed transactions
      */
     private boolean isTxConfirmed(Chain chain, List<byte[]> keys) {
         List<byte[]> confirmedList = confirmedTxStorageService.getExistTxs(chain.getChainId(), keys);
@@ -729,25 +729,25 @@ public class TxPackageServiceImpl implements TxPackageService {
     }
 
     /**
-     * 开启多线程 对不在本地的未确认数据库中的交易, 进行基础验证
+     * Enable multithreading For transactions in unconfirmed databases that are not local, Conduct basic validation
      */
     private void verifyNonLocalTxs(Chain chain, List<Future<Boolean>> futures, List<byte[]> keys, List<TxVerifyWrapper> txList, long height) {
-        //获取区块的交易中, 在未确认数据库中存在的交易
+        //In the transaction of obtaining blocks, Transactions that exist in unconfirmed databases
         List<String> unconfirmedList = unconfirmedTxStorageService.getExistKeysStr(chain.getChainId(), keys);
         Set<String> set = new HashSet<>();
         set.addAll(unconfirmedList);
         unconfirmedList = null;
         for (TxVerifyWrapper txVerifyWrapper : txList) {
             Transaction tx = txVerifyWrapper.getTx();
-            //能加入表明未确认中没有,则需要处理
+            //Being able to join indicates that there is no confirmation yet,Then it needs to be handled
             if (set.add(tx.getHash().toHex())) {
-                //不在未确认中就进行基础验证
-                //多线程处理单个交易
+                //Perform basic validation without confirmation
+                //Multi threaded processing of individual transactions
                 Future<Boolean> res = verifySignExecutor.submit(new Callable<Boolean>() {
                     @Override
                     public Boolean call() {
                         try {
-                            //只验证单个交易的基础内容(TX模块本地验证)
+                            //Verify only the basic content of a single transaction(TXModule Local Validation)
                             TxRegister txRegister = TxManager.getTxRegister(chain, tx.getType());
                             if (null == txRegister) {
                                 throw new NulsException(TxErrorCode.TX_TYPE_INVALID);
@@ -781,7 +781,7 @@ public class TxPackageServiceImpl implements TxPackageService {
     }
 
     /**
-     * 检查基础验证结果
+     * Check the basic verification results
      */
     private void checkbaseValidateResult(Chain chain, List<Future<Boolean>> futures) throws NulsException {
         NulsLogger log = chain.getLogger();

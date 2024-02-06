@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 减少保证金交易验证器
+ * Reduce margin trading validators
  * @author  tag
  * */
 @Component
@@ -29,7 +29,7 @@ public class ReduceAgentDepositValidator extends BaseValidator {
 
     @Override
     public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
-        //txData验证
+        //txDatavalidate
         if (tx.getTxData() == null) {
             chain.getLogger().error("CreateAgent -- TxData is null");
             return Result.getFailed(ConsensusErrorCode.TX_DATA_VALIDATION_ERROR);
@@ -37,13 +37,13 @@ public class ReduceAgentDepositValidator extends BaseValidator {
         ChangeAgentDepositData txData = new ChangeAgentDepositData();
         txData.parse(tx.getTxData(),0);
 
-        //验证交易发起者是否为节点创建者，只有节点创建者才能减少保证金
+        //Verify if the transaction initiator is the node creator, only the node creator can reduce the margin
         Result rs = agentManager.creatorValid(chain, txData.getAgentHash(), txData.getAddress());
         if(rs.isFailed()){
             return rs;
         }
 
-        //保证金验证
+        //Margin verification
         AgentPo po = (AgentPo) rs.getData();
         BigInteger amount = txData.getAmount();
 
@@ -51,31 +51,31 @@ public class ReduceAgentDepositValidator extends BaseValidator {
         if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
             minAppendAmount = chain.getConfig().getMinAppendAndExitAmount();
         }
-        //金额小于允许的最小金额
+        //The amount is less than the minimum allowed amount
         if(amount.compareTo(minAppendAmount) < 0){
             chain.getLogger().error("The amount of exit margin is not within the allowed range");
             return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
         }
         BigInteger maxReduceAmount = po.getDeposit().subtract(chain.getConfig().getDepositMin());
-        //退出金额大于当前允许退出的最大金额
+        //The exit amount is greater than the current maximum allowed exit amount
         if(amount.compareTo(maxReduceAmount) > 0){
             chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}",po.getDeposit(),maxReduceAmount,amount);
             return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
         }
 
-        //coinData验证
+        //coinDatavalidate
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(),0);
         rs = reduceDepositCoinDataValid(chain, amount, coinData, txData.getAddress(),  tx.getTime() + chain.getConfig().getReducedDepositLockTime());
         if(rs.isFailed()){
             return rs;
         }
-        //CoinData nonce验证
+        //CoinData noncevalidate
         if(!AgentDepositNonceManager.coinDataNonceVerify(chain, coinData, po.getHash())){
             return Result.getFailed(ConsensusErrorCode.COIN_DATA_VALID_ERROR);
         }
 
-        //验证手续费
+        //Verification fee
         rs = validFee(chain, coinData, tx);
         if(rs.isFailed()){
             return rs;

@@ -39,8 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 提案确认交易的业务数据
- * 确认交易中的txData 的业务数据
+ * Business data for proposal confirmation transactions
+ * Confirm transactions in progresstxData Business data for
  *
  * @author: Loki
  * @date: 2020/5/20
@@ -52,24 +52,24 @@ public class ProposalExeBusinessData extends BaseNulsData {
     private String heterogeneousTxHash;
 
     /**
-     * 提案交易hash
+     * Proposal transactionhash
      */
     private NulsHash proposalTxHash;
 
     /**
-     * NERVE地址（账户、节点地址等）
+     * NERVEaddress（account、Node address, etc）
      */
     private byte[] address;
 
     private byte[] hash;
 
     /**
-     * 需要分发提现手续费的节点异构链地址
+     * Node heterogeneous chain addresses that require distribution of withdrawal fees
      */
     private List<HeterogeneousAddress> listDistributionFee;
 
     /**
-     * 执行提案时产生的交易hash(如果有)
+     * Transactions generated during proposal executionhash(If there is any)
      */
     private NulsHash proposalExeHash;
 

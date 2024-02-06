@@ -39,10 +39,12 @@ public class StableCoin {
 
     private String address;
     private Map<NerveToken, Boolean> groupCoin;
+    private Map<NerveToken, Boolean> pauseGroupCoin;
 
-    public StableCoin(String address, Map<NerveToken, Boolean> groupCoin) {
+    public StableCoin(String address, Map<NerveToken, Boolean> groupCoin, Map<NerveToken, Boolean> pauseGroupCoin) {
         this.address = address;
         this.groupCoin = groupCoin;
+        this.pauseGroupCoin = pauseGroupCoin;
     }
 
     public String getAddress() {
@@ -61,8 +63,17 @@ public class StableCoin {
         this.groupCoin = groupCoin;
     }
 
+    public Map<NerveToken, Boolean> getPauseGroupCoin() {
+        return pauseGroupCoin;
+    }
+
+    public void setPauseGroupCoin(Map<NerveToken, Boolean> pauseGroupCoin) {
+        this.pauseGroupCoin = pauseGroupCoin;
+    }
+
     public void clear() {
         this.address = EMPTY_STRING;
         this.groupCoin = Collections.EMPTY_MAP;
+        this.pauseGroupCoin = Collections.EMPTY_MAP;
     }
 }

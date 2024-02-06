@@ -30,7 +30,7 @@ import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import java.util.List;
 
 /**
- * 已确认时等待后续处理的交易
+ * Transactions waiting for subsequent processing when confirmed
  * @author: Loki
  * @date: 2020-03-09
  */

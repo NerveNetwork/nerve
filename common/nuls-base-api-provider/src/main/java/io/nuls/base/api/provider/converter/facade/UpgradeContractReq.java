@@ -33,29 +33,29 @@ import io.nuls.base.api.provider.BaseReq;
 public class UpgradeContractReq extends BaseReq {
 
     /**
-     * 异构链地址
+     * Heterogeneous Chain Address
      */
     private int heterogeneousChainId;
     /**
-     * 新合约地址
+     * New Contract Address
      */
     private String businessAddress;
     /**
-     * 提案类型
+     * Proposal type
      */
     private int type;
 
     /**
-     * 提案内容
+     * Proposal content
      */
     private String content;
     /**
-     * 提现赎回地址(转出)
+     * Withdrawal and redemption address(Transfer out)
      */
     private String address;
 
     /**
-     * 赎回地址密码
+     * Redemption address password
      */
     private String password;
 

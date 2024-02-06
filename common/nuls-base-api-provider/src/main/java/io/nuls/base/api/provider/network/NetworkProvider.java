@@ -7,7 +7,7 @@ import io.nuls.base.api.provider.network.facade.RemoteNodeInfo;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-12 16:11
- * @Description: 功能描述
+ * @Description: Function Description
  */
 public interface NetworkProvider {
 
@@ -18,7 +18,7 @@ public interface NetworkProvider {
     Result<NetworkInfo> getInfo();
 
     /**
-     * 获取节点外网ip
+     * Obtain node external networkip
      * @return
      */
     Result<String> getNodeExtranetIp();

@@ -30,8 +30,8 @@ public class TradingOrderStorageServiceImpl implements TradingOrderStorageServic
     }
 
     /**
-     * 当挂单被取消或者是挂单交易已完成时，需要将订单数据从订单表移除
-     * 同时做备份
+     * When the order is cancelled or the order transaction has been completed, the order data needs to be removed from the order table
+     * Make backups simultaneously
      *
      * @param po
      * @throws Exception

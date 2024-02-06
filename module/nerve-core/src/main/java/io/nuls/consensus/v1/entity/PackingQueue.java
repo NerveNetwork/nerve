@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class PackingQueue {
 
     /**
-     * 出块请求放在这里
+     * Place block request here
      */
     private LinkedBlockingQueue<PackingData> voteMessageQueue = new LinkedBlockingQueue<>();
 

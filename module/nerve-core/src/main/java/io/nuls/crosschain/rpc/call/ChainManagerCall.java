@@ -19,14 +19,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 与跨链管理模块交易接口
+ * Transaction interface with cross chain management module
  *
  * @author: tag
  * @date: 2019/4/15
  */
 public class ChainManagerCall {
     /**
-     * 验证跨链交易资产
+     * Verify cross chain transaction assets
      * @param tx
      * @return boolean
      * @throws NulsException
@@ -46,7 +46,7 @@ public class ChainManagerCall {
     }
 
     /**
-     * 跨链交易链资产管理提交
+     * Cross chain transaction chain asset management submission
      * @param txList
      * @param blockHeader
      * @return
@@ -69,7 +69,7 @@ public class ChainManagerCall {
     }
 
     /**
-     * 跨链交易链资产管理回滚
+     * Cross chain transaction chain asset management rollback
      * @param txList
      * @param blockHeader
      * @return
@@ -91,7 +91,7 @@ public class ChainManagerCall {
     }
 
     /**
-     * 将链资产流通量发送给链管理模块
+     * Send the circulation of chain assets to the chain management module
      * @return
      * @throws NulsException
      */
@@ -119,7 +119,7 @@ public class ChainManagerCall {
     }
 
     /**
-     * 向链管理模块查询已注册链信息
+     * Query registered chain information to the chain management module
      * @return
      * @throws NulsException
      */

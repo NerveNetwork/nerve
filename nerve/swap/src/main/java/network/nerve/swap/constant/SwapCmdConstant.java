@@ -35,10 +35,12 @@ public interface SwapCmdConstant {
 
     String IS_LEGAL_COIN_FOR_ADD_STABLE = "sw_is_legal_coin_for_add_stable";
     String IS_LEGAL_COIN_FOR_REMOVE_STABLE = "sw_is_legal_coin_for_remove_stable";
+    String IS_LEGAL_COIN_FOR_STABLE = "sw_is_legal_coin_for_stable";
     String IS_LEGAL_STABLE = "sw_is_legal_stable";
     String IS_LEGAL_SWAP_FEE_RATE = "sw_is_legal_swap_fee_rate";
     String ADD_COIN_FOR_STABLE = "sw_add_coin_for_stable";
     String REMOVE_COIN_FOR_STABLE = "sw_remove_coin_for_stable";
+    String PAUSE_COIN_FOR_STABLE = "sw_pause_coin_for_stable";
     String UPDATE_SWAP_PAIR_FEE_RATE = "sw_update_swap_pair_fee_rate";
     String ADD_STABLE_FOR_SWAP_TRADE = "sw_add_stable_for_swap_trade";
     String REMOVE_STABLE_FOR_SWAP_TRADE = "sw_remove_stable_for_swap_trade";
@@ -65,6 +67,7 @@ public interface SwapCmdConstant {
     String STABLE_SWAP_PAIR_INFO = "sw_stable_swap_pair_info";
     String STABLE_SWAP_PAIR_BY_LP = "sw_stable_swap_pair_by_lp";
     String STABLE_SWAP_PAIRS_ALL = "sw_get_all_stable_swap_pairs";
+    String IS_LEGAL_BTC_ADDR = "sw_is_legal_btc_addr";
 
     String CREATE_FARM = "sw_createFarm";
     String FARM_STAKE = "sw_farmstake";

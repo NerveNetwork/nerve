@@ -46,10 +46,10 @@ public class QuotationCmdTest {
 
     @Test
     public void importPriKeyTest() {
-        //公钥: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
-        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
-        //公钥: 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b
-//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
+        //Public key: 037fae74d15153c3b55857ca0abd5c34c865dfa1c0d0232997c545bae5541a0863
+        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//Seed block address tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
+        //Public key: 036c0c9ae792f043e14d6a3160fa37e9ce8ee3891c34f18559e20d9cb45a877c4b
+//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//Seed block address tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
         importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
         importPriKey("477059f40708313626cccd26f276646e4466032cabceccbf571a7c46f954eb75", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
         importPriKey("8212e7ba23c8b52790c45b0514490356cd819db15d364cbe08659b5888339e78", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24
@@ -73,7 +73,7 @@ public class QuotationCmdTest {
     @Test
     public void getTxs() throws Exception {
         String txStr = (String) (getTxCfmClient("8cbc547447c195259741118bd61f0e0a552f1f791d5a362cf46f403f2767ac08").get("tx"));
-        Transaction tx = CommonUtil.getInstance(txStr, Transaction.class);//最后一条
+        Transaction tx = CommonUtil.getInstance(txStr, Transaction.class);//The last one
         System.out.println(tx.format(Quotation.class));
     }
 
@@ -133,7 +133,7 @@ public class QuotationCmdTest {
     }
 
     /**
-     * 查交易
+     * Check transactions
      */
     private Map<String, Object> getTxCfmClient(String hash) throws Exception {
         Map<String, Object> params = new HashMap<>();
@@ -147,7 +147,7 @@ public class QuotationCmdTest {
 
     public static void importPriKey(String priKey, String pwd) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -199,13 +199,13 @@ public class QuotationCmdTest {
 //        Log.info("{}",quotation);
 
 //
-//        // 最终报价txdata
+//        // Final quotationtxdata
         String txDataStr = "010a4d415449432d55534454dd3b30a1fe6af03f";
 //        Prices price = CommonUtil.getInstance(txDataStr, Prices.class);
 //        price.getPrices().forEach(d -> {
 //            Log.info("{}:{}", d.getKey(), d.getValue());
 //        });
-        /** 喂价*/
+        /** Feed price*/
         Prices quotation = CommonUtil.getInstance(txDataStr, Prices.class);
         Log.info("{}", quotation.toString());
     }

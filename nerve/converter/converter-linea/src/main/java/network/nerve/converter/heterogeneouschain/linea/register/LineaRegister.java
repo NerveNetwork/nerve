@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.linea.context.LineaContext;
 
 
 /**
- * 向Nerve核心注册
+ * towardsNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

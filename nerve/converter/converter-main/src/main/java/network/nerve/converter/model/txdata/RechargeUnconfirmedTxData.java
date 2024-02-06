@@ -37,47 +37,47 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 异构链充值待确认交易txData
- * 系统交易
+ * Heterogeneous chain recharge pending confirmation transactiontxData
+ * System transactions
  * @author: Loki
  * @date: 2020/9/25
  */
 public class RechargeUnconfirmedTxData extends BaseNulsData {
 
     /**
-     * 异构链充值交易hash
+     * Heterogeneous chain recharge transactionshash
      */
     private HeterogeneousHash originalTxHash;
 
     /**
-     * 异构链交易所在区块高度
+     * Heterogeneous chain exchanges at block height
      */
     private long heterogeneousHeight;
 
     /**
-     * 异构链网络中 充值的from地址
+     * In heterogeneous chain networks Rechargeablefromaddress
      */
     private String heterogeneousFromAddress;
 
     /**
-     * nerve 网络中的到账地址
+     * nerve Delivery address in the network
      */
     private byte[] nerveToAddress;
 
     /**
-     * nerve 网络中充值资产链Id
+     * nerve Recharge asset chain in the networkId
      */
     private int assetChainId;
 
     /**
-     * nerve 网络中充值资产Id
+     * nerve Recharge assets in the networkId
      */
     private int assetId;
     /**
-     * 充值金额
+     * Recharge amount
      */
     private BigInteger amount;
-    // 同时充值token和main，记录main
+    // Simultaneously rechargetokenandmainRecordmain
     private BigInteger mainAssetAmount;
     private int mainAssetChainId;
     private int mainAssetId;

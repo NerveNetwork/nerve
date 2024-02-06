@@ -70,7 +70,7 @@ public class ConfirmRemoveCoinProposal implements IConfirmProposal, Initializing
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if (null == proposalPO) {
-            chain.getLogger().error("[ConfirmRemoveCoinProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmRemoveCoinProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
 
@@ -99,13 +99,13 @@ public class ConfirmRemoveCoinProposal implements IConfirmProposal, Initializing
             success = true;
         } while (false);
         if (!success) {
-            chain.getLogger().error("[提案移除币种] 币种信息缺失. content:{}", content);
+            chain.getLogger().error("[Proposal to remove currency] Currency information missing. content:{}", content);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         boolean legalCoin = SwapCall.isLegalCoinForRemoveStable(chain.getChainId(), stablePairAddress, assetChainId, assetId);
         if (!legalCoin) {
-            chain.getLogger().error("[提案移除币种] 币种不合法. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+            chain.getLogger().error("[Proposal to remove currency] Currency is illegal. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

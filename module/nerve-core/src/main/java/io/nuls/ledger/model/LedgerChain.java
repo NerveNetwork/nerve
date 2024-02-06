@@ -1,7 +1,7 @@
 package io.nuls.ledger.model;
 
 /**
- * 链信息类
+ * Chain information class
  * Chain information class
  *
  * @author lanjinsheng

@@ -29,14 +29,14 @@ import io.nuls.base.api.provider.BaseReq;
 import java.math.BigInteger;
 
 /**
- * 异构链提现
+ * Heterogeneous chain withdrawal
  * @author: Charlie
  * @date: 2020/4/28
  */
 public class WithdrawalReq extends BaseReq {
 
     /**
-     * 提现异构链id
+     * Withdrawal of heterogeneous chainsid
      */
     private int heterogeneousChainId;
 
@@ -45,33 +45,33 @@ public class WithdrawalReq extends BaseReq {
     private int assetId;
 
     /**
-     * 提现异构到账地址
+     * Withdrawal to heterogeneous account addresses
      */
     private String heterogeneousAddress;
 
     /**
-     * 自定义提现手续费
+     * Custom withdrawal handling fee
      */
     private BigInteger distributionFee;
 
     /**
-     * 提现金额
+     * Withdrawal amount
      */
     private BigInteger amount;
 
 
     /**
-     * 提现备注
+     * Withdrawal remarks
      */
     private String remark;
 
     /**
-     * 提现赎回地址(转出)
+     * Withdrawal and redemption address(Transfer out)
      */
     private String address;
 
     /**
-     * 赎回地址密码
+     * Redemption address password
      */
     private String password;
 

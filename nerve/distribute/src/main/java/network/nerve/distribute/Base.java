@@ -25,17 +25,17 @@ import java.util.*;
 /**
  * @Author: zhoulijun
  * @Time: 2020/7/2 14:10
- * @Description: 功能描述
+ * @Description: Function Description
  */
 public class Base {
 
     /**
-     * 查询资产地址
+     * Query asset address
      */
     static String QUERY_PS_URL = "http://seede.nuls.io:8003/jsonrpc";
 
     /**
-     * 查询POCM委托地址
+     * queryPOCMEntrusted address
      */
     static String POCM_URL = "http://seede.nuls.io:8008/pocm/total/75320664-9638-47c9-af62-e334665d46f8";
 
@@ -46,14 +46,14 @@ public class Base {
     static File POCM = new File(System.getProperty("user.dir") + File.separator + "pocm");
 
     /**
-     * 排除的地址目录
+     * Excluded Address Directory
      */
     static Set<String> EXCLUSION = new HashSet<>();
 
     static Set<String> NRC20_EXCLUSION = new HashSet<>();
 
     /**
-     * 空投门槛
+     * Airdrop threshold
      */
     static BigInteger MIN = BigInteger.valueOf(0L);
 
@@ -64,17 +64,17 @@ public class Base {
     static int NVT_ASSET_ID = 1;
 
     /**
-     * nrc20 映射出金地址
+     * nrc20 Map out the gold address
      */
     static String NVT_FROM_ADDRESS_FOR_NRC20 = "NULSd6HgeiNNZY6r3Rq66Gvrg69Bf1tbVrnVV";
 
     /**
-     * nuls空投出金地址
+     * nulsAirdrop withdrawal address
      */
     static String NVT_FROM_ADDRESS_FOR_NULS = "NULSd6HgeiNNZY6r3Rq66Gvrg69Bf1tbVrnVV";
 
     /**
-     * NVT NRC20合约地址
+     * NVT NRC20Contract address
      */
     static String NVT_NRC20 = "NULSd6Hgk44pRaP9EuBXsEyQy15yv6pfGGVUz";
 
@@ -111,7 +111,7 @@ public class Base {
             }
         }
 
-        //锁定地址
+        //Lock address
         EXCLUSION.add("NULSd6HgWAwX7MbvcFSLYqMoyn88d5x3AcUww");
         EXCLUSION.add("NULSd6HgaXkFL7uYEhvC8zqjkYDNY5GQwrHos");
         EXCLUSION.add("NULSd6HgdZh1GWTN7a6P92zThPC77EuDPt3N2");
@@ -177,7 +177,7 @@ public class Base {
         EXCLUSION.add("NULSd6HgfYpp9kfgJU5z5q5D4BRHw4rrbGVH3");
         EXCLUSION.add("NULSd6HgjYXoMgRa89jDeHcEV7B5JCEhhWqm2");
 
-        //黑洞地址
+        //Black hole address
         byte[] blackHolePublicKey= HexUtil.decode("000000000000000000000000000000000000000000000000000000000000000000");
         Address address = new Address(CHAIN_ID, "NULS", BaseConstant.DEFAULT_ADDRESS_TYPE, SerializeUtils.sha256hash160(blackHolePublicKey));
         String addressStr = AddressTool.getStringAddressByBytes(address.getAddressBytes(), address.getPrefix());
@@ -215,7 +215,7 @@ public class Base {
             Map res = JSONUtils.json2pojo(body, Map.class);
             return res.get("result");
         } catch (JsonProcessingException e) {
-            Log.error("序列化错误", e);
+            Log.error("Serialization error", e);
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();

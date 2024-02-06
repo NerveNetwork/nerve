@@ -6,15 +6,15 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 /**
  * @author Niels
  */
-@ApiModel(name = "质押信息详情")
+@ApiModel(name = "Pledge information details")
 public class FarmUserInfoDTO {
     @ApiModelProperty(description = "Farm-HASH")
     private String farmHash;
     @ApiModelProperty(description = "user address")
     private String userAddress;
-    @ApiModelProperty(description = "已质押金额")
+    @ApiModelProperty(description = "Pledged amount")
     private double amount;
-    @ApiModelProperty(description = "待领取奖励金额")
+    @ApiModelProperty(description = "Reward amount to be claimed")
     private double reward;
 
     public double getReward() {

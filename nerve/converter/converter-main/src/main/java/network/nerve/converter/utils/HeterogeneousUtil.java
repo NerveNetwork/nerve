@@ -33,6 +33,8 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -42,11 +44,11 @@ import java.util.List;
 public class HeterogeneousUtil {
 
     /**
-     * 获取异构链交易
+     * Obtain heterogeneous chain transactions
      * @param chain
      * @param heterogeneousChainId
      * @param heterogeneousTxHash
-     * @param type 充值/提现
+     * @param type Recharge/Withdrawal
      * @param manager
      * @return
      * @throws NulsException
@@ -60,11 +62,11 @@ public class HeterogeneousUtil {
     }
 
     /**
-     * 获取异构链交易
+     * Obtain heterogeneous chain transactions
      * @param chain
      * @param heterogeneousChainId
      * @param heterogeneousTxHash
-     * @param type 充值/提现
+     * @param type Recharge/Withdrawal
      * @param manager
      * @param heterogeneousInterface
      * @return
@@ -80,7 +82,7 @@ public class HeterogeneousUtil {
             heterogeneousInterface = manager.getHeterogeneousDocking(heterogeneousChainId);
         }
         if (null == heterogeneousInterface) {
-            chain.getLogger().error("异构链不存在 heterogeneousChainId:{}", heterogeneousChainId);
+            chain.getLogger().error("Heterogeneous chain does not exist heterogeneousChainId:{}", heterogeneousChainId);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
         HeterogeneousTransactionInfo info = null;
@@ -99,7 +101,7 @@ public class HeterogeneousUtil {
 
 
     /**
-     * 比较两个异构链地址列表中地址是否相同
+     * Compare whether the addresses in two heterogeneous chain address lists are the same
      * @param txSigners
      * @param heterogeneousSigners
      * @return
@@ -151,4 +153,37 @@ public class HeterogeneousUtil {
         }
         return true;
     }
+
+    public static BigInteger getL1Fee(int htgChainId, BigInteger ethNetworkGasPrice) {
+        switch (htgChainId) {
+            case 130: return getL1FeeOnScroll(_l1GasUsedOnScroll, ethNetworkGasPrice);
+            case 133: return getL1FeeOnManta(_l1GasUsedOnManta, ethNetworkGasPrice);
+            case 136:
+            case 115:
+            case 129: return getL1FeeOnOptimismOrBase(_l1GasUsedOnOptimismOrBase, ethNetworkGasPrice);
+            default: return BigInteger.ZERO;
+        }
+    }
+
+    private static final BigInteger _l1GasUsedOnScroll = BigInteger.valueOf(21000L);
+    private static final BigInteger _l1GasUsedOnOptimismOrBase = BigInteger.valueOf(18000L);
+    private static final BigInteger _l1GasUsedOnManta = BigInteger.valueOf(18000L);
+    private static final BigInteger scalarOnScroll = BigInteger.valueOf(1150000000L);
+    private static final BigInteger precisionOnScroll = BigInteger.valueOf(1000000000L);
+    private static final BigDecimal dynamicOverheadOnOptimismOrBase = new BigDecimal("0.684");
+    // look formanta L1 feeof`L1 Fee Scalar`, tentatively set as1
+    private static final BigDecimal dynamicOverheadOnManta = new BigDecimal("1");
+
+    private static BigInteger getL1FeeOnScroll(BigInteger _l1GasUsed, BigInteger ethNetworkGasPrice) {
+        return _l1GasUsed.multiply(ethNetworkGasPrice).multiply(scalarOnScroll).divide(precisionOnScroll);
+    }
+
+    private static BigInteger getL1FeeOnOptimismOrBase(BigInteger _l1GasUsed, BigInteger ethNetworkGasPrice) {
+        return new BigDecimal(_l1GasUsed).multiply(dynamicOverheadOnOptimismOrBase).multiply(new BigDecimal(ethNetworkGasPrice)).toBigInteger();
+    }
+
+    private static BigInteger getL1FeeOnManta(BigInteger _l1GasUsed, BigInteger ethNetworkGasPrice) {
+        return new BigDecimal(_l1GasUsed).multiply(dynamicOverheadOnManta).multiply(new BigDecimal(ethNetworkGasPrice)).toBigInteger();
+    }
+
 }

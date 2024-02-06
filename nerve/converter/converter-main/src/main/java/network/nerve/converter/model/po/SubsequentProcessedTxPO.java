@@ -27,7 +27,7 @@ package network.nerve.converter.model.po;
 import java.io.Serializable;
 
 /**
- * 已调用成功异构链组件的交易
+ * Successfully called transaction for heterogeneous chain component
  * @author: Loki
  * @date: 2020-03-12
  */

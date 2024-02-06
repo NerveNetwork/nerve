@@ -31,13 +31,13 @@ import io.nuls.core.exception.NulsException;
 
 /**
  * @author lan
- * @description 调用外部区块模块接口
+ * @description Calling external block module interfaces
  * @date 2018/12/07
  **/
 public interface CallRpcService {
     long getBlockLatestHeight(int chainId);
     /**
-     * 交易签名
+     * Transaction signature
      * transaction signature
      *
      * @param chainId

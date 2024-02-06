@@ -30,7 +30,7 @@ public class CreateTradingTest {
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
     }
     /**
-     * 创建交易对：测试网
+     * Create transaction pairs：Test Network
      */
     @Test
     public void sendCreateCoinTradingTxBeta() {
@@ -60,7 +60,7 @@ public class CreateTradingTest {
 
     }
     /**
-     * 创建交易对:主网
+     * Create transaction pairs:Main network
      */
     @Test
     public void sendCreateCoinTradingTx() {

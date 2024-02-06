@@ -63,7 +63,7 @@ import static network.nerve.converter.heterogeneouschain.eth.constant.EthConstan
 import static network.nerve.converter.heterogeneouschain.eth.context.EthContext.logger;
 
 /**
- * Eth组件向Nerve核心注册
+ * EthComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -120,16 +120,16 @@ public class EthRegister implements IHeterogeneousChainRegister {
     @Override
     public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
-            // 存放日志实例
+            // Storing log instances
             EthContext.setLogger(logger);
             isInitial = true;
-            // 存放配置实例
+            // Storing configuration instances
             EthContext.setConfig(config);
-            // 初始化默认API
+            // Initialize defaultAPI
             initDefualtAPI();
-            // 解析ETH API URL
+            // analysisETH API URL
             initEthWalletRPC();
-            // 存放nerveChainId
+            // depositnerveChainId
             EthContext.NERVE_CHAINID = converterConfig.getChainId();
             //RocksDBService.createTable(EthDBConstant.DB_ETH);
         }
@@ -196,31 +196,31 @@ public class EthRegister implements IHeterogeneousChainRegister {
     @Override
     public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
         String multiSigAddress = registerInfo.getMultiSigAddress().toLowerCase();
-        // 监听多签地址交易
+        // Listening for multi signature address transactions
         ethListener.addListeningAddress(multiSigAddress);
-        // 管理回调函数实例
+        // Manage callback function instances
         ethCallBackManager.setDepositTxSubmitter(registerInfo.getDepositTxSubmitter());
         ethCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
         ethCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
-        // 存放CORE查询API实例
+        // depositCOREqueryAPIexample
         EthContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
         EthContext.getConverterCoreApi().addChainDBName(getChainId(), EthDBConstant.DB_ETH);
-        // 更新多签地址
+        // Update multiple signed addresses
         EthContext.MULTY_SIGN_ADDRESS = multiSigAddress;
-        // 保存当前多签地址到多签地址历史列表中
+        // Save the current multi signature address to the multi signature address history list
         //ethMultiSignAddressHistoryStorageService.save(multiSigAddress);
-        // 合约未升级时，使用当前的任务处理流程
+        // When the contract has not been upgraded, use the current task processing flow
         if (!isUpgradeContract()) {
-            // 初始化任务工作池
+            // Initialize Task Work Pool
             initScheduled();
         }
-        // 初始化待确认任务队列
+        // Initialize the pending confirmation task queue
         //initUnconfirmedTxQueue();
-        logger().info("ETH注册完成.");
+        logger().info("ETHRegistration completed.");
     }
 
     /**
-     * 当配置的合约地址与当前有效的合约地址不同时，则说明合约已升级
+     * When the configured contract address is different from the currently valid contract address, it indicates that the contract has been upgraded
      */
     private boolean isUpgradeContract() {
         String multySignAddressOfSetting = EthContext.getConfig().getMultySignAddress().toLowerCase();
@@ -241,15 +241,15 @@ public class EthRegister implements IHeterogeneousChainRegister {
         try {
             list = ethUnconfirmedTxStorageService.findAll();
         } catch (Exception e) {
-            logger().warn("初始化ETH未确认交易队列异常，忽略旧流程队列");
+            logger().warn("initializationETHUnconfirmed transaction queue exception, ignoring old process queue");
             list = Collections.EMPTY_LIST;
         }
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
-                    // 把待确认的交易加入到监听交易hash列表中
+                    // Add pending transactions to listening transactionshashIn the list
                     ethListener.addListeningTx(po.getTxHash());
                 }
             });
@@ -258,7 +258,7 @@ public class EthRegister implements IHeterogeneousChainRegister {
     }
 
     /**
-     * 停止当前区块解析任务与待确认交易任务
+     * Stop the current block parsing task and pending transaction task
      */
     public void shutDownScheduled() {
         if (blockSyncExecutor != null && !blockSyncExecutor.isShutdown()) {

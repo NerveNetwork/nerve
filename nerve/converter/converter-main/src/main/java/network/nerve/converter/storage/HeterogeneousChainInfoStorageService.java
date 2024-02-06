@@ -33,50 +33,50 @@ import java.util.List;
  */
 public interface HeterogeneousChainInfoStorageService {
     /**
-     * 保存异构链基本信息
+     * Save basic information of heterogeneous chains
      */
     int saveHeterogeneousChainInfo(int heterogeneousChainId, HeterogeneousChainInfo info) throws Exception;
 
     /**
-     * 获取异构链基本信息
+     * Obtain basic information of heterogeneous chains
      */
     HeterogeneousChainInfo getHeterogeneousChainInfo(int heterogeneousChainId);
 
     /**
-     * 删除异构链基本信息
+     * Delete basic information of heterogeneous chains
      */
     void deleteHeterogeneousChainInfo(int heterogeneousChainId) throws Exception;
 
     /**
-     * 根据异构链chainId检查是否存在这个异构链基本信息
+     * Based on heterogeneous chainschainIdCheck if there is basic information about this heterogeneous chain
      */
     boolean isExistHeterogeneousChainInfo(int heterogeneousChainId);
 
     /**
-     * 获取所有异构链基本信息
+     * Obtain basic information of all heterogeneous chains
      *
      * @return
      */
     List<HeterogeneousChainInfo> getAllHeterogeneousChainInfoList();
 
     /**
-     * 查询向账本初始化异构链资产是否完成
+     * Query whether the initialization of heterogeneous chain assets to the ledger has been completed
      */
     boolean hadInit2LedgerAsset();
 
     /**
-     * 完成向账本初始化异构链资产
+     * Complete the initialization of heterogeneous chain assets to the ledger
      * @throws Exception
      */
     void init2LedgerAssetCompleted() throws Exception;
 
     /**
-     * 异构链是否以完成DB合并
+     * Has the heterogeneous chain been completedDBmerge
      */
     boolean hadDBMerged(int hChainId);
 
     /**
-     * 标记异构链已完成DB合并
+     * Marking heterogeneous chains completedDBmerge
      */
     void markMergedChainDB(int hChainId) throws Exception;
 

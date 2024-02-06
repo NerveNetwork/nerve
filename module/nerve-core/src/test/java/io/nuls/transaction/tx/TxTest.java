@@ -53,7 +53,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 测试交易
+ * Test transaction
  * @author: Charlie
  * @date: 2020/6/12
  */
@@ -119,7 +119,7 @@ public class TxTest {
     }
 
     /**
-     * 对交易hash签名(在线)
+     * Regarding transactionshashautograph(on line)
      * @param tx
      * @param address
      * @param password
@@ -138,7 +138,7 @@ public class TxTest {
         P2PHKSignature signature = new P2PHKSignature();
         signature.parse(new NulsByteBuffer(RPCUtil.decode(signatureStr)));
         p2PHKSignatures.add(signature);
-        //交易签名
+        //Transaction signature
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         tx.setTransactionSignature(transactionSignature.serialize());
     }
@@ -154,7 +154,7 @@ public class TxTest {
 //        for(P2PHKSignature p : ts.getP2PHKSignatures()){
 //            byte[] address = AddressTool.getAddress(p.getPublicKey(), 5);
 //            String addr = AddressTool.getStringAddressByBytes(address);
-//            System.out.println("签名地址");
+//            System.out.println("Signature address");
 //            System.out.println(addr);
 //
 //        }

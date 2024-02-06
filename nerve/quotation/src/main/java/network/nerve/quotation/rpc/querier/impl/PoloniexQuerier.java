@@ -44,7 +44,7 @@ import java.util.Map;
 @Component
 public class PoloniexQuerier implements Querier {
     /**
-     * 获取交易对价格接口
+     * Obtain transaction pair price interface
      */
     private final String CMD = "/public?command=returnChartData&currencyPair=%s&start=%s&period=86400";
 
@@ -65,10 +65,10 @@ public class PoloniexQuerier implements Querier {
                 return null;
             }
             BigDecimal res = new BigDecimal(resultMap.get("close").toString());
-            chain.getLogger().info("Poloniex 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            chain.getLogger().info("Poloniex Obtaining transaction pairs[{}]price:{}", symbol.toUpperCase(), res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Poloniex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("Poloniex, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

@@ -10,13 +10,13 @@ public class FIFOCache <K,V> extends LinkedHashMap<K, V> {
         SIZE = size;
     }
     /**
-     * 重写淘汰机制
+     * Rewrite elimination mechanism
      * @param eldest
      * @return
      */
     @Override
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        //如果缓存存储达到最大值删除最后一个
+        //If the cache storage reaches its maximum value, delete the last one
         return size() > SIZE;
     }
 }

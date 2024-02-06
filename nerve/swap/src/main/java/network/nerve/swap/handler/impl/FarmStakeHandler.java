@@ -171,7 +171,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
     public SwapResult executeTx(Chain chain, SwapResult result, BatchInfo batchInfo, Transaction tx, long blockHeight, long blockTime) {
 
         try {
-            // 提取业务参数
+            // Extract business parameters
             FarmStakeChangeData txData = new FarmStakeChangeData();
             txData.parse(tx.getTxData(), 0);
             ValidaterResult validaterResult = helper.validateTxData(chain, tx, txData, batchInfo.getFarmTempManager());
@@ -184,18 +184,18 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
                 FarmPoolPO realPo = farmCache.get(txData.getFarmHash());
                 farm = realPo.copy();
             }
-            //处理
+            //handle
             executeBusiness(chain, tx, txData, farm, batchInfo, result, blockHeight, blockTime);
 
 //            batchInfo.getFarmTempManager().putFarm(farm);
 
-            // 装填执行结果
+            // Loading execution result
             result.setSuccess(true);
             result.setBlockHeight(blockHeight);
 
         } catch (NulsException e) {
             chain.getLogger().error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setSuccess(false);
             result.setErrorMessage(e.format());
         }
@@ -222,7 +222,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
         bus.setUserAddress(address);
-        //获取用户状态数据
+        //Obtain user status data
         FarmUserInfoPO user = batchInfo.getFarmUserTempManager().getUserInfo(farm.getFarmHash(), address);
         if (null == user) {
             user = this.userInfoStorageService.load(chain.getChainId(), farm.getFarmHash(), address);
@@ -236,7 +236,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         }
         bus.setUserAmountOld(user.getAmount());
         bus.setUserRewardDebtOld(user.getRewardDebt());
-        //生成领取奖励的交易
+        //Generate transactions to claim rewards
 //        uint256 pending = user.amount.mul(pool.accSushiPerShare).div(1e12).sub(user.rewardDebt);
         BigInteger expectedReward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
         BigInteger realReward = expectedReward;
@@ -244,7 +244,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
             if (realReward.compareTo(BigInteger.ZERO) <= 0) {
                 break;
             }
-            // 糖果余额不足的情况，剩多少领多少
+            // In the case of insufficient candy balance, collect as much as is left
             if (farm.getSyrupTokenBalance().compareTo(realReward) < 0) {
                 realReward = BigInteger.ZERO.add(farm.getSyrupTokenBalance());
             }
@@ -254,7 +254,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
 
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
-            // farm余额不足的情况，能领多少算多少,理论上不会出现这种情况
+            // farmIn the case of insufficient balance, calculate as much as can be claimed,In theory, this situation would not occur
             if (balance.getBalance().compareTo(realReward) < 0) {
                 realReward = BigInteger.ZERO.add(balance.getBalance());
             }
@@ -273,9 +273,9 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
         } while (false);
 
         farm.setStakeTokenBalance(farm.getStakeTokenBalance().add(txData.getAmount()));
-        //更新池子信息
+        //Update pool information
         batchInfo.getFarmTempManager().putFarm(farm);
-        //更新用户状态数据
+        //Update user status data
         user.setAmount(user.getAmount().add(txData.getAmount()));
 
         BigInteger difference = expectedReward.subtract(realReward);
@@ -290,7 +290,7 @@ public class FarmStakeHandler extends SwapHandlerConstraints {
 
         if (blockHeight >= SwapContext.PROTOCOL_1_16_0 && bus.getStakingBalanceOld().compareTo(BigInteger.ZERO) == 0 && farm.getStakeTokenBalance().compareTo(BigInteger.ZERO) > 0) {
             BigInteger allHeight = farm.getSyrupTokenBalance().divide(farm.getSyrupPerBlock());
-            //新的协议业务，当第一笔委托早于起始高度时，使用startHeight计算stopHeight，这样更准确
+            //New protocol business, when the first commission is earlier than the starting height, usestartHeightcalculatestopHeightThis is more accurate
             if (blockHeight >= SwapContext.PROTOCOL_1_29_0 && farm.getStartBlockHeight() > blockHeight) {
                 farm.setStopHeight(farm.getStartBlockHeight() + allHeight.longValue());
             } else {

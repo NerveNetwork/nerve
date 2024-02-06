@@ -41,7 +41,7 @@ public class StableSwapTempPairManager {
 
     private int chainId;
     /**
-     * 用于校验
+     * Used for verification
      */
     private Set<String> tempCreatePairs = new HashSet<>();
     private StableSwapPairCache stableSwapPairCache;

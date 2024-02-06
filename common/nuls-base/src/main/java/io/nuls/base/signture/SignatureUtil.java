@@ -41,7 +41,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 交易签名工具类
+ * Transaction signature tool class
  * Transaction Signature Tool Class
  *
  * @author tag
@@ -53,13 +53,13 @@ public class SignatureUtil {
     private static final int MAIN_CHAIN_ID = 1;
 
     /**
-     * 验证交易中所有签名正确性
+     * Verify the correctness of all signatures in the transaction
      *
-     * @param chainId 当前链ID
-     * @param tx      交易
+     * @param chainId Current ChainID
+     * @param tx      transaction
      */
     public static boolean validateTransactionSignture(int chainId, Transaction tx) throws NulsException {
-        // 判断硬分叉,需要一个高度
+        // Determine hard fork,Need a height
         try {
             if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
                 throw new NulsException(new Exception());
@@ -102,9 +102,9 @@ public class SignatureUtil {
     }
 
     /**
-     * 跨链交易验证签名
+     * Cross chain transaction verification signature
      *
-     * @param tx 交易
+     * @param tx transaction
      */
     public static boolean ctxSignatureValid(int chainId, Transaction tx) throws NulsException {
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
@@ -140,9 +140,9 @@ public class SignatureUtil {
     }
 
     /**
-     * 跨链交易验证签名
+     * Cross chain transaction verification signature
      *
-     * @param tx 交易
+     * @param tx transaction
      */
     public static boolean validateCtxSignture(Transaction tx) throws NulsException {
         if (tx.getTransactionSignature() == null || tx.getTransactionSignature().length == 0) {
@@ -162,7 +162,7 @@ public class SignatureUtil {
     }
 
     /**
-     * 验证数据签名
+     * Verify data signature
      *
      * @param digestBytes
      * @param p2PHKSignature
@@ -189,9 +189,9 @@ public class SignatureUtil {
     }
 
     /**
-     * 判断交易是否存在某地址
+     * Determine if a certain address exists in the transaction
      *
-     * @param tx 交易
+     * @param tx transaction
      */
     public static boolean containsAddress(Transaction tx, byte[] address, int chainId) throws NulsException {
         Set<String> addressSet = getAddressFromTX(tx, chainId);
@@ -202,9 +202,9 @@ public class SignatureUtil {
     }
 
     /**
-     * 获取交易签名地址
+     * Obtain transaction signature address
      *
-     * @param tx 交易
+     * @param tx transaction
      */
     public static Set<String> getAddressFromTX(Transaction tx, int chainId) throws NulsException {
         Set<String> addressSet = new HashSet<>();
@@ -239,10 +239,10 @@ public class SignatureUtil {
     }
 
     /**
-     * 生成交易TransactionSignture
+     * Generate transactionsTransactionSignture
      *
-     * @param tx         交易
-     * @param signEckeys 需要生成普通签名的秘钥
+     * @param tx         transaction
+     * @param signEckeys A key that needs to generate a regular signature
      */
     public static void createTransactionSignture(Transaction tx, List<ECKey> signEckeys) throws IOException {
         if (signEckeys == null || signEckeys.size() == 0) {
@@ -262,10 +262,10 @@ public class SignatureUtil {
     }
 
     /**
-     * 生成交易多个传统签名（多地址转账可能会用到）
+     * Generate multiple traditional signatures for transactions（Multiple address transfers may require）
      *
-     * @param tx     交易
-     * @param eckeys 秘钥列表
+     * @param tx     transaction
+     * @param eckeys Key List
      */
     public static List<P2PHKSignature> createSignaturesByEckey(Transaction tx, List<ECKey> eckeys) {
         List<P2PHKSignature> signatures = new ArrayList<>();
@@ -284,30 +284,30 @@ public class SignatureUtil {
     }
 
     /**
-     * 生成交易的签名传统
+     * Traditional signature generation for transactions
      *
-     * @param tx     交易
-     * @param priKey 私钥
+     * @param tx     transaction
+     * @param priKey Private key
      */
     public static P2PHKSignature createSignatureByPriKey(Transaction tx, String priKey) {
         ECKey ecKey = ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(priKey)));
         P2PHKSignature p2PHKSignature = new P2PHKSignature();
         p2PHKSignature.setPublicKey(ecKey.getPubKey());
-        //用当前交易的hash和账户的私钥账户
+        //Using the current transaction'shashAnd the private key account of the account
         p2PHKSignature.setSignData(signDigest(tx.getHash().getBytes(), ecKey));
         return p2PHKSignature;
     }
 
     /**
-     * 生成交易的签名传统
+     * Traditional signature generation for transactions
      *
-     * @param tx    交易
-     * @param ecKey 秘钥
+     * @param tx    transaction
+     * @param ecKey Secret key
      */
     public static P2PHKSignature createSignatureByEckey(Transaction tx, ECKey ecKey) {
         P2PHKSignature p2PHKSignature = new P2PHKSignature();
         p2PHKSignature.setPublicKey(ecKey.getPubKey());
-        //用当前交易的hash和账户的私钥账户
+        //Using the current transaction'shashAnd the private key account of the account
         p2PHKSignature.setSignData(signDigest(tx.getHash().getBytes(), ecKey));
         return p2PHKSignature;
     }
@@ -316,16 +316,16 @@ public class SignatureUtil {
     public static P2PHKSignature createSignatureByEckey(NulsHash hash, ECKey ecKey) {
         P2PHKSignature p2PHKSignature = new P2PHKSignature();
         p2PHKSignature.setPublicKey(ecKey.getPubKey());
-        //用当前交易的hash和账户的私钥账户
+        //Using the current transaction'shashAnd the private key account of the account
         p2PHKSignature.setSignData(signDigest(hash.getBytes(), ecKey));
         return p2PHKSignature;
     }
 
     /**
-     * 多重签名脚本签名验证
+     * Multi signature script signature verification
      *
-     * @param digestBytes 验证的签名数据
-     * @param signtures   签名列表
+     * @param digestBytes Verified signature data
+     * @param signtures   Signature List
      */
     public static boolean validMultiScriptSign(byte[] digestBytes, LinkedList<byte[]> signtures, LinkedList<byte[]> pubkeys) {
         while (signtures.size() > 0) {
@@ -341,10 +341,10 @@ public class SignatureUtil {
     }
 
     /**
-     * 生成交易签名
+     * Generate transaction signature
      *
-     * @param digest 需要签名的交易数据
-     * @param ecKey  签名的私钥
+     * @param digest Transaction data that requires signature
+     * @param ecKey  Signature private key
      */
     public static NulsSignData signDigest(byte[] digest, ECKey ecKey) {
         byte[] signbytes = ecKey.sign(digest);

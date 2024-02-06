@@ -74,7 +74,7 @@ public class EthBlockScheduled implements Runnable {
     public void run() {
         if (!EthContext.getConverterCoreApi().isRunning()) {
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("忽略同步区块模式");
+                LoggerUtil.LOG.debug("Ignoring synchronous block mode");
             }
             return;
         }
@@ -88,13 +88,13 @@ public class EthBlockScheduled implements Runnable {
                 EthContext.logger().error(e);
             }
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
+                LoggerUtil.LOG.debug("Non virtual bank member, skip this task");
             }
             return;
         }
         clearDB = false;
         if (LoggerUtil.LOG.isDebugEnabled()) {
-            LoggerUtil.LOG.debug("[ETH区块解析任务] - 每隔20秒执行一次。");
+            LoggerUtil.LOG.debug("[ETHBlock parsing task] - every other20Execute once per second.");
         }
         try {
             ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
@@ -103,24 +103,24 @@ public class EthBlockScheduled implements Runnable {
                 EthContext.setEthGasPrice(currentGasPrice);
             }
         } catch (Exception e) {
-            EthContext.logger().error("同步ETH当前Price失败", e);
+            EthContext.logger().error("synchronizationETHcurrentPricefail", e);
         }
         try {
             ethCommonHelper.clearHash();
         } catch (Exception e) {
-            EthContext.logger().error("清理充值交易hash再次验证的集合失败", e);
+            EthContext.logger().error("Clearing recharge transactionshashFailed to revalidate collection", e);
         }
         try {
 
-            // 当前ETH网络最新的区块
+            // currentETHThe latest blocks in the network
             long blockHeightFromEth = ethWalletApi.getBlockHeight();
-            // 本地最新的区块
+            // Latest local blocks
             EthSimpleBlockHeader localMax = ethLocalBlockHelper.getLatestLocalBlockHeader();
             if (localMax == null) {
-                // 当启动节点时，本地区块为空，将从ETH网络最新高度开始同步
+                // When starting a node, the local block is empty and will be removed from theETHStarting synchronization at the latest height of the network
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    EthContext.logger().info("获取不到ETH区块，等待下轮执行");
+                    EthContext.logger().info("Unable to obtainETHBlock, waiting for the next round of execution");
                     return;
                 }
                 ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
@@ -128,11 +128,11 @@ public class EthBlockScheduled implements Runnable {
                 return;
             }
             Long localBlockHeight = localMax.getHeight();
-            // 当启动节点时，本地最新高度与ETH网络区块高度相差两个区块及以上时，则从ETH网络高度开始同步
+            // When starting a node, the latest local altitude matchesETHWhen the height of a network block differs by two or more blocks, it will be removed from theETHNetwork height begins to synchronize
             if (firstSync && blockHeightFromEth - localBlockHeight >= 2) {
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    EthContext.logger().info("获取不到ETH区块，等待下轮执行");
+                    EthContext.logger().info("Unable to obtainETHBlock, waiting for the next round of execution");
                     return;
                 }
                 ethLocalBlockHelper.deleteAllLocalBlockHeader();
@@ -141,13 +141,13 @@ public class EthBlockScheduled implements Runnable {
                 return;
             }
 
-            // 验证最新区块是否正确
+            // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                EthContext.logger().error("获取ETH区块失败");
+                EthContext.logger().error("obtainETHBlock failure");
                 return;
             } else if (resultCode == 1) {
-                EthContext.logger().error("ETH区块分叉");
+                EthContext.logger().error("ETHBlock fork");
                 ethLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }
@@ -156,12 +156,12 @@ public class EthBlockScheduled implements Runnable {
             for (int i = 1; i <= size; i++) {
                 localBlockHeight = localBlockHeight + 1;
                 /**
-                 * 同步并解析数据
+                 * Synchronize and parse data
                  */
                 try {
                     EthBlock.Block block = ethWalletApi.getBlockByHeight(localBlockHeight);
                     if(block == null) {
-                        EthContext.logger().info("获取不到ETH区块，等待下轮执行");
+                        EthContext.logger().info("Unable to obtainETHBlock, waiting for the next round of execution");
                         break;
                     }
                     ethBlockAnalysisHelper.analysisEthBlock(block, ethAnalysisTxHelper);
@@ -171,7 +171,7 @@ public class EthBlockScheduled implements Runnable {
                 }
             }
         } catch (Exception e) {
-            EthContext.logger().error("同步ETH区块失败, 错误: {}", e);
+            EthContext.logger().error("synchronizationETHBlock failure, error: {}", e);
         }
     }
 
@@ -181,14 +181,14 @@ public class EthBlockScheduled implements Runnable {
             EthContext.logger().info("Not a virtual bank, skipping `EthBlockScheduled`");
             return;
         }
-        EthContext.logger().info("ethBlockScheduled - 每隔20秒执行一次。");
+        EthContext.logger().info("ethBlockScheduled - every other20Execute once per second.");
         try {
             BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
             if (currentGasPrice != null) {
                 EthContext.setEthGasPrice(currentGasPrice);
             }
         } catch (Exception e) {
-            EthContext.logger().error("同步ETH当前Price失败", e);
+            EthContext.logger().error("synchronizationETHcurrentPricefail", e);
         }
         try {
             if (!initialLoaded) {
@@ -196,9 +196,9 @@ public class EthBlockScheduled implements Runnable {
                 initialLoaded = true;
             }
 
-            // 本地最新的区块
+            // Latest local blocks
             EthSimpleBlockHeader localMax = ethLocalBlockHelper.getLatestLocalBlockHeader();
-            // 默认起始同步高度 (暂时不使用)
+            // Default starting synchronization height (Temporarily not used)
             long defaultStartHeight = EthContext.getConfig().getDefaultStartHeight();
             if (localMax == null) {
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(defaultStartHeight);
@@ -206,7 +206,7 @@ public class EthBlockScheduled implements Runnable {
                 return;
             }
             Long localBlockHeight = localMax.getHeight();
-            // 当本地最新高度小于配置的默认高度时，则从默认高度开始同步
+            // When the latest local height is less than the configured default height, synchronization starts from the default height
             if (localBlockHeight < defaultStartHeight) {
                 ethLocalBlockHelper.deleteAllLocalBlockHeader();
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(defaultStartHeight);
@@ -214,24 +214,24 @@ public class EthBlockScheduled implements Runnable {
                 return;
             }
 
-            // 验证最新区块是否正确
+            // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                EthContext.logger().error("获取区块失败");
+                EthContext.logger().error("Failed to obtain block");
                 return;
             } else if (resultCode == 1) {
-                EthContext.logger().error("区块分叉");
+                EthContext.logger().error("Block fork");
                 ethLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }
 
-            // 当前ETH网络最新的区块
+            // currentETHThe latest blocks in the network
             long blockHeight = ethWalletApi.getBlockHeight();
 
             for (int i = 1; i <= blockHeight - localBlockHeight; i++) {
                 localBlockHeight = localBlockHeight + 1;
                 /**
-                 * 同步并解析数据
+                 * Synchronize and parse data
                  */
                 EthBlock.Block block = null;
                 try {
@@ -261,7 +261,7 @@ public class EthBlockScheduled implements Runnable {
                 }
             }
         } catch (Exception e) {
-            EthContext.logger().error("同步ETH区块失败, 错误: {}", e);
+            EthContext.logger().error("synchronizationETHBlock failure, error: {}", e);
         }
     }
 

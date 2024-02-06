@@ -26,7 +26,7 @@ package network.nerve.converter.storage;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
 
 /**
- * 确认虚拟银行管理员变更
+ * Confirm virtual bank administrator changes
  * @author: Mimi
  * @date: 2020-02-18
  */

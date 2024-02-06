@@ -55,23 +55,23 @@ public class DexTxResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_createCoinTradingTx", version = 1.0, description = "create CoinTradingTransaction and broadcast")
     @Parameters(value = {
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易创建者地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码"),
-            @Parameter(parameterName = "quoteAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "计价币种chainId"),
-            @Parameter(parameterName = "quoteAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "计价币种assetId"),
-            @Parameter(parameterName = "scaleQuoteDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "计价币种允许最小交易小数位"),
-            @Parameter(parameterName = "baseAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种chainId"),
-            @Parameter(parameterName = "baseAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种assetId"),
-            @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种允许最小交易小数位"),
-            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额"),
-            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "计价币种交易支持最小额")
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction creator address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password"),
+            @Parameter(parameterName = "quoteAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Pricing currencychainId"),
+            @Parameter(parameterName = "quoteAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Pricing currencyassetId"),
+            @Parameter(parameterName = "scaleQuoteDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "Pricing currency allows for minimum transaction decimal places"),
+            @Parameter(parameterName = "baseAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Transaction CurrencychainId"),
+            @Parameter(parameterName = "baseAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Transaction CurrencyassetId"),
+            @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "Transaction currency allows for minimum transaction decimal places"),
+            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Transaction currency supports minimum transaction amount"),
+            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Pricing currency transactions support the minimum amount")
     })
     public Response createCoinTradingTx(Map params) {
-        //组装交易对txData
+        //Assembly transaction pairstxData
         try {
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            //判断地址是否为本地chainId地址
+            //Determine if the address is localchainIdaddress
             boolean isAddressValidate = (AddressTool.getChainIdByAddress(address) == dexConfig.getChainId());
             if (!isAddressValidate) {
                 return failed(DexErrorCode.ERROR_ADDRESS_ERROR);
@@ -80,7 +80,7 @@ public class DexTxResource extends BaseCmd {
             Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
             BigInteger available = new BigInteger(balanceMap.get("available").toString());
             String nonce = (String) balanceMap.get("nonce");
-            /* 组装交易发送 (Send transaction) */
+            /* Assembly transaction sending (Send transaction) */
             Transaction tx = new Transaction();
             tx.setType(TxType.COIN_TRADING);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
@@ -106,18 +106,18 @@ public class DexTxResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_createTradingOrderTx", version = 1.0, description = "create TradingOrderTransaction and broadcast")
     @Parameters(value = {
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易创建者地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码"),
-            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对hash"),
-            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-2]", parameterDes = "交易类型：1买单,2买单"),
-            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "币种交易数量"),
-            @Parameter(parameterName = "price", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "挂单价格")
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction creator address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password"),
+            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction pairshash"),
+            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-2]", parameterDes = "Transaction type：1Pay the bill,2Pay the bill"),
+            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Currency transaction quantity"),
+            @Parameter(parameterName = "price", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Listing price")
     })
     public Response createTradingOrderTx(Map params) {
         try {
             String address = (String) params.get("address");
             String password = (String) params.get("password");
-            //判断地址是否为本地chainId地址
+            //Determine if the address is localchainIdaddress
             boolean isAddressValidate = (AddressTool.getChainIdByAddress(address) == dexConfig.getChainId());
             if (!isAddressValidate) {
                 return failed(DexErrorCode.ERROR_ADDRESS_ERROR);
@@ -130,7 +130,7 @@ public class DexTxResource extends BaseCmd {
             String tradingHash = (String) params.get("tradingHash");
             NulsHash nulsHash = NulsHash.fromHex(tradingHash);
 
-            /* 组装交易发送 (Send transaction) */
+            /* Assembly transaction sending (Send transaction) */
             Transaction tx = new Transaction();
             tx.setType(TxType.TRADING_ORDER);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
@@ -165,33 +165,33 @@ public class DexTxResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_createTradingCancelOrderTx", version = 1.0, description = "create TradingCancelOrderTransaction and broadcast")
     @Parameters(value = {
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易创建者地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码"),
-            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "挂单hash")
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction creator address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password"),
+            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Order placementhash")
     })
     public Response createTradingCancelOrderTx(Map params) {
         try {
             String address = (String) params.get("address");
             String password = (String) params.get("password");
             String orderHash = (String) params.get("orderHash");
-            //判断地址是否为本地chainId地址
+            //Determine if the address is localchainIdaddress
             boolean isAddressValidate = (AddressTool.getChainIdByAddress(address) == dexConfig.getChainId());
             if (!isAddressValidate) {
                 return failed(DexErrorCode.ERROR_ADDRESS_ERROR);
             }
             String priKey = null;
 //            String priKey = AccountCall.getPriKey(dexConfig.getChainId(), address, password);
-            //查找order是否存在
+            //lookuporderDoes it exist
             TradingOrderPo orderPo = orderStorageService.query(HexUtil.decode(orderHash));
             if (orderPo == null) {
                 throw new NulsException(DexErrorCode.DATA_NOT_FOUND);
             }
-            //查看挂单账户是否等于当前调用接口账户
+            //Check whether the pending account is equal to the current calling interface account
             if (!Arrays.equals(AddressTool.getAddress(address), orderPo.getAddress())) {
                 throw new NulsException(DexErrorCode.ACCOUNT_VALID_ERROR);
             }
 
-            /* 组装交易发送 (Send transaction) */
+            /* Assembly transaction sending (Send transaction) */
             Transaction tx = new Transaction();
             tx.setType(TxType.TRADING_ORDER_CANCEL);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
@@ -219,13 +219,13 @@ public class DexTxResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_editCoinTradingTx", version = 1.0, description = "create CoinTradingTransaction and broadcast")
     @Parameters(value = {
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易创建者地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码"),
-            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对hash"),
-            @Parameter(parameterName = "scaleQuoteDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "计价币种允许最小交易小数位"),
-            @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易币种允许最小交易小数位"),
-            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "交易币种交易支持最小额"),
-            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "计价币种交易支持最小额")
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction creator address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password"),
+            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction pairshash"),
+            @Parameter(parameterName = "scaleQuoteDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "Pricing currency allows for minimum transaction decimal places"),
+            @Parameter(parameterName = "scaleBaseDecimal", requestType = @TypeDescriptor(value = int.class), parameterDes = "Transaction currency allows for minimum transaction decimal places"),
+            @Parameter(parameterName = "minBaseAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Transaction currency supports minimum transaction amount"),
+            @Parameter(parameterName = "minQuoteAmount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Pricing currency transactions support the minimum amount")
     })
     public Response editCoinTradingTx(Map params) {
         try {
@@ -288,12 +288,12 @@ public class DexTxResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_getTradingOrderNonceInfo", version = 1.0, description = "get the current nonce of the tradingOrder")
     @Parameters(value = {
-            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "订单hash")
+            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "order formhash")
     })
     public Response getTradingOrderNonceInfo(Map params) {
         try {
             String orderHash = (String) params.get("orderHash");
-            //查找order是否存在
+            //lookuporderDoes it exist
             TradingOrderPo orderPo = orderStorageService.query(HexUtil.decode(orderHash));
             if (orderPo == null) {
                 throw new NulsException(DexErrorCode.DATA_NOT_FOUND);
@@ -320,7 +320,7 @@ public class DexTxResource extends BaseCmd {
     }
 
     private CoinData createCoinTradingTxCoinData(String address, String nonce, BigInteger available) throws NulsException {
-        //创建交易对费用
+        //Create transaction pair fees
         BigInteger amount = DexContext.createTradingAmount.add(TransactionFeeCalculator.NORMAL_PRICE_PRE_1024_BYTES);
         if (available.compareTo(amount) < 0) {
             throw new NulsException(DexErrorCode.BALANCE_NOT_ENOUGH);
@@ -354,12 +354,12 @@ public class DexTxResource extends BaseCmd {
             throw new NulsException(CommonCodeConstanst.DATA_NOT_FOUND, "coinTrading not found");
         }
         CoinTradingPo tradingPo = container.getCoinTrading();
-        //首先通过交易币数量和单价，计算出需要的计价货币总量
+        //Firstly, calculate the total amount of pricing currency required based on the quantity and unit price of transaction coins
 
         BigDecimal price = new BigDecimal(priceBigInteger).movePointLeft(tradingPo.getQuoteDecimal());
         BigDecimal amount = new BigDecimal(baseAmount).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.DOWN);
-        BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
+        BigInteger quoteAmount = amount.toBigInteger();     //The total amount of pricing currencies that can ultimately be exchanged
 
         Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), address);
         BigInteger available = new BigInteger(balanceMap.get("available").toString());
@@ -385,7 +385,7 @@ public class DexTxResource extends BaseCmd {
 
         return coinData;
 
-//        //如果挂单是本链资产，直接将手续费加在一起
+//        //If the order is an asset in this chain, add the handling fee directly together
 //        if (tradingPo.getQuoteAssetChainId() == dexConfig.getChainId() && tradingPo.getQuoteAssetId() == dexConfig.getAssetId()) {
 //            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
 //            BigInteger available = new BigInteger(balanceMap.get("available").toString());
@@ -402,7 +402,7 @@ public class DexTxResource extends BaseCmd {
 //            from.setNonce(HexUtil.decode(nonce));
 //            coinData.addFrom(from);
 //        } else {
-//            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+//            //If the hanging order is an external chain asset, a handling fee for adding an internal chain asset is requiredfrom
 //            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId(), address);
 //            BigInteger available = new BigInteger(balanceMap.get("available").toString());
 //            String nonce = (String) balanceMap.get("nonce");
@@ -476,7 +476,7 @@ public class DexTxResource extends BaseCmd {
 
         return coinData;
 
-//        //如果挂单是本链资产，直接将手续费加在一起
+//        //If the order is an asset in this chain, add the handling fee directly together
 //        if (tradingPo.getBaseAssetChainId() == dexConfig.getChainId() && tradingPo.getBaseAssetId() == dexConfig.getAssetId()) {
 //            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), dexConfig.getChainId(), dexConfig.getAssetId(), address);
 //            BigInteger available = new BigInteger(balanceMap.get("available").toString());
@@ -493,7 +493,7 @@ public class DexTxResource extends BaseCmd {
 //            from.setNonce(HexUtil.decode(nonce));
 //            coinData.addFrom(from);
 //        } else {
-//            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+//            //If the hanging order is an external chain asset, a handling fee for adding an internal chain asset is requiredfrom
 //            Map balanceMap = AccountCall.getAccountBalance(dexConfig.getChainId(), tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId(), address);
 //            BigInteger available = new BigInteger(balanceMap.get("available").toString());
 //            String nonce = (String) balanceMap.get("nonce");

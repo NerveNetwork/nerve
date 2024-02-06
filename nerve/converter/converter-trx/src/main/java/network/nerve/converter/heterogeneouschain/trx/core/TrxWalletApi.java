@@ -113,14 +113,14 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     }
 
     public void init(String rpcAddress) throws NulsException {
-        // 默认初始化的API会被新的API服务覆盖，当节点成为虚拟银行时，会初始化新的API服务
+        // Default initializedAPIWill be replaced by new onesAPIService coverage, when a node becomes a virtual bank, a new one will be initializedAPIservice
         if (StringUtils.isNotBlank(rpcAddress) && htgContext.getConfig().getCommonRpcAddress().equals(this.rpcAddress) && !rpcAddress.equals(this.rpcAddress)) {
             resetApiWrapper();
         }
         if (wrapper == null) {
             wrapper = newInstanceApiWrapper(rpcAddress);
             this.rpcAddress = StringUtils.isBlank(rpcAddress) ? EMPTY_STRING : rpcAddress;
-            getLog().info("初始化 {} API URL: {}", symbol(), rpcAddress);
+            getLog().info("initialization {} API URL: {}", symbol(), rpcAddress);
         }
     }
 
@@ -128,7 +128,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
         checkLock.lock();
         try {
             do {
-                // 强制从第三方系统更新rpc
+                // Force updates from third-party systemsrpc
                 Map<Long, Map> rpcCheckMap = htgContext.getConverterCoreApi().HTG_RPC_CHECK_MAP();
                 Map<String, Object> resultMap = rpcCheckMap.get(htgContext.getConfig().getChainIdOnHtgNetwork());
                 if (resultMap == null) {
@@ -146,7 +146,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     break;
                 }
                 if (_version.intValue() > this.rpcVersion){
-                    // 发现version改变，切换rpc
+                    // findversionChange, switchrpc
                     Integer _index = (Integer) resultMap.get("index");
                     if (_index == null) {
                         break;
@@ -155,7 +155,10 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                     if (StringUtils.isBlank(apiUrl)) {
                         break;
                     }
-                    getLog().info("检查到需更改RPC服务 {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    getLog().info("Checked that changes are neededRPCservice {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    String msg = String.format("[%s]网络检查到需强制更改RPC服务, rpc check from third party, version: %s, url: %s, old api: %s", symbol(), _version.intValue(), apiUrl, this.rpcAddress);
+                    htgContext.getConverterCoreApi().putWechatMsg(msg);
+                    getLog().info(msg);
                     TX_CACHE.invalidateAll();
                     TX_RECEIPT_CACHE.invalidateAll();
                     this.changeApi(apiUrl);
@@ -167,27 +170,27 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             } while (false);
 
             if (this.urlFromThirdPartyForce) {
-                getLog().info("[{}]强制应急API(ThirdParty)使用期间内，不再根据bank order切换API", symbol());
+                getLog().info("[{}]Mandatory emergency responseAPI(ThirdParty)During the use period, no longer based onbank orderswitchAPI", symbol());
                 return;
             }
 
             long now = System.currentTimeMillis();
-            // 如果使用的是应急API，应急API使用时间内，不检查API切换
+            // If using emergencyAPIEmergency responseAPIDuring use, do not checkAPIswitch
             if (now < clearTimeOfRequestExceededMap) {
                 if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
                     if (getLog().isDebugEnabled()) {
-                        getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                        getLog().debug("emergencyAPIDuring use, do not checkAPIswitch, Expiration time: {}, remaining waiting time: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                     }
                     return;
                 }
                 if (urlFromThirdParty) {
                     if (getLog().isDebugEnabled()) {
-                        getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                        getLog().debug("emergencyAPI(ThirdParty)During use, do not checkAPIswitch, Expiration time: {}, remaining waiting time: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                     }
                     return;
                 }
             } else if (clearTimeOfRequestExceededMap != 0){
-                getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                 requestExceededMap.clear();
                 clearTimeOfRequestExceededMap = 0L;
                 urlFromThirdParty = false;
@@ -195,7 +198,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
             String rpc = this.calRpcBySwitchStatus(order, switchStatus);
             if (!rpc.equals(this.rpcAddress)) {
-                getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                getLog().info("Detected a change in sequence,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                 changeApi(rpc);
             }
         } catch (NulsException e) {
@@ -247,33 +250,33 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
         checkLock.lock();
         try {
             if (urlFromThirdParty || urlFromThirdPartyForce) {
-                getLog().info("应急API(ThirdParty)使用时间内，不检查API切换");
+                getLog().info("emergencyAPI(ThirdParty)During use, do not checkAPIswitch");
                 return;
             }
-            getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
-            // 不相等，说明已经被切换
+            getLog().info("{} API Ready to switch, currentlyAPI: {}", symbol(), oldRpc);
+            // Unequal, indicating that it has been switched
             if (!oldRpc.equals(this.rpcAddress)) {
-                getLog().info("{} API 已切换至: {}", symbol(), this.rpcAddress);
+                getLog().info("{} API Switched to: {}", symbol(), this.rpcAddress);
                 return;
             }
             int expectSwitchStatus = (switchStatus + 1) % 2;
             int order = htgContext.getConverterCoreApi().getVirtualBankOrder();
             String rpc = this.calRpcBySwitchStatus(order, expectSwitchStatus);
-            // 检查配置的API是否超额
+            // Check the configurationAPIIs it excessive
             if (unavailableRpc(oldRpc) && unavailableRpc(rpc)) {
                 String mainRpcAddress = htgContext.getConfig().getMainRpcAddress();
                 mainRpcAddress = StringUtils.isBlank(mainRpcAddress) ? EMPTY_STRING : mainRpcAddress;
-                getLog().info("{} API 不可用: {} - {}, 准备切换至应急API: {}, ", symbol(), oldRpc, rpc, mainRpcAddress);
+                getLog().info("{} API Not available: {} - {}, Prepare to switch to emergency modeAPI: {}, ", symbol(), oldRpc, rpc, mainRpcAddress);
                 changeApi(mainRpcAddress);
                 if (mainRpcAddress.equals(this.rpcAddress)) {
                     clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
                 }
                 return;
             }
-            // 正常切换API
+            // Normal switchingAPI
             if (!rpc.equals(this.rpcAddress)) {
                 changeApi(rpc);
-                // 相等，说明切换成功
+                // Equal, indicating successful switching
                 if (rpc.equals(this.rpcAddress)) {
                     switchStatus = expectSwitchStatus;
                 }
@@ -304,7 +307,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     protected void checkIfResetApiWrapper(int times) throws NulsException {
         int mod = times % 6;
         if (mod == 5 && wrapper != null && rpcAddress != null) {
-            getLog().info("重启API服务");
+            getLog().info("restartAPIservice");
             resetApiWrapper();
             wrapper = newInstanceApiWrapper(rpcAddress);
         }
@@ -359,7 +362,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     private <T, R> R timeOutWrapperFunction(String functionName, T arg, ExceptionFunction<T, R> fucntion) throws Exception {
         return this.timeOutWrapperFunctionReal(functionName, fucntion, 0, arg);
     }
-
+    private boolean timeOutExceed = false;
     private <T, R> R timeOutWrapperFunctionReal(String functionName, ExceptionFunction<T, R> fucntion, int times, T arg) throws Exception {
         try {
             this.checkIfResetApiWrapper(times);
@@ -376,6 +379,14 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             boolean isTimeOut = ConverterUtil.isTimeOutError(message);
             if (isTimeOut) {
                 getLog().error("{}: {} function [{}] time out", e.getClass().getName(), symbol(), functionName);
+                if (timeOutExceed || times > 10) {
+                    htgContext.getConverterCoreApi().putWechatMsg(String.format("请求超时大于10次, 异常[%s]: [%s]网络 time out, 当前Api: %s", e.getClass().getName(), symbol(), this.rpcAddress));
+                    timeOutExceed = true;
+                    Integer count = requestExceededMap.computeIfAbsent(this.rpcAddress, r -> 0);
+                    requestExceededMap.put(this.rpcAddress, count + 1);
+                    switchStandbyAPI(this.rpcAddress);
+                    throw e;
+                }
                 try {
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (InterruptedException ex) {
@@ -383,6 +394,11 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
+            String errorMsg = String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), message, this.rpcAddress);
+            if (message.contains("exceed") || message.contains("limit")) {
+                htgContext.getConverterCoreApi().putWechatMsg(String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), "request exceeded or limit", this.rpcAddress));
+            }
+            getLog().warn(errorMsg);
             String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
             if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
                 clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
@@ -391,15 +407,15 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                 changeApi(availableRpc);
                 throw e;
             }
-            // 当API连接异常时，重置API连接，使用备用API
+            // WhenAPIReset when there is an abnormal connectionAPIConnection, using backupAPI
             if (e instanceof StatusException || e instanceof StatusRuntimeException) {
-                getLog().warn("API连接异常时，重置API连接，使用备用API");
+                getLog().warn("APIReset when there is an abnormal connectionAPIConnection, using backupAPI");
                 if (ConverterUtil.isRequestExpired(e.getMessage()) && htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重新签名应急API: {}", this.rpcAddress);
+                    getLog().info("Re sign EmergencyAPI: {}", this.rpcAddress);
                     throw e;
                 }
                 if (ConverterUtil.isRequestDenied(e.getMessage()) && htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                    getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.rpcAddress);
@@ -410,17 +426,17 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
                 switchStandbyAPI(this.rpcAddress);
                 throw e;
             }
-            // 若遭遇网络连接异常
+            // If encountering abnormal network connection
             if (e instanceof ConnectException || e instanceof UnknownHostException) {
-                // 应急API重置，切换到普通API
+                // emergencyAPIReset, switch to normalAPI
                 if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                    getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.rpcAddress);
                     throw e;
                 }
-                // 普通API记录异常次数
+                // ordinaryAPIRecord the number of exceptions
                 Integer count = requestExceededMap.getOrDefault(this.rpcAddress, 0);
                 requestExceededMap.put(this.rpcAddress, count + 1);
                 switchStandbyAPI(this.rpcAddress);
@@ -437,7 +453,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
 
     /**
-     * 获取交易详情
+     * Get transaction details
      */
     public Chain.Transaction getTransactionByHash(String txHash) throws Exception {
         try {
@@ -466,7 +482,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 调用合约的view/constant函数
+     * Invoke contractview/constantfunction
      */
     public List<Type> callViewFunction(String contractAddress, Function function) throws Exception {
         List<Type> typeList = this.timeOutWrapperFunction("callViewFunction", List.of(contractAddress, function), args -> {
@@ -528,7 +544,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
 
     /**
-     * 根据高度获取区块
+     * Obtain blocks based on height
      */
     public Response.BlockExtention getBlockByHeight(Long height) throws Exception {
         Response.BlockExtention block = this.timeOutWrapperFunction("getBlockByHeight", height, args -> {
@@ -538,13 +554,13 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             return wrapper.blockingStub.getBlockByNum2(builder.build());
         });
         if (block == null) {
-            getLog().error("获取区块为空");
+            getLog().error("Get block empty");
         }
         return block;
     }
 
     /**
-     * 获取ht余额
+     * obtainhtbalance
      */
     public BigDecimal getBalance(String address) throws Exception {
         BigDecimal balance = this.timeOutWrapperFunction("getAccountBalance", address, args -> {
@@ -593,7 +609,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             }
             Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
             if (!ret.getResult()) {
-                getLog().error("[{}]调用合约交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
+                getLog().error("[{}]Call to contract transaction broadcast failed, reason: {}", symbol(), ret.getMessage().toStringUtf8());
                 return null;
             }
 
@@ -615,10 +631,10 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 获取ERC-20 token指定地址余额
+     * obtainERC-20 tokenDesignated address balance
      *
-     * @param address         查询地址
-     * @param contractAddress 合约地址
+     * @param address         Search address
+     * @param contractAddress Contract address
      * @return
      * @throws ExecutionException
      * @throws InterruptedException
@@ -664,7 +680,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
 
     public TrxSendTransactionPo transferTRC20Token(String from, String to, BigInteger value, String privateKey, String contractAddress, BigInteger feeLimit) throws Exception {
         feeLimit = feeLimit == null ? TRX_20 : feeLimit;
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(to), new Uint256(value)),
@@ -683,7 +699,7 @@ public class TrxWalletApi implements WalletApi, BeanInitial {
             Chain.Transaction signedTxn = wrapper.signTransaction(builder.build(), new KeyPair(privateKey));
             Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
             if (!ret.getResult()) {
-                getLog().error("[{}]转账交易广播失败, 原因: {}", symbol(), ret.getMessage().toStringUtf8());
+                getLog().error("[{}]Transfer transaction broadcast failed, reason: {}", symbol(), ret.getMessage().toStringUtf8());
                 return null;
             }
             return new TrxSendTransactionPo(TrxUtil.calcTxHash(signedTxn), from, to, value, null, TRX_2);

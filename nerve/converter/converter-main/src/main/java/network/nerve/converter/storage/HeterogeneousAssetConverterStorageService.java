@@ -33,42 +33,42 @@ import java.util.List;
  */
 public interface HeterogeneousAssetConverterStorageService {
     /**
-     * 保存异构链资产信息
+     * Save heterogeneous chain asset information
      */
     int saveAssetInfo(int nerveAssetChainId, int nerveAssetId, HeterogeneousAssetInfo info) throws Exception;
 
     /**
-     * 移除异构链资产信息
+     * Remove heterogeneous chain asset information
      */
     int deleteAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
 
     /**
-     * 保存绑定类型的异构链资产信息
+     * Save heterogeneous chain asset information for binding types
      */
     int saveBindAssetInfo(int nerveAssetChainId, int nerveAssetId, HeterogeneousAssetInfo info) throws Exception;
 
     /**
-     * 移除绑定类型的异构链资产信息
+     * Remove heterogeneous chain asset information for binding types
      */
     int deleteBindAssetInfo(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
 
     /**
-     * 是否绑定类型的异构链资产
+     * Whether to bind heterogeneous chain assets of type
      */
     boolean isBoundHeterogeneousAsset(int heterogeneousChainId, int heterogeneousAssetId) throws Exception;
 
     /**
-     * 获取异构链资产信息集合
+     * Obtain a collection of heterogeneous chain asset information
      */
     List<HeterogeneousAssetInfo> getHeterogeneousAssetInfo(int nerveAssetChainId, int nerveAssetId);
 
     /**
-     * 获取异构链资产信息
+     * Obtain heterogeneous chain asset information
      */
     HeterogeneousAssetInfo getHeterogeneousAssetInfo(int heterogeneousChainId, int nerveAssetChainId, int nerveAssetId);
 
     /**
-     * 获取Nerve资产ID
+     * obtainNerveassetID
      */
     NerveAssetInfo getNerveAssetInfo(int heterogeneousChainId, int heterogeneousAssetId);
 

@@ -28,7 +28,7 @@ import io.nuls.base.data.BaseBusinessMessage;
 import io.nuls.base.data.NulsHash;
 
 /**
- * 还未处理的交易消息
+ * Unprocessed transaction messages
  *
  * @author: Loki
  * @date: 2020/4/13

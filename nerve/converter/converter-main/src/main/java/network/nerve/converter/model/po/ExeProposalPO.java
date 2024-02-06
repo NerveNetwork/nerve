@@ -30,7 +30,7 @@ import io.nuls.core.constant.SyncStatusEnum;
 import java.io.Serializable;
 
 /**
- * 处理已通过的提案
+ * Handling approved proposals
  * @author: Loki
  * @date: 2020/5/15
  */
@@ -42,18 +42,18 @@ public class ExeProposalPO implements Serializable {
 
     private long height;
     /**
-     * 处理时先验证交易是否确认的验证次数（达到阈值交易没确认则丢弃）
+     * Verify the number of times the transaction has been confirmed during processing（Discard transactions that have reached the threshold but have not been confirmed）
      */
     private int isConfirmedVerifyCount;
 
     /**
-     * 节点区块同步模式
+     * Node block synchronization mode
      */
     private SyncStatusEnum syncStatusEnum;
 
     /**
-     * 当前区块的虚拟银行成员总数
-     * (不算当前加入, 要算当前退出)
+     * The total number of virtual bank members in the current block
+     * (Not including current joining, To calculate the current exit)
      */
     private int currenVirtualBankTotal;
 

@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 交易hash和交易签名的消息
+ * transactionhashMessage with transaction signature
  * @author: Loki
  * @date: 2020-02-27
  */
@@ -50,18 +50,18 @@ public class BroadcastHashSignMessage extends BaseBusinessMessage {
     private P2PHKSignature p2PHKSignature;
 
     /**
-     * 原始交易hash(例如确认变更交易的msg, 则该属性为对应的变更交易的hash)
-     * 如果是提案, 则该属性为提案交易hash
+     * Original transactionhash(For example, confirming a change in transactionmsg, Then this attribute is the corresponding change transactionhash)
+     * If it is a proposal, Then this attribute is a proposal transactionhash
      */
     private String originalHash;
 
     /**
-     * 交易类型
+     * Transaction type
      */
     private int type;
 
     /**
-     * 异构链hash列表
+     * Heterogeneous chainhashlist
      */
     private List<HeterogeneousHash> heterogeneousHashList;
 

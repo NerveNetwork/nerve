@@ -81,13 +81,13 @@ public class AccountController {
     AccountService accountService = ServiceManager.get(AccountService.class);
 
     @RpcMethod("createAccount")
-    @ApiOperation(description = "批量创建账户", order = 101, detailDesc = "创建的账户存在于本地钱包内")
+    @ApiOperation(description = "Batch Create Accounts", order = 101, detailDesc = "The created account exists in the local wallet")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "count", requestType = @TypeDescriptor(value = int.class), parameterDes = "创建数量"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "count", requestType = @TypeDescriptor(value = int.class), parameterDes = "Create quantity"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回账户地址集合", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    @ResponseData(name = "Return value", description = "Return account address set", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
     public RpcResult createAccount(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
         int chainId, count;
@@ -124,15 +124,15 @@ public class AccountController {
     }
 
     @RpcMethod("updatePassword")
-    @ApiOperation(description = "修改账户密码", order = 102)
+    @ApiOperation(description = "Change account password", order = 102)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址"),
-            @Parameter(parameterName = "oldPassword", requestType = @TypeDescriptor(value = String.class), parameterDes = "原密码"),
-            @Parameter(parameterName = "newPassword", requestType = @TypeDescriptor(value = String.class), parameterDes = "新密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address"),
+            @Parameter(parameterName = "oldPassword", requestType = @TypeDescriptor(value = String.class), parameterDes = "Original password"),
+            @Parameter(parameterName = "newPassword", requestType = @TypeDescriptor(value = String.class), parameterDes = "New password")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "是否修改成功")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Is the modification successful")
     }))
     public RpcResult updatePassword(List<Object> params) {
         VerifyUtils.verifyParams(params, 4);
@@ -186,17 +186,17 @@ public class AccountController {
     private long lastTime;
 
     @RpcMethod("getPriKey")
-    @ApiOperation(description = "导出账户私钥", order = 103, detailDesc = "只能导出本地钱包已存在账户的私钥")
+    @ApiOperation(description = "Export account private key", order = 103, detailDesc = "Only the private key of an existing account in the local wallet can be exported")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterDes = "password")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "私钥")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Private key")
     }))
     public RpcResult getPriKey(List<Object> params) {
-        //增加一个频率限制
+        //Add a frequency limit
         if (System.currentTimeMillis() - lastTime < 2000) {
             return RpcResult.failed(RpcErrorCode.ExceedingFrequencyLimit);
         }
@@ -241,14 +241,14 @@ public class AccountController {
     }
 
     @RpcMethod("importPriKey")
-    @ApiOperation(description = "根据私钥导入账户", order = 104, detailDesc = "导入私钥时，需要输入密码给明文私钥加密")
+    @ApiOperation(description = "Import account based on private key", order = 104, detailDesc = "When importing a private key, you need to enter a password to encrypt the plaintext private key")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "priKey", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户明文私钥"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "新密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "priKey", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account plaintext private key"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "New password")
     })
-    @ResponseData(name = "返回值", description = "返回账户地址", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "账户地址")
+    @ResponseData(name = "Return value", description = "Return account address", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Account address")
     }))
     public RpcResult importPriKey(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
@@ -289,14 +289,14 @@ public class AccountController {
     }
 
     @RpcMethod("importKeystore")
-    @ApiOperation(description = "根据keystore导入账户", order = 105)
+    @ApiOperation(description = "according tokeystoreImport account", order = 105)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
             @Parameter(parameterName = "keyStoreJson", requestType = @TypeDescriptor(value = Map.class), parameterDes = "keyStoreJson"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "keystore密码")
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "keystorepassword")
     })
-    @ResponseData(name = "返回值", description = "返回账户地址", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "账户地址")
+    @ResponseData(name = "Return value", description = "Return account address", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Account address")
     }))
     public RpcResult importKeystore(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
@@ -336,17 +336,17 @@ public class AccountController {
     }
 
     @RpcMethod("exportKeystore")
-    @ApiOperation(description = "账户备份，导出账户keystore信息", order = 106)
+    @ApiOperation(description = "Account backup, exporting accountskeystoreinformation", order = 106)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password")
     })
-    @ResponseData(name = "返回值", description = "返回keystore字符串", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "returnkeystorecharacter string", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "result", description = "keystore")
     }))
     public RpcResult exportKeystore(List<Object> params) {
-        //增加一个频率限制
+        //Add a frequency limit
         if (System.currentTimeMillis() - lastTime < 2000) {
             return RpcResult.failed(RpcErrorCode.ExceedingFrequencyLimit);
         }
@@ -397,14 +397,14 @@ public class AccountController {
     }
 
     @RpcMethod("getAccountBalance")
-    @ApiOperation(description = "查询账户余额", order = 107, detailDesc = "根据资产链ID和资产ID，查询本链账户对应资产的余额与nonce值")
+    @ApiOperation(description = "Query account balance", order = 107, detailDesc = "According to the asset chainIDAnd assetsID, query the balance of assets corresponding to this chain account andnoncevalue")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产的链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "The chain of assetsID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = AccountBalance.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = AccountBalance.class))
     public RpcResult getAccountBalance(List<Object> params) {
         VerifyUtils.verifyParams(params, 4);
         int chainId, assetChainId, assetId;
@@ -445,18 +445,18 @@ public class AccountController {
     }
 
     /**
-     * 查询用户资产合计
+     * Query total user assets
      * @param params
      * @return
      */
     @RpcMethod("getBalanceList")
-    @ApiOperation(description = "查询账户余额", order = 107, detailDesc = "根据资产链ID和资产ID，查询本链账户对应资产的余额与nonce值集合")
+    @ApiOperation(description = "Query account balance", order = 107, detailDesc = "According to the asset chainIDAnd assetsID, query the balance of assets corresponding to this chain account andnonceValue set")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址"),
-            @Parameter(parameterName = "assetIdList", requestType = @TypeDescriptor(value = List.class), parameterDes = "资产的ID集合")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address"),
+            @Parameter(parameterName = "assetIdList", requestType = @TypeDescriptor(value = List.class), parameterDes = "AssetsIDaggregate")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = AccountBalance.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = AccountBalance.class))
     public RpcResult getBalanceList(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
         String address;
@@ -492,15 +492,15 @@ public class AccountController {
 
 
     @RpcMethod("setAlias")
-    @ApiOperation(description = "设置账户别名", order = 108, detailDesc = "别名格式为1-20位小写字母和数字的组合，设置别名会销毁1个NULS")
+    @ApiOperation(description = "Set account alias", order = 108, detailDesc = "The alias format is1-20A combination of lowercase letters and numbers, setting an alias will destroy it1individualNULS")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址"),
-            @Parameter(parameterName = "alias", requestType = @TypeDescriptor(value = String.class), parameterDes = "别名"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address"),
+            @Parameter(parameterName = "alias", requestType = @TypeDescriptor(value = String.class), parameterDes = "alias"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account password")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "设置别名交易的hash")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Setting up alias transactionshash")
     }))
     public RpcResult setAlias(List<Object> params) {
         int chainId;
@@ -550,12 +550,12 @@ public class AccountController {
     }
 
     @RpcMethod("validateAddress")
-    @ApiOperation(description = "验证地址是否正确", order = 109, detailDesc = "验证地址是否正确")
+    @ApiOperation(description = "Verify if the address is correct", order = 109, detailDesc = "Verify if the address is correct")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Account address")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "boolean")
     }))
     public RpcResult validateAddress(List<Object> params) {
@@ -580,14 +580,14 @@ public class AccountController {
     }
 
     @RpcMethod("createAccountOffline")
-    @ApiOperation(description = "离线 - 批量创建账户", order = 151, detailDesc = "创建的账户不会保存到钱包中,接口直接返回账户的keystore信息")
+    @ApiOperation(description = "off-line - Batch Create Accounts", order = 151, detailDesc = "The created account will not be saved to the wallet,The interface directly returns the account'skeystoreinformation")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "count", requestType = @TypeDescriptor(value = int.class), parameterDes = "创建数量"),
-            @Parameter(parameterName = "prefix", requestType = @TypeDescriptor(value = String.class), parameterDes = "地址前缀", canNull = true),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "count", requestType = @TypeDescriptor(value = int.class), parameterDes = "Create quantity"),
+            @Parameter(parameterName = "prefix", requestType = @TypeDescriptor(value = String.class), parameterDes = "Address prefix", canNull = true),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回账户信息集合", responseType = @TypeDescriptor(value = List.class, collectionElement = AccountDto.class))
+    @ResponseData(name = "Return value", description = "Return account information collection", responseType = @TypeDescriptor(value = List.class, collectionElement = AccountDto.class))
     public RpcResult createAccountOffline(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
         int chainId, count;
@@ -628,15 +628,15 @@ public class AccountController {
     }
 
     @RpcMethod("getPriKeyOffline")
-    @ApiOperation(description = "离线获取账户明文私钥", order = 152)
+    @ApiOperation(description = "Offline acquisition of account plaintext private key", order = 152)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "账户密文私钥"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "Account ciphertext private key"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "明文私钥")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Clear text private key")
     }))
     public RpcResult getPriKeyOffline(List<Object> params) {
         int chainId;
@@ -666,16 +666,16 @@ public class AccountController {
     }
 
     @RpcMethod("resetPasswordOffline")
-    @ApiOperation(description = "离线修改账户密码", order = 153)
+    @ApiOperation(description = "Offline account password modification", order = 153)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "账户密文私钥"),
-            @Parameter(parameterName = "oldPassword", parameterType = "String", parameterDes = "原密码"),
-            @Parameter(parameterName = "newPassword", parameterType = "String", parameterDes = "新密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "Account ciphertext private key"),
+            @Parameter(parameterName = "oldPassword", parameterType = "String", parameterDes = "Original password"),
+            @Parameter(parameterName = "newPassword", parameterType = "String", parameterDes = "New password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "重置密码后的加密私钥")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Encryption private key after resetting password")
     }))
     public RpcResult resetPasswordOffline(List<Object> params) {
         int chainId;
@@ -711,15 +711,15 @@ public class AccountController {
     }
 
     @RpcMethod("multiSign")
-    @ApiOperation(description = "多账户摘要签名", order = 154, detailDesc = "用于签名离线组装的多账户转账交易,调用接口时，参数可以传地址和私钥，或者传地址和加密私钥和加密密码")
+    @ApiOperation(description = "Multiple Account Summary Signature", order = 154, detailDesc = "Multi account transfer transaction for offline assembly of signatures,When calling the interface, parameters can be passed an address and private key, or an address and encryption private key and encryption password")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "signDtoList", parameterDes = "摘要签名表单", requestType = @TypeDescriptor(value = List.class, collectionElement = SignDto.class)),
-            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "交易序列化16进制字符串")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "signDtoList", parameterDes = "Summary signature form", requestType = @TypeDescriptor(value = List.class, collectionElement = SignDto.class)),
+            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "Transaction serialization16Hexadecimal Strings")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "hash", description = "交易hash"),
-            @Key(name = "txHex", description = "签名后的交易16进制字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "hash", description = "transactionhash"),
+            @Key(name = "txHex", description = "Signed transaction16Hexadecimal Strings")
     }))
     public RpcResult multiSign(List<Object> params) {
         int chainId;
@@ -751,16 +751,16 @@ public class AccountController {
     }
 
     @RpcMethod("priKeySign")
-    @ApiOperation(description = "明文私钥摘要签名", order = 155)
+    @ApiOperation(description = "Clear text private key digest signature", order = 155)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "交易序列化16进制字符串"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "privateKey", parameterType = "String", parameterDes = "账户明文私钥")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "Transaction serialization16Hexadecimal Strings"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "privateKey", parameterType = "String", parameterDes = "Account plaintext private key")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "hash", description = "交易hash"),
-            @Key(name = "txHex", description = "签名后的交易16进制字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "hash", description = "transactionhash"),
+            @Key(name = "txHex", description = "Signed transaction16Hexadecimal Strings")
     }))
     public RpcResult sign(List<Object> params) {
         int chainId;
@@ -803,17 +803,17 @@ public class AccountController {
     }
 
     @RpcMethod("encryptedPriKeySign")
-    @ApiOperation(description = "密文私钥摘要签名", order = 156)
+    @ApiOperation(description = "Cryptography private key digest signature", order = 156)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "交易序列化16进制字符串"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "账户密文私钥"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "Transaction serialization16Hexadecimal Strings"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "encryptedPrivateKey", parameterType = "String", parameterDes = "Account ciphertext private key"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "hash", description = "交易hash"),
-            @Key(name = "txHex", description = "签名后的交易16进制字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "hash", description = "transactionhash"),
+            @Key(name = "txHex", description = "Signed transaction16Hexadecimal Strings")
     }))
     public RpcResult encryptedPriKeySign(List<Object> params) {
         int chainId;
@@ -857,13 +857,13 @@ public class AccountController {
     }
 
     @RpcMethod("createMultiSignAccount")
-    @ApiOperation(description = "创建多签账户", order = 157, detailDesc = "根据多个账户的公钥创建多签账户，minSigns为多签账户创建交易时需要的最小签名数")
+    @ApiOperation(description = "Create a multi signature account", order = 157, detailDesc = "Create multiple signed accounts based on the public keys of multiple accounts,minSignsThe minimum number of signatures required to create transactions for multi signature accounts")
     @Parameters(value = {
-            @Parameter(parameterName = "pubKeys", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "账户公钥集合"),
-            @Parameter(parameterName = "minSigns", requestType = @TypeDescriptor(value = int.class), parameterDes = "最小签名数")
+            @Parameter(parameterName = "pubKeys", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Account public key collection"),
+            @Parameter(parameterName = "minSigns", requestType = @TypeDescriptor(value = int.class), parameterDes = "Minimum number of signatures")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "账户的地址")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "The address of the account")
     }))
     public RpcResult createMultiSignAccount(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
@@ -892,13 +892,13 @@ public class AccountController {
     }
 
     @RpcMethod("createAliasTx")
-    @ApiOperation(description = "离线创建设置别名交易", order = 158)
+    @ApiOperation(description = "Offline creation and setting of alias transactions", order = 158)
     @Parameters({
-            @Parameter(parameterName = "创建别名交易", parameterDes = "创建别名交易表单", requestType = @TypeDescriptor(value = AliasDto.class))
+            @Parameter(parameterName = "Create an alias transaction", parameterDes = "Create an alias transaction form", requestType = @TypeDescriptor(value = AliasDto.class))
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "hash", description = "交易hash"),
-            @Key(name = "txHex", description = "交易序列化16进制字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "hash", description = "transactionhash"),
+            @Key(name = "txHex", description = "Transaction serialization16Hexadecimal Strings")
     }))
     public RpcResult createAliasTx(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
@@ -928,13 +928,13 @@ public class AccountController {
     }
 
     @RpcMethod("createMultiSignAliasTx")
-    @ApiOperation(description = "多签账户离线创建设置别名交易", order = 159)
+    @ApiOperation(description = "Offline creation and setting of alias transactions for multiple signed accounts", order = 159)
     @Parameters({
-            @Parameter(parameterName = "多签账户离线创建设置别名交易", parameterDes = "创建别名交易表单", requestType = @TypeDescriptor(value = MultiSignAliasDto.class))
+            @Parameter(parameterName = "Offline creation and setting of alias transactions for multiple signed accounts", parameterDes = "Create an alias transaction form", requestType = @TypeDescriptor(value = MultiSignAliasDto.class))
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "hash", description = "交易hash"),
-            @Key(name = "txHex", description = "交易序列化16进制字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "hash", description = "transactionhash"),
+            @Key(name = "txHex", description = "Transaction serialization16Hexadecimal Strings")
     }))
     public RpcResult createMultiSignAliasTx(List<Object> params) {
         String address, alias, nonce, remark;
@@ -982,12 +982,12 @@ public class AccountController {
     }
 
     @RpcMethod("getAddressByPriKey")
-    @ApiOperation(description = "根据私钥获取账户地址格式", order = 160)
+    @ApiOperation(description = "Obtain account address format based on private key", order = 160)
     @Parameters({
-            @Parameter(parameterName = "原始私钥", parameterDes = "私钥表单", requestType = @TypeDescriptor(value = PriKeyForm.class))
+            @Parameter(parameterName = "Original private key", parameterDes = "Private Key Form", requestType = @TypeDescriptor(value = PriKeyForm.class))
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "账户地址")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Account address")
     }))
     public RpcResult getAddressByPriKey(List<Object> params) {
         String priKey;
@@ -1001,13 +1001,13 @@ public class AccountController {
     }
 
     @RpcMethod("isBlockAccount")
-    @ApiOperation(description = "是否锁定账户", order = 161)
+    @ApiOperation(description = "Is the account locked", order = 161)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "是否锁定"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "Is it locked"),
     }))
     public RpcResult isBlockAccount(List<Object> params) {
         int chainId;
@@ -1033,12 +1033,12 @@ public class AccountController {
     }
 
     @RpcMethod("getBlockAccountInfo")
-    @ApiOperation(description = "查询锁定账户信息", order = 162)
+    @ApiOperation(description = "Query locked account information", order = 162)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = AccountBlockDTO.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = AccountBlockDTO.class))
     public RpcResult getBlockAccountInfo(List<Object> params) {
         int chainId;
         String address;

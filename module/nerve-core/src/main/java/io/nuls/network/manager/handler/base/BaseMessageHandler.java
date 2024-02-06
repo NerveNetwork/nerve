@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class BaseMessageHandler implements BaseMeesageHandlerInf {
     /**
-     * 实现发送消息
+     * Implement sending messages
      * Implement sending a message
      *
      * @param message message

@@ -43,7 +43,7 @@ public class DisConnectProcessor extends BasicRunnable {
         String msgHash = message.getMsgHash().toHex();
         //chain.getLogger().debug("DisConnect message,msgHash={} recv from node={}", msgHash, nodeId);
         try {
-            //校验签名
+            //Verify signature
             if (!SignatureUtil.validateSignture(message.getConsensusIdentitiesSub().serialize(), message.getSign())) {
                 chain.getLogger().error("msgHash={} recv pocDisConn from node={} validateSignture false", msgHash, nodeId);
                 return;
@@ -55,15 +55,15 @@ public class DisConnectProcessor extends BasicRunnable {
             chain.getLogger().error("msgHash={} recv pocDisConn from node={} error", msgHash, nodeId);
             chain.getLogger().error(e);
         }
-        //获取自身的共识信息
+        //Obtain consensus information from oneself
         ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chainId);
         if (null == consensusKeys) {
-            //非共识节点，无需处理
-            //chain.getLogger().debug("=======不是共识节点，不处理{}消息", nodeId);
+            //Non consensus nodes, no need to handle
+            //chain.getLogger().debug("=======Not a consensus node, not processed{}news", nodeId);
         } else {
-            //获取对方公钥
+            //Obtain the opponent's public key
             byte[] pubKey = message.getSign().getPublicKey();
-            //清除IP
+            //clean upIP
             consensusNetService.disConnNode(chain, pubKey);
         }
     }

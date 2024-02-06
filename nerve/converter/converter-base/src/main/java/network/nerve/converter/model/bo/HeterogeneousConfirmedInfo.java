@@ -34,7 +34,7 @@ public class HeterogeneousConfirmedInfo {
     private String multySignAddress;
     private Long txTime;
     /**
-     * 多签交易的签名列表
+     * Signature list for multi signature transactions
      */
     private List<HeterogeneousAddress> signers;
 

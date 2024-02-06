@@ -37,24 +37,24 @@ import java.util.Map;
 public interface ModuleTxPackageProcessor {
 
     /**
-     * 交易模块打包时, 如果对应交易注册时 packProduce标志是true,
-     * 会把该模块下所有该标志位true的交易, 一起作为参数调用接口进行
-     * 例如内部交易生成等处理, 如dex
-     * 返回新产生的交易
+     * When packaging transaction modules, If the corresponding transaction is registered packProduceThe logo istrue,
+     * It will display all the corresponding flag bits under this moduletrueTransaction, Call the interface as parameters together
+     * For example, internal transaction generation and other processing, asdex
+     * Return newly generated transactions
      * @param chainId
      * @param txs
-     * @param process 0:表示打包时调用 1:表示验证区块时调用
-     * @param height 区块高度
-     * @param blockTime 区块时间
+     * @param process 0:Calling during packaging 1:Calling when validating a block
+     * @param height block height
+     * @param blockTime Block time
      *
-     * @return Map 返回两个列表 1.key:newlyList 新生成的交易, 2.key: rmHashList 需要删除的原始交易hash
+     * @return Map Return two lists 1.key:newlyList Newly generated transactions, 2.key: rmHashList Original transactions that need to be deletedhash
      */
     default Map<String, List<String>> packProduce(int chainId, List<Transaction> txs, int process, long height, long blockTime) throws NulsException {
         return null;
     }
 
     /**
-     * 模块code
+     * modulecode
      * @return
      */
     String getModuleCode();

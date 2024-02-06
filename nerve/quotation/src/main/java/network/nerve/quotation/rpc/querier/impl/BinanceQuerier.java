@@ -41,7 +41,7 @@ import java.util.Map;
 @Component
 public class BinanceQuerier implements Querier {
     /**
-     * 获取交易对价格接口
+     * Obtain transaction pair price interface
      */
     private final String CMD = "/api/v3/ticker/price?symbol=";
 
@@ -55,10 +55,10 @@ public class BinanceQuerier implements Querier {
                 return null;
             }
             BigDecimal res = new BigDecimal((String) data.get("price"));
-            chain.getLogger().info("Binance 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            chain.getLogger().info("Binance Obtaining transaction pairs[{}]price:{}", symbol.toUpperCase(), res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Binance, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("Binance, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

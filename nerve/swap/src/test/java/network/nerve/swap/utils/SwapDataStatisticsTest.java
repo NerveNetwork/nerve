@@ -70,7 +70,7 @@ public class SwapDataStatisticsTest {
         paramMap.put("id", "1234");
         String response = HttpClientUtil.post(requestURL, paramMap);
         if (StringUtils.isBlank(response)) {
-            System.err.println("未能得到返回数据");
+            System.err.println("Failed to obtain return data");
             return null;
         }
         Map<String, Object> map = JSONUtils.json2map(response);
@@ -98,7 +98,7 @@ public class SwapDataStatisticsTest {
         paramMap.put("searchKey", symbol);
         String response = HttpClientUtil.post("https://api.v2.nabox.io/nabox-api/asset/price", paramMap);
         if (StringUtils.isBlank(response)) {
-            System.err.println("未能得到返回数据");
+            System.err.println("Failed to obtain return data");
             return BigDecimal.ZERO;
         }
         Map<String, Object> map = JSONUtils.json2map(response);
@@ -152,19 +152,19 @@ public class SwapDataStatisticsTest {
             int decimals = (Integer) result.get("decimalPlace");
             String symbol = (String) result.get("assetSymbol");
             BigDecimal dValue = value.movePointLeft(decimals);
-            System.out.println(String.format("资产查询: %s-%s, symbol: %s, 交易数量: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString()));
+            System.out.println(String.format("Asset inquiry: %s-%s, symbol: %s, Transaction quantity: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString()));
             BigDecimal price = this.getPrice(assetChainId, assetId, symbol);
             if (price.compareTo(BigDecimal.ZERO) == 0) {
-                System.out.println(String.format("错误的资产，无法获取价格"));
+                System.out.println(String.format("Wrong asset, unable to obtain price"));
                 System.out.println("-----");
                 continue;
             }
             BigDecimal uValue = dValue.multiply(price);
             total = total.add(uValue);
-            System.out.println(String.format("资产结果: %s-%s, symbol: %s, 交易数量: %s, U价格: %s, 交易U价值: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString(), price.toPlainString(), uValue.stripTrailingZeros().toPlainString()));
+            System.out.println(String.format("Asset results: %s-%s, symbol: %s, Transaction quantity: %s, Uprice: %s, transactionUvalue: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString(), price.toPlainString(), uValue.stripTrailingZeros().toPlainString()));
             System.out.println("-----");
         }
-        System.out.println("总交易U价值: " + total.stripTrailingZeros().toPlainString());
+        System.out.println("Total transactionsUvalue: " + total.stripTrailingZeros().toPlainString());
     }
 
     @Test
@@ -207,15 +207,15 @@ public class SwapDataStatisticsTest {
             int decimals = (Integer) result.get("decimalPlace");
             String symbol = (String) result.get("assetSymbol");
             BigDecimal dValue = value.movePointLeft(decimals);
-            System.out.println(String.format("资产查询: %s-%s, symbol: %s, 流动性数量: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString()));
+            System.out.println(String.format("Asset inquiry: %s-%s, symbol: %s, Liquidity quantity: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString()));
             BigDecimal price = this.getPrice(assetChainId, assetId, symbol);
             if (price.compareTo(BigDecimal.ZERO) == 0) {
-                System.out.println(String.format("错误的资产，无法获取价格"));
+                System.out.println(String.format("Wrong asset, unable to obtain price"));
                 System.out.println("-----");
                 continue;
             }
             BigDecimal uValue = dValue.multiply(price);
-            System.out.println(String.format("资产结果: %s-%s, symbol: %s, 流动性数量: %s, U价格: %s, 流动性U价值: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString(), price.toPlainString(), uValue.stripTrailingZeros().toPlainString()));
+            System.out.println(String.format("Asset results: %s-%s, symbol: %s, Liquidity quantity: %s, Uprice: %s, LiquidityUvalue: %s", assetChainId, assetId, symbol, dValue.stripTrailingZeros().toPlainString(), price.toPlainString(), uValue.stripTrailingZeros().toPlainString()));
             System.out.println("-----");
         }
     }

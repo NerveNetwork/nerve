@@ -24,9 +24,9 @@ public class LocalVerifierTest {
     public static void beforeTest() {
         /*CrossChainBootStrap.main(null);
         CrossChainBootStrap accountBootstrap = SpringLiteContext.getBean(CrossChainBootStrap.class);
-        //初始化配置
+        //Initialize configuration
         accountBootstrap.init();
-        //启动时间同步线程
+        //Start time synchronization thread
         localVerifierService = SpringLiteContext.getBean(LocalVerifierService.class);*/
     }
 
@@ -40,10 +40,10 @@ public class LocalVerifierTest {
         RocksDBService.createTable(DB_NAME_CONSUME_CONGIF);
         RocksDBService.createTable(DB_NAME_LOCAL_VERIFIER);
         /*
-            已注册跨链的链信息操作表
+            Registered Cross Chain Chain Information Operation Table
             Registered Cross-Chain Chain Information Operating Table
             key：RegisteredChain
-            value:已注册链信息列表
+            value:Registered Chain Information List
             */
         RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_REGISTERED_CHAIN);
         List<String> list = new ArrayList<>();

@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * 减少保证金交易验证器
+ * Reduce margin trading validators
  *
  * @author tag
  */
@@ -46,13 +46,13 @@ public class WithdrawValidator extends BaseValidator {
             return Result.getFailed(ConsensusErrorCode.DATA_NOT_EXIST);
         }
 
-        //交易发起者是否为委托者
+        //Is the initiator of the transaction the principal
         if (!Arrays.equals(depositPo.getAddress(), txData.getAddress())) {
             chain.getLogger().error("Withdraw -- Account is not the agent Creator");
             return Result.getFailed(ConsensusErrorCode.ACCOUNT_IS_NOT_CREATOR);
         }
 
-        //如果为定期委托则验证委托是否到期
+        //If it is a regular commission, verify whether the commission has expired
         StackingAsset stackingAsset = chainManager.assetStackingVerify(depositPo.getAssetChainId(), depositPo.getAssetId());
         if (null == stackingAsset) {
             chain.getLogger().error("The asset cannot participate in staking");
@@ -73,7 +73,7 @@ public class WithdrawValidator extends BaseValidator {
             }
         }
 
-        //coinData验证
+        //coinDatavalidate
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(), 0);
         long realLockTime = 0;
@@ -84,12 +84,12 @@ public class WithdrawValidator extends BaseValidator {
         if (rs.isFailed()) {
             return rs;
         }
-        //验证nonce值
+        //validatenoncevalue
         if (!ArraysTool.arrayEquals(coinData.getFrom().get(0).getNonce(), CallMethodUtils.getNonce(txData.getJoinTxHash().getBytes()))) {
             chain.getLogger().error("nonce error");
             return Result.getFailed(ConsensusErrorCode.COIN_DATA_VALID_ERROR);
         }
-        //验证手续费
+        //Verification fee
         rs = validFee(chain, coinData, tx);
         if (rs.isFailed()) {
             return rs;

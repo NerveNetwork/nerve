@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 存放相同token 以天为单位的所有报价
+ * Store the sametoken All quotations in days
  * @author: Loki
  * @date: 2019/11/28
  */

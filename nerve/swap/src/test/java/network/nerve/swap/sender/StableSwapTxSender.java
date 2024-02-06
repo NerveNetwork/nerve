@@ -75,7 +75,7 @@ public class StableSwapTxSender extends ApiTxSender {
 
         BigInteger amount = BigInteger.ZERO;
 
-        //追加糖果资产的总额
+        //Total amount of additional candy assets
         LedgerBalance balance = getLedgerBalance(chainId, address, chainId, 1);
         aTx.newFrom().setFrom(balance, amount).endFrom();
 

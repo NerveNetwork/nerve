@@ -59,8 +59,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 确认虚拟银行变更交易业务验证器
- * (创建交易后)
+ * Confirm virtual bank change transaction business validator
+ * (After creating the transaction)
  * @author: Loki
  * @date: 2020/4/15
  */
@@ -83,33 +83,33 @@ public class ConfirmedChangeVirtualBankVerifier {
     public void validate(Chain chain, Transaction tx) throws NulsException {
         byte[] coinData = tx.getCoinData();
         if(coinData != null && coinData.length > 0){
-            // coindata存在数据(coinData应该没有数据)
+            // coindataExisting data(coinDataThere should be no data available)
             throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
         }
         ConfirmedChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmedChangeVirtualBankTxData.class);
         String originalHash = txData.getChangeVirtualBankTxHash().toHex();
         ConfirmedChangeVirtualBankPO po = cfmChangeBankStorageService.find(chain, originalHash);
         if (null != po) {
-            // 说明确认交易业务重复,该原始交易已经有一个确认交易 已确认
+            // Explanation: Confirmation of duplicate transaction business,The original transaction already has a confirmed transaction Confirmed
             throw new NulsException(ConverterErrorCode.CFM_IS_DUPLICATION);
         }
 
-        //获取银行变更交易
+        //Obtain bank change transactions
         Transaction changeVirtualBankTx = TransactionCall.getConfirmedTx(chain, txData.getChangeVirtualBankTxHash());
         if (null == changeVirtualBankTx) {
-            // 交易不存在
+            // Transaction does not exist
             throw new NulsException(ConverterErrorCode.CHANGE_VIRTUAL_BANK_TX_NOT_EXIST);
         }
 
         List<byte[]> agents = txData.getListAgents();
         if (agents.size() != chain.getMapVirtualBank().values().size()) {
-            // 虚拟银行列表不一致
+            // Inconsistent virtual bank list
             throw new NulsException(ConverterErrorCode.VIRTUAL_BANK_MISMATCH);
         }
-        //判断所有地址是否是当前虚拟银行节点
+        //Determine if all addresses are the current virtual bank node
         for (byte[] addrByte : agents) {
             if (!chain.isVirtualBankByAgentAddr(AddressTool.getStringAddressByBytes(addrByte))) {
-                // 虚拟银行列表不一致
+                // Inconsistent virtual bank list
                 throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
             }
         }
@@ -118,13 +118,13 @@ public class ConfirmedChangeVirtualBankVerifier {
 
         for (HeterogeneousConfirmedVirtualBank confirmed : listConfirmed) {
             if(StringUtils.isBlank(confirmed.getHeterogeneousTxHash())){
-                // 说明合并交易后(加入和退出银行出现抵消的情况)没有实际执行异构链的需要, 直接发出确认交易
-                // 找出合并的交易, 验证合并是否是抵消情况
+                // Explanation: After the merger transaction(Offset situation between joining and exiting the bank)There is no actual need to execute heterogeneous chains, Directly send confirmation transaction
+                // Identify the merged transactions, Verify if the merger is an offsetting situation
                 String cvTxhash = changeVirtualBankTx.getHash().toHex();
                 String mergedTxKey = mergeComponentStorageService.getMergedTxKeyByMember(chain, cvTxhash);
                 if(StringUtils.isBlank(mergedTxKey)){
-                    // 不存在合并key
-                    chain.getLogger().error("变更交易不存在合并key, 当前hash:{}, 变更交易hash:{}", tx.getHash().toHex(),  cvTxhash);
+                    // No merge existskey
+                    chain.getLogger().error("There is no merger in the change transactionkey, currenthash:{}, Change transactionhash:{}", tx.getHash().toHex(),  cvTxhash);
                     throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
                 }
                 MergedComponentCallPO mergedTx = mergeComponentStorageService.findMergedTx(chain, mergedTxKey);
@@ -136,23 +136,23 @@ public class ConfirmedChangeVirtualBankVerifier {
                     }
                     Transaction cvBankTx = TransactionCall.getConfirmedTx(chain, hash);
                     if(null == cvBankTx){
-                        chain.getLogger().error("银行变更交易合并成员交易不存在, hash:{}, 变更交易hash:{}",tx.getHash().toHex(), hash);
+                        chain.getLogger().error("Bank change transaction merged member transaction does not exist, hash:{}, Change transactionhash:{}",tx.getHash().toHex(), hash);
                         throw new NulsException(ConverterErrorCode.DATA_NOT_FOUND);
                     }
                     list.add(cvBankTx);
                 }
                 boolean rs = validMergedQuits(chain, list);
                 if(!rs){
-                    chain.getLogger().error("合并没有出现抵消情况, hash:{}",tx.getHash().toHex());
+                    chain.getLogger().error("There was no offsetting situation in the merger, hash:{}",tx.getHash().toHex());
                     throw new NulsException(ConverterErrorCode.DATA_ERROR);
                 }
 
             }else {
-                // 正常验证
+                // Normal verification
                 IHeterogeneousChainDocking HeterogeneousInterface =
                         heterogeneousDockingManager.getHeterogeneousDocking(confirmed.getHeterogeneousChainId());
                 if (null == HeterogeneousInterface) {
-                    // 异构链不存在
+                    // Heterogeneous chain does not exist
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
                 }
                 long startTimeHeterogeneousCall = NulsDateUtils.getCurrentTimeMillis();
@@ -163,33 +163,33 @@ public class ConfirmedChangeVirtualBankVerifier {
                     chain.getLogger().error(e);
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
                 }
-                chain.getLogger().debug("[validate]虚拟银行变更确认交易, 调用异构链[getChangeVirtualBankConfirmedTxInfo]时间:{}, txhash:{}",
+                chain.getLogger().debug("[validate]Virtual Bank Change Confirmation Transaction, Calling heterogeneous chains[getChangeVirtualBankConfirmedTxInfo]time:{}, txhash:{}",
                         NulsDateUtils.getCurrentTimeMillis() - startTimeHeterogeneousCall,
                         tx.getHash().toHex());
                 if (null == info) {
 
-                    // 变更交易不存在
+                    // Change transaction does not exist
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
                 }
 
                 if (confirmed.getEffectiveTime() != info.getTxTime()) {
-                    // 异构交易生效时间不匹配
+                    // Heterogeneous transaction effective time mismatch
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_TIME_MISMATCH);
                 }
                 if (!confirmed.getHeterogeneousAddress().equals(info.getMultySignAddress())) {
-                    // 变更交易数据不匹配
+                    // Change transaction data mismatch
                     throw new NulsException(ConverterErrorCode.VIRTUAL_BANK_MULTIADDRESS_MISMATCH);
                 }
 
-                // 验证 异构链签名列表
+                // validate Heterogeneous Chain Signature List
                 List<HeterogeneousAddress> signedList = confirmed.getSignedHeterogeneousAddress();
                 if (null == signedList || signedList.isEmpty()) {
-                    // 异构链签名列表是空的
+                    // The heterogeneous chain signature list is empty
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY);
                 }
                 List<HeterogeneousAddress> heterogeneousSigners = info.getSigners();
                 if (!HeterogeneousUtil.listHeterogeneousAddressEquals(signedList, heterogeneousSigners)) {
-                    // 异构链签名列表不匹配
+                    // Heterogeneous chain signature list mismatch
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
                 }
             }
@@ -198,7 +198,7 @@ public class ConfirmedChangeVirtualBankVerifier {
     }
 
     /**
-     * 验证原始变更交易合并是否会抵消, 从而无需调用异构链交易
+     * Verify if the original change transaction merger will offset, So there is no need to call heterogeneous chain transactions
      * @param list
      */
     private boolean validMergedQuits(Chain chain, List<Transaction> list) throws NulsException{
@@ -239,7 +239,7 @@ public class ConfirmedChangeVirtualBankVerifier {
             return true;
         }
         try {
-            chain.getLogger().error("[ConfirmedChangeVirtualBankVerifier]合并没有抵消, inSize:{}, outSize:{}, mapAllDirector:{}", inCount, outCount, JSONUtils.obj2json(mapAllDirector));
+            chain.getLogger().error("[ConfirmedChangeVirtualBankVerifier]Merge without offsetting, inSize:{}, outSize:{}, mapAllDirector:{}", inCount, outCount, JSONUtils.obj2json(mapAllDirector));
         } catch (JsonProcessingException e) {
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }

@@ -30,7 +30,7 @@ package network.nerve.quotation.constant;
  */
 public interface QuotationConstant {
 
-    /** 报价的txData数据类型常量 */
+    /** QuotedtxDataData type constant */
     byte QUOTE_TXDATA_TYPE = 1;
 
     String RPC_VERSION = "1.0";
@@ -47,40 +47,40 @@ public interface QuotationConstant {
     int INIT_CAPACITY_4 = 4;
     int INIT_CAPACITY_2 = 2;
 
-    /** 计算价格时保留小数位数 */
+    /** Keep decimal places when calculating prices */
     int SCALE = 8;
 
-    /** 配置信息表名 */
+    /** Configuration Information Table Name */
     String DB_MODULE_CONGIF = "config";
 
-    /** 存储各节点的报价交易数据 */
+    /** Store quotation and transaction data for each node */
     String DB_QUOTATION_NODE_PREFIX = "quotation_node_";
 
-    /** 存储各节点的报价交易数据 */
+    /** Store quotation and transaction data for each node */
     String DB_INTRADAY_QUOTATION_NODE_PREFIX = "Intraday_quotation_node_";
 
-    /** 存储计算后的最终报价 */
+    /** Store the final quotation after calculation */
     String DB_QUOTATION_FINAL_PREFIX = "final_quotation_final_";
 
     String DB_LAST_QUOTATION_PREFIX = "last_quotation_";
 
 
-    /** 存储计算后的最终报价 */
+    /** Store the final quotation after calculation */
     String DB_CONFIRM_FINAL_QUOTATION_PREFIX = "confirm_final_quotation_";
 
     String DB_CONFIRM_LAST_FINAL_QUOTATION_PREFIX = "confirm_last_final_quotation_";
 
     /**
-     * 更新覆盖最近一次确认最终报价时，备份当前报价时的key前缀（以防回滚）
+     * Update to overwrite the last confirmed final quotation, backup the current quotationkeyprefix（To prevent rollback）
      */
 
-    /** 获取报价线程*/
+    /** Get quote thread*/
     String QU_COLLECTOR_THREAD = "quotationCollector";
-    /** 计算最终报价线程*/
+    /** Calculate final quotation thread*/
     String QU_CALCULATOR_THREAD = "quotationCalculator";
-    /** 报价处理task, 初始延迟值(分) */
+    /** Quotation processingtask, Initial delay value(branch) */
     int QU_TASK_INITIALDELAY = 1;
-    /** 报价处理task, 运行周期间隔(分) */
+    /** Quotation processingtask, Run cycle interval(branch) */
     int QUTASK_PERIOD = 3;
 
 
@@ -95,7 +95,7 @@ public interface QuotationConstant {
     String BASIC_QUERIER_THREAD = "basicQuerierThread";
 
     /**
-     * 协议升级的验证key
+     * Verification of protocol upgradekey
      */
     String ANCHOR_TOKEN_USDT = "USDT-USDT";
     String ANCHOR_TOKEN_DAI = "DAI-USDT";
@@ -129,6 +129,8 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_ETC = "ETC-USDT";
     String ANCHOR_TOKEN_BRISE = "BRISE-USDT";
     String ANCHOR_TOKEN_JNS = "JNS-USDT";
+    String ANCHOR_TOKEN_DOGE = "DOGE-USDT";
+    String ANCHOR_TOKEN_ZETA = "ZETA-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

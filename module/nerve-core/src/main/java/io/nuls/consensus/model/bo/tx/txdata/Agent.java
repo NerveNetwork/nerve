@@ -45,96 +45,96 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 节点信息类
+ * Node information class
  * Node information class
  *
  * @author tag
  * 2018/11/6
  */
-@ApiModel(name = "节点信息")
+@ApiModel(name = "Node information")
 public class Agent extends BaseNulsData {
 
     /**
-     * 节点地址
+     * Node address
      * agent address
      **/
-    @ApiModelProperty(description = "节点地址")
+    @ApiModelProperty(description = "Node address")
     private byte[] agentAddress;
 
     /**
-     * 打包地址
+     * Packaging address
      * packing address
      **/
-    @ApiModelProperty(description = "出块地址")
+    @ApiModelProperty(description = "Block address")
     private byte[] packingAddress;
 
     /**
-     * 奖励地址
+     * Reward Address
      * reward address
      */
-    @ApiModelProperty(description = "奖励地址")
+    @ApiModelProperty(description = "Reward Address")
     private byte[] rewardAddress;
 
     /**
-     * 保证金
+     * Margin
      * deposit
      */
-    @ApiModelProperty(description = "保证金")
+    @ApiModelProperty(description = "Margin")
     private BigInteger deposit;
 
     /**
-     * 创建时间
+     * Creation time
      * create time
      **/
-    @ApiModelProperty(description = "创建时间")
+    @ApiModelProperty(description = "Creation time")
     private transient long time;
 
     /**
-     * 所在区块高度
+     * Block height
      * block height
      */
-    @ApiModelProperty(description = "所在区块高度")
+    @ApiModelProperty(description = "Block height")
     private transient long blockHeight = -1L;
 
     /**
-     * 该节点注销所在区块高度
+     * The height of the block where the node is deregistered is located
      * Block height where the node logs out
      */
-    @ApiModelProperty(description = "节点注销高度")
+    @ApiModelProperty(description = "Node deregistration height")
     private transient long delHeight = -1L;
 
     /**
-     * 0:待共识 unConsensus, 1:共识中 consensus
+     * 0:Pending consensus unConsensus, 1:In consensus consensus
      */
-    @ApiModelProperty(description = "状态，0:待共识 unConsensus, 1:共识中 consensus")
+    @ApiModelProperty(description = "Status,0:Pending consensus unConsensus, 1:In consensus consensus")
     private transient int status;
 
     /**
-     * 信誉值
+     * Reputation value
      * credit value
      */
-    @ApiModelProperty(description = "信誉值")
+    @ApiModelProperty(description = "Reputation value")
     private transient double creditVal;
 
     /**
-     * 交易HASH
+     * transactionHASH
      * transaction hash
      */
-    @ApiModelProperty(description = "创建该节点的交易HASH")
+    @ApiModelProperty(description = "Create transactions for this nodeHASH")
     private transient NulsHash txHash;
 
     /**
-     * 别名不序列化
+     * Aliases are not serialized
      * Aliases not serialized
      */
-    @ApiModelProperty(description = "节点别名")
+    @ApiModelProperty(description = "net aliases")
     private transient String alias;
 
     /**
-     * 出块地址公钥
+     * Block address public key
      * Aliases not serialized
      */
-    @ApiModelProperty(description = "节点别名")
+    @ApiModelProperty(description = "net aliases")
     private transient byte[] pubKey;
 
     private transient String packingAddressStr;

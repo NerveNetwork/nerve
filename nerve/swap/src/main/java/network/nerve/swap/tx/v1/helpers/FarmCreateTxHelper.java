@@ -113,7 +113,7 @@ public class FarmCreateTxHelper {
             logger.warn("Incomplete transaction business basic data");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_TX_DATA_ERROR);
         }
-        // 验证2种资产存在
+        // validate2Existing assets
         if (ledgerAssetCache.getLedgerAsset(chainId, txData.getStakeToken()) == null) {
             logger.warn("Incorrect type of stake assets");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_STAKE_ASSET_TYPE_ERROR);
@@ -123,7 +123,7 @@ public class FarmCreateTxHelper {
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SYRUP_ASSET_TYPE_ERROR);
         }
 
-        // 验证每个区块奖励数额区间正确
+        // Verify that the reward amount range for each block is correct
         if (null == txData.getSyrupPerBlock() || txData.getSyrupPerBlock().compareTo(BigInteger.ZERO) <= 0) {
             logger.warn("The number of rewards per block must be greater than 0");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SYRUP_PER_BLOCK_ERROR);
@@ -144,9 +144,9 @@ public class FarmCreateTxHelper {
             logger.warn("Incorrect transaction signature");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SIGNER_COUNT_ERROR);
         }
-        //amount和coindata的保持一致
-        //转入资产地址为adminAddress
-        //接收地址为farm地址
+        //amountandcoindataMaintain consistency
+        //Transferred asset address isadminAddress
+        //The receiving address isfarmaddress
         CoinData coinData;
         try {
             coinData = tx.getCoinDataInstance();

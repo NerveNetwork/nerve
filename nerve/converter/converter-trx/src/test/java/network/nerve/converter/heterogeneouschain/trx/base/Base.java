@@ -174,18 +174,18 @@ public class Base {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算feeLimit
+        // estimatefeeLimit
         System.out.println(String.format("%s, %s, %s, %s", fromAddress, contract, FunctionEncoder.encode(txFunction), value));
         TrxEstimateSun estimateSun = walletApi.estimateSunUsed(fromAddress, contract, txFunction, value);
         if (estimateSun.isReverted()) {
-            System.err.println(String.format("[%s]交易验证失败，原因: %s", txType, estimateSun.getRevertReason()));
+            System.err.println(String.format("[%s]Transaction verification failed, reason: %s", txType, estimateSun.getRevertReason()));
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
         }
         BigInteger feeLimit = TRX_100.multiply(BigInteger.valueOf(5));
         //if (estimateSun.getSunUsed() > 0) {
         //    feeLimit = BigInteger.valueOf(estimateSun.getSunUsed());
         //}
-        System.out.println(String.format("交易类型: %s, 估算的feeLimit: %s", txType, TrxUtil.convertSunToTrx(feeLimit).toPlainString()));
+        System.out.println(String.format("Transaction type: %s, EstimatedfeeLimit: %s", txType, TrxUtil.convertSunToTrx(feeLimit).toPlainString()));
         value = value == null ? BigInteger.ZERO : value;
         String encodedHex = FunctionEncoder.encode(txFunction);
         Contract.TriggerSmartContract trigger =

@@ -99,7 +99,7 @@ public class QuotationServiceImpl implements QuotationService {
         Transaction tx = new Transaction(TxType.QUOTATION);
         tx.setTxData(txData);
         tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
-        //签名
+        //autograph
         sign(tx, address, password);
         return tx;
     }
@@ -128,7 +128,7 @@ public class QuotationServiceImpl implements QuotationService {
 
     private void sign(Transaction tx, String address, String password) throws NulsException {
         if (StringUtils.isBlank(address) || StringUtils.isBlank(password)) {
-            //非共识节点
+            //Non consensus nodes
             throw new NulsException(QuotationErrorCode.NULL_PARAMETER);
         }
         List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();

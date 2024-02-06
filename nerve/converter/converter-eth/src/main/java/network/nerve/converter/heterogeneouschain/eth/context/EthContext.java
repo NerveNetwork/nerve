@@ -49,14 +49,14 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
 public class EthContext implements Serializable {
 
     /**
-     * 当 importAccountByPriKey 或者 importAccountByKeystore 被调用时，覆写这个地址作为虚拟银行管理员地址
+     * When importAccountByPriKey perhaps importAccountByKeystore When called, overwrite this address as the virtual bank administrator address
      */
     public static String ADMIN_ADDRESS;
     public static String ADMIN_ADDRESS_PASSWORD;
     public static String ADMIN_ADDRESS_PUBLIC_KEY;
 
     /**
-     * 待确认交易队列
+     * Pending confirmation transaction queue
      */
     public static LinkedBlockingDeque<EthUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
 
@@ -65,7 +65,7 @@ public class EthContext implements Serializable {
     public static List<String> RPC_ADDRESS_LIST = new ArrayList<>();
     public static List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
-     * 日志实例
+     * Log instance
      */
     private static NulsLogger logger;
     private static HeterogeneousCfg config;
@@ -143,7 +143,7 @@ public class EthContext implements Serializable {
                 ETH_GAS_PRICE = ethGasPrice;
             }
             /*
-            回滚异构网络打包价格，稳定6次后再更新的机制，原因是造成前后端price不一致
+            Rolling back heterogeneous network packaging prices for stability6The mechanism of updating again after the second update is due to the cause of front-end and back-end issuespriceInconsistent
             if (ETH_GAS_PRICE == null || ETH_GAS_PRICE.compareTo(ethGasPrice) <= 0) {
                 ETH_GAS_PRICE = ethGasPrice;
             } else {

@@ -28,8 +28,6 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.*;
 import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.base.signture.MultiSignTxSignature;
-import io.nuls.base.signture.P2PHKSignature;
-import io.nuls.base.signture.SignatureUtil;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.SyncStatusEnum;
@@ -106,14 +104,14 @@ public class VoteProposalProcessor implements TransactionProcessor {
             for (Transaction tx : txs) {
                 VoteProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), VoteProposalTxData.class);
                 if (null == txData.getProposalTxHash() || txData.getProposalTxHash().isBlank()) {
-                    // 投票交易中提案hash不存在
+                    // Proposal in voting transactionshashNot present
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.PROPOSAL_NOT_EXIST.getCode();
                     log.error("There is no proposal hash on the Vote. vote_txHash:{}", tx.getHash().toHex());
                     continue;
                 }
                 if (null == ProposalVoteChoiceEnum.getEnum(txData.getChoice())) {
-                    // 投票选项错误
+                    // Voting option error
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.VOTE_CHOICE_ERROR.getCode();
                     log.error("Choice error. choice:{}", txData.getChoice());
@@ -122,7 +120,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
 
                 ProposalPO proposalPo = this.proposalStorageService.find(chain, txData.getProposalTxHash());
                 if (null == proposalPo) {
-                    // 提案不存在
+                    // Proposal does not exist
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.PROPOSAL_NOT_EXIST.getCode();
                     log.error(ConverterErrorCode.PROPOSAL_NOT_EXIST.getMsg());
@@ -130,16 +128,16 @@ public class VoteProposalProcessor implements TransactionProcessor {
                 }
 
                 if (proposalPo.getStatus() != ProposalVoteStatusEnum.VOTING.value()) {
-                    // 该提案已不能投票
+                    // The proposal is no longer eligible for voting
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.VOTING_STOPPED.getCode();
                     log.error("Proposal can not vote. Status:{}", ProposalVoteStatusEnum.getEnum(proposalPo.getStatus()));
                     continue;
                 }
-                // 本地最新高度(如果是同步模式中, 则为同步的最新高度)
+                // Latest local altitude(If it is in synchronous mode, Then it is the latest synchronized height)
                 long currentHeight = chain.getLatestBasicBlock().getHeight();
                 if (proposalPo.getVoteEndHeight() < currentHeight) {
-                    // 该提案投票已截止
+                    // The voting on this proposal has been closed
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.VOTING_STOPPED.getCode();
                     log.error("The vote on the proposal has closed. VoteEndHeight:{}, currentHeight:{}",
@@ -156,7 +154,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     address = addressObj.getAddressBytes();
                 } else {
                     TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
-                    //第一个签名为投票人签名
+                    //The first signature is the signature of the voter
                     address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
                 }
 
@@ -171,7 +169,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     }
                 }
                 if (!addrMatched) {
-                    // 该投票签名者与投票人不匹配, 该投票无效
+                    // The signer of the vote does not match the voter, This vote is invalid
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.VOTER_SIGNER_MISMATCH.getCode();
                     log.error("The vote tx coinFrom address and signer address is mismatch. ");
@@ -181,30 +179,30 @@ public class VoteProposalProcessor implements TransactionProcessor {
                 String voterAddress = AddressTool.getStringAddressByBytes(address);
                 String key = proposalPo.getHash().toHex().toLowerCase() + voterAddress;
                 if (setDuplicate.contains(key)) {
-                    // 业务重复的投票
+                    // Voting for duplicate business transactions
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DUPLICATE_VOTE.getCode();
                     log.error(ConverterErrorCode.DUPLICATE_VOTE.getMsg());
                     continue;
                 }
-                // 投票资格
+                // Voting qualifications
                 boolean rs = suffrage(chain,
                         ProposalTypeEnum.getEnum(proposalPo.getType()),
                         ProposalVoteRangeTypeEnum.getEnum(proposalPo.getVoteRangeType()),
                         voterAddress,
                         currentHeight);
                 if (!rs) {
-                    // 投票人没有投票权
+                    // Voters do not have voting rights
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.NO_VOTING_RIGHTS.getCode();
                     log.error("The voter has no right to vote. Proposal_voter_range:{}",
                             ProposalVoteRangeTypeEnum.getEnum(proposalPo.getVoteRangeType()));
                     continue;
                 }
-                // 投票人没有重复投票（一经确认，不可修改）
+                // Voters did not vote repeatedly（Once confirmed, cannot be modified）
                 VoteProposalPO votePO = voteProposalStorageService.find(chain, txData.getProposalTxHash(), address);
                 if (null != votePO) {
-                    // 该地址已对该提案投过票
+                    // The address has already voted on the proposal
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DUPLICATE_VOTE.getCode();
                     log.error("The voter have voted on the proposal.  voter:{}, proposalHash:{}",
@@ -224,7 +222,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
     }
 
     /**
-     * 验证是否有投票资格
+     * Verify eligibility to vote
      *
      * @param chain
      * @param rangeEnum
@@ -265,7 +263,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
             if (null == txs || txs.isEmpty()) {
                 return true;
             }
-            // 存储基本数据, 更新提案状态.
+            // Store basic data, Update proposal status.
             Set<ExeProposalPO> exeProposalPOSet = null;
             for (Transaction tx : txs) {
                 VoteProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), VoteProposalTxData.class);
@@ -280,7 +278,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     address = addressObj.getAddressBytes();
                 } else {
                     TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
-                    //第一个签名为投票人签名
+                    //The first signature is the signature of the voter
                     address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
                 }
 
@@ -294,7 +292,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     chain.getLogger().error("[commit] Save vote failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
-                // 为提案处理票数
+                // Handling votes for proposals
                 po.voteCommit(chain, votePo);
                 res = this.proposalStorageService.save(chain, po);
                 if (!res) {
@@ -302,11 +300,11 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
                 if (po.getStatus() == ProposalVoteStatusEnum.REJECTED.value()) {
-                    // 从投票中的提案移除
+                    // Remove proposals from voting
                     chain.getVotingProposalMap().remove(po.getHash());
                     proposalVotingStorageService.delete(chain, po.getHash());
                 } else if (po.getStatus() == ProposalVoteStatusEnum.ADOPTED.value()) {
-                    // 投票通过 可以执行提案
+                    // Voted through Can execute proposal
                     ExeProposalPO exeProposalPO = new ExeProposalPO();
                     exeProposalPO.setProposalTxHash(txData.getProposalTxHash());
                     exeProposalPO.setHeight(blockHeader.getHeight());
@@ -318,27 +316,27 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     }
                     exeProposalPOSet.add(exeProposalPO);
 
-                    // 如果是撤销虚拟银行节点,则先执行提案,保证节点数据一致性
+                    // If it is to revoke the virtual bank node,Then execute the proposal first,Ensure node data consistency
                     if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
                         if (syncStatus == SyncStatusEnum.RUNNING.value()) {
                             heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, true);
                         }
                         if (!disqualificationStorageService.save(chain, po.getAddress())) {
-                            chain.getLogger().error("[commit] 地址加入[撤销银行资格列表]失败 address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
+                            chain.getLogger().error("[commit] Add address[Revocation of Bank Qualification List]fail address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                             throw new NulsException(ConverterErrorCode.DISQUALIFICATION_FAILED);
                         }
-                        chain.getLogger().info("[commit] 撤销银行资格提案投票通过, 银行节点地址加入[撤销银行资格列表] address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
+                        chain.getLogger().info("[commit] Proposal to revoke bank qualification passed by vote, Add bank node address[Revocation of Bank Qualification List] address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                     }
-                    // 从投票中的提案移除
+                    // Remove proposals from voting
                     chain.getVotingProposalMap().remove(po.getHash());
                     proposalVotingStorageService.delete(chain, po.getHash());
                 }
-                chain.getLogger().info("[commit] 提案投票成功 hash:{}, 提案hash:{}, 投票地址:{}",
+                chain.getLogger().info("[commit] Proposal voted successfully hash:{}, proposalhash:{}, Voting address:{}",
                         tx.getHash().toHex(), txData.getProposalTxHash().toHex(), AddressTool.getStringAddressByBytes(address));
             }
             if (null != exeProposalPOSet) {
                 for (ExeProposalPO exeProposalPO : exeProposalPOSet) {
-                    // 放入队列
+                    // Put into queue
                     chain.getExeProposalQueue().offer(exeProposalPO);
                     exeProposalStorageService.save(chain, exeProposalPO);
                 }
@@ -379,7 +377,7 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     address = addressObj.getAddressBytes();
                 } else {
                     TransactionSignature signature = ConverterUtil.getInstance(tx.getTransactionSignature(), TransactionSignature.class);
-                    //第一个签名为投票人签名
+                    //The first signature is the signature of the voter
                     address = AddressTool.getAddress(signature.getP2PHKSignatures().get(0).getPublicKey(), chainId);
                 }
 
@@ -388,13 +386,13 @@ public class VoteProposalProcessor implements TransactionProcessor {
                     chain.getLogger().error("[rollback] remove vote failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
-                // 为提案处理票数
+                // Handling votes for proposals
                 ProposalPO po = this.proposalStorageService.find(chain, txData.getProposalTxHash());
                 po.voteRollback(chain, txData.getChoice(), AddressTool.getStringAddressByBytes(address));
                 if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.EXPELLED) {
                     heterogeneousService.saveExeDisqualifyBankProposalStatus(chain, false);
                     if (!disqualificationStorageService.delete(chain, po.getAddress())) {
-                        chain.getLogger().error("[rollback]地址移除[撤销银行资格列表]失败 address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
+                        chain.getLogger().error("[rollback]Address removal[Revocation of Bank Qualification List]fail address:{}", AddressTool.getStringAddressByBytes(po.getAddress()));
                         throw new NulsException(ConverterErrorCode.DISQUALIFICATION_FAILED);
                     }
                 }

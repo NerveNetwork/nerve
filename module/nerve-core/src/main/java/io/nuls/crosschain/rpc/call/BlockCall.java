@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 调用其他模块跟交易相关的接口
+ * Calling other modules and transaction related interfaces
  *
  * @author tag
  * @date 2019/4/12
@@ -19,7 +19,7 @@ import java.util.Map;
 public class BlockCall {
 
     /**
-     * 查询区块状态
+     * Query block status
      * */
     public static int getBlockStatus(Chain chain) {
         try {

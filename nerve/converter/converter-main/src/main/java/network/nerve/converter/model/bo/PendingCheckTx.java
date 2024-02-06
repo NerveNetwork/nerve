@@ -36,24 +36,24 @@ import java.util.List;
  */
 public class PendingCheckTx {
     /**
-     * 检查次数
+     * Inspection frequency
      */
     private int checkTimes;
 
     private NulsHash hash;
 
     /**
-     * 原始交易hash
+     * Original transactionhash
      */
     private String originalHash;
 
     /**
-     * 交易类型
+     * Transaction type
      */
     private int type;
 
     /**
-     * 异构链hash列表
+     * Heterogeneous chainhashlist
      */
     private List<HeterogeneousHash> heterogeneousHashList;
 

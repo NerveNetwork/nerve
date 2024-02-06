@@ -36,14 +36,14 @@ import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGH
 import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
 
 /**
- * 提现交易txdata
+ * Withdrawal transactionstxdata
  * @author: Loki
  * @date: 2020-02-17
  */
 public class WithdrawalTxData extends BaseNulsData {
 
     /**
-     * 提现到账的对应异构链地址
+     * Corresponding heterogeneous chain addresses for withdrawal to account
      */
     private String heterogeneousAddress;
 

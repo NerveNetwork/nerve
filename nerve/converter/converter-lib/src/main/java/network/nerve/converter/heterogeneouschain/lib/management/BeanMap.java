@@ -39,15 +39,41 @@ public class BeanMap {
     }
 
     public void add(Class clazz) throws Exception {
-        beanMap.put(clazz.getName(), clazz.getDeclaredConstructor().newInstance());
+        Object obj = clazz.getDeclaredConstructor().newInstance();
+        Class temp = clazz;
+        while (true) {
+            if (temp == Object.class || temp == null) {
+                break;
+            }
+            beanMap.put(temp.getName(), obj);
+            temp = temp.getSuperclass();
+        }
     }
 
     public void add(Class clazz, Object obj) throws Exception {
-        beanMap.put(clazz.getName(), obj);
+        Class temp = clazz;
+        while (true) {
+            if (temp == Object.class || temp == null) {
+                break;
+            }
+            beanMap.put(temp.getName(), obj);
+            temp = temp.getSuperclass();
+        }
     }
 
     public Object get(Class clazz) {
-        return beanMap.get(clazz.getName());
+        Class temp = clazz;
+        while (true) {
+            if (temp == Object.class || temp == null) {
+                break;
+            }
+            Object obj = beanMap.get(temp.getName());
+            if (obj != null) {
+                return obj;
+            }
+            temp = temp.getSuperclass();
+        }
+        return null;
     }
 
     public Collection<Object> values() {

@@ -43,7 +43,7 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 @Component
 public class ProposalStorageServiceImpl implements ProposalStorageService {
     /**
-     * 提案执行业务hash 与提案交易hash的关系 前缀
+     * Proposal execution businesshash Trading with proposalshashThe relationship between prefix
      */
     private final String EXE_BUSINESS_PREFIX = "exeBusinessPrefix_";
 

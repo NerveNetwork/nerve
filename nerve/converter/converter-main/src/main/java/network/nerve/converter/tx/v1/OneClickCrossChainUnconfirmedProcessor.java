@@ -26,9 +26,7 @@ package network.nerve.converter.tx.v1;
 
 import io.nuls.base.data.BlockHeader;
 import io.nuls.base.data.Transaction;
-import io.nuls.base.data.TxData;
 import io.nuls.base.protocol.TransactionProcessor;
-import io.nuls.base.protocol.TxDefine;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -40,7 +38,6 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousHash;
 import network.nerve.converter.model.txdata.OneClickCrossChainUnconfirmedTxData;
-import network.nerve.converter.model.txdata.RechargeUnconfirmedTxData;
 import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 import network.nerve.converter.utils.ConverterUtil;
@@ -75,19 +72,19 @@ public class OneClickCrossChainUnconfirmedProcessor implements TransactionProces
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 OneClickCrossChainUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainUnconfirmedTxData.class);
                 if(!setDuplicate.add(txData.getOriginalTxHash().getHeterogeneousHash().toLowerCase())){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
                             tx.getHash().toHex(), txData.getOriginalTxHash().getHeterogeneousHash());
                     continue;
                 }
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -117,7 +114,7 @@ public class OneClickCrossChainUnconfirmedProcessor implements TransactionProces
             for (Transaction tx : txs) {
                 OneClickCrossChainUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainUnconfirmedTxData.class);
                 HeterogeneousHash heterogeneousHash = txData.getOriginalTxHash();
-                chain.getLogger().info("[commit] [{}]异构链组件解析到一键跨链交易[Pending] hash:{}, 异构链交易hash:{}", heterogeneousHash.getHeterogeneousChainId(), tx.getHash().toHex(), heterogeneousHash.getHeterogeneousHash());
+                chain.getLogger().info("[commit] [{}]Resolving heterogeneous chain components to one click cross chain transactions[Pending] hash:{}, Heterogeneous Chain Tradinghash:{}", heterogeneousHash.getHeterogeneousChainId(), tx.getHash().toHex(), heterogeneousHash.getHeterogeneousHash());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

@@ -11,7 +11,7 @@ public class PocbftConstant {
 
     /**
      * unit:round of consensus
-     * 用于计算信誉值（表示只用最近这么多轮的轮次信息来计算信誉值）
+     * Used to calculate reputation value（Indicates that only the most recent round information is used to calculate the reputation value）
      */
     public static int getRANGE_OF_CAPACITY_COEFFICIENT(Chain chain) {
         if (chain.getBestHeader().getHeight() > chain.getConfig().getV1_6_0Height()) {

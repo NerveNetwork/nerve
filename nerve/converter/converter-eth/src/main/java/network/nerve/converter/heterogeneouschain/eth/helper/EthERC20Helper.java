@@ -80,12 +80,12 @@ public class EthERC20Helper {
                 if (topics.size() == 0) {
                     continue;
                 }
-                // ERC20 topics 解析事件名
+                // ERC20 topics Parsing event names
                 if (topics.get(0).equals(EthConstant.EVENT_HASH_ERC20_TRANSFER)) {
-                    // 为转账
+                    // For transfer
                     String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
                     toAddress = toAddress.toLowerCase();
-                    // 接收地址不是监听的多签地址
+                    // The receiving address is not a listening multi signature address
                     if (!isListening.test(toAddress)) {
                         return false;
                     }
@@ -96,7 +96,7 @@ public class EthERC20Helper {
                         data = topics.get(3);
                     }
                     String[] v = data.split("x");
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = new BigInteger(v[1], 16);
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setTo(toAddress);

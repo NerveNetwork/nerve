@@ -38,7 +38,7 @@ import io.nuls.core.crypto.HexUtil;
 
 
 /**
- * 处理收到的{@link ConsensusShareMsg},共识节点信息分享
+ * Process received{@link ConsensusShareMsg},Consensus node information sharing
  *
  * @author lanjinsheng
  * @version 1.0

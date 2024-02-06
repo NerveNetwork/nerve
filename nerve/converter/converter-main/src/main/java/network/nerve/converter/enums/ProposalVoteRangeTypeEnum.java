@@ -32,7 +32,7 @@ import java.util.Map;
  * @date: 2020-03-04
  */
 public enum ProposalVoteRangeTypeEnum {
-    //类型 1:虚拟银行节点, 2:共识节点, 3:所有持币人
+    //type 1:Virtual Bank Node, 2:Consensus node, 3:All coin holders
     BANK((byte) 1),
 
     AGENT((byte) 2),

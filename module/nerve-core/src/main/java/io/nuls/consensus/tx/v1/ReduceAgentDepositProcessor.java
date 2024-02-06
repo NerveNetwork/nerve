@@ -31,7 +31,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * CoinBase交易处理器
+ * CoinBaseTransaction processor
  *
  * @author tag
  * @date 2019/10/22
@@ -98,7 +98,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
         Result rs;
         for (Transaction tx : txs) {
             try {
-                //验证停止节点交易时间正确性
+                //Verify the correctness of stopping node transaction time
                 long time = NulsDateUtils.getCurrentTimeSeconds();
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
@@ -124,7 +124,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.CONFLICT_ERROR.getCode();
                 }
 
-                //委托金额超出节点最大委托金额
+                //The entrusted amount exceeds the maximum entrusted amount of the node
                 NulsHash agentHash = txData.getAgentHash();
                 if (appendTotalAmountMap.containsKey(agentHash)) {
                     BigInteger totalDeposit = appendTotalAmountMap.get(agentHash).subtract(txData.getAmount());
@@ -174,7 +174,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!commitResult) {
             for (Transaction commitTx : commitSuccessList) {
                 reduceDepositRollback(commitTx, blockHeader, chain);
@@ -200,7 +200,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 reduceDepositCommit(commitTx, blockHeader, chain);
@@ -219,13 +219,13 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
         ChangeAgentDepositPo po = new ChangeAgentDepositPo(data, tx.getTime(), tx.getHash(), height);
-        //保存追加记录
+        //Save additional records
         if (!agentDepositManager.saveReduceDeposit(chain, po)) {
             chain.getLogger().error("Failed to save the reduce agent deposit record");
             return false;
         }
 
-        //修改节点保证金金额
+        //Modify node deposit amount
         Agent agent = agentManager.getAgentByHash(chain, po.getAgentHash());
         BigInteger oldDeposit = agent.getDeposit();
         BigInteger newDeposit = oldDeposit.subtract(po.getAmount());
@@ -236,7 +236,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
 
-        //节点保证金nonce信息变更
+        //Node marginnonceInformation changes
         if (!AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false)) {
             agent.setDeposit(oldDeposit);
             agentManager.updateAgent(chain, agent);
@@ -257,7 +257,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
         ChangeAgentDepositPo po = new ChangeAgentDepositPo(data, tx.getTime(), tx.getHash(), height);
-        //修改节点保证金金额
+        //Modify node deposit amount
         Agent agent = agentManager.getAgentByHash(chain, po.getAgentHash());
         BigInteger newDeposit = agent.getDeposit();
         BigInteger oldDeposit = newDeposit.add(po.getAmount());
@@ -271,7 +271,7 @@ public class ReduceAgentDepositProcessor implements TransactionProcessor {
             chain.getLogger().error("Agent deposit modification failed");
             return false;
         }
-        //删除追加记录
+        //Delete Append Record
         if (!agentDepositManager.removeReduceDeposit(chain, po.getTxHash())) {
             AgentDepositNonceManager.unLockTxCommit(chain, po.getAgentHash(), tx, false);
             agent.setDeposit(oldDeposit.subtract(po.getAmount()));

@@ -10,35 +10,35 @@ import java.util.Map;
  * */
 public interface ChainService {
     /**
-     * 查询黄牌列表
+     * Query Yellow Card List
      * @param params
      * @return Result
      * */
     Result getPublishList(Map<String,Object> params);
 
     /**
-     * 查询全网共识信息
+     * Query consensus information across the entire network
      * @param params
      * @return Result
      * */
     Result getWholeInfo(Map<String,Object> params);
 
     /**
-     * 查询指定账户的共识信息
+     * Query consensus information for specified accounts
      * @param params
      * @return Result
      * */
     Result getInfo(Map<String,Object> params);
 
     /**
-     * 获取当前轮次信息
+     * Obtain current round information
      * @param params
      * @return Result
      * */
     Result getCurrentRoundInfo(Map<String,Object> params);
 
     /**
-     * 获取指定区块轮次
+     * Obtain specified block rounds
      * @param params
      * @return Result
      * */
@@ -46,28 +46,28 @@ public interface ChainService {
 
 
     /**
-     * 记录分叉证据
+     * Record evidence of bifurcation
      * @param params
      * @return Result
      * */
     Result addEvidenceRecord(Map<String,Object> params);
 
     /**
-     * 是否为共识节点
+     * Is it a consensus node
      * @param params
      * @return Result
      * */
     Result isConsensusAgent(Map<String,Object> params);
 
     /**
-     * 双花交易记录
+     * Shuanghua transaction records
      * @param params
      * @return Result
      * */
     Result doubleSpendRecord(Map<String,Object> params);
 
     /**
-     * 获取共模块识配置信息
+     * Obtain common module recognition configuration information
      * @param params
      * @return Result
      * */
@@ -75,21 +75,21 @@ public interface ChainService {
 
 
     /**
-     * 获取种子节点信息
+     * Obtain seed node information
      * @param params
      * @return Result
      * */
     Result getSeedNodeInfo(Map<String,Object> params);
 
     /**
-     * 查询Stacking利率加成信息
+     * queryStackingInterest rate markup information
      * @param params
      * @return Result
      * */
     Result getRateAddition(Map<String,Object> params);
 
     /**
-     * 查询指定高度区块共识奖励单位
+     * Query specified height block consensus reward units
      * @param params
      * @return Result
      * */

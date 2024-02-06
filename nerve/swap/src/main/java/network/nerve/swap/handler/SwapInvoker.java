@@ -63,14 +63,14 @@ public class SwapInvoker implements ISwapInvoker {
         }
         Chain chain = chainManager.getChain(chainId);
         BatchInfo batchInfo = chain.getBatchInfo();
-        // 缓存高度必须一致
+        // Cache height must be consistent
         if (blockHeight != batchInfo.getCurrentBlockHeader().getHeight()) {
             throw new NulsException(SwapErrorCode.BLOCK_HEIGHT_INCONSISTENCY);
         }
-        // 刷新临时余额
+        // Refresh temporary balance
         LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
         tempBalanceManager.refreshTempBalance(chainId, tx, blockTime);
-        // 执行交易业务
+        // Execute transaction business
         return iSwapHandler.execute(chainId, tx, blockHeight, blockTime);
     }
 }

@@ -93,7 +93,7 @@ public class HeterogeneousChainManager {
     }
 
     /**
-     * 根据异构链名称获取chainId
+     * Obtain based on heterogeneous chain nameschainId
      */
     public int getHeterogeneousChainIdByName(String heterogeneousChainName) throws NulsException {
         heterogeneousChainName = heterogeneousChainName.trim().toLowerCase();
@@ -110,11 +110,11 @@ public class HeterogeneousChainManager {
     }
 
     /**
-     * 异构链多签地址变更后，调用此函数持久化更新
-     * 更新异构链多签地址
+     * Call this function to update persistently after the address of multiple tags in the heterogeneous chain is changed
+     * Update heterogeneous chain multi signature addresses
      */
     public void updateMultySignAddress(int heterogeneousChainId, String multySignAddress) throws NulsException {
-        logger().info("持久化更新多签合约地址, heterogeneousChainId: {}, new: {}", heterogeneousChainId, multySignAddress);
+        logger().info("Persistent update of multiple contract addresses, heterogeneousChainId: {}, new: {}", heterogeneousChainId, multySignAddress);
         HeterogeneousChainInfo info = heterogeneousChainInfoStorageService.getHeterogeneousChainInfo(heterogeneousChainId);
         if (info == null) {
             logger().error("error heterogeneousChainId: {}", heterogeneousChainId);
@@ -130,7 +130,7 @@ public class HeterogeneousChainManager {
     }
 
     /**
-     * 初始化所有异构链信息
+     * Initialize all heterogeneous chain information
      */
     public void initHeterogeneousChainInfo() throws Exception {
         if (!isInited) {
@@ -152,7 +152,7 @@ public class HeterogeneousChainManager {
                     registerList.add((IHeterogeneousChainRegister) object);
                 }
             }
-            // 按指定顺序执行异构链注册
+            // Perform heterogeneous chain registration in the specified order
             registerList.sort(new Comparator<IHeterogeneousChainRegister>() {
                 @Override
                 public int compare(IHeterogeneousChainRegister o1, IHeterogeneousChainRegister o2) {
@@ -171,35 +171,35 @@ public class HeterogeneousChainManager {
                 HeterogeneousCfg heterogeneousCfg = chain.getHeterogeneousCfg(chainId, 1);
                 if (heterogeneousCfg == null)
                     continue;
-                // 执行异构链的初始化函数
+                // Execute initialization functions for heterogeneous chains
                 String dbName = register.init(heterogeneousCfg, chain.getLogger());
-                // add by pierre at 2023/9/5 数据库合并
+                // add by pierre at 2023/9/5 Database merge
                 do {
-                    //检查此链DB是否已合并
+                    //Check this chainDBHas it been merged
                     boolean hadDBMerged = heterogeneousChainInfoStorageService.hadDBMerged(chainId);
                     if (hadDBMerged) {
-                        logger().info("[{}]链DB[{}]已合并至[{}]", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        logger().info("[{}]chainDB[{}]Merged to[{}]", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
                         converterCoreApi.setDbMergedStatus(chainId);
                         break;
                     }
-                    //检查在表列表中是否存在此链DB，不存在则使用合并表，此链DB打上已合并标记
+                    //Check if this chain exists in the table listDBIf it does not exist, use a merged table, this chainDBMark as merged
                     RocksDB table = RocksDBManager.getTable(dbName);
                     if (table == null) {
-                        logger().info("[{}]链DB使用合并表[{}]", AssetName.getEnum(chainId).name(), ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
+                        logger().info("[{}]chainDBUsing Merge Tables[{}]", AssetName.getEnum(chainId).name(), ConverterDBConstant.DB_HETEROGENEOUS_CHAIN);
                         heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
                         converterCoreApi.setDbMergedStatus(chainId);
                         break;
                     }
                     byte[] prefix = ConverterDBUtil.stringToBytes(chainId + "_");
-                    //此链DB执行合并
+                    //This chainDBExecute merge
                     RocksIterator iterator = table.newIterator();
                     int count = 0;
                     for (iterator.seekToFirst(); iterator.isValid(); iterator.next()) {
                         RocksDBManager.put(ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, ArraysTool.concatenate(prefix, iterator.key()), iterator.value());
                         count++;
                     }
-                    //此链DB打上已合并标记
-                    logger().info("[{}]链DB[{}]已合并至[{}]，数目: {}", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, count);
+                    //This chainDBMark as merged
+                    logger().info("[{}]chainDB[{}]Merged to[{}]Number: {}", AssetName.getEnum(chainId).name(), dbName, ConverterDBConstant.DB_HETEROGENEOUS_CHAIN, count);
                     heterogeneousChainInfoStorageService.markMergedChainDB(chainId);
                     converterCoreApi.setDbMergedStatus(chainId);
                     RocksDBManager.destroyTable(dbName);
@@ -208,10 +208,10 @@ public class HeterogeneousChainManager {
                 } while (false);
                 // end code by pierre
                 HeterogeneousChainInfo chainInfo = register.getChainInfo();
-                // 保存异构链symbol和chainId的关系
+                // Save heterogeneous chainssymbolandchainIdThe relationship between
                 heterogeneousChainIdRuleMap.put(chainInfo.getChainName(), chainId);
                 String multySignAddress = chainInfo.getMultySignAddress();
-                // 持久化存储异构链基本信息
+                // Basic information of persistent storage heterogeneous chains
                 if (StringUtils.isNotBlank(multySignAddress) && !heterogeneousChainMap.containsKey(chainId)) {
                     try {
                         heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
@@ -220,20 +220,32 @@ public class HeterogeneousChainManager {
                     }
                     heterogeneousChainMap.put(chainId, chainInfo);
                 }
+                if (chainId == 202) {
+                    HeterogeneousChainInfo chainInfoDB = heterogeneousChainMap.get(chainId);
+                    if (!chainInfoDB.getMultySignAddress().equals(chainInfo.getMultySignAddress())
+                            && chainInfoDB.getMultySignAddress().equalsIgnoreCase(chainInfo.getMultySignAddress())) {
+                        try {
+                            heterogeneousChainInfoStorageService.saveHeterogeneousChainInfo(chainId, chainInfo);
+                        } catch (Exception e) {
+                            throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
+                        }
+                        heterogeneousChainMap.put(chainId, chainInfo);
+                    }
+                }
                 IHeterogeneousChainDocking docking = register.getDockingImpl();
-                // 执行异构链注册
+                // Perform heterogeneous chain registration
                 HeterogeneousChainRegisterInfo registerInfo = heterogeneousChainRegister.register(converterConfig.getChainId(), chainId, docking);
-                // 向异构链组件返回注册信息
+                // Return registration information to heterogeneous chain components
                 register.registerCallBack(registerInfo);
-                // 读取最新的docking contract signature version
+                // Read the latestdocking contract signature version
                 docking.initialSignatureVersion();
-                // 设置价格Key, 通过喂价模块获取价格
+                // Set priceKey, Obtain prices through the pricing module
                 AssetName assetName = AssetName.getEnum(chainId);
                 if (assetName == null) {
                     throw new RuntimeException("Empty AssetName!");
                 }
                 ConverterContext.priceKeyMap.put(assetName.name(), heterogeneousCfg.getPriceKey());
-                // 设置协议生效数据
+                // Set effective protocol data
                 int protocolVersion = heterogeneousCfg.getProtocolVersion();
                 if (protocolVersion == 0) {
                     continue;
@@ -244,10 +256,10 @@ public class HeterogeneousChainManager {
                 }
                 heterogeneousDockingManager.addProtocol(chainId, protocolHeight, heterogeneousCfg.getSymbol());
             }
-            //执行数据库合并操作
-            //遍历注册的链DB名称
+            //Perform database merge operation
+            //Traverse the registered chainDBname
             //Map<Integer, String> chainDBNameMap = converterCoreApi.chainDBNameMap();
-            ////检查此链DB是否已合并
+            ////Check this chainDBHas it been merged
             //Set<Map.Entry<Integer, String>> entries = chainDBNameMap.entrySet();
             //for (Map.Entry<Integer, String> entry : entries) {
             //    Integer hChainId = entry.getKey();
@@ -259,12 +271,12 @@ public class HeterogeneousChainManager {
 
     public void init2LedgerAsset() {
         try {
-            // 检查主资产是否绑定异构链合约资产
-            // 由于账本内的主资产记录在内存中，重启应用后，账本内的主资产的类型被还原，
-            // 所以，需要检查converter模块是否已绑定异构链合约资产，是则更新账本内记录的类型
+            // Check if the main asset is bound to heterogeneous chain contract assets
+            // Due to the main asset records in the ledger being stored in memory, the type of main asset in the ledger is restored after restarting the application,
+            // So, it needs to be checkedconverterHas the module been bound to heterogeneous chain contract assets? If so, update the type of record in the ledger
             ledgerAssetRegisterHelper.checkMainAssetBind();
             if(heterogeneousChainInfoStorageService.hadInit2LedgerAsset()) {
-                logger().info("[重复执行] 已完成初始化异构链主资产到账本，不再执行");
+                logger().info("[Repeated execution] The initialization of heterogeneous chain master assets to the ledger has been completed and will no longer be executed");
                 return;
             }
             int chainId = converterConfig.getChainId();
@@ -277,7 +289,7 @@ public class HeterogeneousChainManager {
             ledgerAssetRegisterHelper.crossChainAssetReg(chainId, FIRST_HETEROGENEOUS_ASSET_CHAIN_ID, assetInfo.getAssetId(),
                     assetInfo.getSymbol(), assetInfo.getDecimals(), assetInfo.getSymbol(), assetInfo.getContractAddress());
             heterogeneousChainInfoStorageService.init2LedgerAssetCompleted();
-            logger().info("完成初始化异构链主资产到账本");
+            logger().info("Complete initialization of heterogeneous chain master assets to ledger");
         } catch (Exception e) {
             throw new RuntimeException(e);
             //TODO pierre test

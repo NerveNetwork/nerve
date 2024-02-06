@@ -49,10 +49,10 @@ public class ConfirmProposalVerifier {
         ConfirmProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmProposalTxData.class);
         ProposalTypeEnum proposalType = ProposalTypeEnum.getEnum(txData.getType());
         if (null == proposalType) {
-            // 提案类型不存在
+            // Proposal type does not exist
             throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
         }
-        // 业务验证
+        // Business validation
         confirmProposalHelper.getConfirmProposal(txData.getType()).validate(chain, tx, txData);
     }
 }

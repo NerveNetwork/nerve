@@ -54,6 +54,27 @@ public class SwapCall extends BaseCall {
         }
     }
 
+    public static boolean isLegalCoinForStable(int chainId, String stablePairAddress, int assetChainId, int assetId) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("stablePairAddress", stablePairAddress);
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_is_legal_coin_for_stable", params);
+            if (result == null || result.get("value") == null) {
+                return false;
+            }
+            return (boolean) result.get("value");
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_coin_for_stable");
+            LoggerUtil.LOG.error(msg, e);
+            return false;
+        }
+    }
+
     public static boolean isLegalStable(int chainId, String stablePairAddress) throws NulsException {
         try {
             Map<String, Object> params = new HashMap<>();
@@ -68,6 +89,24 @@ public class SwapCall extends BaseCall {
             return (boolean) result.get("value");
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_stable");
+            LoggerUtil.LOG.error(msg, e);
+            return false;
+        }
+    }
+
+    public static boolean isLegalBTCAddr(boolean mainnet, String btcAddress) {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put("mainnet", mainnet);
+            params.put("address", btcAddress);
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_is_legal_btc_addr", params);
+            if (result == null || result.get("value") == null) {
+                return false;
+            }
+            return (boolean) result.get("value");
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_is_legal_btc_addr");
             LoggerUtil.LOG.error(msg, e);
             return false;
         }
@@ -111,7 +150,7 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[提案添加币种] 币种添加失败. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+                LoggerUtil.LOG.error("[Proposal to add currency] Currency addition failed. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
@@ -139,11 +178,39 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[提案移除币种] 币种移除失败. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+                LoggerUtil.LOG.error("[Proposal to remove currency] Currency removal failed. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
             String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_remove_coin_for_stable");
+            LoggerUtil.LOG.error(msg, e);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    public static void pauseCoinForStable(int chainId, String stablePairAddress, int assetChainId, int assetId, String status) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, "1.0");
+            params.put(Constants.CHAIN_ID, chainId);
+
+            params.put("stablePairAddress", stablePairAddress);
+            params.put("assetChainId", assetChainId);
+            params.put("assetId", assetId);
+            params.put("status", status);
+            boolean success;
+            Map result = (Map) requestAndResponse(ModuleE.SW.abbr, "sw_pause_coin_for_stable", params);
+            if (result == null || result.get("value") == null) {
+                success = false;
+            } else {
+                success = (boolean) result.get("value");
+            }
+            if (!success) {
+                LoggerUtil.LOG.error("[Suspend multi chain routing pool currency transactions] Currency pause failed. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+                throw new NulsException(ConverterErrorCode.DATA_ERROR);
+            }
+        } catch (Exception e) {
+            String msg = MessageFormat.format("Calling remote interface failed. module:{0} - interface:{1}", ModuleE.SW.abbr, "sw_pause_coin_for_stable");
             LoggerUtil.LOG.error(msg, e);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
@@ -164,7 +231,7 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[提案管理稳定币交易对-用于Swap交易] 添加失败. stablePairAddress: {}", stablePairAddress);
+                LoggerUtil.LOG.error("[Proposal management for stablecoin trading-Used forSwaptransaction] Add failed. stablePairAddress: {}", stablePairAddress);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
@@ -189,7 +256,7 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[提案回滚] 移除稳定币交易对失败. stablePairAddress: {}", stablePairAddress);
+                LoggerUtil.LOG.error("[Proposal rollback] Removing stablecoin trading pair failed. stablePairAddress: {}", stablePairAddress);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {
@@ -200,7 +267,7 @@ public class SwapCall extends BaseCall {
     }
 
     public static void updateSwapPairFeeRate(int chainId, String swapPairAddress, Integer feeRate) throws NulsException {
-        // swap手续费定制
+        // swapCustomization of handling fees
         try {
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
@@ -216,7 +283,7 @@ public class SwapCall extends BaseCall {
                 success = (boolean) result.get("value");
             }
             if (!success) {
-                LoggerUtil.LOG.error("[SWAP手续费定制] 更新失败. swapPairAddress: {}, feeRate:{}", swapPairAddress, feeRate);
+                LoggerUtil.LOG.error("[SWAPCustomization of handling fees] Update failed. swapPairAddress: {}, feeRate:{}", swapPairAddress, feeRate);
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
         } catch (Exception e) {

@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.metis.context.MetisContext;
 
 
 /**
- * Metis组件向Nerve核心注册
+ * MetisComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

@@ -100,8 +100,8 @@ public class AddressToolTest {
     @Test
     public void createNerveAddr() {
         ECKey ecKey = new ECKey();
-        System.out.println("私钥:" + ecKey.getPrivateKeyAsHex());
-        System.out.println("公钥:" + ecKey.getPublicKeyAsHex());
+        System.out.println("Private key:" + ecKey.getPrivateKeyAsHex());
+        System.out.println("Public key:" + ecKey.getPublicKeyAsHex());
 //        f07d26a6cc0e931602f638fdf5b7dfa94ac8e1a0f9b5885feb78db17a4a7400a
 //        034e7ebe781dc25d5603c78616c939beabb1bd89ef5a2a182d292535146828c509
 //        TNVTdTSPG3sAwUkrGBqoVVzDjHYqvQKMX1khf
@@ -150,7 +150,7 @@ public class AddressToolTest {
     }
 
     /**
-     * 通缩计算
+     * Deflation calculation
      */
     @Test
     public void calc() {

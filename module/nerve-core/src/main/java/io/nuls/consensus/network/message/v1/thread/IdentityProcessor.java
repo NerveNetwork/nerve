@@ -55,7 +55,7 @@ public class IdentityProcessor extends BasicRunnable {
         String msgHash = message.getMsgHash().toHex();
 //        //chain.getLogger().debug("Identity message,msgHash={} recv from node={}", msgHash, nodeId);
         try {
-            //校验签名
+            //Verify signature
             if (!SignatureUtil.validateSignture(message.getConsensusIdentitiesSub().serialize(), message.getSign())) {
                 chain.getLogger().error("Identity message,msgHash={} recv from node={} validateSignture false", msgHash, nodeId);
                 return;
@@ -65,39 +65,39 @@ public class IdentityProcessor extends BasicRunnable {
             return;
         }
         /*
-        接受身份信息，判断是否有自己的包，有解析，1.解析后判断是否在自己连接列表内，存在则跃迁，不存在进行第三步,同时 广播转发/ 普通节点直接转发
+        Accept identity information, determine if there is your own package, have parsing,1.After parsing, determine if it is in your own connection list. If it exists, jump. If it does not exist, proceed to the third step,meanwhile Broadcast forwarding/ Direct forwarding by ordinary nodes
         */
         ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chainId);
         if (null == consensusKeys) {
-            //只需要转发消息
-//            //chain.getLogger().debug("=======不是共识节点，只转发{}消息", nodeId);
+            //Just need to forward the message
+//            //chain.getLogger().debug("=======Not a consensus node, only forwarding{}news", nodeId);
         } else {
-            //如果为当前节点签名消息则直接返回
+            //If the message is signed for the current node, it will be returned directly
             String signAddress = AddressTool.getStringAddressByBytes(AddressTool.getAddress(message.getSign().getPublicKey(), chainId));
             if (signAddress.equals(consensusKeys.getAddress())) {
                 return;
             }
-            //如果无法解密直接返回
+            //If decryption is not possible, return directly
             ConsensusNet consensusNet = message.getConsensusIdentitiesSub().getDecryptConsensusNet(chain, consensusKeys.getAddress(), consensusKeys.getPubKey());
             if (null == consensusNet) {
-//                chain.getLogger().error("=======无法解密消息，返回！", nodeId);
+//                chain.getLogger().error("=======Unable to decrypt message, returning！", nodeId);
                 return;
             }
             if (StringUtils.isBlank(consensusNet.getAddress())) {
                 consensusNet.setAddress(AddressTool.getStringAddressByBytes(AddressTool.getAddress(consensusNet.getPubKey(), chainId)));
             }
-            //解出的包,需要判断对方是否共识节点
+            //Unsolved package,Need to determine if the other party has reached a consensus on the node
             ConsensusNet dbConsensusNet = consensusNetService.getConsensusNode(chainId, consensusNet.getAddress());
             if (null == dbConsensusNet) {
-                //这边需要注意，此时如果共识节点列表里面还没有该节点，可能就会误判，所以必须保障 在收到消息时候，共识列表里已经存在该消息。
+                //It should be noted that if the consensus node list does not include that node at this time, it may be misjudged, so it is necessary to ensure that When receiving the message, it already exists in the consensus list.
                 chain.getLogger().error("nodeId = {} not in consensus Group", consensusNet.getNodeId());
                 return;
             }
 
-            //可能没公钥，更新下公钥信息
+            //Maybe there is no public key, update the public key information
             String consensusNetNodeId = consensusNet.getNodeId();
 
-            //每次从网络模块查询，是为了避免某节点断开然后重连导致本地连接缓存信息失效
+            //Every time a query is made from the network module, it is to avoid a node being disconnected and reconnected, which may cause the local connection cache information to become invalid
             boolean isConnect = networkService.connectPeer(chainId, consensusNetNodeId);
             if (!isConnect) {
                 chain.getLogger().warn("connect fail .nodeId = {}", consensusNet.getNodeId());
@@ -110,21 +110,21 @@ public class IdentityProcessor extends BasicRunnable {
                 ips.add(consensusNetNodeId.split(":")[0]);
                 networkService.addIps(chainId, NetworkCmdConstant.NW_GROUP_FLAG, ips);
             }
-            //分享所有已连接共识信息给对端
+            //Share all connected consensus information with the counterpart
             networkService.sendShareMessage(chainId, consensusNetNodeId, consensusNet.getPubKey());
 
-            //如果为新节点消息则需要，如果为其他链接节点的回执信息则不需要
+            //If it is a new node message, it is required. If it is a receipt information for other linked nodes, it is not required
             if (message.getConsensusIdentitiesSub().isBroadcast()) {
-                //同时分享新增的连接信息给其他已连接节点
+                //Simultaneously share the newly added connection information with other connected nodes
                 networkService.sendShareMessageExNode(chainId, consensusNetNodeId, consensusNet);
             }
-            //如果为新节点消息则需要将本节点的身份信息回执给对方（用于对方节点将本节点设置为共识网络节点）
+            //If it is a new node message, it is necessary to receive a receipt of the identity information of this node to the other party（Used for the other node to set this node as a consensus network node）
             if (message.getConsensusIdentitiesSub().isBroadcast()) {
                 chain.getLogger().info("begin broadCastIdentityMsg to={} success", nodeId);
                 networkService.sendIdentityMessage(chainId, consensusNet.getNodeId(), consensusNet.getPubKey());
             }
         }
-        //如果为新节点消息则需要转发，如果为其他链接节点的回执信息则不需要广播
+        //If it is a new node message, it needs to be forwarded. If it is a receipt information from another linked node, it does not need to be broadcasted
         if (message.getConsensusIdentitiesSub().isBroadcast()) {
 //            chain.getLogger().info("begin broadCastIdentityMsg exclude={} success", nodeId);
             networkService.broadCastIdentityMsg(chain, NetworkCmdConstant.POC_IDENTITY_MESSAGE, message.getMsgStr(), nodeId);

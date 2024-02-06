@@ -26,7 +26,7 @@ public abstract class ApiTxSender {
         paramMap.put("id", "1234");
         String response = HttpClientUtil.post(getApiUrl(), paramMap);
         if (StringUtils.isBlank(response)) {
-            System.out.println("未能得到返回数据");
+            System.out.println("Failed to obtain return data");
             return false;
         }
         Map<String, Object> map = JSONUtils.json2map(response);

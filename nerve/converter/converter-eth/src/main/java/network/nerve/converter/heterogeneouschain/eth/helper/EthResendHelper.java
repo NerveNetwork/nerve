@@ -70,7 +70,7 @@ public class EthResendHelper {
     }
 
     /**
-     * 是否当前节点发出的交易
+     * Is the transaction sent by the current node
      */
     public boolean currentNodeSent(String ethTxHash) {
         if (StringUtils.isBlank(ethTxHash)) {
@@ -80,7 +80,7 @@ public class EthResendHelper {
     }
 
     /**
-     * 获取已发出的交易信息
+     * Obtain transaction information that has been sent out
      */
     public EthSendTransactionPo getSentTransactionInfo(String ethTxHash) {
         return ethTxRelationStorageService.findEthSendTxPo(ethTxHash);

@@ -27,7 +27,7 @@ import io.nuls.consensus.utils.manager.AgentManager;
 import java.util.*;
 
 /**
- * 红牌交易处理器
+ * Red card trading processor
  *
  * @author tag
  * @date 2019/6/1
@@ -72,7 +72,7 @@ public class RedPunishProcessor implements TransactionProcessor {
                 redPunishData.parse(tx.getTxData(), 0);
                 String addressHex = HexUtil.encode(redPunishData.getAddress());
                 /*
-                 * 重复的红牌交易不打包
+                 * Repeated red card transactions are not packaged
                  * */
                 if (!addressHexSet.add(addressHex)) {
                     invalidTxList.add(tx);
@@ -107,7 +107,7 @@ public class RedPunishProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //回滚已提交成功的交易
+        //Roll back transactions that have been successfully submitted
         if (!commitResult) {
             for (Transaction rollbackTx : commitSuccessList) {
                 redPunishRollback(rollbackTx, chain, blockHeader);
@@ -133,7 +133,7 @@ public class RedPunishProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 redPunishCommit(commitTx, chain, blockHeader);
@@ -163,7 +163,7 @@ public class RedPunishProcessor implements TransactionProcessor {
         punishLogPo.setReasonCode(punishData.getReasonCode());
 
         /*
-        找到被惩罚的节点
+        Find the penalized node
         Find the punished node
          */
         Agent agent = agentManager.getAgentByAddress(chain, punishLogPo.getAddress());
@@ -173,17 +173,17 @@ public class RedPunishProcessor implements TransactionProcessor {
             return false;
         }
 
-        //保存红牌惩罚信息
+        //Save red card penalty information
         punishStorageService.save(punishLogPo, chainId);
 
-        //修改惩罚节点信息
+        //Modify penalty node information
         agent.setDelHeight(blockHeight);
         if(!agentManager.updateAgent(chain, agent)){
             punishStorageService.delete(punishLogPo.getKey(), chainId);
             return false;
         }
 
-        //修改NONCE信息
+        //modifyNONCEinformation
         if(!AgentDepositNonceManager.unLockTxCommit(chain, agent.getTxHash(), tx, true)){
             agent.setDelHeight(-1);
             agentManager.updateAgent(chain, agent);
@@ -192,7 +192,7 @@ public class RedPunishProcessor implements TransactionProcessor {
             return false;
         }
 
-        //更新缓存
+        //Update cache
         chain.getRedPunishList().add(punishLogPo);
         return true;
     }
@@ -208,7 +208,7 @@ public class RedPunishProcessor implements TransactionProcessor {
             return false;
         }
         /*
-        找到被惩罚的节点
+        Find the penalized node
         Find the punished node
          */
         Agent agent = agentManager.getAgentByAddress(chain, punishData.getAddress());
@@ -222,7 +222,7 @@ public class RedPunishProcessor implements TransactionProcessor {
             return false;
         }
 
-        //修改惩罚节点信息
+        //Modify penalty node information
         agent.setDelHeight(-1L);
         if(!agentManager.updateAgent(chain, agent)){
             AgentDepositNonceManager.unLockTxCommit(chain, agent.getTxHash(), tx, true);
@@ -230,7 +230,7 @@ public class RedPunishProcessor implements TransactionProcessor {
             return false;
         }
 
-        //删除红牌惩罚信息
+        //Delete red card penalty information
         byte[] key = ByteUtils.concatenate(punishData.getAddress(), new byte[]{PunishType.RED.getCode()}, SerializeUtils.uint64ToByteArray(blockHeight), new byte[]{0});
         if (!punishStorageService.delete(key, chainId)) {
             AgentDepositNonceManager.unLockTxCommit(chain, agent.getTxHash(), tx, true);
@@ -241,7 +241,7 @@ public class RedPunishProcessor implements TransactionProcessor {
         }
 
         /*
-         * 修改缓存
+         * Modify cache
          * */
         BlockExtendsData roundData = blockHeader.getExtendsData();
         PunishLogPo punishLogPo = new PunishLogPo();

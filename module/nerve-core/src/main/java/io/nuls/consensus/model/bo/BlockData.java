@@ -33,7 +33,7 @@ import java.util.List;
 
 
 /**
- * 区块基础信息类(创建区块是用)
+ * Block basic information class(Creating blocks is done using)
  * Block Foundation Information Class (Block Creation is used)
  *
  * @author tag
@@ -57,7 +57,7 @@ public class BlockData {
         this.extendsData = extendsData;
     }
     /**
-     * pierre add 合约状态根
+     * pierre add Contract Status Root
      */
     private byte[] stateRoot;
 

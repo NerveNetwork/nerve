@@ -50,7 +50,7 @@ import java.util.Map;
 public class TransactionCall extends BaseCall {
 
     /**
-     * 发起新交易
+     * Initiate new transactions
      */
     public static boolean newTx(Chain chain, Transaction tx) throws NulsException {
         try {
@@ -82,7 +82,7 @@ public class TransactionCall extends BaseCall {
     }
 
     /**
-     * 根据交易hash 获取已确认交易
+     * According to the transactionhash Obtain confirmed transactions
      * @param chain
      * @param hash
      * @return
@@ -111,7 +111,7 @@ public class TransactionCall extends BaseCall {
     }
 
     /**
-     * 查询地址是否已经被冻结
+     * Check if the address has been frozen
      * @param chain
      * @param address
      * @return

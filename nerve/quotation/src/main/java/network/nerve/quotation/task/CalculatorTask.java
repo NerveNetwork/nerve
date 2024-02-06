@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 从交易中提取报价, 统计最终价格
+ * Extracting quotes from transactions, Statistical final price
  * Final Quotation
  *
  * @author: Loki
@@ -64,14 +64,14 @@ public class CalculatorTask implements Runnable {
     @Override
     public void run() {
         try {
-            //是否在允许的执行时间范围
+            //Is it within the allowed execution time range
             if (!TimeUtil.isNowDateTimeInRange(QuotationContext.quoteEndH, QuotationContext.quoteEndM)) {
                 return;
             }
             if (!CommonUtil.isCurrentConsensusNode(QuotationCall.getPackerInfo(chain))) {
                 return;
             }
-            //清空当天的节点报价缓存
+            //Clear the node quotation cache for the day
             QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.clear();
             QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.clear();
             quotationIntradayStorageService.removeAll(chain);
@@ -81,7 +81,7 @@ public class CalculatorTask implements Runnable {
             for (QuotationActuator qa : quteList) {
                 String anchorToken = qa.getAnchorToken();
                 if (QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)) {
-                    //如果已确认的报价交易缓存中已存在该key, 则不再执行.
+                    //If the confirmed quote transaction already exists in the cachekey, Then it will no longer be executed.
                     continue;
                 }
                 Calculator calculator = getCalculator(qa.getCalculator());
@@ -90,11 +90,11 @@ public class CalculatorTask implements Runnable {
                     pricesMap.put(anchorToken, price);
                 }
             }
-            // swap合约报价key
+            // swapContract quotationkey
             for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
                 String anchorToken = quContractCfg.getAnchorToken();
                 if (QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.contains(anchorToken)) {
-                    //如果已确认的报价交易缓存中已存在该key, 则不再执行.
+                    //If the confirmed quote transaction already exists in the cachekey, Then it will no longer be executed.
                     continue;
                 }
                 Calculator calculator = getCalculator(quContractCfg.getCalculator());
@@ -103,13 +103,13 @@ public class CalculatorTask implements Runnable {
                     pricesMap.put(anchorToken, price);
                 }
             }
-            //开始组装交易发送到交易模块（交易模块有特殊的接口 不广播）
+            //Start assembling transactions and sending them to the transaction module（The transaction module has a special interface Not broadcasting）
             if (!pricesMap.isEmpty()) {
                 Transaction tx = quotationService.createFinalQuotationTransaction(pricesMap);
                 chain.getLogger().info("{}", tx.format(Prices.class));
-                //发送到交易模块
+                //Send to transaction module
                 QuotationCall.newTx(chain, tx);
-                chain.getLogger().info("发布最终报价交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("Publish final quotation transaction hash:{}", tx.getHash().toHex());
             }
         } catch (Throwable e) {
             chain.getLogger().error("finalQuotationProcessTask error", e);

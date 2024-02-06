@@ -32,11 +32,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * HttpClient工具类
+ * HttpClientTool class
  *
  * @author SHANHY
  * @return
- * @create 2015年12月18日
+ * @create 2015year12month18day
  */
 public class HttpClientUtil {
 
@@ -49,7 +49,7 @@ public class HttpClientUtil {
     private final static Object syncLock = new Object();
 
     private static void config(HttpRequestBase httpRequestBase) {
-        // 设置Header等
+        // set upHeaderetc.
         // httpRequestBase.setHeader("User-Agent", "Mozilla/5.0");
         // httpRequestBase
         // .setHeader("Accept",
@@ -59,7 +59,7 @@ public class HttpClientUtil {
         // httpRequestBase.setHeader("Accept-Charset",
         // "ISO-8859-1,utf-8,gbk,gb2312;q=0.7,*;q=0.7");
 
-        // 配置请求的超时设置
+        // Configure timeout settings for requests
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(timeOut)
                 .setConnectTimeout(timeOut).setSocketTimeout(timeOut).build();
@@ -67,11 +67,11 @@ public class HttpClientUtil {
     }
 
     /**
-     * 获取HttpClient对象
+     * obtainHttpClientobject
      *
      * @return
      * @author SHANHY
-     * @create 2015年12月18日
+     * @create 2015year12month18day
      */
     public static CloseableHttpClient getHttpClient(String url) {
         String hostname = url.split("/")[2];
@@ -96,7 +96,7 @@ public class HttpClientUtil {
     }
 
     /**
-     * 重置httpClient对象
+     * ResethttpClientobject
      * @param url
      */
     public static void resetHttpClient(String url) {
@@ -118,11 +118,11 @@ public class HttpClientUtil {
     }
 
     /**
-     * 创建HttpClient对象
+     * establishHttpClientobject
      *
      * @return
      * @author SHANHY
-     * @create 2015年12月18日
+     * @create 2015year12month18day
      */
     public static CloseableHttpClient createHttpClient(int maxTotal,
                                                        int maxPerRoute, int maxRoute, String hostname, int port) {
@@ -135,44 +135,44 @@ public class HttpClientUtil {
                 .register("https", sslsf).build();
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager(
                 registry);
-        // 将最大连接数增加
+        // Increase the maximum number of connections
         cm.setMaxTotal(maxTotal);
-        // 将每个路由基础的连接增加
+        // Add connections to each routing base
         cm.setDefaultMaxPerRoute(maxPerRoute);
         HttpHost httpHost = new HttpHost(hostname, port);
-        // 将目标主机的最大连接数增加
+        // Increase the maximum number of connections to the target host
         cm.setMaxPerRoute(new HttpRoute(httpHost), maxRoute);
 
-        // 请求重试处理
+        // Request retry processing
         HttpRequestRetryHandler httpRequestRetryHandler = new HttpRequestRetryHandler() {
             public boolean retryRequest(IOException exception,
                                         int executionCount, HttpContext context) {
-                if (executionCount >= 3) {// 如果已经重试了3次，就放弃
+                if (executionCount >= 3) {// If it has already been retried3Next time, give up
                     return false;
                 }
-                if (exception instanceof NoHttpResponseException) {// 如果服务器丢掉了连接，那么就重试
+                if (exception instanceof NoHttpResponseException) {// If the server loses the connection, then try again
                     return true;
                 }
-                if (exception instanceof SSLHandshakeException) {// 不要重试SSL握手异常
+                if (exception instanceof SSLHandshakeException) {// Do not retrySSLHandshake abnormality
                     return false;
                 }
-                if (exception instanceof InterruptedIOException) {// 超时
+                if (exception instanceof InterruptedIOException) {// overtime
                     return false;
                 }
-                if (exception instanceof UnknownHostException) {// 目标服务器不可达
+                if (exception instanceof UnknownHostException) {// Target server unreachable
                     return false;
                 }
-                if (exception instanceof ConnectTimeoutException) {// 连接被拒绝
+                if (exception instanceof ConnectTimeoutException) {// connection not permitted
                     return false;
                 }
-                if (exception instanceof SSLException) {// SSL握手异常
+                if (exception instanceof SSLException) {// SSLHandshake abnormality
                     return false;
                 }
 
                 HttpClientContext clientContext = HttpClientContext
                         .adapt(context);
                 HttpRequest request = clientContext.getRequest();
-                // 如果请求是幂等的，就再次尝试
+                // If the request is idempotent, try again
                 if (!(request instanceof HttpEntityEnclosingRequest)) {
                     return true;
                 }
@@ -188,31 +188,31 @@ public class HttpClientUtil {
     }
 
     private static void setPostParams(HttpPost httpPost, Map<String, Object> params) throws Exception {
-        //设置请求参数
+        //Set request parameters
         String json = JSONUtils.obj2json(params);
         StringEntity entity = new StringEntity(json, "UTF-8");
         entity.setContentEncoding("UTF-8");
-        entity.setContentType("application/json");//发送json需要设置contentType
+        entity.setContentType("application/json");//sendjsonNeed to set upcontentType
         httpPost.setEntity(entity);
     }
 
     private static void setPutParams(HttpPut httpPut, Map<String, Object> params) throws Exception {
-        //设置请求参数
+        //Set request parameters
         String json = JSONUtils.obj2json(params);
         StringEntity entity = new StringEntity(json, "UTF-8");
         entity.setContentEncoding("UTF-8");
-        entity.setContentType("application/json");//发送json需要设置contentType
+        entity.setContentType("application/json");//sendjsonNeed to set upcontentType
         httpPut.setEntity(entity);
     }
 
     /**
-     * POST请求URL获取内容
+     * POSTrequestURLGet content
      *
      * @param url
      * @return
      * @throws IOException
      * @author SHANHY
-     * @create 2015年12月18日
+     * @create 2015year12month18day
      */
     public static String post(String url, Map<String, Object> params) throws Exception {
         CloseableHttpResponse response = null;
@@ -239,13 +239,13 @@ public class HttpClientUtil {
     }
 
     /**
-     * PUT请求URL获取内容
+     * PUTrequestURLGet content
      *
      * @param url
      * @return
      * @throws IOException
      * @author SHANHY
-     * @create 2015年12月18日
+     * @create 2015year12month18day
      */
     public static String put(String url, Map<String, Object> params) throws Exception {
         CloseableHttpResponse response = null;
@@ -271,12 +271,12 @@ public class HttpClientUtil {
     }
 
     /**
-     * GET请求URL获取内容
+     * GETrequestURLGet content
      *
      * @param url
      * @return
      * @author SHANHY
-     * @create 2015年12月18日
+     * @create 2015year12month18day
      */
     public static String get(String url) throws Exception {
         return get(url, null, null);
@@ -293,7 +293,7 @@ public class HttpClientUtil {
     public static String get(String url, Map<String, Object> params, List<BasicHeader> headers) throws Exception {
         StringBuffer buffer;
         if (null != params && !params.isEmpty()) {
-            //遍历map
+            //ergodicmap
             buffer = new StringBuffer("");
             for (Map.Entry<String, Object> entry : params.entrySet()) {
                 buffer.append("&" + entry.getKey() + "=" + entry.getValue());

@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 包括stake和withdraw两种操作
+ * includestakeandwithdrawTwo operations
  *
  * @author Niels
  */

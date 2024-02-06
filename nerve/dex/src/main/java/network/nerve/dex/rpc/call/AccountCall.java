@@ -22,7 +22,7 @@ import java.util.Map;
 public class AccountCall {
 
     /**
-     * 账户验证
+     * Account verification
      * account validate
      *
      * @param chainId

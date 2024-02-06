@@ -20,55 +20,55 @@ import java.math.BigInteger;
 public class ConverterConfig extends ConfigBean implements ModuleConfig {
 
     /**
-     * ROCK DB 数据库文件存储路径
+     * ROCK DB Database file storage path
      */
     private String dataPath;
     /**
-     * 模块code
+     * modulecode
      */
     private String moduleCode;
     /**
-     * 主链链ID
+     * Main chainID
      */
     private int mainChainId;
     /**
-     * 主链主资产ID
+     * Main asset of the main chainID
      */
     private int mainAssetId;
     /**
-     * 触发初始化虚拟银行的区块高度
+     * Trigger the block height for initializing virtual banks
      */
     private long initVirtualBankHeight;
     /**
-     * 手续费汇集分发公钥
+     * Collection and distribution of public keys for handling fees
      */
     private String feePubkey;
 
     /**
-     * 提现黑洞公钥(与设置别名共用一个公钥)
+     * Withdrawal of black hole public key(Share the same public key with setting aliases)
      */
     private String blackHolePublicKey;
     /**
-     * 触发执行虚拟银行变更交易的高度周期 配置
-     * 按2秒一个块 大约1天的出块数量
+     * Trigger the high cycle of executing virtual bank change transactions allocation
+     * according to2One block per second about1Number of blocks produced per day
      */
     private long executeChangeVirtualBankPeriodicHeight;
 
     /**
-     * 虚拟银行共识节点总数（包含种子节点成员）
+     * Total number of consensus nodes in virtual banks（Include seed node members）
      */
     private int virtualBankAgentTotal;
 
-    // 版本2废弃 由于历史data有数据, 所以db取出反序列化需要该属性存在
+    // version2Abandoned Due to historydataThere is data available, thereforedbExtracting deserialization requires the existence of this attribute
     @Deprecated
     private int virtualBankAgentCountWithoutSeed;
 
     /**
-     * 发起提案费用
+     * Proposal initiation fee
      */
     private BigInteger proposalPrice;
     /**
-     * 提案投票持续天数(最终会计算成出块数)
+     * Duration of proposal voting(Ultimately, it will be calculated as the number of blocks)
      */
     private int proposalVotingDays;
 
@@ -77,30 +77,30 @@ public class ConverterConfig extends ConfigBean implements ModuleConfig {
     private BigInteger distributionFee;
 
     /**
-     * 第一次协议升级高度 提现手续费100
+     * The height of the first protocol upgrade Withdrawal fees100
      */
     private long feeEffectiveHeightFirst;
 
     /**
-     * 第二次协议升级高度 提现手续费10
+     * Second protocol upgrade height Withdrawal fees10
      */
     private long feeEffectiveHeightSecond;
 
     /**
-     * 所有异构链多签地址集合, 格式(以逗号隔开):chainId_1:address_1,chainId_2:address_2
+     * All heterogeneous chain multi signature address sets, format(Separate by commas):chainId_1:address_1,chainId_2:address_2
      */
     private String multySignAddressSet;
     /**
-     * 是否异构链主网
+     * Is it a heterogeneous chain main network
      */
     private boolean heterogeneousMainNet;
     /**
-     * 直接启用合约异构链新流程
+     * Directly enable the new process of contract heterogeneous chain
      */
     private boolean newProcessorMode;
 
     /**
-     * 异构链版本2开始初始化虚拟银行公钥
+     * Heterogeneous Chain Version2Start initializing virtual bank public key
      */
     private String initVirtualBankPubKeyList;
 

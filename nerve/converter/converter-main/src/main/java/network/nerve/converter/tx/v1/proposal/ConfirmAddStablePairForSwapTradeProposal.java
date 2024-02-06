@@ -69,7 +69,7 @@ public class ConfirmAddStablePairForSwapTradeProposal implements IConfirmProposa
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if (null == proposalPO) {
-            chain.getLogger().error("[ConfirmAddStablePairForSwapTradeProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmAddStablePairForSwapTradeProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
 
@@ -77,7 +77,7 @@ public class ConfirmAddStablePairForSwapTradeProposal implements IConfirmProposa
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         boolean legalStable = SwapCall.isLegalStable(chain.getChainId(), stablePairAddress);
         if (!legalStable) {
-            chain.getLogger().error("[提案管理稳定币交易对] 交易对不合法. stablePairAddress: {}", stablePairAddress);
+            chain.getLogger().error("[Proposal management for stablecoin trading] Transaction is illegal. stablePairAddress: {}", stablePairAddress);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

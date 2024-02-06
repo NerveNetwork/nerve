@@ -8,7 +8,7 @@ import io.nuls.crosschain.base.constant.CommandConstant;
 import io.nuls.crosschain.base.service.ProtocolService;
 
 /**
- * GetCirculationMessage处理类
+ * GetCirculationMessageProcessing class
  * GetCirculationMessage Processing Class
  *
  * @author tag

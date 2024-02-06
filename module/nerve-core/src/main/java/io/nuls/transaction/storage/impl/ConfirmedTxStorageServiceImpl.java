@@ -57,7 +57,7 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
         Map<byte[], byte[]> txPoMap = new HashMap<>();
         try {
             for (TransactionConfirmedPO tx : txList) {
-                //序列化对象为byte数组存储
+                //Serializing objects asbyteArray storage
                 txPoMap.put(tx.getTx().getHash().getBytes(), tx.serialize());
             }
             return RocksDBService.batchPut(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId, txPoMap);
@@ -148,7 +148,7 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
 
 
     /**
-     * 处理跨链交易生效高度
+     * Effective height of handling cross chain transactions
      */
     private class CrossTxEffectList extends BaseNulsData {
         List<NulsHash> hashList;
@@ -202,7 +202,7 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
             return null;
         }
         List<Transaction> txList = new ArrayList<>();
-        //根据交易hash批量查询交易数据
+        //According to the transactionhashBatch query of transaction data
         List<byte[]> list = RocksDBService.multiGetAsList(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId, hashList);
         if (list != null) {
             for (byte[] txBytes : list) {
@@ -222,7 +222,7 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
         if (hashList == null || hashList.size() == 0) {
             return null;
         }
-        //根据交易hash批量查询交易数据
+        //According to the transactionhashBatch query of transaction data
         return RocksDBService.multiGetAsList(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId, hashList);
     }
 
@@ -240,7 +240,7 @@ public class ConfirmedTxStorageServiceImpl implements ConfirmedTxStorageService 
                 try {
                     tx = TxUtil.getInstance(txBytes, TransactionConfirmedPO.class);
                 } catch (NulsException e) {
-                    LOG.error("交易反序列化失败 hash:{}", HexUtil.encode(entry.getKey()));
+                    LOG.error("Transaction deserialization failed hash:{}", HexUtil.encode(entry.getKey()));
                     LOG.error(e);
                     continue;
                 }

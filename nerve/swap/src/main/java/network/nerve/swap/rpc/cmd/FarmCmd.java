@@ -39,19 +39,19 @@ public class FarmCmd extends BaseCmd {
         return SwapContext.logger;
     }
 
-    @CmdAnnotation(cmd = CREATE_FARM, version = 1.0, description = "创建Farm")
+    @CmdAnnotation(cmd = CREATE_FARM, version = 1.0, description = "establishFarm")
     @Parameters(value = {
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "stakeTokenStr", parameterType = "String", parameterDes = "质押token的类型，示例：1-1"),
-            @Parameter(parameterName = "syrupTokenStr", parameterType = "String", parameterDes = "奖励token的类型，示例：1-1"),
-            @Parameter(parameterName = "syrupPerBlock", parameterType = "Double", parameterDes = "每个区块的奖励数量"),
-            @Parameter(parameterName = "startHeight", parameterType = "Long", parameterDes = "生效高度"),
-            @Parameter(parameterName = "lockedHeight", parameterType = "Long", parameterDes = "最小允许退出高度"),
-            @Parameter(parameterName = "modifiable", parameterType = "Boolean", parameterDes = "是否允许修改"),
-            @Parameter(parameterName = "withdrawLockTime", parameterType = "Long", parameterDes = "退出farm后锁定时间（秒）"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "stakeTokenStr", parameterType = "String", parameterDes = "pledgetokenType of, example：1-1"),
+            @Parameter(parameterName = "syrupTokenStr", parameterType = "String", parameterDes = "rewardtokenType of, example：1-1"),
+            @Parameter(parameterName = "syrupPerBlock", parameterType = "Double", parameterDes = "The number of rewards per block"),
+            @Parameter(parameterName = "startHeight", parameterType = "Long", parameterDes = "Effective height"),
+            @Parameter(parameterName = "lockedHeight", parameterType = "Long", parameterDes = "Minimum allowable exit height"),
+            @Parameter(parameterName = "modifiable", parameterType = "Boolean", parameterDes = "Is modification allowed"),
+            @Parameter(parameterName = "withdrawLockTime", parameterType = "Long", parameterDes = "quitfarmPost lock time（second）"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "transactionHash")
     public Response createFarm(Map<String, Object> params) {
         try {
             String address = (String) params.get("address");
@@ -75,14 +75,14 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_STAKE, version = 1.0, description = "质押资产")
+    @CmdAnnotation(cmd = FARM_STAKE, version = 1.0, description = "Pledged assets")
     @Parameters(value = {
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识"),
-            @Parameter(parameterName = "amount", parameterType = "Double", parameterDes = "要转入的数量"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier"),
+            @Parameter(parameterName = "amount", parameterType = "Double", parameterDes = "Quantity to be transferred in"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "transactionHash")
     public Response stake(Map<String, Object> params) {
         try {
             String address = (String) params.get("address");
@@ -99,13 +99,13 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_WAITHDRAW, version = 1.0, description = "取回质押资产")
+    @CmdAnnotation(cmd = FARM_WAITHDRAW, version = 1.0, description = "Retrieve pledged assets")
     @Parameters(value = {
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "transactionHash")
     public Response withdraw(Map<String, Object> params) {
         try {
             String address = (String) params.get("address");
@@ -122,11 +122,11 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_INFO, version = 1.0, description = "获取farm当前状态")
+    @CmdAnnotation(cmd = FARM_INFO, version = 1.0, description = "obtainfarmcurrent state")
     @Parameters(value = {
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier")
     })
-    @ResponseData(description = "farm详情")
+    @ResponseData(description = "farmdetails")
     public Response getfarm(Map<String, Object> params) {
         try {
             String farmHash = (String) params.get("farmHash");
@@ -140,11 +140,11 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_LIST, version = 1.0, description = "获取farm列表")
+    @CmdAnnotation(cmd = FARM_LIST, version = 1.0, description = "obtainfarmlist")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
     })
-    @ResponseData(description = "farm列表")
+    @ResponseData(description = "farmlist")
     public Response getfarmList(Map<String, Object> params) {
         try {
             int chainId = (int )params.get("chainId");
@@ -156,12 +156,12 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_USER_INFO, version = 1.0, description = "获取farm当前状态")
+    @CmdAnnotation(cmd = FARM_USER_INFO, version = 1.0, description = "obtainfarmcurrent state")
     @Parameters(value = {
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier")
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "transactionHash")
     public Response getStakeInfo(Map<String, Object> params) {
         try {
             String address = (String) params.get("userAddress");
@@ -176,12 +176,12 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_INFO_DETAIL, version = 1.0, description = "获取farm当前状态")
+    @CmdAnnotation(cmd = FARM_INFO_DETAIL, version = 1.0, description = "obtainfarmcurrent state")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier")
     })
-    @ResponseData(description = "farm详情")
+    @ResponseData(description = "farmdetails")
     public Response farmInfo(Map<String, Object> params) {
         try {
             int chainId = (int )params.get("chainId");
@@ -195,13 +195,13 @@ public class FarmCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = FARM_USER_DETAIL, version = 1.0, description = "获取farm当前状态")
+    @CmdAnnotation(cmd = FARM_USER_DETAIL, version = 1.0, description = "obtainfarmcurrent state")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farm唯一标识")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "farmHash", parameterType = "String", parameterDes = "farmUnique identifier")
     })
-    @ResponseData(description = "交易Hash")
+    @ResponseData(description = "transactionHash")
     public Response getStakeDetail(Map<String, Object> params) {
         try {
             int chainId = (int )params.get("chainId");

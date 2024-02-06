@@ -50,7 +50,7 @@ public class FarmUpdateTxHelper {
             logger.warn("Incomplete transaction business basic data");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_TX_DATA_ERROR);
         }
-        // 验证每个区块奖励数额区间正确
+        // Verify that the reward amount range for each block is correct
         if (null == txData.getNewSyrupPerBlock() || txData.getNewSyrupPerBlock().compareTo(BigInteger.ZERO) <= 0) {
             logger.warn("The number of rewards per block must be greater than 0");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SYRUP_PER_BLOCK_ERROR);
@@ -77,7 +77,7 @@ public class FarmUpdateTxHelper {
             logger.warn("Incorrect transaction signature");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_SIGNER_COUNT_ERROR);
         }
-        //验证farm是否存在
+        //validatefarmDoes it exist
         FarmPoolPO farm = farmCache.get(txData.getFarmHash());
         String farmHash = txData.getFarmHash().toHex();
         if (farmTempManager != null && farmTempManager.getFarm(farmHash) != null) {
@@ -87,7 +87,7 @@ public class FarmUpdateTxHelper {
             logger.warn("Farm not exist.");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_NOT_EXIST);
         }
-        //既不能修改，也不是追加糖果的交易，不通过
+        //Neither modification nor addition of candy transaction, not approved
         if (!farm.isModifiable() && !onlyAddSyrup(farm, txData)) {
             logger.warn("The user does not have farm management permission");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_PERMISSION_ERROR);
@@ -106,9 +106,9 @@ public class FarmUpdateTxHelper {
             }
             return ValidaterResult.getSuccess();
         }
-        //amount和coindata的保持一致
-        //转入资产地址为adminAddress
-        //接收地址为farm地址
+        //amountandcoindataMaintain consistency
+        //Transferred asset address isadminAddress
+        //The receiving address isfarmaddress
         CoinData coinData;
         try {
             coinData = tx.getCoinDataInstance();

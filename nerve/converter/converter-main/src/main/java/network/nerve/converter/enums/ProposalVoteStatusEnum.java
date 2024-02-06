@@ -28,22 +28,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 提案可投票状态(是否可以投票)
+ * Proposal Votable Status(Is it possible to vote)
  * @author: Loki
  * @date: 2020/5/13
  */
 public enum ProposalVoteStatusEnum {
 
     /**
-     * 投票中(可投票)
+     * In voting(Votable)
      */
     VOTING((byte) 0),
     /**
-     * 已通过(不可投票)
+     * Passed(Non Votable)
      */
     ADOPTED((byte) 1),
     /**
-     * 已被否决(不可投票)
+     * Rejected(Non Votable)
      */
     REJECTED((byte) 2);
 

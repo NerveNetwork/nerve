@@ -33,42 +33,42 @@ import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
 public class ProposalTxDTO {
 
     /**
-     * 提案类型
+     * Proposal type
      */
     byte type;
 
     /**
-     * 投票范围
+     * Voting scope
      */
     byte voteRangeType = ProposalVoteRangeTypeEnum.BANK.value();
     /**
-     * 提案内容
+     * Proposal content
      */
     String content;
 
     /**
-     * 异构链ChainId
+     * Heterogeneous chainChainId
      */
     int heterogeneousChainId;
     /**
-     * 异构链交易hash
+     * Heterogeneous Chain Tradinghash
      */
     String heterogeneousTxHash;
     /**
-     * 业务地址
+     * Business address
      */
     String businessAddress;
     /**
-     * 链内交易hash
+     * On chain transactionshash
      */
     String hash;
     /**
-     * 备注
+     * Remarks
      */
     String remark;
 
     /**
-     * 签名信息
+     * Signature information
      */
     private SignAccountDTO signAccountDTO;
 

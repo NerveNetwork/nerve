@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * ETH_II组件向Nerve核心注册
+ * ETH_IIComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -116,11 +116,11 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
-            // 初始化实例
+            // Initialize instance
             initBean();
-            // 初始化地址过滤集合
+            // Initialize address filtering set
             initFilterAddresses();
-            // 初始化升级切换操作的函数，当动态升级合约交易确认时，将调用设置的匿名函数
+            // The function that initializes the upgrade switch operation will call the set anonymous function when dynamically upgrading contract transaction confirmation
             initUpgradeSwitchFunction();
         }
         return EthDBConstant.DB_ETH;
@@ -185,18 +185,18 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
             @Override
             public void newSwitch(String newContract) throws Exception {
                 if (EthIIRegister.this.newProcessActivated) {
-                    EthIIContext.getLogger().info("ETH II 已注册，不再重复注册。");
+                    EthIIContext.getLogger().info("ETH II Registered, no more duplicate registrations.");
                     return;
                 }
-                // 停止旧的处理流程
+                // Stop the old processing flow
                 ethRegister.shutDownScheduled();
-                // 停止旧的RPC请求服务
+                // Stop oldRPCRequest service
                 if (ethWalletApi.getWeb3j() != null) {
                     ethWalletApi.getWeb3j().shutdown();
                 }
-                // 清空旧的地址监听器
+                // Clear old address listeners
                 ethListener.clear();
-                // 监听多签地址
+                // Listening to multiple signed addresses
                 htgListener.addListeningAddress(newContract);
                 if (EthContext.UNCONFIRMED_TX_QUEUE != null) {
                     EthContext.UNCONFIRMED_TX_QUEUE.stream().forEach(q -> {
@@ -204,15 +204,15 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
                     });
                     EthContext.UNCONFIRMED_TX_QUEUE.clear();
                 }
-                // 初始化默认API
+                // Initialize defaultAPI
                 initDefualtAPI();
-                // 初始化交易等待任务队列
+                // Initialize transaction waiting task queue
                 EthIIRegister.this.initWaitingTxQueue();
-                // 开启新的处理流程
+                // Start a new processing flow
                 EthIIRegister.this.initScheduled();
-                // 切换dockingII实例到CORE中
+                // switchdockingIIInstance toCOREin
                 ethCallBackManager.getHeterogeneousUpgrade().switchDocking(EthIIContext.DOCKING);
-                // 设置新流程切换标志
+                // Set new process switching flag
                 EthIIRegister.this.newProcessActivated = true;
             }
         });
@@ -229,7 +229,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
 
     @Override
     public IHeterogeneousChainDocking getDockingImpl() {
-        // 合约未升级，返回旧的实例
+        // Contract not upgraded, returning old instance
         if (!isUpgradeContract() && !converterConfig.isNewProcessorMode()) {
             return EthDocking.getInstance();
         }
@@ -239,17 +239,17 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     @Override
     public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
         if (converterConfig.isNewProcessorMode()) {
-            EthIIContext.getLogger().info("ETH将以当前多签合约[{}]启用新流程.", EthContext.MULTY_SIGN_ADDRESS);
+            EthIIContext.getLogger().info("ETHWill sign multiple contracts with the current one[{}]Enable new process.", EthContext.MULTY_SIGN_ADDRESS);
             htgUpgradeContractSwitchHelper.switchProcessor(EthContext.MULTY_SIGN_ADDRESS);
         }
-        // 合约已升级
+        // Contract has been upgraded
         if (isUpgradeContract() && !this.newProcessActivated) {
             htgUpgradeContractSwitchHelper.switchProcessor(EthContext.MULTY_SIGN_ADDRESS);
         }
-        // 初始化待确认任务队列
+        // Initialize the pending confirmation task queue
         initUnconfirmedTxQueue();
         EthContext.getConverterCoreApi().addChainDBName(getChainId(), EthDBConstant.DB_ETH);
-        EthIIContext.getLogger().info("ETH II 注册完成.");
+        EthIIContext.getLogger().info("ETH II Registration completed.");
     }
 
     private void initDefualtAPI() throws Exception {
@@ -281,9 +281,9 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     EthIIContext.UNCONFIRMED_TX_QUEUE.offer(po);
-                    // 把待确认的交易加入到监听交易hash列表中
+                    // Add pending transactions to listening transactionshashIn the list
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
@@ -292,7 +292,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
     }
 
     /**
-     * 当配置的合约地址与当前有效的合约地址不同时，则说明合约已升级
+     * When the configured contract address is different from the currently valid contract address, it indicates that the contract has been upgraded
      */
     private boolean isUpgradeContract() {
         String multySignAddressOfSetting = EthContext.getConfig().getMultySignAddress().toLowerCase();
@@ -322,7 +322,7 @@ public class EthIIRegister implements IHeterogeneousChainRegister {
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     EthIIContext.WAITING_TX_QUEUE.offer(po);
                 }
             });

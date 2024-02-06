@@ -37,8 +37,8 @@ import java.util.List;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
 /**
- * 记录被冻结的账户地址
- * k:v 都是冻结地址
+ * Record frozen account addresses
+ * k:v All are frozen addresses
  * @author: Charlie
  * @date: 2020/5/19
  */

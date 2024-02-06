@@ -13,7 +13,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.consensus.constant.CommandConstant;
 
 /**
- * 获取投票结果数据消息处理器
+ * Get voting result data message processor
  * Get voting result data message processor
  *
  * @author tag
@@ -41,11 +41,11 @@ public class GetVoteResultHandler implements MessageProcessor {
         if (getVoteResultMessage == null) {
             return;
         }
-//        chain.getLogger().info("收到获取投票结果的消息：{},来源：{}", getVoteResultMessage.getBlockHash().toHex(), nodeId);
-        //从本地缓存中查询该投票结果信息并返回
+//        chain.getLogger().info("Received message to obtain voting results：{},source：{}", getVoteResultMessage.getBlockHash().toHex(), nodeId);
+        //Query the voting result information from the local cache and return it
         VoteResultMessage voteResultMessage = chain.getConsensusCache().getVoteResult(getVoteResultMessage.getBlockHash());
         if (null == voteResultMessage) {
-            chain.getLogger().info("******没有获取到内容");
+            chain.getLogger().info("******No content obtained");
             return;
         }
 //        chain.getLogger().info("******send-msg*size={},hash={},node={}", voteResultMessage.getSignList().size(), voteResultMessage.getBlockHash().toHex(), nodeId);

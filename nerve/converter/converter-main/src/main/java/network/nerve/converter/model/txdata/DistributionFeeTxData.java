@@ -33,18 +33,18 @@ import io.nuls.core.exception.NulsException;
 import java.io.IOException;
 
 /**
- * 补贴,分发手续费交易
+ * subsidy,Distribution fee transaction
  * @author: Loki
  * @date: 2020/3/19
  */
 public class DistributionFeeTxData extends BaseNulsData {
 
     /**
-     * 分发手续费的依据hash
-     * 根据该交易hash,得到交易和交易类型
-     * 根据不同的交易类型进行不同的验证逻辑
-     * 1.提现手续费分发,签名
-     * 2.提案投票手续费分发
+     * Basis for distributing handling feeshash
+     * According to this transactionhash,Obtain transactions and transaction types
+     * Perform different verification logic based on different transaction types
+     * 1.Distribution of withdrawal fees,autograph
+     * 2.Distribution of proposal voting fees
      */
     private NulsHash basisTxHash;
 

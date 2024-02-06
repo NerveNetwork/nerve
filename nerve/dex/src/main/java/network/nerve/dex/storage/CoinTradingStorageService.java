@@ -8,12 +8,12 @@ import network.nerve.dex.model.po.CoinTradingPo;
 import java.util.List;
 
 /**
- * 币对存储服务
+ * Coin to coin storage services
  */
 public interface CoinTradingStorageService {
 
     /**
-     * 存储一条币对信息
+     * Store a coin pair information
      *
      * @param tradingPo
      * @return
@@ -21,7 +21,7 @@ public interface CoinTradingStorageService {
     void save(CoinTradingPo tradingPo) throws Exception;
 
     /**
-     * 根据创建币对的交易hash查询一条交易对信息
+     * Based on the transaction of creating currency pairshashQuery a transaction pair information
      *
      * @param hash
      * @return
@@ -29,7 +29,7 @@ public interface CoinTradingStorageService {
     CoinTradingPo query(NulsHash hash) throws NulsException;
 
     /**
-     * 根据币对id查询币对信息
+     * Based on currency pairsidQuery currency pair information
      *
      * @param coinTradingKey
      * @return
@@ -37,7 +37,7 @@ public interface CoinTradingStorageService {
     CoinTradingPo query(String coinTradingKey);
 
     /**
-     * 查询所有币对信息
+     * Query all currency pair information
      *
      * @return
      */

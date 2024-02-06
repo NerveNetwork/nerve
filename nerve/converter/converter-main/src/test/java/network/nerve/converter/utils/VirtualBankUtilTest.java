@@ -1,5 +1,6 @@
 package network.nerve.converter.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.basic.TransactionFeeCalculator;
 import io.nuls.base.data.*;
@@ -9,6 +10,7 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.rpc.util.NulsDateUtils;
 import io.nuls.v2.model.dto.RpcResult;
@@ -24,12 +26,32 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class VirtualBankUtilTest {
+
+    @Test
+    public void balanceOrderTest() throws Exception {
+        Map<String, BigDecimal> balanceMap = new HashMap<>();
+        balanceMap.put("aaa", new BigDecimal("2.3"));
+        balanceMap.put("bbb", new BigDecimal("3.3"));
+        balanceMap.put("ccc", new BigDecimal("5.3"));
+        balanceMap.put("ddd", new BigDecimal("1.3"));
+        balanceMap.put("eee", new BigDecimal("4.3"));
+        balanceMap.put("a0", new BigDecimal("0"));
+        Map<String, Integer> resultMap = new HashMap<>();
+        List<Map.Entry<String, BigDecimal>> list = new ArrayList(balanceMap.entrySet());
+        list.sort(ConverterUtil.BALANCE_SORT);
+        int i = 1;
+        for (Map.Entry<String, BigDecimal> entry : list) {
+            resultMap.put(entry.getKey(), i++);
+        }
+        System.out.println(JSONUtils.obj2PrettyJson(resultMap));
+    }
 
     @Test
     public void bankOrderTest() {
@@ -228,7 +250,9 @@ public class VirtualBankUtilTest {
 //        String nonce = "75c643fb277e8077";
 //
         List<String[]> proposalTxHashList = new ArrayList<>();
-        proposalTxHashList.add(new String[]{"多链路由eth添加scroll",     "22157d9d732ccf6e9792dea1236e766e9c09d45a1fcd54bceaa20123278f833a"});
+        proposalTxHashList.add(new String[]{"Multi chain routing usdc remove oktc",     "f25ccbf66e34f8a72d3a2268b628e24f9ed5889f1039a6b9b78171f03f3858da"});
+        proposalTxHashList.add(new String[]{"Multi chain routing usdt remove oktc",     "f307e85c5a35f9125ff3a0dc271bf247c4daaf88e372652e18d15a4d729aeaab"});
+        proposalTxHashList.add(new String[]{"Multi chain routing eth add manta",     "e4b9230d7a0d587067ea2063d87262a5e1422e765cf17073efff10f5f2ab88d3"});
 
         List<String[]> list = new ArrayList<>();
         list.add(new String[]{"NERVEepb6nsuYD48jW2Hq6W9ob1aTpZ3LiNGvk", "02376148f0332ca5bafc89f55777308f0d042290222fc0826ab16f40e2d39d17ba,03d621e65654ff522fa0121b45b9f137e78f0ca27380167b5d0373ec1820e5e9e2,03a1f65c80936606df6185fe9bd808d7dd5201e1e88f2a475f6b2a70d81f7f52e4,031e919d04934d4c5018b00a8d6c8964c76281c39b3b580b6d70aa813296c9cfa6,022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"});
@@ -293,7 +317,7 @@ public class VirtualBankUtilTest {
                 String hash = tx.getHash().toHex();
                 nonce = hash.substring(hash.length() - 16, hash.length());
                 nonceMap.put(address, nonce);
-                String txInfo = String.format("发起链: %s, 多签地址: %s, 交易hash: %s, nextNonce: %s, 交易Hex: %s", chainName, address, hash, nonce, HexUtil.encode(tx.serialize()));
+                String txInfo = String.format("Initiate Chain: %s, Multiple signed addresses: %s, transactionhash: %s, nextNonce: %s, transactionHex: %s", chainName, address, hash, nonce, HexUtil.encode(tx.serialize()));
                 sb.append(txInfo).append("\n");
                 System.out.println(txInfo);
                 System.out.println();

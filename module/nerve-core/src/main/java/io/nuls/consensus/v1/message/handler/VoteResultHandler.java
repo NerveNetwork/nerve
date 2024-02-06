@@ -11,7 +11,7 @@ import io.nuls.consensus.constant.CommandConstant;
 import io.nuls.consensus.v1.message.VoteResultMessage;
 
 /**
- * 投票结果数据消息处理器
+ * Voting result data message processor
  * Voting result data message processor
  *
  * @author tag
@@ -36,11 +36,11 @@ public class VoteResultHandler implements MessageProcessor {
         }
         VoteResultMessage voteResultMessage = RPCUtil.getInstanceRpcStr(message, VoteResultMessage.class);
         if (voteResultMessage == null || voteResultMessage.getSignList() == null || voteResultMessage.getSignList().isEmpty()) {
-            chain.getLogger().warn("收到节点：{}返回的投票结果为null");
+            chain.getLogger().warn("Received node：{}The returned voting result isnull");
             return;
         }
         voteResultMessage.setNodeId(nodeId);
-//        chain.getLogger().info("收到节点：{}，返回的投票记录，条数：" + voteResultMessage.getSignList().size());
+//        chain.getLogger().info("Received node：{}Returned voting records, number of entries：" + voteResultMessage.getSignList().size());
         chain.getConsensusCache().getVoteResultQueue().offer(voteResultMessage);
     }
 }

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 系统日志类
+ * System log class
  * System Log Class
  *
  * @author tag
@@ -30,9 +30,9 @@ public class NulsLogger {
     }
 
     /**
-     * 提供debug级别基本的日志输出
+     * providedebugBasic level log output
      *
-     * @param msg 需要显示的消息
+     * @param msg Message to be displayed
      */
     public void debug(String msg) {
         if (logger.isDebugEnabled()) {
@@ -65,10 +65,10 @@ public class NulsLogger {
     }
 
     /**
-     * 提供debug级别基本的日志输出
+     * providedebugBasic level log output
      *
-     * @param msg       需要显示的消息
-     * @param throwable 异常信息
+     * @param msg       Message to be displayed
+     * @param throwable Abnormal information
      */
     public void debug(String msg, Throwable throwable) {
         if (logger.isDebugEnabled()) {
@@ -78,9 +78,9 @@ public class NulsLogger {
     }
 
     /**
-     * 提供info级别基本的日志输出
+     * provideinfoBasic level log output
      *
-     * @param msg 需要显示的消息
+     * @param msg Message to be displayed
      */
     public void info(String msg) {
         String logContent = getLogTrace() + ":" + msg;
@@ -105,10 +105,10 @@ public class NulsLogger {
     }
 
     /**
-     * 提供info级别基本的日志输出
+     * provideinfoBasic level log output
      *
-     * @param msg       需要显示的消息
-     * @param throwable 异常信息
+     * @param msg       Message to be displayed
+     * @param throwable Abnormal information
      */
     public void info(String msg, Throwable throwable) {
         String logContent = getLogTrace() + ":" + msg;
@@ -116,9 +116,9 @@ public class NulsLogger {
     }
 
     /**
-     * 提供warn级别基本的日志输出
+     * providewarnBasic level log output
      *
-     * @param msg 需要显示的消息
+     * @param msg Message to be displayed
      */
     public void warn(String msg) {
         String logContent = getLogTrace() + ":" + msg;
@@ -143,10 +143,10 @@ public class NulsLogger {
     }
 
     /**
-     * 提供warn级别基本的日志输出
+     * providewarnBasic level log output
      *
-     * @param msg       需要显示的消息
-     * @param throwable 异常信息
+     * @param msg       Message to be displayed
+     * @param throwable Abnormal information
      */
     public void warn(String msg, Throwable throwable) {
         String logContent = getLogTrace() + ":" + msg;
@@ -154,9 +154,9 @@ public class NulsLogger {
     }
 
     /**
-     * 提供error级别基本的日志输出
+     * provideerrorBasic level log output
      *
-     * @param msg 需要显示的消息
+     * @param msg Message to be displayed
      */
     public void error(String msg) {
         String logContent = getLogTrace() + ":" + msg;
@@ -184,10 +184,10 @@ public class NulsLogger {
     }
 
     /**
-     * 提供error级别基本的日志输出
+     * provideerrorBasic level log output
      *
-     * @param msg       需要显示的消息
-     * @param throwable 异常信息
+     * @param msg       Message to be displayed
+     * @param throwable Abnormal information
      */
     public void error(String msg, Throwable throwable) {
         String logContent = getLogTrace() + ":" + msg;
@@ -232,9 +232,9 @@ public class NulsLogger {
     }
 
     /**
-     * 提供trace级别基本的日志输出
+     * providetraceBasic level log output
      *
-     * @param msg 需要显示的消息
+     * @param msg Message to be displayed
      */
     public void trace(String msg) {
         String logContent = getLogTrace() + ":" + msg;
@@ -242,10 +242,10 @@ public class NulsLogger {
     }
 
     /**
-     * 提供trace级别基本的日志输出
+     * providetraceBasic level log output
      *
-     * @param msg       需要显示的消息
-     * @param throwable 异常信息
+     * @param msg       Message to be displayed
+     * @param throwable Abnormal information
      */
     public void trace(String msg, Throwable throwable) {
         String logContent = getLogTrace() + ":" + msg;
@@ -253,9 +253,9 @@ public class NulsLogger {
     }
 
     /**
-     * 获取日志记录点的全路径
+     * Obtain the full path of the logging point
      *
-     * @return 日志记录点的全路径
+     * @return The full path of the logging point
      */
 
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -266,13 +266,13 @@ public class NulsLogger {
         logTrace.append("---currentTime:" + sdf.format(time) +"--,");
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();
         if (stack.length > 1) {
-            // index为3上一级调用的堆栈信息，index为1和2都为Log类自己调两次（可忽略），index为0为主线程触发（可忽略）
+            // indexby3The stack information of the previous level call,indexby1and2All forLogClass adjusts itself twice（Negligible）,indexby0Triggered by the main thread（Negligible）
             StackTraceElement ste = stack[3];
             if (BASIC_PATH_MAP.contains(ste.getClassName())) {
                 ste = stack[4];
             }
             if (ste != null) {
-                // 获取类名、方法名、日志的代码行数
+                // Get class name、Method name、Number of code lines in the log
                 logTrace.append(ste.getClass().getName());
                 logTrace.append('.');
                 logTrace.append(ste.getMethodName());

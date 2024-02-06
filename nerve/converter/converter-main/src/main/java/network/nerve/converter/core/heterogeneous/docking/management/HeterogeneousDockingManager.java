@@ -47,7 +47,7 @@ import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGH
 public class HeterogeneousDockingManager {
 
     /**
-     * 管理每个异构链组件的接口实现实例
+     * Manage interface implementation instances for each heterogeneous chain component
      */
     private Map<Integer, IHeterogeneousChainDocking> heterogeneousDockingMap = new ConcurrentHashMap<>();
 
@@ -67,7 +67,7 @@ public class HeterogeneousDockingManager {
         return docking;
     }
 
-    // 装填新增异构链的协议生效数据
+    // Load the effective protocol data for adding new heterogeneous chains
     private Map<Integer, DockingProtocolInfo> protocolEffectiveInformation = new LinkedHashMap<>();
 
     public void addProtocol(Integer heterogeneousChainId, Long effectiveHeight, String symbol) {
@@ -95,7 +95,7 @@ public class HeterogeneousDockingManager {
             long crossChainHeight = protocolInfo.getEffectiveHeight();
             boolean crossChainAvailable = protocolInfo.isCrossChainAvailable();
             if (!crossChainAvailable && LATEST_BLOCK_HEIGHT >= crossChainHeight) {
-                // 向HTG异构链组件,注册地址签名信息
+                // towardsHTGHeterogeneous Chain Components,Registration address signature information
                 this.registerAccount(protocolInfo.getSymbol(), chain, signAccountDTO, htgChainId);
                 protocolInfo.setCrossChainAvailable(true);
             }
@@ -106,18 +106,18 @@ public class HeterogeneousDockingManager {
         if (symbol == null)
             return;
         try {
-            // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
+            // If this node is a consensus node, And if it is a virtual bank member, registration will be executed
             if (null != signAccountDTO) {
                 String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
-                // 向异构链跨链组件导入账户
+                // Import accounts to heterogeneous chain cross chain components
                 IHeterogeneousChainDocking dock = this.getHeterogeneousDocking(htgChainId);
                 if (dock != null && dock.getCurrentSignAddress() == null) {
                     dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
-                    chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件[{}]注册签名账户信息..", dock.getChainSymbol());
+                    chain.getLogger().info("[initialization]This node is a virtual banking node,To heterogeneous chain components[{}]Register signature account information..", dock.getChainSymbol());
                 }
             }
         } catch (NulsException e) {
-            chain.getLogger().warn("向异构链组件[{}]注册地址签名信息异常, 错误: {}", symbol, e.format());
+            chain.getLogger().warn("To heterogeneous chain components[{}]Abnormal signature information of registered address, error: {}", symbol, e.format());
         }
     }
 }

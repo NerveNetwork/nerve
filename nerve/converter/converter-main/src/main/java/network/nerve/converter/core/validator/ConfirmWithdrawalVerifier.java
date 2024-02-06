@@ -61,8 +61,8 @@ import java.util.List;
 import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 /**
- * 确认提现交易业务验证器
- * (创建交易后)
+ * Confirming withdrawal transaction validator
+ * (After creating the transaction)
  *
  * @author: Loki
  * @date: 2020/4/15
@@ -88,22 +88,22 @@ public class ConfirmWithdrawalVerifier {
     public void validate(Chain chain, Transaction tx) throws NulsException {
         byte[] coinData = tx.getCoinData();
         if (coinData != null && coinData.length > 0) {
-            // coindata存在数据(coinData应该没有数据)
+            // coindataExisting data(coinDataThere should be no data available)
             throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
         }
-        //区块内业务重复交易检查
+        //Check for duplicate transactions within the block business
         ConfirmWithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmWithdrawalTxData.class);
-        // 判断该提现交易一否已经有对应的确认提现交易
+        // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
         ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, txData.getWithdrawalTxHash());
         if (null != po) {
-            // 说明该提现交易 已经发出过确认提现交易,本次交易为重复的确认提现交易
-            // Nerve提现交易不存在
+            // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out,This transaction is a duplicate confirmed withdrawal transaction
+            // NerveWithdrawal transaction does not exist
             throw new NulsException(ConverterErrorCode.CFM_IS_DUPLICATION);
         }
-        //获取提现交易
+        //Obtain withdrawal transactions
         Transaction withdrawalTx = TransactionCall.getConfirmedTx(chain, txData.getWithdrawalTxHash());
         if (null == withdrawalTx) {
-            // Nerve提现交易不存在
+            // NerveWithdrawal transaction does not exist
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         CoinData withdrawalCoinData = ConverterUtil.getInstance(withdrawalTx.getCoinData(), CoinData.class);
@@ -126,64 +126,64 @@ public class ConfirmWithdrawalVerifier {
             htgChainId = txData1.getDesChainId();
             toAddress = txData1.getDesToAddress();
         }
-        // 根据提现交易 资产信息获取异构链交易信息(转换获取) 再验证
+        // Based on withdrawal transactions Asset information acquisition heterogeneous chain transaction information(Conversion acquisition) Re validation
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, withdrawalTo.getAssetsChainId(), withdrawalTo.getAssetsId());
         if(null == heterogeneousAssetInfo){
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
-        // 获取异构链中对应的提现交易
+        // Obtain corresponding withdrawal transactions in heterogeneous chains
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 heterogeneousAssetInfo.getChainId(),
                 txData.getHeterogeneousTxHash(),
                 HeterogeneousTxTypeEnum.WITHDRAWAL,
                 this.heterogeneousDockingManager);
         if (null == info) {
-            // 异构链提现交易不存在
+            // Heterogeneous chain withdrawal transaction does not exist
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
 
-        // 验证 异构链签名列表
+        // validate Heterogeneous Chain Signature List
         List<HeterogeneousAddress> listDistributionFee = txData.getListDistributionFee();
         if (null == listDistributionFee || listDistributionFee.isEmpty()) {
-            // 异构链签名列表是空的
+            // The heterogeneous chain signature list is empty
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY);
         }
         List<HeterogeneousAddress> listSigners = info.getSigners();
         if (!HeterogeneousUtil.listHeterogeneousAddressEquals(listDistributionFee, listSigners)) {
-            // 异构链签名列表不匹配
+            // Heterogeneous chain signature list mismatch
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_SIGNER_LIST_MISMATCH);
         }
 
         if (!addressToLowerCase(toAddress).equals(addressToLowerCase(info.getTo()))) {
-            // 提现交易确认交易中到账地址与异构确认交易到账地址数据不匹配
+            // The data of the receiving address in the withdrawal transaction confirmation transaction does not match the receiving address in the heterogeneous confirmation transaction
             throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_ARRIVE_ADDRESS_MISMATCH);
         }
 
         if (txData.getHeterogeneousHeight() != info.getBlockHeight()) {
-            // 提现交易确认交易中height与异构确认交易height数据不匹配
+            // Withdrawal transaction confirmation transaction in progressheightConfirm transactions with heterogeneous entitiesheightData mismatch
             throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_HEIGHT_MISMATCH);
         }
         /**
-         * 提现金额匹配涉及手续费问题
-         * 目前异构链获取到信息中交易金额是包含手续费的, 所以是对比包含手续费的金额
+         * Matching withdrawal amounts involves handling fee issues
+         * At present, the transaction amount in the information obtained by heterogeneous chains includes transaction fees, So it's a comparison of the amount including handling fees
          */
         BigInteger fee = new BigInteger("0");
         BigInteger arrivedAmount = withdrawalTo.getAmount().subtract(fee);
         if (converterCoreApi.isProtocol22()) {
-            // 跨链资产精度不同时的金额换算
+            // Amount Conversion for Cross Chain Assets with Different Precision
             arrivedAmount = converterCoreApi.checkDecimalsSubtractedToNerveForWithdrawal(heterogeneousAssetInfo, arrivedAmount);
             if (arrivedAmount.compareTo(info.getValue()) < 0) {
-                // 提现交易确认交易中金额与异构确认交易金额数据不匹配
+                // The amount in the withdrawal transaction confirmation transaction does not match the amount data of heterogeneous confirmation transactions
                 throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
             }
         } else if (converterCoreApi.isSupportProtocol12ERC20OfTransferBurn()) {
             if (arrivedAmount.compareTo(info.getValue()) < 0) {
-                // 提现交易确认交易中金额与异构确认交易金额数据不匹配
+                // The amount in the withdrawal transaction confirmation transaction does not match the amount data of heterogeneous confirmation transactions
                 throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
             }
         } else {
             if (arrivedAmount.compareTo(info.getValue()) != 0) {
-                // 提现交易确认交易中金额与异构确认交易金额数据不匹配
+                // The amount in the withdrawal transaction confirmation transaction does not match the amount data of heterogeneous confirmation transactions
                 throw new NulsException(ConverterErrorCode.CFM_WITHDRAWAL_AMOUNT_MISMATCH);
             }
         }

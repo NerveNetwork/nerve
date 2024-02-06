@@ -54,11 +54,11 @@ import static io.nuls.block.constant.CommandConstant.GET_BLOCK_BY_HEIGHT_MESSAGE
 import static io.nuls.block.constant.CommandConstant.GET_BLOCK_MESSAGE;
 
 /**
- * 区块工具类
+ * Block tool class
  *
  * @author captain
  * @version 1.0
- * @date 18-11-19 上午11:06
+ * @date 18-11-19 morning11:06
  */
 @Component
 public class BlockUtil {
@@ -131,25 +131,25 @@ public class BlockUtil {
     }
 
     /**
-     * 分叉区块、孤儿区块验证
-     * 区块B与链A的关系有四种：
-     * 1.B是A上重复的区块
-     * 2.B是A上分叉的区块
-     * 3.B能直接连到A
-     * 4.B与A没有任何关联关系
-     * 以上四种关系适用于主链、分叉链、孤儿链
+     * Forked block、Orphan block verification
+     * blockBChainAThere are four types of relationships：
+     * 1.ByesARepeated blocks on top
+     * 2.ByesAUpward forked block
+     * 3.BCan be directly connected toA
+     * 4.BRelated toAThere is no related relationship
+     * The above four relationships apply to the main chain、Forked chain、Orphan Chain
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param block
      * @return
      */
     public static boolean forkVerify(int chainId, Block block, boolean isPocNet, String nodeId) {
-        //1.与主链判断
+        //1.Judging from the main chain
         ErrorCode mainCode = mainChainProcess(chainId, block).getErrorCode();
         if (mainCode.equals(BlockErrorCode.SUCCESS)) {
             return true;
         }
-        //如果收到未来区块,先缓存
+        //If future blocks are received,Cache first
         if (mainCode.equals(BlockErrorCode.IRRELEVANT_BLOCK)){
             ChainContext context = ContextManager.getContext(chainId);
             context.getLogger().debug("received future block, cache block, height:" + block.getHeader().getHeight() + ", hash:" + block.getHeader().getHash());
@@ -171,9 +171,9 @@ public class BlockUtil {
     }
 
     /**
-     * 区块与主链比对
+     * Comparison between blocks and main chains
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param block
      * @return
      */
@@ -187,7 +187,7 @@ public class BlockUtil {
         long masterChainEndHeight = masterChain.getEndHeight();
         NulsHash masterChainEndHash = masterChain.getEndHash();
 
-        //1.收到的区块与主链最新高度差大于1000(可配置),丢弃
+        //1.The height difference between the received block and the latest main chain is greater than1000(Configurable),discard
         ChainContext context = ContextManager.getContext(chainId);
         ConfigBean parameters = context.getParameters();
         NulsLogger logger = context.getLogger();
@@ -196,28 +196,28 @@ public class BlockUtil {
             return Result.getFailed(BlockErrorCode.OUT_OF_RANGE);
         }
 
-        //2.收到的区块可以连到主链,验证通过
+        //2.The received block can be connected to the main chain,Verification passed
         if (blockHeight == masterChainEndHeight + 1 && blockPreviousHash.equals(masterChainEndHash)) {
 //            logger.debug("received continuous block of masterChain, height:" + blockHeight + ", hash:" + blockHash);
             return Result.getSuccess(BlockErrorCode.SUCCESS);
         }
 
         if (blockHeight <= masterChainEndHeight) {
-            //3.如果收到之前区块则直接丢弃
+            //3.If the previous block is received, it will be directly discarded
             return Result.getFailed(BlockErrorCode.FORK_BLOCK);
         }
 
-        //与主链没有关联
+        //Not associated with the main chain
         return Result.getFailed(BlockErrorCode.IRRELEVANT_BLOCK);
     }
 
     /**
-     * 处理同一个打包地址出的同样高度的块，降低网络分区概率
-     * @param chainId           链ID
+     * Processing blocks of the same height from the same packaging address to reduce the probability of network partitioning
+     * @param chainId           chainID
      * @param blockService
-     * @param header            要保存的区块
-     * @param masterChainEndHeight          主链最新高度
-     * @param masterChainEndHash            主链最新区块hash
+     * @param header            Block to be saved
+     * @param masterChainEndHeight          The latest height of the main chain
+     * @param masterChainEndHash            The latest block in the main chainhash
      * @param masterHeader
      * @return
      */
@@ -237,9 +237,9 @@ public class BlockUtil {
     }
 
     /**
-     * 区块与分叉链比对
+     * Block and fork chain comparison
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param block
      * @return
      */
@@ -256,7 +256,7 @@ public class BlockUtil {
                 long forkChainStartHeight = forkChain.getStartHeight();
                 long forkChainEndHeight = forkChain.getEndHeight();
                 NulsHash forkChainEndHash = forkChain.getEndHash();
-                //1.直连,链尾
+                //1.Direct connection,Chain tail
                 if (blockHeight == forkChainEndHeight + 1 && blockPreviousHash.equals(forkChainEndHash)) {
                     chainStorageService.save(chainId, block);
                     forkChain.addLast(block);
@@ -264,12 +264,12 @@ public class BlockUtil {
                     ConsensusCall.evidence(chainId, blockService, header);
                     return Result.getFailed(BlockErrorCode.FORK_BLOCK);
                 }
-                //2.重复,丢弃
+                //2.repeat,discard
                 if (forkChainStartHeight <= blockHeight && blockHeight <= forkChainEndHeight && forkChain.getHashList().contains(blockHash)) {
                     logger.debug("received duplicate block of forkChain, height:" + blockHeight + ", hash:" + blockHash);
                     return Result.getFailed(BlockErrorCode.FORK_BLOCK);
                 }
-                //3.分叉
+                //3.Fork
                 if (forkChainStartHeight <= blockHeight && blockHeight <= forkChainEndHeight && forkChain.getHashList().contains(blockPreviousHash)) {
                     chainStorageService.save(chainId, block);
                     Chain newForkChain = ChainGenerator.generate(chainId, block, forkChain, ChainTypeEnum.FORK);
@@ -282,14 +282,14 @@ public class BlockUtil {
         } catch (Exception e) {
             logger.error("", e);
         }
-        //4.与分叉链没有关联,进入孤儿链判断流程
+        //4.Not associated with forked chains,Enter the orphan chain judgment process
         return Result.getFailed(BlockErrorCode.IRRELEVANT_BLOCK);
     }
 
     /**
-     * 区块与孤儿链比对
+     * Comparison between blocks and orphan chains
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param block
      * @return
      */
@@ -312,7 +312,7 @@ public class BlockUtil {
                 long orphanChainEndHeight = orphanChain.getEndHeight();
                 NulsHash orphanChainEndHash = orphanChain.getEndHash();
                 NulsHash orphanChainPreviousHash = orphanChain.getPreviousHash();
-                //1.直连,分链头、链尾两种情况
+                //1.Direct connection,Splitting head、There are two situations at the end of the chain
                 if (blockHeight == orphanChainEndHeight + 1 && blockPreviousHash.equals(orphanChainEndHash)) {
                     chainStorageService.save(chainId, block);
                     orphanChain.addLast(block);
@@ -325,12 +325,12 @@ public class BlockUtil {
                     logger.info("received continuous head block of orphanChain, height:" + blockHeight + ", hash:" + blockHash);
                     return;
                 }
-                //2.重复,丢弃
+                //2.repeat,discard
                 if (orphanChainStartHeight <= blockHeight && blockHeight <= orphanChainEndHeight && orphanChain.getHashList().contains(blockHash)) {
                     logger.debug("received duplicate block of orphanChain, height:" + blockHeight + ", hash:" + blockHash);
                     return;
                 }
-                //3.分叉
+                //3.Fork
                 if (orphanChainStartHeight <= blockHeight && blockHeight <= orphanChainEndHeight && orphanChain.getHashList().contains(blockPreviousHash)) {
                     chainStorageService.save(chainId, block);
                     Chain forkOrphanChain = ChainGenerator.generate(chainId, block, orphanChain, ChainTypeEnum.ORPHAN);
@@ -339,7 +339,7 @@ public class BlockUtil {
                     return;
                 }
             }
-            //4.与主链、分叉链、孤儿链都无关,形成一个新的孤儿链
+            //4.With the main chain、Forked chain、Orphan chains have nothing to do with it,Forming a new orphan chain
             chainStorageService.save(chainId, block);
             Chain newOrphanChain = ChainGenerator.generate(chainId, block, null, ChainTypeEnum.ORPHAN);
             BlockChainManager.addOrphanChain(chainId, newOrphanChain);
@@ -355,7 +355,7 @@ public class BlockUtil {
         if (transactionType.isEmpty()) {
             List<Integer> sysTxType = TransactionCall.getSystemTypes(chainId);
             transactionType.addAll(sysTxType);
-            LoggerUtil.COMMON_LOG.info("获取系统交易类型列表:{}", Arrays.toString(sysTxType.toArray(new Integer[sysTxType.size()])));
+            LoggerUtil.COMMON_LOG.info("Obtain a list of system transaction types:{}", Arrays.toString(sysTxType.toArray(new Integer[sysTxType.size()])));
         }
         SmallBlock smallBlock = new SmallBlock();
         smallBlock.setHeader(block.getHeader());
@@ -365,7 +365,7 @@ public class BlockUtil {
     }
 
     /**
-     * 根据smallblock和txmap组装一个完整区块
+     * according tosmallblockandtxmapAssemble a complete block
      *
      * @param header
      * @param txMap
@@ -420,9 +420,9 @@ public class BlockUtil {
     }
 
     /**
-     * 根据区块高度从节点下载区块
+     * Download blocks from nodes based on block height
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param nodeId
      * @param height
      * @return
@@ -456,9 +456,9 @@ public class BlockUtil {
     }
 
     /**
-     * 根据区块hash从节点下载区块
+     * Based on blockshashDownload blocks from nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param hash
      * @param nodeId
      * @param height

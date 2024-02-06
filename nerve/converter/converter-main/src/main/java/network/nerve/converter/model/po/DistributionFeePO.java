@@ -29,18 +29,18 @@ import io.nuls.base.data.NulsHash;
 import java.io.Serializable;
 
 /**
- * 手续费补贴交易确认业务数据 关系
+ * Confirmation of transaction data for handling fee subsidies relationship
  * @author: Loki
  * @date: 2020/3/20
  */
 public class DistributionFeePO implements Serializable {
 
     /**
-     * 原始依据交易hash
+     * Original basis transactionhash
      */
     private NulsHash basisTxHash;
     /**
-     * 当前手续费补贴交易hash
+     * Current transaction of handling fee subsidyhash
      */
     private NulsHash DistributionFeeTxHash;
 

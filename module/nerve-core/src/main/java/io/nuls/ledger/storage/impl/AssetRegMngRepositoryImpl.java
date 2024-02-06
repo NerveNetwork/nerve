@@ -54,7 +54,7 @@ public class AssetRegMngRepositoryImpl implements AssetRegMngRepository, Initial
     @Autowired
     private NerveCoreConfig config;
     /**
-     * 缓存合约资产id
+     * Cache contract assetsid
      */
     Map<String, Integer> DB_CONTRACT_ASSETS_IDS_MAP = new ConcurrentHashMap<>();
 

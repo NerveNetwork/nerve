@@ -50,7 +50,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 测试转账解锁
+ * Test transfer unlocking
  * @author: Charlie
  * @date: 2020/5/14
  */
@@ -100,7 +100,7 @@ public class TxUnlock {
     }
 
     /**
-     * 测试时需要将锁定交易 打印的nonce 填到解锁的from中
+     * During testing, it is necessary to lock the transaction Printednonce Fill in to unlockfromin
      * @throws Exception
      */
     @Test
@@ -119,16 +119,16 @@ public class TxUnlock {
     public static Transaction assemblyTransaction(int ide) throws Exception {
         Transaction tx = new Transaction(2);
         tx.setTime(NulsDateUtils.getCurrentTimeMillis() / 1000);
-        //组装CoinData中的coinFrom、coinTo数据
+        //assembleCoinDataMiddlecoinFrom、coinTodata
         if (ide == 0) {
             tx.setCoinData(getLock().serialize());
         } else if (ide == 1) {
             tx.setCoinData(getUnlock().serialize());
         }
-        //计算交易数据摘要哈希
+        //Calculate transaction data summary hash
         byte[] bytes = tx.serializeForHash();
         tx.setHash(NulsHash.calcHash(bytes));
-        //创建ECKey用于签名
+        //establishECKeyUsed for signature
         TransactionSignature transactionSignature = new TransactionSignature();
         List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
 
@@ -145,7 +145,7 @@ public class TxUnlock {
         signature.parse(new NulsByteBuffer(RPCUtil.decode(signatureStr)));
 
         p2PHKSignatures.add(signature);
-        //交易签名
+        //Transaction signature
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         tx.setTransactionSignature(transactionSignature.serialize());
         return tx;
@@ -158,9 +158,9 @@ public class TxUnlock {
         String address = address25;
         byte[] addressByte = AddressTool.getAddress(address);
 
-        //检查对应资产余额是否足够
+        //Check if the corresponding asset balance is sufficient
         BigInteger amount = new BigInteger("99900000000");
-        //查询账本获取nonce值
+        //Query ledger to obtainnoncevalue
         byte[] nonce = getNonceByPreHash(createChain(), address, null);
         System.out.println("lock tx from nonce: " + HexUtil.encode(nonce));
         CoinFrom coinFrom = new CoinFrom(addressByte, assetChainId, assetId, amount.add(new BigInteger("100000")), nonce, (byte) 0);
@@ -185,11 +185,11 @@ public class TxUnlock {
         String address = address25;
         byte[] addressByte = AddressTool.getAddress(address);
 
-        //检查对应资产余额是否足够
+        //Check if the corresponding asset balance is sufficient
         BigInteger amount = new BigInteger("99900000000");
         
         /**
-         * 需要填入锁定的那一笔nonce
+         * The locked transaction needs to be filled innonce
          */
         byte[] nonce = HexUtil.decode("67729674f1e105e7");
         CoinFrom coinFrom = new CoinFrom(addressByte, assetChainId, assetId, amount, nonce, (byte) -1);

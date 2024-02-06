@@ -160,7 +160,7 @@ public class CoinData extends BaseNulsData {
     }
 
     /**
-     * 从CoinData中获取和交易相关的地址(缺少txData中相关地址，需要对应的交易单独获取)
+     * fromCoinDataObtain and transact related addresses from(lacktxDataThe relevant address needs to be obtained separately for the corresponding transaction)
      *
      * @return
      */
@@ -208,10 +208,10 @@ public class CoinData extends BaseNulsData {
     }
 
     /**
-     * 计算指定资产手续费
-     * @param assetChainId     指定资产链ID
-     * @param assetId          指定资产ID
-     * @return                 手续费大小
+     * Calculate designated asset handling fees
+     * @param assetChainId     Designated asset chainID
+     * @param assetId          Designated assetsID
+     * @return                 Handling fee size
      * */
     public BigInteger getFeeByAsset(int assetChainId, int assetId){
         BigInteger fromAmount = BigInteger.ZERO;
@@ -248,7 +248,7 @@ public class CoinData extends BaseNulsData {
                 builder.append(String.format("\t\t\tassetChainId: %s", coinFrom.getAssetsChainId())).append(lineSeparator);
                 builder.append(String.format("\t\t\tassetId: %s", coinFrom.getAssetsId())).append(lineSeparator);
                 builder.append(String.format("\t\t\tnonce: %s", HexUtil.encode(coinFrom.getNonce()))).append(lineSeparator);
-                builder.append(String.format("\t\t\tlocked: %s", coinFrom.getLocked())).append("\t(0普通交易，-1解锁金额交易（退出共识，退出委托))").append(lineSeparator);
+                builder.append(String.format("\t\t\tlocked: %s", coinFrom.getLocked())).append("\t(0Ordinary transactions,-1Unlock amount transaction（Exit consensus, exit delegation))").append(lineSeparator);
                 builder.append(lineSeparator);
             }
         }
@@ -267,7 +267,7 @@ public class CoinData extends BaseNulsData {
                 builder.append(String.format("\t\t\tamount: %s", coinTo.getAmount())).append(lineSeparator);
                 builder.append(String.format("\t\t\tassetChainId: %s", coinTo.getAssetsChainId())).append(lineSeparator);
                 builder.append(String.format("\t\t\tassetId: %s", coinTo.getAssetsId())).append(lineSeparator);
-                builder.append(String.format("\t\t\tlocked: %s", coinTo.getLockTime())).append("\t(解锁高度或解锁时间，-1为永久锁定)").append(lineSeparator);
+                builder.append(String.format("\t\t\tlocked: %s", coinTo.getLockTime())).append("\t(Unlocking height or unlocking time,-1To permanently lock)").append(lineSeparator);
                 builder.append(lineSeparator);
             }
         }

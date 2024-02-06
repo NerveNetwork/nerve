@@ -38,47 +38,47 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 一键跨链
+ * One click cross chain
  * @author: PierreLuo
  * @date: 2022/3/21
  */
 public class OneClickCrossChainUnconfirmedTxData extends BaseNulsData {
 
     /**
-     * 异构链充值交易hash
+     * Heterogeneous chain recharge transactionshash
      */
     private HeterogeneousHash originalTxHash;
     /**
-     * 异构链交易所在区块高度
+     * Heterogeneous chain exchanges at block height
      */
     private long heterogeneousHeight;
     /**
-     * 异构链网络中 充值的from地址
+     * In heterogeneous chain networks Rechargeablefromaddress
      */
     private String heterogeneousFromAddress;
     /**
-     * nerve 网络中的到账地址
+     * nerve Delivery address in the network
      */
     private byte[] nerveToAddress;
-    // erc20资产
+    // erc20asset
     private BigInteger erc20Amount;
     private int erc20AssetChainId;
     private int erc20AssetId;
-    // tipping资产
+    // tippingasset
     private String tippingAddress;
     private BigInteger tipping;
     private int tippingChainId;
     private int tippingAssetId;
-    // main资产
-    private BigInteger mainAssetFeeAmount;// 跨到目标链的手续费支出
+    // mainasset
+    private BigInteger mainAssetFeeAmount;// Transaction fee expenditure across the target chain
     private BigInteger mainAssetAmount;
     private int mainAssetChainId;
     private int mainAssetId;
-    // 目标链跨链信息
+    // Cross chain information of the target chain
     private int desChainId;
     private String desToAddress;
     private String desExtend;
-    // 预留字段
+    // Reserved fields
     private byte[] extend;
 
     @Override

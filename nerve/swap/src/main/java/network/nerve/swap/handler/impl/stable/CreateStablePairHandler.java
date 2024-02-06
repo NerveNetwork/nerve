@@ -90,7 +90,7 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
         BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
         try {
             StableSwapTempPairManager stableSwapTempPairManager = batchInfo.getStableSwapTempPairManager();
-            // 提取业务参数
+            // Extract business parameters
             CreateStablePairData txData = new CreateStablePairData();
             txData.parse(tx.getTxData(), 0);
             NerveToken[] coins = txData.getCoins();
@@ -123,13 +123,13 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
 
             byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), chainId, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
             String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
-            // 检查交易对地址是否重复
+            // Check if the transaction pairs have duplicate addresses
             if (stableSwapTempPairManager.isExist(stablePairAddress)) {
                 throw new NulsException(PAIR_ALREADY_EXISTS);
             }
-            // 保存临时创建的交易对
+            // Save temporarily created transaction pairs
             stableSwapTempPairManager.add(stablePairAddress);
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
@@ -138,7 +138,7 @@ public class CreateStablePairHandler extends SwapHandlerConstraints {
 
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());

@@ -38,11 +38,11 @@ import java.util.Map;
 /**
  * @author lanjinsheng
  * @date 2019/10/17
- * @description 用于广播身份消息
+ * @description Used for broadcasting identity messages
  */
 public class ConsensusIdentitiesMsg extends BaseBusinessMessage {
     private ConsensusIdentitiesSub consensusIdentitiesSub = new ConsensusIdentitiesSub();
-    //对identityList的签名
+    //rightidentityListSignature of
     private P2PHKSignature sign = null;
     private String nodeId;
     private String msgStr;

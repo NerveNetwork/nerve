@@ -47,12 +47,12 @@ public class TradingDealProcessor implements TransactionProcessor {
     }
 
     /**
-     * 系统交易不单独验证，提交时一并验证
+     * System transactions are not validated separately, but are validated together when submitted
      *
-     * @param chainId     链Id
-     * @param txs         类型为{@link #getType()}的所有交易集合
-     * @param txMap       不同交易类型与其对应交易列表键值对
-     * @param blockHeader 区块头
+     * @param chainId     chainId
+     * @param txs         Type is{@link #getType()}All transaction sets for
+     * @param txMap       Different transaction types and their corresponding transaction list key value pairs
+     * @param blockHeader Block head
      * @return
      */
     @Override
@@ -78,7 +78,7 @@ public class TradingDealProcessor implements TransactionProcessor {
             TradingDeal deal = new TradingDeal();
             deal.parse(new NulsByteBuffer(tx.getTxData()));
             TradingDealPo dealPo = new TradingDealPo(tx.getHash(), deal);
-            //找到对应的买单和卖单
+            //Find the corresponding buy and sell orders
             TradingContainer container = dexManager.getTradingContainer(dealPo.getTradingHash().toHex());
             TradingOrderPo buyOrder = orderStorageService.query(deal.getBuyHash());
             TradingOrderPo sellOrder = orderStorageService.query(deal.getSellHash());
@@ -89,9 +89,9 @@ public class TradingDealProcessor implements TransactionProcessor {
 //                CancelDeal cancelDeal = dealTxData.getCancelDealList().get(i);
 //                if (cancelDeal.getStatus() == DexConstant.CANCEL_ORDER_SUCC) {
 //                    TradingOrderPo orderPo = orderStorageService.query(cancelDeal.getOrderHash());
-//                    //删除盘口对应的订单记录
+//                    //Delete order records corresponding to inventory opening
 //                    dexManager.removeTradingOrder(orderPo);
-//                    //持久化数据库
+//                    //Persistent database
 //                    orderStorageService.stop(orderPo);
 //                }
 //                orderCancelStorageService.save(cancelDeal);
@@ -124,7 +124,7 @@ public class TradingDealProcessor implements TransactionProcessor {
         if (dealPo.getType() == DexConstant.ORDER_SELL_OVER || dealPo.getType() == DexConstant.ORDER_ALL_OVER) {
             sellOrder.setOver(true);
         }
-        //先更新盘口，如果未完全成交则更新盘口，已完成成交则从盘口移出
+        //Update the trading position first. If the transaction is not fully completed, update the trading position. If the transaction is completed, remove it from the trading position
         if (!buyOrder.isOver()) {
             container.updateTradingOrder(buyOrder);
         } else {
@@ -136,7 +136,7 @@ public class TradingDealProcessor implements TransactionProcessor {
             container.removeTradingOrder(sellOrder);
         }
 
-        //再统一更新数据库，如果交易已完全成交，需要从数据库移至备份库
+        //Update the database uniformly again. If the transaction has been fully completed, it needs to be moved from the database to the backup database
         if (!buyOrder.isOver()) {
             orderStorageService.save(buyOrder);
         } else {
@@ -148,7 +148,7 @@ public class TradingDealProcessor implements TransactionProcessor {
             orderStorageService.stop(sellOrder);
         }
 
-        //存储成交信息
+        //Store transaction information
         tradingDealStorageService.save(dealPo);
     }
 
@@ -157,20 +157,20 @@ public class TradingDealProcessor implements TransactionProcessor {
             boolean isBuyOver = false;
             boolean isSellOver = false;
             TradingDealPo dealPo = tradingDealStorageService.query(tx.getHash());
-            //未查询到持久化的成交数据直接返回
+            //No persistent transaction data found, directly returned
             if (dealPo == null) {
                 return;
             }
-            //1.处理买单
-            //查询持久化的买单数据
+            //1.Processing Purchase Orders
+            //Query persistent payment data
             TradingOrderPo buyOrder = orderStorageService.query(dealPo.getBuyHash().getBytes());
             if (buyOrder == null) {
-                //委托单表查询不到，就到历史备份表里去查询
+                //If the entrusted table cannot be queried, go to the historical backup table to query it
                 buyOrder = orderStorageService.queryFromBack(dealPo.getBuyHash().getBytes());
                 buyOrder.setOver(false);
                 isBuyOver = true;
             }
-            //如果还是查询不到，说明就是本区块打包的委托单，并没有被保存，这样就直接返回，不做处理
+            //If it still cannot be found, it indicates that the delegation order packaged in this block has not been saved, so it will be returned directly without processing
             if (buyOrder == null) {
                 return;
             }
@@ -178,7 +178,7 @@ public class TradingDealProcessor implements TransactionProcessor {
             buyOrder.setDealAmount(buyOrder.getDealAmount().subtract(dealPo.getBaseAmount()));
             buyOrder.setLeftQuoteAmount(buyOrder.getLeftQuoteAmount().add(dealPo.getQuoteAmount()));
 
-            //2.处理卖单
+            //2.Processing sales orders
             TradingOrderPo sellOrder = orderStorageService.query(dealPo.getSellHash().getBytes());
             if (sellOrder == null) {
                 sellOrder = orderStorageService.queryFromBack(dealPo.getSellHash().getBytes());
@@ -192,7 +192,7 @@ public class TradingDealProcessor implements TransactionProcessor {
             sellOrder.setDealAmount(sellOrder.getDealAmount().subtract(dealPo.getBaseAmount()));
 
             TradingContainer container = dexManager.getTradingContainer(dealPo.getTradingHash().toHex());
-            //将挂单重新放回盘口
+            //Put the order back into the inventory
             if (isBuyOver) {
                 container.addTradingOrder(buyOrder);
             } else {
@@ -204,7 +204,7 @@ public class TradingDealProcessor implements TransactionProcessor {
                 container.updateTradingOrder(sellOrder);
             }
 
-            //回滚持久化数据
+            //Rolling back persistent data
             orderStorageService.deleteBackData(dealPo.getBuyHash().getBytes());
             orderStorageService.save(buyOrder);
             orderStorageService.deleteBackData(dealPo.getSellHash().getBytes());
@@ -230,15 +230,15 @@ public class TradingDealProcessor implements TransactionProcessor {
 //
 //            TradingDealTxData dealTxData = new TradingDealTxData();
 //            dealTxData.parse(new NulsByteBuffer(tx.getTxData()));
-//            //回滚的处理和commit的处理顺序完全相反
-//            //1.先反向处理取消委托挂单
+//            //Rollback processing andcommitThe processing order is completely opposite
+//            //1.Reverse the process of canceling the entrusted order first
 //            CancelDeal cancelDeal;
 //            for (int i = dealTxData.getCancelDealList().size() - 1; i >= 0; i--) {
 //                cancelDeal = dealTxData.getCancelDealList().get(i);
 //                cancelDeal = orderCancelStorageService.query(cancelDeal.getOrderHash());
 //                if (cancelDeal != null && cancelDeal.getStatus() == DexConstant.CANCEL_ORDER_SUCC) {
 //                    TradingOrderPo orderPo = orderStorageService.queryFromBack(cancelDeal.getOrderHash());
-//                    //有可能是因为保存区块时，未完整保存需要做回滚，因此数据可能会查询不到
+//                    //It is possible that when saving the block, incomplete saving requires a rollback, so the data may not be queried
 //                    if (orderPo != null) {
 //                        orderStorageService.rollbackStop(orderPo);
 //                    }
@@ -246,23 +246,23 @@ public class TradingDealProcessor implements TransactionProcessor {
 //                orderCancelStorageService.delete(cancelDeal.getOrderHash());
 //            }
 //
-//            //2.再反向处理成交单
+//            //2.Reverse processing of transaction orders
 //            for (int i = dealTxData.getTradingDealList().size() - 1; i >= 0; i--) {
 //                TradingDealPo dealPo = tradingDealStorageService.query(tx.getHash());
-//                //未查询到持久化的成交数据直接返回
+//                //No persistent transaction data found, directly returned
 //                if (dealPo == null) {
 //                    return;
 //                }
-//                //1.处理买单
-//                //查询持久化的买单数据
+//                //1.Processing Purchase Orders
+//                //Query persistent payment data
 //                TradingOrderPo buyOrder = orderStorageService.query(dealPo.getBuyHash().getBytes());
 //                if (buyOrder == null) {
-//                    //委托单表查询不到，就到历史备份表里去查询
+//                    //If the entrusted table cannot be queried, go to the historical backup table to query it
 //                    buyOrder = orderStorageService.queryFromBack(dealPo.getBuyHash().getBytes());
 //                    buyOrder.setOver(false);
 //                    isBuyOver = true;
 //                }
-//                //如果还是查询不到，说明就是本区块打包的委托单，并没有被保存，这样就直接跳过不做处理
+//                //If it still cannot be found, it indicates that the delegation order packaged in this block has not been saved, so it will be skipped and not processed directly
 //                if (buyOrder == null) {
 //                    tradingDealStorageService.delete(dealPo.getTradingHash());
 //                    continue;
@@ -271,7 +271,7 @@ public class TradingDealProcessor implements TransactionProcessor {
 //                buyOrder.setDealAmount(buyOrder.getDealAmount().subtract(dealPo.getBaseAmount()));
 //                buyOrder.setLeftQuoteAmount(buyOrder.getLeftQuoteAmount().add(dealPo.getQuoteAmount()));
 //
-//                //2.处理卖单
+//                //2.Processing sales orders
 //                TradingOrderPo sellOrder = orderStorageService.query(dealPo.getSellHash().getBytes());
 //                if (sellOrder == null) {
 //                    sellOrder = orderStorageService.queryFromBack(dealPo.getSellHash().getBytes());
@@ -286,7 +286,7 @@ public class TradingDealProcessor implements TransactionProcessor {
 //                sellOrder.setDealAmount(sellOrder.getDealAmount().subtract(dealPo.getBaseAmount()));
 //
 //                TradingContainer container = dexManager.getTradingContainer(dealPo.getTradingHash().toHex());
-//                //将挂单重新放回盘口
+//                //Put the order back into the inventory
 //                if (isBuyOver) {
 //                    container.addTradingOrder(buyOrder);
 //                } else {
@@ -298,7 +298,7 @@ public class TradingDealProcessor implements TransactionProcessor {
 //                    container.updateTradingOrder(sellOrder);
 //                }
 //
-//                //回滚持久化数据
+//                //Rolling back persistent data
 //                orderStorageService.deleteBackData(dealPo.getBuyHash().getBytes());
 //                orderStorageService.save(buyOrder);
 //                orderStorageService.deleteBackData(dealPo.getSellHash().getBytes());

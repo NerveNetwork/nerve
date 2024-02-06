@@ -10,106 +10,106 @@ import java.util.Map;
  * */
 public interface AgentService {
     /**
-     * 创建节点
+     * Create nodes
      * */
     Result createAgent(Map<String,Object> params);
 
     /**
-     * 追加保证金
+     * Additional margin
      * */
     Result appendAgentDeposit (Map<String,Object> params);
 
     /**
-     * 减少保证金
+     * Reduce margin
      * */
     Result reduceAgentDeposit (Map<String,Object> params);
 
     /**
-     * 注销节点
+     * Unregister node
      * @param params
      * return Result
      * */
     Result stopAgent(Map<String,Object> params);
 
     /**
-     * 获取节点列表
+     * Get node list
      * @param params
      * return Result
      * */
     Result getAgentList(Map<String,Object> params);
 
     /**
-     * 异构跨链查询共识节点列表
+     * Heterogeneous cross chain query consensus node list
      * @param params
      * return Result
      * */
     Result getAgentBasicList(Map<String,Object> params);
 
     /**
-     * 获取指定节点信息
+     * Get specified node information
      * @param params
      * @return Result
      * */
     Result getAgentInfo(Map<String,Object> params);
 
     /**
-     * 查询指定共识节点状态
+     * Query the status of specified consensus nodes
      * @param params
      * @return Result
      * */
     Result getAgentStatus(Map<String,Object> params);
 
     /**
-     * 修改节点共识状态
+     * Modify node consensus status
      * @param params
      * @return Result
      */
     Result updateAgentConsensusStatus(Map<String, Object> params);
 
     /**
-     * 修改节点打包状态
+     * Modify node packaging status
      * @param params
      * @return Result
      * */
     Result updateAgentStatus(Map<String,Object> params);
 
     /**
-     * 获取当前节点出块地址
+     * Get the current node's outbound address
      * @param params
      * @return Result
      * */
     Result getNodePackingAddress(Map<String,Object> params);
 
     /**
-     * 获取所有节点出块地址/指定N个区块出块指定
+     * Get all node block addresses/specifyNBlock assignment
      * @param params
      * @return Result
      * */
     Result getAgentAddressList(Map<String,Object> params);
 
     /**
-     * 获取当前节点的出块账户信息
+     * Obtain the outbound account information of the current node
      * @param params
      * @return Result
      * */
     Result getPackerInfo(Map<String,Object> params);
 
     /**
-     * 获取共识两轮次间节点变化信息
+     * Obtain node change information between two rounds of consensus
      * @param params
      * @return Result
      * */
     Result getAgentChangeInfo(Map<String,Object> params);
 
     /**
-     * 获取共识两轮次间节点变化信息
+     * Obtain node change information between two rounds of consensus
      * @param params
      * @return Result
      * */
     Result getReduceDepositNonceList(Map<String,Object> params);
 
     /**
-     * 虚拟银行节点变更
+     * Virtual Bank Node Change
      * @param params
      * @return Result
      * */

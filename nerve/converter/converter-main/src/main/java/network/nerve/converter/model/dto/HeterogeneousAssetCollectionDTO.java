@@ -37,9 +37,9 @@ import java.util.List;
 @ApiModel
 public class HeterogeneousAssetCollectionDTO {
 
-    @ApiModelProperty(description = "异构链chainId")
+    @ApiModelProperty(description = "Heterogeneous chainchainId")
     private int chainId;
-    @ApiModelProperty(description = "异构链所有初始资产", type = @TypeDescriptor(value = List.class, collectionElement = HeterogeneousAssetInfo.class))
+    @ApiModelProperty(description = "All initial assets of heterogeneous chains", type = @TypeDescriptor(value = List.class, collectionElement = HeterogeneousAssetInfo.class))
     private List<HeterogeneousAssetInfo> assetList;
 
     public HeterogeneousAssetCollectionDTO(int chainId, List<HeterogeneousAssetInfo> assetList) {

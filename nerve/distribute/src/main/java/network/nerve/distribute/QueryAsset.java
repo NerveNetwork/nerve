@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 /**
  * @Author: zhoulijun
  * @Time: 2020/7/1 14:48
- * @Description: 快照数据
- * 准备快照
+ * @Description: Snapshot data
+ * Prepare snapshot
  */
 public class QueryAsset extends Base {
 
@@ -78,7 +78,7 @@ public class QueryAsset extends Base {
             String address = account.get("address").toString();
             BigInteger balance = new BigInteger(account.get("balance").toString());
             if(AddressTool.validContractAddress(AddressTool.getAddress(address),CHAIN_ID)){
-                Log.warn("{}是一个智能合约地址，放弃转账",address);
+                Log.warn("{}It is a smart contract address, abandon transfer",address);
                 return ;
             }
             if(NRC20_EXCLUSION.contains(address)){
@@ -99,7 +99,7 @@ public class QueryAsset extends Base {
                 writer.write(d);
                 writer.newLine();
             } catch (IOException e) {
-                Log.error("写入文件失败");
+                Log.error("fail to write to file");
                 System.exit(0);
             }
         });
@@ -195,37 +195,37 @@ public class QueryAsset extends Base {
     }
 
     public static void main(String[] args) throws Exception {
-        //将资产数据读取到文件中
+        //Read asset data into a file
 //        readRrc20ToFile();
         readNulsToFile();
         readPocmDepositToFile();
-        //从文件数据中计算总数
+        //Calculate the total number from file data
 //        BigDecimal nrc20TotalForFile = readTotalByFile(NRC20);
         BigDecimal pocmTotalForFile =  readTotalByFile(POCM);
         BigDecimal nulsTotalForFile =  readTotalByFile(NULS);
         //====================================
-        //重新从节点中查询总数与文件数据的总数进行比对验证
+        //Compare and verify the total number of queries from the node with the total number of file data
         Log.info("=".repeat(100));
 //        BigDecimal nrc20Total = calcNRC20Total();
 //        if(nrc20Total.compareTo(nrc20TotalForFile) != 0 ){
-//            Log.error("nrc20的数量不一致");
+//            Log.error("nrc20The quantity is inconsistent");
 //            System.exit(0);
 //        }
 //        Log.info("=".repeat(100));
 //        Log.info("nrc20:{}",nrc20TotalForFile);
         BigDecimal pocmTotal = calcPocmDeposit();
         if(pocmTotal.compareTo(pocmTotalForFile) != 0){
-            Log.error("pocm委托的数量不一致");
+            Log.error("pocmThe quantity entrusted is inconsistent");
             System.exit(0);
         }
         Log.info("=".repeat(100));
         BigDecimal nulsTotal = calcNulsTotal();
         if(nulsTotal.compareTo(nulsTotalForFile) != 0){
-            Log.error("nuls资产列表不一致");
+            Log.error("nulsInconsistent asset list");
             System.exit(0);
         }
         Log.info("=".repeat(100));
-        Log.info("空投总需要NVT数量:{}",pocmTotal.add(nulsTotal).movePointLeft(1));
+        Log.info("Air drop total requirementNVTquantity:{}",pocmTotal.add(nulsTotal).movePointLeft(1));
     }
 
 }

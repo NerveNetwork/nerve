@@ -19,7 +19,7 @@ import io.nuls.core.rpc.modulebootstrap.Module;
 import java.io.File;
 
 /**
- * 共识模块启动及初始化管理
+ * Consensus module startup and initialization management
  * Consensus Module Startup and Initialization Management
  *
  * @author tag
@@ -39,8 +39,8 @@ public class ConsensusBootStrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 初始化模块，比如初始化RockDB等，在此处初始化后，可在其他bean的afterPropertiesSet中使用
-     * 在onStart前会调用此方法
+     * Initialize modules, such as initializationRockDBWait, after initialization here, you can use other optionsbeanofafterPropertiesSetUsed in
+     * stayonStartI will call this method before
      */
     private void init() {
         try {
@@ -88,7 +88,7 @@ public class ConsensusBootStrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 初始化数据库
+     * Initialize database
      * Initialization database
      */
     private void initDB() throws Exception {

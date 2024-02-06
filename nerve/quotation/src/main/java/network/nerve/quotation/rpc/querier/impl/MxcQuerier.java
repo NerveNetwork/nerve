@@ -53,10 +53,10 @@ public class MxcQuerier implements Querier {
             }
             String price = (String) map.get("price");
 
-            chain.getLogger().info("MXC 获取到交易对[{}]价格:{}", symbol.toUpperCase(), price);
+            chain.getLogger().info("MXC Obtaining transaction pairs[{}]price:{}", symbol.toUpperCase(), price);
             return new BigDecimal(price);
         } catch (Throwable e) {
-            chain.getLogger().error("MXC, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("MXC, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

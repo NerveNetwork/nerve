@@ -38,7 +38,7 @@ import java.util.Map;
 /**
  * @Author: ljs
  * @Time: 2019-08-06 17:34
- * @Description: 功能描述
+ * @Description: Function Description
  */
 @Component
 public class TestCleanNetProcessor extends ConsensusBaseProcessor {

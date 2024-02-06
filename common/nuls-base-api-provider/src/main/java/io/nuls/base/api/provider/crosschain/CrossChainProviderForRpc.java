@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * @Author: zhoulijun
  * @Time: 2019-05-06 17:14
- * @Description: 功能描述
+ * @Description: Function Description
  */
 @Provider(Provider.ProviderType.RPC)
 public class CrossChainProviderForRpc extends BaseRpcService implements CrossChainProvider {

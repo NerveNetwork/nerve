@@ -81,29 +81,29 @@ public class ETHWalletApi implements WalletApi {
 
     public void init(String ethRpcAddress) throws NulsException {
         initialize();
-        // 默认初始化的API会被新的API服务覆盖，当节点成为虚拟银行时，会初始化新的API服务
+        // Default initializedAPIWill be replaced by new onesAPIService coverage, when a node becomes a virtual bank, a new one will be initializedAPIservice
         if (web3j != null && EthContext.getConfig().getCommonRpcAddress().equals(this.ethRpcAddress) && !ethRpcAddress.equals(this.ethRpcAddress)) {
             resetWeb3j();
         }
         if (web3j == null) {
             web3j = newInstanceWeb3j(ethRpcAddress);
             this.ethRpcAddress = ethRpcAddress;
-            getLog().info("初始化 ETH API URL: {}", ethRpcAddress);
+            getLog().info("initialization ETH API URL: {}", ethRpcAddress);
         }
     }
 
     public void checkApi(int order) throws NulsException {
         long now = System.currentTimeMillis();
-        // 如果使用的是应急API，应急API使用时间内，不检查API切换
+        // If using emergencyAPIEmergency responseAPIDuring use, do not checkAPIswitch
         if (now < clearTimeOfRequestExceededMap) {
             if (EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
                 if (getLog().isDebugEnabled()) {
-                    getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                    getLog().debug("emergencyAPIDuring use, do not checkAPIswitch, Expiration time: {}, remaining waiting time: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                 }
                 return;
             }
         } else if (clearTimeOfRequestExceededMap != 0){
-            getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+            getLog().info("Reset EmergencyAPI,ETH API Ready to switch, currentlyAPI: {}", this.ethRpcAddress);
             requestExceededMap.clear();
             clearTimeOfRequestExceededMap = 0L;
         }
@@ -113,7 +113,7 @@ public class ETHWalletApi implements WalletApi {
             checkLock.lock();
             try {
                 if (!rpc.equals(this.ethRpcAddress)) {
-                    getLog().info("检测到顺序变化，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    getLog().info("Detected a change in sequence,ETH API Ready to switch, currentlyAPI: {}", this.ethRpcAddress);
                     changeApi(rpc);
                 }
             } catch (NulsException e) {
@@ -152,7 +152,7 @@ public class ETHWalletApi implements WalletApi {
         reSignLock.lock();
         try {
             if (this.ethRpcAddress == null) {
-                getLog().info("进入重签");
+                getLog().info("Enter re signing");
                 changeApi(EthContext.getConfig().getMainRpcAddress());
             }
         } catch (NulsException e) {
@@ -179,21 +179,21 @@ public class ETHWalletApi implements WalletApi {
     }
 
     private void switchStandbyAPI(String oldRpc) throws NulsException {
-        getLog().info("ETH API 准备切换，当前API: {}", oldRpc);
+        getLog().info("ETH API Ready to switch, currentlyAPI: {}", oldRpc);
         resetLock.lock();
         try {
-            // 不相等，说明已经被切换
+            // Unequal, indicating that it has been switched
             if (!oldRpc.equals(this.ethRpcAddress)) {
-                getLog().info("ETH API 已切换至: {}", this.ethRpcAddress);
+                getLog().info("ETH API Switched to: {}", this.ethRpcAddress);
                 return;
             }
             int expectSwitchStatus = (switchStatus + 1) % 2;
             int order = EthContext.getConverterCoreApi().getVirtualBankOrder();
             String rpc = this.calRpcBySwitchStatus(order, expectSwitchStatus);
-            // 检查配置的API是否超额
+            // Check the configurationAPIIs it excessive
             if (unavailableRpc(oldRpc) && unavailableRpc(rpc)) {
                 String mainRpcAddress = EthContext.getConfig().getMainRpcAddress();
-                getLog().info("ETH API 不可用: {} - {}, 准备切换至应急API: {}, ", oldRpc, rpc, mainRpcAddress);
+                getLog().info("ETH API Not available: {} - {}, Prepare to switch to emergency modeAPI: {}, ", oldRpc, rpc, mainRpcAddress);
                 if (!mainRpcAddress.equals(this.ethRpcAddress)) {
                     changeApi(mainRpcAddress);
                     if (mainRpcAddress.equals(this.ethRpcAddress)) {
@@ -202,10 +202,10 @@ public class ETHWalletApi implements WalletApi {
                 }
                 return;
             }
-            // 正常切换API
+            // Normal switchingAPI
             if (!rpc.equals(this.ethRpcAddress)) {
                 changeApi(rpc);
-                // 相等，说明切换成功
+                // Equal, indicating successful switching
                 if (rpc.equals(this.ethRpcAddress)) {
                     switchStatus = expectSwitchStatus;
                 }
@@ -250,27 +250,28 @@ public class ETHWalletApi implements WalletApi {
     protected void checkIfResetWeb3j(int times) throws NulsException {
         int mod = times % 6;
         if (mod == 5 && web3j != null && ethRpcAddress != null) {
-            getLog().info("重启API服务");
+            getLog().info("restartAPIservice");
             resetWeb3j();
             web3j = newInstanceWeb3j(ethRpcAddress);
         }
     }
 
     private Web3j newInstanceWeb3j(String ethRpcAddress) throws NulsException {
-        Web3j web3j;
-        if (EthContext.getConfig().getMainRpcAddress().equals(ethRpcAddress)) {
-            String data = String.valueOf(System.currentTimeMillis());
-            String sign = ethAccountHelper.sign(data);
-            web3j = Web3j.build(new HttpService(ethRpcAddress + String.format("?d=%s&s=%s&p=%s", data, sign, EthContext.ADMIN_ADDRESS_PUBLIC_KEY)));
-        } else {
-            web3j = Web3j.build(new HttpService(ethRpcAddress));
-        }
+        //Web3j web3j;
+        //if (EthContext.getConfig().getMainRpcAddress().equals(ethRpcAddress)) {
+        //    String data = String.valueOf(System.currentTimeMillis());
+        //    String sign = ethAccountHelper.sign(data);
+        //    web3j = Web3j.build(new HttpService(ethRpcAddress + String.format("?d=%s&s=%s&p=%s", data, sign, EthContext.ADMIN_ADDRESS_PUBLIC_KEY)));
+        //} else {
+        //    web3j = Web3j.build(new HttpService(ethRpcAddress));
+        //}
+        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
         return web3j;
     }
 
     /**
      * Method:getBlock
-     * Description: 获取区块信息
+     * Description: Obtain block information
      * Author: xinjl
      * Date: 2018/4/16 15:23
      */
@@ -315,7 +316,7 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:getBlockByHeight
-     * Description: 根据高度获取区块
+     * Description: Obtain blocks based on height
      * Author: xinjl
      * Date: 2018/4/16 15:23
      */
@@ -324,26 +325,26 @@ public class ETHWalletApi implements WalletApi {
             return web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), true).send().getBlock();
         });
         if (block == null) {
-            getLog().error("获取区块为空");
+            getLog().error("Get block empty");
         }
         return block;
     }
 
     /**
-     * 根据高度获取区块头
+     * Obtain block heads based on height
      */
     public EthBlock.Block getBlockHeaderByHeight(Long height) throws Exception {
         EthBlock.Block header = this.timeOutWrapperFunction("getBlockHeaderByHeight", height, args -> {
             return web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), false).send().getBlock();
         });
         if (header == null) {
-            getLog().error("获取区块头为空");
+            getLog().error("Get block header empty");
         }
         return header;
     }
 
     /**
-     * Method:获取链上交易
+     * Method:Obtain on chain transactions
      * Description:
      * Author: xinjl
      * Date: 2018/4/16 15:23
@@ -356,7 +357,7 @@ public class ETHWalletApi implements WalletApi {
             if (send.getTransaction().isPresent()) {
                 transaction = send.getTransaction().get();
             } else {
-                getLog().error("交易详情获取失败:" + transaction + ",height:" + height + ",index:" + index);
+                getLog().error("Transaction details acquisition failed:" + transaction + ",height:" + height + ",index:" + index);
             }
         } catch (IOException e) {
             getLog().error(e.getMessage(), e);
@@ -366,7 +367,7 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:getEthBalance
-     * Description: 获取eth余额
+     * Description: obtainethbalance
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -384,7 +385,7 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 获取交易详情
+     * Get transaction details
      */
     public org.web3j.protocol.core.methods.response.Transaction getTransactionByHash(String txHash) throws Exception {
         return this.timeOutWrapperFunction("getTransactionByHash", txHash, args -> {
@@ -414,12 +415,12 @@ public class ETHWalletApi implements WalletApi {
     @Override
     public String sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount) {
         String result = null;
-        //发送eth
+        //sendeth
         if (toAddress.length() != 42) {
             return null;
         }
         if (secretKey == null) {
-            getLog().error("账户私钥不存在!");
+            getLog().error("The account private key does not exist!");
         }
         try {
             result = sendETH(fromAddress, secretKey, toAddress, amount, ETH_GAS_LIMIT_OF_ETH, EthContext.getEthGasPrice());
@@ -431,7 +432,7 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:send
-     * Description: 发送交易
+     * Description: Send transaction
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -447,26 +448,26 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:sendETH
-     * Description: 发送以太坊
+     * Description: Send Ethereum
      * Author: xinjl
      * Date: 2018/4/16 14:55
      */
     public String sendETH(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice) throws Exception {
         BigDecimal ethBalance = getBalance(fromAddress);
         if (ethBalance == null) {
-            getLog().error("获取当前地址ETH余额失败!");
+            getLog().error("Get the current addressETHBalance failed!");
             return "501";
         }
-        //getLog().info(fromAddress + "===账户金额" + convertWeiToEth(ethBalance.toBigInteger()));
+        //getLog().info(fromAddress + "===Account amount" + convertWeiToEth(ethBalance.toBigInteger()));
         BigInteger bigIntegerValue = convertEthToWei(value);
         if (ethBalance.toBigInteger().compareTo(bigIntegerValue.add(gasLimit.multiply(gasPrice))) < 0) {
-            //余额小于转账金额与手续费之和
-            getLog().error("账户金额小于转账金额与手续费之和!");
+            //The balance is less than the sum of the transfer amount and handling fee
+            getLog().error("The account amount is less than the sum of the transfer amount and handling fee!");
             return "502";
         }
         BigInteger nonce = getNonce(fromAddress);
         if (nonce == null) {
-            getLog().error("获取当前地址nonce失败!");
+            getLog().error("Get the current addressnoncefail!");
             return "503";
         }
         //getLog().info("nonce======>" + nonce);
@@ -476,11 +477,11 @@ public class ETHWalletApi implements WalletApi {
             getLog().error(e.getMessage(), e);
         }
         RawTransaction etherTransaction = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, toAddress, bigIntegerValue);
-        //交易签名
+        //Transaction signature
         Credentials credentials = Credentials.create(privateKey);
         byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, credentials);
         String hexValue = Numeric.toHexString(signedMessage);
-        //发送广播
+        //Send broadcast
         EthSendTransaction send = send(hexValue);
         if (send == null || send.getResult() == null) {
             return null;
@@ -492,13 +493,13 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 获取nonce LATEST 模式 + 自维护nonce
+     * obtainnonce LATEST mode + Self maintenancenonce
      *
      * @param address
      * @return
      */
     public BigInteger getNonceLatestAndMemory(String address) {
-        //获取nonce
+        //obtainnonce
         if (map.size() > 0 && map.containsKey(address)) {
             BigInteger nonce = map.get(address);
             nonce = nonce.add(BigInteger.ONE);
@@ -534,7 +535,7 @@ public class ETHWalletApi implements WalletApi {
             BigInteger _nonce = (BigInteger) args.get(i++);
             BigInteger bigIntegerValue = convertEthToWei(_value);
             RawTransaction etherTransaction = RawTransaction.createEtherTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue);
-            //交易签名
+            //Transaction signature
             Credentials credentials = Credentials.create(_privateKey);
             byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, 1, credentials);
             String hexValue = Numeric.toHexString(signedMessage);
@@ -548,7 +549,7 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 获取nonce，Pending模式 适用于连续转账
+     * obtainnonce,Pendingmode Suitable for continuous transfers
      *
      * @param from
      * @return
@@ -564,7 +565,7 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 获取nonce，Latest模式
+     * obtainnonce,Latestmode
      *
      * @param from
      * @return
@@ -591,7 +592,7 @@ public class ETHWalletApi implements WalletApi {
     // test-
 
     /**
-     * 获取eth网络当前gasPrice
+     * obtainethNetwork currentgasPrice
      */
     public BigInteger getCurrentGasPrice() throws Exception {
         BigInteger nonce = this.timeOutWrapperFunction("getCurrentGasPrice", null, args -> {
@@ -608,7 +609,7 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * ERC-20Token交易
+     * ERC-20Tokentransaction
      *
      * @param from
      * @param to
@@ -622,12 +623,12 @@ public class ETHWalletApi implements WalletApi {
                                                  BigInteger value,
                                                  String privateKey,
                                                  String contractAddress) throws Exception {
-        //加载转账所需的凭证，用私钥
+        //Load the required credentials for the transfer using a private key
         Credentials credentials = Credentials.create(privateKey);
-        //获取nonce，交易笔数
+        //obtainnonceNumber of transactions
         BigInteger nonce = getNonce(from);
 
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(to), new Uint256(value)),
@@ -642,22 +643,22 @@ public class ETHWalletApi implements WalletApi {
                 ETH_GAS_LIMIT_OF_USDT,
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         return ethSendTransaction;
     }
 
     @Override
     public EthSendTransaction sendTransaction(String toAddress, String fromAddress, String secretKey, BigDecimal amount, String contractAddress) throws Exception {
-        //发送token
+        //sendtoken
         if (toAddress.length() != 42) {
             return null;
         }
         if (secretKey == null) {
-            getLog().error("账户私钥不存在!");
+            getLog().error("The account private key does not exist!");
         }
         EthSendTransaction result = transferERC20Token(fromAddress, toAddress, amount.toBigInteger(), secretKey, contractAddress);
         return result;
@@ -692,7 +693,7 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 调用合约的view/constant函数
+     * Invoke contractview/constantfunction
      */
     public List<Type> callViewFunction(String contractAddress, Function function) throws Exception {
         return this.callViewFunction(contractAddress, function, false);
@@ -741,10 +742,10 @@ public class ETHWalletApi implements WalletApi {
                     value,
                     encodedFunction
             );
-            //签名Transaction，这里要对交易做签名
+            //autographTransactionHere, we need to sign the transaction
             byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
             String hexValue = Numeric.toHexString(signMessage);
-            //发送交易
+            //Send transaction
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
                 throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, "ETH request error");
@@ -785,10 +786,10 @@ public class ETHWalletApi implements WalletApi {
                     _value,
                     _encodedFunction
             );
-            //签名Transaction，这里要对交易做签名
+            //autographTransactionHere, we need to sign the transaction
             byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
             String hexValue = Numeric.toHexString(signMessage);
-            //发送交易
+            //Send transaction
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
                 throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, "ETH request error");
@@ -885,16 +886,16 @@ public class ETHWalletApi implements WalletApi {
             this.checkIfResetWeb3j(times);
             return fucntion.apply(arg);
         } catch (Exception e) {
-            // 当API连接异常时，重置API连接，使用备用API 异常: ClientConnectionException
+            // WhenAPIReset when there is an abnormal connectionAPIConnection, using backupAPI abnormal: ClientConnectionException
             if (e instanceof ClientConnectionException) {
-                getLog().warn("API连接异常时，重置API连接，使用备用API");
+                getLog().warn("APIReset when there is an abnormal connectionAPIConnection, using backupAPI");
                 if (ConverterUtil.isRequestExpired(e.getMessage()) && EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
-                    getLog().info("重新签名应急API: {}", this.ethRpcAddress);
+                    getLog().info("Re sign EmergencyAPI: {}", this.ethRpcAddress);
                     reSignMainAPI();
                     throw e;
                 }
                 if (ConverterUtil.isRequestDenied(e.getMessage()) && EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
-                    getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    getLog().info("Reset EmergencyAPI,ETH API Ready to switch, currentlyAPI: {}", this.ethRpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.ethRpcAddress);
@@ -908,17 +909,17 @@ public class ETHWalletApi implements WalletApi {
                 switchStandbyAPI(this.ethRpcAddress);
                 throw e;
             }
-            // 若遭遇网络连接异常
+            // If encountering abnormal network connection
             if (e instanceof ConnectException || e instanceof UnknownHostException) {
-                // 应急API重置，切换到普通API
+                // emergencyAPIReset, switch to normalAPI
                 if (EthContext.getConfig().getMainRpcAddress().equals(this.ethRpcAddress)) {
-                    getLog().info("重置应急API，ETH API 准备切换，当前API: {}", this.ethRpcAddress);
+                    getLog().info("Reset EmergencyAPI,ETH API Ready to switch, currentlyAPI: {}", this.ethRpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.ethRpcAddress);
                     throw e;
                 }
-                // 普通API记录异常次数
+                // ordinaryAPIRecord the number of exceptions
                 Integer count = requestExceededMap.computeIfAbsent(this.ethRpcAddress, r -> 0);
                 requestExceededMap.put(this.ethRpcAddress, count + 1);
                 switchStandbyAPI(this.ethRpcAddress);
@@ -942,7 +943,7 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:getTransactionReceipt
-     * Description: 获取合约交易信息
+     * Description: Obtain contract transaction information
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -955,7 +956,7 @@ public class ETHWalletApi implements WalletApi {
         if (logs != null && logs.size() > 0) {
             List<String> topics = logs.get(0).getTopics();
             if (topics.get(0).substring(0, 10).equals("0xa9059cbb") || input.substring(0, 10).equals("0xa9059cbb")) {
-                //为转账
+                //For transfer
                 String fromAddress = "0x" + topics.get(1).substring(26, topics.get(1).length()).toString();
                 String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
                 String data;
@@ -1012,7 +1013,7 @@ public class ETHWalletApi implements WalletApi {
 
     /**
      * Method:getBlock
-     * Description: 获取指定ERC20合约的区块交易信息
+     * Description: Get specifiedERC20Block transaction information of the contract
      * Author: xinjl
      * Date: 2018/4/16 15:23
      */
@@ -1030,7 +1031,7 @@ public class ETHWalletApi implements WalletApi {
                 org.web3j.protocol.core.methods.response.Transaction ethTransaction = (org.web3j.protocol.core.methods.response.Transaction) ethTransactionResults.get(i).get();
                 if (ethTransaction != null && ethTransaction.getTo() != null && ethTransaction.getTo().equals(contractAddress)) {
                     Transaction contractTransaction = getContractTransaction(ethTransaction.getHash(), ethTransaction.getInput());
-                    //用户充值交易 归集交易 提币交易 写入区块
+                    //User recharge transaction Collecting transactions Withdrawal transaction Write block
                     if (contractTransaction != null && contractTransaction.getToAddress() != null && addressBloomFilter.contains(contractTransaction.getToAddress())) {
                         if (getLog().isDebugEnabled()) {
                             getLog().debug("Eth Block Height is [{}], Detected contract transaction in ETH is {}", height, contractTransaction.toString());
@@ -1046,10 +1047,10 @@ public class ETHWalletApi implements WalletApi {
     }
 
     /**
-     * 获取ERC-20 token指定地址余额
+     * obtainERC-20 tokenDesignated address balance
      *
-     * @param address         查询地址
-     * @param contractAddress 合约地址
+     * @param address         Search address
+     * @param contractAddress Contract address
      * @return
      * @throws ExecutionException
      * @throws InterruptedException

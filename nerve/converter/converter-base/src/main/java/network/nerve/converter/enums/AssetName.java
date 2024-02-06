@@ -64,9 +64,15 @@ public enum AssetName {
     SCROLL(130, 18),
     BRISE(131, 18),
     JANUS(132, 18),
-    MANTA(133, 18);
+    MANTA(133, 18),
+    OKB(134, 18),
+    ZETA(135, 18),
+    KROMA(136, 18),
 
-    // 可使用其他异构网络的主资产作为手续费, 比如提现到ETH，支付BNB作为手续费
+    BTC(201, 8),
+    FCH(202, 8);
+
+    // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
     private int chainId;
     private int decimals;
     private static Map<Integer, AssetName> map;

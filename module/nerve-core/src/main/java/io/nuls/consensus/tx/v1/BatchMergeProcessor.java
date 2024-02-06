@@ -23,7 +23,7 @@ import io.nuls.consensus.utils.validator.BatchMergeValidator;
 import java.util.*;
 
 /**
- * 退出staking交易处理器
+ * quitstakingTransaction processor
  *
  * @author tag
  * @date 2019/6/1
@@ -58,7 +58,7 @@ public class BatchMergeProcessor implements TransactionProcessor {
         Result rs;
         for (Transaction batchMergeTx : txs) {
             try {
-                //交易时间验证
+                //Transaction time verification
                 long time = NulsDateUtils.getCurrentTimeSeconds();
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
@@ -79,7 +79,7 @@ public class BatchMergeProcessor implements TransactionProcessor {
                 BatchStakingMerge batchWithdraw = new BatchStakingMerge();
                 batchWithdraw.parse(batchMergeTx.getTxData(), 0);
                 /*
-                 * 重复退出staking
+                 * Repeated exitstaking
                  * */
                 for (NulsHash hash : batchWithdraw.getJoinTxHashList()) {
                     if (!hashSet.add(hash)) {
@@ -118,7 +118,7 @@ public class BatchMergeProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //回滚已提交成功的交易
+        //Roll back transactions that have been successfully submitted
         if (!commitResult) {
             for (Transaction rollbackTx : commitSuccessList) {
                 mergeRollBack(rollbackTx, chain, blockHeader);
@@ -144,7 +144,7 @@ public class BatchMergeProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 mergeCommit(commitTx, blockHeader, chain);
@@ -163,19 +163,19 @@ public class BatchMergeProcessor implements TransactionProcessor {
         }
         List<NulsHash> successList = new ArrayList<>();
         for (NulsHash joinTxHash : batchStakingMerge.getJoinTxHashList()) {
-            //获取该笔交易对应的加入共识委托交易
+            //Obtain the consensus delegation transaction corresponding to this transaction
             Deposit deposit = depositManager.getDeposit(chain, joinTxHash);
-            //委托交易不存在
+            //The entrusted transaction does not exist
             if (deposit == null) {
                 chain.getLogger().error("The exited deposit information does not exist");
                 return false;
             }
-            //委托交易已退出
+            //The entrusted transaction has been exited
             if (deposit.getDelHeight() > 0) {
                 chain.getLogger().error("The exited deposit information has been withdrawn");
                 return false;
             }
-            //设置退出共识高度
+            //Set exit consensus height
             deposit.setDelHeight(header.getHeight());
 
             boolean result = depositManager.updateDeposit(chain, deposit);
@@ -212,9 +212,9 @@ public class BatchMergeProcessor implements TransactionProcessor {
         }
         List<NulsHash> successList = new ArrayList<>();
         for (NulsHash joinTxHash : batchStakingMerge.getJoinTxHashList()) {
-            //获取该笔交易对应的加入共识委托交易
+            //Obtain the consensus delegation transaction corresponding to this transaction
             Deposit deposit = depositManager.getDeposit(chain, joinTxHash);
-            //委托交易不存在
+            //The entrusted transaction does not exist
             if (deposit == null) {
                 chain.getLogger().error("The deposit information does not exist");
                 return false;

@@ -29,13 +29,13 @@ public class SwapController {
     SwapTools swapTools;
 
     @RpcMethod("getSwapPairInfo")
-    @ApiOperation(description = "查询Swap交易对信息", order = 701)
+    @ApiOperation(description = "querySwapTransaction pair information", order = 701)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getSwapPairInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
         int chainId;
@@ -66,11 +66,11 @@ public class SwapController {
     }
 
     @RpcMethod("getAllSwapPairsInfo")
-    @ApiOperation(description = "查询所有Swap交易对地址", order = 710)
+    @ApiOperation(description = "Query AllSwapTransaction to address", order = 710)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    @ResponseData(description = "All transactions against addresses", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
     public RpcResult getAllSwapPairsInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
@@ -87,11 +87,11 @@ public class SwapController {
     }
 
     @RpcMethod("getAllStableSwapPairsInfo")
-    @ApiOperation(description = "查询所有Stable-Swap交易对地址", order = 711)
+    @ApiOperation(description = "Query AllStable-SwapTransaction to address", order = 711)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    @ResponseData(description = "All transactions against addresses", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
     public RpcResult getAllStableSwapPairsInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
@@ -108,12 +108,12 @@ public class SwapController {
     }
 
     @RpcMethod("getSwapPairInfoByPairAddress")
-    @ApiOperation(description = "根据交易对地址 查询Swap交易对信息", order = 702)
+    @ApiOperation(description = "Address based on transaction pairs querySwapTransaction pair information", order = 702)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "pairAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getSwapPairInfoByPairAddress(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -139,12 +139,12 @@ public class SwapController {
     }
 
     @RpcMethod("getStableSwapPairInfo")
-    @ApiOperation(description = "查询Stable-Swap交易对信息", order = 703)
+    @ApiOperation(description = "queryStable-SwapTransaction pair information", order = 703)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "pairAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getStableSwapPairInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -170,12 +170,12 @@ public class SwapController {
     }
 
     @RpcMethod("getSwapResultInfo")
-    @ApiOperation(description = "查询Stable-Swap交易对信息", order = 704)
+    @ApiOperation(description = "queryStable-SwapTransaction pair information", order = 704)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易Hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "transactionHash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getSwapResultInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -203,12 +203,12 @@ public class SwapController {
 
 
     @RpcMethod("getPairAddressByTokenLP")
-    @ApiOperation(description = "根据LP资产查询交易对地址", order = 705)
+    @ApiOperation(description = "according toLPAsset inquiry transaction address", order = 705)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tokenLPStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产LP的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenLPStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetLPType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "交易对地址")
+    @ResponseData(name = "Return value", description = "Transaction to address")
     public RpcResult getPairAddressByTokenLP(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -234,20 +234,20 @@ public class SwapController {
     }
 
     @RpcMethod("getBestTradeExactIn")
-    @ApiOperation(description = "寻找最佳交易路径", order = 706)
+    @ApiOperation(description = "Finding the best trading path", order = 706)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tokenInStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产数量"),
-            @Parameter(parameterName = "tokenOutStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "买进资产的类型，示例：1-1"),
-            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易最深路径"),
-            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表"),
-            @Parameter(parameterName = "resultRule", requestType = @TypeDescriptor(value = String.class), parameterDes = "`bestPrice`, `impactPrice`. 按[最优价格]和[价格影响]因素来取结果，默认使用[价格影响]因素来取结果")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenInStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "Types of assets sold, examples：1-1"),
+            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenOutStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "Types of purchased assets, examples：1-1"),
+            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "Deepest trading path"),
+            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "List of all transaction pairs in the current network"),
+            @Parameter(parameterName = "resultRule", requestType = @TypeDescriptor(value = String.class), parameterDes = "`bestPrice`, `impactPrice`. according to[Optimal price]and[Price impact]Using factors to obtain results, defaults to using[Price impact]Using factors to obtain results")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "tokenPath", valueType = List.class, description = "最佳交易路径"),
-            @Key(name = "tokenAmountIn", valueType = Map.class, description = "卖出资产"),
-            @Key(name = "tokenAmountOut", valueType = Map.class, description = "买进资产"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "tokenPath", valueType = List.class, description = "Best trading path"),
+            @Key(name = "tokenAmountIn", valueType = Map.class, description = "Selling assets"),
+            @Key(name = "tokenAmountOut", valueType = Map.class, description = "Buying assets"),
     }))
     public RpcResult getBestTradeExactIn(List<Object> params) {
         VerifyUtils.verifyParams(params, 6);
@@ -307,16 +307,16 @@ public class SwapController {
     }
 
     @RpcMethod("calMinAmountOnSwapTokenTrade")
-    @ApiOperation(description = "查询Swap币币交换最小买进token", order = 707)
+    @ApiOperation(description = "querySwapMinimum buy in for coin exchangetoken", order = 707)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "amountIn", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出的资产数量"),
-            @Parameter(parameterName = "tokenPath", requestType = @TypeDescriptor(value = String[].class), parameterDes = "币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "amountIn", requestType = @TypeDescriptor(value = String.class), parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenPath", requestType = @TypeDescriptor(value = String[].class), parameterDes = "Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "tokenPath", valueType = List.class, description = "最佳交易路径"),
-            @Key(name = "tokenAmountIn", valueType = Map.class, description = "卖出资产"),
-            @Key(name = "tokenAmountOut", valueType = Map.class, description = "买进资产"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "tokenPath", valueType = List.class, description = "Best trading path"),
+            @Key(name = "tokenAmountIn", valueType = Map.class, description = "Selling assets"),
+            @Key(name = "tokenAmountOut", valueType = Map.class, description = "Buying assets"),
     }))
     public RpcResult calMinAmountOnSwapTokenTrade(List<Object> params) {
         VerifyUtils.verifyParams(params, 3);
@@ -350,17 +350,17 @@ public class SwapController {
     }
 
     @RpcMethod("calMinAmountOnSwapAddLiquidity")
-    @ApiOperation(description = "查询添加Swap流动性的最小资产数量", order = 708)
+    @ApiOperation(description = "Query AddSwapThe minimum number of assets with liquidity", order = 708)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "amountA", requestType = @TypeDescriptor(value = String.class), parameterDes = "添加的资产A的数量"),
-            @Parameter(parameterName = "amountB", requestType = @TypeDescriptor(value = String.class), parameterDes = "添加的资产B的数量"),
-            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "amountA", requestType = @TypeDescriptor(value = String.class), parameterDes = "Added assetsAQuantity of"),
+            @Parameter(parameterName = "amountB", requestType = @TypeDescriptor(value = String.class), parameterDes = "Added assetsBQuantity of"),
+            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "amountAMin", valueType = String.class, description = "资产A最小添加值"),
-            @Key(name = "amountBMin", valueType = String.class, description = "资产B最小添加值")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "amountAMin", valueType = String.class, description = "assetAMinimum added value"),
+            @Key(name = "amountBMin", valueType = String.class, description = "assetBMinimum added value")
     }))
     public RpcResult calMinAmountOnSwapAddLiquidity(List<Object> params) {
         VerifyUtils.verifyParams(params, 5);
@@ -400,16 +400,16 @@ public class SwapController {
 
 
     @RpcMethod("calMinAmountOnSwapRemoveLiquidity")
-    @ApiOperation(description = "查询移除Swap流动性的最小资产数量", order = 709)
+    @ApiOperation(description = "Query removalSwapThe minimum number of assets with liquidity", order = 709)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "amountLP", requestType = @TypeDescriptor(value = String.class), parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "amountLP", requestType = @TypeDescriptor(value = String.class), parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenAStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", requestType = @TypeDescriptor(value = String.class), parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "amountAMin", valueType = String.class, description = "资产A最小移除值"),
-            @Key(name = "amountBMin", valueType = String.class, description = "资产B最小移除值")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "amountAMin", valueType = String.class, description = "assetAMinimum removal value"),
+            @Key(name = "amountBMin", valueType = String.class, description = "assetBMinimum removal value")
     }))
     public RpcResult calMinAmountOnSwapRemoveLiquidity(List<Object> params) {
         VerifyUtils.verifyParams(params, 4);
@@ -443,11 +443,11 @@ public class SwapController {
     }
 
     @RpcMethod("getStablePairListForSwapTrade")
-    @ApiOperation(description = "查询可用于Swap交易的稳定币交易对", order = 710)
+    @ApiOperation(description = "Queries available forSwapStable currency trading for transactions", order = 710)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
+    @ResponseData(name = "Return value", description = "Return a collection", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
     public RpcResult getStablePairListForSwapTrade(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
@@ -464,11 +464,11 @@ public class SwapController {
     }
 
     @RpcMethod("getAvailableStablePairList")
-    @ApiOperation(description = "查询所有有效的稳定币交易对", order = 711)
+    @ApiOperation(description = "Query all valid stablecoin transaction pairs", order = 711)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
+    @ResponseData(name = "Return value", description = "Return a collection", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class))
     public RpcResult getAvailableStablePairList(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;

@@ -41,11 +41,11 @@ public class HtgWaitingTxPo extends HeterogeneousTransactionInfo implements Seri
     private long waitingEndTime;
     private long maxWaitingEndTime;
     /**
-     * 合约升级的参数
+     * Parameters for contract upgrade
      */
     private String upgradeContract;
     /**
-     * 拜占庭签名数据
+     * Byzantine signature data
      */
     private String signatures;
     private transient boolean invokeResend;

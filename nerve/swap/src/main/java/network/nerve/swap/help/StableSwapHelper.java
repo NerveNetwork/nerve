@@ -61,7 +61,7 @@ public class StableSwapHelper {
         SwapContext.logger.debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
         LedgerAssetDTO asset = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
         if (asset == null) {
-            SwapContext.logger.error("资产不存在. {}-{}-{}", chainId, assetChainId, assetId);
+            SwapContext.logger.error("Asset does not exist. {}-{}-{}", chainId, assetChainId, assetId);
             return false;
         }
         if (asset.getDecimalPlace() > 18) {
@@ -70,13 +70,13 @@ public class StableSwapHelper {
         }
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
-            SwapContext.logger.error("交易对不存在. {}", stablePairAddress);
+            SwapContext.logger.error("Transaction pair does not exist. {}", stablePairAddress);
             return false;
         }
         NerveToken[] coins = pairPo.getCoins();
         for (NerveToken coin : coins) {
             if (coin.getChainId() == assetChainId && coin.getAssetId() == assetId) {
-                SwapContext.logger.error("资产冲突. {}, {}-{}", coin.str(), assetChainId, assetId);
+                SwapContext.logger.error("Asset Conflict. {}, {}-{}", coin.str(), assetChainId, assetId);
                 return false;
             }
         }
@@ -87,15 +87,15 @@ public class StableSwapHelper {
         SwapContext.logger.debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
         LedgerAssetDTO asset = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
         if (asset == null) {
-            SwapContext.logger.error("资产不存在. {}-{}-{}", chainId, assetChainId, assetId);
+            SwapContext.logger.error("Asset does not exist. {}-{}-{}", chainId, assetChainId, assetId);
             return false;
         }
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
-            SwapContext.logger.error("交易对不存在. {}", stablePairAddress);
+            SwapContext.logger.error("Transaction pair does not exist. {}", stablePairAddress);
             return false;
         }
-        // 检查移除资产逻辑，存在于池中，并且资产数量为0
+        // Check the logic for removing assets, which exist in the pool and have a quantity of assets0
         boolean isExist = false;
         NerveToken[] coins = pairPo.getCoins();
         NerveToken coin;
@@ -109,13 +109,43 @@ public class StableSwapHelper {
             }
         }
         if (!isExist) {
-            SwapContext.logger.error("资产不存在于交易对中. {}-{}-{}, stablePairAddress: {}", chainId, assetChainId, assetId, stablePairAddress);
+            SwapContext.logger.error("The asset does not exist in the transaction pair. {}-{}-{}, stablePairAddress: {}", chainId, assetChainId, assetId, stablePairAddress);
             return false;
         }
         StableSwapPairBalancesPo pairBalances = swapStablePairBalancesStorageService.getPairBalances(stablePairAddress);
         BigInteger[] balances = pairBalances.getBalances();
         if (balances[index].compareTo(BigInteger.ZERO) > 0) {
-            SwapContext.logger.error("交易对中此资产金额不为0. amount: {}, stablePairAddress: {}", balances[index], stablePairAddress);
+            SwapContext.logger.error("The amount of this asset in the transaction is not0. amount: {}, stablePairAddress: {}", balances[index], stablePairAddress);
+            return false;
+        }
+        return true;
+    }
+
+    public boolean isLegalCoinForStable(int chainId, String stablePairAddress, int assetChainId, int assetId) throws NulsException {
+        SwapContext.logger.debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
+        LedgerAssetDTO asset = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
+        if (asset == null) {
+            SwapContext.logger.error("Asset does not exist. {}-{}-{}", chainId, assetChainId, assetId);
+            return false;
+        }
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            SwapContext.logger.error("Transaction pair does not exist. {}", stablePairAddress);
+            return false;
+        }
+        // Check the logic for removing assets, existing in the pool
+        boolean isExist = false;
+        NerveToken[] coins = pairPo.getCoins();
+        NerveToken coin;
+        for (int i = 0, len = coins.length; i < len; i++) {
+            coin = coins[i];
+            if (coin.getChainId() == assetChainId && coin.getAssetId() == assetId) {
+                isExist = true;
+                break;
+            }
+        }
+        if (!isExist) {
+            SwapContext.logger.error("The asset does not exist in the transaction pair. {}-{}-{}, stablePairAddress: {}", chainId, assetChainId, assetId, stablePairAddress);
             return false;
         }
         return true;
@@ -124,7 +154,7 @@ public class StableSwapHelper {
     public boolean isLegalStable(int chainId, String stablePairAddress) throws NulsException {
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
-            SwapContext.logger.error("交易对不存在. {}", stablePairAddress);
+            SwapContext.logger.error("Transaction pair does not exist. {}", stablePairAddress);
             return false;
         }
         return true;
@@ -154,6 +184,14 @@ public class StableSwapHelper {
         }
         removes[length] = false;
         pairPo.setRemoves(removes);
+        boolean[] pauses = pairPo.getPauses();
+        if (pauses == null) {
+            pauses = new boolean[length + 1];
+        } else {
+            pauses = Arrays.copyOf(pauses, length + 1);
+        }
+        pauses[length] = false;
+        pairPo.setPauses(pauses);
         swapStablePairStorageService.savePair(address, pairPo);
 
         StableSwapPairBalancesPo pairBalancesPo = swapStablePairBalancesStorageService.getPairBalances(stablePairAddress);
@@ -163,15 +201,15 @@ public class StableSwapHelper {
         pairBalancesPo.setBalances(newBalances);
         swapStablePairBalancesStorageService.savePairBalances(stablePairAddress, pairBalancesPo);
 
-        // 更新缓存
+        // Update cache
         stableSwapPairCache.reload(stablePairAddress);
-        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, removes);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, removes, pauses);
         SwapContext.logger.info("[Commit AddCoinForStable] stablePairAddress: {}, new coin: {}", stablePairAddress, newCoin.str());
         return true;
     }
 
     /**
-     * 设置移除状态
+     * Set removal status
      */
     public boolean removeCoinForStableV2(int chainId, String stablePairAddress, int assetChainId, int assetId, String status) throws Exception {
         byte[] address = AddressTool.getAddress(stablePairAddress);
@@ -179,7 +217,7 @@ public class StableSwapHelper {
         if (pairPo == null) {
             return false;
         }
-        // 移除多链路由池的币种
+        // Remove currency from multi chain routing pools
         NerveToken removeCoin = new NerveToken(assetChainId, assetId);
         NerveToken[] coins = pairPo.getCoins();
         int length = coins.length;
@@ -202,23 +240,60 @@ public class StableSwapHelper {
         }
         pairPo.setRemoves(removes);
         swapStablePairStorageService.savePair(address, pairPo);
-        // 更新缓存
+        // Update cache
         stableSwapPairCache.reload(stablePairAddress);
-        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, coins, removes);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, coins, removes, pairPo.getPauses());
         SwapContext.logger.info("[Commit [{}]CoinForStable] stablePairAddress: {}, {} coin: {}", status, stablePairAddress, status, removeCoin.str());
         return true;
     }
 
+    public boolean pauseCoinForStable(int chainId, String stablePairAddress, int assetChainId, int assetId, String status) throws Exception {
+        byte[] address = AddressTool.getAddress(stablePairAddress);
+        StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
+        if (pairPo == null) {
+            return false;
+        }
+        // Pause currency for multi chain routing pools
+        NerveToken pauseCoin = new NerveToken(assetChainId, assetId);
+        NerveToken[] coins = pairPo.getCoins();
+        int length = coins.length;
+        boolean[] pauses = pairPo.getPauses();
+        if (pauses == null) {
+            pauses = new boolean[length];
+        }
+
+        int pauseIndex = Integer.MAX_VALUE;
+        for (int i = 0; i < length; i++) {
+            if (coins[i].equals(pauseCoin)) {
+                pauseIndex = i;
+                break;
+            }
+        }
+        if ("resume".equalsIgnoreCase(status)) {
+            pauses[pauseIndex] = false;
+        } else {
+            pauses[pauseIndex] = true;
+        }
+        pairPo.setPauses(pauses);
+        swapStablePairStorageService.savePair(address, pairPo);
+        // Update cache
+        stableSwapPairCache.reload(stablePairAddress);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, coins, pairPo.getRemoves(), pauses);
+        SwapContext.logger.info("[Commit [{}]CoinForStable] stablePairAddress: {}, {} coin: {}", status, stablePairAddress, status, pauseCoin.str());
+        return true;
+    }
+
     /**
-     * 数组缩短，index被改变，造成未知影响，弃用，保留代码
+     * Array shortening,indexChanged, causing unknown impact, discarded, retaining code
      */
+    @Deprecated
     private boolean removeCoinForStableV1(int chainId, String stablePairAddress, int assetChainId, int assetId) throws Exception {
         byte[] address = AddressTool.getAddress(stablePairAddress);
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
             return false;
         }
-        // 移除多链路由池的币种
+        // Remove currency from multi chain routing pools
         NerveToken removeCoin = new NerveToken(assetChainId, assetId);
         NerveToken[] coins = pairPo.getCoins();
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
@@ -247,30 +322,30 @@ public class StableSwapHelper {
         swapStablePairStorageService.savePair(address, pairPo);
         swapStablePairBalancesStorageService.savePairBalances(stablePairAddress, pairBalancesPo);
 
-        // 更新缓存
+        // Update cache
         stableSwapPairCache.reload(stablePairAddress);
-        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, null);
+        SwapContext.stableCoinGroup.updateStableCoin(stablePairAddress, newCoins, null, null);
         SwapContext.logger.info("[Commit RemoveCoinForStable] stablePairAddress: {}, remove coin: {}", stablePairAddress, removeCoin.str());
         return true;
     }
 
     public boolean addStableForSwapTrade(int chainId, String stablePairAddress) throws Exception {
-        // DB持久化
+        // DBPersistence
         swapStablePairStorageService.savePairForSwapTrade(stablePairAddress);
-        // 更新缓存
+        // Update cache
         StableSwapPairPo pairPo = swapStablePairStorageService.getPair(stablePairAddress);
         if (pairPo == null) {
             return false;
         }
         NerveToken[] coins = pairPo.getCoins();
-        SwapContext.stableCoinGroup.add(stablePairAddress, coins, pairPo.getRemoves());
+        SwapContext.stableCoinGroup.add(stablePairAddress, coins, pairPo.getRemoves(), pairPo.getPauses());
         return true;
     }
 
     public boolean removeStableForSwapTrade(int chainId, String stablePairAddress) throws Exception {
-        // DB持久化
+        // DBPersistence
         swapStablePairStorageService.delelePairForSwapTrade(stablePairAddress);
-        // 更新缓存
+        // Update cache
         SwapContext.stableCoinGroup.remove(stablePairAddress);
         return true;
     }

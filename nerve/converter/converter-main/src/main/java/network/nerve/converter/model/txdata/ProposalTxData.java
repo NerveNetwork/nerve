@@ -36,43 +36,43 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 
 /**
- * 发起提案交易txdata
+ * Initiate proposal transactionstxdata
  * @author: Loki
  * @date: 2020-02-18
  */
 public class ProposalTxData extends BaseNulsData {
 
     /**
-     * 提案类型（比如充值的异构链交易hash）
+     * Proposal type（For example, heterogeneous chain transactions for recharginghash）
      */
     private byte type;
 
     /**
-     * 提案内容
+     * Proposal content
      */
     private String content;
 
     /**
-     * 异构链chainId
+     * Heterogeneous chainchainId
      */
     private int heterogeneousChainId;
     /**
-     * 异构链原始交易hash
+     * Heterogeneous chain original transactionhash
      */
     private String heterogeneousTxHash;
 
     /**
-     * 地址（账户、节点地址等）
+     * address（account、Node address, etc）
      */
     private byte[] address;
 
     /**
-     * 链内交易hash(例如 提现失败后的提案)
+     * On chain transactionshash(for example Proposal after failed withdrawal)
      */
     private byte[] hash;
 
     /**
-     * 投票范围类型
+     * Voting scope type
      */
     private byte voteRangeType;
 

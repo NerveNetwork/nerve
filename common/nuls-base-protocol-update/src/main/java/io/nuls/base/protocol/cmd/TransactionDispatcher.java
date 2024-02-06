@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 交易分发器
+ * Transaction distributor
  *
  * @author captain
  * @version 1.0
@@ -43,7 +43,7 @@ public final class TransactionDispatcher extends BaseCmd {
 
     private List<TransactionProcessor> processors;
     /**
-     * 打包交易时,模块统一交易内部生成处理器
+     * When packaging transactions,Module Unified Transaction Internal Generation Processor
      */
     private ModuleTxPackageProcessor moduleTxPackageProcessor;
 
@@ -86,7 +86,7 @@ public final class TransactionDispatcher extends BaseCmd {
     }
 
     /**
-     * 内部生成交易与验证器
+     * Internally generated transactions and validators
      *
      * @param params
      * @return
@@ -115,7 +115,7 @@ public final class TransactionDispatcher extends BaseCmd {
                     txs.add(tx);
                 }
             }
-            //1.newlyList新生成的交易, 2.rmHashList需要删除的原始交易hash
+            //1.newlyListNewly generated transactions, 2.rmHashListOriginal transactions that need to be deletedhash
             Map<String, List<String>> map = new HashMap<>();
             if (null != moduleTxPackageProcessor) {
                 map = moduleTxPackageProcessor.packProduce(chainId, txs, process, height, blockTime);
@@ -133,7 +133,7 @@ public final class TransactionDispatcher extends BaseCmd {
 
 
     /**
-     * 交易的模块验证器
+     * Module validator for transactions
      *
      * @param params
      * @return
@@ -220,7 +220,7 @@ public final class TransactionDispatcher extends BaseCmd {
     }
 
     /**
-     * 交易业务提交
+     * Transaction business submission
      *
      * @param params
      * @return
@@ -278,7 +278,7 @@ public final class TransactionDispatcher extends BaseCmd {
     }
 
     /**
-     * 交易业务回滚
+     * Transaction business rollback
      *
      * @param params
      * @return

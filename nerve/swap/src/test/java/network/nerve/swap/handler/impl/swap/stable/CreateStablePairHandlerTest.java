@@ -103,15 +103,15 @@ public class CreateStablePairHandlerTest {
         Chain.putCurrentThreadBlockType(0);
         BatchInfo batchInfo = new BatchInfo();
         chain.setBatchInfo(batchInfo);
-        // 准备临时余额
+        // Prepare temporary balance
         LedgerTempBalanceManager tempBalanceManager = LedgerTempBalanceManager.newInstance(chainId);
         batchInfo.setLedgerTempBalanceManager(tempBalanceManager);
-        // 准备当前区块头
+        // Prepare the current block header
         BlockHeader tempHeader = new BlockHeader();
         tempHeader.setHeight(blockHeight);
         tempHeader.setTime(System.currentTimeMillis() / 1000);
         batchInfo.setCurrentBlockHeader(tempHeader);
-        // 准备临时交易对
+        // Prepare for temporary transactions
         StableSwapTempPairManager stableSwapTempPairManager = StableSwapTempPairManager.newInstance(chainId);
         batchInfo.setStableSwapTempPairManager(stableSwapTempPairManager);
         chainManager.getChainMap().put(chainId, chain);
@@ -210,7 +210,7 @@ public class CreateStablePairHandlerTest {
         int chainId = chain.getChainId();
         BlockHeader header = chain.getBatchInfo().getCurrentBlockHeader();
         Transaction tx = TxAssembleUtil.asmbStableSwapPairCreate(chainId, null, token0, token1);
-        System.out.println(String.format("创建交易对的交易hash: %s", tx.getHash().toHex()));
+        System.out.println(String.format("Create transaction pairs for transactionshash: %s", tx.getHash().toHex()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) {
@@ -219,13 +219,13 @@ public class CreateStablePairHandlerTest {
                 byte[] stablePairAddressBytes = AddressTool.getAddress(tx.getHash().getBytes(), chainId, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
                 String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
                 Assert.assertTrue(chain.getBatchInfo().getStableSwapTempPairManager().isExist(stablePairAddress));
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test StableSwap-CreatePair tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test StableSwap-CreatePair tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
 
             }
         };
-        return new JunitCase("正常创建稳定价值Pair", handler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Normal creation of stable valuePair", handler, new Object[]{tx}, null, false, null, callback);
     }
 
     private JunitCase getCase1() throws IOException {
@@ -237,12 +237,12 @@ public class CreateStablePairHandlerTest {
             public void callback(JunitCase junitCase, SwapResult result) {
                 assertNotNull(result);
                 Assert.assertFalse(result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test StableSwap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test StableSwap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
             }
         };
-        return new JunitCase("异常创建稳定价值Pair，使用同一个token创建", handler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Abnormal creation of stable valuePairUsing the sametokenestablish", handler, new Object[]{tx}, null, false, null, callback);
     }
 
     private JunitCase getCase2() throws IOException {
@@ -254,11 +254,11 @@ public class CreateStablePairHandlerTest {
             public void callback(JunitCase junitCase, SwapResult result) {
                 assertNotNull(result);
                 Assert.assertFalse(result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test StableSwap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test StableSwap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
             }
         };
-        return new JunitCase("异常创建稳定价值Pair，重复创建稳定价值Pair", handler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Abnormal creation of stable valuePairRepeatedly creating stable valuePair", handler, new Object[]{tx}, null, false, null, callback);
     }
 }

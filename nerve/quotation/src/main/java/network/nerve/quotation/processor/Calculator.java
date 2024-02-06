@@ -28,7 +28,7 @@ import io.nuls.core.exception.NulsException;
 import network.nerve.quotation.model.bo.Chain;
 
 /**
- * 最终报价计算器
+ * Final quotation calculator
  *
  * @author: Loki
  * @date: 2019/12/5
@@ -36,23 +36,23 @@ import network.nerve.quotation.model.bo.Chain;
 public interface Calculator {
 
     /**
-     * 统计最终报价保存
+     * Save the final quotation statistics
      *
      * @param chain
      * @param token
-     * @return 是否成功出价
+     * @return Whether the bid was successful or not
      * @throws NulsException
      */
     @Deprecated
 //    boolean calc(Chain chain, String token);
 
     /**
-     * 统计最终报价结果
+     * Statistical final quotation results
      *
      * @param chain
      * @param token
-     * @param date 日期字符串 格式 yyyyMMdd
-     * @return double 价格
+     * @param date Date string format yyyyMMdd
+     * @return double price
      * @throws NulsException
      */
     Double calcFinal(Chain chain, String token, String date);

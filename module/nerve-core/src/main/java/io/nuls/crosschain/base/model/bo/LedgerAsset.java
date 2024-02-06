@@ -33,7 +33,7 @@ import java.math.BigInteger;
  */
 public class LedgerAsset{
     /**
-     * 资产是在哪条链上注册的
+     * On which chain is the asset registered
      * Which chain is the asset registered on
      */
     private int assetChainId;

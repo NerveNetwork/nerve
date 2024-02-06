@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * Dex模块定时任务管理器
+ * DexModule Timed Task Manager
  */
 @Component
 public class ScheduleManager {

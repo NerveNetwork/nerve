@@ -86,23 +86,23 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
                 if(coinData != null && coinData.length > 0){
-                    // coindata存在数据(coinData应该没有数据)
+                    // coindataExisting data(coinDataThere should be no data available)
                     throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
                 }
                 InitializeHeterogeneousTxData txData = ConverterUtil.getInstance(tx.getTxData(), InitializeHeterogeneousTxData.class);
                 int heterogeneousChainId = txData.getHeterogeneousChainId();
-                // 检查异构链id存在
+                // Check heterogeneous chainsidexistence
                 IHeterogeneousChainDocking HeterogeneousInterface =
                         heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                 if (null == HeterogeneousInterface) {
                     failsList.add(tx);
-                    // 异构链不存在
+                    // Heterogeneous chain does not exist
                     errorCode = ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST.getMsg());
                     continue outer;
                 }
                 if (setDuplicate.contains(heterogeneousChainId)) {
-                    // 判断区块内重复初始化异构链交易
+                    // Determine duplicate initialization of heterogeneous chain transactions within a block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.HETEROGENEOUS_INIT_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_INIT_DUPLICATION.getMsg());
@@ -113,7 +113,7 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
                 for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
 
                     if (!director.getSeedNode()) {
-                        // 判断已确认交易中重复初始化异构链交易
+                        // Determine duplicate initialization of heterogeneous chain transactions in confirmed transactions
                         if (director.getHeterogeneousAddrMap().containsKey(txData.getHeterogeneousChainId())) {
                             failsList.add(tx);
                             errorCode = ConverterErrorCode.HETEROGENEOUS_HAS_BEEN_INITIALIZED.getCode();
@@ -124,7 +124,7 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
                     }
                 }
 
-                // 验签名
+                // Verification signature
                 try {
                     ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
@@ -135,7 +135,7 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
                 }
                 setDuplicate.add(heterogeneousChainId);
             }*/
-            // 暂时关闭该交易
+            // Temporarily close this transaction
             failsList.addAll(txs);
             result.put("txList", failsList);
             result.put("errorCode", errorCode);
@@ -157,14 +157,14 @@ public class InitializeHeterogeneousProcessor implements TransactionProcessor {
             boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
             if (isCurrentDirector) {
                 for (Transaction tx : txs) {
-                    //放入类似队列处理机制 准备通知异构链组件执行
+                    //Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);
                     pendingPO.setBlockHeader(blockHeader);
                     pendingPO.setSyncStatusEnum(SyncStatusEnum.getEnum(syncStatus));
                     txSubsequentProcessStorageService.save(chain, pendingPO);
                     chain.getPendingTxQueue().offer(pendingPO);
-                    chain.getLogger().info("[commit] 初始化异构链交易 hash:{}", tx.getHash().toHex());
+                    chain.getLogger().info("[commit] Initialize heterogeneous chain transactions hash:{}", tx.getHash().toHex());
                 }
             }
         } catch (Exception e) {

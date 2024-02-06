@@ -30,7 +30,7 @@ import network.nerve.converter.model.po.ExeProposalPO;
 import java.util.List;
 
 /**
- * 提案确认后, 执行提案流程前暂存的数据(队列持久化)
+ * After proposal confirmation, Temporarily stored data before executing the proposal process(Queue persistence)
  * @author: Loki
  * @date: 2020/5/15
  */

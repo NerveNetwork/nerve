@@ -149,22 +149,22 @@ public class FarmUpdateHandlerTest {
 
     @Test
     public void testExecute() throws IOException {
-        //质押NULS获取NVT
+        //pledgeNULSobtainNVT
         FarmPoolPO po = tempFarm();
         farmCacher.put(po.getFarmHash(), po);
 
         List<JunitCase> items = new ArrayList<>();
 
-        items.add(getNormalCase());//高度1，质押：10000个
-        items.add(getOutAt10001());//高度10001，退出质押5000，应得奖励：100万
-        //高度20001，修改每个块奖励为1，退出锁定1年,取出奖励：（1000000000000-500万）
+        items.add(getNormalCase());//height1Pledge：10000individual
+        items.add(getOutAt10001());//height10001, withdraw from pledge5000, deserved rewards：100ten thousand
+        //height20001Modify each block reward to1, exit lock1year,Retrieve rewards：（1000000000000-500ten thousand）
         items.add(changeFarm());
-        // 高度30001，领取奖励：应为101万
+        // height30001, claim rewards：Should be101ten thousand
         items.add(getNormalCase2());
-        //高度40001，修改奖励为10
+        //height40001, modify the reward to10
         items.add(changeFarm2());
-        //高度50001，退出时间锁定验证
-        items.add(getOutAt50001());//高度50001，退出质押4000，应得奖励：11万，锁定多一年
+        //height50001Exit time lock verification
+        items.add(getOutAt50001());//height50001, withdraw from pledge4000, deserved rewards：11Ten thousand, lock in for another year
 
 
         JunitExecuter<SwapHandlerConstraints> executer = new JunitExecuter<>() {
@@ -176,7 +176,7 @@ public class FarmUpdateHandlerTest {
         JunitUtils.execute(items, executer);
     }
 
-    //高度20001，修改每个块奖励为1，退出锁定1年,取出奖励：（1000000000000-500万）
+    //height20001Modify each block reward to1, exit lock1year,Retrieve rewards：（1000000000000-500ten thousand）
     private JunitCase changeFarm() throws IOException {
         FarmUpdateData txData = new FarmUpdateData();
         txData.setFarmHash(NulsHash.EMPTY_NULS_HASH);
@@ -197,7 +197,7 @@ public class FarmUpdateHandlerTest {
                 assertEquals(po.getSyrupTokenBalance(),BigInteger.valueOf(4000000));
                 assertEquals(po.getTotalSyrupAmount(),BigInteger.valueOf(5000000));
                 assertEquals(po.getWithdrawLockTime(),365*24*3600L);
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -214,11 +214,11 @@ public class FarmUpdateHandlerTest {
                     }
                 }
                 farmStorageService.save(9,po);
-                System.out.println("[通过]初次update！");
+                System.out.println("[adopt]First timeupdate！");
 
             }
         };
-        return new JunitCase("第一次大改", updateHandler, new Object[]{tx1, 20001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("First major revision", updateHandler, new Object[]{tx1, 20001L, tx1.getTime()}, null, false, null, callback1);
     }
     private JunitCase changeFarm2() throws IOException {
         FarmUpdateData txData = new FarmUpdateData();
@@ -241,11 +241,11 @@ public class FarmUpdateHandlerTest {
                 assertEquals(po.getTotalSyrupAmount(),BigInteger.valueOf(5000000));
 
                 farmStorageService.save(9,po);
-                System.out.println("[通过]第二次修改！");
+                System.out.println("[adopt]Second modification！");
 
             }
         };
-        return new JunitCase("第二次修改", updateHandler, new Object[]{tx1, 40001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Second modification", updateHandler, new Object[]{tx1, 40001L, tx1.getTime()}, null, false, null, callback1);
     }
     private JunitCase getOutAt10001() throws IOException {
         BigInteger currentAmount = BigInteger.valueOf(10000L);
@@ -259,7 +259,7 @@ public class FarmUpdateHandlerTest {
                 Assert.assertTrue(result.isSuccess());
                 FarmPoolPO po = farmStorageService.getList(9).get(0);
                 assertNotNull(result.getSubTx());
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -290,11 +290,11 @@ public class FarmUpdateHandlerTest {
                 FarmUserInfoPO user = chain.getBatchInfo().getFarmUserTempManager().getUserInfo(po.getFarmHash(), AddressTool.getAddressByPrikey(HexUtil.decode(prikeyHex), 9, BaseConstant.DEFAULT_ADDRESS_TYPE));
                 userInfoStorageService.save(9,user);
                 farmStorageService.save(9,farm);
-                System.out.println("[通过]第一次退出！");
+                System.out.println("[adopt]First exit！");
 
             }
         };
-        return new JunitCase("第一次退出", withdrawHandler, new Object[]{tx1, 10001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("First exit", withdrawHandler, new Object[]{tx1, 10001L, tx1.getTime()}, null, false, null, callback1);
     }
     private JunitCase getOutAt50001() throws IOException {
         BigInteger currentAmount = BigInteger.valueOf(5000L);
@@ -308,7 +308,7 @@ public class FarmUpdateHandlerTest {
                 Assert.assertTrue(result.isSuccess());
                 FarmPoolPO po = farmStorageService.getList(9).get(0);
                 assertNotNull(result.getSubTx());
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -341,11 +341,11 @@ public class FarmUpdateHandlerTest {
                 FarmUserInfoPO user = chain.getBatchInfo().getFarmUserTempManager().getUserInfo(po.getFarmHash(), AddressTool.getAddressByPrikey(HexUtil.decode(prikeyHex), 9, BaseConstant.DEFAULT_ADDRESS_TYPE));
                 userInfoStorageService.save(9,user);
                 farmStorageService.save(9,farm);
-                System.out.println("[通过]第二次退出！");
+                System.out.println("[adopt]Second exit！");
 
             }
         };
-        return new JunitCase("第二次退出", withdrawHandler, new Object[]{tx1, 50001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Second exit", withdrawHandler, new Object[]{tx1, 50001L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getNormalCase() throws IOException {
@@ -387,10 +387,10 @@ public class FarmUpdateHandlerTest {
 
                 userInfoStorageService.save(9,user);
                 farmStorageService.save(9,farm);
-                System.out.println("[通过]初次stake！");
+                System.out.println("[adopt]First timestake！");
             }
         };
-        return new JunitCase("第一次stake", stakeHandler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("First timestake", stakeHandler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getNormalCase2() throws IOException {
@@ -413,7 +413,7 @@ public class FarmUpdateHandlerTest {
                 assertNotNull(user);
                 assertTrue(user.getAmount().compareTo(BigInteger.valueOf(5000L)) == 0);
 
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -433,10 +433,10 @@ public class FarmUpdateHandlerTest {
 
                 userInfoStorageService.save(9,user);
                 farmStorageService.save(9,farm);
-                System.out.println("[通过]领取奖励！");
+                System.out.println("[adopt]Claim rewards！");
             }
         };
-        return new JunitCase("领取奖励", stakeHandler, new Object[]{tx1, 30001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Claim rewards", stakeHandler, new Object[]{tx1, 30001L, tx1.getTime()}, null, false, null, callback1);
     }
 
     public FarmPoolPO tempFarm() {

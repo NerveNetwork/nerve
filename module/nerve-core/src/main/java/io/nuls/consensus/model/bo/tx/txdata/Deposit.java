@@ -44,33 +44,33 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 委托信息类
+ * Entrusted Information
  * Delegated information class
  *
  * @author tag
  * 2018/11/28
  */
-@ApiModel(name = "委托信息")
+@ApiModel(name = "Entrustment information")
 public class Deposit extends BaseNulsData {
-    @ApiModelProperty(description = "委托金额")
+    @ApiModelProperty(description = "Entrusted amount")
     private BigInteger deposit;
-    @ApiModelProperty(description = "委托账户")
+    @ApiModelProperty(description = "Entrusted account")
     private byte[] address;
-    @ApiModelProperty(description = "资产链ID")
+    @ApiModelProperty(description = "Asset ChainID")
     private int assetChainId;
-    @ApiModelProperty(description = "资产ID")
+    @ApiModelProperty(description = "assetID")
     private int assetId;
-    @ApiModelProperty(description = "委托类型")
+    @ApiModelProperty(description = "Entrustment type")
     private byte depositType;
-    @ApiModelProperty(description = "委托时长")
+    @ApiModelProperty(description = "Entrustment duration")
     private byte timeType;
-    @ApiModelProperty(description = "委托时间")
+    @ApiModelProperty(description = "Entrustment time")
     private transient long time;
-    @ApiModelProperty(description = "委托交易HASH")
+    @ApiModelProperty(description = "Entrusted transactionHASH")
     private transient NulsHash txHash;
-    @ApiModelProperty(description = "委托交易被打包的高度")
+    @ApiModelProperty(description = "The height at which the entrusted transaction is packaged")
     private transient long blockHeight = -1L;
-    @ApiModelProperty(description = "退出委托高度")
+    @ApiModelProperty(description = "Exit commission height")
     private transient long delHeight = -1L;
 
 

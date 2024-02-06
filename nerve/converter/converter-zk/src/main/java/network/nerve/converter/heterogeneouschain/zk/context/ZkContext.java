@@ -28,7 +28,7 @@ import network.nerve.converter.heterogeneouschain.lib.context.HtgContextNew;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.*;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.GWEI_DOT_3;
 
 /**
  * @author: Mimi
@@ -58,32 +58,32 @@ public class ZkContext extends HtgContextNew implements Serializable {
     }
 
     @Override
-    public BigInteger GAS_LIMIT_OF_WITHDRAW() {
+    public BigInteger GET_GAS_LIMIT_OF_WITHDRAW() {
         return GAS_LIMIT_OF_WITHDRAW;
     }
 
     @Override
-    public BigInteger GAS_LIMIT_OF_CHANGE() {
+    public BigInteger GET_GAS_LIMIT_OF_CHANGE() {
         return GAS_LIMIT_OF_CHANGE;
     }
 
     @Override
-    public BigInteger GAS_LIMIT_OF_MAIN_ASSET() {
+    public BigInteger GET_GAS_LIMIT_OF_MAIN_ASSET() {
         return GAS_LIMIT_OF_MAIN_ASSET;
     }
 
     @Override
-    public BigInteger GAS_LIMIT_OF_ERC20() {
+    public BigInteger GET_GAS_LIMIT_OF_ERC20() {
         return GAS_LIMIT_OF_ERC20;
     }
 
     @Override
-    public BigInteger HTG_ESTIMATE_GAS() {
+    public BigInteger GET_HTG_ESTIMATE_GAS() {
         return HTG_ESTIMATE_GAS;
     }
 
     @Override
-    public BigInteger BASE_GAS_LIMIT() {
+    public BigInteger GET_BASE_GAS_LIMIT() {
         return BASE_GAS_LIMIT;
     }
 }

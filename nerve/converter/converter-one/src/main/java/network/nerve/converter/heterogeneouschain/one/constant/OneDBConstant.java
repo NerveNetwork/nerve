@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.one.constant;
  */
 public interface OneDBConstant {
     /**
-     * ONE信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * ONEInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_ONE = "cv_table_one";

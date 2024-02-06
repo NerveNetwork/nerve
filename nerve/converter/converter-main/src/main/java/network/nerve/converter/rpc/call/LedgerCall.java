@@ -21,7 +21,7 @@ import java.util.Map;
 public class LedgerCall extends BaseCall {
 
     /**
-     * 查询账户余额
+     * Query account balance
      */
     public static NonceBalance getBalanceNonce(Chain chain, int assetChainId, int assetId, String address) throws NulsException {
         try {
@@ -46,7 +46,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * 查询账户余额
+     * Query account balance
      */
     public static BigInteger getBalance(Chain chain, int assetChainId, int assetId, String address) {
         try {
@@ -72,7 +72,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * 登记异构跨链资产
+     * Register heterogeneous cross chain assets
      */
     public static Integer crossChainAssetReg(int chainId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws NulsException {
         try {
@@ -95,7 +95,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * NERVE资产绑定异构跨链合约资产
+     * NERVEAsset binding heterogeneous cross chain contract assets
      */
     public static HtgAssetBindDTO bindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
         try {
@@ -118,7 +118,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * NERVE资产解绑异构跨链合约资产
+     * NERVEAsset unbinding heterogeneous cross chain contract assets
      */
     public static Integer unbindHeterogeneousAssetReg(int chainId, int assetChainId, int assetId) throws NulsException {
         try {
@@ -139,7 +139,7 @@ public class LedgerCall extends BaseCall {
 
 
     /**
-     * 移除异构跨链资产
+     * Remove heterogeneous cross chain assets
      */
     public static Boolean crossChainAssetDelete(int assetId) throws NulsException {
         try {

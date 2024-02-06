@@ -52,6 +52,7 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.rpc.call.ConsensusCall;
 import network.nerve.converter.rpc.call.LedgerCall;
+import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.utils.HeterogeneousUtil;
 import network.nerve.converter.utils.LoggerUtil;
 
@@ -65,7 +66,7 @@ import static io.protostuff.ByteString.EMPTY_STRING;
 import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 /**
- * 异构链信息提供命令
+ * Heterogeneous chain information provision command
  *
  * @author: Mimi
  * @date: 2020-02-28
@@ -92,19 +93,19 @@ public class HeterogeneousChainCmd extends BaseCmd {
     private AccountConfig accountConfig;
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO, version = 1.0, description = "异构链资产信息查询")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO, version = 1.0, description = "Heterogeneous Chain Asset Information Query")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "symbol", description = "资产symbol"),
-            @Key(name = "decimals", valueType = int.class, description = "资产小数位数"),
-            @Key(name = "contractAddress", description = "资产对应合约地址(若有)"),
-            @Key(name = "isToken", description = "资产是否为TOKEN资产"),
-            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
-            @Key(name = "heterogeneousChainSymbol", description = "异构链Symbol"),
-            @Key(name = "heterogeneousChainMultySignAddress", description = "异构链多签地址")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "symbol", description = "assetsymbol"),
+            @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets"),
+            @Key(name = "contractAddress", description = "Asset corresponding contract address(If there is any)"),
+            @Key(name = "isToken", description = "Is the assetTOKENasset"),
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "Heterogeneous chainID"),
+            @Key(name = "heterogeneousChainSymbol", description = "Heterogeneous chainSymbol"),
+            @Key(name = "heterogeneousChainMultySignAddress", description = "Heterogeneous chain with multiple signed addresses")
     })
     )
     public Response getAssetInfoById(Map params) {
@@ -134,19 +135,19 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_LIST, version = 1.0, description = "异构链资产信息列表查询")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_LIST, version = 1.0, description = "Query of heterogeneous chain asset information list")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
-            @Key(name = "symbol", description = "资产symbol"),
-            @Key(name = "decimals", valueType = int.class, description = "资产小数位数"),
-            @Key(name = "contractAddress", description = "资产对应合约地址(若有)"),
-            @Key(name = "isToken", description = "资产是否为TOKEN资产"),
-            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
-            @Key(name = "heterogeneousChainSymbol", description = "异构链Symbol"),
-            @Key(name = "heterogeneousChainMultySignAddress", description = "异构链多签地址")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
+            @Key(name = "symbol", description = "assetsymbol"),
+            @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets"),
+            @Key(name = "contractAddress", description = "Asset corresponding contract address(If there is any)"),
+            @Key(name = "isToken", description = "Is the assetTOKENasset"),
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "Heterogeneous chainID"),
+            @Key(name = "heterogeneousChainSymbol", description = "Heterogeneous chainSymbol"),
+            @Key(name = "heterogeneousChainMultySignAddress", description = "Heterogeneous chain with multiple signed addresses")
     })
     )
     public Response getAssetInfoListById(Map params) {
@@ -184,16 +185,16 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(resultList);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS, version = 1.0, description = "异构链资产信息查询")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ADDRESS, version = 1.0, description = "Heterogeneous Chain Asset Information Query")
     @Parameters(value = {
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链ID"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址")
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "chainId", valueType = int.class, description = "资产链ID"),
-            @Key(name = "assetId", valueType = int.class, description = "资产ID"),
-            @Key(name = "symbol", description = "资产symbol"),
-            @Key(name = "decimals", valueType = int.class, description = "资产小数位数")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", valueType = int.class, description = "Asset ChainID"),
+            @Key(name = "assetId", valueType = int.class, description = "assetID"),
+            @Key(name = "symbol", description = "assetsymbol"),
+            @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets")
     })
     )
     public Response getAssetInfoByAddress(Map params) {
@@ -220,16 +221,16 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ID, version = 1.0, description = "异构链资产信息查询")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_CHAIN_ASSET_INFO_BY_ID, version = 1.0, description = "Heterogeneous Chain Asset Information Query")
     @Parameters(value = {
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链ID"),
-            @Parameter(parameterName = "heterogeneousAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链资产ID")
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "heterogeneousAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chain assetsID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "chainId", valueType = int.class, description = "资产链ID"),
-            @Key(name = "assetId", valueType = int.class, description = "资产ID"),
-            @Key(name = "symbol", description = "资产symbol"),
-            @Key(name = "decimals", valueType = int.class, description = "资产小数位数")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", valueType = int.class, description = "Asset ChainID"),
+            @Key(name = "assetId", valueType = int.class, description = "assetID"),
+            @Key(name = "symbol", description = "assetsymbol"),
+            @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets")
     })
     )
     public Response getAssetInfoByHeterogeneousAssetId(Map params) {
@@ -257,15 +258,15 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX, version = 1.0, description = "验证异构链合约资产注册交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.VALIDATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX, version = 1.0, description = "Verify heterogeneous chain contract asset registration transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
-            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "Decimal places of assets"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class, description = "true/false")
     })
     )
@@ -303,14 +304,14 @@ public class HeterogeneousChainCmd extends BaseCmd {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
             }
             HeterogeneousAssetInfo assetInfo = docking.getAssetByContractAddress(contractAddress);
-            // 资产已存在
+            // Asset already exists
             if (assetInfo != null) {
-                LoggerUtil.LOG.error("资产已存在");
+                LoggerUtil.LOG.error("Asset already exists");
                 throw new NulsException(ConverterErrorCode.ASSET_EXIST);
             }
-            // 资产信息验证
+            // Asset information verification
             if (!docking.validateHeterogeneousAssetInfoFromNet(contractAddress, symbol, decimals)) {
-                LoggerUtil.LOG.error("资产信息不匹配");
+                LoggerUtil.LOG.error("Asset information mismatch");
                 throw new NulsException(ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY);
             }
 
@@ -329,19 +330,19 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX, version = 1.0, description = "创建异构链合约资产注册交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_CONTRACT_ASSET_REG_TX, version = 1.0, description = "Create heterogeneous chain contract asset registration transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
-            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "Decimal places of assets"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes", canNull = true),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response createHeterogeneousContractAssetRegPendingTx(Map params) {
@@ -383,7 +384,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,
@@ -408,14 +409,14 @@ public class HeterogeneousChainCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_ADDRESS, version = 1.0, description = "查询共识节点打包地址对应的异构链地址")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_ADDRESS, version = 1.0, description = "Query heterogeneous chain addresses corresponding to consensus node packaging addresses")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链ID"),
-            @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "共识节点打包地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainID"),
+            @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Consensus node packaging address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousAddress", description = "异构链地址"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousAddress", description = "Heterogeneous Chain Address"),
     })
     )
     public Response getHeterogeneousAddress(Map params) {
@@ -433,10 +434,10 @@ public class HeterogeneousChainCmd extends BaseCmd {
             }
             Chain chain = chainManager.getChain(chainId);
             LatestBasicBlock latestBasicBlock = chain.getLatestBasicBlock();
-            // 获取最新共识列表
+            // Get the latest consensus list
             List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, latestBasicBlock.getHeight());
             if (null == listAgent) {
-                chain.getLogger().error("向共识模块获取共识节点列表数据为null");
+                chain.getLogger().error("Obtain consensus node list data from the consensus module asnull");
                 return failed(ConverterErrorCode.DATA_ERROR, "empty agent list");
             }
             String pubKey = null;
@@ -456,17 +457,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.VALIDATE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "验证Nerve资产绑定异构链合约资产")
+    @CmdAnnotation(cmd = ConverterCmdConstant.VALIDATE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "validateNerveAsset binding heterogeneous chain contract assets")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
-            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "Decimal places of assets"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", valueType = boolean.class, description = "true/false")
     })
     )
@@ -524,20 +525,20 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "Nerve资产绑定异构链合约资产[新绑定]")
+    @CmdAnnotation(cmd = ConverterCmdConstant.BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "NerveAsset binding heterogeneous chain contract assets[New binding]")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
-            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "Decimal places of assets"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response bindHeterogeneousContractTokenToNerveAssetRegPendingTx(Map params) {
@@ -585,7 +586,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
 
@@ -610,18 +611,18 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.OVERRIDE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "Nerve资产绑定异构链合约资产[覆盖绑定]")
+    @CmdAnnotation(cmd = ConverterCmdConstant.OVERRIDE_BIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "NerveAsset binding heterogeneous chain contract assets[Overwrite binding]")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response overrideBindHeterogeneousContractTokenToNerveAssetRegPendingTx(Map params) {
@@ -660,7 +661,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -714,17 +715,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "Nerve资产取消绑定异构链合约资产[取消绑定]")
+    @CmdAnnotation(cmd = ConverterCmdConstant.UNBIND_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "NerveUnbind assets to heterogeneous chain contract assets[Unbind]")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response unbindHeterogeneousContractTokenToNerveAssetRegPendingTx(Map params) {
@@ -759,7 +760,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -775,7 +776,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (assetType <= 4) {
                 throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
             }
-            // 非Nerve链ID的资产，一定是异构链的绑定资产
+            // wrongNervechainIDThe assets must be bound assets of heterogeneous chains
             if (nerveAssetChainId == chainId) {
                 Map checkMap = new HashMap();
                 checkMap.put("chainId", nerveAssetChainId);
@@ -812,16 +813,16 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX, version = 1.0, description = "创建异构链主资产注册交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_MAIN_ASSET_REG_TX, version = 1.0, description = "Create heterogeneous chain master asset registration transaction")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes", canNull = true),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response createHeterogeneousMainAssetRegTx(Map params) {
@@ -853,7 +854,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             // exclude (nuls & EVM:enuls) (eth & EVM:goerliETH)
@@ -876,18 +877,18 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_MAIN_ASSET_BIND_TX, version = 1.0, description = "创建异构链主资产绑定NERVE资产交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CREATE_HETEROGENEOUS_MAIN_ASSET_BIND_TX, version = 1.0, description = "Create heterogeneous chain master asset bindingNERVEAsset trading")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes", canNull = true),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response createHeterogeneousMainAssetBindTx(Map params) {
@@ -923,7 +924,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             // only (nuls & EVM:enuls) (eth & EVM:goerliETH)
@@ -946,14 +947,14 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_REGISTER_NETWORK, version = 1.0, description = "查询资产的异构链注册网络")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_REGISTER_NETWORK, version = 1.0, description = "Heterogeneous chain registration network for querying assets")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
-            @Key(name = "contractAddress", valueType = String.class, description = "资产对应合约地址(若有)")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "Heterogeneous chainID"),
+            @Key(name = "contractAddress", valueType = String.class, description = "Asset corresponding contract address(If there is any)")
     })
     )
     public Response getRegisterNetwork(Map params) {
@@ -1012,12 +1013,12 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_NETWORK_CHAIN_ID, version = 1.0, description = "查询资产的异构链注册网络")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_HETEROGENEOUS_NETWORK_CHAIN_ID, version = 1.0, description = "Heterogeneous chain registration network for querying assets")
     @Parameters(value = {
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId")
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousNetworkChainId", valueType = long.class, description = "异构链网络内部chainId")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousNetworkChainId", valueType = long.class, description = "Within heterogeneous chain networkschainId")
     })
     )
     public Response getHtgNetworkChainId(Map params) {
@@ -1040,17 +1041,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         return success(rtMap);
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.UNREGISTER_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "Nerve资产取消注册异构链合约资产[取消注册]")
+    @CmdAnnotation(cmd = ConverterCmdConstant.UNREGISTER_HETEROGENEOUS_CONTRACT_TOKEN_TO_NERVE_ASSET_REG_TX, version = 1.0, description = "NerveAsset deregistration of heterogeneous chain contract assets[Cancel registration]")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response unRegisterHeterogeneousContractTokenToNerveAssetRegPendingTx(Map params) {
@@ -1085,7 +1086,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -1135,17 +1136,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.PAUSE_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "暂停异构链合约资产充值")
+    @CmdAnnotation(cmd = ConverterCmdConstant.PAUSE_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "Suspend asset recharge for heterogeneous chain contracts")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response pauseInHeterogeneousContractTokenTx(Map params) {
@@ -1180,7 +1181,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -1218,17 +1219,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.RESUME_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "恢复异构链合约资产充值")
+    @CmdAnnotation(cmd = ConverterCmdConstant.RESUME_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "Restore heterogeneous chain contract asset recharge")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response resumeInHeterogeneousContractTokenTx(Map params) {
@@ -1263,7 +1264,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -1301,17 +1302,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.PAUSE_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "暂停异构链合约资产提现")
+    @CmdAnnotation(cmd = ConverterCmdConstant.PAUSE_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "Suspend withdrawal of heterogeneous chain contract assets")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response pauseOutHeterogeneousContractTokenTx(Map params) {
@@ -1346,7 +1347,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -1384,17 +1385,17 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.RESUME_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "恢复异构链合约资产提现")
+    @CmdAnnotation(cmd = ConverterCmdConstant.RESUME_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX, version = 1.0, description = "Recovery of heterogeneous chain contract asset withdrawals")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产链ID"),
-            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Nerve资产ID"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "nerveAssetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "nerveAssetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response resumeOutHeterogeneousContractTokenTx(Map params) {
@@ -1429,7 +1430,7 @@ public class HeterogeneousChainCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
             }
-            if (!chain.isVirtualBankBySignAddr(address)) {
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, nerveAssetChainId, nerveAssetId);
@@ -1467,11 +1468,11 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GAS_LIMIT_OF_HETEROGENEOUS_CHAINS, version = 1.0, description = "异构链需要的gasLimit")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GAS_LIMIT_OF_HETEROGENEOUS_CHAINS, version = 1.0, description = "What heterogeneous chains requiregasLimit")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public Response gasLimitOfHeterogeneousChains(Map params) {
         Chain chain = null;
         try {
@@ -1499,11 +1500,93 @@ public class HeterogeneousChainCmd extends BaseCmd {
         }
     }
 
-    /*@CmdAnnotation(cmd = "cv_test", version = 1.0, description = "测试")
+
+    @CmdAnnotation(cmd = ConverterCmdConstant.PAUSE_COIN_FOR_STABLE_SWAP, version = 1.0, description = "Suspend currency trading in the Multi-Routing pool")
     @Parameters(value = {
-            @Parameter(parameterName = "params", requestType = @TypeDescriptor(value = String.class), parameterDes = "测试参数")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "stable pair address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "NerveAsset ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "NerveassetID"),
+            @Parameter(parameterName = "status", parameterType = "String", parameterDes = "pause/resume"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
+    })
+    )
+    public Response pauseCoinForStableSwap(Map params) {
+        Chain chain = null;
+        try {
+            if (!converterCoreApi.isSeedVirtualBankByCurrentNode()) {
+                throw new NulsRuntimeException(ConverterErrorCode.AGENT_IS_NOT_SEED_VIRTUAL_BANK);
+            }
+            // check parameters
+            if (params == null) {
+                LoggerUtil.LOG.warn("params is null");
+                throw new NulsRuntimeException(ConverterErrorCode.NULL_PARAMETER);
+            }
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("stablePairAddress"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("assetChainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("assetId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("status"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("address"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("password"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+
+            // parse params
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            Integer nerveAssetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            Integer nerveAssetId = Integer.parseInt(params.get("assetId").toString());
+            String status = (String) params.get("status");
+            String address = (String) params.get("address");
+            String password = (String) params.get("password");
+            if (!this.accountConfig.vaildPassword(address, password)) {
+                throw new NulsException(ConverterErrorCode.PASSWORD_IS_WRONG);
+            }
+            chain = chainManager.getChain(chainId);
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (!chain.isSeedVirtualBankBySignAddr(address)) {
+                throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
+            }
+            boolean legalCoinForStable = SwapCall.isLegalCoinForStable(chainId, stablePairAddress, nerveAssetChainId, nerveAssetId);
+            if (!legalCoinForStable) {
+                throw new NulsRuntimeException(ConverterErrorCode.NOT_BIND_ASSET);
+            }
+            HeterogeneousAssetInfo assetInfo = ConverterContext.assetRegisterNetwork.get(nerveAssetChainId + "_" + nerveAssetId);
+            if (assetInfo == null) {
+                throw new NulsRuntimeException(ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND);
+            }
+
+            Transaction tx = assembleTxService.createHeterogeneousContractAssetRegPendingTx(chain, address, password,
+                    assetInfo.getChainId(),
+                    assetInfo.getDecimals(),
+                    assetInfo.getSymbol(),
+                    assetInfo.getContractAddress(),
+                    String.valueOf(String.format("%s:%s-%s-%s-%s", BindHeterogeneousContractMode.STABLE_SWAP_COIN_PAUSE, nerveAssetChainId, nerveAssetId, stablePairAddress, status)));
+            Map<String, String> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
+            map.put("value", tx.getHash().toHex());
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode(), e.getMessage());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    /*@CmdAnnotation(cmd = "cv_test", version = 1.0, description = "test")
+    @Parameters(value = {
+            @Parameter(parameterName = "params", requestType = @TypeDescriptor(value = String.class), parameterDes = "Test parameters")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public Response test(Map params) {
         Map<String, Object> rtMap = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
         try {

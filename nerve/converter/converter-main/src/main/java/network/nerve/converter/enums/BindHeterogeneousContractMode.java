@@ -33,5 +33,7 @@ public enum BindHeterogeneousContractMode {
     OVERRIDE,
     UNREGISTER,
     PAUSE,
-    RESUME;
+    RESUME,
+    STABLE_SWAP_COIN_PAUSE;
+
 }

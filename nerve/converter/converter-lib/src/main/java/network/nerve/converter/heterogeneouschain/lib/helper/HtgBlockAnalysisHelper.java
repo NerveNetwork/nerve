@@ -32,7 +32,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import java.util.List;
 
 /**
- * 解析HTG区块，监听指定地址和指定交易并回调Nerve核心
+ * analysisHTGBlock, listen to specified addresses and transactions, and call backNervecore
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -47,7 +47,7 @@ public class HtgBlockAnalysisHelper implements BeanInitial {
     //    this.htgContext = (HtgContext) beanMap.get("htgContext");
     //}
     /**
-     * 解析HTG区块
+     * analysisHTGblock
      */
     public void analysisEthBlock(EthBlock.Block block, IHtgAnalysisTx ethAnalysisTx) throws Exception {
         List<EthBlock.TransactionResult> ethTransactionResults = block.getTransactions();
@@ -60,24 +60,24 @@ public class HtgBlockAnalysisHelper implements BeanInitial {
                 try {
                     ethAnalysisTx.analysisTx(tx, txTime, blockHeight);
                 } catch (Exception e) {
-                    htgContext.logger().error(String.format("[%s]网络交易解析失败: %s", htgContext.getConfig().getSymbol(), tx.getHash()), e);
+                    htgContext.logger().error(String.format("[%s]Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getHash()), e);
                 }
             }
         }
-        // 保存本地区块
+        // Save local blocks
         HtgSimpleBlockHeader simpleBlockHeader = new HtgSimpleBlockHeader();
         simpleBlockHeader.setHash(block.getHash());
         simpleBlockHeader.setPreHash(block.getParentHash());
         simpleBlockHeader.setHeight(block.getNumber().longValue());
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三十个区块
+        // Keep only the last thirty blocks
         htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
 
         if (blockHeight % 50 == 0) {
-            htgContext.logger().info("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().info("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
         } else {
-            htgContext.logger().debug("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().debug("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
         }
     }
 

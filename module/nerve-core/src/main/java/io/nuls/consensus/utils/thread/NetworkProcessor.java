@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 监控网络状态
+ * Monitoring network status
  */
 public class NetworkProcessor implements Runnable {
     private ChainManager chainManager = SpringLiteContext.getBean(ChainManager.class);
@@ -26,7 +26,7 @@ public class NetworkProcessor implements Runnable {
     public void run() {
         while (true) {
             boolean netStatus;
-            //如果不是共识节点或则共识网络未组好则直接返回
+            //If it is not a consensus node or if the consensus network is not properly assembled, return directly
             if (chain.isSynchronizedHeight()) {
                 try {
                     ConsensusNetService consensusNetService = SpringLiteContext.getBean(ConsensusNetService.class);
@@ -34,13 +34,13 @@ public class NetworkProcessor implements Runnable {
                     boolean isChange = consensusNetService.netStatusChange(chain);
                     netStatus = consensusNetService.getNetStatus(chain);
                     if (isChange) {
-                        //通知回调
-                        chain.getLogger().info("=====共识网络状态变更={}", netStatus);
+                        //Notification callback
+                        chain.getLogger().info("=====Consensus Network State Change={}", netStatus);
                         chainManager.netWorkStateChange(chain, netStatus);
                     }
-                    //有未连接peer，进行重连
+                    //Not connectedpeer, perform reconnection
                     processConnect(consensusNetService, chain);
-                    //如果存在未连接的共识节点，进行自身地址重分享
+                    //If there are unconnected consensus nodes, perform self address re sharing
 
                     if (!chain.isNetworkStateOk()) {
                         processShareSelf(consensusNetService, chain);
@@ -59,7 +59,7 @@ public class NetworkProcessor implements Runnable {
 
     public void updatePocGroup(ConsensusNetService consensusNetService, Chain chain) {
         NetworkService networkService = SpringLiteContext.getBean(NetworkService.class);
-        //获取网络模块上的共识网络IP组，进行共识模块的更新
+        //Obtain consensus networks on network modulesIPGroup, update consensus module
         List<String> list = networkService.getPocNodes(chain);
         if (null != list) {
             consensusNetService.reCalConsensusNet(chain, list);
@@ -78,9 +78,9 @@ public class NetworkProcessor implements Runnable {
             if (result) {
                 consensusNet.setHadConnect(true);
                 ips.add(consensusNet.getNodeId().split(":")[0]);
-                //连接通知
-                //chain.getLogger().debug("已连接通知:node = {}",consensusNet.getNodeId());
-                //给链接到的节点本节点的回执信息，用于对方节点将本节点设置为共识网络节点
+                //Connection notification
+                //chain.getLogger().debug("Connected notification:node = {}",consensusNet.getNodeId());
+                //Provide the receipt information of the node linked to this node, which is used by the other node to set this node as a consensus network node
                 networkService.sendIdentityMessage(chain.getChainId(), consensusNet.getNodeId(), consensusNet.getPubKey(), true);
             }
         }
@@ -91,7 +91,7 @@ public class NetworkProcessor implements Runnable {
     }
 
     public void processShareSelf(ConsensusNetService consensusNetService, Chain chain) {
-        //广播身份消息
+        //Broadcast identity messages
         NetworkService networkService = SpringLiteContext.getBean(NetworkService.class);
         if (consensusNetService.reShareSelf(chain)) {
             networkService.broadCastIdentityMsg(chain);

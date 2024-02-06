@@ -5,7 +5,7 @@ import io.nuls.base.api.provider.BaseReq;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-11 11:57
- * @Description: 退出共识
+ * @Description: Exit consensus
  */
 public class BatchStakingMergeReq extends BaseReq {
 

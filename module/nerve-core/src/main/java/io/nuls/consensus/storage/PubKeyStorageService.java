@@ -5,17 +5,17 @@ import io.nuls.consensus.model.po.PubKeyPo;
 
 public interface PubKeyStorageService {
     /**
-     * 保存
-     * @param po     公钥数据
-     * @param chain  链信息
-     * @return  保存是否成功
+     * preserve
+     * @param po     Public key data
+     * @param chain  Chain information
+     * @return  Whether the save was successful
      * */
     boolean save(PubKeyPo po, Chain chain);
 
     /**
-     * 获取链公钥信息
-     * @param chain 链信息
-     * @return      本链公钥列表
+     * Obtain chain public key information
+     * @param chain Chain information
+     * @return      List of public keys in this chain
      * */
     PubKeyPo get(Chain chain);
 }

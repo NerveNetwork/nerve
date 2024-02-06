@@ -1,7 +1,7 @@
 package io.nuls.consensus.constant;
 
 /**
- * 参数名称
+ * Parameter Name
  * @author tag
  * 2019/10/16
  * */

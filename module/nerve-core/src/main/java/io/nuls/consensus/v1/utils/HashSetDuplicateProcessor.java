@@ -46,10 +46,10 @@ public class HashSetDuplicateProcessor<T> {
     }
 
     /**
-     * 插入一个元素，并检查是否存在
+     * Insert an element and check for its existence
      *
      * @param t
-     * @return 存在：false，不存在：true
+     * @return existence：false, does not exist：true
      */
     public boolean insertAndCheck(T t) {
         boolean result = set1.add(t);

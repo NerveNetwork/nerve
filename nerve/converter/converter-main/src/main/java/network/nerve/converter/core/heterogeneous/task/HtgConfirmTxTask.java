@@ -50,7 +50,7 @@ public class HtgConfirmTxTask implements Runnable{
                 runnable.run();
             }
         } catch (Exception e) {
-            converterCoreApi.logger().warn("异构链交易确认任务执行异常: {}", e.getMessage());
+            converterCoreApi.logger().warn("Abnormal execution of heterogeneous chain transaction confirmation task: {}", e.getMessage());
         }
     }
 }

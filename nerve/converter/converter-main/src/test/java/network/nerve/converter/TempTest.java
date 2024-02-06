@@ -77,7 +77,7 @@ public class TempTest {
                 ConverterContext.HTG_RPC_CHECK_MAP = map;
             }
 
-            // 强制从第三方系统更新rpc
+            // Force updates from third-party systemsrpc
             Map<Long, Map> rpcCheckMap = ConverterContext.HTG_RPC_CHECK_MAP;
             Map<String, Object> resultMap = rpcCheckMap.get(10000);
             if (resultMap == null) {
@@ -97,7 +97,7 @@ public class TempTest {
                 break;
             }
             if (_version.intValue() > rpcVersion){
-                // 发现version改变，切换rpc
+                // findversionChange, switchrpc
                 Integer _index = (Integer) resultMap.get("index");
                 if (_index == null) {
                     break;

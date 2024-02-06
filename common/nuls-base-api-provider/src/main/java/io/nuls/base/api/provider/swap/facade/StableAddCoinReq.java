@@ -33,15 +33,15 @@ import io.nuls.base.api.provider.BaseReq;
 public class StableAddCoinReq extends BaseReq {
 
     /**
-     * 提案类型
+     * Proposal type
      */
     private int type;
     /**
-     * 稳定币交易对地址
+     * Stable currency transactions against addresses
      */
     private String businessAddress;
     /**
-     * 添加的币种，示例: 5-16
+     * Added currency, example: 5-16
      */
     private String content;
     private String address;

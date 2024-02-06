@@ -48,7 +48,7 @@ import java.util.Map;
 public class ConverterSignUtil {
 
     /**
-     * 签名(已存在签名,则追加签名)
+     * autograph(Signature already exists,Add signature)
      *
      * @param tx
      * @param signAccountDTO
@@ -60,7 +60,7 @@ public class ConverterSignUtil {
 
         byte[] signBytes = tx.getTransactionSignature();
         if(null != signBytes && signBytes.length > 0){
-            // 如果已存在签名则追加签名
+            // If a signature already exists, add a signature
             transactionSignature = ConverterUtil.getInstance(signBytes, TransactionSignature.class);
             p2PHKSignatures = transactionSignature.getP2PHKSignatures();
         } else {
@@ -96,7 +96,7 @@ public class ConverterSignUtil {
     }
 
     /**
-     * 当前虚拟银行节点签名
+     * Current virtual bank node signature
      *
      * @param chain
      * @param tx
@@ -104,12 +104,12 @@ public class ConverterSignUtil {
     public static P2PHKSignature signTxCurrentVirtualBankAgent(Chain chain, Transaction tx) throws NulsException {
         SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
         if (null == signAccountDTO) {
-            chain.getLogger().error("[交易签名失败]当前由虚拟银行节点签名, 但当前节点非共识节点, 不具备签名资格! type:{}, hash:{}",
+            chain.getLogger().error("[Transaction signature failed]Currently signed by virtual bank node, But the current node is not a consensus node, Not qualified for signature! type:{}, hash:{}",
                     tx.getType(), tx.getHash().toHex());
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_CONSENSUS_AGENT);
         }
         if (!chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
-            chain.getLogger().error("[交易签名失败]当前由虚拟银行节点签名, 但当前节点非虚拟银行成员节点, 不具备签名资格! type:{}, hash:{}, signAddress:{}",
+            chain.getLogger().error("[Transaction signature failed]Currently signed by virtual bank node, But the current node is not a virtual bank member node, Not qualified for signature! type:{}, hash:{}, signAddress:{}",
                     tx.getType(), tx.getHash().toHex(), signAccountDTO.getAddress());
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
         }
@@ -117,7 +117,7 @@ public class ConverterSignUtil {
     }
 
     /**
-     * 如果当前节点是虚拟银行成员, 则追加当前虚拟银行成员的签名
+     * If the current node is a virtual bank member, Then add the signature of the current virtual bank member
      * @param chain
      * @param tx
      */
@@ -130,7 +130,7 @@ public class ConverterSignUtil {
     }
 
     /**
-     * 如果当前节点是虚拟银行成员, 则获取签名的信息 不追加到交易中
+     * If the current node is a virtual bank member, Obtain signature information Not added to the transaction
      * @param chain
      * @param txHash
      */

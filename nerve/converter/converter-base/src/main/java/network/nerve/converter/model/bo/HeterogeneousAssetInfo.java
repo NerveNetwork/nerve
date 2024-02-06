@@ -35,17 +35,17 @@ import java.io.Serializable;
 @ApiModel
 public class HeterogeneousAssetInfo implements Serializable {
 
-    @ApiModelProperty(description = "异构链chainId")
+    @ApiModelProperty(description = "Heterogeneous chainchainId")
     private int chainId;
-    @ApiModelProperty(description = "资产符号")
+    @ApiModelProperty(description = "Asset symbols")
     private String symbol;
-    @ApiModelProperty(description = "资产小数位数")
+    @ApiModelProperty(description = "Decimal places of assets")
     private int decimals;
-    @ApiModelProperty(description = "资产ID")
+    @ApiModelProperty(description = "assetID")
     private int assetId;
-    @ApiModelProperty(description = "资产对应合约地址(若有)")
+    @ApiModelProperty(description = "Asset corresponding contract address(If there is any)")
     private String contractAddress;
-    @ApiModelProperty(description = "Htg资产到nerve资产的小数位差值")
+    @ApiModelProperty(description = "HtgAssets tonerveDecimal difference of assets")
     private String decimalsSubtractedToNerve;
 
     public int getChainId() {

@@ -31,12 +31,12 @@ package network.nerve.converter.heterogeneouschain.eth.helper.interfaces;
 public interface IEthUpgrade {
 
     /**
-     * 当前升级的版本号
+     * The current upgraded version number
      */
     int version();
 
     /**
-     * 新流程切换
+     * New process switching
      */
     void newSwitch(String newContract) throws Exception;
 }

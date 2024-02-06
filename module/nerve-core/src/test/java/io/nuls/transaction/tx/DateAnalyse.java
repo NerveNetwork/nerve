@@ -43,7 +43,7 @@ import org.junit.Before;
 import java.util.List;
 
 /**
- * 数据分析
+ * Data analysis
  *
  * @author: Loki
  * @date: 2020/12/1
@@ -66,7 +66,7 @@ public class DateAnalyse {
         testAnalyse();
     }
 
-    // 根据交易地址以及资产数据，查找交易hash
+    // Search for transactions based on transaction address and asset datahash
     public static void testAnalyse() throws Exception {
         RocksDBService.init("data/transaction");
         ConfirmedTxStorageService cft = new ConfirmedTxStorageServiceImpl();

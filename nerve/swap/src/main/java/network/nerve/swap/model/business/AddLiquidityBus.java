@@ -32,21 +32,21 @@ import java.math.BigInteger;
 public class AddLiquidityBus extends BaseBus {
 
     /**
-     * 实际添加的资产
+     * Actual added assets
      */
     private BigInteger realAddAmount0;
     private BigInteger realAddAmount1;
     /**
-     * 获得的LP资产
+     * ObtainedLPasset
      */
     private BigInteger liquidity;
     /**
-     * 当前池子余额（添加前）
+     * Current pool balance（Before adding）
      */
     private BigInteger reserve0;
     private BigInteger reserve1;
     /**
-     * 最终退回给用户的资产
+     * Assets ultimately returned to users
      */
     private BigInteger refundAmount0;
     private BigInteger refundAmount1;

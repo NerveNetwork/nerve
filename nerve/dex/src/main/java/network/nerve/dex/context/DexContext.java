@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class DexContext {
-    //系统收取手续费地址
+    //Address for system fee collection
     public static byte[] sysFeeAddress;
-    //系统收取手续费比例
+    //System fee collection ratio
     public static BigDecimal sysFeeScaleDecimal;
-    //创建币对销毁Nerve数量
+    //Create a coin pair and destroy itNervequantity
     public static BigInteger createTradingAmount;
 
     public static long skipHeight;

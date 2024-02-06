@@ -31,10 +31,10 @@ public class AwardProcessor extends BasicRunnable {
 
     private void process() throws InterruptedException {
         BlockHeader header = chain.getConsensusCache().getBlockHeaderQueue().take();
-        //判断是否 需要计算共识奖励
+        //Determine if Need to calculate consensus rewards
 
-        //计算共识奖励
+        //Calculate consensus rewards
 
-        //存储计算结果
+        //Store calculation results
     }
 }

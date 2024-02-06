@@ -4,32 +4,32 @@ import java.math.BigDecimal;
 
 public interface DexConstant {
 
-    //买单委托类型
+    //Purchase order commission type
     byte TRADING_ORDER_BUY_TYPE = 1;
-    //卖单委托类型
+    //Sales order commission type
     byte TRADING_ORDER_SELL_TYPE = 2;
-    //有效资产
+    //Effective assets
     int ASSET_ENABLE = 1;
-    //无效资产
+    //Invalid assets
     int ASSET_DISABLE = 0;
-    //from锁定类型
+    //fromLock type
     byte ASSET_LOCK_TYPE = -1;
-    //委托挂单锁定类型
+    //Entrusted order locking type
     byte DEX_LOCK_TIME = -2;
 
-    //买单完全成交
+    //Purchase order fully completed
     byte ORDER_BUY_OVER = 1;
-    //卖单完全成交
+    //Complete transaction of sales order
     byte ORDER_SELL_OVER = 2;
-    //买单卖单都完全成交
+    //Both buy and sell orders are fully executed
     byte ORDER_ALL_OVER = 3;
-    //买单主动吃单
+    //Take the initiative to pay the bill
     byte BUY_TAKER = 1;
-    //卖单主动吃单
+    //Selling orders and actively accepting orders
     byte SELL_TAKER = 2;
-    //取消订单成功
+    //Cancel order successful
     byte CANCEL_ORDER_SUCC = 1;
-    //取消订单失败
+    //Cancel order failed
     byte CANCEL_ORDER_FAIL = 0;
 
     int NONCE_LENGTH = 8;

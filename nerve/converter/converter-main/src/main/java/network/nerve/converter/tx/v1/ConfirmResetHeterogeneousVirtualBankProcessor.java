@@ -84,24 +84,24 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 ConfirmResetVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmResetVirtualBankTxData.class);
                 NulsHash resetTxHash = txData.getResetTxHash();
                 if (setDuplicate.contains(resetTxHash.toHex())) {
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.TX_DUPLICATION.getMsg());
                     continue;
                 }
-                // 判断该提现交易是否已经有对应的确认提现交易
+                // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                 NulsHash confirmHash = confirmResetBankStorageService.get(chain, resetTxHash);
                 if (null != confirmHash) {
-                    // 说明该提现交易 已经发出过确认提现交易,本次交易为重复的确认提现交易
+                    // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out,This transaction is a duplicate confirmed withdrawal transaction
                     failsList.add(tx);
-                    // Nerve提现交易不存在
+                    // NerveWithdrawal transaction does not exist
                     errorCode = ConverterErrorCode.CFM_IS_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.CFM_IS_DUPLICATION.getMsg());
                     continue;
@@ -112,13 +112,13 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
                     log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
-                //获取原始交易
+                //Obtain original transaction
                 Transaction resetTx = TransactionCall.getConfirmedTx(chain, resetTxHash);
                 if (null == resetTx) {
-                    // Nerve原始重置交易不存在
+                    // NerveThe original reset transaction does not exist
                     throw new NulsException(ConverterErrorCode.RESET_TX_NOT_EXIST);
                 }
-                // 签名验证(种子)
+                // Signature verification(seed)
                 try {
                     ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
@@ -159,7 +159,7 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
                     chain.getLogger().error("[commit] Save confirm ResetHeterogeneousVirtualBank tx failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
-                // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
+                // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-12
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     if(StringUtils.isNotBlank(txData.getHeterogeneousTxHash())) {
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
@@ -169,7 +169,7 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
                 heterogeneousService.saveResetVirtualBankStatus(chain, false);
                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, false);
                 heterogeneousService.saveResetVirtualBankStatus(chain, false);
-                chain.getLogger().info("[commit] 确认重置虚拟银行异构链(合约) hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit] Confirm resetting the virtual banking heterogeneous chain(contract) hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (Exception e) {
@@ -202,13 +202,13 @@ public class ConfirmResetHeterogeneousVirtualBankProcessor implements Transactio
                 }
                 if (isCurrentDirector) {
                     if(StringUtils.isNotBlank(txData.getHeterogeneousTxHash())) {
-                        // 更新异构链组件交易状态 // add by Mimi at 2020-03-13
+                        // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-13
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                         docking.txConfirmedRollback(txData.getHeterogeneousTxHash());
                     }
                 }
                 heterogeneousService.saveResetVirtualBankStatus(chain, true);
-                chain.getLogger().info("[rollback] 确认重置虚拟银行异构链(合约) hash:{}, 原始提现交易hash:{}", tx.getHash().toHex(), txData.getResetTxHash().toHex());
+                chain.getLogger().info("[rollback] Confirm resetting the virtual banking heterogeneous chain(contract) hash:{}, Original withdrawal transactionhash:{}", tx.getHash().toHex(), txData.getResetTxHash().toHex());
             }
             return true;
         } catch (Exception e) {

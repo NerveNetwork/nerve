@@ -98,7 +98,7 @@ public class SwapBootstrap extends RpcModule {
     public void init() {
         try {
             super.init();
-            //增加地址工具类初始化
+            //Add address tool class initialization
             AddressTool.init(addressPrefixDatas);
             initDB();
             initProtocolUpdate();
@@ -183,6 +183,13 @@ public class SwapBootstrap extends RpcModule {
             Log.error("Failed to get height_1_29_0", e);
             throw new RuntimeException(e);
         }
+        try {
+            long heightVersion1_31_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_31_0"));
+            SwapContext.PROTOCOL_1_31_0 = heightVersion1_31_0;
+        } catch (Exception e) {
+            Log.error("Failed to get height_1_31_0", e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -215,7 +222,7 @@ public class SwapBootstrap extends RpcModule {
             for (Chain chain : chainMap.values()) {
                 int chainId = chain.getConfig().getChainId();
                 boolean registerTx = RegisterHelper.registerTx(chainId, ProtocolGroupManager.getCurrentProtocol(chainId));
-                // 通知交易模块，SWAP模块的系统交易
+                // Notify the trading module,SWAPSystem transactions of modules
                 setSwapGenerateTxTypes(chainId);
                 Log.info("register tx type to tx module, chain id is {}, result is {}", chainId, registerTx);
             }
@@ -257,7 +264,7 @@ public class SwapBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化系统编码
+     * Initialize system encoding
      */
     private static void initSys() throws NoSuchFieldException, IllegalAccessException {
         try {
@@ -277,30 +284,30 @@ public class SwapBootstrap extends RpcModule {
 
 
     private void initDB() throws Exception {
-        // 数据文件存储地址
+        // Data file storage address
         RocksDBService.init(swapConfig.getPathRoot());
 
     }
 
     /**
-     * 初始化配置项上下文
+     * Initialize configuration item context
      */
     private void initContext() {
-        // 提现黑洞公钥
+        // Withdrawal of black hole public key
         SwapContext.BLACKHOLE_PUBKEY = HexUtil.decode(swapConfig.getBlackHolePublicKey());
         SwapContext.BLACKHOLE_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getBlackHolePublicKey(), swapConfig.getChainId());
-        // 手续费奖励的系统接收地址
+        // System receiving address for handling fee rewards
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKey(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0 = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeSystemAddressPublicKeyProtocol17(), swapConfig.getChainId());
         SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS = AddressTool.getAddressByPubKeyStr(swapConfig.getAwardFeeDestructionAddressPublicKey(), swapConfig.getChainId());
-        // 初始化聚合stableCombining
+        // Initialize AggregationstableCombining
         String stablePairAddressSetStr = swapConfig.getStablePairAddressInitialSet();
         if (StringUtils.isNotBlank(stablePairAddressSetStr)) {
             String[] array = stablePairAddressSetStr.split(",");
             if (array.length == 0) {
                 return;
             }
-            // 延迟缓存: 管理稳定币交易对-用于Swap交易
+            // Delayed caching: Managing stablecoin transactions-Used forSwaptransaction
             for (String stable : array) {
                 stable = stable.trim();
                 SwapContext.stableCoinGroup.addAddress(stable, stableSwapPairCache, swapStablePairStorageService, swapConfig);
@@ -317,7 +324,7 @@ public class SwapBootstrap extends RpcModule {
         try {
             TransactionCall.setSwapGenerateTxTypes(currentChainId, resultList);
         } catch (NulsException e) {
-            Log.warn("获取智能合约生成交易类型异常", e);
+            Log.warn("Exception in obtaining transaction type for smart contract generation", e);
         }
     }
 }

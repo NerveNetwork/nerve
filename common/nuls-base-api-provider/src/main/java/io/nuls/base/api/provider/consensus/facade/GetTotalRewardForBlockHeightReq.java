@@ -5,7 +5,7 @@ import io.nuls.base.api.provider.BaseReq;
 /**
  * @Author: zhoulijun
  * @Time: 2020-06-09 14:29
- * @Description: 获取一个指定高度区块的总奖励数
+ * @Description: Obtain the total number of rewards for a specified height block
  */
 public class GetTotalRewardForBlockHeightReq extends BaseReq {
 

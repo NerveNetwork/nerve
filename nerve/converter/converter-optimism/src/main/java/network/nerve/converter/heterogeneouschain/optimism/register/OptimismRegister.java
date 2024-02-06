@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.optimism.context.OptimismConte
 
 
 /**
- * Optimism组件向Nerve核心注册
+ * OptimismComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

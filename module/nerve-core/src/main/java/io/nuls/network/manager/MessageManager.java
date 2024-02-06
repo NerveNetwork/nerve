@@ -62,7 +62,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 消息管理器，用于收发消息
+ * Message Manager, used for sending and receiving messages
  * message manager：  send and rec msg
  *
  * @author lan
@@ -77,7 +77,7 @@ public class MessageManager extends BaseManager {
     }
 
     public void sendToNode(BaseMessage message, Node node, boolean aysn) {
-        //向节点发送消息
+        //Send messages to nodes
         broadcastToANode(message, node, aysn);
 
     }
@@ -119,7 +119,7 @@ public class MessageManager extends BaseManager {
 
 
     /**
-     * 验证消息
+     * Verify message
      * validate message checkSum
      *
      * @param data entity
@@ -133,7 +133,7 @@ public class MessageManager extends BaseManager {
     }
 
     public void receiveMessage(NulsByteBuffer byteBuffer, Node node) {
-        //统一接收消息处理
+        //Unified message reception and processing
         try {
             if (null == byteBuffer) {
                 return;
@@ -158,7 +158,7 @@ public class MessageManager extends BaseManager {
                     BaseMeesageHandlerInf handler = MessageHandlerFactory.getInstance().getHandler(header.getCommandStr());
                     result = handler.recieve(message, node);
                 } else {
-                    //外部消息，转外部接口
+                    //External messages, converting to external interfaces
                     OtherModuleMessageHandler handler = MessageHandlerFactory.getInstance().getOtherModuleHandler();
                     result = handler.recieve(header, payLoadBody, node);
                     byteBuffer.setCursor(payLoad.length);
@@ -185,7 +185,7 @@ public class MessageManager extends BaseManager {
     }
 
     /**
-     * 发送请求地址消息
+     * Send request address message
      *
      * @param nodeGroup      NodeGroup
      * @param isConnectCross boolean
@@ -219,7 +219,7 @@ public class MessageManager extends BaseManager {
 
 
     /**
-     * 通过本地网络传递获取跨链网络地址
+     * Obtain cross chain network addresses through local network transmission
      *
      * @param connectNodeGroup
      * @param messageNodeGroup
@@ -245,7 +245,7 @@ public class MessageManager extends BaseManager {
     }
 
     /**
-     * 广播消息到所有节点，排除特定节点
+     * Broadcast messages to all nodes, excluding specific nodes
      *
      * @param message
      * @param excludeNode
@@ -256,7 +256,7 @@ public class MessageManager extends BaseManager {
         NodeGroup nodeGroup = NodeGroupManager.getInstance().getNodeGroupByMagic(message.getHeader().getMagicNumber());
         Collection<Node> connectNodes = null;
         if (isCross) {
-            //跨链节点，不做广播分享
+            //Cross chain nodes, no broadcast sharing
             return new NetworkEventResult(true, NetworkErrorCode.SUCCESS);
 //            connectNodes = nodeGroup.getCrossNodeContainer().getConnectedNodes().values();
         } else {
@@ -293,7 +293,7 @@ public class MessageManager extends BaseManager {
     }
 
     /**
-     * 判断是否是握手消息
+     * Determine if it is a handshake message
      * isHandShakeMessage?
      *
      * @param message

@@ -84,14 +84,14 @@ public class ComponentSignHandler implements MessageProcessor {
                 if (StringUtils.isNotBlank(currentOutHash)) {
                     ComponentCalledPO outPO = asyncProcessedTxStorageService.getComponentCalledPO(chain, currentOutHash);
                     if (null != outPO && po.getHeight() <= outPO.getHeight()) {
-                        chain.getLogger().debug("当前非虚拟银行成员节点，参与签名, hash: {}", hash);
+                        chain.getLogger().debug("Current non virtual bank member node, participating in signature, hash: {}", hash);
                         messageService.componentSign(chain, nodeId, componentSignMessage, false);
                     }
                 }
             }
         }
         if(!currentDirector){
-            chain.getLogger().debug("当前非虚拟银行成员节点, 不处理消息:{}", COMPONENT_SIGN);
+            chain.getLogger().debug("Current non virtual bank member nodes, Do not process messages:{}", COMPONENT_SIGN);
             return;
         }
         messageService.componentSign(chain, nodeId, componentSignMessage, true);

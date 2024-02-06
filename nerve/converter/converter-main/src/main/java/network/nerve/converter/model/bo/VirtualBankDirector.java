@@ -29,47 +29,47 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * 虚拟银行成员
+ * Virtual Bank Members
  * @author: Loki
  * @date: 2020-02-28
  */
 public class VirtualBankDirector implements Serializable {
     /**
-     * 节点hash
+     * nodehash
      */
     private String agentHash;
     /**
-     * 签名地址（节点打包地址）
+     * Signature address（Node packaging address）
      */
     private String signAddress;
     /**
-     * 签名地址 公钥
+     * Signature address Public key
      */
     private String signAddrPubKey;
 
     /**
-     * 节点地址
+     * Node address
      */
     private String agentAddress;
 
     /**
-     * 奖励地址
+     * Reward Address
      */
     private String rewardAddress;
 
     /**
-     * 是否是种子节点
+     * Is it a seed node
      */
     private boolean seedNode;
 
     /**
-     * 节点提交的所持有的异构链地址
-     * K:异构链在NERVE中的chainId, V:异构链地址
+     * Heterogeneous chain addresses held by nodes submitted
+     * K:Heterogeneous chains inNERVEMiddlechainId, V:Heterogeneous Chain Address
      */
     private Map<Integer, HeterogeneousAddress> heterogeneousAddrMap;
 
     /**
-     * 节点加入虚拟银行时的顺序
+     * Order of nodes joining virtual banks
      */
     private int order;
 

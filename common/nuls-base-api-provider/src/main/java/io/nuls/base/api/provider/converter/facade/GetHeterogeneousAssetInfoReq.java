@@ -5,7 +5,7 @@ import io.nuls.base.api.provider.BaseReq;
 /**
  * @Author: zhoulijun
  * @Time: 2020-06-12 11:59
- * @Description: 获取异构资产信息
+ * @Description: Obtaining heterogeneous asset information
  */
 public class GetHeterogeneousAssetInfoReq extends BaseReq {
 

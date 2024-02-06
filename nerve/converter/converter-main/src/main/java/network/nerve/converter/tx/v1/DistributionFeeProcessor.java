@@ -97,40 +97,40 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 DistributionFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), DistributionFeeTxData.class);
                 NulsHash basisTxHash = txData.getBasisTxHash();
                 String originalHash = basisTxHash.toHex();
                 if (setDuplicate.contains(originalHash)) {
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.TX_DUPLICATION.getMsg());
                     continue;
                 }
-                // 验证是否重复发奖励
+                // Verify if rewards are issued repeatedly
                 DistributionFeePO po = distributionFeeStorageService.findByBasisTxHash(chain, basisTxHash);
                 if (null != po) {
-                    // 说明该提现交易 已经发出过确认提现交易,本次交易为重复的确认提现交易
+                    // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out,This transaction is a duplicate confirmed withdrawal transaction
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DISTRIBUTION_FEE_IS_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.DISTRIBUTION_FEE_IS_DUPLICATION.getMsg());
                     continue;
                 }
 
-                // 获取原始交易
+                // Obtain original transaction
                 Transaction basisTx = TransactionCall.getConfirmedTx(chain, basisTxHash);
                 if (null == basisTx) {
                     failsList.add(tx);
-                    // Nerve原始交易不存在
+                    // NerveThe original transaction does not exist
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
                     log.error(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
                     continue;
                 }
 
-                // 根据原始交易 来验证
+                // Based on the original transaction To verify
                 switch (basisTx.getType()) {
                     case TxType.WITHDRAWAL:
                         String eCode = validWithdrawalDistribution(chain, tx, basisTx, blockHeader);
@@ -163,8 +163,8 @@ public class DistributionFeeProcessor implements TransactionProcessor {
     }
 
     /**
-     * 验证提现交易的手续费补贴分发
-     * 通过则返回空, 不通过返回错误码
+     * Distribution of transaction fee subsidies for verifying withdrawal transactions
+     * If passed, return empty, Failure to return error code
      *
      * @param chain
      * @param tx
@@ -172,13 +172,13 @@ public class DistributionFeeProcessor implements TransactionProcessor {
      * @return
      */
     private String validWithdrawalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
-        // 获取提现确认交易中的 分发手续费地址
+        // Obtain withdrawal confirmation transactions Distribution fee address
         ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basisTx.getHash());
         return validDistributionFeeAddress(chain, tx, basisTx, po.getListDistributionFee(), blockHeader, false);
     }
 
     /**
-     * 验证补贴续费地址
+     * Verify subsidy renewal address
      *
      * @param chain
      * @param tx
@@ -191,7 +191,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             chain.getLogger().error(ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getMsg());
             return ConverterErrorCode.HETEROGENEOUS_SIGN_ADDRESS_LIST_EMPTY.getCode();
         }
-        // 确认提现交易应发手续费的地址列表
+        // List of addresses for confirming the handling fees to be paid for withdrawal transactions
         List<byte[]> listBasisTxRewardAddressBytes = new ArrayList<>();
         for (HeterogeneousAddress addr : listDistributionFee) {
             String address = chain.getDirectorRewardAddress(addr);
@@ -210,9 +210,9 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             return e.getErrorCode().getCode();
         }
 
-        // 补贴交易的收到手续费的地址列表
+        // List of addresses for receiving transaction fees for subsidy transactions
         List<byte[]> listDistributionTxRewardAddressBytes = new ArrayList<>();
-        // 计算 每个节点补贴多少手续费
+        // calculate How much commission is subsidized for each node
         BigInteger count = BigInteger.valueOf(listBasisTxRewardAddressBytes.size());
 
         long height = chain.getLatestBasicBlock().getHeight();
@@ -222,7 +222,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         WithdrawalTotalFeeInfo distributionFeeInfo;
         BigInteger distributionFee;
         try {
-            // 修改手续费机制，支持异构链主资产作为手续费
+            // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
             distributionFeeInfo = assembleTxService.calculateFee(chain, height, basisTx, isProposal);
             distributionFee = distributionFeeInfo.getFee();
         } catch (NulsException e) {
@@ -230,7 +230,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
         }
 
         BigInteger amount = distributionFee.divide(count);
-        // 通过原始数据(确认交易中的列表),计算组装cointo的数据
+        // Through raw data(Confirm the list in the transaction),Calculate assemblycointoData for
         Map<String, BigInteger> coinToOriginalMap = assembleTxService.calculateDistributionFeeCoinToAmount(listBasisTxRewardAddressBytes, amount);
 
         if (coinToOriginalMap.size() != coinData.getTo().size()) {
@@ -240,7 +240,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
 
         Coin feeCoin = distributionFeeInfo.getFeeCoin();
         for (CoinTo coinTo : coinData.getTo()) {
-            // 协议15: 增加验证feeCoin
+            // protocol15: Add verificationfeeCoin
             if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
                 if (distributionFeeInfo.isNvtAsset()) {
                     if (coinTo.getAssetsChainId() != chain.getConfig().getChainId()
@@ -281,12 +281,12 @@ public class DistributionFeeProcessor implements TransactionProcessor {
 
 
     /**
-     * 验证提案投票交易的手续费补贴分发
-     * 通过则返回空, 不通过返回错误码
+     * Distribution of transaction fee subsidies for verifying proposal voting transactions
+     * If passed, return empty, Failure to return error code
      *
      * @param chain
-     * @param tx      当前补贴手续费交易
-     * @param basisTx 执行提案确认交易
+     * @param tx      Current subsidy handling fee transactions
+     * @param basisTx Execute proposal confirmation transaction
      * @return
      */
     private String validProposalDistribution(Chain chain, Transaction tx, Transaction basisTx, BlockHeader blockHeader) {
@@ -300,11 +300,11 @@ public class DistributionFeeProcessor implements TransactionProcessor {
             return ConverterErrorCode.DESERIALIZE_ERROR.getCode();
         }
 
-        // 验证提案类型
+        // Verify proposal type
         if (txData.getType() != ProposalTypeEnum.UPGRADE.value() &&
                 txData.getType() == ProposalTypeEnum.EXPELLED.value() &&
                 txData.getType() != ProposalTypeEnum.REFUND.value()) {
-            chain.getLogger().error("提案类型的执行不需要补贴手续费. ProposalTxHash:{}, type:{}",
+            chain.getLogger().error("The execution of proposal types does not require subsidy handling fees. ProposalTxHash:{}, type:{}",
                     businessData.getProposalTxHash().toHex(), txData.getType());
             return ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
         }
@@ -331,7 +331,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
                     chain.getLogger().error("[commit] Save distribution fee failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
-                chain.getLogger().info("[commit] 补贴手续费交易 hash:{}, basisTxHash:{}", tx.getHash().toHex(), txData.getBasisTxHash().toHex());
+                chain.getLogger().info("[commit] Subsidy handling fee transaction hash:{}, basisTxHash:{}", tx.getHash().toHex(), txData.getBasisTxHash().toHex());
             }
             return true;
         } catch (Exception e) {
@@ -362,7 +362,7 @@ public class DistributionFeeProcessor implements TransactionProcessor {
                     chain.getLogger().error("[rollback] remove distribution fee failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
-                chain.getLogger().info("[rollback] 补贴手续费交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[rollback] Subsidy handling fee transaction hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (Exception e) {

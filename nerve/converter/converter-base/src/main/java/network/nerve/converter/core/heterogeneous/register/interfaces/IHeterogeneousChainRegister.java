@@ -31,37 +31,37 @@ import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
 /**
- * 注册流程如下, Nerve核心将按照如下顺序调用异构链
+ * The registration process is as follows, NerveThe core will call heterogeneous chains in the following order
  * @author: Mimi
  * @date: 2020-03-08
  */
 public interface IHeterogeneousChainRegister {
 
     /**
-     * 1. Nerve核心将调用此函数获取异构链的chainId
+     * 1. NerveThe core will call this function to obtain the information of heterogeneous chainschainId
      */
     int getChainId();
     /**
-     * 2. Nerve核心将调用此函数初始化异构链的数据，如初始化配置、DB
+     * 2. NerveThe core will call this function to initialize the data of heterogeneous chains, such as initializing configurations、DB
      */
     String init(HeterogeneousCfg config, NulsLogger logger) throws Exception;
 
     /**
-     * 3. 获取异构链的基本信息，如chainId、symbol、初始多签地址
+     * 3. Obtain basic information about heterogeneous chains, such aschainId、symbol、Initial multi signature address
      */
     HeterogeneousChainInfo getChainInfo();
 
     /**
-     * 4. 获取异构链实现的Nerve接口规范
+     * 4. Obtain heterogeneous chain implementationNerveinterface specification
      */
     IHeterogeneousChainDocking getDockingImpl();
 
     /**
-     * 5. Nerve核心调用此函数，返回注册信息给异构链
+     * 5. NerveThe core calls this function to return registration information to the heterogeneous chain
      */
     void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception;
     /**
-     * CORE 执行异构链注册的顺序
+     * CORE The order of executing heterogeneous chain registration
      */
     int order();
 }

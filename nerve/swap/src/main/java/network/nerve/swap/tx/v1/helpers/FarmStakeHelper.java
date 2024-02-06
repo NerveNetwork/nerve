@@ -47,7 +47,7 @@ public class FarmStakeHelper {
 
     public ValidaterResult validateTxData(Chain chain, Transaction tx, FarmStakeChangeData data, FarmTempManager farmTempManager) {
         NulsLogger logger = chain.getLogger();
-        //验证farm是否存在
+        //validatefarmDoes it exist
         FarmPoolPO farm = farmCache.get(data.getFarmHash());
         String farmHash = data.getFarmHash().toHex();
         if (farmTempManager != null && farmTempManager.getFarm(farmHash) != null) {
@@ -65,7 +65,7 @@ public class FarmStakeHelper {
             logger.warn("Incorrect stake amount.");
             return ValidaterResult.getFailed(SwapErrorCode.FARM_STAKE_AMOUNT_ERROR);
         }
-        //地址、资产、金额是否正确
+        //address、asset、Is the amount correct
         CoinData coinData;
         try {
             coinData = tx.getCoinDataInstance();

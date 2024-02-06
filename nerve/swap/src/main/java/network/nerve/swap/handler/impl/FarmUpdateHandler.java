@@ -109,7 +109,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
     private SwapResult executeTx(Chain chain, SwapResult result, BatchInfo batchInfo, Transaction tx, long blockHeight, long blockTime) {
 
         try {
-            // 提取业务参数
+            // Extract business parameters
             FarmUpdateData txData = new FarmUpdateData();
             txData.parse(tx.getTxData(), 0);
             ValidaterResult validaterResult = helper.validateTxData(chain, tx, txData, batchInfo.getFarmTempManager());
@@ -122,7 +122,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
                 FarmPoolPO realPo = farmCache.get(txData.getFarmHash());
                 farm = realPo.copy();
             }
-            //处理
+            //handle
             if (SwapContext.PROTOCOL_1_17_0 > blockHeight) {
                 executeBusiness(chain, tx, txData, farm, batchInfo, result, blockHeight, blockTime);
             } else {
@@ -131,13 +131,13 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
 
 //            batchInfo.getFarmTempManager().putFarm(farm);
 
-            // 装填执行结果
+            // Loading execution result
             result.setSuccess(true);
             result.setBlockHeight(blockHeight);
 
         } catch (NulsException e) {
             chain.getLogger().error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setSuccess(false);
             result.setErrorMessage(e.format());
         }
@@ -183,7 +183,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
                 }
                 LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
                 LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
-                // farm余额不足的情况，能领多少算多少,理论上不会出现这种情况
+                // farmIn the case of insufficient balance, calculate as much as can be claimed,In theory, this situation would not occur
                 if (balance.getBalance().compareTo(txData.getChangeTotalSyrupAmount()) < 0) {
                     throw new NulsException(SwapErrorCode.FARM_CHANGE_ERROR);
                 }
@@ -214,7 +214,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         }
 
         farm.setWithdrawLockTime(txData.getWithdrawLockTime());
-        //更新池子信息
+        //Update pool information
         batchInfo.getFarmTempManager().putFarm(farm);
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());
@@ -262,7 +262,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
                 }
                 LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
                 LedgerBalance balance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
-                // farm余额不足的情况，能领多少算多少,理论上不会出现这种情况
+                // farmIn the case of insufficient balance, calculate as much as can be claimed,In theory, this situation would not occur
                 if (balance.getBalance().compareTo(txData.getChangeTotalSyrupAmount()) < 0) {
                     throw new NulsException(SwapErrorCode.FARM_CHANGE_ERROR);
                 }
@@ -289,7 +289,7 @@ public class FarmUpdateHandler extends SwapHandlerConstraints {
         if (SwapContext.PROTOCOL_1_29_0 <= blockHeight) {
             farm.setSyrupLockTime(txData.getSyrupLockTime());
         }
-        //更新池子信息
+        //Update pool information
         batchInfo.getFarmTempManager().putFarm(farm);
 
         bus.setAccSyrupPerShareNew(farm.getAccSyrupPerShare());

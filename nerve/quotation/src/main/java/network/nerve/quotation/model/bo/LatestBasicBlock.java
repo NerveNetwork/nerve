@@ -27,24 +27,24 @@ package network.nerve.quotation.model.bo;
 import io.nuls.core.constant.SyncStatusEnum;
 
 /**
- * 最新区块简略信息
+ * Latest Block Brief Information
  * @author: Loki
  * @date: 2020/3/16
  */
 public class LatestBasicBlock {
 
     /**
-     * 区块高度
+     * block height
      */
     private long height;
 
     /**
-     * 区块时间
+     * Block time
      */
     private long time;
 
     /**
-     * 当前节点区块同步模式
+     * Current node block synchronization mode
      */
     private SyncStatusEnum syncStatusEnum;
 

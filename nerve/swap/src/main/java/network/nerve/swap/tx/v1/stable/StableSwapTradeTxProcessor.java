@@ -82,7 +82,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
             }
             for (Transaction tx : txs) {
                 logger.info("[commit] Stable Swap Trade, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -91,7 +91,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
                 String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -121,7 +121,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 StableSwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableSwapTradeBus.class);
                 String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 stablePair.rollback(BigInteger.ZERO, bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[rollback] Stable Swap Trade, hash: {}", tx.getHash().toHex());
@@ -134,15 +134,15 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
     }
 
 
-    // 持久化更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    // Persistent update, after integrating stable coin pools, ordinarySWAPCalling the stablecoin pool function, stablecoin currency1:1exchange
     public void updatePersistence(StableSwapTradeBus bus, long height, long time) throws Exception {
         String pairAddress = AddressTool.getStringAddressByBytes(bus.getPairAddress());
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
-        // 更新Pair的资金池和发行总量
+        // updatePairThe fund pool and total issuance amount of
         stablePair.update(BigInteger.ZERO, bus.getChangeBalances(), bus.getBalances(), height, time);
     }
 
-    // 回滚持久化更新，整合稳定币币池后，普通SWAP调用稳定币币池函数，稳定币币种1:1兑换
+    // Rolling back persistent updates, integrating stable coin pools, ordinarySWAPCalling the stablecoin pool function, stablecoin currency1:1exchange
     public void rollbackPersistence(TradePairBus tradePairBus) throws Exception {
         String pairAddress = AddressTool.getStringAddressByBytes(tradePairBus.getPairAddress());
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
@@ -201,7 +201,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 byte tokenOutIndex = txData.getTokenOutIndex();
                 CoinData coinData = tx.getCoinDataInstance();
                 StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, tokenOutIndex);
-                SwapUtils.calStableSwapTradeBusiness(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo());
+                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo(), null);
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);
@@ -256,7 +256,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                     errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
                     continue;
                 }
-                SwapUtils.calStableSwapTradeBusinessP21(chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), dto.getFeeTo());
+                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), null, dto.getFeeTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

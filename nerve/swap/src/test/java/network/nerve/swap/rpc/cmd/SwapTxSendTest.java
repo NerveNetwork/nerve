@@ -8,6 +8,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.info.Constants;
@@ -40,6 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -155,7 +157,7 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQoTpeBsikSpXijfRmgA1qFHRPxEBNL";
+    protected String stablePairAddress = "TNVTdTSQh2YzAxL8kPt5yc25AhMUsm7st1VCi";
 
     protected NerveToken U1D = new NerveToken(5, 3);
     protected NerveToken U2D = new NerveToken(5, 4);
@@ -170,6 +172,8 @@ public class SwapTxSendTest {
     protected NerveToken KHT = new NerveToken(5, 9);
     protected NerveToken KOT = new NerveToken(5, 10);
     protected NerveToken USDTN = new NerveToken(5, 0);
+
+    Map<String, Object> pMap;
 
     @BeforeClass
     public static void beforeClass() {
@@ -186,6 +190,22 @@ public class SwapTxSendTest {
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":8771");
         chain = new Chain();
         chain.setConfig(new ConfigBean(chainId, assetId, "UTF-8"));
+
+        try {
+            String path = new File(this.getClass().getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
+            pMap = JSONUtils.json2map(pData);
+            packageAddressZP = "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV";
+            packageAddressNE = "TNVTdTSPMGoSukZyzpg23r3A7AnaNyi3roSXT";
+            packageAddressHF = "TNVTdTSPV7WotsBxPc4QjbL8VLLCoQfHPXWTq";
+            packageAddressPrivateKeyZP = pMap.get(packageAddressZP).toString();
+            packageAddressPrivateKeyNE = pMap.get(packageAddressNE).toString();
+            packageAddressPrivateKeyHF = pMap.get(packageAddressHF).toString();
+            address31 = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         from = address31;
         awardFeeSystemAddress = AddressTool.getStringAddressByBytes(AddressTool.getAddressByPubKeyStr(awardFeeSystemAddressPublicKey, chainId));
 
@@ -227,11 +247,11 @@ public class SwapTxSendTest {
         params.put("password", "nuls123456");
         Response response = ResponseMessageProcessor.requestAndResponse(ModuleE.LG.abbr, "chainAssetTxReg", params);
         if (!response.isSuccess()) {
-            Log.error("资产[{}-{}]创建失败, error: {}", asset, decimals, JSONUtils.obj2PrettyJson(response));
+            Log.error("asset[{}-{}]Creation failed, error: {}", asset, decimals, JSONUtils.obj2PrettyJson(response));
         } else {
             Map chainAssetTxReg = (Map)((Map) response.getResponseData()).get("chainAssetTxReg");
             String txHash = (String) chainAssetTxReg.get("txHash");
-            Log.info("资产[{}-{}]创建成功, txHash: {}", asset, decimals, txHash);
+            Log.info("asset[{}-{}]Created successfully, txHash: {}", asset, decimals, txHash);
             TimeUnit.MILLISECONDS.sleep(6000);
         }
     }
@@ -370,11 +390,11 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
     @Test
     public void swapCreatePairTest() throws Exception {
@@ -458,17 +478,17 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "添加的资产A的数量"),
-            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "添加的资产B的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1"),
-            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "资产A最小添加值"),
-            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "资产B最小添加值"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "Added assetsAQuantity of"),
+            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "Added assetsBQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1"),
+            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "assetAMinimum added value"),
+            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "assetBMinimum added value"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Liquidity share receiving address")
     })
     @Test
     public void swapAddLiquidityTest() throws Exception {
@@ -497,17 +517,17 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1"),
-            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "资产A最小移除值"),
-            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "资产B最小移除值"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1"),
+            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "assetAMinimum removal value"),
+            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "assetBMinimum removal value"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address")
     })
     @Test
     public void swapRemoveLiquidity() throws Exception {
@@ -526,15 +546,15 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "卖出的资产数量"),
-            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]"),
-            @Parameter(parameterName = "amountOutMin", parameterType = "String", parameterDes = "最小买进的资产数量"),
-            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费取出一部分给指定的接收地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]"),
+            @Parameter(parameterName = "amountOutMin", parameterType = "String", parameterDes = "Minimum number of assets to be purchased"),
+            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "Withdraw a portion of the transaction fee to the designated receiving address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address")
     })
     @Test
     public void swapTokenTrade() throws Exception {
@@ -588,11 +608,11 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "coins", parameterType = "String[]", parameterDes = "资产类型列表，示例：[1-1, 1-2]"),
-            @Parameter(parameterName = "symbol", parameterType = "String", parameterDes = "LP名称")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "coins", parameterType = "String[]", parameterDes = "List of asset types, example：[1-1, 1-2]"),
+            @Parameter(parameterName = "symbol", parameterType = "String", parameterDes = "LPname")
     })
     @Test
     public void stableSwapCreatePairTest() throws Exception {
@@ -602,42 +622,45 @@ public class SwapTxSendTest {
         // U4D[5-5] decimals: 18, initNumber: 100000000, type: 1
         // UDN[5-6] decimals: 18, initNumber: 0, type: 10
         Map<String, Object> params = new HashMap<>();
-        params.put("coins", new String[]{"5-2","5-3","5-4","5-5"});
+        params.put("coins", new String[]{"5-4","5-5","5-6","5-7","5-8"});
         params.put("symbol", "UDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
     }
 
     @Test
     public void stableAddressTest() {
-        NulsHash txHash = NulsHash.fromHex("c3f6fbe46454d4b8c3a7b2c3d8e197f01bc17010ed223438c20eec217505ecfa");
+        NulsHash txHash = NulsHash.fromHex("9210d0cf97c02230dbceb8d5cc6c438a11346e23ec4624fc7d8f8003da518f39");
         byte[] stablePairAddressBytes = AddressTool.getAddress(txHash.getBytes(), 5, SwapConstant.STABLE_PAIR_ADDRESS_TYPE);
         stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         System.out.println(stablePairAddress);
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amounts", parameterType = "String[]", parameterDes = "添加的资产数量列表"),
-            @Parameter(parameterName = "tokens", parameterType = "String[]", parameterDes = "添加的资产类型列表，示例：[1-1, 1-2]"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amounts", parameterType = "String[]", parameterDes = "List of added asset quantities"),
+            @Parameter(parameterName = "tokens", parameterType = "String[]", parameterDes = "List of added asset types, example：[1-1, 1-2]"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Liquidity share receiving address")
     })
     @Test
     public void stableSwapAddLiquidity() throws Exception {
+        String amount0 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
         //String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
         //String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
         //String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
-        String amount4 = new BigDecimal("700").scaleByPowerOfTen(18).toPlainString();
+        //String amount4 = new BigDecimal("700").scaleByPowerOfTen(18).toPlainString();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amounts", new String[]{amount4});
-        params.put("tokens", new String[]{"5-5"});
+        //params.put("amounts", new String[]{amount1,amount2,amount3,amount4});
+        params.put("amounts", new String[]{amount0});
+        //params.put("tokens", new String[]{"5-5","5-6","5-7","5-8"});
+        params.put("tokens", new String[]{"5-4"});
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
-        params.put("to", address22);
+        params.put("to", address31);
         this.sendTx(from, STABLE_SWAP_ADD_LIQUIDITY, params);
     }
 
@@ -669,15 +692,15 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
-            @Parameter(parameterName = "receiveOrderIndexs", parameterType = "int[]", parameterDes = "按币种索引顺序接收资产"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
+            @Parameter(parameterName = "receiveOrderIndexs", parameterType = "int[]", parameterDes = "Receive assets in currency index order"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address")
     })
     @Test
     public void stableSwapRemoveLiquidity() throws Exception {
@@ -686,28 +709,28 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountLP", "6677000000000000000000");
-        params.put("tokenLPStr", "5-6");
-        params.put("receiveOrderIndexs", new int[]{3, 2, 1, 0});
+        params.put("amountLP", new BigDecimal("200").movePointRight(18));
+        params.put("tokenLPStr", "5-9");
+        params.put("receiveOrderIndexs", new int[]{0});
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
-        params.put("to", address32);
-        this.sendTx(address22, STABLE_SWAP_REMOVE_LIQUIDITY, params);
+        params.put("to", address31);
+        this.sendTx(from, STABLE_SWAP_REMOVE_LIQUIDITY, params);
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountsIn", parameterType = "String[]", parameterDes = "卖出的资产数量列表"),
-            @Parameter(parameterName = "tokensIn", parameterType = "String[]", parameterDes = "卖出的资产类型列表"),
-            @Parameter(parameterName = "tokenOutIndex", parameterType = "int", parameterDes = "买进的资产索引"),
-            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费取出一部分给指定的接收地址"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址"),
-            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "手续费资产类型，示例：1-1"),
-            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "交易手续费")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountsIn", parameterType = "String[]", parameterDes = "List of sold assets"),
+            @Parameter(parameterName = "tokensIn", parameterType = "String[]", parameterDes = "List of asset types sold"),
+            @Parameter(parameterName = "tokenOutIndex", parameterType = "int", parameterDes = "Index of purchased assets"),
+            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "Withdraw a portion of the transaction fee to the designated receiving address"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address"),
+            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "Handling fee asset type, example：1-1"),
+            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "Transaction fees")
     })
     @Test
     public void stableSwapTokenTrade() throws Exception {
@@ -716,13 +739,13 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountsIn", new String[]{new BigDecimal("33").movePointRight(18).toPlainString()});
+        params.put("amountsIn", new String[]{new BigDecimal("22").movePointRight(18).toPlainString()});
         params.put("tokensIn", new String[]{"5-5"});
         params.put("tokenOutIndex", 0);
         //params.put("feeTo", address51);
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
-        params.put("to", address32);
+        params.put("to", address31);
         //params.put("feeToken", U3D.str());
         //params.put("feeAmount", new BigDecimal("0.29").movePointRight(18).toPlainString());
         this.sendTx(from, STABLE_SWAP_TOKEN_TRADE, params);
@@ -804,11 +827,11 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "添加的资产A的数量"),
-            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "添加的资产B的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "Added assetsAQuantity of"),
+            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "Added assetsBQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
     protected BigInteger[] calMinAmountOnSwapAddLiquidity(Map<String, Object> params) throws Exception {
         HashMap data = this.getData(SWAP_MIN_AMOUNT_ADD_LIQUIDITY, params);
@@ -819,10 +842,10 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
     protected BigInteger[] calMinAmountOnSwapRemoveLiquidity(Map<String, Object> params) throws Exception {
         HashMap data = this.getData(SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY, params);
@@ -833,9 +856,9 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "卖出的资产数量"),
-            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]")
     })
     protected BigInteger calMinAmountOnSwapTokenTrade(Map<String, Object> params) throws Exception {
         HashMap data = this.getData(SWAP_MIN_AMOUNT_TOKEN_TRADE, params);
@@ -843,12 +866,12 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenInStr", parameterType = "String", parameterDes = "卖出资产的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产数量"),
-            @Parameter(parameterName = "tokenOutStr", parameterType = "String", parameterDes = "买进资产的类型，示例：1-1"),
-            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易最深路径"),
-            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenInStr", parameterType = "String", parameterDes = "Types of assets sold, examples：1-1"),
+            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenOutStr", parameterType = "String", parameterDes = "Types of purchased assets, examples：1-1"),
+            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "Deepest trading path"),
+            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "List of all transaction pairs in the current network")
     })
     protected Map bestTradeExactIn(String tokenInStr, String tokenInAmount, String tokenOutStr, int maxPairSize, String[] pairs) throws Exception {
         Map<String, Object> params = new HashMap<>();
@@ -862,9 +885,9 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
     protected Map getSwapPairInfo(String tokenAStr, String tokenBStr) throws Exception {
         Map<String, Object> params = new HashMap<>();
@@ -893,8 +916,8 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address")
     })
     protected Map getStableSwapPairInfo(String pairAddress) throws Exception {
         Map<String, Object> params = new HashMap<>();
@@ -904,8 +927,8 @@ public class SwapTxSendTest {
     }
 
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "交易hash")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "transactionhash")
     })
     protected Map getSwapResultInfo(String txHash) throws Exception {
         Map<String, Object> params = new HashMap<>();
@@ -916,7 +939,7 @@ public class SwapTxSendTest {
 
     @Test
     public void proposalAddCoin() throws Exception {
-        //账户已存在则覆盖 If the account exists, it covers.
+        //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -925,7 +948,7 @@ public class SwapTxSendTest {
         params.put("content", "5-27");
         params.put("businessAddress", stablePairAddress);// stablePairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
-        params.put("remark", "稳定币增加币种测试");
+        params.put("remark", "Stable currency increase currency test");
         params.put("address", "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV");
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
@@ -939,7 +962,7 @@ public class SwapTxSendTest {
 
     @Test
     public void proposalRemoveCoin() throws Exception {
-        //账户已存在则覆盖 If the account exists, it covers.
+        //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -948,7 +971,7 @@ public class SwapTxSendTest {
         params.put("content", "5-4");
         params.put("businessAddress", stablePairAddress);// stablePairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
-        params.put("remark", "稳定币移除币种测试");
+        params.put("remark", "Stable currency removal currency test");
         params.put("address", "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV");
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
@@ -962,7 +985,7 @@ public class SwapTxSendTest {
 
     @Test
     public void proposalSwapPairFeeRate() throws Exception {
-        //账户已存在则覆盖 If the account exists, it covers.
+        //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -971,7 +994,7 @@ public class SwapTxSendTest {
         params.put("content", "500");// 500‰ == 50%
         params.put("businessAddress", "TNVTdTSQJkuFpDm9j49KJBBuduuv3XsQCoeJQ");// pairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
-        params.put("remark", "交易对定制手续费");
+        params.put("remark", "Customized transaction fees");
         params.put("address", address31);
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
@@ -985,7 +1008,7 @@ public class SwapTxSendTest {
 
     @Test
     public void proposalAddStablePairForSwapTrade() throws Exception {
-        //账户已存在则覆盖 If the account exists, it covers.
+        //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
         params.put(Constants.VERSION_KEY_STR, "1.0");
         params.put(Constants.CHAIN_ID, chainId);
@@ -993,7 +1016,7 @@ public class SwapTxSendTest {
         params.put("type", (byte) 10);// ProposalTypeEnum.ADD_STABLE_FOR_SWAP_TRADE
         params.put("businessAddress", stablePairAddress);// stablePairAddress
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
-        params.put("remark", "稳定币交易对增加测试");
+        params.put("remark", "Adding tests to stablecoin trading pairs");
         params.put("content", "ct");
         params.put("address", address22);
         params.put("password", password);
@@ -1059,12 +1082,12 @@ public class SwapTxSendTest {
 
     @Test
     public void getBalance() throws Exception {
-        getBalanceByAddress("address31-用户地址", address31);
-        //getBalanceByAddress("address32-接收地址", address32);
-        //getBalanceByAddress("Swap-pair地址", SwapUtils.getStringPairAddress(chainId, dxa8_bnb, usdx_bnb));
-        //getBalanceByAddress("Stable-Swap-pair地址", stablePairAddress);
-        //getBalanceByAddress("接收手续费的系统地址", awardFeeSystemAddress);
-        //getBalanceByAddress("address51-接收手续费的交易指定地址", address51);
+        getBalanceByAddress("address31-User address", address31);
+        //getBalanceByAddress("address32-Receiving address", address32);
+        //getBalanceByAddress("Swap-pairaddress", SwapUtils.getStringPairAddress(chainId, dxa8_bnb, usdx_bnb));
+        //getBalanceByAddress("Stable-Swap-pairaddress", stablePairAddress);
+        //getBalanceByAddress("System address for receiving handling fees", awardFeeSystemAddress);
+        //getBalanceByAddress("address51-Designated transaction address for receiving transaction fees", address51);
     }
 
     protected void getBalanceByAddress(String address) throws Exception {
@@ -1075,33 +1098,33 @@ public class SwapTxSendTest {
         System.out.println();
         System.out.println(String.format("%s address: %s", title, address));
 
-        this.balanceInfoPrint("　主资产NVT", nvt, address);
+        this.balanceInfoPrint("　Main assetsNVT", nvt, address);
 
-        //this.balanceInfoPrint("Ethereum-资产USDX", usdx_eth, address);
-        //this.balanceInfoPrint("BSC-资产USDX", usdx_bnb, address);
-        //this.balanceInfoPrint("BSC-资产DXA", dxa8_bnb, address);
-        //this.balanceInfoPrint("BSC-资产GOAT", goat9_bnb, address);
-        //this.balanceInfoPrint("BSC-资产SAFEMOON", safemoon9_bnb, address);
-        //this.balanceInfoPrint("HT-资产USDX", usdx_ht, address);
-        //this.balanceInfoPrint("OKT-资产USDX", usdx_okt, address);
-        //this.balanceInfoPrint("BSC-资产BUSD", busd_18, address);
-        //this.balanceInfoPrint("HT-资产HUSD", husd_18, address);
-        //this.balanceInfoPrint("OKT-资产OKUSD", okusd_8, address);
+        //this.balanceInfoPrint("Ethereum-assetUSDX", usdx_eth, address);
+        //this.balanceInfoPrint("BSC-assetUSDX", usdx_bnb, address);
+        //this.balanceInfoPrint("BSC-assetDXA", dxa8_bnb, address);
+        //this.balanceInfoPrint("BSC-assetGOAT", goat9_bnb, address);
+        //this.balanceInfoPrint("BSC-assetSAFEMOON", safemoon9_bnb, address);
+        //this.balanceInfoPrint("HT-assetUSDX", usdx_ht, address);
+        //this.balanceInfoPrint("OKT-assetUSDX", usdx_okt, address);
+        //this.balanceInfoPrint("BSC-assetBUSD", busd_18, address);
+        //this.balanceInfoPrint("HT-assetHUSD", husd_18, address);
+        //this.balanceInfoPrint("OKT-assetOKUSD", okusd_8, address);
 
-        this.balanceInfoPrint("U1D资产", new NerveToken(5, 17), address);
-        this.balanceInfoPrint("U2D资产", new NerveToken(5, 18), address);
-        this.balanceInfoPrint("U3D资产", new NerveToken(5, 19), address);
-        this.balanceInfoPrint("U4D资产", new NerveToken(5, 20), address);
-        this.balanceInfoPrint("U5D资产", new NerveToken(5, 22), address);
-        this.balanceInfoPrint("U6D资产", new NerveToken(5, 23), address);
-        this.balanceInfoPrint("Stable-LP资产", new NerveToken(5, 21), address);
+        this.balanceInfoPrint("U1Dasset", new NerveToken(5, 17), address);
+        this.balanceInfoPrint("U2Dasset", new NerveToken(5, 18), address);
+        this.balanceInfoPrint("U3Dasset", new NerveToken(5, 19), address);
+        this.balanceInfoPrint("U4Dasset", new NerveToken(5, 20), address);
+        this.balanceInfoPrint("U5Dasset", new NerveToken(5, 22), address);
+        this.balanceInfoPrint("U6Dasset", new NerveToken(5, 23), address);
+        this.balanceInfoPrint("Stable-LPasset", new NerveToken(5, 21), address);
 
-        //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
-        //this.balanceInfoPrint("Swap-LP资产(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);
-        //this.balanceInfoPrint("Swap-LP资产(dxa8usdx_bnb)", swap_lp_dxa8usdx_bnb, address);
-        //this.balanceInfoPrint("Swap-LP资产(goat9usdx_bnb)", swap_lp_goat9usdx_bnb, address);
-        //this.balanceInfoPrint("Swap-LP资产(nvt8safemoon9)", swap_lp_nvt8safemoon9, address);
-        //this.balanceInfoPrint("Swap-LP资产(goat9safemoon9)", swap_lp_goat9safemoon9, address);
+        //this.balanceInfoPrint("Swap-LPasset(nvt8usdx_bnb)", swap_lp_nvt8usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LPasset(nvt8usdx_eth)", swap_lp_nvt8usdx_eth, address);
+        //this.balanceInfoPrint("Swap-LPasset(dxa8usdx_bnb)", swap_lp_dxa8usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LPasset(goat9usdx_bnb)", swap_lp_goat9usdx_bnb, address);
+        //this.balanceInfoPrint("Swap-LPasset(nvt8safemoon9)", swap_lp_nvt8safemoon9, address);
+        //this.balanceInfoPrint("Swap-LPasset(goat9safemoon9)", swap_lp_goat9safemoon9, address);
     }
 
     private void balanceInfoPrint(String desc, NerveToken token, String address) {
@@ -1130,7 +1153,7 @@ public class SwapTxSendTest {
     public void getTx() throws Exception {
         String txStr = (String) (getTxCfmClient("20d27a63cebd99997d5014d70812408718b028a734a2e90f8e99f4c0237149fb").get("tx"));
         System.out.println(txStr);
-        Transaction tx = Transaction.getInstance(HexUtil.decode(txStr), Transaction.class);//最后一条
+        Transaction tx = Transaction.getInstance(HexUtil.decode(txStr), Transaction.class);//The last one
         System.out.println(tx.format());
     }
 

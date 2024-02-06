@@ -24,7 +24,7 @@ import java.util.Map;
 /**
  * @Author: zhoulijun
  * @Time: 2020-06-03 17:40
- * @Description: 功能描述
+ * @Description: Function Description
  */
 @Controller
 @Api(type = ApiType.JSONRPC)

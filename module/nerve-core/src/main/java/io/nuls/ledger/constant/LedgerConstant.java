@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class LedgerConstant {
     /**
-     * 基础类型与合约类型
+     * Basic type and contract type
      */
     public static final short COMMON_ASSET_TYPE = 1;
     public static final short CONTRACT_ASSET_TYPE = 2;
@@ -51,7 +51,7 @@ public class LedgerConstant {
     public static final short BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET = 12;
 
     /**
-     * 资产小数分割位
+     * Decimal Division of Assets
      */
     public static final int DECIMAL_PLACES_MIN = 0;
     public static final int DECIMAL_PLACES_MAX = 18;
@@ -61,22 +61,22 @@ public class LedgerConstant {
 
 
     /**
-     * 高度解锁的阈值，大于这个值就是时间锁
+     * The threshold for height unlocking, greater than which is the time lock
      */
     public static final int MAX_HEIGHT_VALUE = 1000000000;
     public static final long LOCKED_ML_TIME_VALUE = 1000000000000L;
     /**
-     * 重新统计锁定的时间 1s
+     * Recalculate the locked time 1s
      */
     public static final int TIME_RECALCULATE_FREEZE = 1;
     /**
-     * FROM locked 解锁常量 0 普通交易，-1 时间解锁,1 高度解锁
+     * FROM locked Unlocking Constants 0 Ordinary transactions,-1 Time unlocking,1 Height unlocking
      */
     public static final int UNLOCKED_COMMON = 0;
     public static final int UNLOCKED_TIME = -1;
     public static final int UNLOCKED_HEIGHT = 1;
     /**
-     * To 永久锁定lockTime值 0 不锁定 -1 普通永久锁定，-2 dex永久锁定，x 锁定时间(s或ms)
+     * To Permanent locklockTimevalue 0 Not locked -1 Normal permanent lock,-2 dexPermanent lock,x Lock time(sorms)
      */
     public static final int PERMANENT_LOCK_COMMON = -1;
     public static final int PERMANENT_LOCK_DEX = -2;
@@ -85,16 +85,16 @@ public class LedgerConstant {
     public static byte[] blackHolePublicKey = null;
 
     /**
-     * 缓存的账户区块数量
+     * Number of cached account blocks
      */
     public static final int CACHE_ACCOUNT_BLOCK = 1000;
     /**
-     * 缓存同步统计数据的区块信息
+     * Block information of cache synchronization statistics data
      */
     public static final int CACHE_NONCE_INFO_BLOCK = 100;
 
     /**
-     * 缓存的账户初始化nonce
+     * Cache account initializationnonce
      */
 
     public static byte[] getInitNonceByte() {
@@ -104,7 +104,7 @@ public class LedgerConstant {
     public static final int NONCE_LENGHT = 8;
     public static String DEFAULT_ENCODING = "UTF-8";
     /**
-     * 未确认交易的过期时间-s，配置加载会重置该值
+     * Expiration time of unconfirmed transactions-sConfiguration loading will reset this value
      */
     public static int UNCONFIRM_NONCE_EXPIRED_TIME = 100;
 
@@ -117,49 +117,49 @@ public class LedgerConstant {
     public static final Map<Short, Short> CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS = new HashMap<>();
     public static final Map<Short, Short> CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE = new HashMap<>();
     static {
-        // 1-链内普通资产 ==> 5-链内普通资产绑定异构链资产
+        // 1-On chain ordinary assets ==> 5-On chain ordinary assets bound to heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(COMMON_ASSET_TYPE, BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 3-平行链资产 ==> 6-平行链资产绑定异构链资产
+        // 3-Parallel chain assets ==> 6-Parallel chain assets bound to heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(CROSS_CHAIN_ASSET_TYPE, BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 4-异构链资产 ==> 9-异构链资产绑定多异构链资产
+        // 4-Heterogeneous chain assets ==> 9-Binding heterogeneous chain assets to multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE, BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 10-链内SWAP资产 ==> 11-链内SWAP资产绑定异构链资产
+        // 10-In chainSWAPasset ==> 11-In chainSWAPAsset binding heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(SWAP_LIQUIDITY_POOL_CROSS_CHAIN_ASSET_TYPE, BIND_SWAP_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 5-链内普通资产绑定异构链资产 ==> 7-链内普通资产绑定多异构链资产
+        // 5-On chain ordinary assets bound to heterogeneous chain assets ==> 7-Binding ordinary assets within the chain to multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_COMMON_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 6-平行链资产绑定异构链资产 ==> 8-平行链资产绑定多异构链资产
+        // 6-Parallel chain assets bound to heterogeneous chain assets ==> 8-Binding Parallel Chain Assets to Multiple Heterogeneous Chain Assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_CROSS_CHAIN_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 11-链内SWAP资产绑定异构链资产 ==> 12-链内SWAP资产绑定多异构链资产
+        // 11-In chainSWAPAsset binding heterogeneous chain assets ==> 12-In chainSWAPAsset binding with multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_SWAP_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        /** 绑定超过两个资产后，资产类型不再改变 **/
-        // 7-链内普通资产绑定多异构链资产 ==> 7-链内普通资产绑定多异构链资产
+        /** After binding more than two assets, the asset type no longer changes **/
+        // 7-Binding ordinary assets within the chain to multiple heterogeneous chain assets ==> 7-Binding ordinary assets within the chain to multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_COMMON_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_COMMON_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 8-平行链资产绑定多异构链资产 ==> 8-平行链资产绑定多异构链资产
+        // 8-Binding Parallel Chain Assets to Multiple Heterogeneous Chain Assets ==> 8-Binding Parallel Chain Assets to Multiple Heterogeneous Chain Assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_CROSS_CHAIN_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_CROSS_CHAIN_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 9-异构链资产绑定多异构链资产 ==> 9-异构链资产绑定多异构链资产
+        // 9-Binding heterogeneous chain assets to multiple heterogeneous chain assets ==> 9-Binding heterogeneous chain assets to multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 12-链内SWAP资产绑定多异构链资产 ==> 12-链内SWAP资产绑定多异构链资产
+        // 12-In chainSWAPAsset binding with multiple heterogeneous chain assets ==> 12-In chainSWAPAsset binding with multiple heterogeneous chain assets
         CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS.put(BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET);
 
 
-        // 5-链内普通资产绑定异构链资产 ==> 1-链内普通资产
+        // 5-On chain ordinary assets bound to heterogeneous chain assets ==> 1-On chain ordinary assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, COMMON_ASSET_TYPE);
-        // 6-平行链资产绑定异构链资产 ==> 3-平行链资产
+        // 6-Parallel chain assets bound to heterogeneous chain assets ==> 3-Parallel chain assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, CROSS_CHAIN_ASSET_TYPE);
-        // 7-链内普通资产绑定多异构链资产 ==> 5-链内普通资产绑定异构链资产
+        // 7-Binding ordinary assets within the chain to multiple heterogeneous chain assets ==> 5-On chain ordinary assets bound to heterogeneous chain assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_COMMON_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_COMMON_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 11-链内SWAP资产绑定异构链资产 ==> 10-链内SWAP资产
+        // 11-In chainSWAPAsset binding heterogeneous chain assets ==> 10-In chainSWAPasset
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_SWAP_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET, SWAP_LIQUIDITY_POOL_CROSS_CHAIN_ASSET_TYPE);
-        // 8-平行链资产绑定多异构链资产 ==> 6-平行链资产绑定异构链资产
+        // 8-Binding Parallel Chain Assets to Multiple Heterogeneous Chain Assets ==> 6-Parallel chain assets bound to heterogeneous chain assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_CROSS_CHAIN_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_CROSS_CHAIN_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
-        // 9-异构链资产绑定多异构链资产 ==> 4-异构链资产
+        // 9-Binding heterogeneous chain assets to multiple heterogeneous chain assets ==> 4-Heterogeneous chain assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, HETEROGENEOUS_CROSS_CHAIN_ASSET_TYPE);
-        // 12-链内SWAP资产绑定多异构链资产 ==> 11-链内SWAP资产绑定异构链资产
+        // 12-In chainSWAPAsset binding with multiple heterogeneous chain assets ==> 11-In chainSWAPAsset binding heterogeneous chain assets
         CORRESPONDENCE_ASSET_HETEROGENEOUS_NERVE.put(BIND_SWAP_ASSET_TO_MULTY_HETEROGENEOUS_CROSS_CHAIN_ASSET, BIND_SWAP_ASSET_TO_HETEROGENEOUS_CROSS_CHAIN_ASSET);
     };
 
     /**
-     * v1.17.0 协议升级高度
+     * v1.17.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_17_0 = 0L;
 }

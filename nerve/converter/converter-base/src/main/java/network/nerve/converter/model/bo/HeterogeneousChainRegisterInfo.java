@@ -34,26 +34,26 @@ import network.nerve.converter.core.heterogeneous.callback.interfaces.ITxConfirm
  */
 public class HeterogeneousChainRegisterInfo {
     /**
-     * 多签地址
-     * 用于充值、提现或人事变更
+     * Multiple signed addresses
+     * Used for recharging、Withdrawal or personnel change
      */
     private String multiSigAddress;
     /**
-     * 充值交易提交器
-     * 用于异构链组件解析到监听的交易，发送给Nerve核心组件
+     * Recharge transaction submitter
+     * Used for parsing transactions from heterogeneous chain components to listening, sent toNerveCore components
      */
     private IDepositTxSubmitter depositTxSubmitter;
     /**
-     * 发送的提现或者人事变更交易的状态确认器
-     * 用于异构链交易确认后，发送给Nerve核心组件
+     * Confirmer of the status of withdrawal or personnel change transactions sent
+     * Used for sending confirmation of heterogeneous chain transactions toNerveCore components
      */
     private ITxConfirmedProcessor txConfirmedProcessor;
     /**
-     * 核心模块向异构链组件提供的查询api
+     * The core module provides queries to heterogeneous chain componentsapi
      */
     private IConverterCoreApi converterCoreApi;
     /**
-     * 合约多签类型的异构链，合约升级后，异构链组件发送新的流程处理接口给Nerve核心组件
+     * Heterogeneous chain with multiple contract types, after contract upgrade, the heterogeneous chain component sends a new process processing interface toNerveCore components
      */
     private IHeterogeneousUpgrade heterogeneousUpgrade;
 

@@ -48,20 +48,20 @@ import java.util.Map;
 /**
  * @author lan
  * @description Open peer connection remote call node rpc
- * 直接连接peer
+ * Direct connectionpeer
  * @create 2019/10/18
  **/
 @Component
 @NerveCoreCmd(module = ModuleE.NW)
 public class ConnectRpc extends BaseCmd {
     @CmdAnnotation(cmd = CmdConstant.CMD_DIRECT_CONNECT_NODES, version = 1.0,
-            description = "连接节点")
+            description = "Connecting nodes")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "nodeId", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点组ID，ip:port")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "nodeId", requestType = @TypeDescriptor(value = String.class), parameterDes = "Node groupID,ip:port")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "无法规定时间完成业务连接的返回false")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Unable to complete the return of business connection within the specified timefalse")
     }))
     public Response connectNodes(Map params) {
         NodeGroupManager nodeGroupManager = NodeGroupManager.getInstance();
@@ -79,7 +79,7 @@ public class ConnectRpc extends BaseCmd {
                 return failed(NetworkErrorCode.PARAMETER_ERROR);
             }
             if (nodeGroup.getLocalNetNodeContainer().hadPeerIp(nodeId, ipPort[0])) {
-                LoggerUtil.logger(chainId).info("已连接，connected success:{}, had exist.", nodeId);
+                LoggerUtil.logger(chainId).info("Connected,connected success:{}, had exist.", nodeId);
                 rtMap.put("value", true);
                 return success(rtMap);
             }
@@ -119,16 +119,16 @@ public class ConnectRpc extends BaseCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_ADD_BUSINESS_GROUP_IPS, version = 1.0,
-            description = "添加连接业务节点组")
+            description = "Add Connection Business Node Group")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
-            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点组标识"),
-            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "新增的IP组")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Name"),
+            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "Node group identification"),
+            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "Newly addedIPgroup")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "正确true,错误false")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "correcttrue,errorfalse")
     }))
     public Response addIps(Map params) {
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
@@ -150,15 +150,15 @@ public class ConnectRpc extends BaseCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_GET_BUSINESS_GROUP_IPS, version = 1.0,
-            description = "添加连接业务节点组")
+            description = "Add Connection Business Node Group")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
-            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点组标识")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Name"),
+            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "Node group identification")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "业务连接集合")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "Business Connection Collection")
     }))
     public Response getBusinessGroupNodes(Map params) {
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
@@ -180,16 +180,16 @@ public class ConnectRpc extends BaseCmd {
 
 
     @CmdAnnotation(cmd = CmdConstant.CMD_REMOVE_BUSINESS_GROUP_IPS, version = 1.0,
-            description = "移除连接业务节点组")
+            description = "Remove the connected business node group")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
-            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点组标识"),
-            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "新增的IP组")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Name"),
+            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "Node group identification"),
+            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "Newly addedIPgroup")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "正确true,错误false")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "correcttrue,errorfalse")
     }))
     public Response removeIps(Map params) {
         int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));

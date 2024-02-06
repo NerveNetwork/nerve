@@ -37,31 +37,31 @@ import java.util.Arrays;
 public class TradePairBus extends BaseBus {
     private byte[] pairAddress;
     /**
-     * 交易后的余额
+     * Balance after transaction
      */
     private BigInteger balance0;
     private BigInteger balance1;
     /**
-     * 交易前的余额
+     * Balance before transaction
      */
     private BigInteger reserve0;
     private BigInteger reserve1;
     /**
-     * 进入池子的token
+     * Entering the pooltoken
      */
     private NerveToken tokenIn;
     private BigInteger amountIn;
     /**
-     * `非`流动性提供者可奖励的交易手续费
+     * `wrong`Transaction fees that liquidity providers can reward
      */
     private BigInteger unLiquidityAwardFee;
     /**
-     * 流出池子的token
+     * Flowing out of the pooltoken
      */
     private NerveToken tokenOut;
     private BigInteger amountOut;
     private byte[] to;
-    private transient StableSwapTradeBus stableSwapTradeBus;// 用于普通swap结合稳定币swap的缓存更新
+    private transient StableSwapTradeBus stableSwapTradeBus;// For regular useswapCombining stablecoinsswapCache update for
 
     public TradePairBus(byte[] pairAddress, BigInteger balance0, BigInteger balance1, BigInteger reserve0, BigInteger reserve1, NerveToken tokenIn, BigInteger amountIn, BigInteger unLiquidityAwardFee, NerveToken tokenOut, BigInteger amountOut, byte[] to) {
         this.pairAddress = pairAddress;

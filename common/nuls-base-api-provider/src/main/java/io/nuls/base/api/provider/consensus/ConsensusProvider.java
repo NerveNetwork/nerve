@@ -44,7 +44,7 @@ public interface ConsensusProvider {
     Result<MultiSignTransferRes> stopAgentForMultiSignAccount(StopMultiSignAgentReq req);
 
     /**
-     * 改变节点押金
+     * Change node deposit
      *
      * @param req
      * @return
@@ -52,7 +52,7 @@ public interface ConsensusProvider {
     Result<String> changeAgentDeposit(AgentDepositChangeReq req);
 
     /**
-     * 改变节点押金
+     * Change node deposit
      *
      * @param req
      * @return
@@ -61,7 +61,7 @@ public interface ConsensusProvider {
 
 
     /**
-     * 委托共识
+     * Commission consensus
      * @param req
      * @return
      */
@@ -69,14 +69,14 @@ public interface ConsensusProvider {
 
 
     /**
-     * staking 参与委托
+     * staking Participate in commission
      * @param req
      * @return
      */
     Result<String> deposit(DepositReq req);
 
     /**
-     * staking 退出委托
+     * staking Exit the commission
      * @param req
      * @return
      */
@@ -86,7 +86,7 @@ public interface ConsensusProvider {
 
 
     /**
-     * 退出委托
+     * Exit the commission
      * @param req
      * @return
      */
@@ -94,7 +94,7 @@ public interface ConsensusProvider {
 
 
     /**
-     * 查询节点信息
+     * Query node information
      * @param req
      * @return
      */
@@ -102,28 +102,28 @@ public interface ConsensusProvider {
 
 
     /**
-     * 查询节点列表
+     * Query node list
      * @param req
      * @return
      */
     Result<AgentInfo> getAgentList(GetAgentListReq req);
 
     /**
-     * 查询委托列表
+     * Query delegation list
      * @param req
      * @return
      */
     Result<DepositInfo> getDepositList(GetDepositListReq req);
 
     /**
-     * 根据symbol查询参与stacking资产的id
+     * according tosymbolQuery participationstackingAssetsid
      * @param req
      * @return
      */
     Result<AssetInfo> getStatcingAssetBySymbol(GetStackingAssetBySymbolReq req);
 
     /**
-     * 查询退出保证金/退出节点对应的交易列表
+     * Query withdrawal deposit/Exit the transaction list corresponding to the node
      * @param req
      * @return
      */
@@ -131,14 +131,14 @@ public interface ConsensusProvider {
 
 
     /**
-     * 获取可参与stacking的资产列表
+     * Obtain participationstackingAsset List for
      * @param req
      * @return
      */
     Result<AssetInfo> getCanStackingAssetList(GetCanStackingAssetListReq req);
 
     /**
-     * 获取指定区块高度的区块总奖励数
+     * Obtain the total number of rewards for the specified block height
      * @param req
      * @return
      */

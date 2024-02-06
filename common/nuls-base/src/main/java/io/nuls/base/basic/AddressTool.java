@@ -62,7 +62,7 @@ public class AddressTool {
     }
 
     /**
-     * chainId-地址映射表
+     * chainId-Address Mapping Table
      */
     private static Map<Integer, String> ADDRESS_PREFIX_MAP = new HashMap<Integer, String>();
 
@@ -150,7 +150,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据地址字符串查询地址字节数组
+     * Query address byte array based on address string
      *
      * @param addressString
      * @return
@@ -165,9 +165,9 @@ public class AddressTool {
     }
 
     /**
-     * 根据地址字符串解码出地址原始字节数组
+     * Decode the original byte array of the address based on the address string
      * base58(chainId)+_+base58(addressType+hash160(pubKey)+XOR(addressType+hash160(pubKey)))
-     * addressType在原始数据后补位0
+     * addressTypePlace after the original data0
      *
      * @param addressString
      * @return
@@ -200,7 +200,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据地址字符串查询地址所属链ID
+     * Query the chain to which the address belongs based on the address stringID
      *
      * @param addressString
      * @return
@@ -219,7 +219,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据公钥查询地址字节数组
+     * Query address byte array based on public key
      *
      * @param publicKey
      * @param chainId
@@ -231,7 +231,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据公钥查询地址字节数组
+     * Query address byte array based on public key
      *
      * @param publicKey
      * @param chainId
@@ -244,7 +244,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据公钥查询地址字节数组
+     * Query address byte array based on public key
      *
      * @param publicKeyStr
      * @param chainId
@@ -285,7 +285,7 @@ public class AddressTool {
     }
 
     /**
-     * 生成校验位，根据以下字段生成：addressType+hash160(pubKey)
+     * Generate checksums based on the following fields：addressType+hash160(pubKey)
      *
      * @param body
      * @return
@@ -299,7 +299,7 @@ public class AddressTool {
     }
 
     /**
-     * 检查校验位是否正确，XOR(addressType+hash160(pubKey))
+     * Check if the checksum is correct,XOR(addressType+hash160(pubKey))
      *
      * @param hashs
      */
@@ -318,7 +318,7 @@ public class AddressTool {
     }
 
     /**
-     * 验证地址字符串是否是有效地址
+     * Verify if the address string is a valid address
      *
      * @param address
      * @param chainId
@@ -371,7 +371,7 @@ public class AddressTool {
     }
 
     /**
-     * 通过地址获得chainId
+     * Obtain through addresschainId
      *
      * @param bytes
      * @return
@@ -391,7 +391,7 @@ public class AddressTool {
     }
 
     /**
-     * 校验是否是普通地址
+     * Verify if it is a regular address
      *
      * @param bytes
      * @param chainId
@@ -402,9 +402,9 @@ public class AddressTool {
     }
 
     /**
-     * @param bytes   地址
-     * @param chainId 链id
-     * @param type    账户类型，如果传0，则不验证
+     * @param bytes   address
+     * @param chainId chainid
+     * @param type    Account type, if transferred0Then do not verify
      * @return
      */
     public static boolean validAddress(byte[] bytes, int chainId, byte type) {
@@ -431,8 +431,8 @@ public class AddressTool {
     }
 
     /**
-     * @param bytes   地址
-     * @param chainId 链id
+     * @param bytes   address
+     * @param chainId chainid
      * @return
      */
     public static boolean validAddress(int chainId, byte[] bytes) {
@@ -459,7 +459,7 @@ public class AddressTool {
     }
 
     /**
-     * 校验是否是智能合约地址
+     * Verify if it is a smart contract address
      *
      * @param addressBytes
      * @param chainId
@@ -492,7 +492,7 @@ public class AddressTool {
     }
 
     /**
-     * 根据地址字节数组生成地址字符串
+     * Generate address string based on address byte array
      * base58(chainId)+_+base58(addressType+hash160(pubKey)+XOR(addressType+hash160(pubKey)))
      *
      * @param addressBytes

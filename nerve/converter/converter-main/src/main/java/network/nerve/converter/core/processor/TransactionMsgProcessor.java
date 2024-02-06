@@ -54,7 +54,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 消息交易处理类
+ * Message transaction processing class
  *
  * @author: Loki
  * @date: 2020/4/14
@@ -68,37 +68,37 @@ public class TransactionMsgProcessor {
     private static ConverterCoreApi converterCoreApi;
 
     /**
-     * 对本链广播的交易进行处理
+     * Process transactions broadcasted on this chain
      *
-     * @param chain   本链信息
-     * @param hash    交易缓存HASH
-     * @param nodeId  发送节点ID
-     * @param hashHex 交易Hash字符串（用于日志打印）
+     * @param chain   This chain information
+     * @param hash    Transaction cacheHASH
+     * @param nodeId  Sending nodeID
+     * @param hashHex transactionHashcharacter string（Used for log printing）
      */
     public static void handleSignMessageByzantine(Chain chain, NulsHash hash, String nodeId, BroadcastHashSignMessage messageBody, String hashHex) {
         try {
-            // v15波场协议升级后，特殊处理hash，历史遗留问题，polygon区块回滚导致的交易高度和时间不一致的问题
+            // v15Special handling after upgrading the wavefield protocolhashHistorical legacy issues,polygonThe issue of inconsistent transaction height and time caused by block rollback
             if (converterCoreApi.isSupportProtocol15TrxCrossChain() && "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26".equalsIgnoreCase(hash.toHex())) {
-                LoggerUtil.LOG.warn("过滤交易hash: {}", hash.toHex());
+                LoggerUtil.LOG.warn("Filter transactionshash: {}", hash.toHex());
                 txStorageService.delete(chain, hash);
                 return;
             }
             TransactionPO txPO = txStorageService.get(chain, hash);
-            //如果交易已经拜占庭成功了, 就不用再广播该交易的签名
+            //If the transaction has already been successful in Byzantium, You don't need to broadcast the signature of the transaction anymore
             if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || messageBody.getP2PHKSignature() == null) {
-                LoggerUtil.LOG.info("交易在本节点已经处理完成,Hash:{}\n\n", hashHex);
+                LoggerUtil.LOG.info("The transaction has been processed at this node,Hash:{}\n\n", hashHex);
                 return;
             }
             P2PHKSignature p2PHKSignature = messageBody.getP2PHKSignature();
             Transaction tx = txPO.getTx();
             String signHex = HexUtil.encode(p2PHKSignature.getBytes());
-            // 判断之前是否有收到过该签名(交易里面是否已含有该签名)
+            // Determine if the signature has been received before(Does the signature already exist in the transaction)
             TransactionSignature signature = new TransactionSignature();
             if (tx.getTransactionSignature() != null) {
                 signature.parse(tx.getTransactionSignature(), 0);
                 for (P2PHKSignature sign : signature.getP2PHKSignatures()) {
                     if (Arrays.equals(messageBody.getP2PHKSignature().getBytes(), sign.serialize())) {
-                        LoggerUtil.LOG.debug("本节点已经收到过该交易的该签名,Hash:{}, 签名地址:{}\n\n", hashHex,
+                        LoggerUtil.LOG.debug("This node has already received the signature for this transaction,Hash:{}, Signature address:{}\n\n", hashHex,
                                 AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId())));
                         return;
                     }
@@ -108,22 +108,22 @@ public class TransactionMsgProcessor {
                 signature.setP2PHKSignatures(p2PHKSignatureList);
             }
 
-            // 判断签名发送者是否有资格签名(是否当前虚拟银行成员)
+            // Determine whether the signature sender is qualified to sign(Is it the current virtual bank member)
             String signAddress = AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId()));
             if (!chain.isVirtualBankBySignAddr(signAddress)) {
-                //签名地址不是虚拟银行节点
+                //The signature address is not a virtual bank node
                 chain.getLogger().error(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT.getMsg());
                 return;
             }
-            //验证签名本身正确性
+            //Verify the correctness of the signature itself
             if (!ECKey.verify(tx.getHash().getBytes(), p2PHKSignature.getSignData().getSignBytes(), p2PHKSignature.getPublicKey())) {
-                LoggerUtil.LOG.error("[非法签名] 签名验证不通过!. hash:{}, 签名地址:{}, 签名hex:{}\n\n",
+                LoggerUtil.LOG.error("[Illegal signature] Signature verification failed!. hash:{}, Signature address:{}, autographhex:{}\n\n",
                         tx.getHash().toHex(),
                         AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId())),
                         signHex);
                 return;
             }
-            // 把当前签名加入签名列表
+            // Add the current signature to the signature list
             signature.getP2PHKSignatures().add(p2PHKSignature);
             signByzantine(chain, txPO, messageBody, signature, nodeId);
         } catch (NulsException e) {
@@ -135,7 +135,7 @@ public class TransactionMsgProcessor {
 
 
     /**
-     * 交易签名拜占庭处理
+     * Transaction Signature Byzantine Processing
      * @param chain
      * @param txPO
      * @param messageBody
@@ -148,10 +148,10 @@ public class TransactionMsgProcessor {
 
         Transaction tx = txPO.getTx();
         if (signByzantineInChain(chain, tx, signature)) {
-            // 表示交易已经拜占庭验证成功
+            // Indicates that the transaction has been successfully Byzantine verified
             txPO.setStatus(ByzantineStateEnum.PASSED.getStatus());
             /**
-             * 签名验证通过
+             * Signature verification passed
              */
             try {
                 TransactionCall.newTx(chain, tx);
@@ -170,31 +170,31 @@ public class TransactionMsgProcessor {
             }
         }
         txStorageService.save(chain, txPO);
-        // 广播这个收到的签名
+        // Broadcast the received signature
         NetWorkCall.broadcast(chain, messageBody, excludeNodes, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-        LoggerUtil.LOG.info("广播签名消息给其他节点, Hash:{}, ", tx.getHash().toHex());
+        LoggerUtil.LOG.info("Broadcast signature messages to other nodes, Hash:{}, ", tx.getHash().toHex());
     }
 
     /**
-     * 交易签名拜占庭验证
+     * Transaction signature Byzantine verification
      *
-     * @param chain                  本链信息
-     * @param tx                     交易
-     * @param signature              签名列表
-     * @return 拜占庭验证是否通过
+     * @param chain                  This chain information
+     * @param tx                     transaction
+     * @param signature              Signature List
+     * @return Byzantine verification passed
      */
     public static boolean signByzantineInChain(Chain chain, Transaction tx, TransactionSignature signature) throws IOException {
-        //交易签名拜占庭
+        //Transaction Signature Byzantine
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
         int signCount = signature.getSignersCount();
         if (signCount >= byzantineCount) {
-            // 交易签名拜占庭, 获取所有虚拟银行成员签名地址
+            // Transaction Signature Byzantine, Obtain signature addresses for all virtual bank members
             Set<String> directorSignAddressSet = chain.getMapVirtualBank().keySet();
-            // 统计有效的签名个数(排除不是当前虚拟银行成员的签名和重复签名)
+            // Count the number of valid signatures(Exclude signatures and duplicate signatures that are not members of the current virtual bank)
             signCount = VirtualBankUtil.getSignCountWithoutMisMatchSigns(chain, signature, directorSignAddressSet);
             if (signCount >= byzantineCount) {
                 tx.setTransactionSignature(signature.serialize());
-                LoggerUtil.LOG.info("拜占庭签名数验证通过, hash:{}, 当前虚拟银行成员数:{}, 当前签名数:{}, 需达到的签名数:{}", tx.getHash().toHex(),chain.getMapVirtualBank().size(), signCount, byzantineCount);
+                LoggerUtil.LOG.info("Byzantine signature verification passed, hash:{}, Current number of virtual bank members:{}, Current number of signatures:{}, Number of signatures required:{}", tx.getHash().toHex(),chain.getMapVirtualBank().size(), signCount, byzantineCount);
                 return true;
             } else {
                 tx.setTransactionSignature(signature.serialize());
@@ -202,7 +202,7 @@ public class TransactionMsgProcessor {
         } else {
             tx.setTransactionSignature(signature.serialize());
         }
-        LoggerUtil.LOG.info("拜占庭签名数不足, hash:{}, 需达到的签名数:{}, 当前签名数:{}", tx.getHash().toHex(), byzantineCount, signCount);
+        LoggerUtil.LOG.info("Insufficient Byzantine signatures, hash:{}, Number of signatures required:{}, Current number of signatures:{}", tx.getHash().toHex(), byzantineCount, signCount);
         return false;
     }
 

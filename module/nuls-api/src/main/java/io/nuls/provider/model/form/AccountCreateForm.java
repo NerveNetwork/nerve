@@ -32,16 +32,16 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 /**
  * @author: Charlie
  */
-@ApiModel(name = "创建账户表单数据")
+@ApiModel(name = "Create account form data")
 public class AccountCreateForm extends Base{
 
-    @ApiModelProperty(description = "新建账户数量")
+    @ApiModelProperty(description = "Number of new accounts created")
     private int count;
 
-    @ApiModelProperty(description = "地址前缀", required = false)
+    @ApiModelProperty(description = "Address prefix", required = false)
     private String prefix;
 
-    @ApiModelProperty(description = "账户密码")
+    @ApiModelProperty(description = "Account password")
     private String password;
 
     public int getCount() {

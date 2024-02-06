@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 链管理类,负责各条链的初始化,运行,启动,参数维护等
+ * Chain management,Responsible for initializing each chain,working,start-up,Parameter maintenance, etc
  * Chain management class, responsible for the initialization, operation, start-up, parameter maintenance of each chain, etc.
  *
  * @author tag
@@ -38,31 +38,31 @@ public class ChainManager {
     @Autowired
     private RegisteredCrossChainService registeredCrossChainService;
     /**
-     * 链缓存
+     * Chain cache
      * Chain cache
      */
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
-     * 缓存已注册跨链的链信息
+     * Caching registered cross chain chain information
      */
     private List<ChainInfo> registeredCrossChainList = new ArrayList<>();
 
     /**
-     * 缓存每条链最新区块头
+     * Cache the latest block header of each chain
      * */
     private Map<Integer, BlockHeader> chainHeaderMap = new ConcurrentHashMap<>();
 
     private boolean crossNetUseAble = false;
 
     /**
-     * 初始化
+     * initialization
      * Initialization chain
      */
     public void initChain() throws Exception {
         Map<Integer, ConfigBean> configMap = CommonContext.CONFIG_BEAN_MAP;
         if (configMap == null || configMap.size() == 0) {
-            Log.info("链初始化失败！");
+            Log.info("Chain initialization failed！");
             return;
         }
         for (Map.Entry<Integer, ConfigBean> entry : configMap.entrySet()) {
@@ -75,13 +75,13 @@ public class ChainManager {
             }
             chain.setConfig(configBean);
             /*
-             * 初始化链日志对象
+             * Initialize Chain Log Object
              * Initialization Chain Log Objects
              * */
             LoggerUtil.initLogger(chain);
 
             /*
-            初始化链数据库表
+            Initialize Chain Database Table
             Initialize linked database tables
             */
             initTable(chain);
@@ -106,15 +106,15 @@ public class ChainManager {
     }
 
     /**
-     * 加载链缓存数据并启动链
+     * Load chain cache data and start the chain
      * Load the chain to cache data and start the chain
      */
     @SuppressWarnings("unchecked")
     public void runChain() {
         for (Chain chain : chainMap.values()) {
-            //加载本地验证人列表
+            //Load local validator list
             LocalVerifierManager.loadLocalVerifier(chain);
-            //初始化区块模块同步状态
+            //Initialize block module synchronization status
             chain.setSyncStatus(BlockCall.getBlockStatus(chain));
             chain.getThreadPool().execute(new HashMessageHandler(chain));
             chain.getThreadPool().execute(new OtherCtxMessageHandler(chain));
@@ -130,7 +130,7 @@ public class ChainManager {
     }
 
     /**
-     * 初始化链相关表
+     * Initialize Chain Related Tables
      * Initialization chain correlation table
      *
      * @param chain chain info
@@ -139,10 +139,10 @@ public class ChainManager {
         int chainId = chain.getConfig().getChainId();
         try {
             /*
-            新创建的跨链交易,用于保存本地新创建的和验证通过的跨链交易
+            Newly created cross chain transactions,Used to save locally created and verified cross chain transactions
             New Cross-Chain Transactions
-            key:本链协议的交易Hash
-            value:本链协议跨链交易及状态
+            key:Transactions under this chain agreementHash
+            value:Cross chain transactions and status of this chain protocol
             */
             /**
              * @see CtxStatusPO
@@ -150,56 +150,56 @@ public class ChainManager {
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_CTX_STATUS + chainId);
 
             /*
-            保存已验证通过的跨链交易
-            key:本链协议跨链交易hash
-            value：主网协议跨链交易
+            Save verified cross chain transactions
+            key:Cross chain transactions under this chain protocolhash
+            value：Main network protocol cross chain transactions
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_CONVERT_CTX + chainId);
 
             /*
-            已打包的跨链交易
+            Packaged Cross Chain Transactions
             New Cross-Chain Transactions
-            key:主网协议跨链交易hash
-            value:本链协议HASH
+            key:Main network protocol cross chain transactionshash
+            value:This Chain ProtocolHASH
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_CONVERT_HASH_CTX + chainId);
 
             /*
-            已拜占庭完成的跨链交易
+            Cross chain transactions completed by Byzantium
             New Cross-Chain Transactions
-            key:主网协议跨链交易hash
-            value:主网协议跨链交易(发起链签名的主网协议签名)
+            key:Main network protocol cross chain transactionshash
+            value:Main network protocol cross chain transactions(Initiate main network protocol signature for chain signature)
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_OTHER_COMMITED_CTX + chainId);
 
             /*
-            待广播的高度交易
+            High level trading to be broadcasted
             Processing completed cross-chain transactions (broadCasted to other chains)
-            key:高度
+            key:height
             value:List<LocalHash>
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_SEND_HEIGHT + chainId);
 
             /*
-            处理完成的跨链交易（已广播给其他链）
+            Processing completed cross chain transactions（Broadcasted to other chains）
             Processing completed cross-chain transactions (broadCasted to other chains)
-            key:高度
+            key:height
             value:List<LocalHash>
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_SENDED_HEIGHT + chainId);
 
             /*
-            保存处理在处理成功的跨链交易记录
+            Save and process successful cross chain transaction records
             Keep records of successful cross-chain transactions processed
-            key：跨链交易Hash
-            value:处理成功与否
+            key：Cross chain transactionsHash
+            value:Whether the processing was successful or not
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_CTX_STATE+ chainId);
 
             /*
-            广播失败的验证人变更消息
+            Verifier change message for broadcast failure
             Keep records of successful cross-chain transactions processed
-            key:高度
+            key:height
             value:List<chainId>
             */
             RocksDBService.createTable(NulsCrossChainConstant.DB_NAME_BROAD_FAILED+ chainId);

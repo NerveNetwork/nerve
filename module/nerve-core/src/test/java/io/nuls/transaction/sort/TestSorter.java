@@ -124,14 +124,14 @@ public class TestSorter {
         String result = getResult(dataList);
 
         System.out.println(result);
-//        1/3 在4之前
+//        1/3 stay4before
         assertTrue(result.indexOf("1") < result.indexOf("4") && result.indexOf("3") < result.indexOf("4"));
 
-//        2 在5之前
+//        2 stay5before
         assertTrue(result.indexOf("2") < result.indexOf("5"));
-//        4，5 在6之前
+//        4,5 stay6before
         assertTrue(result.indexOf("4") < result.indexOf("6") && result.indexOf("5") < result.indexOf("6"));
-//            6，7在d之前
+//            6,7staydbefore
         assertTrue(result.indexOf("6") < result.indexOf("d") && result.indexOf("7") < result.indexOf("d"));
     }
 

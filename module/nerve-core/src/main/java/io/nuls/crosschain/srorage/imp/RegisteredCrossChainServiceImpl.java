@@ -8,7 +8,7 @@ import io.nuls.crosschain.constant.NulsCrossChainConstant;
 import io.nuls.crosschain.srorage.RegisteredCrossChainService;
 
 /**
- * 已注册跨链的交易数据库操作实现类
+ * Registered cross chain transaction database operation implementation class
  * Registered Cross-Chain Transaction Database Operations Implementation Class
  *
  * @author  tag

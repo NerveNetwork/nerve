@@ -30,7 +30,7 @@ package network.nerve.converter.heterogeneouschain.lib.helper.interfaces;
  */
 public interface IHtgAnalysisTx {
     /**
-     * 解析ETH交易，是否充值、提现、变更等
+     * analysisETHTransaction, whether to recharge、Withdrawal、Changes, etc
      */
     void analysisTx(org.web3j.protocol.core.methods.response.Transaction tx, long txTime, long blockHeight) throws Exception;
 }

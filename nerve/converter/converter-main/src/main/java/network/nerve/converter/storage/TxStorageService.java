@@ -30,14 +30,14 @@ import network.nerve.converter.model.po.TransactionPO;
 import network.nerve.converter.model.po.WithdrawalAdditionalFeePO;
 
 /**
- * 交易持久层
+ * Transaction persistence layer
  * @author: Loki
  * @date: 2020-02-27
  */
 public interface TxStorageService {
 
     /**
-     * 存交易
+     * Deposit transaction
      * @param chain
      * @param tx
      * @return
@@ -45,7 +45,7 @@ public interface TxStorageService {
     boolean save(Chain chain, TransactionPO tx);
 
     /**
-     * 获取交易
+     * Obtain transactions
      * @param chain
      * @param hash
      * @return
@@ -53,7 +53,7 @@ public interface TxStorageService {
     TransactionPO get(Chain chain, NulsHash hash);
 
     /**
-     * 获取交易
+     * Obtain transactions
      * @param chain
      * @param hash
      * @return
@@ -61,7 +61,7 @@ public interface TxStorageService {
     TransactionPO get(Chain chain, String hash);
 
     /**
-     * 删除交易
+     * Delete transaction
      * @param chain
      * @param hash
      * @return
@@ -69,7 +69,7 @@ public interface TxStorageService {
     boolean delete(Chain chain, NulsHash hash);
 
     /**
-     * 删除交易
+     * Delete transaction
      * @param chain
      * @param hash
      * @return
@@ -77,7 +77,7 @@ public interface TxStorageService {
     boolean delete(Chain chain, String hash);
 
     /**
-     * 存CheckRetryParseMessage收到的异构链交易hash
+     * SaveCheckRetryParseMessageReceived heterogeneous chain transactionshash
      * @param chain
      * @param heterogeneousHash
      * @return
@@ -85,7 +85,7 @@ public interface TxStorageService {
     boolean saveHeterogeneousHash(Chain chain, String heterogeneousHash);
 
     /**
-     * 取CheckRetryParseMessage收到的异构链交易hash
+     * takeCheckRetryParseMessageReceived heterogeneous chain transactionshash
      * @param chain
      * @param heterogeneousHash
      * @return
@@ -93,7 +93,7 @@ public interface TxStorageService {
     String getHeterogeneousHash(Chain chain, String heterogeneousHash);
 
     /**
-     * 存储追加手续费交易业务数据
+     * Store transaction data for additional transaction fees
      * @param chain
      * @param withdrawalAdditionalFeePO
      * @return

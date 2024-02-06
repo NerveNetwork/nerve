@@ -37,7 +37,7 @@ import java.util.Set;
 import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
 /**
- * 确认虚拟银行管理员变更
+ * Confirm virtual bank administrator changes
  * @author: Mimi
  * @date: 2020-03-12
  */

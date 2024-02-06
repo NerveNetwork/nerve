@@ -4,13 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 节点同步状态枚举
+ * Node synchronization status enumeration
  * @author: Charlie
  * @date: 2020-03-12
  */
 public enum SyncStatusEnum {
 
-    // 同步状态 0:同步中，1:正常运行中
+    // Synchronization status 0:In synchronization,1:Under normal operation
     SYNC(0),
 
     RUNNING(1);

@@ -27,7 +27,7 @@ package network.nerve.converter.model.bo;
 import java.math.BigDecimal;
 
 /**
- * 异构链配置
+ * Heterogeneous Chain Configuration
  * @author: Loki
  * @date: 2020-03-02
  */
@@ -43,69 +43,69 @@ public class HeterogeneousCfg {
 
 //    private BigInteger withdrawalSignFeeNvt;
     /**
-     *  多签地址
+     *  Multiple signed addresses
      */
     private String multySignAddress;
     /**
-     *  节点启动时默认使用的API服务地址
+     *  The default usage for node startupAPIService address
      */
     private String commonRpcAddress;
     /**
-     *  API服务地址
+     *  APIService address
      */
     private String mainRpcAddress;
     /**
-     *  默认起始同步高度
+     *  Default starting synchronization height
      */
     private long defaultStartHeight;
     /**
-     *  交易确认高度数
+     *  Transaction confirmation height
      */
     private int txBlockConfirmations;
     /**
-     *  提现交易确认高度数
+     *  Confirmation height of withdrawal transactions
      */
     private int txBlockConfirmationsOfWithdraw;
     /**
-     *  每个虚拟银行节点发送异构链交易的间隔时间（单位：秒）
+     *  The interval time for each virtual bank node to send heterogeneous chain transactions（unit：second）
      */
     private String intervalWaittingSendTransaction;
     /**
-     *  API服务地址列表(多个服务地址以逗号隔开，组成一个字符串)
+     *  APIService Address List(Multiple service addresses separated by commas form a string)
      */
     private String orderRpcAddresses;
     /**
-     *  API备用服务地址列表(多个备用服务地址以逗号隔开，组成一个字符串)
+     *  APIList of backup service addresses(Multiple backup service addresses separated by commas form a string)
      */
     private String standbyRpcAddresses;
 
     /**
-     * 异构链地址初始最小余额, 用于加入虚拟银行验证
+     * Initial minimum balance of heterogeneous chain addresses, Used to join virtual bank verification
      */
     private BigDecimal initialBalance;
 
     /**
-     * 过滤掉的充值地址
+     * Filtered recharge addresses
      */
     private String filterAddresses;
 
     /**
-     * 任务队列的执行周期
+     * The execution cycle of the task queue
      */
     private int blockQueuePeriod;
     private int confirmTxQueuePeriod;
     private int waitingTxQueuePeriod;
 
     /**
-     * 异构链网络内部chainId
+     * Within heterogeneous chain networkschainId
      */
     private long chainIdOnHtgNetwork;
     /**
-     * 协议生效高度
+     * Effective height of the agreement
      */
     private int protocolVersion;
     /**
-     * 价格KEY
+     * priceKEY
      */
     private String priceKey;
     private boolean proxy;

@@ -68,9 +68,9 @@ public class LedgerTempBalanceManager {
 
             String addressKey = balanceKey(address, assetChainId,  assetId);
             LedgerBalance balance = tempBalanceMap.get(addressKey);
-            // 临时余额区没有余额，则从真实余额中取值
+            // If there is no balance in the temporary balance area, take the value from the actual balance
             if (balance == null) {
-                // 初始化临时余额区
+                // Initialize temporary balance area
                 NonceBalance balanceNonce = LedgerCall.getBalanceNonce(chainId, assetChainId, assetId, AddressTool.getStringAddressByBytes(address));
                 balance = LedgerBalance.newInstance();
                 balance.setBalance(balanceNonce.getAvailable());

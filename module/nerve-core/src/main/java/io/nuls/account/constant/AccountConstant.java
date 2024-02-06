@@ -34,7 +34,7 @@ import java.util.Comparator;
 
 /**
  * @author: qinyifeng
- * @description: 配置常量
+ * @description: Configure Constants
  */
 public interface AccountConstant {
 
@@ -42,13 +42,13 @@ public interface AccountConstant {
     int SIG_MODE_MACHINE = 1;
 
     /**
-     * 设置别名的费用(销毁)
+     * The cost of setting an alias(Destruction)
      * The cost of setting an alias
      */
     BigInteger ALIAS_FEE = BigInteger.valueOf(100000000);
 
     /**
-     * 导出accountkeystore文件的后缀名
+     * exportaccountkeystoreThe suffix name of the file
      * The suffix of the accountkeystore file
      */
     String ACCOUNTKEYSTORE_FILE_SUFFIX = ".keystore";
@@ -59,25 +59,25 @@ public interface AccountConstant {
     String SUCCESS_CODE = "1";
 
     /**
-     * 创建账户事件的主题
+     * Theme for creating account events
      * topic of account create events
      */
     String EVENT_TOPIC_CREATE_ACCOUNT = "evt_ac_createAccount";
 
     /**
-     * 移除账户事件的主题
+     * Remove the theme of account events
      * topic of account remove events
      */
     String EVENT_TOPIC_REMOVE_ACCOUNT = "evt_ac_removeAccount";
 
     /**
-     * 修改账户密码事件的主题
+     * The theme of the account password modification event
      * topic of update account password events
      */
     String EVENT_TOPIC_UPDATE_PASSWORD = "evt_ac_updatePassword";
 
     /**
-     * Map初始值
+     * MapInitial value
      */
     int INIT_CAPACITY_16 = 16;
     int INIT_CAPACITY_8 = 8;
@@ -86,7 +86,7 @@ public interface AccountConstant {
 
 
     /**
-     * 普通交易为非解锁交易：0，解锁金额交易（退出共识，退出委托）：-1
+     * Ordinary transactions are non unlocked transactions：0Unlock amount transaction（Exit consensus, exit delegation）：-1
      */
     byte NORMAL_TX_LOCKED = 0;
 
@@ -99,15 +99,15 @@ public interface AccountConstant {
         }
     };
     /**
-     * 操作系统名称
+     * Operating System Name
      */
     String OS_NAME = "os.name";
     /**
-     * WINDOWS系统
+     * WINDOWSsystem
      */
     String OS_WINDOWS = "WINDOWS";
     /**
-     * 路径斜杠
+     * Path slash
      */
     String SLASH = "/";
 

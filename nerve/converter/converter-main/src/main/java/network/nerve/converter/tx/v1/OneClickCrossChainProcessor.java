@@ -84,14 +84,14 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 OneClickCrossChainTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainTxData.class);
                 HeterogeneousHash heterogeneousHash = txData.getOriginalTxHash();
                 String originalTxHash = heterogeneousHash.getHeterogeneousHash();
                 if(!setDuplicate.add(originalTxHash.toLowerCase())){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
@@ -99,14 +99,14 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
                     continue;
                 }
                 if(null != rechargeStorageService.find(chain, originalTxHash)){
-                    // 该原始交易已执行过充值
+                    // The original transaction has already been recharged
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                             tx.getHash().toHex(), txData.getOriginalTxHash());
                 }
 
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -150,11 +150,11 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
 
-                // 当区块出块正常运行状态时（非区块同步模式），才执行
+                // When the block is in normal operation state（Non block synchronization mode）Only then will it be executed
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
                     docking.txConfirmedCompleted(originalTxHash, blockHeader.getHeight(), hash.toHex());
-                    // 放入类似队列处理机制 准备通知异构链组件执行提现
+                    // Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute withdrawals
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);
                     pendingPO.setBlockHeader(blockHeader);
@@ -164,7 +164,7 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
                     txSubsequentProcessStorageService.save(chain, pendingPO);
                     chain.getPendingTxQueue().offer(pendingPO);
                 }
-                chain.getLogger().info("[commit]OneClickCrossChain 一键跨链交易 hash:{}", hash.toHex());
+                chain.getLogger().info("[commit]OneClickCrossChain One click cross chain transaction hash:{}", hash.toHex());
             }
             return true;
         } catch (Exception e) {
@@ -187,13 +187,13 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
         }
         Chain chain = chainManager.getChain(chainId);
         try {
-            // 回滚异构链组件交易状态 // add by Mimi at 2020-03-13
+            // Rolling back the transaction status of heterogeneous chain components // add by Mimi at 2020-03-13
             for(Transaction tx : txs) {
                 OneClickCrossChainTxData txData = ConverterUtil.getInstance(tx.getTxData(), OneClickCrossChainTxData.class);
                 HeterogeneousHash heterogeneousHash = txData.getOriginalTxHash();
                 String originalTxHash = heterogeneousHash.getHeterogeneousHash();
                 int htgChainId = heterogeneousHash.getHeterogeneousChainId();
-                // 不是提案执行的充值交易，才执行异构链交易确认回滚
+                // Perform heterogeneous chain transaction confirmation rollback only for recharge transactions that are not proposed for execution
                 if (htgChainId > 0) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
                     docking.txConfirmedRollback(originalTxHash);
@@ -204,7 +204,7 @@ public class OneClickCrossChainProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
 
-                chain.getLogger().info("[rollback]Recharge 充值交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[rollback]Recharge Recharge transaction hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (Exception e) {

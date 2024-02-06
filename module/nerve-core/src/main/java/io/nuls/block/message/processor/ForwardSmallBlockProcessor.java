@@ -56,11 +56,11 @@ public class ForwardSmallBlockProcessor implements Runnable {
             nodes.add(nodeId);
             logger.debug("add OrphanBlockRelatedNodes, blockHash-{}, nodeId-{}", blockHash, nodeId);
         }
-        //1.已收到完整区块,丢弃
+        //1.Received complete block,discard
         if (BlockForwardEnum.COMPLETE.equals(status)) {
             return;
         }
-        //2.已收到部分区块,还缺失交易信息,发送HashListMessage到源节点
+        //2.Received partial blocks,Transaction information is still missing,sendHashListMessageTo source node
         if (BlockForwardEnum.INCOMPLETE.equals(status) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
             CachedSmallBlock block = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
             if (block == null) {
@@ -77,7 +77,7 @@ public class ForwardSmallBlockProcessor implements Runnable {
             TxGroupRequestor.addTask(chainId, blockHash.toString(), task);
             return;
         }
-        //3.未收到区块
+        //3.Block not received
         if (BlockForwardEnum.EMPTY.equals(status)) {
             HashMessage request = new HashMessage(blockHash, height);
             NetworkCall.sendToNode(chainId, request, nodeId, GET_SMALL_BLOCK_MESSAGE);

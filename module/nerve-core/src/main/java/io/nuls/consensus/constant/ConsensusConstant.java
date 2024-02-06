@@ -3,7 +3,7 @@ package io.nuls.consensus.constant;
 import java.math.BigInteger;
 
 /**
- * 共识模块常量类
+ * Consensus module constant class
  *
  * @author tag
  * 2018/11/6
@@ -19,7 +19,7 @@ public interface ConsensusConstant {
 
 
     /**
-     * Consensus module related table name/共识模块相关表名
+     * Consensus module related table name/Consensus module related table names
      */
     String DB_NAME_AGENT = "agent";
     String DB_NAME_APPEND_DEPOSIT = "append_agent_deposit";
@@ -58,33 +58,33 @@ public interface ConsensusConstant {
 
     /**
      * Load the block header of the last specified number of rounds during initialization
-     * 初始化时加载最近指定轮数的惩罚信息
+     * Load penalty information for the most recent specified number of rounds during initialization
      */
     int INIT_PUNISH_OF_ROUND_COUNT = 2100;
 
     /**
-     * 系统启动时缓存指定轮次的区块头
+     * Cache block headers for specified rounds during system startup
      * Buffer a specified number of blocks at system startup
      */
     int INIT_BLOCK_HEADER_COUNT = 2100;
 
     /**
-     * 同一个出块地址1000轮内存在3轮发出两个相同高度，但不同hash的block，节点将会被红牌惩罚
+     * Same outbound address1000Presence within the wheel3The wheel emits two identical heights, but differenthashofblockNodes will be penalized with red cards
      */
     byte REDPUNISH_BIFURCATION = 3;
 
     /**
-     * 信誉值的最小值，小于等于该值会给红牌处罚
+     * The minimum value of reputation value, less than or equal to this value will result in a red card penalty
      */
     double RED_PUNISH_CREDIT_VAL = -1D;
 
     /**
-     * 共识锁定时间
+     * Consensus locking time
      */
     long CONSENSUS_LOCK_TIME = -1;
 
     /**
-     * Map初始值
+     * MapInitial value
      */
     int INIT_CAPACITY_2 = 2;
     int INIT_CAPACITY_4 = 4;
@@ -94,12 +94,12 @@ public interface ConsensusConstant {
     int INIT_CAPACITY_64 = 64;
 
     /**
-     * 接口版本号
+     * Interface version number
      */
     String RPC_VERSION = "1.0";
 
     /**
-     * 接口调用失败重试次数
+     * Interface call failure retry count
      */
     int RPC_CALL_TRY_COUNT = 5;
 
@@ -110,7 +110,7 @@ public interface ConsensusConstant {
     String SEED_NODE_SEPARATOR = ",";
 
     /**
-     * 解锁交易允许的最大时间差(S)
+     * Maximum time difference allowed for unlocking transactions(S)
      */
     long UNLOCK_TIME_DIFFERENCE_LIMIT = 600;
 
@@ -131,9 +131,9 @@ public interface ConsensusConstant {
     int HALF_DAY_MILLISECONDS = 12 * 60 * 60 * 1000;
 
     /**
-     * 共识网络节点 正常出块最低比例常量60%
+     * Consensus Network Node Minimum proportion constant for normal block output60%
      */
-    int POC_NETWORK_NODE_PERCENT = 50;
+    int POC_NETWORK_NODE_PERCENT = 20;
     short POC_CONNECT_MAX_FAIL_TIMES = 100;
 
     String STACKING_CONFIG_FILE = "staking-asset";

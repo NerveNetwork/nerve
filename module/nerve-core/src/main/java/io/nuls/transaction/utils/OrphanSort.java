@@ -45,7 +45,7 @@ import static io.nuls.transaction.utils.LoggerUtil.LOG;
 public class OrphanSort {
 
     public void rank(List<TransactionNetPO> txList) {
-        //分组：相同时间的一组，同时设置排序字段的值（10000*time），用于最终排序
+        //grouping：Set the value of the sorting field for a group at the same time（10000*time）, used for final sorting
         Map<Long, List<TransactionNetPO>> groupMap = new HashMap<>();
         for (TransactionNetPO tx : txList) {
             long second = tx.getTx().getTime();
@@ -57,12 +57,12 @@ public class OrphanSort {
             tx.setOrphanSortSerial(second * 10000);
             subList.add(tx);
         }
-        //相同时间的组，进行细致排序，并更新排序字段的值
+        //Sort groups at the same time in detail and update the values of the sorting fields
         for (Map.Entry<Long, List<TransactionNetPO>> entry : groupMap.entrySet()) {
             List<TransactionNetPO> list = entry.getValue();
             entry.setValue(this.sameTimeRank(list));
         }
-        //重新排序
+        //Reorder
         Collections.sort(txList, new Comparator<TransactionNetPO>() {
             @Override
             public int compare(TransactionNetPO o1, TransactionNetPO o2) {
@@ -92,7 +92,7 @@ public class OrphanSort {
 
     private void doRank(OrphanSortResult<TransactionNetPO> result, OrphanSortItem<TransactionNetPO> thisItem) {
         if (result.getIndex() == -1) {
-            System.out.println("找到第一个元素： " + thisItem.getObj().getTx().getHash());
+            System.out.println("Find the first element： " + thisItem.getObj().getTx().getHash());
             result.getArray()[0] = thisItem;
             result.setIndex(0);
             return;
@@ -106,7 +106,7 @@ public class OrphanSort {
             OrphanSortItem<TransactionNetPO> item = array[i];
             int val = this.compareTo(thisItem.getObj(), item.getObj());
             if (val == 1 && !gotNext) {
-                System.out.println("直接放在后面1： " + thisItem.getObj().getTx().getHash());
+                System.out.println("Directly placed at the back1： " + thisItem.getObj().getTx().getHash());
                 item.setFlower(new OrphanSortItem[]{thisItem});
                 item.setHasFlower(true);
                 insertArray(i + 1, result, result.getIndex() + 1, thisItem, false);
@@ -114,7 +114,7 @@ public class OrphanSort {
                 gotIndex = i + 1;
                 added = true;
             } else if (val == 1 && gotNext) {
-//                需要找到之前的一串，挪动到现在的位置
+//                Need to find the previous string and move it to its current position
                 thisItem = result.getArray()[gotIndex];
                 if (i == gotIndex - 1) {
                     item.setHasFlower(true);
@@ -143,7 +143,7 @@ public class OrphanSort {
                     thisItem.setHasFlower(true);
                 }
                 item.setHasFlower(true);
-                // 前移后面的元素
+                // Move elements forward and behind
                 for (int x = 0; x < result.getIndex() - gotIndex + 1; x++) {
                     int oldIndex = gotIndex + x + realCount;
                     if (oldIndex <= result.getIndex()) {
@@ -184,7 +184,7 @@ public class OrphanSort {
                     }
                 }
                 thisItem.setFlower(flower);
-                // 前移后面的元素
+                // Move elements forward and behind
                 for (int x = 0; x < result.getIndex() - i + 1; x++) {
                     int oldIndex = i + x + realCount;
                     if (oldIndex <= result.getIndex()) {
@@ -200,17 +200,17 @@ public class OrphanSort {
             }
         }
         if (!added) {
-            System.out.println("直接放在后面2：" + thisItem.getObj().getTx().getHash());
+            System.out.println("Directly placed at the back2：" + thisItem.getObj().getTx().getHash());
             this.insertArray(result.getIndex() + 1, result, result.getIndex() + 1, thisItem, false);
         }
     }
 
     /**
-     * @param index         这个item放入的位置
-     * @param result        引用
-     * @param length        之前的总长度
-     * @param item          当前元素
-     * @param insertFlowers 是否有跟随元素
+     * @param index         thisitemPlaced in
+     * @param result        quote
+     * @param length        Previous total length
+     * @param item          Current Element
+     * @param insertFlowers Is there a following element
      */
     private void insertArray(int index, OrphanSortResult result, int length, OrphanSortItem item, boolean insertFlowers) {
         OrphanSortItem[] array = result.getArray();
@@ -238,7 +238,7 @@ public class OrphanSort {
     }
 
     /**
-     * 两个交易根据nonce 来排序
+     * Two transactions based onnonce To sort
      *
      * @param txNeto1
      * @param txNeto2
@@ -260,7 +260,7 @@ public class OrphanSort {
             return 0;
         }
 
-        //比较交易hash和nonce的关系
+        //Comparative transactionshashandnonceThe relationship between
         try {
             if (null == o1.getCoinData() && null == o2.getCoinData()) {
                 return 0;
@@ -295,8 +295,8 @@ public class OrphanSort {
             byte[] o2HashPrefix = TxUtil.getNonce(o2.getHash().getBytes());
             for (CoinFrom o1CoinFrom : o1CoinData.getFrom()) {
                 if (Arrays.equals(o2HashPrefix, o1CoinFrom.getNonce())) {
-                    //o1其中一个账户的nonce等于o2的hash，则需要交换位置(说明o2是o1的前一笔交易)
-                    //命中一个from直接返回
+                    //o1One of the accountsnonceequal too2ofhash, then it is necessary to exchange positions(explaino2yeso1The previous transaction of)
+                    //Hit onefromDirectly return
                     return 1;
                 }
             }
@@ -304,8 +304,8 @@ public class OrphanSort {
             byte[] o1HashPrefix = TxUtil.getNonce(o1.getHash().getBytes());
             for (CoinFrom o2CoinFrom : o2CoinData.getFrom()) {
                 if (Arrays.equals(o1HashPrefix, o2CoinFrom.getNonce())) {
-                    //o2其中一个账户的nonce等于o1的hash，则不需要交换位置(说明o1是o2的前一笔交易)
-                    //命中一个from直接返回
+                    //o2One of the accountsnonceequal too1ofhashThen there is no need to swap positions(explaino1yeso2The previous transaction of)
+                    //Hit onefromDirectly return
                     return -1;
                 }
             }

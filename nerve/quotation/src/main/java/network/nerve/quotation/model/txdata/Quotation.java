@@ -36,18 +36,18 @@ import network.nerve.quotation.util.CommonUtil;
 import java.io.IOException;
 
 /**
- * 报价交易业务数据
+ * Quotation transaction business data
  * @author: Loki
  * @date: 2019/11/25
  */
 public class Quotation extends BaseNulsData {
 
     /**
-     * 发送交易的节点打包地址(防止出现不同节点组装出的交易，计算交易hash的数据一致, 导致出现相同交易hash)
+     * Node packaging address for sending transactions(Prevent transactions assembled from different nodes and calculate transactionshashConsistent data, Resulting in identical transactionshash)
      */
     private byte[] address;
     /**
-     * 表示data的数据类型 1：price（后续可扩展）
+     * expressdataData type of 1：price（Subsequent scalability）
      */
     private byte type;
 

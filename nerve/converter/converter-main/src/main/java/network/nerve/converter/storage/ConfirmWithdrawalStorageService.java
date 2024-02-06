@@ -29,7 +29,7 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 
 /**
- * NERVE网络中确认提现交易状态的交易 确认的业务数据存取
+ * NERVETransactions that confirm the status of withdrawal transactions in the network Confirmed business data access
  * @author: Loki
  * @date: 2020-03-06
  */
@@ -39,7 +39,7 @@ public interface ConfirmWithdrawalStorageService {
     boolean save(Chain chain, ConfirmWithdrawalPO cwPO);
 
     /**
-     * 根据提现交易hash获取
+     * Based on withdrawal transactionshashobtain
      * @param chain
      * @param hash
      * @return
@@ -47,7 +47,7 @@ public interface ConfirmWithdrawalStorageService {
     ConfirmWithdrawalPO findByWithdrawalTxHash(Chain chain, NulsHash hash);
 
     /**
-     * 根据提现交易hash删除
+     * Based on withdrawal transactionshashdelete
      * @param chain
      * @param hash
      * @return

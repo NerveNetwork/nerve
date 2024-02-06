@@ -18,7 +18,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 共识模块任务管理器
+ * Consensus Module Task Manager
  * Consensus Module Task Manager
  *
  * @author tag
@@ -27,13 +27,13 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class ThreadManager {
     /**
-     * 创建一条链的任务
+     * The task of creating a chain
      * The task of creating a chain
      *
      * @param chain chain info
      */
     public void createChainThread(Chain chain) {
-        //所有共识核心功能都从这里开始
+        //All consensus core functions start from here
         chain.getThreadPool().execute(new ConsensusThread(chain));
         chain.getThreadPool().execute(new VoteResultProcessor(chain));
         chain.getThreadPool().execute(new IdentityProcessor(chain));
@@ -42,7 +42,7 @@ public class ThreadManager {
     }
 
     /**
-     * 创建一条链的定时任务
+     * Create a scheduled task for a chain
      * The task of creating a chain
      *
      * @param chain chain info
@@ -53,7 +53,7 @@ public class ThreadManager {
         long delayTime;
         long currentTime = NulsDateUtils.getCurrentTimeMillis();
         long timeInDay = currentTime % ConsensusConstant.ONE_DAY_MILLISECONDS;
-        //如果当前时间是一半之前则等到一半时再计算，如果一半之后之后则立即执行，（避免在一半之前停止节点一半之后重启节点这种情况发生）
+        //If the current time is halfway through, wait until halfway through to calculate. If halfway through, execute immediately,（Avoid stopping the node before and restarting it after half of the time）
         if (timeInDay <= ConsensusConstant.HALF_DAY_MILLISECONDS) {
             delayTime = ConsensusConstant.HALF_DAY_MILLISECONDS - timeInDay;
         } else {

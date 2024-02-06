@@ -29,27 +29,27 @@ import network.nerve.converter.model.bo.HeterogeneousAddress;
 import java.util.List;
 
 /**
- * 发出异构链上交易后，异构链组件监听交易是否确认打包，打包后
+ * After sending out heterogeneous on chain transactions, heterogeneous chain components listen to whether the transaction is confirmed to be packaged. After packaging
  *
  * @author: Mimi
  * @date: 2020-02-17
  */
 public interface ITxConfirmedProcessor {
     /**
-     * @param txType           交易类型 - WITHDRAW/CHANGE/UPGRADE 提现/管理员变更/升级
-     * @param nerveTxHash      本链交易hash
-     * @param txHash           异构链交易hash
-     * @param blockHeight      异构链交易确认高度
-     * @param txTime           异构链交易时间
-     * @param multiSignAddress 当前多签地址
-     * @param signers          交易签名地址列表
+     * @param txType           Transaction type - WITHDRAW/CHANGE/UPGRADE Withdrawal/Administrator Change/upgrade
+     * @param nerveTxHash      This chain transactionhash
+     * @param txHash           Heterogeneous Chain Tradinghash
+     * @param blockHeight      Heterogeneous chain transaction confirmation height
+     * @param txTime           Heterogeneous chain transaction time
+     * @param multiSignAddress Current multiple signed addresses
+     * @param signers          Transaction signature address list
      */
     void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash,
                      String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception;
 
     /**
-     * @param nerveTxHash         本链交易hash
-     * @param heterogeneousTxHash 异构链交易hash
+     * @param nerveTxHash         This chain transactionhash
+     * @param heterogeneousTxHash Heterogeneous Chain Tradinghash
      */
     void pendingTxOfWithdraw(String nerveTxHash, String heterogeneousTxHash) throws Exception;
 }

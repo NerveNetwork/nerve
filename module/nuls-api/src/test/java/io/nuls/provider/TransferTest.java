@@ -29,7 +29,7 @@ import java.util.Objects;
 /**
  * @Author: zhoulijun
  * @Time: 2020-05-11 18:30
- * @Description: dex 工具类
+ * @Description: dex Tool class
  */
 public class TransferTest {
 
@@ -50,11 +50,11 @@ public class TransferTest {
     }
 
     /**
-     * 构建一个工具类实例
-     * 可调用对交易签名和广播交易接口
+     * Build a tool class instance
+     * Can call transaction signing and broadcasting transaction interfaces
      *
-     * @param dexApiUrl dex api接口访问地址
-     * @param priKey    私钥
+     * @param dexApiUrl dex apiInterface Access Address
+     * @param priKey    Private key
      */
     public static TransferTest getInstance(String dexApiUrl, String priKey) {
         TransferTest dexUtils = new TransferTest(dexApiUrl, priKey);
@@ -62,10 +62,10 @@ public class TransferTest {
     }
 
     /**
-     * 构建一个工具类实例
-     * 只能组装交易，不能签名和广播
+     * Build a tool class instance
+     * Can only assemble transactions, cannot sign or broadcast
      *
-     * @param dexApiUrl dex api接口访问地址
+     * @param dexApiUrl dex apiInterface Access Address
      * @return
      */
     public static TransferTest getInstance(String dexApiUrl) {
@@ -80,7 +80,7 @@ public class TransferTest {
             byte[] digest = RPCUtil.decode(txHex);
             Transaction tx = new Transaction();
             tx.parse(new NulsByteBuffer(digest));
-            //数据解码为字节数组
+            //Decoding data into byte arrays
             byte[] signBytes = SignatureUtil.signDigest(tx.getHash().getBytes(), ecKey).serialize();
             P2PHKSignature signature = new P2PHKSignature(signBytes, ecKey.getPubKey());
             tx.setTransactionSignature(signature.serialize());
@@ -132,7 +132,7 @@ public class TransferTest {
             Map res = JSONUtils.json2pojo(body, Map.class);
             return res.get("result");
         } catch (JsonProcessingException e) {
-            Log.error("序列化错误", e);
+            Log.error("Serialization error", e);
             throw new RuntimeException(e);
         } catch (Exception e) {
             e.printStackTrace();
@@ -150,10 +150,10 @@ public class TransferTest {
         int chainId = 1;
         BigInteger amount = BigInteger.valueOf(100000000L).multiply(BigInteger.valueOf(100L));
 //        //example
-//        //构建一个工具类
+//        //Build a tool class
 //
         TransferTest dexUtils = TransferTest.getInstance(url, "");
-//        //离线组装挂单交易，生成交易hex
+//        //Offline assembly of pending transactions, generating transactionshex
         Map balance = (Map)dexUtils.post(url + "",
                 Map.of("jsonrpc","2.0",
                 "method" ,"getAccountBalance",
@@ -202,7 +202,7 @@ public class TransferTest {
                         "remark"
                 )));
         Log.info("{}",tx);
-        //        //将交易签名并广播
+        //        //Sign and broadcast the transaction
         Object hash = dexUtils.signAndBroadcast(tx.get("txHex").toString());
         Log.info("{}",hash);
     }

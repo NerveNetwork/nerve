@@ -11,18 +11,18 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 修改币种交易协议
+ * Modify Currency Transaction Agreement
  */
 public class EditCoinTrading extends TxData {
 
     private NulsHash tradingHash;
 
-    //交易币种允许最小交易小数位
+    //Transaction currency allows for minimum transaction decimal places
     private byte scaleBaseDecimal;
 
-    //计价币种允许最小交易小数位
+    //Pricing currency allows for minimum transaction decimal places
     private byte scaleQuoteDecimal;
-    //最小交易量
+    //Minimum trading volume
     private BigInteger minBaseAmount;
 
     private BigInteger minQuoteAmount;

@@ -15,7 +15,7 @@ import java.util.function.Function;
 public class SwapTools implements CallRpc {
 
     /**
-     * 查询Swap交易对信息
+     * querySwapTransaction pair information
      */
     public Result<Map<String, Object>> getSwapPairInfo(int chainId, String tokenAStr, String tokenBStr) {
         Map<String, Object> params = new HashMap<>(8);
@@ -30,7 +30,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询所有Swap交易对信息
+     * Query AllSwapTransaction pair information
      */
     public Result<List<String>> getAllSwapPairsInfo(int chainId) {
         Map<String, Object> params = new HashMap<>(8);
@@ -43,7 +43,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询所有Stable-Swap交易对信息
+     * Query AllStable-SwapTransaction pair information
      */
     public Result<List<String>> getAllStableSwapPairsInfo(int chainId) {
         Map<String, Object> params = new HashMap<>(8);
@@ -56,7 +56,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 根据交易对地址 查询Swap交易对信息
+     * Address based on transaction pairs querySwapTransaction pair information
      */
     public Result<Map<String, Object>> getSwapPairInfoByPairAddress(int chainId, String pairAddress) {
         Map<String, Object> params = new HashMap<>(8);
@@ -70,7 +70,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询Stable-Swap交易对信息
+     * queryStable-SwapTransaction pair information
      */
     public Result<Map<String, Object>> getStableSwapPairInfo(int chainId, String pairAddress) {
         Map<String, Object> params = new HashMap<>(8);
@@ -84,7 +84,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询交易执行结果
+     * Query transaction execution results
      */
     public Result<Map<String, Object>> getSwapResultInfo(int chainId, String txHash) {
         Map<String, Object> params = new HashMap<>(8);
@@ -98,7 +98,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 根据LP资产查询交易对地址
+     * according toLPAsset inquiry transaction address
      */
     public Result<String> getPairAddressByTokenLP(int chainId, String tokenLPStr) {
         Map<String, Object> params = new HashMap<>(8);
@@ -112,7 +112,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 寻找最佳交易路径
+     * Finding the best trading path
      */
     public Result<Map<String, Object>> getBestTradeExactIn(int chainId, String tokenInStr, String tokenInAmount,
                                               String tokenOutStr, int maxPairSize, String[] allPairs, String resultRule) {
@@ -132,7 +132,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询Swap币币交换最小买进token
+     * querySwapMinimum buy in for coin exchangetoken
      */
     public Result<Map<String, Object>> calMinAmountOnSwapTokenTrade(int chainId, String amountIn, String[] tokenPath) {
         Map<String, Object> params = new HashMap<>(8);
@@ -147,7 +147,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询添加Swap流动性的最小资产数量
+     * Query AddSwapThe minimum number of assets with liquidity
      */
     public Result<Map<String, Object>> calMinAmountOnSwapAddLiquidity(int chainId, String amountA, String amountB,
                                               String tokenAStr, String tokenBStr) {
@@ -165,7 +165,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询移除Swap流动性的最小资产数量
+     * Query removalSwapThe minimum number of assets with liquidity
      */
     public Result<Map<String, Object>> calMinAmountOnSwapRemoveLiquidity(int chainId, String amountLP,
                                               String tokenAStr, String tokenBStr) {
@@ -182,7 +182,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询可用于Swap交易的稳定币交易对
+     * Queries available forSwapStable currency trading for transactions
      */
     public Result<List<Map>> getStablePairListForSwapTrade(int chainId) {
         Map<String, Object> params = new HashMap<>(8);
@@ -195,7 +195,7 @@ public class SwapTools implements CallRpc {
     }
 
     /**
-     * 查询所有有效的稳定币交易对
+     * Query all valid stablecoin transaction pairs
      */
     public Result<List<Map>> getAvailableStablePairList(int chainId) {
         Map<String, Object> params = new HashMap<>(8);

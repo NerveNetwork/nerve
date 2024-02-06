@@ -46,7 +46,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 
 /**
- * 交易工具类
+ * Trading tools
  *
  * @author: qinyifeng
  * @date: 2018-12-12
@@ -54,7 +54,7 @@ import java.util.HashMap;
 public class TxUtil {
 
     /**
-     * 校验该资产是否是该链主资产
+     * Verify whether the asset is the main asset of the chain
      *
      * @param chain
      * @param assetId
@@ -71,7 +71,7 @@ public class TxUtil {
     }
 
     /**
-     * 是否主网资产
+     * Is it the main network asset
      *
      * @param chainId
      * @param assetId
@@ -87,7 +87,7 @@ public class TxUtil {
     }
 
     /**
-     * 是否是指定链的资产
+     * Is it an asset of the specified chain
      *
      * @param chain
      * @param coin
@@ -100,7 +100,7 @@ public class TxUtil {
 
 
     /**
-     * 查询账户余额（未确认）
+     * Query account balance（Unconfirmed）
      *
      * @param chain
      * @param assetChainId
@@ -119,7 +119,7 @@ public class TxUtil {
     }
 
     /**
-     * 查询账户余额（未确认）
+     * Query account balance（Unconfirmed）
      *
      * @param chain
      * @param assetChainId
@@ -139,7 +139,7 @@ public class TxUtil {
     }
 
     /**
-     * 查询账户余额（已确认）
+     * Query account balance（Confirmed）
      *
      * @param chain
      * @param assetChainId
@@ -184,7 +184,7 @@ public class TxUtil {
     }
 
     /**
-     * RPCUtil 反序列化
+     * RPCUtil Deserialization
      * @param data
      * @param clazz
      * @param <T>
@@ -228,7 +228,7 @@ public class TxUtil {
 
 
     /**
-     * 校验转账交易备注是否有效
+     * Verify if the transfer transaction remarks are valid
      *
      * @param
      * @return

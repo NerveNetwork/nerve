@@ -20,7 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static io.nuls.crosschain.constant.NulsCrossChainConstant.DB_NAME_TOTAL_OUT_AMOUNT;
 
 /**
- * 链转出资产总量登记
+ * Registration of total amount of assets transferred out of the chain
  */
 @Component
 public class TotalOutAmountServiceImpl implements TotalOutAmountService {

@@ -19,13 +19,13 @@ import java.util.function.Function;
 /**
  * @Author: zhoulijun
  * @Time: 2019-06-12 17:31
- * @Description: 账本模块工具类
+ * @Description: Ledger module tool class
  */
 @Component
 public class LegderTools implements CallRpc {
 
     /**
-     * 获取可用余额和nonce
+     * Obtain available balance andnonce
      * Get the available balance and nonce
      */
     public Result<AccountBalance> getBalanceAndNonce(int chainId, int assetChainId, int assetId, String address) {
@@ -73,8 +73,8 @@ public class LegderTools implements CallRpc {
     }
 
     /**
-     * 查询异构跨链资产在nerve链对应的资产信息
-     * 当contractAddress=null时，默认查询异构链主资产
+     * Query heterogeneous cross chain assets innerveAsset information corresponding to the chain
+     * WhencontractAddress=nullWhen querying heterogeneous chain master assets by default
      */
     public Result<Map> getHeterogeneousChainAssetInfo(int heterogeneousChainId, String contractAddress) {
         Map<String, Object> params = new HashMap(2);
@@ -114,7 +114,7 @@ public class LegderTools implements CallRpc {
     }
 
     /**
-     * 批量查询用户余额
+     * Batch query of user balance
      *
      * @param chainId
      * @param coinDtoList

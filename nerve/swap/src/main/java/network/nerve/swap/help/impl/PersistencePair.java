@@ -58,13 +58,13 @@ public class PersistencePair extends AbstractPair {
         swapPairDTO.setTotalLP(swapPairDTO.getTotalLP().add(liquidityChange));
         swapPairDTO.setReserve0(balance0);
         swapPairDTO.setReserve1(balance1);
-        // pierre reserve0, reserve1 是否需要价格预言机
+        // pierre reserve0, reserve1 Do you need a price oracle
         //......
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         SwapPairReservesPO po = new SwapPairReservesPO(getPair().getAddress(), balance0, balance1, swapPairDTO.getTotalLP(), blockTime, blockHeight);
         swapPairReservesStorageService.savePairReserves(pairAddress, po);
-        // 更新缓存
+        // Update cache
         swapPairCache.reload(pairAddress);
     }
 
@@ -73,13 +73,13 @@ public class PersistencePair extends AbstractPair {
         swapPairDTO.setTotalLP(swapPairDTO.getTotalLP().subtract(liquidityChange));
         swapPairDTO.setReserve0(reserve0);
         swapPairDTO.setReserve1(reserve1);
-        // pierre reserve0, reserve1 是否需要价格预言机
+        // pierre reserve0, reserve1 Do you need a price oracle
         //......
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         SwapPairReservesPO po = new SwapPairReservesPO(getPair().getAddress(), reserve0, reserve1, swapPairDTO.getTotalLP(), blockTime, blockHeight);
         swapPairReservesStorageService.savePairReserves(pairAddress, po);
-        // 更新缓存
+        // Update cache
         swapPairCache.reload(pairAddress);
     }
 }

@@ -20,41 +20,41 @@ public class SwapConfig extends ConfigBean implements ModuleConfig {
     private static final long serialVersionUID = 1L;
 
     /**
-     * ROCK DB 数据库文件存储路径
+     * ROCK DB Database file storage path
      */
     private String dataPath;
     /**
-     * 模块code
+     * modulecode
      */
     private String moduleCode;
     /**
-     * 主链链ID
+     * Main chainID
      */
     private int mainChainId;
     /**
-     * 主链主资产ID
+     * Main asset of the main chainID
      */
     private int mainAssetId;
 
     /**
-     * 提现黑洞公钥(与设置别名共用一个公钥)
+     * Withdrawal of black hole public key(Share the same public key with setting aliases)
      */
     private String blackHolePublicKey;
 
     /**
-     * 手续费奖励的系统接收地址公钥
+     * System receiving address public key for handling fee rewards
      */
     private String awardFeeSystemAddressPublicKey;
     /**
-     * 手续费奖励的系统接收地址公钥(协议17生效)
+     * System receiving address public key for handling fee rewards(protocol17take effect)
      */
     private String awardFeeSystemAddressPublicKeyProtocol17;
     /**
-     * 手续费奖励的销毁地址公钥
+     * Destruction address public key for handling fee rewards
      */
     private String awardFeeDestructionAddressPublicKey;
     /**
-     * 聚合stableCombining
+     * polymerizationstableCombining
      */
     private String stablePairAddressInitialSet;
 
@@ -75,7 +75,7 @@ public class SwapConfig extends ConfigBean implements ModuleConfig {
     }
 
     /**
-     * 读取文件的网络[重新保存所有交易对地址的关系]
+     * Network for reading files[Resave all transaction to address relationships]
      */
     private boolean allPairRelationMainNet;
 

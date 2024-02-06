@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.matic.context.MaticContext;
 
 
 /**
- * MATIC组件向Nerve核心注册
+ * MATICComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

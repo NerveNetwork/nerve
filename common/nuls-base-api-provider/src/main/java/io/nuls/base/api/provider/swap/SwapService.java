@@ -35,14 +35,14 @@ import io.nuls.base.api.provider.swap.facade.StableManagePairReq;
 public interface SwapService {
 
     /**
-     * 稳定币添加币种
+     * Adding currency to stablecoins
      * @param req
      * @return
      */
     Result<String> stableAddCoin(StableAddCoinReq req);
 
     /**
-     * 管理稳定币交易对，用于swap路径结合
+     * Manage stablecoin trading pairs forswapPath binding
      * @param req
      * @return
      */

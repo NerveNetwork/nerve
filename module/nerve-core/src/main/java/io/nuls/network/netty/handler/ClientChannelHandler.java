@@ -76,7 +76,7 @@ public class ClientChannelHandler extends BaseChannelHandler {
         }
         ctx.channel().config().setWriteBufferHighWaterMark(NetworkConstant.HIGH_WATER_MARK);
         ctx.channel().config().setWriteBufferLowWaterMark(NetworkConstant.LOW_WATER_MARK);
-//        LoggerUtil.COMMON_LOG.info("连接：：：：Client Node is active:{}", node != null ? node.getId() : null);
+//        LoggerUtil.COMMON_LOG.info("connect：：：：Client Node is active:{}", node != null ? node.getId() : null);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class ClientChannelHandler extends BaseChannelHandler {
         Attribute<Node> nodeAttribute = ctx.channel().attr(key);
         Node node = nodeAttribute.get();
         if (node != null && node.getDisconnectListener() != null) {
-            //LoggerUtil.COMMON_LOG.info("--------断开---------client channelInactive  node is channelUnregistered node={}-----------------", node.getId());
+            //LoggerUtil.COMMON_LOG.info("--------Disconnect---------client channelInactive  node is channelUnregistered node={}-----------------", node.getId());
             node.getDisconnectListener().action();
         }
     }

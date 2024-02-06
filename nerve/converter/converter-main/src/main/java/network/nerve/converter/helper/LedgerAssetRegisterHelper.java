@@ -111,7 +111,7 @@ public class LedgerAssetRegisterHelper {
         info.setSymbol(assetSymbol);
         info.setDecimals(decimalPlace);
         info.setContractAddress(assetAddress);
-        // 精度差额
+        // Precision difference
         BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
         BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
         info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
@@ -123,9 +123,9 @@ public class LedgerAssetRegisterHelper {
 
     public Boolean deleteCrossChainAssetByExistNerveAsset(int heterogeneousAssetChainId, int heterogeneousAssetId) throws Exception {
         NerveAssetInfo nerveAssetInfo = heterogeneousAssetConverterStorageService.getNerveAssetInfo(heterogeneousAssetChainId, heterogeneousAssetId);
-        // 检查NERVE资产绑定了多少异构链
+        // inspectNERVEHow many heterogeneous chains are bound to assets
         List<HeterogeneousAssetInfo> assetInfoList = heterogeneousAssetHelper.getHeterogeneousAssetInfo(nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
-        // 当NERVE资产绑定了3个及以上的异构链，不改变账本的资产类型，因为解绑了当前异构链，该NERVE资产依然绑定了2个及以上的异构链
+        // WhenNERVEAsset bound3Multiple or more heterogeneous chains, without changing the asset type of the ledger, because the current heterogeneous chain has been unboundNERVEAssets are still bound2Multiple or more heterogeneous chains
         if (assetInfoList.size() < 3) {
             LedgerCall.unbindHeterogeneousAssetReg(converterConfig.getChainId(), nerveAssetInfo.getAssetChainId(), nerveAssetInfo.getAssetId());
         }
@@ -163,12 +163,15 @@ public class LedgerAssetRegisterHelper {
                                                      Set<String> bindRemoveSet,
                                                      Set<String> bindOverrideSet,
                                                      Set<String> unregisterSet,
-                                                     Set<String> pauseSet, Set<String> resumeSet, boolean validateHeterogeneousAssetInfoFromNet) throws Exception {
+                                                     Set<String> pauseSet,
+                                                     Set<String> resumeSet,
+                                                     Set<String> stableSwapCoinSet,
+                                                     boolean validateHeterogeneousAssetInfoFromNet) throws Exception {
         String errorCode;
         NulsLogger logger = chain.getLogger();
         int chainId = chain.getChainId();
         ErrorCode bindError = null;
-        boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false;
+        boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false, isStablePause = false;
         String bindNewKey, bindRemoveKey, bindOverrideKey, unregisterKey, pauseKey, resumeKey;
         try {
             do {
@@ -216,7 +219,7 @@ public class LedgerAssetRegisterHelper {
                             .append(assetId).toString();
                     boolean notExist = bindNewSet.add(bindNewKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产绑定");
+                        logger.error("[Conflict detection for duplicate transactions]Contract asset binding");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
@@ -236,7 +239,7 @@ public class LedgerAssetRegisterHelper {
                             .append(assetId).toString();
                     boolean notExist = bindRemoveSet.add(bindRemoveKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产解绑");
+                        logger.error("[Conflict detection for duplicate transactions]Unbind contract assets");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
@@ -275,7 +278,7 @@ public class LedgerAssetRegisterHelper {
                             .append(assetId).toString();
                     boolean notExist = bindOverrideSet.add(bindOverrideKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产覆盖绑定");
+                        logger.error("[Conflict detection for duplicate transactions]Contract asset coverage binding");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
@@ -295,7 +298,7 @@ public class LedgerAssetRegisterHelper {
                             .append(assetId).toString();
                     boolean notExist = unregisterSet.add(unregisterKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产取消注册");
+                        logger.error("[Conflict detection for duplicate transactions]Contract asset deregistration");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
@@ -328,7 +331,7 @@ public class LedgerAssetRegisterHelper {
                             .append(operationType).toString();
                     boolean notExist = pauseSet.add(pauseKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产充值暂停");
+                        logger.error("[Conflict detection for duplicate transactions]Contract asset recharge suspended");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
@@ -361,14 +364,41 @@ public class LedgerAssetRegisterHelper {
                             .append(operationType).toString();
                     boolean notExist = resumeSet.add(resumeKey);
                     if (!notExist) {
-                        logger.error("[冲突检测重复交易]合约资产充值恢复");
+                        logger.error("[Conflict detection for duplicate transactions]Contract asset recharge recovery");
+                        bindError = ConverterErrorCode.DUPLICATE_REGISTER;
+                        break;
+                    }
+                } else if (BindHeterogeneousContractMode.STABLE_SWAP_COIN_PAUSE.toString().equals(mode)) {
+                    if (hAssetInfo == null) {
+                        bindError = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
+                        break;
+                    }
+                    if (asset.length != 4) {
+                        bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                        break;
+                    }
+                    isStablePause = true;
+                    String stableAddress = asset[2];
+                    String status = asset[3];
+                    if (!"pause".equalsIgnoreCase(status) && "resume".equalsIgnoreCase(status)) {
+                        bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                        break;
+                    }
+                    pauseKey = new StringBuilder(heterogeneousChainId).append("_")
+                            .append(assetChainId).append("_")
+                            .append(assetId).append("_")
+                            .append(stableAddress).append("_")
+                            .append(status).toString();
+                    boolean notExist = stableSwapCoinSet.add(pauseKey);
+                    if (!notExist) {
+                        logger.error("[Conflict Detection Duplicate Transaction] Multi-link by asset transaction suspended");
                         bindError = ConverterErrorCode.DUPLICATE_REGISTER;
                         break;
                     }
                 }
             } while (false);
         } catch (Exception e) {
-            logger.warn("检查绑定信息异常, msg: {}", e.getMessage());
+            logger.warn("Check for abnormal binding information, msg: {}", e.getMessage());
             bindError = ConverterErrorCode.DATA_ERROR;
         }
         if (bindError != null) {
@@ -386,10 +416,10 @@ public class LedgerAssetRegisterHelper {
         } else {
             assetInfo = docking.getMainAsset();
         }
-        // 绑定覆盖资产 OR 异构链资产取消注册，合约资产必须存在
-        if (isBindOverride || isUnregister || isPause || isResume) {
+        // Bind coverage assets OR Unregistration of heterogeneous chain assets, contract assets must exist
+        if (isBindOverride || isUnregister || isPause || isResume || isStablePause) {
             if (assetInfo == null) {
-                logger.error("合约资产不存在");
+                logger.error("Contract assets do not exist");
                 ErrorCode error = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND;
                 errorCode = error.getCode();
                 logger.error(error.getMsg());
@@ -397,29 +427,29 @@ public class LedgerAssetRegisterHelper {
             }
             return EMPTY_STRING;
         }
-        // 新注册、新绑定，合约资产不能存在
+        // New registration、New binding, contract assets cannot exist
         if(assetInfo != null) {
-            logger.error("合约资产已存在, 详情: {}", JSONUtils.obj2json(assetInfo));
+            logger.error("Contract asset already exists, details: {}", JSONUtils.obj2json(assetInfo));
             ErrorCode error = ConverterErrorCode.ASSET_EXIST;
             errorCode = error.getCode();
             logger.error(error.getMsg());
             return errorCode;
         }
-        // 异构合约资产注册
-        if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume) {
+        // Heterogeneous Contract Asset Registration
+        if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume && !isStablePause) {
             String key = heterogeneousChainId + "_" + contractAddress;
             boolean notExist = contractAssetRegSet.add(key);
             if (!notExist) {
-                logger.error("[冲突检测重复交易]合约资产注册, 详情: {} - {} - {} - {}, hash: {}", heterogeneousChainId, contractAddress, decimals, symbol, tx.getHash().toHex());
+                logger.error("[Conflict detection for duplicate transactions]Contract asset registration, details: {} - {} - {} - {}, hash: {}", heterogeneousChainId, contractAddress, decimals, symbol, tx.getHash().toHex());
                 ErrorCode error = ConverterErrorCode.DUPLICATE_REGISTER;
                 errorCode = error.getCode();
                 logger.error(error.getMsg());
                 return errorCode;
             }
         }
-        // 资产信息验证
+        // Asset information verification
         if (validateHeterogeneousAssetInfoFromNet && !docking.validateHeterogeneousAssetInfoFromNet(contractAddress, symbol, decimals)) {
-            logger.error("资产信息不匹配");
+            logger.error("Asset information mismatch");
             ErrorCode error = ConverterErrorCode.REG_ASSET_INFO_INCONSISTENCY;
             errorCode = error.getCode();
             logger.error(error.getMsg());
@@ -461,7 +491,7 @@ public class LedgerAssetRegisterHelper {
         info.setSymbol(assetSymbol);
         info.setDecimals(decimalPlace);
         info.setContractAddress(assetAddress);
-        // 精度差额
+        // Precision difference
         BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
         BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
         info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
@@ -479,7 +509,7 @@ public class LedgerAssetRegisterHelper {
         info.setSymbol(assetSymbol);
         info.setDecimals(decimalPlace);
         info.setContractAddress(assetAddress);
-        // 精度差额
+        // Precision difference
         BigInteger decimalsFromHtg = BigInteger.valueOf(decimalPlace);
         BigInteger decimalsFromNerve = BigInteger.valueOf(bindDTO.getAssetDecimals());
         info.setDecimalsSubtractedToNerve(decimalsFromHtg.subtract(decimalsFromNerve).toString());
@@ -499,7 +529,7 @@ public class LedgerAssetRegisterHelper {
         if (heterogeneousAssetChainId == 119 && heterogeneousAssetId == 1) {
             Chain chain = chainManager.getChain(converterConfig.getChainId());
             NulsLogger logger = chain.getLogger();
-            logger.info("Enuls资产注册检查-->");
+            logger.info("EnulsAsset registration inspection-->");
             HeterogeneousAssetInfo assetInfo = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(119, 9, 1);
             logger.info("119,9,1 assetInfo not exist--> {}", assetInfo == null);
             List<HeterogeneousAssetInfo> infoList = heterogeneousAssetConverterStorageService.getHeterogeneousAssetInfo(9, 1);

@@ -14,19 +14,19 @@ public class FarmPoolPO {
     private NulsHash farmHash;
     private NerveToken stakeToken;
     private NerveToken syrupToken;
-    private BigInteger syrupPerBlock;//每个区块奖励的糖果数量
-    private long startBlockHeight;//开始计算奖励的高度
-    private long lockedTime;//锁定时间，在此时间之前不解锁
-    private long lastRewardBlock; // 最近计算过激励的区块高度
+    private BigInteger syrupPerBlock;//The number of candies awarded per block
+    private long startBlockHeight;//Start calculating the height of the reward
+    private long lockedTime;//Lock time, do not unlock before this time
+    private long lastRewardBlock; // Recently calculated block heights for incentives
     private byte[] creatorAddress;
-    private BigInteger accSyrupPerShare;//累计每股可分到的奖励数量
+    private BigInteger accSyrupPerShare;//Accumulated number of rewards per share that can be allocated
     private BigInteger syrupTokenBalance = BigInteger.ZERO;
     private BigInteger stakeTokenBalance = BigInteger.ZERO;
     private BigInteger totalSyrupAmount = BigInteger.ZERO;
-    private boolean modifiable; //0不可以修改，1可以修改
-    private long withdrawLockTime;//质押资产退出后，时间锁定
+    private boolean modifiable; //0Cannot be modified,1Can be modified
+    private long withdrawLockTime;//After the withdrawal of pledged assets, time lock
     private Long stopHeight;
-    private long syrupLockTime;//领取奖励后，奖励资产时间锁定
+    private long syrupLockTime;//After receiving the reward, the reward asset time is locked
 
     public BigInteger getTotalSyrupAmount() {
         return totalSyrupAmount;

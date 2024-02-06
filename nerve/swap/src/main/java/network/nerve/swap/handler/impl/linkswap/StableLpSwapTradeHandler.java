@@ -45,6 +45,7 @@ import network.nerve.swap.handler.impl.stable.StableSwapTradeHandler;
 import network.nerve.swap.help.IPair;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
 import network.nerve.swap.model.NerveToken;
@@ -94,6 +95,8 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
     private SwapTradeHandler swapTradeHandler;
     @Autowired
     private StableSwapTradeHandler stableSwapTradeHandler;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Integer txType() {
@@ -117,14 +120,14 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             if (tos.size() > 1) {
                 throw new NulsException(SwapErrorCode.INVALID_TO);
             }
-            // 提取业务参数
+            // Extract business parameters
             StableLpSwapTradeData txData = new StableLpSwapTradeData();
             txData.parse(tx.getTxData(), 0);
             long deadline = txData.getDeadline();
             if (blockTime > deadline) {
                 throw new NulsException(SwapErrorCode.EXPIRED);
             }
-            // 检查交易路径
+            // Check transaction path
             NerveToken[] path = txData.getPath();
             int pathLength = path.length;
             if (pathLength < 3) {
@@ -132,18 +135,18 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             }
             NerveToken firstToken = path[0];
             NerveToken stableLpToken = path[1];
-            // 路径中的稳定币
+            // Stable coins in the path
             CoinTo coinTo = coinData.getTo().get(0);
             if (coinTo.getAssetsChainId() != firstToken.getChainId() || coinTo.getAssetsId() != firstToken.getAssetId()) {
                 throw new NulsException(SwapErrorCode.INVALID_TO);
             }
-            // 路径中的稳定币LP
+            // Stable coins in the pathLP
             String pairAddressByTokenLP = stableSwapPairCache.getPairAddressByTokenLP(chainId, stableLpToken);
             if (!dto.getPairAddress().equals(pairAddressByTokenLP)) {
                 throw new NulsException(INVALID_PATH);
             }
 
-            // 第一个普通swap交易对地址由 path[1], path[2] 组成的交易对
+            // The first ordinaryswapThe transaction is addressed by path[1], path[2] Transaction pairs composed of
             byte[] firstSwapPair = SwapUtils.getPairAddress(chainId, path[1], path[2]);
             if (!swapPairCache.isExist(AddressTool.getStringAddressByBytes(firstSwapPair))) {
                 throw new NulsException(PAIR_NOT_EXIST);
@@ -151,28 +154,28 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             String pairAddress = dto.getPairAddress();
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
             StableSwapPairPo pairPo = stablePair.getPair();
-            // 整合计算数据
-            StableAddLiquidityBus stableAddLiquidityBus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), firstSwapPair);
+            // Integrate computing data
+            StableAddLiquidityBus stableAddLiquidityBus = SwapUtils.calStableAddLiquididy(swapHelper, chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), firstSwapPair);
             NerveToken[] swapTradePath = new NerveToken[path.length - 1];
             System.arraycopy(path, 1, swapTradePath, 0, path.length - 1);
             SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
 
 
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
-            // 集成两个业务数据
+            // Integrate two business data
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(new StableLpSwapTradeBus(stableAddLiquidityBus, swapTradeBus))));
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
-            // 生成swap系统交易
+            // generateswapSystem transactions
             Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
 
-            // 集成两个生成的交易
+            // Integrate two generated transactions
             Transaction sysDealTx = sysDealTx0;
             CoinData coinDataInstance = sysDealTx.getCoinDataInstance();
             CoinData coinData1 = sysDealTx1.getCoinDataInstance();
@@ -182,14 +185,14 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
 
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新 StableAddLiquidity 临时数据
+            // update StableAddLiquidity Temporary data
             stablePair.update(stableAddLiquidityBus.getLiquidity(), stableAddLiquidityBus.getRealAmounts(), stableAddLiquidityBus.getBalances(), blockHeight, blockTime);
-            // 更新 SwapTrade 临时数据
+            // update SwapTrade Temporary data
             List<TradePairBus> busList = swapTradeBus.getTradePairBuses();
             for (TradePairBus pairBus : busList) {
-                //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+                //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
                 if (swapTradeBus.isExistStablePair() && SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
                     stableSwapTradeHandler.updateCacheByCombining(iPairFactory, pairBus.getStableSwapTradeBus(), blockHeight, blockTime);
                     continue;
@@ -199,7 +202,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             }
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -210,7 +213,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             String pairAddress = dto.getPairAddress();
@@ -239,7 +242,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);

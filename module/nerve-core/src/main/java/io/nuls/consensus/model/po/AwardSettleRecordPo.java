@@ -12,11 +12,11 @@ import java.util.List;
 
 public class AwardSettleRecordPo extends BaseNulsData {
     /**
-     * 已结算的共识奖励记录已结算的共识奖励记录
+     * Settled consensus reward records
      */
     private List<AwardSettlePo> recordList;
     /**
-     * 当前待结算的共识奖励结算信息
+     * Current consensus reward settlement information to be settled
      */
     private AwardSettlePo lastestSettleResult;
 

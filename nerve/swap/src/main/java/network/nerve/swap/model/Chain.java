@@ -9,7 +9,7 @@ import network.nerve.swap.model.bo.LatestBasicBlock;
 import network.nerve.swap.model.dto.PairsP17Info;
 
 /**
- * 链的基础数据和运行状态数据
+ * Basic data and operational status data of the chain
  * Chain information class
  *
  * @author: Loki
@@ -18,29 +18,29 @@ import network.nerve.swap.model.dto.PairsP17Info;
 public class Chain {
 
     /**
-     * 打包区块 - 0, 验证区块 - 1
+     * Packaging blocks - 0, Verify Block - 1
      */
     private static ThreadLocal<Integer> currentThreadBlockType = new ThreadLocal<>();
 
     private ConfigBean config;
 
     /**
-     * 最新区块高度等简略信息
+     * Latest block height and other brief information
      */
     private LatestBasicBlock latestBasicBlock = new LatestBasicBlock();
 
     /**
-     * 日志
+     * journal
      */
     private NulsLogger logger;
 
     /**
-     * 打包区块时批量执行信息
+     * Batch execution information when packaging blocks
      */
     private BatchInfo batchInfo;
 
     /**
-     * 验证区块时批量执行信息
+     * Batch execution information during block validation
      */
     private BatchInfo verifyBatchInfo;
     private PairsP17Info pairsP17Info;

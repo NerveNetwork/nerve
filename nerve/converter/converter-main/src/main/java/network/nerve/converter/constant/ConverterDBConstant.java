@@ -26,121 +26,121 @@
 package network.nerve.converter.constant;
 
 /**
- * 交易数据存储常量
+ * Transaction data storage constant
  * Transaction entity storage constants
  *
  * @author: qinyifeng
  */
 public interface ConverterDBConstant {
 
-    /** 持久化异构链正在执行虚拟银行变更交易 状态key*/
+    /** Persistent heterogeneous chain is executing virtual bank change transactions statekey*/
     String EXE_HETEROGENEOUS_CHANGE_BANK_KEY = "exeHeterogeneousChangeBankKey";
-    /** 持久化正在执行取消节点银行资格的提案 状态key*/
+    /** Persistence is implementing a proposal to revoke node banking eligibility statekey*/
     String EXE_DISQUALIFY_BANK_PROPOSAL_KEY = "exeDisqualifyBankProposalKey";
-    /** 是否正在重置异构链(合约) 状态key*/
+    /** Are you resetting heterogeneous chains(contract) statekey*/
     String RESET_VIRTUALBANK_KEY = "resetVirtualBankKey";
     /**
-     * 配置信息表名
+     * Configuration Information Table Name
      * chain configuration table name
      */
     String DB_MODULE_CONGIF = "config";
 
     /**
-     * 异构链基本信息表
+     * Basic Information Table of Heterogeneous Chain
      */
     String DB_HETEROGENEOUS_CHAIN_INFO = "cv_table_heterogeneous_chain_info";
     /**
-     * 异构链数据表
+     * Heterogeneous Chain Data Table
      */
     String DB_HETEROGENEOUS_CHAIN = "cv_table_heterogeneous_chain";
 
     /**
-     * 交易存储表名 前缀
+     * Transaction storage table name prefix
      */
     String DB_TX_PREFIX = "cv_table_tx_";
 
     /**
-     * 虚拟银行信息持久化表
+     * Virtual Bank Information Persistence Table
      */
     String DB_VIRTUAL_BANK_PREFIX = "cv_table_virtual_bank_";
 
     /**
-     * 历史所有虚拟银行信息持久化表(只增不减)
+     * Persistent table of all virtual banking information in history(Only increase without decrease)
      */
     String DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX = "cv_table_all_history_virtual_bank_";
 
     /**
-     * 确认虚拟银行变更交易 业务存储表
+     * Confirm virtual bank change transaction Business Storage Table
      */
     String DB_CFM_VIRTUAL_BANK_PREFIX = "cv_confirm_virtual_bank_";
 
 
     /**
-     * 确认提现交易状态业务数据表
+     * Confirmation of withdrawal transaction status business data table
      */
     String DB_CONFIRM_WITHDRAWAL_PREFIX = "cv_confirm_withdrawal_";
 
     /**
-     * 异构链组件/提案执行 执行过的交易, 防止二次执行
+     * Heterogeneous Chain Components/Proposal execution Executed transactions, Prevent secondary execution
      */
     String DB_ASYNC_PROCESSED_PREFIX = "cv_async_processed_";
 
     /**
-     * 重置虚拟银行异构链
+     * Reset Virtual Bank Heterogeneous Chain
      */
     String DB_RESET_BANK_PREFIX = "cv_reset_bank_";
 
     /**
-     * 等待调用组件的数据表
+     * Waiting for the data table of the calling component
      */
     String DB_PENDING_PREFIX = "cv_pending_";
 
     /**
-     * 虚拟银行调用异构链, 合并交易时, key与各交易的对应关系
+     * Virtual bank calls heterogeneous chains, When merging transactions, keyCorrespondence with each transaction
      */
     String DB_MERGE_COMPONENT_PREFIX = "cv_merge_component_";
 
     /**
-     * 等待执行的提案
+     * Proposal awaiting execution
      */
     String DB_EXE_PROPOSAL_PENDING_PREFIX = "cv_exe_proposal_pending_";
 
     /**
-     * 确认补贴手续费交易业务 数据表
+     * Confirm subsidy handling fee transaction business data sheet
      */
     String DB_DISTRIBUTION_FEE_PREFIX = "cv_distribution_fee_";
 
 
     /**
-     * 提案存储表
+     * Proposal Storage Table
      */
     String DB_PROPOSAL_PREFIX = "cv_proposal_";
 
     /**
-     * 投票中的提案存储表
+     * Proposal storage table in voting
      */
     String DB_PROPOSAL_VOTING_PREFIX = "cv_proposal_voting_";
 
 
     /**
-     * 提案功能投票信息表
+     * Proposal Function Voting Information Table
      */
     String DB_VOTE_PREFIX = "cv_vote_";
 
     /**
-     * 被取消银行资格地址表
+     * Cancelled Bank Qualification Address Table
      */
     String DB_DISQUALIFICATION_PREFIX = "cv_disqualification_";
 
     String DB_RECHARGE_PREFIX = "cv_recharge_";
 
     /**
-     * 执行提案的交易hash 和 提案的对应关系
+     * Transaction for executing proposalshash and Correspondence of proposals
      */
     String DB_PROPOSAL_EXE = "cv_proposal_exe_";
 
     /**
-     * 异构链地址签名消息存储表
+     * Heterogeneous Chain Address Signature Message Storage Table
      */
     String DB_COMPONENT_SIGN = "cv_component_sign_";
 

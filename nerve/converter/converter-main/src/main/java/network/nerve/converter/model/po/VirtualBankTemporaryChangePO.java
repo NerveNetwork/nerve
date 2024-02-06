@@ -29,19 +29,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 统计周期内，需要加入和退出虚拟银行的节点列表
+ * List of nodes that need to join and exit virtual banks during the statistical period
  * @author: Loki
  * @date: 2020-03-13
  */
 public class VirtualBankTemporaryChangePO implements Serializable {
 
     /**
-     * 待加入的虚拟银行节点地址列表
+     * List of virtual bank node addresses to be added
      */
     private List<byte[]> listInAgents;
 
     /**
-     * 待退出的虚拟银行节点列表
+     * List of virtual bank nodes to be exited
      */
     private List<byte[]> listOutAgents;
 

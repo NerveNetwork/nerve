@@ -5,11 +5,11 @@ import io.nuls.core.rpc.model.ApiModel;
 import io.nuls.core.rpc.model.ApiModelProperty;
 
 
-@ApiModel(name = "退出节点保证金nonce数据")
+@ApiModel(name = "Exit node marginnoncedata")
 public class ReduceNonceDTO {
-    @ApiModelProperty(description = "委托金额")
+    @ApiModelProperty(description = "Entrusted amount")
     private String deposit;
-    @ApiModelProperty(description = "委托数据对应NONCE")
+    @ApiModelProperty(description = "Correspondence of entrusted dataNONCE")
     private String nonce;
     public ReduceNonceDTO(ReduceNonceInfo reduceNonceInfo){
         this.deposit = reduceNonceInfo.getDeposit();

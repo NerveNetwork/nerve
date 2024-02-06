@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 节点保证变更管理类
+ * Node Guarantee Change Management
  * Node assurance change management
  *
  * @author tag
@@ -32,23 +32,23 @@ public class AgentDepositManager {
     private ReduceDepositStorageService reduceDepositStorageService;
 
     /**
-     * 加载节点追加保证金信息
+     * Load node additional margin information
      * Add margin information to load node
      *
-     * @param chain 链信息/chain info
+     * @param chain Chain information/chain info
      */
     public void loadAppendDeposits(Chain chain) throws NulsException {
         List<ChangeAgentDepositPo> appendDepositList = appendDepositStorageService.getList(chain.getChainId());
-        //排序
+        //sort
         appendDepositList.sort(new ChangeDepositComparator());
         chain.setAppendDepositList(appendDepositList);
     }
 
     /**
-     * 保存追加保证金记录
-     * @param chain 链信息
-     * @param po    追加保证金交易信息
-     * @return      保存结果
+     * Save additional margin deposit records
+     * @param chain Chain information
+     * @param po    Additional margin trading information
+     * @return      Save Results
      * */
     public boolean saveAppendDeposit(Chain chain, ChangeAgentDepositPo po){
         if(!appendDepositStorageService.save(po, chain.getChainId())){
@@ -61,10 +61,10 @@ public class AgentDepositManager {
 
 
     /**
-     * 删除追加保证金记录
-     * @param chain      链信息
-     * @param txHash     追加保证金交易HASH
-     * @return           是否删除成功
+     * Delete additional margin deposit records
+     * @param chain      Chain information
+     * @param txHash     Additional margin tradingHASH
+     * @return           Whether the deletion was successful
      * */
     public boolean removeAppendDeposit(Chain chain, NulsHash txHash){
         if(!appendDepositStorageService.delete(txHash, chain.getChainId())){
@@ -76,10 +76,10 @@ public class AgentDepositManager {
     }
 
     /**
-     * 获取指定高度之后的追加保证金金额
-     * @param chain      链信息
-     * @param height     区块高度
-     * @return           各个节点在指定高度之后追加的保证金金额
+     * Obtain the additional deposit amount after obtaining the specified height
+     * @param chain      Chain information
+     * @param height     block height
+     * @return           The amount of margin added by each node after the specified height
      * */
     public Map<NulsHash, BigInteger> getAppendDepositAfterHeight(Chain chain, long height){
         Map<NulsHash, BigInteger> appendDepositMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);
@@ -102,23 +102,23 @@ public class AgentDepositManager {
     }
 
     /**
-     * 加载节点退出保证金信息
+     * Load node exit margin information
      * Add margin information to load node
      *
-     * @param chain 链信息/chain info
+     * @param chain Chain information/chain info
      */
     public void loadReduceDeposits(Chain chain)throws NulsException{
         List<ChangeAgentDepositPo> reduceDepositList = reduceDepositStorageService.getList(chain.getChainId());
-        //排序
+        //sort
         reduceDepositList.sort(new ChangeDepositComparator());
         chain.setReduceDepositList(reduceDepositList);
     }
 
     /**
-     * 保存退出保证金记录
-     * @param chain 链信息
-     * @param po    追加保证金交易信息
-     * @return      保存结果
+     * Save exit margin record
+     * @param chain Chain information
+     * @param po    Additional margin trading information
+     * @return      Save Results
      * */
     public boolean saveReduceDeposit(Chain chain, ChangeAgentDepositPo po){
         if(!reduceDepositStorageService.save(po, chain.getChainId())){
@@ -130,10 +130,10 @@ public class AgentDepositManager {
     }
 
     /**
-     * 删除退出保证金记录
-     * @param chain      链信息
-     * @param txHash     追加保证金交易HASH
-     * @return           是否删除成功
+     * Delete exit margin record
+     * @param chain      Chain information
+     * @param txHash     Additional margin tradingHASH
+     * @return           Whether the deletion was successful
      * */
     public boolean removeReduceDeposit(Chain chain, NulsHash txHash){
         if(!reduceDepositStorageService.delete(txHash, chain.getChainId())){
@@ -145,10 +145,10 @@ public class AgentDepositManager {
     }
 
     /**
-     * 获取指定高度之后的退出的保证金金额
-     * @param chain      链信息
-     * @param height     区块高度
-     * @return           各个节点在指定高度之后追加的保证金金额
+     * Obtain the withdrawal deposit amount after obtaining the specified height
+     * @param chain      Chain information
+     * @param height     block height
+     * @return           The amount of margin added by each node after the specified height
      * */
     public Map<NulsHash, BigInteger> getReduceDepositAfterHeight(Chain chain, long height){
         Map<NulsHash, BigInteger> reduceDepositMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_16);

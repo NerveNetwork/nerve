@@ -40,7 +40,7 @@ import java.util.Map;
 /**
  * @author lanjinsheng
  * @date 2019/10/17
- * @description 用于广播身份消息
+ * @description Used for broadcasting identity messages
  */
 public class ConsensusIdentitiesSub extends BaseNulsData {
     private List<NodeIdentity> identityList = new ArrayList<>();
@@ -48,7 +48,7 @@ public class ConsensusIdentitiesSub extends BaseNulsData {
     private long messageTime;
 
     /**
-     * 不作序列化,本地节点数据
+     * Unordered serialization,Local node data
      */
     private transient ConsensusNet consensusNet;
 

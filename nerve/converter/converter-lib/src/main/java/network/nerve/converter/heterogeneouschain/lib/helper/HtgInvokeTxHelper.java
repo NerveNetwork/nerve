@@ -47,7 +47,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
     //}
 
     public void saveWaittingInvokeQueue(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, int currentNodeSendOrder, HtgWaitingTxPo info) throws Exception {
-        // 保存交易调用参数，设置等待结束时间
+        // Save transaction call parameters and set waiting time to end
         boolean exist = this.ifSavedWaittingPo(nerveTxHash);
         if (!exist) {
             this.saveCommonData(info, nerveTxHash, signatureData, currentNodeSendOrder);
@@ -61,7 +61,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
     }
 
     public void saveWaittingInvokeQueue(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData, int currentNodeSendOrder, HtgWaitingTxPo info) throws Exception {
-        // 保存交易调用参数，设置等待结束时间
+        // Save transaction call parameters and set waiting time to end
         boolean exist = this.ifSavedWaittingPo(nerveTxHash);
         if (!exist) {
             this.saveCommonData(info, nerveTxHash, signatureData, currentNodeSendOrder);
@@ -75,7 +75,7 @@ public class HtgInvokeTxHelper implements BeanInitial {
     }
 
     public void saveWaittingInvokeQueue(String nerveTxHash, String upgradeContract, String signatureData, int currentNodeSendOrder, HtgWaitingTxPo info) throws Exception {
-        // 保存交易调用参数，设置等待结束时间
+        // Save transaction call parameters and set waiting time to end
         boolean exist = this.ifSavedWaittingPo(nerveTxHash);
         if (!exist) {
             this.saveCommonData(info, nerveTxHash, signatureData, currentNodeSendOrder);

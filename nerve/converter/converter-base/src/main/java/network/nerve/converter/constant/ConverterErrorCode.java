@@ -75,12 +75,12 @@ public interface ConverterErrorCode extends CommonCodeConstanst {
     ErrorCode HETEROGENEOUS_TRANSACTION_COMPLETED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0053");
     ErrorCode HETEROGENEOUS_TRANSACTION_DATA_INCONSISTENCY = ErrorCode.init(ModuleE.CV.getPrefix() + "_0054");
     ErrorCode HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED = ErrorCode.init(ModuleE.CV.getPrefix() + "_0055");
-    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0056");//待加入中存在地址-已经是管理员
-    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0057");//重复的待加入地址列表
-    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_3 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0058");//待退出中存在地址-不是管理员
-    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_4 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0059");//重复的待退出地址列表
+    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_1 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0056");//There is an address in the pending join-Already an administrator
+    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_2 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0057");//Duplicate list of addresses to be added
+    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_3 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0058");//Address present in pending exit-Not an administrator
+    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_4 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0059");//Duplicate list of pending exits
     ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_5 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0060");//Maximum 15 managers
-    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_6 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0061");//退出的管理员不能参与管理员变更交易
+    ErrorCode HETEROGENEOUS_MANAGER_CHANGE_ERROR_6 = ErrorCode.init(ModuleE.CV.getPrefix() + "_0061");//Logged out administrators cannot participate in administrator change transactions
     ErrorCode ASSET_EXIST = ErrorCode.init(ModuleE.CV.getPrefix() + "_0062");
     ErrorCode REG_ASSET_INFO_INCONSISTENCY = ErrorCode.init(ModuleE.CV.getPrefix() + "_0063");
     ErrorCode HETEROGENEOUS_CHAIN_NAME_ERROR = ErrorCode.init(ModuleE.CV.getPrefix() + "_0064");

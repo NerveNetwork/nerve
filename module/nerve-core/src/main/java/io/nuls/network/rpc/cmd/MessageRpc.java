@@ -49,9 +49,9 @@ import java.util.*;
 
 /**
  * @author lan
- * @description 消息远程调用
- * 模块消息处理器注册
- * 发送消息调用
+ * @description Message remote call
+ * Module Message Processor Registration
+ * Send Message Call
  * @date 2018/11/12
  **/
 @Component
@@ -61,17 +61,17 @@ public class MessageRpc extends BaseCmd {
     private MessageHandlerFactory messageHandlerFactory = MessageHandlerFactory.getInstance();
 
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_PROTOCOL_REGISTER, version = 1.0,
-            description = "模块协议指令注册")
+            description = "Module Protocol Instruction Registration")
     @Parameters(value = {
-            @Parameter(parameterName = "role", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块角色名称"),
-            @Parameter(parameterName = "protocolCmds", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "注册指令列表")
+            @Parameter(parameterName = "role", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Role Name"),
+            @Parameter(parameterName = "protocolCmds", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Register Instruction List")
     })
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response protocolRegister(Map params) {
         String role = String.valueOf(params.get("role"));
         try {
             /*
-             * 如果外部模块修改了调用注册信息，进行重启，则清理缓存信息，并重新注册
+             * If the external module modifies the call registration information and restarts, clear the cache information and register again
              * clear cache protocolRoleHandler
              */
             messageHandlerFactory.clearCacheProtocolRoleHandlerMap(role);
@@ -88,20 +88,20 @@ public class MessageRpc extends BaseCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_PROTOCOL_PRIORITY_REGISTER, version = 1.0,
-            description = "模块协议指令注册，带有优先级参数")
+            description = "Module protocol instruction registration with priority parameters")
     @Parameters(value = {
-            @Parameter(parameterName = "role", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块角色名称"),
+            @Parameter(parameterName = "role", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Role Name"),
             @Parameter(parameterName = "protocolCmds", requestType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
-                    @Key(name = "cmd", valueType = String.class, description = "协议指令名称,12byte"),
-                    @Key(name = "priority", valueType = String.class, description = "优先级,3个等级,HIGH,DEFAULT,LOWER")
-            }), parameterDes = "注册指令列表")
+                    @Key(name = "cmd", valueType = String.class, description = "Protocol instruction name,12byte"),
+                    @Key(name = "priority", valueType = String.class, description = "priority,3Level,HIGH,DEFAULT,LOWER")
+            }), parameterDes = "Register Instruction List")
     })
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response protocolRegisterWithPriority(Map params) {
         String role = String.valueOf(params.get("role"));
         try {
             /*
-             * 如果外部模块修改了调用注册信息，进行重启，则清理缓存信息，并重新注册
+             * If the external module modifies the call registration information and restarts, clear the cache information and register again
              * clear cache protocolRoleHandler
              */
             messageHandlerFactory.clearCacheProtocolRoleHandlerMap(role);
@@ -120,21 +120,21 @@ public class MessageRpc extends BaseCmd {
 
     /**
      * nw_broadcast
-     * 外部广播接收
+     * External broadcast reception
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_BROADCAST, version = 1.0,
-            description = "广播消息")
+            description = "Broadcast messages")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "排除peer节点Id，用逗号分割"),
-            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
-            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令"),
-            @Parameter(parameterName = "isCross", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "是否是跨链"),
-            @Parameter(parameterName = "percent", requestType = @TypeDescriptor(value = int.class), parameterDes = "广播发送比例,不填写,默认100"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "eliminatepeernodeId, separated by commas"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message BodyHex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message Protocol Instructions"),
+            @Parameter(parameterName = "isCross", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "Is it cross chain"),
+            @Parameter(parameterName = "percent", requestType = @TypeDescriptor(value = int.class), parameterDes = "Broadcast transmission ratio,Not filled in,default100"),
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "一个节点都没发送出去时返回false")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Returned when no node has been sent outfalse")
     }))
     public Response broadcast(Map params) {
         Map<String, Object> rtMap = new HashMap<>();
@@ -190,21 +190,21 @@ public class MessageRpc extends BaseCmd {
 
     /**
      * nw_broadcast
-     * 外部广播接收
+     * External broadcast reception
      */
     @CmdAnnotation(cmd = CmdConstant.NW_BROADCAST_JOIN_CONSENSUS, version = 1.0,
-            description = "广播消息")
+            description = "Broadcast messages")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "排除peer节点Id，用逗号分割"),
-            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
-            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令"),
-            @Parameter(parameterName = "isCross", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "是否是跨链"),
-            @Parameter(parameterName = "percent", requestType = @TypeDescriptor(value = int.class), parameterDes = "广播发送比例,不填写,默认100"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "eliminatepeernodeId, separated by commas"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message BodyHex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message Protocol Instructions"),
+            @Parameter(parameterName = "isCross", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "Is it cross chain"),
+            @Parameter(parameterName = "percent", requestType = @TypeDescriptor(value = int.class), parameterDes = "Broadcast transmission ratio,Not filled in,default100"),
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "一个节点都没发送出去时返回false")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Returned when no node has been sent outfalse")
     }))
     public Response broadcastJoinConsensusMessage(Map params) {
         NetworkContext.isConsensusNode = true;
@@ -214,20 +214,20 @@ public class MessageRpc extends BaseCmd {
 
     /**
      * nw_broadcast
-     * 外部广播接收
+     * External broadcast reception
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_SEND_BY_IPS, version = 1.0,
-            description = "广播消息")
+            description = "Broadcast messages")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "发送的节点Ip集合"),
-            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "排除peer节点Id，用逗号分割"),
-            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
-            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "ips", requestType = @TypeDescriptor(value = List.class), parameterDes = "Sent nodesIpaggregate"),
+            @Parameter(parameterName = "excludeNodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "eliminatepeernodeId, separated by commas"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message BodyHex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message Protocol Instructions")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "可发送连接集合")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "Can send connection sets")
     }))
     public Response sendByIps(Map params) {
         long time1, time2;
@@ -332,14 +332,14 @@ public class MessageRpc extends BaseCmd {
      */
 
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_SEND_PEERS_MSG, version = 1.0,
-            description = "向指定节点发送消息")
+            description = "Send messages to specified nodes")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "nodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "指定发送peer节点Id，用逗号拼接的字符串"),
-            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
-            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "nodes", requestType = @TypeDescriptor(value = String.class), parameterDes = "Specify sendingpeernodeIdString concatenated with commas"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message BodyHex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message Protocol Instructions")
     })
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response sendPeersMsg(Map params) {
         try {
             int chainId = Integer.valueOf(String.valueOf(params.get("chainId")));
@@ -365,7 +365,7 @@ public class MessageRpc extends BaseCmd {
                     nodesList.add(availableNode);
                 }
             }
-            //如果节点id不存在，则寻找相同ip的节点
+            //If the nodeidIf it does not exist, search for the sameipNode of
             if (nodesList.isEmpty()) {
                 List<String> ips = new ArrayList<>();
                 for (String nodeId : nodeIds) {
@@ -395,17 +395,17 @@ public class MessageRpc extends BaseCmd {
      */
 
     @CmdAnnotation(cmd = CmdConstant.CMD_NW_SEND_BY_GROUP_FLAG, version = 1.0,
-            description = "向指定节点发送消息")
+            description = "Send messages to specified nodes")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "连接的链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
-            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "节点组标识"),
-            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息体Hex"),
-            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "消息协议指令")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Connected ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "module", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Name"),
+            @Parameter(parameterName = "groupFlag", requestType = @TypeDescriptor(value = String.class), parameterDes = "Node group identification"),
+            @Parameter(parameterName = "messageBody", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message BodyHex"),
+            @Parameter(parameterName = "command", requestType = @TypeDescriptor(value = String.class), parameterDes = "Message Protocol Instructions")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "可发送连接集合")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "Can send connection sets")
     }))
     public Response sendByGroupIps(Map params) {
         List<String> rtList = new ArrayList<>();
@@ -419,7 +419,7 @@ public class MessageRpc extends BaseCmd {
             BusinessGroupManager businessGroupManager = BusinessGroupManager.getInstance();
             Map<String, String> ipsMap = businessGroupManager.getIpsMap(chainId, module, groupFlag);
             if (ipsMap == null) {
-                LoggerUtil.COMMON_LOG.info("未连接到其他节点");
+                LoggerUtil.COMMON_LOG.info("Not connected to other nodes");
                 rtMap.put("list", rtList);
                 return success(rtMap);
             }

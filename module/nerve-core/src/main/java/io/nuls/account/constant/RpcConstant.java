@@ -28,7 +28,7 @@ package io.nuls.account.constant;
 
 /**
  * @author: qinyifeng
- * @description: RPC常量 RPC constants
+ * @description: RPCconstant RPC constants
  */
 public interface RpcConstant {
 
@@ -36,47 +36,47 @@ public interface RpcConstant {
      * --------[call Transaction module RPC constants] -------
      */
     /**
-     * newTx发起新交易接口版本号
+     * newTxInitiate new transaction interface version number
      */
     String TX_NEW_VERSION = "1.0";
     /**
-     * 发起新交易接口
+     * Initiate new transaction interface
      */
     String TX_NEW_CMD = "tx_newTx";
 
     /**
-     * 交易数据HEX编码
+     * transaction dataHEXcoding
      */
     String TX_DATA = "tx";
     /**
-     * 交易所属链ID
+     * Exchange ChainID
      */
     String TX_CHAIN_ID = "chainId";
     /**
      * --------[RPC response constants] -------
      */
     /**
-     * 单个返回值默认键key
+     * Single return value default keykey
      */
     String VALUE = "value";
     /**
-     * 集合返回值默认键key
+     * Set return value default keykey
      */
     String LIST = "list";
     /**
-     * 账户地址
+     * Account address
      */
     String ADDRESS = "address";
     /**
-     * 加密私钥
+     * Encrypt private key
      */
     String ENCRYPTED_PRIKEY = "encryptedPriKey";
     /**
-     * keystore备份地址
+     * keystoreBackup address
      */
     String PATH = "path";
     /**
-     * 签名数据
+     * Signature data
      */
     String SIGNATURE = "signature";
 

@@ -60,37 +60,37 @@ public class CalculatorProcessor implements Calculator {
     @Override
     public Double calcFinal(Chain chain, String token, String date) {
         try {
-            chain.getLogger().info("[CalculatorProcessor] 开始统计({})网络最终报价", token);
+            chain.getLogger().info("[CalculatorProcessor] Start statistics({})Final online quotation", token);
             NulsLogger log = chain.getLogger();
-            //获取各节点报价交易数据
+            //Obtain quotation transaction data for each node
             String dbKey = CommonUtil.assembleKey(date, token);
             NodeQuotationWrapperPO nodeQuotationWrapper = quotationStorageService.getNodeQuotationsBykey(chain, dbKey);
             if (null == nodeQuotationWrapper || null == nodeQuotationWrapper.getList() || nodeQuotationWrapper.getList().isEmpty()) {
-                log.warn("There is no node quote yet, key:{}, 无任何节点报价 ", dbKey);
+                log.warn("There is no node quote yet, key:{}, No node quotation ", dbKey);
                 return getLastFinalConfiremdPrice(chain, token);
             }
 
             List<NodeQuotationPO> list = nodeQuotationWrapper.getList();
-            log.info("{}当前报价数:{}", dbKey, list.size());
+            log.info("{}Current quotation quantity:{}", dbKey, list.size());
             distinctNodeTx(chain, list);
             list = removeMinMax(chain, list);
             if (list.size() < QuotationContext.effectiveQuotation) {
                 log.warn("The current quoted quantity is less than the minimum. current-effective:{}", list.size());
-                //获取前一次报价, 作为当天的最终报价
+                //Obtain the previous quotation, As the final quotation for the day
                 return getLastFinalConfiremdPrice(chain, token);
             }
             double finalPrice = avgCalc(list);
-            log.info("{}当前节基于{}个节点的报价，最终报价计算结果:{}", dbKey, list.size(), (new BigDecimal(Double.toString(finalPrice))).toPlainString());
+            log.info("{}The current section is based on{}Quotation for nodes, final quotation calculation result:{}", dbKey, list.size(), (new BigDecimal(Double.toString(finalPrice))).toPlainString());
             return finalPrice;
         } catch (Throwable e) {
-            chain.getLogger().error("统计最终报价异常.. {}, {}", token, date);
+            chain.getLogger().error("Abnormal final quotation statistics.. {}, {}", token, date);
             chain.getLogger().error(e);
             return null;
         }
     }
 
     /**
-     * 获取最近一次已确认报价
+     * Obtain the latest confirmed quotation
      * @param chain
      * @param token
      * @return
@@ -98,18 +98,18 @@ public class CalculatorProcessor implements Calculator {
     public Double getLastFinalConfiremdPrice(Chain chain, String token){
         ConfirmFinalQuotationPO cfrFinalQuotationPO = cfrFinalQuotationStorageService.getCfrFinalLastTimeQuotation(chain, token);
         if(null == cfrFinalQuotationPO){
-            //记录该token当天无需再次计算
+            //Record thistokenNo need to recalculate on the same day
             INTRADAY_NEED_NOT_QUOTE_TOKENS.add(token);
-            chain.getLogger().error("暂无该任何最终报价数据(包括历史报价), token:{}", token);
+            chain.getLogger().error("There is currently no final quotation data available(Including historical quotations), token:{}", token);
             return null;
         }
-        chain.getLogger().warn("存(使用前一天报价): {} - {}", token, cfrFinalQuotationPO.getPrice());
+        chain.getLogger().warn("Save(Use the previous day's quotation): {} - {}", token, cfrFinalQuotationPO.getPrice());
         return cfrFinalQuotationPO.getPrice();
     }
 
 
     /**
-     * 去除 有多笔报价交易的节点的所有报价数据
+     * Remove All quotation data for nodes with multiple quotation transactions
      *
      * @param list
      */
@@ -126,7 +126,7 @@ public class CalculatorProcessor implements Calculator {
             NodeQuotationPO nq = it.next();
             for (String address : distinctAddress) {
                 if (address.equals(nq.getAddress())) {
-                    chain.getLogger().debug("CalculatorProcessor, 节点重复报价 address:{}, key:{}", address, nq.getToken());
+                    chain.getLogger().debug("CalculatorProcessor, Node duplicate quotation address:{}, key:{}", address, nq.getToken());
                     it.remove();
                 }
             }
@@ -134,7 +134,7 @@ public class CalculatorProcessor implements Calculator {
     }
 
     /**
-     * 去掉[两个]最大值和两个最小值的数据
+     * Remove[Two]Data for maximum and two minimum values
      */
     private List<NodeQuotationPO> removeMinMax(Chain chain, List<NodeQuotationPO> list) {
         if (QuotationContext.removeMaxMinCount <= 0){
@@ -144,7 +144,7 @@ public class CalculatorProcessor implements Calculator {
             list.clear();
             return list;
         }
-        //排序
+        //sort
         list.sort(new Comparator<NodeQuotationPO>() {
             @Override
             public int compare(NodeQuotationPO o1, NodeQuotationPO o2) {
@@ -158,7 +158,7 @@ public class CalculatorProcessor implements Calculator {
             }
         });
         List<NodeQuotationPO> rsList = new ArrayList<>();
-        //去掉头尾各两个元素
+        //Remove two elements at the beginning and two at the end
         for (int i = QuotationContext.removeMaxMinCount; i < list.size() - QuotationContext.removeMaxMinCount; i++) {
             rsList.add(list.get(i));
         }
@@ -166,7 +166,7 @@ public class CalculatorProcessor implements Calculator {
     }
 
     /**
-     * 计算平均数
+     * Calculate the average
      *
      * @param list
      * @return

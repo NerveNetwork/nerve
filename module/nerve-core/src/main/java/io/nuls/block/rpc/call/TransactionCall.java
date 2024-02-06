@@ -38,19 +38,19 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 调用交易管理模块的工具类
+ * Tool class for calling transaction management module
  *
  * @author captain
  * @version 1.0
- * @date 18-11-9 上午10:44
+ * @date 18-11-9 morning10:44
  */
 public class TransactionCall {
 
     /**
-     * 通知共识模块进入工作状态或者进入等待状态
+     * Notify consensus module to enter working state or waiting state
      *
-     * @param chainId 链Id/chain id
-     * @param status  1-工作,0-等待
+     * @param chainId chainId/chain id
+     * @param status  1-work,0-wait for
      * @return
      */
     public static boolean notice(int chainId, int status) {
@@ -68,9 +68,9 @@ public class TransactionCall {
     }
 
     /**
-     * 获取系统交易类型
+     * Obtain system transaction type
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static List<Integer> getSystemTypes(int chainId) {
@@ -94,9 +94,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量保存交易
+     * Batch save transactions
      *
-     * @param chainId       链Id/chain id
+     * @param chainId       chainId/chain id
      * @param blockHeaderPo
      * @param txs
      * @param localInit
@@ -111,9 +111,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量保存交易
+     * Batch save transactions
      *
-     * @param chainId       链Id/chain id
+     * @param chainId       chainId/chain id
      * @param blockHeaderPo
      * @param contractList
      * @return
@@ -150,9 +150,9 @@ public class TransactionCall {
 
 
     /**
-     * 批量回滚交易
+     * Batch rollback transactions
      *
-     * @param chainId       链Id/chain id
+     * @param chainId       chainId/chain id
      * @param blockHeaderPo
      * @return
      */
@@ -181,9 +181,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量获取已确认交易
+     * Batch acquisition of confirmed transactions
      *
-     * @param chainId  链Id/chain id
+     * @param chainId  chainId/chain id
      * @param hashList
      * @return
      * @throws IOException
@@ -222,9 +222,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量获取交易
+     * Batch acquisition of transactions
      *
-     * @param chainId  链Id/chain id
+     * @param chainId  chainId/chain id
      * @param hashList
      * @return
      * @throws IOException
@@ -267,9 +267,9 @@ public class TransactionCall {
     }
 
     /**
-     * 获取单个交易
+     * Obtain a single transaction
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param hash
      * @return
      */
@@ -301,9 +301,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量保存交易
+     * Batch save transactions
      *
-     * @param chainId       链Id/chain id
+     * @param chainId       chainId/chain id
      * @param blockHeaderPo
      * @return
      */
@@ -339,9 +339,9 @@ public class TransactionCall {
     }
 
     /**
-     * 批量保存交易
+     * Batch save transactions
      *
-     * @param chainId       链Id/chain id
+     * @param chainId       chainId/chain id
      * @param height
      * @return
      */

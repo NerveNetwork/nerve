@@ -39,7 +39,6 @@ import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
 import network.nerve.converter.rpc.call.SwapCall;
-import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.tx.v1.proposal.interfaces.IConfirmProposal;
 import network.nerve.converter.utils.ConverterUtil;
@@ -71,7 +70,7 @@ public class ConfirmAddCoinProposal implements IConfirmProposal, InitializingBea
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if (null == proposalPO) {
-            chain.getLogger().error("[ConfirmAddCoinProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmAddCoinProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
 
@@ -100,13 +99,13 @@ public class ConfirmAddCoinProposal implements IConfirmProposal, InitializingBea
             success = true;
         } while (false);
         if (!success) {
-            chain.getLogger().error("[提案添加币种] 币种信息缺失. content:{}", content);
+            chain.getLogger().error("[Proposal to add currency] Currency information missing. content:{}", content);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
         String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         boolean legalCoin = SwapCall.isLegalCoinForAddStable(chain.getChainId(), stablePairAddress, assetChainId, assetId);
         if (!legalCoin) {
-            chain.getLogger().error("[提案添加币种] 币种不合法. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+            chain.getLogger().error("[Proposal to add currency] Currency is illegal. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

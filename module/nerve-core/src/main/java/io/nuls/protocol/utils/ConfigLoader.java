@@ -38,11 +38,11 @@ import java.util.List;
 import static io.nuls.protocol.constant.Constant.PROTOCOL_CONFIG_FILE;
 
 /**
- * 配置加载器
+ * Configure Loader
  *
  * @author captain
  * @version 1.0
- * @date 18-11-8 下午1:37
+ * @date 18-11-8 afternoon1:37
  */
 @Component
 public class ConfigLoader {
@@ -60,7 +60,7 @@ public class ConfigLoader {
 
 
     /**
-     * 加载配置文件
+     * Load configuration file
      *
      */
     public static void load() {

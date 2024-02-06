@@ -16,7 +16,7 @@ import java.math.BigInteger;
 public class FarmUpdateData extends BaseNulsData {
     private NulsHash farmHash;
     private BigInteger newSyrupPerBlock;
-    private short changeType;//0：增加，1：减少
+    private short changeType;//0：Increase,1：reduce
     private BigInteger changeTotalSyrupAmount;
     private long withdrawLockTime;
     private long stopHeight;

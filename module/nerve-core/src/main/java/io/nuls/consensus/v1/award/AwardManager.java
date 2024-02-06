@@ -6,18 +6,18 @@ package io.nuls.consensus.v1.award;
 public class AwardManager {
 
     /**
-     * 判断本区块是否需要发放共识奖励
+     * Determine whether consensus rewards need to be issued in this block
      */
 
     /**
-     * 验证区块共识奖励正确性
+     * Verify the correctness of block consensus rewards
      */
 
     /**
-     * 更新共识奖励发放进度
+     * Update the progress of consensus reward distribution
      */
 
     /**
-     * 查询当前共识奖励方法进度
+     * Query the progress of the current consensus reward method
      */
 }

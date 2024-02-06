@@ -4,23 +4,23 @@ language=en
 logPath=Logs
 logLevel=INFO
 dataPath=data
-#默认本链ID
+#Default This ChainID
 chainId=9
-#地址前缀
+#Address prefix
 addressPrefix=NERVE
-#默认本链主资产ID
+#Default main asset of this chainID
 assetId=1
-#默认资产小数位数
+#Default Decimal Places for Assets
 decimals=8
-#默认链名称
+#Default Chain Name
 chainName=nerve
-#本链默认资产符号
+#The default asset symbol for this chain
 symbol=NVT
-#主网链id
+#Main network chainid
 mainChainId=1
-#主网主资产id
+#Main network assetsid
 mainAssetId=1
-#主网主资产符号
+#Main network main asset symbol
 mainSymbol=NULS
 blackHolePublicKey=000000000000000000000000000000000000000000000000000000000000000000
 serviceManagerPort=8771
@@ -29,15 +29,15 @@ packageVersion=%PACKAGE_VERSION%
 [network]
 port=7001
 crossPort=7002
-#魔法参数
+#Magic parameters
 packetMagic=2020071001
-#种子节点
+#Seed node
 selfSeedIps=seeda.nerve.network:7001,seedb.nerve.network:7001,seedh.nerve.network:7001,seedg.nerve.network:7001,seedc.nerve.network:7001,seede.nerve.network:7001
-#主网的跨链种子连接节点
+#Cross chain seed connection nodes of the main network
 moonSeedIps=seeda.nuls.io:8002,seedb.nuls.io:8002,seedc.nuls.io:8002,seedd.nuls.io:8002,seede.nuls.io:8002,seedf.nuls.io:8002
-#最大入网连接数
+#Maximum number of network connections
 maxInCount=300
-#最大出网连接数
+#Maximum number of outbound connections
 maxOutCount=50
 
 [account]
@@ -50,73 +50,73 @@ sigMacUrl=http://127.0.0.1:8085/
 sigMacApiKey=25eb1cb9-d19c-43d4-8899-32bef8b9b006
 
 [block]
-#区块最大字节数
+#Maximum number of bytes in a block
 blockMaxSize=5242880
-#区块扩展字段最大字节数
+#Maximum number of bytes for block extension fields
 extendMaxSize=1024
-#引发分叉链切换的高度差阈值
+#Threshold of height difference that triggers fork chain switching
 chainSwtichThreshold=3
-#最小链接节点数,当链接到的网络节点低于此参数时,会持续等待
+#Minimum number of linked nodes,When the network node linked to is below this parameter,Will continue to wait
 minNodeAmount=2
-#区块同步过程中,每次从网络上节点下载的区块数量
+#During block synchronization process,The number of blocks downloaded from nodes on the network each time
 downloadNumber=10
-#从网络节点下载单个区块的超时时间
+#The timeout for downloading a single block from a network node
 singleDownloadTimeout=2000
-#区块同步过程中缓存的区块字节数上限(20M)
+#Maximum number of cached block bytes during block synchronization process(20M)
 cachedBlockSizeLimit=20971520
-#创世块文件路径(支持绝对路径与相对路径,相对路径相对于此配置文件的目录)
+#Genesis block file path(Supports absolute and relative paths,Relative path relative to the directory of this configuration file)
 genesisBlockPath=genesis-block.json
 
 [consensus]
 seedNodes=NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA,NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB,NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC,NERVEepb63mC8F4cwLRbkW3ATbZbtFChbRp2DD,NERVEepb6CY4q799Pqk3dKuxZgU68Hn8WpPdEE
-#种子节点对应的公钥列表
+#List of public keys corresponding to seed nodes
 pubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0,020c60dd7e0016e174f7ba4fc0333052bade8c890849409de7b6f3d26f0ec64528,0369865ab23a1e4f3434f85cc704723991dbec1cb9c33e93aa02ed75151dfe49c5
-#出块地址密码
+#Block address password
 password=nuls123456
-#出块间隔时间(单位：s)
+#Block output interval time(unit：s)
 packingInterval=2
-#共识委托抵押资产链ID
+#Consensus entrusted mortgage asset chainID
 agentChainId=9
-#共识委托抵押资产ID
+#Consensus entrusted mortgage assetsID
 agentAssetId=1
-#共识奖励资产ID(共识奖励必须为本链资产)
+#Consensus reward assetsID(Consensus rewards must be assets of the same chain)
 awardAssetId=1
-#共识交易手续费单价
+#Consensus transaction fee unit price
 feeUnit=100000
-#NULS权重基数
+#NULSWeight base
 mainAssertBase=2
-#NVT权重基数
+#NVTWeight base
 localAssertBase=2
-#节点保证金基数
+#Node margin base
 reservegentDepositBase=1.5
 agentDepositBase=3
-#虚拟银行保证金基数
+#Virtual Bank Margin Base
 superAgentDepositBase=4
-#总通胀量(10亿枚)
+#Total Inflation(10Billion pieces)
 totalInflationAmount=100000000000000000
-#初始通胀金额（每个抵减周期）
+#Initial inflation amount（Each deduction cycle）
 inflationAmount=864000000000000
-#通胀开始计算高度
+#Inflation begins to be calculated at a high level
 initHeight=1
-#通缩比例(如果没有通缩则设为0)
+#Deflationary ratio(If there is no deflation, set to0)
 deflationRatio=0.0082
-#通缩间隔高度,100天
+#Deflation interval height,100day
 deflationHeightInterval=4320000
 
 [public-service]
-#public-service模块对外的rpc端口号
+#public-serviceModule ExternalrpcPort number
 rpcPort=7003
-#数据库url地址
+#databaseurladdress
 databaseUrl=127.0.0.1
-#数据库端口号
+#Database port number
 databasePort=27017
-#连接池最大数
+#Maximum number of connection pools
 maxAliveConnect=20
-#连接最大等待时间
+#Maximum waiting time for connection
 maxWaitTime=120000
-#连接最大持续时间
+#Maximum duration of connection
 socketTimeout=300000
-#连接超时时间
+#Connection timeout
 connectTimeOut=30000
 mongoUser=nuls
 mongoPwd=nuls123456
@@ -124,23 +124,23 @@ nulsApiUrl=https://api.nuls.io/jsonrpc
 lockedAddress=NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6YQa1CZMLGazw3UWhBNwdJzziw6oh4,NERVEepb6drT18ZJbNbF7qqJCAWN2GomMD4b3m,NERVEepb6fMaDTWxHBhCE4cE9WqVS6XA5WdX92,NERVEepb6CQYM6di889LaHqvQMEZUEveUtv6do
 
 [cross-chain]
-#跨链节点链接的最小值
+#The minimum value of cross chain node links
 minNodes=3
-#跨链节点链接的最大值 注：此配置已过时
+#Maximum value of cross chain node links notes：This configuration is outdated
 sendHeight=6
-#跨链交易拜占庭比例
+#Byzantine proportion of cross chain transactions
 byzantineRatio=66
-#主网跨链种子节点列表
+#Main network cross chain seed node list
 crossSeedIps=seeda.nuls.io:8002,seedb.nuls.io:8002,seedc.nuls.io:8002,seedd.nuls.io:8002,seede.nuls.io:8002,seedf.nuls.io:8002
-#主网验证人列表
+#List of main network validators
 verifiers=NULSd6Hge7xHDnvsSpnzbR2gWHd31zJ1How11,NULSd6Hgc5VNP4rF4wxdiXEQKpBKUE4w5RS22,NULSd6HgeQwXLdre69ArkqVZNDqMLU4CaAz33,NULSd6HgcjAKAgq8jjXgBCcNLEJUvJEYcoj44,NULSd6HgiDdTjcuvhqzm3bomyBFZmosV3ei55
-#主网签名拜占庭比列
+#Main network signature Byzantine comparison
 mainByzantineRatio=66
-#主网最大签名数
+#Maximum number of signatures on the main network
 maxSignatureCount=100
 
 [protocol-update]
-#每隔多少个区块统计一次协议占比
+#How many blocks do we count the proportion of protocols per second
 interval=1000
 height_1_6_0=5600000
 height_1_8_0=7385000
@@ -164,11 +164,12 @@ height_1_27_0=48320000
 height_1_28_0=48830000
 height_1_29_0=51500000
 height_1_30_0=52350000
+height_1_31_0=55220000
 
 [nuls-api]
-#httpServer的启动ip
+#httpServerStart ofip
 serverIp=0.0.0.0
-#httpServer的启动port
+#httpServerStart ofport
 serverPort=7004
 
 [nerve-network-wallet]
@@ -182,21 +183,21 @@ explorerPort=7005
 explorerHost=0.0.0.0
 
 [dex]
-#系统收取手续费地址
+#Address for system fee collection
 sysFeeAddress=NERVEepb6Em8hfKMNNnk3Xag8kN3Sf2tya5UDj
-#系统收取手续费比例（2，表示2/10000）
+#System fee collection ratio（2, represents2/10000）
 sysFeeScale=2
-#创建交易对费用
+#Create transaction pair fees
 createTradingAmount=20000000000
 
 [dex-api]
 walletPSUrl=https://public.nerve.network/
 walletApiUrl=https://api.nerve.network/
-#运行节点设置手续费收取地址
+#Set the service fee collection address for operating nodes
 feeAddress=NERVEepb6BiuhyRh4Q9mcwyQd44pfz4AofM2h5
-#运行节点设置手续费收取比例，6
+#Set the fee collection ratio for operating nodes,6
 feeScale=6
-#同步区块的起始高度
+#Starting height of synchronized blocks
 startSyncHeight=1450000
 priceUrl=https://api.binance.com/api/v3/ticker/price?symbol=
 dexPassword=dex123456
@@ -224,7 +225,7 @@ proposalPrice=1000000000
 proposalVotingDays=10
 distributionFee=1000000000
 byzantineRatio=66
-multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,102:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,103:0x23023c99dcede393d6d18ca7fb08541b3364fa90,104:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,105:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,106:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,107:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,108:TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm,109:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,110:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,111:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,112:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,113:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,114:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,115:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,116:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,117:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,119:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,120:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,121:0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E,122:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,123:0x54C4A99Ee277eFF14b378405b6600405790d5045,124:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,125:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,126:0x8CD6e29d3686d24d3C2018CEe54621eA0f89313B,127:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,128:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,129:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,130:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,131:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,133:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5
+multySignAddressSet=101:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,102:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,103:0x23023c99dcede393d6d18ca7fb08541b3364fa90,104:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,105:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,106:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,107:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,108:TYmgxoiPetfE2pVWur9xp7evW4AuZCzfBm,109:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,110:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,111:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,112:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,113:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,114:0xf0e406c49c63abf358030a299c0e00118c4c6ba5,115:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,116:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,117:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,119:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,120:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,121:0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E,122:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,123:0x54C4A99Ee277eFF14b378405b6600405790d5045,124:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,125:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,126:0x8CD6e29d3686d24d3C2018CEe54621eA0f89313B,127:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,128:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,129:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,130:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,131:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,133:0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5,135:0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5,201:39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV,202:39xsUsh4h1FBPiUTYqaGBi9nJKP4PgFrjV
 multySignAddressUpgradeSet=101:0x6758d4c4734ac7811358395a8e0c3832ba6ac624
 heterogeneousMainNet=true
 initVirtualBankPubKeyList=0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b,02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d,02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0
@@ -233,14 +234,14 @@ feeEffectiveHeightFirst=1700000
 feeEffectiveHeightSecond=2260000
 
 [swap]
-#手续费开发团队接收地址
+#Handling fee development team receiving address
 awardFeeSystemAddressPublicKey=03be1113ebf617fe8f6e482c507cf82276f753795eabe48d9b284173edb3c03dfd
-#手续费开发团队接收地址(协议17生效)-NERVEepb6BRQcoN7sshV9tkNsGAFbxNYV15Wj3
+#Handling fee development team receiving address(protocol17take effect)-NERVEepb6BRQcoN7sshV9tkNsGAFbxNYV15Wj3
 awardFeeSystemAddressPublicKeyProtocol17=02c3e88e1c593ed354f0cbff6814a825df9d53436dedfa98e1476f7ab200f7d08e
-#手续费销毁地址
+#Handling fee destruction address
 awardFeeDestructionAddressPublicKey=02f8146b1090e7111edb34d5ac7f01bb6f1d3eb8ad15faccc532e276262eda5615
-#初始交易对地址[聚合stableCombining]
+#Initial transaction to address[polymerizationstableCombining]
 stablePairAddressInitialSet=NERVEepb7WDfEU4ZKsEFmwCfGwCaYWgdHgk5tW,NERVEepb7XXViheVZG7tgAxhjr47KpSGi9cNbY
-#读取文件的网络[重新保存所有交易对地址的关系]
+#Network for reading files[Resave all transaction to address relationships]
 allPairRelationMainNet=true
 

@@ -27,14 +27,14 @@ package network.nerve.converter.storage;
 import network.nerve.converter.model.bo.Chain;
 
 /**
- * 提案交易与确认提案交易业务关系
+ * Proposal Trading and Confirmation Proposal Trading Business Relationship
  * @author: Loki
  * @date: 2020/5/25
  */
 public interface ProposalExeStorageService {
 
     /**
-     * 确认提案交易commit时存储
+     * Confirm proposal transactioncommitTime storage
      * @param chain
      * @param proposalHash
      * @param confirmProposalHash
@@ -43,7 +43,7 @@ public interface ProposalExeStorageService {
     boolean save(Chain chain, String proposalHash, String confirmProposalHash);
 
     /**
-     * 根据提案交易获取确认提案交易hash
+     * Obtain confirmation of proposal transactions based on proposal transactionshash
      * @param chain
      * @param proposalHash
      * @return

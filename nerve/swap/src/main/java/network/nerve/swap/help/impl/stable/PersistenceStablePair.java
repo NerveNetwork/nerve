@@ -63,7 +63,7 @@ public class PersistenceStablePair extends AbstractStablePair {
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, newBalances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
-        // 更新缓存
+        // Update cache
         stableSwapPairCache.reload(pairAddress);
     }
 
@@ -74,7 +74,7 @@ public class PersistenceStablePair extends AbstractStablePair {
 
         String pairAddress = AddressTool.getStringAddressByBytes(getPair().getAddress());
         this.savePairBalances(pairAddress, balances, stableSwapPairDTO.getTotalLP(), blockTime, blockHeight);
-        // 更新缓存
+        // Update cache
         stableSwapPairCache.reload(pairAddress);
     }
 
@@ -86,7 +86,7 @@ public class PersistenceStablePair extends AbstractStablePair {
         }
         BigInteger[] balancesFromDB = pairBalancesPo.getBalances();
         int lengthFromDB = balancesFromDB.length;
-        // 若当前的长度小于DB中的长度，说明交易对中添加了币种，则不能覆盖更新PO
+        // If the current length is less thanDBThe length in indicates that if a currency has been added to the transaction pair, it cannot overwrite the updatePO
         if (lengthCurrent < lengthFromDB) {
             for (int i = 0; i < lengthCurrent; i++) {
                 balancesFromDB[i] = balancesCurrent[i];
@@ -95,7 +95,7 @@ public class PersistenceStablePair extends AbstractStablePair {
         } else if (lengthCurrent == lengthFromDB) {
             pairBalancesPo.setBalances(balancesCurrent);
         } else {
-            // 未提供移除币种的功能，这种场景出现即异常
+            // The function of removing currency is not provided, and this scenario is abnormal when it occurs
             throw new NulsException(SwapErrorCode.COIN_LENGTH_ERROR);
         }
         pairBalancesPo.setTotalLP(totalLP);

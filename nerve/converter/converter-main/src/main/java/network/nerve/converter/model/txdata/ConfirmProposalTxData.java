@@ -34,17 +34,17 @@ import network.nerve.converter.enums.ProposalTypeEnum;
 import java.io.IOException;
 
 /**
- * 确认提案交易txdata
+ * Confirm proposal transactiontxdata
  */
 public class ConfirmProposalTxData extends BaseNulsData {
 
     /**
-     * 提案类型（比如充值的异构链交易hash）
+     * Proposal type（For example, heterogeneous chain transactions for recharginghash）
      */
     private byte type;
 
     /**
-     * 相应提案类型下的数据结构
+     * Data structure under corresponding proposal types
      */
     private byte[] businessData;
 

@@ -33,14 +33,14 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 追加提现手续费TxData
+ * Additional withdrawal handling feeTxData
  * @author: Loki
  * @date: 2020/9/25
  */
 public class WithdrawalAdditionalFeeTxData extends BaseNulsData {
     /**
-     * 要追加手续费的nerve提现交易hash
-     * 或者原路退回的提案交易hash
+     * Additional handling fees are requirednerveWithdrawal transactionshash
+     * Or the proposed transaction of returning the original routehash
      */
     private String txHash;
 

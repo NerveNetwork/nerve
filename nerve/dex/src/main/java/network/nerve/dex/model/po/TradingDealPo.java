@@ -14,21 +14,21 @@ import java.math.BigInteger;
 public class TradingDealPo extends BaseNulsData {
 
     private transient NulsHash dealHash;
-    //交易对hash
+    //Transaction pairshash
     private NulsHash tradingHash;
-    //买单交易hash
+    //Buy order transactionhash
     private NulsHash buyHash;
 
     private byte[] buyNonce;
-    //卖单交易hash
+    //Sell order transactionhash
     private NulsHash sellHash;
 
     private byte[] sellNonce;
-    //计价币种成交量
+    //Pricing currency transaction volume
     private BigInteger quoteAmount;
-    //交易币种成交量
+    //Trading Currency Trading Volume
     private BigInteger baseAmount;
-    //成交价
+    //Transaction price
     private BigInteger price;
 
     private byte type;

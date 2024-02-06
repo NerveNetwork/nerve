@@ -7,7 +7,7 @@ import io.nuls.core.exception.NulsException;
 import java.util.List;
 
 /**
- * 追加保证金数据库管理类
+ * Additional margin database management
  * Additional margin database management
  *
  * @author  tag
@@ -15,43 +15,43 @@ import java.util.List;
  * */
 public interface AppendDepositStorageService {
     /**
-     * 保存追加保证金数据
+     * Save additional margin data
      * Save additional margin data
      *
-     * @param  po        追加保证金数据
-     * @param chainID    链ID/chain id
+     * @param  po        Additional margin data
+     * @param chainID    chainID/chain id
      * @return boolean
      * */
     boolean save(ChangeAgentDepositPo po, int chainID);
 
     /**
-     * 根据交易Hash查询追加保证金交易详细数据
+     * According to the transactionHashQuery detailed data on margin trading
      * Query the detailed data of margin call transaction according to the transaction hash
      *
-     * @param  txHash    交易Hash
-     * @param chainID    链ID/chain id
+     * @param  txHash    transactionHash
+     * @param chainID    chainID/chain id
      * */
     ChangeAgentDepositPo get(NulsHash txHash, int chainID);
 
     /**
-     * 删除指定追加保证金交易详细信息
+     * Delete specified margin trading details
      * Delete specified margin call transaction details
      *
-     * @param txHash     交易Hash
-     * @param chainID    链ID/chain id
+     * @param txHash     transactionHash
+     * @param chainID    chainID/chain id
      * @return boolean
      * */
     boolean delete(NulsHash txHash,int chainID);
 
 
     /**
-     * 获取所有追加保证金信息
+     * Obtain all additional margin information
      * Get all margin call information
      *
-     * @param  chainID    链ID/chain id
-     * @return 追加保证金列表
+     * @param  chainID    chainID/chain id
+     * @return Additional margin list
      * @exception Exception
-     * @return    所有追加记录
+     * @return    All additional records
      * */
     List<ChangeAgentDepositPo> getList(int chainID) throws NulsException;
 }

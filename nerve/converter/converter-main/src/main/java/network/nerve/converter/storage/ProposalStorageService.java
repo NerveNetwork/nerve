@@ -39,7 +39,7 @@ public interface ProposalStorageService {
     boolean save(Chain chain, ProposalPO po);
 
     /**
-     * 根据交易hash获取
+     * According to the transactionhashobtain
      * @param chain
      * @param hash
      * @return
@@ -47,7 +47,7 @@ public interface ProposalStorageService {
     ProposalPO find(Chain chain, NulsHash hash);
 
     /**
-     * 根据交易hash删除
+     * According to the transactionhashdelete
      * @param chain
      * @param hash
      * @return
@@ -55,8 +55,8 @@ public interface ProposalStorageService {
     boolean delete(Chain chain, NulsHash hash);
 
     /**
-     * 提案执行业务hash 与提案交易hash的关系
-     * 用来发起确认交易时 异构链组件能够识别对应的执行提案
+     * Proposal execution businesshash Trading with proposalshashThe relationship between
+     * Used to initiate confirmation transactions Heterogeneous chain components can identify corresponding execution proposals
      * @param chain
      * @param exeHash
      * @param proposalHash

@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 
 
 /**
- * ARBITRUM组件向Nerve核心注册
+ * ARBITRUMComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

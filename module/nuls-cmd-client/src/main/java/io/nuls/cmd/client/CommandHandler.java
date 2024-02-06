@@ -90,7 +90,7 @@ public class CommandHandler implements InitializingBean {
     }
 
     /**
-     * 初始化加载所有命令行实现
+     * Initialize loading all command-line implementations
      */
     @Override
     public void afterPropertiesSet() throws NulsException {
@@ -120,7 +120,7 @@ public class CommandHandler implements InitializingBean {
         //transfer
         register(getBean(TransferProcessor.class));
 //        register(getBean(BatchTransferProcessor.class));
-//        //批量交易测试命令
+//        //Batch transaction test command
 //        register(getBean(TransferTestProcessor.class));
         //transfer by alias
 //        register(getBean(TransferByAliasProcessor.class));
@@ -161,6 +161,8 @@ public class CommandHandler implements InitializingBean {
         register(getBean(ResumeInProcess.class));
         register(getBean(PauseOutProcess.class));
         register(getBean(ResumeOutProcess.class));
+        register(getBean(PauseStableProcess.class));
+        register(getBean(ResumeStableProcess.class));
         /**
          * consensus
          */
@@ -267,9 +269,9 @@ public class CommandHandler implements InitializingBean {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-//       System.out.println("服务器启动1111!");
+//       System.out.println("Server startup1111!");
         /**
-         * 如果操作系统是windows, 可能会使控制台读取部分处于死循环，可以设置为false，绕过本地Windows API，直接使用Java IO流输出
+         * If the operating system iswindows, It may cause the console reading section to be in a loop, which can be set tofalse, bypass localWindows API, use directlyJava IOStream output
          * If the operating system is windows, it may cause the console to read part of the loop, can be set to false,
          * bypass the native Windows API, use the Java IO stream output directly
          */

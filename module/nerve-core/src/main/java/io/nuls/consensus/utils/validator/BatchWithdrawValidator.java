@@ -21,7 +21,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 批量退出staking验证器
+ * Batch exitstakingValidator
  */
 @Component
 public class BatchWithdrawValidator extends BaseValidator {
@@ -118,12 +118,12 @@ public class BatchWithdrawValidator extends BaseValidator {
             chain.getLogger().error("Withdraw -- Deposit transaction does not exist");
             throw new NulsException(ConsensusErrorCode.DATA_NOT_EXIST);
         }
-        //交易发起者是否为委托者
+        //Is the initiator of the transaction the principal
         if (!Arrays.equals(depositPo.getAddress(), address)) {
             chain.getLogger().error("Withdraw -- Account is not the agent Creator");
             throw new NulsException(ConsensusErrorCode.ACCOUNT_IS_NOT_CREATOR);
         }
-        //如果为定期委托则验证委托是否到期
+        //If it is a regular commission, verify whether the commission has expired
         if (depositPo.getDepositType() == DepositType.REGULAR.getCode()) {
             DepositTimeType depositTimeType = DepositTimeType.getValue(depositPo.getTimeType());
             if (depositTimeType == null) {

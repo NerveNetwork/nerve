@@ -16,7 +16,7 @@ public class CreatePairTxValidater {
     private SwapPairCache cacher;
 
     /**
-     * 判断交易对是否存在
+     * Determine whether a transaction pair exists
      *
      * @param pairAddress
      * @return

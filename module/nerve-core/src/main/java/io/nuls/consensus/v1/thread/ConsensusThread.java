@@ -23,11 +23,11 @@ import io.nuls.consensus.v1.entity.LocalBlockListener;
 public class ConsensusThread extends BasicObject implements Runnable {
 
     /**
-     * 共识轮次初始化标识，每次状态变更为可参与共识时需要运行nodeStart方法
+     * Consensus round initialization identifier, which needs to be run every time the state changes to be able to participate in consensusnodeStartmethod
      */
     private boolean inited;
     /**
-     * 用于查询节点列表
+     * Used to query node list
      */
     private AgentManager agentManager;
     private ThreadController threadController;
@@ -42,49 +42,49 @@ public class ConsensusThread extends BasicObject implements Runnable {
         roundController = new RoundController(chain);
         voteController = new VoteController(chain, roundController);
         csController = new CsController(chain, roundController, voteController);
-        //验证通过第一个区块时的监听，应该进行投票
+        //Verify listening when passing the first block, and vote should be taken
         LocalBlockListener listener = new LocalBlockListener(chain, voteController);
         chain.getConsensusCache().getBestBlocksVotingContainer().setListener(listener);
 
-        //未来兼容之前的多链、依赖注入方式，增加下面两行
+        //Future compatibility with previous multi chains、Dependency injection method, add the following two lines
         SpringLiteContext.putBean("roundController", this.roundController);
         SpringLiteContext.putBean("voteController", this.voteController);
     }
 
 
     @Override
-    public void run() { //共识模块是否已完成启动操作
+    public void run() { //Has the consensus module completed the startup operation
         while (true) {
             try {
                 if (chain.getConsensusStatus() != ConsensusStatus.RUNNING) {
-                    sleep("模块启动中");
+                    sleep("Module startup in progress");
                     continue;
                 }
-                //是否同步了最高高度：区块模块调用接口控制
+                //Has the highest altitude been synchronized：Block module call interface control
                 if (!chain.isSynchronizedHeight()) {
-                    sleep("等待区块模块高度同步");
+                    sleep("Waiting for highly synchronized block modules");
                     continue;
                 }
-                //本地是否是共识节点
+                //Is the local consensus node
                 if (!chain.isConsonsusNode()) {
                     checkNode();
                     if (inited) {
-                        chain.getLogger().warn("不再是共识节点");
-//                        从参与中，变为不能参与，清理所有数据
+                        chain.getLogger().warn("No longer a consensus node");
+//                        From participating to not participating, clean up all data
                         this.clearCache();
                     }
-                    sleep("不是共识节点");
+                    sleep("Not a consensus node");
                     continue;
                 }
                 if (!inited) {
-                    //第一次变为可参与共识，初始化
+                    //The first time it becomes a consensus that can be participated in, initialization
                     nodeStart();
                 }
                 if (!chain.isNetworkStateOk()) {
-                    sleep("等待共识组网");
+                    sleep("Waiting for consensus networking");
                     continue;
                 }
-                //真正的业务逻辑
+                //True business logic
                 runConsenrunsus();
 
             } catch (Throwable e) {
@@ -98,14 +98,14 @@ public class ConsensusThread extends BasicObject implements Runnable {
         }
     }
 
-    //执行共识功能：投票、出块、验证
+    //Execute consensus function：vote、Chunking、validate
     private void runConsenrunsus() {
-        //这里有几种情况：1启动网络从0开始，2重启网络从某个高度，3启动本节点
-        //目标是不管哪种情况，都能尽快达成共识（轮次一致）
+        //There are several situations here：1Start network from0Start,2Restart the network from a certain height,3Start this node
+        //The goal is to reach consensus as soon as possible in any situation（Consistent rounds）
         this.csController.consensus();
     }
 
-    //睡眠1秒钟
+    //sleep1Seconds
     private void sleep(String reason) throws InterruptedException {
         if (null != reason) {
             log.info(reason + ",sleep~~~");
@@ -113,18 +113,18 @@ public class ConsensusThread extends BasicObject implements Runnable {
         Thread.sleep(1000);
     }
 
-    //临时轮次，用于判断是否是共识节点
+    //Temporary round, used to determine whether it is a consensus node
     private MeetingRound tempRound;
 
     private boolean checkNode() {
-        //检查是否是共识节点
+        //Check if it is a consensus node
         boolean needInit = null == tempRound;
         boolean timeout = false;
         if (tempRound != null) {
-            //结束时间晚于当前时间
+            //End time is later than the current time
             timeout = tempRound.getStartTime() + tempRound.getDelayedSeconds() + tempRound.getMemberCount() * chain.getConfig().getPackingInterval() < NulsDateUtils.getCurrentTimeSeconds();
         }
-        //在轮次为空，或者：临时轮次超时时，进行轮次计算
+        //When the round is empty, or：When the temporary round exceeds the time limit, perform round calculation
         needInit = needInit || timeout;
         if (needInit) {
             tempRound = roundController.tempRound();
@@ -139,14 +139,14 @@ public class ConsensusThread extends BasicObject implements Runnable {
     }
 
     /**
-     * 启动系统时执行，
+     * Execute when starting the system,
      */
     private void nodeStart() {
 
         if (!chain.isConsonsusNode()) {
             return;
         }
-        //如果还没有轮次，就初始化一个
+        //If there are no rounds yet, initialize one
         MeetingRound round = roundController.getCurrentRound();
         if (null == round) {
             round = roundController.initRound();
@@ -155,26 +155,26 @@ public class ConsensusThread extends BasicObject implements Runnable {
             return;
         }
         chain.getConsensusCache().clear();
-        //消息处理线程：基本的消息验证、过滤、转发功能
+        //Message processing thread：Basic message verification、filter、Forwarding function
         this.threadController.execute(new VoteMsgProcessor(chain, voteController));
-        //打包处理器
+        //Packaging processor
         this.threadController.execute(new PackingProcessor(chain, roundController));
-        //第一阶段投票处理器，单独线程处理
+        //The first stage voting processor, processed by a separate thread
         this.threadController.execute(new StageOneProcessor(chain, this.roundController, this.voteController));
-        //是共识节点，连接其他共识节点，组核心网络
+        //It is a consensus node that connects other consensus nodes and forms the core network
         ConsensusNetUtil.initConsensusNet(chain, AddressTool.getStringAddressByBytes(round.getLocalMember().getAgent().getPackingAddress()),
                 round.getMemberAddressSet());
         ConsensusAwardUtil.onStartConsensusAward(chain);
         inited = true;
-        Log.warn("变为共识中状态");
+        Log.warn("Change to consensus state");
     }
 
 
     /**
-     * 清理所有共识缓存，变成一个普通节点
+     * Clean up all consensus caches and become a regular node
      */
     private void clearCache() {
-        Log.warn("变为非共识状态");
+        Log.warn("Change to a non consensus state");
         chain.getConsensusCache().clear();
         chain.setConsonsusNode(false);
         ConsensusNetUtil.disConnectConsensusNet(chain);

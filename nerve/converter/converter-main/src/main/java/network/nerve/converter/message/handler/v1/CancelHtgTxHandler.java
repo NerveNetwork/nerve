@@ -34,7 +34,6 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.MessageService;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.message.CancelHtgTxMessage;
-import network.nerve.converter.message.CheckRetryParseMessage;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
@@ -43,7 +42,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static network.nerve.converter.constant.ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE;
-import static network.nerve.converter.constant.ConverterCmdConstant.CHECK_RETRY_PARSE_MESSAGE;
 import static network.nerve.converter.constant.ConverterConstant.MINUTES_5;
 
 /**
@@ -73,7 +71,7 @@ public class CancelHtgTxHandler implements MessageProcessor {
             return;
         }
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            LoggerUtil.LOG.debug("当前非虚拟银行成员节点, 不处理消息:{}", ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
+            LoggerUtil.LOG.debug("Current non virtual bank member nodes, Do not process messages:{}", ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
             return;
         }
         CancelHtgTxMessage cancelHtgTxMessage = RPCUtil.getInstanceRpcStr(message, CancelHtgTxMessage.class);
@@ -81,7 +79,7 @@ public class CancelHtgTxHandler implements MessageProcessor {
             chain.getLogger().error("msg is null, msg:{}", ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
             return;
         }
-        // 增加一个接收消息次数限制，限制时长5分钟
+        // Add a limit on the number of messages received and limit the duration5minute
         if (hadReceived(cancelHtgTxMessage)) {
             chain.getLogger().info("msg had received, msg symbol:{}, msg:{}", ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE, cancelHtgTxMessage.toKey());
             return;

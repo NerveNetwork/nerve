@@ -39,15 +39,15 @@ import java.util.Map;
 /**
  * @author lanjinsheng
  * @date 2019/10/17
- * @description 用于广播身份消息
+ * @description Used for broadcasting identity messages
  */
 public class ConsensusShareMsg extends BaseBusinessMessage {
     /**
-     * 密文 包含 nodeId,pubKey信息的List
+     * ciphertext contain nodeId,pubKeyInformationList
      */
     private byte[] identityList;
     private long messageTime;
-    //对identityList的签名
+    //rightidentityListSignature of
     private P2PHKSignature sign = null;
     private transient ConsensusShare consensusShare;
     private String nodeId;

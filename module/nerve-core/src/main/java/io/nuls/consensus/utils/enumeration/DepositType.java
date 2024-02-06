@@ -2,12 +2,12 @@ package io.nuls.consensus.utils.enumeration;
 
 public enum DepositType {
     /**
-     * 定期
+     * regular
      * */
     REGULAR((byte)1),
 
     /**
-     * 活期
+     * current
      * */
     CURRENT((byte)0);
 

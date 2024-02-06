@@ -21,9 +21,9 @@ public class SendHeightServiceTest {
     public static void beforeTest() {
         //CrossChainBootStrap.main();
         //CrossChainBootStrap accountBootstrap = SpringLiteContext.getBean(CrossChainBootStrap.class);
-        ////初始化配置
+        ////Initialize configuration
         //accountBootstrap.init();
-        ////启动时间同步线程
+        ////Start time synchronization thread
         //sendHeightService = SpringLiteContext.getBean(SendHeightService.class);
     }
 

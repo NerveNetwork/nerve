@@ -34,7 +34,7 @@ import org.web3j.protocol.core.methods.response.EthBlock;
 import java.util.List;
 
 /**
- * 解析以太坊区块，监听指定地址和指定交易并回调Nerve核心
+ * Analyze Ethereum blocks, listen to specified addresses and transactions, and call backNervecore
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -46,7 +46,7 @@ public class EthBlockAnalysisHelper {
     private EthLocalBlockHelper ethLocalBlockHelper;
 
     /**
-     * 解析以太坊区块
+     * Analyzing Ethereum Blocks
      */
     public void analysisEthBlock(EthBlock.Block block, IEthAnalysisTx ethAnalysisTx) throws Exception {
         List<EthBlock.TransactionResult> ethTransactionResults = block.getTransactions();
@@ -59,19 +59,19 @@ public class EthBlockAnalysisHelper {
                 ethAnalysisTx.analysisTx(tx, txTime, blockHeight);
             }
         }
-        // 保存本地区块
+        // Save local blocks
         EthSimpleBlockHeader simpleBlockHeader = new EthSimpleBlockHeader();
         simpleBlockHeader.setHash(block.getHash());
         simpleBlockHeader.setPreHash(block.getParentHash());
         simpleBlockHeader.setHeight(blockHeight);
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         ethLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三十个区块
+        // Keep only the last thirty blocks
         ethLocalBlockHelper.deleteByHeight(blockHeight - 30);
         if (blockHeight % 20 == 0) {
-            EthContext.logger().info("同步ETH高度[{}]完成", blockHeight);
+            EthContext.logger().info("synchronizationETHheight[{}]complete", blockHeight);
         } else {
-            EthContext.logger().debug("同步ETH高度[{}]完成", blockHeight);
+            EthContext.logger().debug("synchronizationETHheight[{}]complete", blockHeight);
         }
     }
 

@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 
 public class Protocol22Test {
 
-    // 设置环境
+    // Set up environment
     static boolean MAIN = true;
 
     @BeforeClass
@@ -91,7 +91,7 @@ public class Protocol22Test {
                 htgWalletApi.setWeb3j(web3j);
                 htgWalletApi.setEthRpcAddress(cfg.getMainRpcAddress());
                 HtgContext htgContext = contextMap.get(htgChainId);
-                // 设置新的签名版本号
+                // Set a new signature version number
                 byte newVersion = 3;
                 htgContext.SET_VERSION(newVersion);
                 htgContext.setLogger(Log.BASIC_LOGGER);
@@ -108,7 +108,7 @@ public class Protocol22Test {
     }
 
     /**
-     * 读取每个链的新旧多签合约
+     * Read the new and old multi signed contracts for each chain
      */
     private Map<Integer, String[]> multyMap() {
         if (MAIN) {
@@ -119,7 +119,7 @@ public class Protocol22Test {
     }
 
     /**
-     * 测试网: 配置每个链的新旧多签合约
+     * Test Network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyMapTestnet() {
         /*
@@ -128,7 +128,7 @@ public class Protocol22Test {
             118 GoerliETH, 119 ENULS, 120 KAVA, 122 LGCY?
          */
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(118, new String[]{"0x898d47a9C97B6b17409FaFC982514A8e89251fED", "0x898d47a9C97B6b17409FaFC982514A8e89251fED"});
         map.put(119, new String[]{"0x56F175D48211e7D018ddA7f0A0B51bcfB405AE69", "0x56F175D48211e7D018ddA7f0A0B51bcfB405AE69"});
         map.put(120, new String[]{"0x8999d8738CC9B2E1fb1D01E1af732421D53Cb2A9", "0x8999d8738CC9B2E1fb1D01E1af732421D53Cb2A9"});
@@ -136,7 +136,7 @@ public class Protocol22Test {
     }
 
     /**
-     * 主网: 配置每个链的新旧多签合约
+     * Main network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyMapMainnet() {
         /*
@@ -144,9 +144,9 @@ public class Protocol22Test {
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM, 113 METIS, 114 IOTX, 115 OETH, 116 KLAY, 117 BCH,
             119 ENULS, 120 KAVA, 121 ETHW, 122 LGCY?
          */
-        // 配置每个链的新旧多签合约
+        // Configure new and old multiple contracts for each chain
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(119, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"});
         map.put(120, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5"});
         map.put(121, new String[]{"0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E", "0x67b3757f20DBFa114b593dfdAc2b3097Aa42133E"});
@@ -154,7 +154,7 @@ public class Protocol22Test {
     }
 
     /**
-     * 读取异构链基本信息
+     * Read basic information of heterogeneous chains
      */
     private Map<Integer, HeterogeneousCfg> cfgMap() {
         try {
@@ -173,13 +173,13 @@ public class Protocol22Test {
     }
 
     /**
-     注册跨链网络
-     测试网:
+     Register for Cross Chain Network
+     Test Network:
      bindheterogeneousmainasset TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK 119 2 1
      registerheterogeneousmainasset TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK 120
 
 
-     主网:
+     Main network:
      bindheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 119 1 1
      registerheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 120
      registerheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 121
@@ -187,7 +187,7 @@ public class Protocol22Test {
 
 
     /**
-     * 补齐管理员
+     * Complete administrator
      */
     @Test
     public void managerChangeSignData() throws Exception {
@@ -218,15 +218,15 @@ public class Protocol22Test {
             String multySignContractAddress = newMulty;
 
             String hash = this.sendChange(htgWalletApi, htgContext, seedList, multySignContractAddress, txKey, adds, txCount, removes, signCount);
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，hash: %s", htgChainId, adds.length, removes.length, hash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,hash: %s", htgChainId, adds.length, removes.length, hash));
         }
     }
 
     @Test
     public void setupMinterOnCreateERC20MinterTest() {
-        // 更新工具合约中的minter地址为新多签地址
+        // Update the tool contractminterThe address is a newly signed address
         String prikey = "???";
-        // 遍历所有异构链
+        // Traverse all heterogeneous chains
         for (int i = 118; i <= 121; i++) {
             Integer htgChainId = i;
             if (htgChainId == 118 && MAIN) {
@@ -249,7 +249,7 @@ public class Protocol22Test {
                 String from = credentials.getAddress();
                 EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, _contractForCreateERC20Minter, setupMinter);
                 if (ethEstimateGas.getError() != null) {
-                    System.err.println(String.format("验证失败[setupMinter] - HtgChainId: %s, newMultyContract: %s, Failed to setupMinter, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
+                    System.err.println(String.format("Verification failed[setupMinter] - HtgChainId: %s, newMultyContract: %s, Failed to setupMinter, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
                     continue;
                 }
                 BigInteger nonce = htgWalletApi.getNonce(from);
@@ -259,20 +259,20 @@ public class Protocol22Test {
                 RawTransaction rawTransaction = RawTransaction.createTransaction(
                         nonce,
                         gasPrice, gasLimit, _contractForCreateERC20Minter, BigInteger.ZERO, data);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                 String hexValue = Numeric.toHexString(signMessage);
-                //发送交易
+                //Send transaction
                 EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                 if (send.hasError()) {
-                    System.err.println(String.format("广播失败[setupMinter] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                    System.err.println(String.format("Broadcast failed[setupMinter] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                             htgChainId, newMulty,
                             send.getError().getMessage(),
                             send.getError().getCode(),
                             send.getError().getData()
                     ));
                 } else {
-                    System.out.println(String.format("广播成功[setupMinter] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
+                    System.out.println(String.format("Broadcast successful[setupMinter] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
                 }
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception e) {
@@ -311,7 +311,7 @@ public class Protocol22Test {
     }
 
     protected String sendTx(HtgWalletApi htgWalletApi, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
@@ -321,7 +321,7 @@ public class Protocol22Test {
             } else {
                 Log.error("Failed to estimate gas");
             }
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", 估算GasLimit失败");
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", estimateGasLimitfail");
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);

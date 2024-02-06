@@ -28,9 +28,9 @@ import java.math.RoundingMode;
 import java.util.*;
 
 public class DexTxOfflineTest {
-    //地址1
+    //address1
     static String address1 = "TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA";
-    //地址2
+    //address2
     static String address2 = "TNVTdN9iB7VveoFG4GwYMRAFAF2Rsyrj9mjR3";
 
     static String address3 = "TNVTdN9i3RVt2u8ueS2u7y8aTUt7GzB2SC3HX";
@@ -180,14 +180,14 @@ public class DexTxOfflineTest {
     private CoinData createBuyOrderTxCoinData(CoinTradingPo tradingPo, String address, BigInteger baseAmount, BigInteger priceBigInteger) throws NulsException {
         CoinData coinData = new CoinData();
 
-        //首先通过交易币数量和单价，计算出需要的计价货币总量
+        //Firstly, calculate the total amount of pricing currency required based on the quantity and unit price of transaction coins
 
         BigDecimal price = new BigDecimal(priceBigInteger).movePointLeft(tradingPo.getQuoteDecimal());
         BigDecimal amount = new BigDecimal(baseAmount).movePointLeft(tradingPo.getBaseDecimal());
         amount = amount.multiply(price).movePointRight(tradingPo.getQuoteDecimal()).setScale(0, RoundingMode.UP);
-        BigInteger quoteAmount = amount.toBigInteger();     //最终可以兑换到的计价币种总量
+        BigInteger quoteAmount = amount.toBigInteger();     //The total amount of pricing currencies that can ultimately be exchanged
 
-        //如果挂单是本链资产，直接将手续费加在一起
+        //If the order is an asset in this chain, add the handling fee directly together
 
         if (tradingPo.getQuoteAssetChainId() == defaultChainId && tradingPo.getQuoteAssetId() == defaultAssetId) {
             getAccountBalance(address, defaultChainId, defaultAssetId);
@@ -206,7 +206,7 @@ public class DexTxOfflineTest {
             from.setNonce(HexUtil.decode(nonce));
             coinData.addFrom(from);
         } else {
-            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+            //If the hanging order is an external chain asset, a handling fee for adding an internal chain asset is requiredfrom
             Map balanceMap = getAccountBalance(address, tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId());
             BigInteger available = new BigInteger(balanceMap.get("available").toString());
             String nonce = (String) balanceMap.get("nonce");
@@ -249,7 +249,7 @@ public class DexTxOfflineTest {
     private CoinData createSellOrderTxCoinData(CoinTradingPo tradingPo, String address, BigInteger baseAmount) throws NulsException {
         CoinData coinData = new CoinData();
 
-        //如果挂单是本链资产，直接将手续费加在一起
+        //If the order is an asset in this chain, add the handling fee directly together
         if (tradingPo.getBaseAssetChainId() == defaultChainId && tradingPo.getBaseAssetId() == defaultAssetId) {
             Map balanceMap = getAccountBalance(address, defaultChainId, defaultAssetId);
 
@@ -267,7 +267,7 @@ public class DexTxOfflineTest {
             from.setNonce(HexUtil.decode(nonce));
             coinData.addFrom(from);
         } else {
-            //如果挂单是外链资产，则需要添加一条本链资产的手续费from
+            //If the hanging order is an external chain asset, a handling fee for adding an internal chain asset is requiredfrom
             Map balanceMap = getAccountBalance(address, tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId());
             BigInteger available = new BigInteger(balanceMap.get("available").toString());
             String nonce = (String) balanceMap.get("nonce");
@@ -362,7 +362,7 @@ public class DexTxOfflineTest {
 
     public Map<String, Object> getAccountBalance(String address, int assetChainId, int assetId) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, defaultChainId);
@@ -381,7 +381,7 @@ public class DexTxOfflineTest {
 
     public Map<String, Object> sign(String address, String password, String txHex) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, defaultChainId);
@@ -401,7 +401,7 @@ public class DexTxOfflineTest {
 
     public Map<String, Object> broadcast(String txHex) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, defaultChainId);

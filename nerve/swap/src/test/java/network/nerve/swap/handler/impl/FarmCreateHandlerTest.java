@@ -127,10 +127,10 @@ public class FarmCreateHandlerTest {
 
                 assertNull(farm);
 
-                System.out.println("[通过]Test Farm-Create tx execute: wrong signature！");
+                System.out.println("[adopt]Test Farm-Create tx execute: wrong signature！");
             }
         };
-        return new JunitCase("创建farm-资产不存在", handler, new Object[]{tx1, 10000L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("establishfarm-Asset does not exist", handler, new Object[]{tx1, 10000L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getCase1() throws IOException {
@@ -145,10 +145,10 @@ public class FarmCreateHandlerTest {
 
                 assertNull(farm);
 
-                System.out.println("[通过]Test Farm-Create tx execute: 资产不存在！");
+                System.out.println("[adopt]Test Farm-Create tx execute: Asset does not exist！");
             }
         };
-        return new JunitCase("创建farm-资产不存在", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("establishfarm-Asset does not exist", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getCase0() throws IOException {
@@ -174,10 +174,10 @@ public class FarmCreateHandlerTest {
                 assertNotNull(farm.getAccSyrupPerShare());
                 assertNotNull(farm.getStakeTokenBalance());
 
-                System.out.println("[通过]Test Farm-Create tx execute: 2种资产一致！");
+                System.out.println("[adopt]Test Farm-Create tx execute: 2Consistent assets！");
             }
         };
-        return new JunitCase("创建farm-资产一样", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("establishfarm-Same assets", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getNormalCase() throws IOException {
@@ -203,9 +203,9 @@ public class FarmCreateHandlerTest {
                 assertNotNull(farm.getAccSyrupPerShare());
                 assertNotNull(farm.getStakeTokenBalance());
                 assertEquals(farm.getWithdrawLockTime(),100L);
-                System.out.println("[通过]Test Farm-Create tx execute: Normal process！");
+                System.out.println("[adopt]Test Farm-Create tx execute: Normal process！");
             }
         };
-        return new JunitCase("创建farm-成功0", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("establishfarm-success0", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
     }
 }

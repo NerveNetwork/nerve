@@ -52,7 +52,7 @@ import static io.nuls.ledger.constant.LedgerConstant.CORRESPONDENCE_ASSET_HETERO
 import static io.nuls.ledger.constant.LedgerConstant.CORRESPONDENCE_ASSET_NERVE_HETEROGENEOUS;
 
 /**
- * 资产登记与管理接口
+ * Asset registration and management interface
  *
  * @author lanjinsheng .
  * @date 2019/10/22
@@ -74,24 +74,24 @@ public class AssetsRegCmd extends BaseLedgerCmd {
 
 
     /**
-     * 链内异构链资产登记接口
+     * On chain heterogeneous chain asset registration interface
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_HETEROGENEOUS_REG, version = 1.0,
-            description = "链内异构链资产登记接口")
+            description = "On chain heterogeneous chain asset registration interface")
     @Parameters(value = {
-            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产名称: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "资产初始值"),
-            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "资产最小分割位数"),
-            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产单位符号: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "新资产地址"),
+            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset Name: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Initial value of assets"),
+            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "The minimum number of split digits for assets"),
+            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset unit symbol: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "New asset address"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "chainId", valueType = int.class, description = "链id"),
-                    @Key(name = "assetId", valueType = int.class, description = "资产id")
+                    @Key(name = "chainId", valueType = int.class, description = "chainid"),
+                    @Key(name = "assetId", valueType = int.class, description = "assetid")
             })
     )
     public Response chainAssetHeterogeneousReg(Map params) {
@@ -113,19 +113,19 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 链内异构链资产登记回滚
+     * In chain heterogeneous chain asset registration rollback
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_HETEROGENEOUS_ROLLBACK, version = 1.0,
-            description = "链内异构链资产登记回滚")
+            description = "In chain heterogeneous chain asset registration rollback")
     @Parameters(value = {
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产Id"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetId"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+                    @Key(name = "value", valueType = boolean.class, description = "successtrue,failfalse")
             })
     )
     public Response chainAssetHeterogeneousRollBack(Map params) {
@@ -141,15 +141,15 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_BIND_HETEROGENEOUS_ASSET_REG, version = 1.0,
-            description = "NERVE资产绑定异构链资产")
+            description = "NERVEAsset binding heterogeneous chain assets")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "chainId"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回绑定后的资产类型", description = "返回一个Map对象",
+    @ResponseData(name = "Return the bound asset type", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [5-链内普通资产绑定异构链资产 6-平行链资产绑定异构链资产 7-链内普通资产绑定多异构链资产 8-平行链资产绑定多异构链资产 9-异构链资产绑定多异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type [5-On chain ordinary assets bound to heterogeneous chain assets 6-Parallel chain assets bound to heterogeneous chain assets 7-Binding ordinary assets within the chain to multiple heterogeneous chain assets 8-Binding Parallel Chain Assets to Multiple Heterogeneous Chain Assets 9-Binding heterogeneous chain assets to multiple heterogeneous chain assets]"),
             })
     )
     public Response bindHeterogeneousAssetReg(Map params) {
@@ -160,7 +160,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
             int assetId = Integer.parseInt(params.get("assetId").toString());
             short assetType = 0;
             LedgerAsset ledgerAsset = null;
-            // 获取注册的链内资产
+            // Obtain registered in chain assets
             if(chainId == assetChainId) {
                 if(assetId == ledgerConfig.getAssetId()) {
                     Map<String, Object> defaultAsset = ledgerChainManager.getLocalChainDefaultAsset();
@@ -176,7 +176,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                     ledgerAsset = assetRegMngRepository.getLedgerAssetByAssetId(assetChainId, assetId);
                 }
             } else {
-                // 获取登记的跨链资产
+                // Obtain registered cross chain assets
                 ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
             }
             if (ledgerAsset == null || StringUtils.isBlank(ledgerAsset.getSymbol())) {
@@ -203,15 +203,15 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_UNBIND_HETEROGENEOUS_ASSET_REG, version = 1.0,
-            description = "NERVE资产解绑异构链资产")
+            description = "NERVEUnbind assets to heterogeneous chain assets")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "chainId"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回解绑后的资产类型", description = "返回一个Map对象",
+    @ResponseData(name = "Return the unbound asset type", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型 [1-链内普通资产 3-平行链资产 4-异构链资产]"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type [1-On chain ordinary assets 3-Parallel chain assets 4-Heterogeneous chain assets]"),
             })
     )
     public Response unbindHeterogeneousAssetReg(Map params) {
@@ -222,7 +222,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
             int assetId = Integer.parseInt(params.get("assetId").toString());
             short assetType = 0;
             LedgerAsset ledgerAsset = null;
-            // 获取注册的链内资产
+            // Obtain registered in chain assets
             if(chainId == assetChainId) {
                 if(assetId == ledgerConfig.getAssetId()) {
                     Map<String, Object> defaultAsset = ledgerChainManager.getLocalChainDefaultAsset();
@@ -237,7 +237,7 @@ public class AssetsRegCmd extends BaseLedgerCmd {
                     ledgerAsset = assetRegMngRepository.getLedgerAssetByAssetId(assetChainId, assetId);
                 }
             } else {
-                // 获取登记的跨链资产
+                // Obtain registered cross chain assets
                 ledgerAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, assetId);
             }
             if (ledgerAsset == null || StringUtils.isBlank(ledgerAsset.getSymbol())) {
@@ -263,24 +263,24 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 链内Swap-LP资产登记接口
+     * In chainSwap-LPAsset registration interface
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_REG, version = 1.0,
-            description = "链内Swap-LP资产登记接口")
+            description = "In chainSwap-LPAsset registration interface")
     @Parameters(value = {
-            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产名称: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "资产初始值"),
-            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "资产最小分割位数"),
-            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产单位符号: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "新资产地址"),
+            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset Name: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Initial value of assets"),
+            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "The minimum number of split digits for assets"),
+            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset unit symbol: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "New asset address"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "chainId", valueType = int.class, description = "链id"),
-                    @Key(name = "assetId", valueType = int.class, description = "资产id")
+                    @Key(name = "chainId", valueType = int.class, description = "chainid"),
+                    @Key(name = "assetId", valueType = int.class, description = "assetid")
             })
     )
     public Response chainAssetSwapLiquidityPoolReg(Map params) {
@@ -302,19 +302,19 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 链内Swap-LP资产登记回滚
+     * In chainSwap-LPAsset registration rollback
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_SWAP_LIQUIDITY_POOL_ROLLBACK, version = 1.0,
-            description = "链内Swap-LP资产登记回滚")
+            description = "In chainSwap-LPAsset registration rollback")
     @Parameters(value = {
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产Id"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetId"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+                    @Key(name = "value", valueType = boolean.class, description = "successtrue,failfalse")
             })
     )
     public Response chainAssetSwapLiquidityPoolRollBack(Map params) {
@@ -330,28 +330,28 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 查看链内注册资产信息
+     * View registered asset information within the chain
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_REG_INFO, version = 1.0,
-            description = "查看链内注册资产信息")
+            description = "View registered asset information within the chain")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "运行链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产类型")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Run ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset type")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个list对象",
+    @ResponseData(name = "Return value", description = "Return alistobject",
             responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
-                    @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型"),
-                    @Key(name = "assetOwnerAddress", valueType = String.class, description = "资产所有者地址"),
-                    @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
-                    @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
-                    @Key(name = "assetName", valueType = String.class, description = "资产名"),
-                    @Key(name = "assetSymbol", valueType = String.class, description = "资产符号"),
-                    @Key(name = "txHash", valueType = String.class, description = "交易hash值")
+                    @Key(name = "assetId", valueType = int.class, description = "assetid"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type"),
+                    @Key(name = "assetOwnerAddress", valueType = String.class, description = "Address of asset owner"),
+                    @Key(name = "initNumber", valueType = BigInteger.class, description = "Asset initialization value"),
+                    @Key(name = "decimalPlace", valueType = int.class, description = "Decimal Division"),
+                    @Key(name = "assetName", valueType = String.class, description = "Asset Name"),
+                    @Key(name = "assetSymbol", valueType = String.class, description = "Asset symbols"),
+                    @Key(name = "txHash", valueType = String.class, description = "transactionhashvalue")
             })
     )
     public Response getAssetRegInfo(Map params) {
@@ -370,28 +370,28 @@ public class AssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 查看链内注册资产信息-通过资产id
+     * View registered asset information within the chain-Through assetsid
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CHAIN_ASSET_REG_INFO_BY_ASSETID, version = 1.0,
-            description = "通过资产id查看链内注册资产信息")
+            description = "Through assetsidView registered asset information within the chain")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "运行链Id,取值区间[1-65535]"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = String.class), parameterValidRange = "[1-65535]", parameterDes = "资产id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Run ChainId,Value range[1-65535]"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = String.class), parameterValidRange = "[1-65535]", parameterDes = "assetid")
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型"),
-                    @Key(name = "assetOwnerAddress", valueType = String.class, description = "资产所有者地址"),
-                    @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
-                    @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
-                    @Key(name = "assetName", valueType = String.class, description = "资产名"),
-                    @Key(name = "assetSymbol", valueType = String.class, description = "资产符号"),
-                    @Key(name = "txHash", valueType = String.class, description = "交易hash值")
+                    @Key(name = "assetId", valueType = int.class, description = "assetid"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type"),
+                    @Key(name = "assetOwnerAddress", valueType = String.class, description = "Address of asset owner"),
+                    @Key(name = "initNumber", valueType = BigInteger.class, description = "Asset initialization value"),
+                    @Key(name = "decimalPlace", valueType = int.class, description = "Decimal Division"),
+                    @Key(name = "assetName", valueType = String.class, description = "Asset Name"),
+                    @Key(name = "assetSymbol", valueType = String.class, description = "Asset symbols"),
+                    @Key(name = "txHash", valueType = String.class, description = "transactionhashvalue")
             })
     )
     public Response getAssetRegInfoByAssetId(Map params) {

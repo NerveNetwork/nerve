@@ -39,7 +39,7 @@ import java.util.*;
 import static io.nuls.consensus.constant.ParameterConstant.*;
 
 /**
- * 多签账户相关交易接口实现类
+ * Implementation class for multi account related transaction interfaces
  * Implementation Class of Multi-Sign Account Related Transaction Interface
  *
  * @author tag
@@ -203,7 +203,7 @@ public class MultiSignServiceImpl implements MultiSignService {
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //验证节点是否存在且交易发起者是否为节点创建者
+            //Verify if the node exists and if the transaction initiator is the node creator
             Result rs = agentManager.creatorValid(chain, agentHash, address);
             if (rs.isFailed()) {
                 return rs;
@@ -264,14 +264,14 @@ public class MultiSignServiceImpl implements MultiSignService {
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //验证节点是否存在且交易发起者是否为节点创建者
+            //Verify if the node exists and if the transaction initiator is the node creator
             Result rs = agentManager.creatorValid(chain, agentHash, address);
             if (rs.isFailed()) {
                 return rs;
             }
             AgentPo agentPo = (AgentPo) rs.getData();
             BigInteger amount = new BigInteger(dto.getAmount());
-            //金额小于允许的最小金额
+            //The amount is less than the minimum allowed amount
             BigInteger minReduceAmount = chain.getConfig().getReduceAgentDepositMin();
 
             if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
@@ -283,7 +283,7 @@ public class MultiSignServiceImpl implements MultiSignService {
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
             BigInteger maxReduceAmount = agentPo.getDeposit().subtract(chain.getConfig().getDepositMin());
-            //退出金额大于当前允许退出的最大金额
+            //The exit amount is greater than the current maximum allowed exit amount
             if (amount.compareTo(maxReduceAmount) > 0) {
                 chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}", agentPo.getDeposit(), maxReduceAmount, amount);
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
@@ -337,12 +337,12 @@ public class MultiSignServiceImpl implements MultiSignService {
             if (StringUtils.isNotBlank(dto.getSignAddress()) && StringUtils.isNotBlank(dto.getPassword())) {
                 callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getSignAddress(), dto.getPassword());
             }
-            //验证资产是否可以参与stacking
+            //Verify whether assets can participatestacking
             if (null == chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())) {
                 chain.getLogger().error("The current asset does not support stacking");
                 return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
             }
-            //如果为存定期则验证定期类型是否存在
+            //If it is a fixed term, verify whether the fixed term type exists
             if (dto.getDepositType() == DepositType.REGULAR.getCode()) {
                 DepositTimeType depositTimeType = DepositTimeType.getValue(dto.getTimeType());
                 if (depositTimeType == null) {

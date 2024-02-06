@@ -70,7 +70,7 @@ import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
 
 
 /**
- * 链管理类,负责各条链的初始化,运行,启动,参数维护等
+ * Chain management,Responsible for initializing each chain,working,start-up,Parameter maintenance, etc
  * Chain management class, responsible for the initialization, operation, start-up, parameter maintenance of each chain, etc.
  *
  * @author qinyifeng
@@ -78,7 +78,6 @@ import static network.nerve.converter.utils.ConverterUtil.addressToLowerCase;
  */
 @Component
 public class ChainManager {
-
     @Autowired
     private ConfigStorageService configStorageService;
     @Autowired
@@ -98,7 +97,7 @@ public class ChainManager {
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void initChain() throws Exception {
@@ -129,40 +128,40 @@ public class ChainManager {
     private void initTable(Chain chain) {
         int chainId = chain.getConfig().getChainId();
         try {
-            // 虚拟银行成员表、虚拟银行变化记录对象
+            // Virtual Bank Member Table、Virtual Bank Change Record Object
             RocksDBService.createTable(ConverterDBConstant.DB_VIRTUAL_BANK_PREFIX + chainId);
             RocksDBService.createTable(ConverterDBConstant.DB_ALL_HISTORY_VIRTUAL_BANK_PREFIX + chainId);
-            // 交易存储
+            // Transaction storage
             RocksDBService.createTable(ConverterDBConstant.DB_TX_PREFIX + chainId);
-            // 确认虚拟银行变更交易 业务存储表
+            // Confirm virtual bank change transaction Business Storage Table
             RocksDBService.createTable(ConverterDBConstant.DB_CFM_VIRTUAL_BANK_PREFIX + chainId);
-            // 确认提现交易状态业务数据表
+            // Confirmation of withdrawal transaction status business data table
             RocksDBService.createTable(ConverterDBConstant.DB_CONFIRM_WITHDRAWAL_PREFIX + chainId);
-            // 已调用成功异构链组件的交易/已执行的提案等 持久化表 防止2次调用
+            // Successfully called transaction for heterogeneous chain component/Implemented proposals, etc Persistent Table prevent2Secondary call
             RocksDBService.createTable(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chainId);
-            // 等待调用组件的数据表
+            // Waiting for the data table of the calling component
             RocksDBService.createTable(ConverterDBConstant.DB_PENDING_PREFIX + chainId);
-            // 虚拟银行调用异构链, 合并交易时, key与各交易的对应关系
+            // Virtual bank calls heterogeneous chains, When merging transactions, keyCorrespondence with each transaction
             RocksDBService.createTable(ConverterDBConstant.DB_MERGE_COMPONENT_PREFIX + chainId);
-            // 确认补贴手续费交易业务 数据表
+            // Confirm subsidy handling fee transaction business data sheet
             RocksDBService.createTable(ConverterDBConstant.DB_DISTRIBUTION_FEE_PREFIX + chainId);
-            // 提案存储表
+            // Proposal Storage Table
             RocksDBService.createTable(ConverterDBConstant.DB_PROPOSAL_PREFIX + chainId);
-            //投票中的提案
+            //Proposals in voting
             RocksDBService.createTable(ConverterDBConstant.DB_PROPOSAL_VOTING_PREFIX + chainId);
-            // 提案功能投票信息表
+            // Proposal Function Voting Information Table
             RocksDBService.createTable(ConverterDBConstant.DB_VOTE_PREFIX + chainId);
-            // 取消银行资格的地址表
+            // Address list for disqualification from banking
             RocksDBService.createTable(ConverterDBConstant.DB_DISQUALIFICATION_PREFIX + chainId);
-            // 充值交易业务数据
+            // Recharge transaction business data
             RocksDBService.createTable(ConverterDBConstant.DB_RECHARGE_PREFIX + chainId);
-            // 执行提案的交易hash 和 提案的对应关系
+            // Transaction for executing proposalshash and Correspondence of proposals
             RocksDBService.createTable(ConverterDBConstant.DB_PROPOSAL_EXE + chainId);
-            // 等待执行的提案
+            // Proposal awaiting execution
             RocksDBService.createTable(ConverterDBConstant.DB_EXE_PROPOSAL_PENDING_PREFIX + chainId);
-            // 重置虚拟银行异构链
+            // Reset Virtual Bank Heterogeneous Chain
             RocksDBService.createTable(ConverterDBConstant.DB_RESET_BANK_PREFIX + chainId);
-            // 异构链地址签名消息存储表
+            // Heterogeneous Chain Address Signature Message Storage Table
             RocksDBService.createTable(ConverterDBConstant.DB_COMPONENT_SIGN + chainId);
 
         } catch (Exception e) {
@@ -173,12 +172,12 @@ public class ChainManager {
     }
 
     /**
-     * 获取加载数据库数据到缓存
+     * Retrieve and load database data to cache
      *
      * @param chain
      */
     private void loadChainCacheData(Chain chain) {
-        // 加载虚拟银行成员
+        // Load virtual bank members
         Map<String, VirtualBankDirector> mapVirtualBank = virtualBankStorageService.findAll(chain);
         if (null != mapVirtualBank && !mapVirtualBank.isEmpty()) {
             VirtualBankUtil.sortDirectorMap(mapVirtualBank);
@@ -190,7 +189,7 @@ public class ChainManager {
             chain.getLogger().warn("MapVirtualBank log print error ");
         }
 
-        // 加载待调用异构组件的交易
+        // Load transactions of heterogeneous components to be called
         List<TxSubsequentProcessPO> listPending = txSubsequentProcessStorageService.findAll(chain);
         if (null != listPending && !listPending.isEmpty()) {
             chain.getPendingTxQueue().addAll(listPending);
@@ -201,7 +200,7 @@ public class ChainManager {
             chain.getLogger().warn("PendingTxQueue log print error ");
         }
 
-        // 加载投票中的提案
+        // Load proposals from voting
         Map<NulsHash, ProposalPO> votingMap= proposalVotingStorageService.findAll(chain);
         if (null != votingMap && !votingMap.isEmpty()) {
             chain.getVotingProposalMap().putAll(votingMap);
@@ -212,7 +211,7 @@ public class ChainManager {
             chain.getLogger().warn("VotingProposals log print error ");
         }
 
-        // 加载待执行的提案
+        // Load pending proposals
         List<ExeProposalPO> exeProposalPOList = exeProposalStorageService.findAll(chain);
         chain.getExeProposalQueue().addAll(exeProposalPOList);
         chain.getLogger().info("exeProposalPOList size : {}", exeProposalPOList.size());
@@ -269,27 +268,27 @@ public class ChainManager {
     }
 
     /**
-     * 停止一条链
+     * Stop a chain
      * Delete a chain
      *
-     * @param chainId 链ID/chain id
+     * @param chainId chainID/chain id
      */
     public void stopChain(int chainId) {
 
     }
 
     /**
-     * 读取配置文件创建并初始化链
+     * Read configuration file to create and initialize chain
      * Read the configuration file to create and initialize the chain
      */
     private Map<Integer, ConfigBean> configChain() {
         try {
             /*
-            读取数据库链信息配置/Read database chain information configuration
+            Read database chain information configuration/Read database chain information configuration
              */
             Map<Integer, ConfigBean> configMap = configStorageService.getList();
             /*
-            如果系统是第一次运行，则本地数据库没有存储链信息，此时需要从配置文件读取主链配置信息
+            If the system is running for the first time and there is no storage chain information in the local database, it is necessary to read the main chain configuration information from the configuration file
             If the system is running for the first time, the local database does not have chain information,
             and the main chain configuration information needs to be read from the configuration file at this time.
             */

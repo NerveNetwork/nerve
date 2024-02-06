@@ -157,7 +157,7 @@ public class FarmCreateHandler extends SwapHandlerConstraints {
 
     public SwapResult executeTx(Chain chain, SwapResult result, BatchInfo batchInfo, Transaction tx, long blockHeight) {
         try {
-            // 提取业务参数
+            // Extract business parameters
             FarmCreateData txData = new FarmCreateData();
             txData.parse(tx.getTxData(), 0);
             ValidaterResult validaterResult = helper.validateTxData(chain, tx, txData);
@@ -168,13 +168,13 @@ public class FarmCreateHandler extends SwapHandlerConstraints {
             FarmPoolPO po = helper.getBean(chain.getChainId(), tx, txData);
             batchInfo.getFarmTempManager().putFarm(po);
 
-            // 装填执行结果
+            // Loading execution result
             result.setSuccess(true);
             result.setBlockHeight(blockHeight);
 
         } catch (NulsException e) {
             Log.error(tx.getHash().toHex(), e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setSuccess(false);
             result.setErrorMessage(e.format());
         }

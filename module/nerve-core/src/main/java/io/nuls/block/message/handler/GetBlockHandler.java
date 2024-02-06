@@ -31,11 +31,11 @@ import io.nuls.core.core.annotation.Component;
 import static io.nuls.block.constant.CommandConstant.GET_BLOCK_MESSAGE;
 
 /**
- * 处理收到的{@link HashMessage},用于孤儿链的维护
+ * Process received{@link HashMessage},Used for maintaining orphan chains
  *
  * @author captain
  * @version 1.0
- * @date 18-11-14 下午4:23
+ * @date 18-11-14 afternoon4:23
  */
 @Component("GetBlockHandlerV1")
 public class GetBlockHandler implements MessageProcessor {

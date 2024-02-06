@@ -16,6 +16,18 @@
         <nuls.v2.version>1.0.0-SNAPSHOT</nuls.v2.version>
     </properties>
 
+
+    <repositories>
+        <repository>
+            <id>nuls-release</id>
+            <url>https://nexus.nuls.io/repository/nuls-release/</url>
+        </repository>
+        <repository>
+            <id>nuls-snapshot</id>
+            <url>https://nexus.nuls.io/repository/nuls-snapshot/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
 
         <dependency>
@@ -212,6 +224,16 @@
             <artifactId>converter-manta</artifactId>
             <version>${nuls.v2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>fc-NERVE</groupId>
+            <artifactId>FC-SDK</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.bitsoex.btcd-cli4j</groupId>
+            <artifactId>btcd-cli4j-core</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>io.nuls.v2</groupId>
@@ -246,6 +268,18 @@
                 <exclusion>
                     <artifactId>nuls-base</artifactId>
                     <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-access</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-core</artifactId>
+                    <groupId>ch.qos.logback</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

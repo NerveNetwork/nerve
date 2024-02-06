@@ -24,12 +24,14 @@
 package network.nerve.converter.heterogeneouschain.lib.handler;
 
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
+import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.helper.HtgLocalBlockHelper;
 import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSimpleBlockHeader;
 import network.nerve.converter.utils.LoggerUtil;
 
 import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.MINUTES_1;
+import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant.MINUTES_20;
 
 /**
  * @author: Mimi
@@ -37,6 +39,7 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
  */
 public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
 
+    private HtgWalletApi htgWalletApi;
     private HtgLocalBlockHelper htgLocalBlockHelper;
     private HtgContext htgContext;
 
@@ -47,23 +50,23 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
         try {
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}网络RPC可用性检查任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+                LoggerUtil.LOG.debug("[{} network RPC Availability check task] - every other {} Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
             boolean availableRPC = true;
             do {
-                // 本地最新的区块
+                // Latest local blocks
                 HtgSimpleBlockHeader localMax = htgLocalBlockHelper.getLatestLocalBlockHeader();
                 if (localMax == null) {
-                    // 当启动节点时，本地区块为空，没有检查依据，跳过本次检查
+                    // When starting a node, the local block is empty with no basis for checking, skipping this check
                     break;
                 }
                 Long localBlockHeight = localMax.getHeight();
@@ -79,10 +82,18 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
                         break;
                     }
                     if (now - lastRecordTime > MINUTES_1) {
-                        htgContext.logger().error("{}网络区块同步异常，本地区块高度: {}, 已有{}秒未同步区块，请检查网络RPC服务",
+                        String error = String.format("[%s]网络区块同步异常，本地区块高度: %s, 已有%s秒未同步区块，当前Api: %s, 请检查网络RPC服务",
                                 htgContext.getConfig().getSymbol(),
                                 localBlockHeight,
-                                (now - lastRecordTime) / 1000);
+                                (now - lastRecordTime) / 1000,
+                                htgWalletApi.getCurrentRpcAddress());
+                        htgContext.logger().error(error);
+                        if (now - lastRecordTime > MINUTES_20) {
+                            htgContext.getConverterCoreApi().putWechatMsg(String.format("[%s]网络区块同步异常，本地区块高度: %s, 已超过20分钟未同步区块，当前Api: %s, 请检查网络RPC服务",
+                                    htgContext.getConfig().getSymbol(),
+                                    localBlockHeight,
+                                    htgWalletApi.getCurrentRpcAddress()));
+                        }
                         availableRPC = false;
                         break;
                     }
@@ -90,7 +101,7 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
             } while (false);
             htgContext.setAvailableRPC(availableRPC);
         } catch (Exception e) {
-            htgContext.logger().error(String.format("{}网络RPC可用性检查任务失败", htgContext.getConfig().getSymbol()), e);
+            htgContext.logger().error(String.format("{} network RPC Availability check task failed", htgContext.getConfig().getSymbol()), e);
         }
     }
 

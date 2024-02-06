@@ -43,7 +43,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 解锁交易处理
+ * Unlock transaction processing
  * Created by lanjinsheng on 2018/12/29.
  *
  * @author lanjinsheng
@@ -56,7 +56,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
     Repository repository;
 
     /**
-     * 交易中按 时间或高度的解锁操作
+     * During transactions, press Unlocking operation for time or height
      *
      * @param coin
      * @param txHash
@@ -70,13 +70,13 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
             if (null != permanentMap.remove(LedgerUtil.getNonceEncode(coin.getNonce()))) {
                 return true;
             }
-            //按时间移除锁定
+            //Remove lock by time
             List<FreezeLockTimeState> list = accountState.getFreezeLockTimeStates();
             for (FreezeLockTimeState freezeLockTimeState : list) {
        //         LoggerUtil.COMMON_LOG.debug("processFromCoinData remove TimeUnlocked address={},amount={}={},nonce={}={},hash={} ", address, coin.getAmount(), freezeLockTimeState.getAmount(), LedgerUtil.getNonceEncode(coin.getNonce()), freezeLockTimeState.getNonce(), txHash);
                 if (LedgerUtil.equalsNonces(freezeLockTimeState.getNonce(), coin.getNonce())) {
                     if (0 == freezeLockTimeState.getAmount().compareTo(coin.getAmount())) {
-                        //金额一致，移除
+                        //Consistent amount, removed
                         list.remove(freezeLockTimeState);
                         LoggerUtil.COMMON_LOG.debug("TimeUnlocked remove ok,hash={} ", txHash);
                         return true;
@@ -85,13 +85,13 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
             }
 
         } else {
-            //按高度移除锁定
+            //Remove lock by height
             List<FreezeHeightState> list = accountState.getFreezeHeightStates();
             for (FreezeHeightState freezeHeightState : list) {
  //               Log.debug("processFromCoinData remove HeightUnlocked address={},amount={}={},nonce={}={},hash={} ", address, coin.getAmount(), freezeHeightState.getAmount(), LedgerUtil.getNonceEncode(coin.getNonce()), freezeHeightState.getNonce(), txHash);
                 if (LedgerUtil.equalsNonces(freezeHeightState.getNonce(), coin.getNonce())) {
                     if (0 == freezeHeightState.getAmount().compareTo(coin.getAmount())) {
-                        //金额一致，移除
+                        //Consistent amount, removed
                         list.remove(freezeHeightState);
                         LoggerUtil.COMMON_LOG.debug("HeightUnlocked remove ok,hash={} ", txHash);
                         return true;
@@ -103,7 +103,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
     }
 
     /**
-     * 交易中按 时间或者高度的锁定操作
+     * During transactions, press Time or height locking operation
      *
      * @param coin
      * @param nonce
@@ -111,7 +111,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
      */
     private boolean processToCoinData(CoinTo coin, byte[] nonce, String hash, AccountState accountState, long txTime, String address) {
         if (coin.getLockTime() < LedgerConstant.MAX_HEIGHT_VALUE && !LedgerUtil.isPermanentLock(coin.getLockTime())) {
-            //按高度锁定
+            //Lock by height
             FreezeHeightState freezeHeightState = new FreezeHeightState();
             freezeHeightState.setAmount(coin.getAmount());
             freezeHeightState.setCreateTime(txTime);
@@ -121,7 +121,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
     //        LoggerUtil.COMMON_LOG.debug("processToCoinData add HeightLocked address={},amount={},height={},hash={} ", address, freezeHeightState.getAmount(), freezeHeightState.getHeight(), hash);
             accountState.getFreezeHeightStates().add(freezeHeightState);
         } else {
-            //按时间锁定
+            //Lock by time
             FreezeLockTimeState freezeLockTimeState = new FreezeLockTimeState();
             freezeLockTimeState.setAmount(coin.getAmount());
             freezeLockTimeState.setCreateTime(txTime);
@@ -139,7 +139,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
     }
 
     /**
-     * 进行区块的缓存锁定解锁处理
+     * Perform cache locking and unlocking processing on blocks
      *
      * @param coin
      * @param nonce
@@ -159,11 +159,11 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
                 if (null != permanentLockMap.remove(LedgerUtil.getNonceEncode(coinFrom.getNonce()))) {
                     return true;
                 }
-                //按时间移除锁定
+                //Remove lock by time
                 for (FreezeLockTimeState freezeLockTimeState : timeStateList) {
                     if (LedgerUtil.equalsNonces(freezeLockTimeState.getNonce(), coinFrom.getNonce())) {
                         if (0 == freezeLockTimeState.getAmount().compareTo(coin.getAmount())) {
-                            //金额一致，移除
+                            //Consistent amount, removed
                             timeStateList.remove(freezeLockTimeState);
                             LoggerUtil.COMMON_LOG.debug("TimeUnlocked remove ok,hash={},lockedNonce={} ", txHash, LedgerUtil.getNonceEncode(freezeLockTimeState.getNonce()));
                             return true;
@@ -172,11 +172,11 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
                 }
 
             } else {
-                //按高度移除锁定
+                //Remove lock by height
                 for (FreezeHeightState freezeHeightState : heightStateList) {
                     if (LedgerUtil.equalsNonces(freezeHeightState.getNonce(), coinFrom.getNonce())) {
                         if (0 == freezeHeightState.getAmount().compareTo(coin.getAmount())) {
-                            //金额一致，移除
+                            //Consistent amount, removed
                             heightStateList.remove(freezeHeightState);
                             LoggerUtil.COMMON_LOG.debug("HeightUnlocked remove ok,hash={} ", txHash);
                             return true;
@@ -187,7 +187,7 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
         } else {
             CoinTo coinTo = (CoinTo) coin;
             if (coinTo.getLockTime() < LedgerConstant.MAX_HEIGHT_VALUE && !LedgerUtil.isPermanentLock(coinTo.getLockTime())) {
-                //按高度锁定
+                //Lock by height
                 FreezeHeightState freezeHeightState = new FreezeHeightState();
                 freezeHeightState.setAmount(coin.getAmount());
                 freezeHeightState.setHeight(coinTo.getLockTime());
@@ -195,17 +195,17 @@ public class LockedTransactionProcessor implements TxLockedProcessor {
                 freezeHeightState.setTxHash(txHash);
                 heightStateList.add(freezeHeightState);
             } else {
-                //按时间锁定
+                //Lock by time
                 FreezeLockTimeState freezeLockTimeState = new FreezeLockTimeState();
                 freezeLockTimeState.setAmount(coin.getAmount());
                 freezeLockTimeState.setLockTime(coinTo.getLockTime());
                 freezeLockTimeState.setNonce(nonce);
                 freezeLockTimeState.setTxHash(txHash);
                 if (LedgerUtil.isPermanentLock(coinTo.getLockTime())) {
-                    //永久锁定
+                    //Permanent lock
                     permanentLockMap.put(LedgerUtil.getNonceEncode(nonce), freezeLockTimeState);
                 } else {
-                    //时间锁定
+                    //Time lock
                     timeStateList.add(freezeLockTimeState);
                 }
 

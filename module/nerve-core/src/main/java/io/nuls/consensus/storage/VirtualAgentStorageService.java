@@ -3,17 +3,17 @@ import io.nuls.consensus.model.po.VirtualAgentPo;
 
 public interface VirtualAgentStorageService {
     /**
-     * 保存虚拟银行节点
+     * Save Virtual Bank Node
      *
-     * @param  virtualAgentPo   虚拟银行节点对象
-     * @param  height           高度
+     * @param  virtualAgentPo   Virtual Bank Node Object
+     * @param  height           height
      * @return boolean
      * */
     boolean save(VirtualAgentPo virtualAgentPo, long height);
 
     /**
-     * 查询指定高度对应虚拟银行信息
-     * @param height  高度
+     * Query virtual bank information corresponding to the specified height
+     * @param height  height
      * @return VirtualAgentPo
      * */
     VirtualAgentPo get(long height);

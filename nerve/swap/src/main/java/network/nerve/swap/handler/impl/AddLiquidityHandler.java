@@ -90,7 +90,7 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = getAddLiquidityInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             AddLiquidityData txData = new AddLiquidityData();
             txData.parse(tx.getTxData(), 0);
             long deadline = txData.getDeadline();
@@ -110,7 +110,7 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
                 amountB = dto.getAmountX();
                 amountA = dto.getAmountY();
             }
-            // 计算用户实际注入的资产，以及用户获取的LP资产
+            // Calculate the actual assets injected by the user and the assets obtained by the userLPasset
             IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(dto.getPairAddress()));
             RealAddLiquidityOrderDTO orderDTO = SwapUtils.calcAddLiquidity(chainId, iPairFactory, tokenA, tokenB,
                     amountA, amountB, txData.getAmountAMin(), txData.getAmountBMin());
@@ -129,7 +129,7 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
                 _refund = new BigInteger[]{orderDTO.getRefundB(), orderDTO.getRefundA()};
             }
 
-            // 整合计算数据
+            // Integrate computing data
             AddLiquidityBus bus = new AddLiquidityBus(
                     _realAmount[0], _realAmount[1],
                     orderDTO.getLiquidity(),
@@ -139,27 +139,27 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
             bus.setPreBlockHeight(pair.getBlockHeightLast());
             bus.setPreBlockTime(pair.getBlockTimeLast());
 
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
-            // 组装系统成交交易
+            // Assembly system transaction
             NerveToken tokenLP = pair.getPair().getTokenLP();
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTx(orderDTO, dto, tx.getHash().toHex(), tokenA, tokenB, tokenLP, txData.getTo(), blockTime, tempBalanceManager);
 
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             pair.update(orderDTO.getLiquidity(), _realAmount[0].add(_reserves[0]), _realAmount[1].add(_reserves[1]), _reserves[0], _reserves[1], blockHeight, blockTime);
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -170,7 +170,7 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             NerveToken tokenX = dto.getTokenX();
             NerveToken tokenY = dto.getTokenY();
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
@@ -196,7 +196,7 @@ public class AddLiquidityHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);

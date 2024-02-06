@@ -7,7 +7,7 @@ import java.math.BigInteger;
 /**
  * @Author: zhoulijun
  * @Time: 2020-02-28 17:21
- * @Description: staking 参与委托
+ * @Description: staking Participate in commission
  */
 public class DepositReq extends BaseReq {
 

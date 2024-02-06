@@ -36,12 +36,12 @@ import java.util.List;
  */
 public class ComponentSignByzantinePO implements Serializable {
     /**
-     * nerve 链内交易hash
+     * nerve On chain transactionshash
      */
     private NulsHash hash;
 
     /**
-     * 每个节点一个签名消息
+     * One signed message per node
      */
     private List<ComponentSignMessage> listMsg;
 
@@ -50,7 +50,7 @@ public class ComponentSignByzantinePO implements Serializable {
     private boolean byzantinePass;
 
     /**
-     * 是否已完成(达到拜占庭签名数, 并且发送成功)
+     * Has it been completed(Reached the number of Byzantine signatures, And it was successfully sent)
      */
     private boolean completed;
 

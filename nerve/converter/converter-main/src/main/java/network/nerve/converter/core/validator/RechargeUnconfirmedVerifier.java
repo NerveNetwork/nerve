@@ -52,10 +52,9 @@ import network.nerve.converter.utils.HeterogeneousUtil;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.List;
 
 /**
- * 异构链充值待确认交易 验证
+ * Heterogeneous chain recharge pending confirmation transaction validate
  * @author: Loki
  * @date: 2020/9/27
  */
@@ -91,7 +90,7 @@ public class RechargeUnconfirmedVerifier {
         HeterogeneousHash originalTxHash = txData.getOriginalTxHash();
         String heterogeneousHash = originalTxHash.getHeterogeneousHash();
         if(null != rechargeStorageService.find(chain, heterogeneousHash)){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), txData.getOriginalTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -99,7 +98,7 @@ public class RechargeUnconfirmedVerifier {
         int assetChainId = txData.getAssetChainId();
         int assetId = txData.getAssetId();
 
-        // 通过链内资产id 获取异构链信息
+        // Through in chain assetsid Obtain heterogeneous chain information
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(originalTxHash.getHeterogeneousChainId(), assetChainId, assetId);
 
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
@@ -126,7 +125,7 @@ public class RechargeUnconfirmedVerifier {
         String heterogeneousHash = originalTxHash.getHeterogeneousHash();
         int htgChainId = originalTxHash.getHeterogeneousChainId();
         if(null != rechargeStorageService.find(chain, heterogeneousHash)){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), txData.getOriginalTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -144,7 +143,7 @@ public class RechargeUnconfirmedVerifier {
         }
         String nerveToAddress = AddressTool.getStringAddressByBytes(txData.getNerveToAddress());
         if (info.isDepositIIMainAndToken()) {
-            // 校验同时充值token和main
+            // Verify simultaneous rechargetokenandmain
             BigInteger mainAmount = txData.getMainAssetAmount();
             if (mainAmount == null) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
@@ -159,10 +158,10 @@ public class RechargeUnconfirmedVerifier {
             HeterogeneousAssetInfo tokenInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, tokenAssetChainId, tokenAssetId);
             heterogeneousRechargeValidForCrossOutII(info, tokenAmount, nerveToAddress, tokenInfo, mainAmount, mainInfo);
         } else {
-            // 校验只充值token 或者 只充值 main
+            // Verify only rechargetoken perhaps Recharge only main
             int assetChainId = txData.getAssetChainId();
             int assetId = txData.getAssetId();
-            // 通过链内资产id 获取异构链信息
+            // Through in chain assetsid Obtain heterogeneous chain information
             HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, assetChainId, assetId);
             BigInteger amount = txData.getAmount();
             heterogeneousRechargeValid(info, amount, nerveToAddress, heterogeneousAssetInfo);
@@ -170,13 +169,13 @@ public class RechargeUnconfirmedVerifier {
     }
 
     /**
-     * 验证异构链充值交易
+     * Verify heterogeneous chain recharge transactions
      *
      * @throws NulsException
      */
     private void heterogeneousRechargeValid(HeterogeneousTransactionInfo info, BigInteger amount, String toAddress, HeterogeneousAssetInfo heterogeneousAssetInfo) throws NulsException {
         if (info.getAssetId() != heterogeneousAssetInfo.getAssetId()) {
-            // 充值资产错误
+            // Recharge asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger infoValue = info.getValue();
@@ -184,7 +183,7 @@ public class RechargeUnconfirmedVerifier {
             infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(heterogeneousAssetInfo, info.getValue());
         }
         if (infoValue.compareTo(amount) != 0) {
-            // 充值金额错误
+            // Recharge amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(toAddress)) {
@@ -193,21 +192,21 @@ public class RechargeUnconfirmedVerifier {
     }
 
     /**
-     * 验证异构链充值交易 - CrossOutII
+     * Verify heterogeneous chain recharge transactions - CrossOutII
      *
      * @throws NulsException
      */
     private void heterogeneousRechargeValidForCrossOutII(HeterogeneousTransactionInfo info, BigInteger tokenAmount, String toAddress, HeterogeneousAssetInfo tokenInfo, BigInteger mainAmount, HeterogeneousAssetInfo mainInfo) throws NulsException {
         if (info.getAssetId() != tokenInfo.getAssetId()) {
-            // 充值token资产错误
+            // RechargetokenAsset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         if (info.getValue().compareTo(tokenAmount) != 0) {
-            // 充值token金额错误
+            // RechargetokenAmount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
-            // 充值主资产错误
+            // Recharge main asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger depositIIMainAssetValue = info.getDepositIIMainAssetValue();
@@ -215,7 +214,7 @@ public class RechargeUnconfirmedVerifier {
             depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
         }
         if (depositIIMainAssetValue.compareTo(mainAmount) != 0) {
-            // 充值主金额错误
+            // Recharge main amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(toAddress)) {
@@ -232,7 +231,7 @@ public class RechargeUnconfirmedVerifier {
         String heterogeneousHash = originalTxHash.getHeterogeneousHash();
         int htgChainId = originalTxHash.getHeterogeneousChainId();
         if(null != rechargeStorageService.find(chain, heterogeneousHash)){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), txData.getOriginalTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -251,7 +250,7 @@ public class RechargeUnconfirmedVerifier {
         String nerveToAddress = AddressTool.getStringAddressByBytes(txData.getNerveToAddress());
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
         byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
-        // 一键跨链的nerve接收地址只能是黑洞地址
+        // One click cross chainnerveThe receiving address can only be a black hole address
         if (!Arrays.equals(txData.getNerveToAddress(), withdrawalBlackhole)) {
             chain.getLogger().error("[{}]OneClickCrossChain Nerve address error:{}, heterogeneousHash:{}", htgChainId, nerveToAddress, heterogeneousHash);
             throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
@@ -260,7 +259,7 @@ public class RechargeUnconfirmedVerifier {
         int crossAssetChainId, crossAssetId;
         BigDecimal crossValue;
         if (info.isDepositIIMainAndToken()) {
-            // 校验同时充值token和main
+            // Verify simultaneous rechargetokenandmain
             BigInteger mainAmount = txData.getMainAssetAmount();
             if (mainAmount == null) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
@@ -278,7 +277,7 @@ public class RechargeUnconfirmedVerifier {
             crossAssetId = tokenAssetId;
             crossValue = new BigDecimal(tokenAmount);
         } else {
-            // 校验只充值token 或者 只充值 main
+            // Verify only rechargetoken perhaps Recharge only main
             int assetChainId,assetId;
             BigInteger amount;
             if (txData.getErc20AssetChainId() > 0) {
@@ -290,17 +289,17 @@ public class RechargeUnconfirmedVerifier {
                 assetId = txData.getMainAssetId();
                 amount = txData.getMainAssetAmount();
             }
-            // 通过链内资产id 获取异构链信息
+            // Through in chain assetsid Obtain heterogeneous chain information
             HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, assetChainId, assetId);
             heterogeneousRechargeValid(info, amount, nerveToAddress, heterogeneousAssetInfo);
             crossAssetChainId = assetChainId;
             crossAssetId = assetId;
             crossValue = new BigDecimal(amount);
         }
-        // tipping 校验
+        // tipping check
         BigInteger tipping = txData.getTipping();
         if (tipping.compareTo(BigInteger.ZERO) > 0) {
-            // 合法的Nerve地址
+            // LegitimateNerveaddress
             if (!converterCoreApi.validNerveAddress(txData.getTippingAddress())) {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping address error:{}, heterogeneousHash:{}", htgChainId, txData.getTippingAddress(), heterogeneousHash);
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
@@ -310,27 +309,27 @@ public class RechargeUnconfirmedVerifier {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping address setting error:{}, heterogeneousHash:{}", htgChainId, txData.getTippingAddress(), heterogeneousHash);
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
             }
-            // 不得大于跨链资产的10%
+            // Must not exceed the value of cross chain assets10%
             if (crossValue.multiply(HtgConstant.NUMBER_0_DOT_1).compareTo(new BigDecimal(tipping)) < 0) {
                 chain.getLogger().error("[{}]OneClickCrossChain tipping exceed error:{}, crossValue:{}, heterogeneousHash:{}", htgChainId, tipping, crossValue.toPlainString(), heterogeneousHash);
                 throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TIPPING_ERROR);
             }
         }
-        // 检查目标链数据
+        // Check target chain data
         IHeterogeneousChainDocking desDocking = heterogeneousDockingManager.getHeterogeneousDocking(desChainId);
-        // 检查充值资产是否能跨链到目标链
+        // Check if the recharged assets can cross the chain to the target chain
         HeterogeneousAssetInfo desChainAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(desChainId, crossAssetChainId, crossAssetId);
         if (desChainAssetInfo == null) {
             chain.getLogger().error("[{}]OneClickCrossChain des error, desChainId:{}, desToAddress:{}, heterogeneousHash:{}", htgChainId, txData.getDesChainId(), txData.getDesToAddress(), heterogeneousHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_DES_ERROR);
         }
-        // 检查目标链地址是否合法
+        // Check if the target chain address is legal
         boolean validateAddress = desDocking.validateAddress(txData.getDesToAddress());
         if (!validateAddress) {
             chain.getLogger().error("[{}]OneClickCrossChain desToAddress error, desChainId:{}, desToAddress:{}, heterogeneousHash:{}", htgChainId, txData.getDesChainId(), txData.getDesToAddress(), heterogeneousHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_DES_ERROR);
         }
-        // 验证跨链手续费是否足够
+        // Verify if cross chain transaction fees are sufficient
         if (txData.getMainAssetFeeAmount().compareTo(txData.getMainAssetAmount()) > 0) {
             chain.getLogger().error("[{}]OneClickCrossChain fee error, feeAmount:{}, totalAmount:{}, heterogeneousHash: {}", htgChainId, txData.getMainAssetFeeAmount(), txData.getMainAssetAmount(), heterogeneousHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_FEE_ERROR);

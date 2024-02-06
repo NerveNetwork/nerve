@@ -13,7 +13,7 @@ import java.io.File;
 public class DexConfig implements ModuleConfig {
 
     /**
-     * 国际化
+     * internationalization
      */
     private String language;
 

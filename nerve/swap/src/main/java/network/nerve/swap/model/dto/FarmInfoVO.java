@@ -5,22 +5,22 @@ import io.nuls.core.rpc.model.ApiModel;
 /**
  * @author Niels
  */
-@ApiModel(name = "Farm信息详情")
+@ApiModel(name = "FarmInformation details")
 public class FarmInfoVO {
     private String farmHash;
     private int stakeTokenChainId;
     private int stakeTokenAssetId;
     private int syrupTokenChainId;
     private int syrupTokenAssetId;
-    private String syrupPerBlock;//每个区块奖励的糖果数量
-    private long startBlockHeight;//开始计算奖励的高度
-    private long lockedTime;//锁定时间，在此时间之前不解锁
+    private String syrupPerBlock;//The number of candies awarded per block
+    private long startBlockHeight;//Start calculating the height of the reward
+    private long lockedTime;//Lock time, do not unlock before this time
     private String creatorAddress;
-    private String accSyrupPerShare;//累计每股可分到的奖励数量
+    private String accSyrupPerShare;//Accumulated number of rewards per share that can be allocated
     private String syrupTokenBalance;
     private String stakeTokenBalance;
     private String totalSyrupAmount;
-    private boolean modifiable; //0不可以修改，1可以修改
+    private boolean modifiable; //0Cannot be modified,1Can be modified
     private long withdrawLockTime;
     private long stopHeight;
 

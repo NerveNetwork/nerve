@@ -78,7 +78,7 @@ public class QuotationProcessor implements TransactionProcessor {
         if (txs.isEmpty()) {
             return null;
         }
-        //业务数据校验
+        //Business data verification
         Chain chain = null;
         Map<String, Object> result = null;
         try {
@@ -88,7 +88,7 @@ public class QuotationProcessor implements TransactionProcessor {
             result = new HashMap<>(QuotationConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
             for (Transaction tx : txs) {
-                //验证业务数据
+                //Verify business data
                 Quotation quotation = CommonUtil.getInstance(tx.getTxData(), Quotation.class);
                 byte type = quotation.getType();
                 if (QuotationConstant.QUOTE_TXDATA_TYPE != type) {
@@ -115,7 +115,7 @@ public class QuotationProcessor implements TransactionProcessor {
                     errorCode = QuotationErrorCode.QUOTATION_COINDATA_NOT_EMPTY.getCode();
                     log.error(QuotationErrorCode.QUOTATION_COINDATA_NOT_EMPTY.getMsg());
                 }
-                //验证签名, 验证签名者在该区块时间是不是共识节点出块地址
+                //Verify signature, Verify if the signer has a consensus node block address at the block time
                 signatureValidation(chain, tx, blockHeader, quotation);
             }
             result.put("txList", failsList);
@@ -140,12 +140,12 @@ public class QuotationProcessor implements TransactionProcessor {
         Chain chain = null;
         try {
             chain = chainManager.getChain(chainId);
-            //得到key前缀
+            //obtainkeyprefix
             String keyPrefix = TimeUtil.toUTCDate(blockHeader.getTime());
             /**
-             * 组装需要存的业务数据
-             * key:token, value:该token的报价业务数据
-             * 存db时将前缀与该key组合, 将值存入(或加入已有的)NodeQuotationsPO数据中
+             * Assemble the business data that needs to be stored
+             * key:token, value:ThistokenQuotation business data for
+             * SavedbWhen associating the prefix with thiskeycombination, Store values in(Or join existing ones)NodeQuotationsPOIn the data
              */
             Map<String, List<NodeQuotationPO>> saveMap = new HashMap<>();
             Map<String, Set<String>> txPriceMap = new HashMap<>();
@@ -158,7 +158,7 @@ public class QuotationProcessor implements TransactionProcessor {
                         List<NodeQuotationPO> list = saveMap.computeIfAbsent(price.getKey(), k -> new ArrayList<>());
                         Set<String> hashes = txPriceMap.computeIfAbsent(price.getKey(), k -> new HashSet<>());
                         if (!hashes.add(hash)) {
-                            chain.getLogger().warn("[Quotation] 交易hash重复存储 General-quotation hash: {}, key:{}, price:{}", hash, price.getKey(), price.getValue());
+                            chain.getLogger().warn("[Quotation] transactionhashDuplicate storage General-quotation hash: {}, key:{}, price:{}", hash, price.getKey(), price.getValue());
                             continue;
                         }
                         NodeQuotationPO nodeQuotationPO = new NodeQuotationPO();
@@ -188,7 +188,7 @@ public class QuotationProcessor implements TransactionProcessor {
                 }
                 quotationStorageService.saveNodeQuotation(chain, key, nqWrapperPO);
                 for(NodeQuotationPO po : nqWrapperPO.getList()) {
-                    chain.getLogger().info("[commit] 确认普通报价 General-quotation key:{}, dbKey:{}, price:{}, hash:{}",
+                    chain.getLogger().info("[commit] Confirm regular quotation General-quotation key:{}, dbKey:{}, price:{}, hash:{}",
                             entry.getKey(), key, (new BigDecimal(Double.toString(po.getPrice()))).toPlainString() , po.getTxHash());
                 }
             }
@@ -214,11 +214,11 @@ public class QuotationProcessor implements TransactionProcessor {
         Chain chain = null;
         try {
             chain = chainManager.getChain(chainId);
-            //组装key
+            //assemblekey
             String keyPrefix = TimeUtil.toUTCDate(blockHeader.getTime());
             Map<String, List<NodeQuotationPO>> saveMap = new HashMap<>();
             for (Transaction tx : txs) {
-                //验证业务数据
+                //Verify business data
                 Quotation quotation = CommonUtil.getInstance(tx.getTxData(), Quotation.class);
                 if (quotation.getType() == QuotationConstant.QUOTE_TXDATA_TYPE) {
                     Prices prices = CommonUtil.getInstance(quotation.getData(), Prices.class);
@@ -243,11 +243,11 @@ public class QuotationProcessor implements TransactionProcessor {
                 List<NodeQuotationPO> list = nodeQuotationWrapperPO.getList();
                 boolean rs = false;
                 if (null != nodeQuotationWrapperPO && null != list) {
-                    //数据库的数据
+                    //Database data
                     Iterator<NodeQuotationPO> it = list.iterator();
                     while (it.hasNext()) {
                         NodeQuotationPO nqPO = it.next();
-                        //需要回滚的数据
+                        //Data that needs to be rolled back
                         List<NodeQuotationPO> rollbackList = entry.getValue();
                         for (NodeQuotationPO quotationRollback : rollbackList) {
                             if (nqPO.getTxHash().equals(quotationRollback.getTxHash())) {
@@ -276,11 +276,11 @@ public class QuotationProcessor implements TransactionProcessor {
 
 
     /**
-     * 喂价交易签名验证
-     * 1.验证交易签名者是否是共识节点
-     * - 如果交易没有打包进入区块, 则验证签名者是否是当前轮次的共识节点
-     * - 如果交易已经打包进入区块, 则验证签名者是否是该区块轮次中的共识节点
-     * 2.验证签名正确性(签名者是否有该签名地址的私钥)
+     * Feed transaction signature verification
+     * 1.Verify whether the transaction signer is a consensus node
+     * - If the transaction is not packaged into the block, Then verify whether the signer is the consensus node of the current round
+     * - If the transaction has already been packaged into the block, Verify if the signer is the consensus node in the block round
+     * 2.Verify signature correctness(Does the signer have a private key for the signing address)
      *
      * @param tx
      * @return
@@ -303,7 +303,7 @@ public class QuotationProcessor implements TransactionProcessor {
                 throw new NulsException(QuotationErrorCode.SIGNATURE_ERROR);
             }
             if(Arrays.equals(quotation.getAddress(), AddressTool.getAddress(signature.getPublicKey(), chain.getChainId()))){
-                //txData中的出块地址 是不是在签名地址列表中
+                //txDataOutbound address in Is it in the signed address list
                 rs = true;
             }
         }
@@ -313,7 +313,7 @@ public class QuotationProcessor implements TransactionProcessor {
     }
 
     /**
-     * 根据签名列表获取第一个签名的地址
+     * Obtain the address of the first signature based on the signature list
      *
      * @param chainId
      * @param txSignatureData

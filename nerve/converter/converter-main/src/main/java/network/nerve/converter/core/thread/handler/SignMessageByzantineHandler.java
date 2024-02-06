@@ -48,7 +48,7 @@ public class SignMessageByzantineHandler implements Runnable {
             try {
                 UntreatedMessage untreatedMessage = chain.getSignMessageByzantineQueue().take();
                 String nativeHex = untreatedMessage.getCacheHash().toHex();
-                LoggerUtil.LOG.debug("[处理线程]开始对节点[{}]广播的交易签名消息拜占庭验证, Hash：{}", untreatedMessage.getNodeId(), nativeHex);
+                LoggerUtil.LOG.debug("[Processing threads]Starting node analysis[{}]Broadcast transaction signature message Byzantine verification, Hash：{}", untreatedMessage.getNodeId(), nativeHex);
                 TransactionMsgProcessor.handleSignMessageByzantine(
                         chain,
                         untreatedMessage.getCacheHash(),

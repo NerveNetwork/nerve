@@ -30,7 +30,6 @@ import io.nuls.base.protocol.TransactionProcessor;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
-import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.config.ConverterContext;
@@ -39,7 +38,6 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
-import network.nerve.converter.model.bo.NerveAssetInfo;
 import network.nerve.converter.model.po.ConfirmWithdrawalPO;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.po.WithdrawalAdditionalFeePO;
@@ -58,7 +56,7 @@ import static network.nerve.converter.constant.ConverterConstant.INIT_CAPACITY_8
 import static network.nerve.converter.enums.ProposalTypeEnum.REFUND;
 
 /**
- * 追加提现手续费交易
+ * Additional withdrawal fee transaction
  *
  * @author: Loki
  * @date: 2020/9/27
@@ -89,13 +87,13 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
         if (converterCoreApi.isProtocol21()) {
-            // 协议21: 一键跨链
+            // protocol21: One click cross chain
             return validateV21(chainId, txs, txMap, blockHeader);
         } else if (converterCoreApi.isSupportProtocol15TrxCrossChain()) {
-            // 协议15: 修改手续费机制，支持异构链主资产作为手续费
+            // protocol15: Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
             return validateV15(chainId, txs, txMap, blockHeader);
         } else if (converterCoreApi.isSupportProtocol13NewValidationOfERC20()) {
-            // 协议v1.13
+            // protocolv1.13
             return validateV13(chainId, txs, txMap, blockHeader);
         }
         return validateV0(chainId, txs, txMap, blockHeader);
@@ -122,14 +120,14 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == po.getMapAdditionalFee()) {
                     po.setMapAdditionalFee(new HashMap<>(INIT_CAPACITY_8));
                 }
-                // 更新提现手续费追加的变化
+                // Changes in updated withdrawal fee additions
                 chain.increaseWithdrawFeeChangeVersion(basicTxHash);
-                // 保存交易
+                // Save transaction
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 BigInteger fee = coinData.getTo().get(0).getAmount();
                 po.getMapAdditionalFee().put(tx.getHash().toHex(), fee);
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);
-                chain.getLogger().info("[commit] 追加提现交易手续费交易 hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), basicTxHash);
+                chain.getLogger().info("[commit] Additional withdrawal transaction fee transaction hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), basicTxHash);
             }
             return true;
         } catch (Exception e) {
@@ -160,12 +158,12 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (po == null || null == po.getMapAdditionalFee() || po.getMapAdditionalFee().isEmpty()) {
                     continue;
                 }
-                // 回滚提现手续费追加的变化
+                // Changes in Rollback Withdrawal Fee Addition
                 chain.decreaseWithdrawFeeChangeVersion(withdrawalTxHash);
-                //移除当前交易的kv
+                //Remove the current transactionkv
                 po.getMapAdditionalFee().remove(tx.getHash().toHex());
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);
-                chain.getLogger().info("[rollback] 追加提现交易手续费交易 hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), withdrawalTxHash);
+                chain.getLogger().info("[rollback] Additional withdrawal transaction fee transaction hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), withdrawalTxHash);
             }
             return true;
         } catch (Exception e) {
@@ -196,38 +194,38 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 WithdrawalAdditionalFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAdditionalFeeTxData.class);
                 if (StringUtils.isBlank(txData.getTxHash())) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    log.error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                    log.error("Original withdrawal transaction with additional transaction feeshashNot present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
                     continue;
                 }
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 /**
-                 * 1.只能有一个coinfrom 必须是nvt资产
-                 * cointo 只有一个 地址是手续费地址
-                 * from地址 == 签名地址 == 原始交易from地址
+                 * 1.There can only be onecoinfrom Must benvtasset
+                 * cointo Only one The address is the handling fee address
+                 * fromaddress == Signature address == Original transactionfromaddress
                  */
 
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinFrom组装错误, 有且只有一个from " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinFromAssembly error, There is and only onefrom " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
                 CoinFrom coinFrom = coinData.getFrom().get(0);
                 if (coinFrom.getAssetsChainId() != chain.getConfig().getChainId() || coinFrom.getAssetsId() != chain.getConfig().getAssetId()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DATA_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须是链内主资产 , AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional trading assets must be in chain primary assets , AssetsChainId:{}, AssetsId:{}",
                             coinFrom.getAssetsChainId(), coinFrom.getAssetsId());
                     continue;
                 }
@@ -237,14 +235,14 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == basicTx) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+                    chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-                    // 不是提现交易
+                    // Not a withdrawal transaction
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("txdata对应的交易不是提现交易/提案交易 , hash:{}", basicTxHash);
+                    chain.getLogger().error("txdataThe corresponding transaction is not a withdrawal transaction/Proposal transaction , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() == TxType.WITHDRAWAL) {
@@ -254,20 +252,20 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                     if (!Arrays.equals(sendAddress, withdrawalTxAddress)) {
                         failsList.add(tx);
                         errorCode = ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_UNMATCHED.getCode();
-                        chain.getLogger().error("该提现交易与追加交易用户不匹配 , 原始withdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
+                        chain.getLogger().error("The withdrawal transaction does not match the user of the additional transaction , originalwithdrawalTxHash:{}, withdrawalTxAddress:{}, AdditionalFeeAddress:{} ",
                                 basicTxHash,
                                 AddressTool.getStringAddressByBytes(withdrawalTxAddress),
                                 AddressTool.getStringAddressByBytes(sendAddress));
                         continue;
                     }
-                    // 判断该提现交易是否已经有对应的确认提现交易
+                    // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                     ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
                     if (null != po) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 } else if (basicTx.getType() == TxType.PROPOSAL) {
@@ -275,29 +273,29 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                     if (null == proposalPO || proposalPO.getType() != REFUND.value()) {
                         failsList.add(tx);
                         errorCode = ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
-                        chain.getLogger().error("该提现交易的原始提案交易不存在或不是提案原路退回 , 原始txHash:{}, txhash:{}",
+                        chain.getLogger().error("The original proposal transaction for the withdrawal transaction does not exist or is not returned through the original proposal route , originaltxHash:{}, txhash:{}",
                                 basicTxHash, hash);
                         continue;
                     }
                     String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
                     if (StringUtils.isNotBlank(confirmProposalHash)) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.PROPOSAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 }
 
-                // 验证to 补贴手续费收集分发地址
+                // validateto Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                 int txToSize = coinData.getTo().size();
                 if (txToSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinTo组装错误, 有且只有一个to " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinToAssembly error, There is and only oneto " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
@@ -305,7 +303,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (coinTo.getAssetsChainId() != chain.getConfig().getChainId() || coinTo.getAssetsId() != chain.getConfig().getAssetId()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DATA_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须是链内主资产 , AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional trading assets must be in chain primary assets , AssetsChainId:{}, AssetsId:{}",
                             coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     continue;
                 }
@@ -314,7 +312,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (!Arrays.equals(toAddress, withdrawalFeeAddress)) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
-                    chain.getLogger().error("手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+                    chain.getLogger().error("Collection address for handling fees and additional transactionstoAddress mismatch, toAddress:{}, withdrawalFeeAddress:{} ",
                             AddressTool.getStringAddressByBytes(toAddress),
                             AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
                     continue;
@@ -331,7 +329,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
     }
 
     /**
-     * 协议v1.13 任意地址可给跨链转出交易追加手续费
+     * protocolv1.13 Any address can add additional transaction fees for cross chain transfer transactions
      */
     private Map<String, Object> validateV13(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
         if (txs.isEmpty()) {
@@ -351,36 +349,36 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 WithdrawalAdditionalFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAdditionalFeeTxData.class);
                 if (StringUtils.isBlank(txData.getTxHash())) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    log.error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                    log.error("Original withdrawal transaction with additional transaction feeshashNot present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
                     continue;
                 }
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 /**
-                 * 1.只能有一个coinfrom 必须是nvt资产
-                 * cointo 只有一个 地址是手续费地址
+                 * 1.There can only be onecoinfrom Must benvtasset
+                 * cointo Only one The address is the handling fee address
                  */
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinFrom组装错误, 有且只有一个from " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinFromAssembly error, There is and only onefrom " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
                 CoinFrom coinFrom = coinData.getFrom().get(0);
                 if (coinFrom.getAssetsChainId() != chain.getConfig().getChainId() || coinFrom.getAssetsId() != chain.getConfig().getAssetId()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DATA_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须是链内主资产 , AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional trading assets must be in chain primary assets , AssetsChainId:{}, AssetsId:{}",
                             coinFrom.getAssetsChainId(), coinFrom.getAssetsId());
                     continue;
                 }
@@ -390,25 +388,25 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == basicTx) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+                    chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-                    // 不是提现交易
+                    // Not a withdrawal transaction
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("txdata对应的交易不是提现交易/提案交易 , hash:{}", basicTxHash);
+                    chain.getLogger().error("txdataThe corresponding transaction is not a withdrawal transaction/Proposal transaction , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() == TxType.WITHDRAWAL) {
-                    // 判断该提现交易是否已经有对应的确认提现交易
+                    // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                     ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
                     if (null != po) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 } else if (basicTx.getType() == TxType.PROPOSAL) {
@@ -416,29 +414,29 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                     if (null == proposalPO || proposalPO.getType() != REFUND.value()) {
                         failsList.add(tx);
                         errorCode = ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
-                        chain.getLogger().error("该提现交易的原始提案交易不存在或不是提案原路退回 , 原始txHash:{}, txhash:{}",
+                        chain.getLogger().error("The original proposal transaction for the withdrawal transaction does not exist or is not returned through the original proposal route , originaltxHash:{}, txhash:{}",
                                 basicTxHash, hash);
                         continue;
                     }
                     String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
                     if (StringUtils.isNotBlank(confirmProposalHash)) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.PROPOSAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 }
 
-                // 验证to 补贴手续费收集分发地址
+                // validateto Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                 int txToSize = coinData.getTo().size();
                 if (txToSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinTo组装错误, 有且只有一个to " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinToAssembly error, There is and only oneto " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
@@ -446,7 +444,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (coinTo.getAssetsChainId() != chain.getConfig().getChainId() || coinTo.getAssetsId() != chain.getConfig().getAssetId()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DATA_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须是链内主资产 , AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional trading assets must be in chain primary assets , AssetsChainId:{}, AssetsId:{}",
                             coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     continue;
                 }
@@ -455,7 +453,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (!Arrays.equals(toAddress, withdrawalFeeAddress)) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
-                    chain.getLogger().error("手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+                    chain.getLogger().error("Collection address for handling fees and additional transactionstoAddress mismatch, toAddress:{}, withdrawalFeeAddress:{} ",
                             AddressTool.getStringAddressByBytes(toAddress),
                             AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
                     continue;
@@ -472,10 +470,10 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
     }
 
     /**
-     * 协议v1.15 修改手续费机制，支持异构链主资产作为手续费
+     * protocolv1.15 Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
      */
     private Map<String, Object> validateV15(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         if (txs.isEmpty()) {
             return null;
         }
@@ -493,29 +491,29 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 WithdrawalAdditionalFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAdditionalFeeTxData.class);
                 if (StringUtils.isBlank(txData.getTxHash())) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    log.error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                    log.error("Original withdrawal transaction with additional transaction feeshashNot present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
                     continue;
                 }
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 /**
-                 * 1.只能有一个coinfrom 必须是nvt资产或者其他链的主资产
-                 * cointo 只有一个 地址是手续费地址
+                 * 1.There can only be onecoinfrom Must benvtThe main asset of an asset or other chain
+                 * cointo Only one The address is the handling fee address
                  */
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinFrom组装错误, 有且只有一个from " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinFromAssembly error, There is and only onefrom " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
@@ -524,30 +522,30 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == basicTx) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+                    chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL) {
-                    // 不是提现交易
+                    // Not a withdrawal transaction
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("txdata对应的交易不是提现交易/提案交易 , hash:{}", basicTxHash);
+                    chain.getLogger().error("txdataThe corresponding transaction is not a withdrawal transaction/Proposal transaction , hash:{}", basicTxHash);
                     continue;
                 }
                 int feeAssetChainId = chain.getConfig().getChainId();
                 int feeAssetId = chain.getConfig().getAssetId();
                 if (basicTx.getType() == TxType.WITHDRAWAL) {
-                    // 判断该提现交易是否已经有对应的确认提现交易
+                    // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                     ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
                     if (null != po) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
-                    // 提现交易的手续费资产ID
+                    // Handling fee assets for withdrawal transactionsID
                     CoinData basicCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
                     byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                     Coin feeCoin = null;
@@ -564,38 +562,38 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                     if (null == proposalPO || proposalPO.getType() != REFUND.value()) {
                         failsList.add(tx);
                         errorCode = ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
-                        chain.getLogger().error("该提现交易的原始提案交易不存在或不是提案原路退回 , 原始txHash:{}, txhash:{}",
+                        chain.getLogger().error("The original proposal transaction for the withdrawal transaction does not exist or is not returned through the original proposal route , originaltxHash:{}, txhash:{}",
                                 basicTxHash, hash);
                         continue;
                     }
                     String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
                     if (StringUtils.isNotBlank(confirmProposalHash)) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.PROPOSAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 }
 
-                // 验证to 补贴手续费收集分发地址
+                // validateto Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                 int txToSize = coinData.getTo().size();
                 if (txToSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinTo组装错误, 有且只有一个to " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinToAssembly error, There is and only oneto " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
-                // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+                // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
                 CoinTo coinTo = coinData.getTo().get(0);
                 if (coinTo.getAssetsChainId() != feeAssetChainId || coinTo.getAssetsId() != feeAssetId) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须与提现交易的手续费资产一致, AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional transaction assets must be consistent with the transaction fee assets for withdrawal transactions, AssetsChainId:{}, AssetsId:{}",
                             coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     continue;
                 }
@@ -604,7 +602,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (!Arrays.equals(toAddress, withdrawalFeeAddress)) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
-                    chain.getLogger().error("手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+                    chain.getLogger().error("Collection address for handling fees and additional transactionstoAddress mismatch, toAddress:{}, withdrawalFeeAddress:{} ",
                             AddressTool.getStringAddressByBytes(toAddress),
                             AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
                     continue;
@@ -621,10 +619,10 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
     }
 
     /**
-     * 协议v1.21 一键跨链
+     * protocolv1.21 One click cross chain
      */
     private Map<String, Object> validateV21(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
-        // 修改手续费机制，支持异构链主资产作为手续费
+        // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
         if (txs.isEmpty()) {
             return null;
         }
@@ -642,29 +640,29 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 WithdrawalAdditionalFeeTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAdditionalFeeTxData.class);
                 if (StringUtils.isBlank(txData.getTxHash())) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    log.error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+                    log.error("Original withdrawal transaction with additional transaction feeshashNot present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
                     continue;
                 }
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 /**
-                 * 1.只能有一个coinfrom 必须是nvt资产或者其他链的主资产
-                 * cointo 只有一个 地址是手续费地址
+                 * 1.There can only be onecoinfrom Must benvtThe main asset of an asset or other chain
+                 * cointo Only one The address is the handling fee address
                  */
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinFrom组装错误, 有且只有一个from " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinFromAssembly error, There is and only onefrom " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
@@ -673,30 +671,30 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (null == basicTx) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+                    chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
                     continue;
                 }
                 if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.PROPOSAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN) {
-                    // 不是提现交易
+                    // Not a withdrawal transaction
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    chain.getLogger().error("txdata对应的交易不是提现交易/提案交易/一键跨链 , hash:{}", basicTxHash);
+                    chain.getLogger().error("txdataThe corresponding transaction is not a withdrawal transaction/Proposal transaction/One click cross chain , hash:{}", basicTxHash);
                     continue;
                 }
                 int feeAssetChainId = chain.getConfig().getChainId();
                 int feeAssetId = chain.getConfig().getAssetId();
                 if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
-                    // 判断该提现交易是否已经有对应的确认提现交易
+                    // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                     ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
                     if (null != po) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
-                    // 提现交易的手续费资产ID
+                    // Handling fee assets for withdrawal transactionsID
                     CoinData basicCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
                     byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                     Coin feeCoin = null;
@@ -713,38 +711,38 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                     if (null == proposalPO || proposalPO.getType() != REFUND.value()) {
                         failsList.add(tx);
                         errorCode = ConverterErrorCode.PROPOSAL_TYPE_ERROR.getCode();
-                        chain.getLogger().error("该提现交易的原始提案交易不存在或不是提案原路退回 , 原始txHash:{}, txhash:{}",
+                        chain.getLogger().error("The original proposal transaction for the withdrawal transaction does not exist or is not returned through the original proposal route , originaltxHash:{}, txhash:{}",
                                 basicTxHash, hash);
                         continue;
                     }
                     String confirmProposalHash = proposalExeStorageService.find(chain, basicTx.getHash().toHex());
                     if (StringUtils.isNotBlank(confirmProposalHash)) {
-                        // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
+                        // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
                         failsList.add(tx);
-                        // Nerve提现交易不存在
+                        // NerveWithdrawal transaction does not exist
                         errorCode = ConverterErrorCode.PROPOSAL_CONFIRMED.getCode();
-                        chain.getLogger().error("该提案交易已经完成,不能再追加异构链提现手续费, proposalTxhash:{}, hash:{}", basicTxHash, hash);
+                        chain.getLogger().error("The proposed transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, proposalTxhash:{}, hash:{}", basicTxHash, hash);
                         continue;
                     }
                 }
 
-                // 验证to 补贴手续费收集分发地址
+                // validateto Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
                 int txToSize = coinData.getTo().size();
                 if (txToSize != COIN_SIZE_1) {
                     failsList.add(tx);
-                    // 提现交易hash
+                    // Withdrawal transactionshash
                     errorCode = ConverterErrorCode.DATA_SIZE_ERROR.getCode();
-                    log.error("coinTo组装错误, 有且只有一个to " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
+                    log.error("coinToAssembly error, There is and only oneto " + ConverterErrorCode.DATA_SIZE_ERROR.getMsg());
                     continue;
                 }
 
-                // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+                // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
                 CoinTo coinTo = coinData.getTo().get(0);
                 if (coinTo.getAssetsChainId() != feeAssetChainId || coinTo.getAssetsId() != feeAssetId) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR.getCode();
-                    chain.getLogger().error("追加交易资产必须与提现交易的手续费资产一致, AssetsChainId:{}, AssetsId:{}",
+                    chain.getLogger().error("Additional transaction assets must be consistent with the transaction fee assets for withdrawal transactions, AssetsChainId:{}, AssetsId:{}",
                             coinTo.getAssetsChainId(), coinTo.getAssetsId());
                     continue;
                 }
@@ -753,7 +751,7 @@ public class WithdrawalAdditionalFeeProcessor implements TransactionProcessor {
                 if (!Arrays.equals(toAddress, withdrawalFeeAddress)) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.DISTRIBUTION_ADDRESS_MISMATCH.getCode();
-                    chain.getLogger().error("手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+                    chain.getLogger().error("Collection address for handling fees and additional transactionstoAddress mismatch, toAddress:{}, withdrawalFeeAddress:{} ",
                             AddressTool.getStringAddressByBytes(toAddress),
                             AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
                     continue;

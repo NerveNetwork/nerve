@@ -71,7 +71,7 @@ public class CreatePairHandler extends SwapHandlerConstraints {
         SwapResult result = new SwapResult();
         BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
         try {
-            // 提取业务参数
+            // Extract business parameters
             CreatePairData txData = new CreatePairData();
             txData.parse(tx.getTxData(), 0);
             NerveToken token0 = txData.getToken0();
@@ -90,9 +90,9 @@ public class CreatePairHandler extends SwapHandlerConstraints {
             if (swapTempPairManager.isExist(address)) {
                 throw new NulsException(PAIR_ALREADY_EXISTS);
             }
-            // 保存临时创建的交易对
+            // Save temporarily created transaction pairs
             swapTempPairManager.add(address);
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
@@ -101,7 +101,7 @@ public class CreatePairHandler extends SwapHandlerConstraints {
 
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());

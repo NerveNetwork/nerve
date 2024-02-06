@@ -90,16 +90,16 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     public void recordVirtualBankChanges(Chain chain) {
         LatestBasicBlock latestBasicBlock = chain.getLatestBasicBlock();
         long height = latestBasicBlock.getHeight();
-        // 获取最新共识列表
+        // Get the latest consensus list
         List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, latestBasicBlock.getHeight());
         if (null == listAgent) {
-            chain.getLogger().error("检查虚拟银行变更时, 向共识模块获取共识节点列表数据为null");
+            chain.getLogger().error("When checking for changes in virtual banking, Obtain consensus node list data from the consensus module asnull");
             return;
         }
-        // 初始化虚拟银行
+        // Initialize virtual bank
         initBank(chain, listAgent, height);
         if (latestBasicBlock.getSyncStatusEnum().equals(SyncStatusEnum.RUNNING)) {
-            // 判断当前是否是虚拟银行成员
+            // Determine whether the current member is a virtual bank
             SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
             if (null == signAccountDTO) {
                 chain.getCurrentIsDirector().set(false);
@@ -112,51 +112,51 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
                 return;
             }
-            //虚拟银行检查
+            //Virtual Bank Check
             VirtualBankTemporaryChangePO virtualBankTemporaryChange = baseCheckVirtualBank(chain, listAgent, height, signAccountDTO);
             if (null == virtualBankTemporaryChange) {
                 return;
             }
-            chain.getLogger().info("[虚拟银行变更] 检测到需要执行创建变更交易.. 加入数:{}, 退出数:{}",
+            chain.getLogger().info("[Virtual Bank Change] Detected the need to create a change transaction.. Number of additions:{}, Number of exits:{}",
                     virtualBankTemporaryChange.getListInAgents().size(),
                     virtualBankTemporaryChange.getListOutAgents().size());
-            // 如果有stopAgent节点 则用停止节点区块头的时间,作为变更交易时间
+            // If there is anystopAgentnode Then use the time to stop the node block header,As a change in transaction time
             long txTime = virtualBankTemporaryChange.getOutTxBlockTime() > 0L ? virtualBankTemporaryChange.getOutTxBlockTime() : latestBasicBlock.getTime();
             effectVirtualBankChangeTx(chain, virtualBankTemporaryChange, txTime);
         }
-        // 检查提案是否到期
+        // Check if the proposal has expired
         checkIfVotingProposalClosed(chain, latestBasicBlock);
 
     }
 
     /**
-     * 检查投票中的提案是否结束
+     * Check if the proposal in the vote has ended
      *
      * @param chain
      * @param latestBasicBlock
      */
     private void checkIfVotingProposalClosed(Chain chain, LatestBasicBlock latestBasicBlock) {
-        // 可投票的提案放入缓存map
+        // Votable proposals placed in cachemap
         Set<ProposalPO> removeSet = new HashSet<>();
         List<ProposalPO> list = new ArrayList<>(chain.getVotingProposalMap().values());
         for (ProposalPO po : list) {
             if (latestBasicBlock.getHeight() >= po.getVoteEndHeight()) {
-                // 提案投票结束 修改状态 从投票中列表中移除, 更新提案数据库
+                // Proposal voting ended modify state Remove from voting list, Update proposal database
                 if (po.getStatus() == ProposalVoteStatusEnum.VOTING.value()) {
-                    // 提案还在投票中说明还没通过, 则设置为被否决.
+                    // The proposal is still in the voting process, indicating that it has not been approved yet, Set as rejected.
                     po.setStatus(ProposalVoteStatusEnum.REJECTED.value());
                 }
                 this.proposalStorageService.save(chain, po);
                 this.proposalVotingStorageService.delete(chain, po.getHash());
                 removeSet.add(po);
-                chain.getLogger().info("提案已截止投票, hash:{}, type:{}, endHeight:{}, status:{}",
+                chain.getLogger().info("The proposal has been closed for voting, hash:{}, type:{}, endHeight:{}, status:{}",
                         po.getHash().toHex(),
                         po.getType(),
                         po.getVoteEndHeight(),
                         ProposalVoteStatusEnum.getEnum(po.getStatus()));
             }
         }
-        // 清理
+        // clean up
         for (ProposalPO proposalPO : removeSet) {
             chain.getVotingProposalMap().remove(proposalPO.getHash());
         }
@@ -178,17 +178,17 @@ public class VirtualBankServiceImpl implements VirtualBankService {
 
     @Override
     public void initLocalSignPriKeyToHeterogeneous(Chain chain, SignAccountDTO signAccountDTO) throws NulsException {
-        // 如果本节点是共识节点, 并且是虚拟银行成员则执行注册
+        // If this node is a consensus node, And if it is a virtual bank member, registration will be executed
         if (null != signAccountDTO) {
             String priKey = AccountCall.getPriKey(signAccountDTO.getAddress(), signAccountDTO.getPassword());
             List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
             if (null == hInterfaces || hInterfaces.isEmpty()) {
-                chain.getLogger().error("异构链组件为空");
+                chain.getLogger().error("Heterogeneous chain component is empty");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
             }
             for (IHeterogeneousChainDocking dock : hInterfaces) {
                 dock.importAccountByPriKey(priKey, signAccountDTO.getPassword());
-                chain.getLogger().info("[初始化]本节点是虚拟银行节点,向异构链组件注册签名账户信息..");
+                chain.getLogger().info("[initialization]This node is a virtual banking node,Register signing account information with heterogeneous chain components..");
             }
         }
     }
@@ -196,13 +196,13 @@ public class VirtualBankServiceImpl implements VirtualBankService {
 
     private synchronized void initBank(Chain chain, List<AgentBasic> listAgent, long height) {
         int bankNumber = chain.getMapVirtualBank().size();
-        /* 2020/11/19 如果异构链数量与虚拟银行节点（种子）维护的异构链地址数不一致， 则需要初始化虚拟银行**/
+        /* 2020/11/19 If the number of heterogeneous chains is different from that of virtual banking nodes（seed）The number of heterogeneous chain addresses maintained is inconsistent, Then it is necessary to initialize the virtual bank**/
         int heterogeneousSize = 0;
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
             if (director.getSeedNode()) {
                 heterogeneousSize = director.getHeterogeneousAddrMap().size();
                 if (chain.getChainId() == 5 && director.getHeterogeneousAddrMap().containsKey(101)) {
-                    // add by pierre at 2023/2/6 测试网删除了101配置
+                    // add by pierre at 2023/2/6 Test network deleted101allocation
                     heterogeneousSize--;
                 }
                 break;
@@ -211,19 +211,19 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         int hSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
         chain.getLogger().debug("heterogeneousSize: {}, hSize: {}, bankNumber: {}", heterogeneousSize, hSize, bankNumber);
         /**
-         * 判断需要进行初始化
+         * Determine the need for initialization
          */
         if (heterogeneousSize != hSize || (INIT_VIRTUAL_BANK_HEIGHT <= height && bankNumber == 0)) {
             chain.getLogger().debug("INIT_VIRTUAL_BANK_HEIGHT: {}, height: {}", INIT_VIRTUAL_BANK_HEIGHT, height);
             try {
-                //初始化种子节点为初始虚拟银行
+                //Initialize the seed node as the initial virtual bank
                 initVirtualBank(chain, listAgent, height);
             } catch (Exception e) {
                 chain.getLogger().error(e);
             }
         }
         /**
-         * 节点数超过阈值, 有虚拟银行在运行
+         * The number of nodes exceeds the threshold, There is a virtual bank running
          */
         if (!ENABLED_VIRTUAL_BANK_CHANGES_SERVICE) {
 //            if (ConverterContext.INITIAL_VIRTUAL_BANK_COUNT <= listAgent.size() && bankNumber > 0) {
@@ -234,91 +234,91 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
-     * 统计出立即执行的最新待加入和待退出的虚拟银行节点列表
-     * 1.检查是否有成员退出, 有则执行变更.
-     * 2.检查达到周期执行高度, 达到则执行变更.
-     * 返回null(不执行变更)的情况包括
-     * 1.没有成员退出 或没有达到周期执行条件
-     * 2.虚拟银行成员无变化
+     * Count the latest list of virtual bank nodes to be added and exited for immediate execution
+     * 1.Check if any members have exited, If there is, execute the change.
+     * 2.Check that the cycle execution height has been reached, If achieved, execute the change.
+     * returnnull(Do not execute changes)The situation includes
+     * 1.No members left Or did not meet the cycle execution conditions
+     * 2.Virtual bank members remain unchanged
      *
      * @param chain
      * @throws NulsException
      */
     private VirtualBankTemporaryChangePO baseCheckVirtualBank(Chain chain, List<AgentBasic> listAgent, long height, SignAccountDTO signAccountDTO) {
-        //达到检查周期
+        //Reaching the inspection cycle
         boolean immediateEffectHeight = height % EXECUTE_CHANGE_VIRTUAL_BANK_PERIODIC_HEIGHT == 0;
         if (immediateEffectHeight) {
-            //记录当前检查高度
-            chain.getLogger().info("达到周期性检查执行高度:{}", height);
+            //Record the current inspection height
+            chain.getLogger().info("Reaching the height of periodic inspection execution:{}", height);
         }
-        // 初始化
+        // initialization
         if (INIT_VIRTUAL_BANK_HEIGHT <= height && !chain.getInitLocalSignPriKeyToHeterogeneous()) {
             try {
-                // 向异构链组件,注册地址签名信息
+                // To heterogeneous chain components,Registration address signature information
                 initLocalSignPriKeyToHeterogeneous(chain, signAccountDTO);
                 chain.setInitLocalSignPriKeyToHeterogeneous(true);
             } catch (NulsException e) {
                 if (immediateEffectHeight) {
-                    chain.getLogger().info("达到周期性检查执行高度:{}, - 退出检查(向异构链组件注册地址签名信息异常)", height);
+                    chain.getLogger().info("Reaching the height of periodic inspection execution:{}, - Exit Check(Abnormal address signature information registered with heterogeneous chain components)", height);
                 }
                 chain.getLogger().error(e);
             }
         }
-        // 新加入的异构跨链组件，根据生效高度检查，是否向异构链组件,注册地址签名信息
+        // Newly added heterogeneous cross chain components should be checked based on their effectiveness level to determine if they are being integrated into heterogeneous chain components,Registration address signature information
         heterogeneousDockingManager.checkAccountImportedInDocking(chain, signAccountDTO);
 
         if (!ENABLED_VIRTUAL_BANK_CHANGES_SERVICE) {
-            // 没有达到开启条件 不能触发变更服务 直接返回
+            // Not meeting the opening conditions Cannot trigger change service Directly return
             if (immediateEffectHeight) {
-                chain.getLogger().info("达到周期性检查执行高度:{}, - 退出检查(变更服务未开启)", height);
+                chain.getLogger().info("Reaching the height of periodic inspection execution:{}, - Exit Check(Change service not enabled)", height);
             }
             return null;
         }
 
         if (chain.getResetVirtualBank().get() || chain.getExeDisqualifyBankProposal().get()) {
-            // 当正在执行重置虚拟银行合约 或执行踢出虚拟银行提案时, 不进行银行变更检查
+            // When resetting virtual banking contracts Or when executing the proposal to kick out the virtual bank, Not conducting bank change checks
             return null;
         }
-        // 根据最新共识列表,计算出最新的有虚拟银行资格的成员(非当前实际生效的虚拟应银行成员)
+        // According to the latest consensus list,Calculate the latest members with virtual banking qualifications(Non current effective virtual bank members)
         List<AgentBasic> listVirtualBank = calcNewestVirtualBank(chain, listAgent);
-        // 当前已生效的
+        // Currently in effect
         Map<String, VirtualBankDirector> mapCurrentVirtualBank = chain.getMapVirtualBank();
-        // 记录周期内模块本地银行变化情况
+        // Record the changes in the local bank of the module during the cycle
         VirtualBankTemporaryChangePO virtualBankTemporaryChange = new VirtualBankTemporaryChangePO();
         boolean isImmediateEffect = false;
 
-        // 统计退出的节点 (只要不在最新计算的虚拟银行列表中, 则表示退出立即执行(包括保证金排名和直接停止共识节点))
+        // Count the nodes that have exited (As long as it is not in the latest calculated virtual bank list, Means to exit and execute immediately(Including margin ranking and direct stop consensus nodes))
         for (VirtualBankDirector director : mapCurrentVirtualBank.values()) {
             if (director.getSeedNode()) {
                 continue;
             }
             boolean rs = true;
             for (AgentBasic agentBasic : listVirtualBank) {
-                // 判断当前银行成员也存在于计算出的最新有虚拟银行资格的列表中, 或成员是种子节点 都不用放入退出列表
+                // Determine if the current bank members also exist in the latest calculated list of virtual bank qualifications, Or member is a seed node No need to put it in the exit list
                 if (director.getAgentAddress().equals(agentBasic.getAgentAddress())) {
-                    // 不需要执行退出的节点
+                    // Nodes that do not require exit execution
                     rs = false;
                 }
             }
-            // 查询是否在撤销资格列表中
+            // Check if it is in the disqualification list
             String addr = disqualificationStorageService.find(chain, AddressTool.getAddress(director.getAgentAddress()));
             if (rs || StringUtils.isNotBlank(addr)) {
-                //表示已经不是虚拟银行节点, 需要立即发布虚拟银行变更交易
+                //Indicates that it is no longer a virtual bank node, Need to immediately publish virtual bank change transactions
                 virtualBankTemporaryChange.getListOutAgents().add(AddressTool.getAddress(director.getAgentAddress()));
 
                 /**
-                 * 需要根据退出的节点地址, 去获取节点hash, 再获取节点信息
-                 * 如果有节点退出高度就说明节点退出共识,直接取退出节点的高度; 否则用当前高度
-                 * 节点hash需要存在虚拟银行列表中, 需要通过 ConsensusCall.getAgentInfo(chain, latestBasicBlock.getHeight());获取得到
+                 * It needs to be determined based on the address of the exiting node, Go get the nodehash, Retrieve node information again
+                 * If there is a node exit height, it indicates that the node has exited consensus,Directly take the height of the exit node; Otherwise, use the current height
+                 * nodehashMust exist in the virtual bank list, Need to pass through ConsensusCall.getAgentInfo(chain, latestBasicBlock.getHeight());Obtain
                  */
                 String agentHash = director.getAgentHash();
                 long delHeight = ConsensusCall.agentDelHeight(chain, agentHash);
                 virtualBankTemporaryChange.setOutHeight(delHeight);
                 if (delHeight > 0L) {
-                    // 说明有stopagent节点
+                    // Explanation: Yesstopagentnode
                     BlockHeader blockHeader = BlockCall.getBlockHeader(chain, delHeight);
                     if (null == blockHeader) {
-                        chain.getLogger().error("检查虚拟银行变更, 根据stopAgent高度获取区块头异常, height:{},", delHeight);
+                        chain.getLogger().error("Check virtual bank changes, according tostopAgentAbnormal height acquisition block header, height:{},", delHeight);
                         return null;
                     }
                     virtualBankTemporaryChange.setOutTxBlockTime(blockHeader.getTime());
@@ -333,12 +333,12 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         }
 
         if (!isImmediateEffect && !immediateEffectHeight) {
-            // 如果没有退出的节点, 并且当前没达到周期性的触发高度
+            // If there are no nodes that have exited, And currently, it has not reached the periodic triggering height
             return null;
         }
-        // 统计加入的节点
+        // Statistics of added nodes
         for (AgentBasic agentBasic : listVirtualBank) {
-            // 判断当前生效的虚拟银行中不存在该节点, 表示该节点是新增节点
+            // Determine if the node does not exist in the currently effective virtual bank, Indicates that the node is a newly added node
             if (!mapCurrentVirtualBank.containsKey(agentBasic.getPackingAddress())) {
                 virtualBankTemporaryChange.getListInAgents().add(AddressTool.getAddress(agentBasic.getAgentAddress()));
                 try {
@@ -349,19 +349,20 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             }
         }
         if (virtualBankTemporaryChange.isBlank()) {
-            // 表示虚拟银行成员没有变化
-            chain.getLogger().info("[Check] 虚拟银行变更检查完成, 虚拟银行成员无变化!");
+            // Indicates that the virtual bank members have not changed
+            chain.getLogger().info("[Check] Virtual bank change check completed, Virtual bank members remain unchanged!");
             return null;
         }
         return virtualBankTemporaryChange;
     }
 
     /**
-     * 判断节点出块地址对应的异构地址余额是否满足条件
+     * Determine whether the balance of heterogeneous addresses corresponding to node block addresses meets the conditions
      *
      * @param agentBasic
-     * @return 满足:true, 不满足:false
+     * @return satisfy:true, Not satisfied:false
      */
+    @Deprecated
     private boolean checkHeterogeneousAddressBalance(Chain chain, AgentBasic agentBasic) {
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
         for (IHeterogeneousChainDocking hInterface : hInterfaces) {
@@ -374,14 +375,14 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             boolean rs = false;
             for (HeterogeneousCfg cfg : chain.getListHeterogeneous()) {
                 if (cfg.getType() != 1) {
-                    // 非主资产, 无需验证
+                    // Non main assets, No verification required
                     continue;
                 }
                 if (cfg.getChainId() == hInterface.getChainId() && cfg.getInitialBalance().compareTo(balance) < 0) {
                     rs = true;
                 }
             }
-            // 所有异构链地址都需要满足条件
+            // All heterogeneous chain addresses need to meet the conditions
             if (!rs) {
                 chain.getLogger().warn("The agent heterogeneous address insufficient balance, cannot join virtual bank. agentAddress:{}, packingAddress:{}",
                         agentBasic.getAgentAddress(), agentBasic.getPackingAddress());
@@ -392,7 +393,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
-     * 根据最新的排好序的共识列表 统计出最新的有虚拟银行资格的成员
+     * Based on the latest sorted consensus list Count the latest members with virtual banking qualifications
      *
      * @param listAgent
      * @return
@@ -400,12 +401,12 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     @Override
     public List<AgentBasic> calcNewestVirtualBank(Chain chain, List<AgentBasic> listAgent) {
         List<AgentBasic> listVirtualBank = new ArrayList<>();
-        // 排除种子节点
+        // Exclude seed nodes
         for (AgentBasic agentBasic : listAgent) {
-            // 排除已被撤销虚拟银行资格的节点地址
+            // Exclude node addresses that have been disqualified from virtual banking
             String disqualificationAddress = disqualificationStorageService.find(chain, AddressTool.getAddress(agentBasic.getAgentAddress()));
 
-            /* // 排除节点出块地址对应的异构地址余额不满足初始值的节点
+            /* // Exclude nodes with heterogeneous address balances corresponding to block addresses that do not meet the initial value
             boolean join = checkHeterogeneousAddressBalance(chain, agentBasic);*/
             boolean packaged = StringUtils.isNotBlank(agentBasic.getPubKey());
             if (!agentBasic.getSeedNode() && StringUtils.isBlank(disqualificationAddress) && packaged) {
@@ -416,20 +417,20 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             return listVirtualBank;
         }
         /**
-         * 同时有多个节点保证金都相同,且满足加入虚拟银行条件,
-         * 如都加入会超出银行总数阈值 需要进行排序来确定最终银行成员
-         * 取出排在虚拟银行总数阈值位置的节点, 再取出列表中与之保证金相同的节点
-         * 通过当前银行的顺序,当前已排序节点列表来确定最终顺序
+         * There are multiple nodes with the same margin at the same time,And meet the conditions for joining virtual banking,
+         * If all are added, it will exceed the threshold for the total number of banks Sorting is required to determine the final bank members
+         * Retrieve the nodes ranked at the threshold of the total number of virtual banks, Retrieve nodes from the list that have the same margin as them
+         * By the order of the current bank,The current sorted node list is used to determine the final order
          */
         AgentBasic thresholdAgentBasic = listVirtualBank.get(VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED - 1);
         BigInteger thresholdDeposit = thresholdAgentBasic.getDeposit();
 
-        // 阈值后一个节点
+        // Node after threshold
         AgentBasic afterThresholdAgentBasic = listVirtualBank.get(VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED);
         BigInteger afterThresholdDeposit = afterThresholdAgentBasic.getDeposit();
 
         if (thresholdDeposit.compareTo(afterThresholdDeposit) != 0) {
-            // 处于阈值位置节点的保证金与后一个节点保证金不同, 直接取前 VIRTUAL_BANK_AGENT_NUMBER 个节点成员新的虚拟银行资格成员列表
+            // The margin of the node at the threshold position is different from the margin of the subsequent node, Take directly before VIRTUAL_BANK_AGENT_NUMBER New virtual bank qualification member list for node members
             return listVirtualBank.subList(0, VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED);
         }
 
@@ -441,10 +442,10 @@ public class VirtualBankServiceImpl implements VirtualBankService {
             if (thresholdDeposit.compareTo(agentBasic.getDeposit()) == 0) {
                 VirtualBankDirector director = mapCurrentVirtualBank.get(agentBasic.getPackingAddress());
                 if (null == director) {
-                    // 如果不是虚拟银行成员则index为银行总数+当前索引 保证当前顺序, 但排名在当前虚拟银行节点之后
+                    // If not a member of a virtual bank, thenindexFor the total number of banks+Current index Ensure current order, But ranking behind the current virtual banking node
                     agentBasic.setIndex(VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED + INITIAL_VIRTUAL_BANK_SEED_COUNT + i + 1);
                 } else {
-                    // 如果是虚拟银行则 用虚拟银行的排序值
+                    // If it is a virtual bank, then Using sorting values from virtual banks
                     agentBasic.setIndex(director.getOrder());
                 }
                 sameDeposit.add(agentBasic);
@@ -453,7 +454,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 listFinalVirtualBank.add(agentBasic);
             }
         }
-        // 排序
+        // sort
         sameDeposit.sort((Comparator.comparingInt(AgentBasic::getIndex)));
         int gap = VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED - listFinalVirtualBank.size();
         listFinalVirtualBank.addAll(sameDeposit.subList(0, gap));
@@ -461,7 +462,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
-     * 添加所有种子节点为虚拟银行成员
+     * Add all seed nodes as virtual bank members
      * @param chain
      * @param listAgent
      */
@@ -471,7 +472,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
         for (AgentBasic agentBasic : listAgent) {
             if (agentBasic.getSeedNode()) {
                 VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
-                // 种子节点打包地址,节点地址 奖励地址 设为一致
+                // Seed node packaging address,Node address Reward Address Set as consistent
                 virtualBankDirector.setAgentHash(agentBasic.getAgentHash());
                 virtualBankDirector.setAgentAddress(agentBasic.getPackingAddress());
                 virtualBankDirector.setSignAddress(agentBasic.getPackingAddress());
@@ -480,20 +481,20 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 virtualBankDirector.setSeedNode(agentBasic.getSeedNode());
                 virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
                 listInDirector.add(virtualBankDirector);
-                // 如果当前是共识节点, 判断当前是否是虚拟银行成员
+                // If it is currently a consensus node, Determine whether the current member is a virtual bank
                 if (null != signAccountDTO && agentBasic.getPackingAddress().equals(signAccountDTO.getAddress())) {
                     chain.getCurrentIsDirector().set(true);
-                    chain.getLogger().info("[虚拟银行] 当前节点介入虚拟银行,标识变更为: true");
+                    chain.getLogger().info("[Virtual banking] The current node is involved in virtual banking,Identification changed to: true");
                 }
             }
         }
-        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        // add by Mimi at 2020-05-06 Update when joining virtual banking[virtualBankDirector]stayDBStorage and order in memory
         VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
         // end code by Mimi
     }
 
     /**
-     * 添加配置的种子节点为虚拟银行成员
+     * Add the configured seed node as a virtual bank member
      * @param chain
      * @param listAgent
      */
@@ -514,7 +515,7 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                     //    chain.getLogger().warn("MapVirtualBank log print error ");
                     //}
                     VirtualBankDirector virtualBankDirector = new VirtualBankDirector();
-                    // 种子节点打包地址,节点地址 奖励地址 设为一致
+                    // Seed node packaging address,Node address Reward Address Set as consistent
                     virtualBankDirector.setAgentHash(agentBasic.getAgentHash());
                     virtualBankDirector.setAgentAddress(agentBasic.getPackingAddress());
                     virtualBankDirector.setSignAddress(agentBasic.getPackingAddress());
@@ -523,28 +524,28 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                     virtualBankDirector.setSeedNode(agentBasic.getSeedNode());
                     virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
                     listInDirector.add(virtualBankDirector);
-                    // 如果当前是共识节点, 判断当前是否是虚拟银行成员
+                    // If it is currently a consensus node, Determine whether the current member is a virtual bank
                     if (null != signAccountDTO && agentBasic.getPackingAddress().equals(signAccountDTO.getAddress())) {
                         chain.getCurrentIsDirector().set(true);
-                        chain.getLogger().info("[虚拟银行] 当前节点介入虚拟银行,标识变更为: true");
+                        chain.getLogger().info("[Virtual banking] The current node is involved in virtual banking,Identification changed to: true");
                     }
                 }
             }
         }
-        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        // add by Mimi at 2020-05-06 Update when joining virtual banking[virtualBankDirector]stayDBStorage and order in memory
         VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
         // end code by Mimi
     }
 
     /**
-     * 初始化所有种子节点为虚拟银行
+     * Initialize all seed nodes as virtual banks
      *
      * @param chain
      * @param listAgent
      */
     private void initVirtualBank(Chain chain, List<AgentBasic> listAgent, long height) throws NulsException {
 
-        // 如果虚拟银行为空 将种子节点初始化为 虚拟银行节成员
+        // If the virtual bank is empty Initialize the seed node as Virtual Bank Festival Members
         if (chain.getMapVirtualBank().isEmpty()) {
             if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                 addBankDirector(chain,  listAgent);
@@ -552,28 +553,28 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 addBankDirectorBySetting( chain, listAgent);
             }
         }
-        // 如果虚拟银行成员 初始化异构链地址
+        // If virtual bank members Initialize heterogeneous chain addresses
         List<IHeterogeneousChainDocking> hInterfaces = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
         if (null == hInterfaces || hInterfaces.isEmpty()) {
-            chain.getLogger().error("异构链组件为空");
+            chain.getLogger().error("Heterogeneous chain component is empty");
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
         }
-        // 调异构链组件,进行初始化
+        // Adjusting heterogeneous chain components,Perform initialization
         for (VirtualBankDirector director : chain.getMapVirtualBank().values()) {
            /* 2020/11/19
            if (!director.getSeedNode()) {
-                // 非种子节点 没有初始化, 无法获取异构链地址
+                // Non seed nodes Not initialized, Unable to obtain heterogeneous chain address
                 continue;
             }*/
             boolean save = false;
             for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                 if (!director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
-                    // 为新成员创建新的异构链多签地址
+                    // Create new heterogeneous chain multi sign addresses for new members
                     String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
                     save = true;
-                    chain.getLogger().info("[初始化异构链多签地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                    chain.getLogger().info("[Initialize heterogeneous chain multi signature addresses] Node address:{}, isomerismid:{}, Heterogeneous addresses:{}",
                             director.getAgentAddress(), hInterface.getChainId(), heterogeneousAddress);
                 }
             }
@@ -582,10 +583,10 @@ public class VirtualBankServiceImpl implements VirtualBankService {
                 virtualBankAllHistoryStorageService.save(chain, director);
             }
         }
-        // 发送给共识
+        // Send to consensus
         ConsensusCall.sendVirtualBank(chain, height);
         try {
-            chain.getLogger().info("[初始化]虚拟银行及异构链初始化完成 - MapVirtualBank : {}", JSONUtils.obj2json(chain.getMapVirtualBank()));
+            chain.getLogger().info("[initialization]Virtual banking and heterogeneous chain initialization completed - MapVirtualBank : {}", JSONUtils.obj2json(chain.getMapVirtualBank()));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -593,11 +594,11 @@ public class VirtualBankServiceImpl implements VirtualBankService {
     }
 
     /**
-     * 执行创建并发布虚拟银行变更交易
+     * Execute the creation and publication of virtual bank change transactions
      *
      * @param chain
      * @param vbankChange
-     * @param txTime      当前高度的区块时间作为虚拟银行变更的交易时间
+     * @param txTime      The current block time at high altitude serves as the transaction time for virtual bank changes
      */
     private void effectVirtualBankChangeTx(Chain chain, VirtualBankTemporaryChangePO vbankChange, long txTime) {
         List<byte[]> inAgentList = vbankChange.getListInAgents();

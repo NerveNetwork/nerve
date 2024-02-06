@@ -32,9 +32,9 @@ import java.util.List;
  */
 public class QuoteCfg {
 
-    /** txData 类型*/
+    /** txData type*/
     private int type;
-    /** txData解析器 */
+    /** txDataParser */
     private String dataParser;
     private List<TokenCfg> items;
 

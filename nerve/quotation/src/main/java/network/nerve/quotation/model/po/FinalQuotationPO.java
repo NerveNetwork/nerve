@@ -33,7 +33,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 经过计算可以使用的最终报价
+ * The final quotation that can be used after calculation
  * @author: Loki
  * @date: 2019/11/27
  */
@@ -42,13 +42,13 @@ public class FinalQuotationPO extends BaseNulsData {
     private String token;
     private double price;
     /**
-     * 发布时间 秒级
-     * 时间戳/1000
+     * Release time Second level
+     * time stamp/1000
      */
     private long launchTime;
     /**
-     * 报价的时间，可能早于发布时间 秒级
-     * 时间戳/1000
+     * The quotation time may be earlier than the release time Second level
+     * time stamp/1000
      */
     private long quotationTime;
 

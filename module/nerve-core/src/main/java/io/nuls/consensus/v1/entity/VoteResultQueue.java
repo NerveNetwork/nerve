@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class VoteResultQueue {
 
     /**
-     * 接收到的投票都统一放在这里
+     * All received votes are placed here uniformly
      */
     private LinkedBlockingQueue<VoteResultMessage> voteMessageQueue = new LinkedBlockingQueue<>();
 

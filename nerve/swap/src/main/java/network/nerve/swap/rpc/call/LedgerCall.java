@@ -20,7 +20,7 @@ import java.util.Map;
 public class LedgerCall extends BaseCall {
 
     /**
-     * 查询账户余额
+     * Query account balance
      */
     public static NonceBalance getBalanceNonce(int chainId, int assetChainId, int assetId, String address) throws NulsException {
         try {
@@ -45,7 +45,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * 查询账户余额
+     * Query account balance
      */
     public static BigInteger getBalance(int chainId, int assetChainId, int assetId, String address) {
         try {
@@ -72,7 +72,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * 登记LP资产
+     * registerLPasset
      */
     public static Integer lpAssetReg(int chainId, String assetName, int decimalPlace, String assetSymbol, String assetAddress) throws NulsException {
         try {
@@ -95,7 +95,7 @@ public class LedgerCall extends BaseCall {
     }
 
     /**
-     * 移除LP资产
+     * removeLPasset
      */
     public static Boolean lpAssetDelete(int assetId) throws NulsException {
         try {

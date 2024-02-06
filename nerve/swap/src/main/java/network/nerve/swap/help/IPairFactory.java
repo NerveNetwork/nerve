@@ -31,9 +31,9 @@ package network.nerve.swap.help;
 public interface IPairFactory {
 
     /**
-     * 实现两种
-     * 一种是直接从DB从获取
-     * 一种是从缓存中获取（缓存生命周期: 一个区块从第一个交易开始到最后一个交易结束）
+     * Implement two types
+     * One way is to directly obtain information fromDBGet from
+     * One way is to retrieve from the cache（Cache lifecycle: A block starts from the first transaction and ends at the last transaction）
      */
     IPair getPair(String pairAddress);
 

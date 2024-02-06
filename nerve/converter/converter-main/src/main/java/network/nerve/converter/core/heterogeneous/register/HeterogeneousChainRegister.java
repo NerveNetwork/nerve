@@ -42,7 +42,7 @@ import network.nerve.converter.model.bo.HeterogeneousChainInfo;
 import network.nerve.converter.model.bo.HeterogeneousChainRegisterInfo;
 
 /**
- * 异构链组件注册入口
+ * Heterogeneous Chain Component Registration Portal
  *
  * @author: Mimi
  * @date: 2020-02-17
@@ -69,22 +69,22 @@ public class HeterogeneousChainRegister {
 
     /**
      * @param chainName
-     * @param HeterogeneousChainInterface Nerve核心接口实现实例
+     * @param HeterogeneousChainInterface NerveCore interface implementation instance
      */
     public HeterogeneousChainRegisterInfo register(int nerveChainId, int heterogeneousChainId, IHeterogeneousChainDocking heterogeneousChainInterface) throws NulsException {
         HeterogeneousChainRegisterInfo info = new HeterogeneousChainRegisterInfo();
         /**
-         分配多签地址
-         分配回调函数实例
+         Assign multiple signed addresses
+         Assign callback function instance
          */
         HeterogeneousChainInfo chainInfo = heterogeneousChainManager.getHeterogeneousChainByChainId(heterogeneousChainId);
         if (chainInfo == null) {
             logger().error("error heterogeneousChainId: {}", heterogeneousChainId);
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR);
         }
-        // 管理异构链组件的接口实现实例
+        // Implementation Example of Interface for Managing Heterogeneous Chain Components
         heterogeneousDockingManager.registerHeterogeneousDocking(heterogeneousChainId, heterogeneousChainInterface);
-        // 多签地址
+        // Multiple signed addresses
         String multySignAddress = chainInfo.getMultySignAddress();
         IDepositTxSubmitter depositTxSubmitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(nerveChainId, heterogeneousChainId);
         ITxConfirmedProcessor txConfirmedProcessor = heterogeneousCallBackManager.createOrGetTxConfirmedProcessor(nerveChainId, heterogeneousChainId);

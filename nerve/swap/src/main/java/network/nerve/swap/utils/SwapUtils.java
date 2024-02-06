@@ -133,15 +133,15 @@ public class SwapUtils {
     }
 
     /*
-     常量乘积公式:
+     Constant product formula:
      rI * rO = (rI + aI) * (rO - aO) = rI * rO - rI * aO + ai * rO - aI * aO
      rI * aO + aI * aO = aI * rO
      aO * (rI + aI) = aI * rO
 
-     换算后得到amountOut:
+     Obtained after conversionamountOut:
      aO = aI * rO / (rI + aI)
 
-     加入手续费率:
+     Add transaction rate:
      aO = rO * aI * 997 / 1000 / (rI + aI *997 / 1000)
         = rO * aI * 997 / (rI * 1000 + aI *997 / 1000 * 1000)
         = rO * aI * 997 / (rI * 1000 + aI *997)
@@ -163,15 +163,15 @@ public class SwapUtils {
     }
 
     /*
-     常量乘积公式:
+     Constant product formula:
      rI * rO = (rI + aI) * (rO - aO) = rI * rO - rI * aO + aI * rO - aI * aO
      rI * aO = aI * rO - aI * aO
      aI * (rO - aO) = rI * aO
 
-     换算后得到amountIn:
+     Obtained after conversionamountIn:
      aI = rI * aO / (rO - aO)
 
-     加入手续费率:
+     Add transaction rate:
      aI * 997 / 1000 = rI * aO / (rO - aO);
      aI = rI * aO * 1000 / (rO - aO) / 997
      aI = rI * aO * 1000 / ((rO - aO) * 997)
@@ -195,7 +195,7 @@ public class SwapUtils {
         NerveToken token0 = nerveTokens[0];
         IPair pair = pairFactory.getPair(getStringPairAddress(chainId, tokenA, tokenB));
         BigInteger[] reserves = pair.getReserves();
-        // 返回feeRate
+        // returnfeeRate
         BigInteger feeRate = BigInteger.valueOf(pair.getPair().getFeeRate().intValue());
         BigInteger[] result = tokenA.equals(token0) ? new BigInteger[]{reserves[0], reserves[1], feeRate} : new BigInteger[]{reserves[1], reserves[0], feeRate};
         return result;
@@ -223,7 +223,7 @@ public class SwapUtils {
         return stableCoinGroup.groupIndex(token1, token2) != -1;
     }
 
-    // 根据 stablePairFactory 余额校验、精度转换
+    // according to stablePairFactory Balance verification、Precision conversion
     public static BigInteger getStableOutAmountByGroupIndex(int groupIndex, NerveToken tokenIn, BigInteger amountIn, NerveToken tokenOut, IPairFactory stablePairFactory, StableCoinGroup stableCoinGroup) throws NulsException {
         String stableAddress = stableCoinGroup.getAddressByIndex(groupIndex);
         IStablePair stablePair = stablePairFactory.getStablePair(stableAddress);
@@ -238,11 +238,11 @@ public class SwapUtils {
                 tokenOutIndex = k;
             }
         }
-        // 精度转换
+        // Precision conversion
         int[] decimalsOfCoins = po.getDecimalsOfCoins();
-        // 计算 tokenOutAmount
+        // calculate tokenOutAmount
         BigInteger tokenOutAmount = new BigDecimal(amountIn).movePointLeft(decimalsOfCoins[tokenInIndex]).movePointRight(decimalsOfCoins[tokenOutIndex]).toBigInteger();
-        // 余额校验
+        // Balance verification
         BigInteger[] balances = stablePair.getBalances();
         if (balances[tokenOutIndex].compareTo(tokenOutAmount) < 0) {
             throw new NulsException(SwapErrorCode.INSUFFICIENT_OUTPUT_AMOUNT);
@@ -262,7 +262,7 @@ public class SwapUtils {
         for (int i = 0; i < pathLength - 1; i++) {
             tokenIn = path[i];
             tokenOut = path[i + 1];
-            // 整合稳定币币池后，稳定币币种1:1兑换
+            // After integrating the stablecoin pool, stablecoin currencies1:1exchange
             int groupIndex;
             if ((groupIndex = stableCoinGroup.groupIndex(tokenIn, tokenOut)) != -1) {
                 amounts[i + 1] = getStableOutAmountByGroupIndex(groupIndex, tokenIn, amounts[i], tokenOut, pairFactory, stableCoinGroup);
@@ -334,7 +334,7 @@ public class SwapUtils {
         }
         BigInteger[] reserves = new BigInteger[]{reserveA, reserveB};
 
-        // 计算用户获取的LP资产
+        // Calculate user acquisitionLPasset
         IPair pair = iPairFactory.getPair(SwapUtils.getStringPairAddress(chainId, tokenA, tokenB));
         BigInteger totalSupply = pair.totalSupply();
         BigInteger liquidity;
@@ -367,7 +367,7 @@ public class SwapUtils {
         BigInteger balance0 = reserves[0];
         BigInteger balance1 = reserves[1];
         BigInteger totalSupply = pair.totalSupply();
-        // 可赎回的资产
+        // Redeemable assets
         BigInteger amount0 = liquidity.multiply(balance0).divide(totalSupply);
         BigInteger amount1 = liquidity.multiply(balance1).divide(totalSupply);
         if (protocol24) {
@@ -401,18 +401,26 @@ public class SwapUtils {
         return bus;
     }
 
-    public static StableAddLiquidityBus calStableAddLiquididy(int chainId, IPairFactory iPairFactory, String pairAddress, byte[] from, BigInteger[] amounts, byte[] to) throws NulsException {
+    public static StableAddLiquidityBus calStableAddLiquididy(SwapHelper swapHelper, int chainId, IPairFactory iPairFactory, String pairAddress, byte[] from, BigInteger[] amounts, byte[] to) throws NulsException {
+        if (swapHelper.isSupportProtocol31()) {
+            return calStableAddLiquididyP31(chainId, iPairFactory, pairAddress, from, amounts, to);
+        } else {
+            return calStableAddLiquididyP0(chainId, iPairFactory, pairAddress, from, amounts, to);
+        }
+    }
+
+    private static StableAddLiquidityBus calStableAddLiquididyP0(int chainId, IPairFactory iPairFactory, String pairAddress, byte[] from, BigInteger[] amounts, byte[] to) throws NulsException {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
-        // 用户添加多少资产，就往池子里填入多少资产
+        // Fill the pool with as many assets as the user adds
         BigInteger[] realAmounts = amounts;
         BigInteger[] refundAmounts = emptyFillZero(new BigInteger[amounts.length]);
 
-        // 计算用户获取的LP资产
+        // Calculate user acquisitionLPasset
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
-        // add by pierre at 2023/8/16，币种状态检查
+        // add by pierre at 2023/8/16 Currency status check
         NerveToken[] coins = pairPo.getCoins();
         boolean[] removes = pairPo.getRemoves();
         if (removes != null) {
@@ -428,13 +436,65 @@ public class SwapUtils {
         BigInteger[] balances = stablePair.getBalances();
         BigInteger totalSupply = stablePair.totalSupply();
         BigInteger liquidity;
-        // 计算总量时，把精度都填充到18位
+        // When calculating the total amount, fill in the accuracy to 18 position
         if (totalSupply.equals(BigInteger.ZERO)) {
             liquidity = SwapUtils.getCumulativeAmountsOfStableSwap(realAmounts, decimalsOfCoins);
         } else {
-            // 计算池子总量
+            // Calculate the total amount of pools
             BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
-            // 计算用户本次添加总量
+            // Calculate the total amount of user additions this time
+            BigInteger currentInTotal = SwapUtils.getCumulativeAmountsOfStableSwap(realAmounts, decimalsOfCoins);
+            liquidity = currentInTotal.multiply(totalSupply).divide(poolTotal);
+        }
+        StableAddLiquidityBus bus = new StableAddLiquidityBus(from, realAmounts, liquidity, balances, refundAmounts, to);
+        bus.setPreBlockHeight(stablePair.getBlockHeightLast());
+        bus.setPreBlockTime(stablePair.getBlockTimeLast());
+        return bus;
+    }
+
+    private static StableAddLiquidityBus calStableAddLiquididyP31(int chainId, IPairFactory iPairFactory, String pairAddress, byte[] from, BigInteger[] amounts, byte[] to) throws NulsException {
+        if (!AddressTool.validAddress(chainId, to)) {
+            throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
+        }
+        // Fill the pool with as many assets as the user adds
+        BigInteger[] realAmounts = amounts;
+        BigInteger[] refundAmounts = emptyFillZero(new BigInteger[amounts.length]);
+
+        // Calculate user acquisitionLPasset
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        // add by pierre at 2023/8/16,Currency status check
+        NerveToken[] coins = pairPo.getCoins();
+        boolean[] removes = pairPo.getRemoves();
+        if (removes != null) {
+            for (int i = 0; i < amounts.length; i++) {
+                if (amounts[i].compareTo(BigInteger.ZERO) > 0 && removes[i]) {
+                    SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(SwapErrorCode.INVALID_COINS);
+                }
+            }
+        }
+        // add by cobble at 2024/1/19 Currency suspension exchange status check
+        boolean[] pauses = pairPo.getPauses();
+        if (pauses != null) {
+            for (int i = 0; i < amounts.length; i++) {
+                if (amounts[i].compareTo(BigInteger.ZERO) > 0 && pauses[i]) {
+                    SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(INVALID_COINS);
+                }
+            }
+        }
+        int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
+        BigInteger[] balances = stablePair.getBalances();
+        BigInteger totalSupply = stablePair.totalSupply();
+        BigInteger liquidity;
+        // When calculating the total amount, fill in the accuracy to 18 position
+        if (totalSupply.equals(BigInteger.ZERO)) {
+            liquidity = SwapUtils.getCumulativeAmountsOfStableSwap(realAmounts, decimalsOfCoins);
+        } else {
+            // Calculate the total amount of pools
+            BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
+            // Calculate the total amount of user additions this time
             BigInteger currentInTotal = SwapUtils.getCumulativeAmountsOfStableSwap(realAmounts, decimalsOfCoins);
             liquidity = currentInTotal.multiply(totalSupply).divide(poolTotal);
         }
@@ -462,20 +522,20 @@ public class SwapUtils {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
-        // 计算用户赎回的资产
+        // Calculate the assets redeemed by users
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         BigInteger[] balances = stablePair.getBalances();
         BigInteger totalSupply = stablePair.totalSupply();
-        // 检查indexs合法与重复
+        // inspectindexsLegitimacy and repetition
         NerveToken[] coins = pairPo.getCoins();
         int length = coins.length;
-        // 检查参数中`indexs`是否合法
-        // indexs本身是等差数列，根据等差数列求和公式算出期望值
+        // Checking parameters`indexs`Is it legal
+        // indexsIt is an arithmetic sequence, and the expected value is calculated based on the sum formula of the arithmetic sequence
         int expect = (length - 1) * length / 2;
-        // 累加indexs的实际值
+        // accumulationindexsActual value of
         int fact = 0;
         for (byte index : indexes) {
             if (index > length - 1) {
@@ -486,12 +546,12 @@ public class SwapUtils {
         if (fact != expect) {
             throw new NulsException(SwapErrorCode.INVALID_COINS);
         }
-        // 获取池子总量
+        // Obtain the total number of pools
         BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
-        // 用户可赎回资产数量(PRECISION_MUL)
+        // Number of redeemable assets for users(PRECISION_MUL)
         BigInteger totalReceives = poolTotal.multiply(liquidity).divide(totalSupply);
         final BigInteger finalTotalReceives = totalReceives;
-        // 按照用户选择的提取顺序，扣减池子数量
+        // Deducting the number of pools according to the extraction order selected by the user
         BigInteger[] receives = new BigInteger[length];
         for (byte index : indexes) {
             BigInteger balance = balances[index].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[index]));
@@ -511,7 +571,7 @@ public class SwapUtils {
         if (!_totalReceives.equals(finalTotalReceives)) {
             throw new NulsException(SwapErrorCode.INVALID_AMOUNTS);
         }
-        // 还原receives <= 以上代码计算用户可赎回资产数量时，把精度都填充到了18位，最终结果按每个coin的实际精度，还原数值
+        // reductionreceives <= When calculating the number of redeemable assets for users using the above code, the accuracy has been filled in to18Bits, the final result is based on eachcoinActual accuracy, restoring numerical values
         for (int i = 0; i < length; i++) {
             BigInteger receive = receives[i];
             if (receive.equals(BigInteger.ZERO)) {
@@ -532,16 +592,16 @@ public class SwapUtils {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
-        // 计算用户赎回的资产
+        // Calculate the assets redeemed by users
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         BigInteger[] balances = stablePair.getBalances();
         BigInteger totalSupply = stablePair.totalSupply();
-        // 检查indexs合法与重复
+        // inspectindexsLegitimacy and repetition
         NerveToken[] coins = pairPo.getCoins();
-        // add by pierre at 2023/8/16，币种状态检查
+        // add by pierre at 2023/8/16Currency status check
         boolean[] removes = pairPo.getRemoves();
         if (removes != null) {
             for (int index : indexes) {
@@ -554,11 +614,11 @@ public class SwapUtils {
         // end code by pierre
         int lengthOfCoins = coins.length;
         int lengthOfIndexes = indexes.length;
-        // 检查参数中`indexs`是否合法
+        // Checking parameters`indexs`Is it legal
         if (lengthOfIndexes == lengthOfCoins) {
-            // indexs本身是等差数列，根据等差数列求和公式算出期望值
+            // indexsIt is an arithmetic sequence, and the expected value is calculated based on the sum formula of the arithmetic sequence
             int expect = (lengthOfCoins - 1) * lengthOfCoins / 2;
-            // 累加indexs的实际值
+            // accumulationindexsActual value of
             int fact = 0;
             for (byte index : indexes) {
                 if (index > lengthOfCoins - 1) {
@@ -591,12 +651,12 @@ public class SwapUtils {
         } else {
             throw new NulsException(SwapErrorCode.INVALID_COINS);
         }
-        // 获取池子总量
+        // Obtain the total number of pools
         BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
-        // 用户可赎回资产数量(PRECISION_MUL)
+        // Number of redeemable assets for users(PRECISION_MUL)
         BigInteger totalReceives = poolTotal.multiply(liquidity).divide(totalSupply);
         final BigInteger finalTotalReceives = totalReceives;
-        // 按照用户选择的提取顺序，扣减池子数量
+        // Deducting the number of pools according to the extraction order selected by the user
         BigInteger[] receives = new BigInteger[lengthOfCoins];
         for (byte index : indexes) {
             BigInteger balance = balances[index].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[index]));
@@ -616,7 +676,7 @@ public class SwapUtils {
         if (!_totalReceives.equals(finalTotalReceives)) {
             throw new NulsException(SwapErrorCode.INVALID_AMOUNTS);
         }
-        // 还原receives <= 以上代码计算用户可赎回资产数量时，把精度都填充到了18位，最终结果按每个coin的实际精度，还原数值
+        // reductionreceives <= When calculating the number of redeemable assets for users using the above code, the accuracy has been filled in to18Bits, the final result is based on eachcoinActual accuracy, restoring numerical values
         for (int i = 0; i < lengthOfCoins; i++) {
             BigInteger receive = receives[i];
             if (receive.equals(BigInteger.ZERO)) {
@@ -637,16 +697,16 @@ public class SwapUtils {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
-        // 计算用户赎回的资产
+        // Calculate the assets redeemed by users
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         BigInteger[] balances = stablePair.getBalances();
         BigInteger totalSupply = stablePair.totalSupply();
-        // 检查indexs合法与重复
+        // inspectindexsLegitimacy and repetition
         NerveToken[] coins = pairPo.getCoins();
-        // add by pierre at 2023/9/1，币种状态检查
+        // add by pierre at 2023/9/1Currency status check
         boolean[] removes = pairPo.getRemoves();
         if (removes == null) {
             removes = new boolean[coins.length];
@@ -654,11 +714,11 @@ public class SwapUtils {
         // end code by pierre
         int lengthOfCoins = coins.length;
         int lengthOfIndexes = indexes.length;
-        // 检查参数中`indexs`是否合法
+        // Checking parameters`indexs`Is it legal
         if (lengthOfIndexes == lengthOfCoins) {
-            // indexs本身是等差数列，根据等差数列求和公式算出期望值
+            // indexsIt is an arithmetic sequence, and the expected value is calculated based on the sum formula of the arithmetic sequence
             int expect = (lengthOfCoins - 1) * lengthOfCoins / 2;
-            // 累加indexs的实际值
+            // accumulationindexsActual value of
             int fact = 0;
             for (byte index : indexes) {
                 if (index > lengthOfCoins - 1) {
@@ -691,15 +751,15 @@ public class SwapUtils {
         } else {
             throw new NulsException(SwapErrorCode.INVALID_COINS);
         }
-        // 获取池子总量
+        // Obtain the total number of pools
         BigInteger poolTotal = SwapUtils.getCumulativeAmountsOfStableSwap(balances, decimalsOfCoins);
-        // 用户可赎回资产数量(PRECISION_MUL)
+        // Number of redeemable assets for users(PRECISION_MUL)
         BigInteger totalReceives = poolTotal.multiply(liquidity).divide(totalSupply);
         final BigInteger finalTotalReceives = totalReceives;
-        // 按照用户选择的提取顺序，扣减池子数量
+        // Deducting the number of pools according to the extraction order selected by the user
         BigInteger[] receives = new BigInteger[lengthOfCoins];
         for (byte index : indexes) {
-            // add by pierre at 2023/9/1，币种状态检查
+            // add by pierre at 2023/9/1Currency status check
             if (removes[index]) {
                 continue;
             }
@@ -721,7 +781,7 @@ public class SwapUtils {
         if (!_totalReceives.equals(finalTotalReceives)) {
             throw new NulsException(SwapErrorCode.INVALID_AMOUNTS);
         }
-        // 还原receives <= 以上代码计算用户可赎回资产数量时，把精度都填充到了18位，最终结果按每个coin的实际精度，还原数值
+        // reductionreceives <= When calculating the number of redeemable assets for users using the above code, the accuracy has been filled in to18Bits, the final result is based on eachcoinActual accuracy, restoring numerical values
         for (int i = 0; i < lengthOfCoins; i++) {
             BigInteger receive = receives[i];
             if (receive.equals(BigInteger.ZERO)) {
@@ -736,7 +796,19 @@ public class SwapUtils {
         return bus;
     }
 
-    public static StableSwapTradeBus calStableSwapTradeBusiness(
+    public static StableSwapTradeBus calStableSwapTradeBusiness(SwapHelper swapHelper,
+            int chainId, IPairFactory iPairFactory,
+            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, byte[] _feeTo, CoinTo feeTo) throws NulsException {
+        if (swapHelper.isSupportProtocol31()) {
+            return calStableSwapTradeBusinessP31(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, feeTo);
+        } else if (swapHelper.isSupportProtocol21()) {
+            return calStableSwapTradeBusinessP21(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, feeTo);
+        } else {
+            return calStableSwapTradeBusinessP0(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, _feeTo);
+        }
+    }
+
+    private static StableSwapTradeBus calStableSwapTradeBusinessP0(
             int chainId, IPairFactory iPairFactory,
             BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, byte[] feeTo) throws NulsException {
         if (!AddressTool.validAddress(chainId, to)) {
@@ -754,7 +826,7 @@ public class SwapUtils {
         BigInteger[] unLiquidityAwardFees = new BigInteger[length];
         BigInteger[] changeBalances = new BigInteger[length];
         BigInteger[] balances = stablePair.getBalances();
-        // 把精度填充到18位
+        // Fill the precision to18position
         BigInteger outBalance = balances[tokenOutIndex].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
         BigInteger totalAmountOut = BigInteger.ZERO;
         for (int i = 0; i < length; i++) {
@@ -765,7 +837,7 @@ public class SwapUtils {
             }
             BigInteger coinFee = amountIn.multiply(SwapContext.FEE_PERMILLAGE_STABLE_SWAP).divide(BI_1000);
             amountIn = amountIn.subtract(coinFee);
-            // 把精度填充到18位
+            // Fill the precision to18position
             BigInteger _amountIn = amountIn.multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
             BigInteger amountOut = _amountIn;
             if (outBalance.compareTo(amountOut) < 0) {
@@ -775,7 +847,7 @@ public class SwapUtils {
             outBalance = outBalance.subtract(amountOut);
             totalAmountOut = totalAmountOut.add(amountOut);
         }
-        // 还原`totalAmountOut` <= 以上代码计算用户买进资产数量时，把精度填充到了18位，最终结果按实际精度，还原数值
+        // reduction`totalAmountOut` <= When calculating the number of assets purchased by users using the above code, the accuracy is filled in to18Bit, the final result is restored to the actual accuracy and numerical value
         totalAmountOut = totalAmountOut.divide(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
 
         changeBalances = SwapUtils.emptyFillZero(changeBalances);
@@ -789,7 +861,7 @@ public class SwapUtils {
         return bus;
     }
 
-    public static StableSwapTradeBus calStableSwapTradeBusinessP21(
+    private static StableSwapTradeBus calStableSwapTradeBusinessP21(
             int chainId, IPairFactory iPairFactory,
             BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, CoinTo feeTo) throws NulsException {
         if (!AddressTool.validAddress(chainId, to)) {
@@ -802,7 +874,7 @@ public class SwapUtils {
         int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
         NerveToken[] coins = pairPo.getCoins();
         int length = coins.length;
-        // add by pierre at 2023/8/16，币种状态检查
+        // add by pierre at 2023/8/16 Currency status check
         boolean[] removes = pairPo.getRemoves();
         if (removes != null) {
             for (int i = 0; i < length; i++) {
@@ -819,7 +891,7 @@ public class SwapUtils {
         // end code by pierre
         BigInteger[] changeBalances = new BigInteger[length];
         BigInteger[] balances = stablePair.getBalances();
-        // 把精度填充到18位
+        // Fill the precision to 18 position
         BigInteger outBalance = balances[tokenOutIndex].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
         BigInteger totalAmountOut = BigInteger.ZERO;
         BigInteger feeAmountExtend = BigInteger.ZERO;
@@ -834,7 +906,7 @@ public class SwapUtils {
                     feeAmountExtend = feeTo.getAmount().multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
                 }
             }
-            // 把精度填充到18位
+            // Fill the precision to18position
             BigInteger _amountIn = amountIn.multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
             BigInteger amountOut = _amountIn;
             if (outBalance.compareTo(amountOut) < 0) {
@@ -843,7 +915,7 @@ public class SwapUtils {
             outBalance = outBalance.subtract(amountOut);
             totalAmountOut = totalAmountOut.add(amountOut);
         }
-        // 检查手续费比例
+        // Check the handling fee ratio
         if (hasFeeTo) {
             BigDecimal percent = new BigDecimal(feeAmountExtend).divide(new BigDecimal(totalAmountOut.add(feeAmountExtend)), 2, RoundingMode.UP).movePointRight(2);
             if (percent.compareTo(SwapContext.FEE_MAX_PERCENT_STABLE_SWAP) > 0) {
@@ -851,7 +923,92 @@ public class SwapUtils {
             }
         }
 
-        // 还原`totalAmountOut` <= 以上代码计算用户买进资产数量时，把精度填充到了18位，最终结果按实际精度，还原数值
+        // reduction`totalAmountOut` <= When calculating the number of assets purchased by users using the above code, the accuracy is filled in to18Bit, the final result is restored to the actual accuracy and numerical value
+        totalAmountOut = totalAmountOut.divide(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
+
+        changeBalances = SwapUtils.emptyFillZero(changeBalances);
+        for (int i = 0; i < length; i++) {
+            changeBalances[i] = changeBalances[i].add(amountsIn[i]);
+        }
+        changeBalances[tokenOutIndex] = changeBalances[tokenOutIndex].subtract(totalAmountOut);
+        StableSwapTradeBus bus = new StableSwapTradeBus(pairAddressBytes, changeBalances, balances, amountsIn, SwapUtils.emptyFillZero(new BigInteger[length]), tokenOutIndex, totalAmountOut, to);
+        bus.setPreBlockHeight(stablePair.getBlockHeightLast());
+        bus.setPreBlockTime(stablePair.getBlockTimeLast());
+        return bus;
+    }
+
+    private static StableSwapTradeBus calStableSwapTradeBusinessP31(
+            int chainId, IPairFactory iPairFactory,
+            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, CoinTo feeTo) throws NulsException {
+        if (!AddressTool.validAddress(chainId, to)) {
+            throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
+        }
+        boolean hasFeeTo = feeTo != null;
+        String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
+        IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
+        StableSwapPairPo pairPo = stablePair.getPair();
+        int[] decimalsOfCoins = pairPo.getDecimalsOfCoins();
+        NerveToken[] coins = pairPo.getCoins();
+        int length = coins.length;
+        // add by pierre at 2023/8/16,Currency status check
+        boolean[] removes = pairPo.getRemoves();
+        if (removes != null) {
+            for (int i = 0; i < length; i++) {
+                if (amountsIn[i].compareTo(BigInteger.ZERO) > 0 && removes[i]) {
+                    SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(INVALID_COINS);
+                }
+            }
+            if (removes[tokenOutIndex]) {
+                SwapContext.logger.info("[{}] error removed coin: {}", pairAddress, coins[tokenOutIndex].str());
+                throw new NulsException(INVALID_COINS);
+            }
+        }
+        // add by cobble at 2024/1/19 Currency suspension exchange status check
+        boolean[] pauses = pairPo.getPauses();
+        if (pauses != null) {
+            for (int i = 0; i < length; i++) {
+                if (amountsIn[i].compareTo(BigInteger.ZERO) > 0 && pauses[i]) {
+                    SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
+                    throw new NulsException(INVALID_COINS);
+                }
+            }
+        }
+        BigInteger[] changeBalances = new BigInteger[length];
+        BigInteger[] balances = stablePair.getBalances();
+        // Fill the precision to 18 position
+        BigInteger outBalance = balances[tokenOutIndex].multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
+        BigInteger totalAmountOut = BigInteger.ZERO;
+        BigInteger feeAmountExtend = BigInteger.ZERO;
+        for (int i = 0; i < length; i++) {
+            BigInteger amountIn = amountsIn[i];
+            if (amountIn.equals(BigInteger.ZERO)) {
+                continue;
+            }
+            if (hasFeeTo) {
+                NerveToken coin = coins[i];
+                if (coin.getChainId() == feeTo.getAssetsChainId() && coin.getAssetId() == feeTo.getAssetsId()) {
+                    feeAmountExtend = feeTo.getAmount().multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
+                }
+            }
+            // Fill the precision to 18 position
+            BigInteger _amountIn = amountIn.multiply(BigInteger.TEN.pow(18 - decimalsOfCoins[i]));
+            BigInteger amountOut = _amountIn;
+            if (outBalance.compareTo(amountOut) < 0) {
+                throw new NulsException(SwapErrorCode.INSUFFICIENT_OUTPUT_AMOUNT);
+            }
+            outBalance = outBalance.subtract(amountOut);
+            totalAmountOut = totalAmountOut.add(amountOut);
+        }
+        // Check the handling fee ratio
+        if (hasFeeTo) {
+            BigDecimal percent = new BigDecimal(feeAmountExtend).divide(new BigDecimal(totalAmountOut.add(feeAmountExtend)), 2, RoundingMode.UP).movePointRight(2);
+            if (percent.compareTo(SwapContext.FEE_MAX_PERCENT_STABLE_SWAP) > 0) {
+                throw new NulsException(FEE_AMOUNT_ERROR);
+            }
+        }
+
+        // reduction`totalAmountOut` <= When calculating the number of assets purchased by users using the above code, the accuracy is filled in to 18 Bit, the final result is restored to the actual accuracy and numerical value
         totalAmountOut = totalAmountOut.divide(BigInteger.TEN.pow(18 - decimalsOfCoins[tokenOutIndex]));
 
         changeBalances = SwapUtils.emptyFillZero(changeBalances);
@@ -884,7 +1041,7 @@ public class SwapUtils {
     public static List<RouteVO> bestTradeExactIn(int chainId, IPairFactory iPairFactory, List<SwapPairVO> pairs, TokenAmount tokenAmountIn,
                                                  NerveToken out, LinkedHashSet<SwapPairVO> currentPath,
                                                  List<RouteVO> bestTrade, TokenAmount orginTokenAmountIn, int maxPairSize, String resultRule) {
-        // 筛选出直接可换的交易对
+        // Filter out directly interchangeable transaction pairs
         NerveToken tokenIn = tokenAmountIn.getToken();
         NerveToken[] tokens = tokenSort(tokenIn, out);
         int length = pairs.size();
@@ -902,15 +1059,15 @@ public class SwapUtils {
             BigInteger amountOut = getAmountOutForBestTrade(tokenAmountIn.getAmount(), reserves[0], reserves[1], reserves[2]);
             bestTrade.add(new RouteVO(List.of(removePair), orginTokenAmountIn, new TokenAmount(out, amountOut)));
         }
-        // 查找所有匹配的交易路径
+        // Find all matching transaction paths
         List<RouteVO> routes = bestTradeExactIn(chainId, iPairFactory, pairs, tokenAmountIn, out, currentPath, bestTrade, orginTokenAmountIn, 0, maxPairSize);
         if (routes.size() == 1) {
             return routes;
         } else if (BEST_PRICE.equals(resultRule)) {
-            // 按最优价格排序
+            // Sort by optimal price
             routes.sort(RouteVOSort.INSTANCE);
         } else {
-            // 按价格影响排序
+            // Sort by price impact
             List<RouteOfPriceImpactVO> impactTrades = calcImpactPrice(routes);
             impactTrades.sort(RouteImpactVOSort.INSTANCE);
         }
@@ -1055,9 +1212,9 @@ public class SwapUtils {
     }
 
     /**
-     * 获取交易签名地址
+     * Obtain transaction signature address
      *
-     * @param tx 交易
+     * @param tx transaction
      */
     public static byte[] getSingleAddressFromTX(Transaction tx, int chainId, boolean verifySign) throws NulsException {
 
@@ -1144,7 +1301,7 @@ public class SwapUtils {
         }
         BigInteger syrupReward = BigInteger.valueOf(height).multiply(farm.getSyrupPerBlock());
         BigInteger accSyrupPerShare = farm.getAccSyrupPerShare();
-//        pool.accSushiPerShare.add(sushiReward.mul(1e12).div(lpSupply));  // 计算每个lp可分到的sushi数量
+//        pool.accSushiPerShare.add(sushiReward.mul(1e12).div(lpSupply));  // Calculate eachlpDistributablesushiquantity
         accSyrupPerShare = accSyrupPerShare.add(syrupReward.multiply(SwapConstant.BI_1E12).divide(lpSupply));
 
         farm.setAccSyrupPerShare(accSyrupPerShare);
@@ -1244,7 +1401,7 @@ public class SwapUtils {
             return null;
         }
         int length = amounts.length;
-        // 空值填充
+        // Fill in empty values
         for (int i = 0; i < length; i++) {
             if (amounts[i] == null) {
                 amounts[i] = BigInteger.ZERO;
@@ -1259,7 +1416,7 @@ public class SwapUtils {
         }
         int length = array.length;
         BigInteger[] result = new BigInteger[length];
-        // 填充
+        // filling
         for (int i = 0; i < length; i++) {
             result[i] = array[i];
         }
@@ -1282,9 +1439,9 @@ public class SwapUtils {
     }
 
     /**
-     * token命名规则:只允许使用大、小写字母、数字、下划线（下划线不能在两端）1~20字节
+     * tokenNaming rules:Only allow the use of large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte
      * @param name   token
-     * @return       验证结果
+     * @return       Verification results
      */
     public static boolean validTokenNameOrSymbol(String name, boolean isProtocol26) {
         if (!isProtocol26) {

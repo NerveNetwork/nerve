@@ -3,11 +3,11 @@ package io.nuls.crosschain.srorage;
 import java.math.BigInteger;
 
 /**
- * 转出外链的金额管理
+ * Amount management for transferring out of the external chain
  */
 public interface TotalOutAmountService {
     /**
-     * 增加转出数据
+     * Add transfer out data
      *
      * @param chainId
      * @param assetId
@@ -17,7 +17,7 @@ public interface TotalOutAmountService {
     boolean addOutAmount(int chainId, int assetId, BigInteger amount);
 
     /**
-     * 转回本来的资产
+     * Returning original assets
      *
      * @param chainId
      * @param assetId
@@ -27,7 +27,7 @@ public interface TotalOutAmountService {
     boolean addBackAmount(int chainId, int assetId, BigInteger amount);
 
     /**
-     * 得到某个资产的总的转出数量
+     * Obtain the total number of transfers out for a certain asset
      * @param chainId
      * @param assetId
      * @return

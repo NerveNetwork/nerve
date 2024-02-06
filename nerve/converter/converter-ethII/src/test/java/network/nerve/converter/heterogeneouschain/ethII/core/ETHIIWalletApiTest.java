@@ -190,61 +190,61 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     /**
-     * 给多签合约转入eth和erc20（用于测试提现）
+     * Transfer to multiple signed contractsethanderc20（Used for testing withdrawals）
      */
     @Test
     public void transferETHAndERC20() throws Exception {
         BigInteger gasPrice = EthContext.getEthGasPrice();
-        // 初始化 账户
+        // initialization account
         setAccount_EFa1();
-        // ETH数量
+        // ETHquantity
         String sendAmount = "0.1";
         String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, multySignContractAddress, new BigDecimal(sendAmount), BigInteger.valueOf(81000L), gasPrice);
-        System.out.println(String.format("向[%s]转账%s个ETH, 交易hash: %s", multySignContractAddress, sendAmount, txHash));
+        System.out.println(String.format("towards[%s]Transfer%sindividualETH, transactionhash: %s", multySignContractAddress, sendAmount, txHash));
         // ERC20
         String tokenAddress = "0x1c78958403625aeA4b0D5a0B527A27969703a270";
         String tokenAmount = "100";
         int tokenDecimals = 6;
         EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, multySignContractAddress, new BigInteger(tokenAmount).multiply(BigInteger.TEN.pow(tokenDecimals)), fromPriKey, tokenAddress);
-        System.out.println(String.format("向[%s]转账%s个ERC20(USDI), 交易hash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
+        System.out.println(String.format("towards[%s]Transfer%sindividualERC20(USDI), transactionhash: %s", multySignContractAddress, tokenAmount, token.getTransactionHash()));
     }
 
     /**
-     * 新方式充值eth
+     * New way of rechargingeth
      */
     @Test
     public void depositETHByCrossOut() throws Exception {
         setLocalTest();
         this.multySignContractAddress = "0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653";
-        // 初始化 账户
+        // initialization account
         setAccount_EFa1();
-        // ETH数量
+        // ETHquantity
         String sendAmount = "0.1";
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, EthConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress, null);
-        System.out.println(String.format("eth充值[%s], hash: %s", sendAmount, hash));
+        System.out.println(String.format("ethRecharge[%s], hash: %s", sendAmount, hash));
     }
     /**
-     * 新方式充值erc20
+     * New way of rechargingerc20
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalTest();
         //setBeta();
         EthContext.setEthGasPrice(BigInteger.valueOf(3L).multiply(BigInteger.TEN.pow(9)));
-        // 初始化 账户
+        // initialization account
         setAccount_EFa1();
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "2.21";
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         //setErc20USDI();
         //setErc20USDX();
         setErc20NVT();
         //setErc20NULS();
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger();
@@ -254,38 +254,38 @@ public class ETHIIWalletApiTest extends BaseII {
 
         BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
-            // erc20授权
+            // erc20authorization
             String approveAmount = "99999999";
             Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address, null);
-            System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+            System.out.println(String.format("erc20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
-                System.out.println("等待8秒查询[ERC20授权]交易打包结果");
+                System.out.println("wait for8Second query[ERC20authorization]Transaction packaging results");
                 TimeUnit.SECONDS.sleep(8);
             }
             TimeUnit.SECONDS.sleep(8);
             BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("等待8秒查询[ERC20授权]交易额度");
+                System.out.println("wait for8Second query[ERC20authorization]Transaction limit");
                 TimeUnit.SECONDS.sleep(8);
                 tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
-        System.out.println("[ERC20授权]额度已满足条件");
-        // crossOut erc20转账
+        System.out.println("[ERC20authorization]The limit has met the conditions");
+        // crossOut erc20Transfer
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20Recharge[%s], Rechargehash: %s", sendAmount, hash));
     }
 
     /**
-     * 合约升级测试
+     * Contract upgrade testing
      */
     @Test
     public void upgradeContractTest() throws Exception {
-        // 环境数据
+        // environmental data
         setLocalTest();
-        // GasPrice准备
+        // GasPriceprepare
         htgContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
         htgContext.SET_VERSION((byte) 2);
         String txKey = "aaa3000000000000000000000000000000000000000000000000000000000000";
@@ -293,26 +293,26 @@ public class ETHIIWalletApiTest extends BaseII {
         this.multySignContractAddress = "0xdcb777E7491f03D69cD10c1FeE335C9D560eb5A2";
         String newContract = "0xBEe53Bf6C5bFaf07Af2aF5c48077B4DD60396653";
         String hash = this.sendUpgrade(txKey, newContract, signCount);
-        System.out.println(String.format("合约升级测试: %s，newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
+        System.out.println(String.format("Contract upgrade testing: %s,newContract: %s, hash: %s", multySignContractAddress, newContract, hash));
     }
 
     @Test
     public void registerERC20Minter() throws Exception {
-        // 正式网数据
+        // Official website data
         setMain();
-        // GasPrice准备
+        // GasPriceprepare
         long gasPriceGwei = 100L;
         BigInteger gasPrice = BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9));
-        // 超级账户，加载凭证，用私钥
+        // Super account, load credentials, use private key
         Credentials credentials = Credentials.create("");
-        // 多签合约地址
+        // Multiple contract addresses
         String contractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
-        // 注册的ERC20Minter合约地址
+        // RegisteredERC20MinterContract address
         String erc20Minter = "0x7b6F71c8B123b38aa8099e0098bEC7fbc35B8a13";
 
         EthGetTransactionCount transactionCount = htgWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "registerMinterERC20",
                 List.of(new Address(erc20Minter)),
@@ -328,16 +328,16 @@ public class ETHIIWalletApiTest extends BaseII {
                 BigInteger.valueOf(50000L),
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = htgWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
         System.out.println(ethSendTransaction.getTransactionHash());
     }
 
     /**
-     * 还原合约管理员
+     * Restore Contract Administrator
      */
     @Test
     public void resetContractManager() throws Exception {
@@ -358,7 +358,7 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     private Set<String> allManagers(String contract) throws Exception {
@@ -394,7 +394,7 @@ public class ETHIIWalletApiTest extends BaseII {
         //setMain();
         setLocalTest();
         //mainnetII();
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
         for (String address : all) {
@@ -405,14 +405,14 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     /**
-     * 添加 N 个管理员
+     * Add N Administrators
      */
     @Test
     public void managerAdd() throws Exception {
-        // 正式网环境数据
+        // Official network environment data
         //setMainData();
         setLocalTest();
-        // GasPrice准备
+        // GasPriceprepare
         long gasPriceGwei = 160L;
         EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "c753d679f58b6111cc7df52b57217a0d81ff725c000000000000000000000005";
@@ -421,7 +421,7 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     @Test
@@ -478,7 +478,7 @@ public class ETHIIWalletApiTest extends BaseII {
     }
 
     /**
-     * 添加10个管理员，4个签名
+     * Add10Administrators,4Signatures
      */
     @Test
     public void managerAdd10By4Managers() throws Exception {
@@ -488,13 +488,13 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = 4;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     protected void setMainData() {
         setMain();
         list = new ArrayList<>();
-        // 十个虚拟银行的私钥，并把AA的私钥放在首位
+        // Ten private keys for virtual banks, andAAPut the private key first
         list.add("");
         list.add("");
         list.add("");
@@ -506,42 +506,42 @@ public class ETHIIWalletApiTest extends BaseII {
 
 
     /**
-     * 5个签名
+     * 5Signatures
      */
     @Test
     public void signDataForERC20WithdrawTest() throws Exception {
         setMainData();
         String txKey = "bbb1024000000000000000000000000000000000000000000000000000000000";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "0x64CE6baa1144e307C68aF1a1fB2ecFe35A058052";
-        // 造币数量
+        // Mint quantity
         String value = "13068492433.458328880192656953";
-        // 新的以太坊网络上的nabox合约
+        // On the new Ethereum networknaboxcontract
         String erc20 = "0x03d1e72765545729a035e909edd9371a405f77fb";
         int tokenDecimals = 18;
         int signCount = 5;
         String signData = this.signDataForERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，signData: %s", new BigDecimal(value).movePointLeft(tokenDecimals).toPlainString(), signCount, signData));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,signData: %s", new BigDecimal(value).movePointLeft(tokenDecimals).toPlainString(), signCount, signData));
     }
 
     /**
-     * 根据已有的签名数据 发送交易 - erc20提现
+     * Based on existing signature data Send transaction - erc20Withdrawal
      */
     @Test
     public void sendERC20WithdrawBySignDataTest() throws Exception {
         setMainData();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         String txKey = "f95b54642994232ca3bb6d8d919ec770188c306ba05748fbc234c34edef456c0";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "0xfb6f40b1f2ea93b41bf96fd2d7413333fa578a9a";
-        // 数量
+        // quantity
         String value = "5303.549827512204473162";
         // token
         String erc20 = "0x2ecba91da63c29ea80fbe7b52632ca2d1f8e5be0";
         int tokenDecimals = 18;
         String signData = "b9d47a14ad309f2666bc5a74198e5e4bfe0fd50192ad563fca1aa2b5e1ca764d6e0c4a6bb2dc3728bc18839d8561d29ebcbb4e671aebe2ecb51837b7662f352d1b2a2bde0f13aad8e9346502eb2f5373cc838eaea92e9d4b307f5c3d3288576546134cda3cae3106fcac2742886b5073eacd8ea021c1ab09a8d02010250cb64bc71b16ec6a6c981cb5092f3b90940ff0fed006a1ef1ecfa0db40bfc56eb95f4fd8773bdac0bb9e3ba35eae2fb94bff4e410051893ebe6f1bc2cecfb0b6bac2cbdd9e1baff7d78ee2bb15a9639be618bbbc6fd9be1c52d2cc0c3a8ec744845a05f7002a12c5ae00cbc55af7cc53fc46f607dff60f52b4af0035ac397f81acc8655338201b9f4e256267558e45a3ae7cbfa313603550603643f2d6e92f3f3adb2c8ca47f1908d373effe535a8578a096c18cae85dfe2c9268d8a53af14865b84f2b04b9d2a1c18cdc6a4ae351d02545e55a0a304165d004740e7d3b8d39c699c7c75d1d4304757f84c350c40e8c8c95a7abf9c01c905c283c868252849c6882048c8fee40a911ba67ab6cd1194c7b89a17c160ab5b687870716f1379d9ad7fdcaef1e6e3410e331d7c5493e2bc69ff432b93bd37258c878e22e694478a928102734d4e0c2603711cb8911e1e89206e53d9552f704bbeb40eaad7e9b652745b79b6b345365fe758156bc15b111d3b4334a4e368f11191e5ed12c1bfc5412cf022f089729bd20efc981c52bc8c34ba7a5b7bf2b29f888857148f5c4e0c56fc1bd4310c1f08ee76c8a9fd751315dcf8657812b4533a48314bd5f13417bd1a727fcbcfeac0689079a518e01c49f74785c5effe533368048a711fae34ef9841c7cb217550252548ba0add22df37623bc88a78e4134b06720fb505cf46fac5edfded646cc4c19374ff85d5f0da1b";
         String hash = this.sendERC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
-        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
     }
 
     @Test
@@ -562,39 +562,39 @@ public class ETHIIWalletApiTest extends BaseII {
                     (String) obj[3],
                     (String) obj[5], nonce);
             nonce = nonce.add(BigInteger.ONE);
-            System.out.println(String.format("ERC20提现%s个，hash: %s", new BigDecimal((String) obj[2]).movePointLeft((Integer) obj[4]).stripTrailingZeros().toPlainString(), hash));
-            System.out.println("等5秒...");
+            System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", new BigDecimal((String) obj[2]).movePointLeft((Integer) obj[4]).stripTrailingZeros().toPlainString(), hash));
+            System.out.println("etc.5second...");
             TimeUnit.SECONDS.sleep(5);
         }
 
     }
 
     /**
-     * erc20提现，10个签名
+     * erc20Withdrawal,10Signatures
      */
     @Test
     public void erc20WithdrawBy10Managers() throws Exception {
         setMainData();
         String txKey = "bbb1024000000000000000000000000000000000000000000000000000000000";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "0x64CE6baa1144e307C68aF1a1fB2ecFe35A058052";
-        // 造币数量
+        // Mint quantity
         String value = "13068492433.458328880192656953";
-        // 新的以太坊网络上的nabox合约
+        // On the new Ethereum networknaboxcontract
         String erc20 = "0x03d1e72765545729a035e909edd9371a405f77fb";
         int tokenDecimals = 18;
         int signCount = 10;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * 顶替一个管理员，10个签名
+     * Replace an administrator,10Signatures
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
         setMainData();
-        // GasPrice准备
+        // GasPriceprepare
         long gasPriceGwei = 20L;
         EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
@@ -603,11 +603,11 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = 10;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     /**
-     * 顶替一个管理员，15个签名
+     * Replace an administrator,15Signatures
      */
     @Test
     public void managerReplace1By15Managers() throws Exception {
@@ -617,11 +617,11 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = 15;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     /**
-     * eth提现，15个签名
+     * ethWithdrawal,15Signatures
      */
     @Test
     public void ethWithdrawBy15Managers() throws Exception {
@@ -631,11 +631,11 @@ public class ETHIIWalletApiTest extends BaseII {
         String value = "50";
         int signCount = list.size();
         String hash = this.sendETHWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("ETH提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ETHWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * eth提现，10个签名
+     * ethWithdrawal,10Signatures
      */
     @Test
     public void ethWithdrawBy10Managers() throws Exception {
@@ -644,11 +644,11 @@ public class ETHIIWalletApiTest extends BaseII {
         String value = "0.02";
         int signCount = 10;
         String hash = this.sendETHWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("ETH提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ETHWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * erc20提现，15个签名
+     * erc20Withdrawal,15Signatures
      */
     @Test
     public void erc20WithdrawBy15Managers() throws Exception {
@@ -659,11 +659,11 @@ public class ETHIIWalletApiTest extends BaseII {
         int tokenDecimals = 6;
         int signCount = 15;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * erc20提现，增发的ERC20
+     * erc20Withdrawal and issuance of additional sharesERC20
      */
     @Test
     public void erc20WithdrawWithERC20Minter() throws Exception {
@@ -674,11 +674,11 @@ public class ETHIIWalletApiTest extends BaseII {
         int tokenDecimals = 2;
         int signCount = 4;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * eth提现，异常测试
+     * ethWithdrawal, anomaly testing
      */
     @Test
     public void errorETHWithdrawTest() throws Exception {
@@ -689,11 +689,11 @@ public class ETHIIWalletApiTest extends BaseII {
         list.addAll(5, list.subList(5, 10));
         //this.VERSION = 2;
         String hash = this.sendETHWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("ETH提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ETHWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * erc20提现，异常测试
+     * erc20Withdrawal, anomaly testing
      */
     @Test
     public void errorErc20WithdrawTest() throws Exception {
@@ -704,11 +704,11 @@ public class ETHIIWalletApiTest extends BaseII {
         int tokenDecimals = 6;
         int signCount = 15;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * 管理员变更，异常测试
+     * Administrator change, abnormal testing
      */
     @Test
     public void errorChangeTest() throws Exception {
@@ -718,7 +718,7 @@ public class ETHIIWalletApiTest extends BaseII {
         int txCount = 1;
         int signCount = 15;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     @Test
@@ -736,7 +736,7 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
         String signs = HexUtil.encode((byte[]) typeList.get(5));
         System.out.println(signs);
-        System.out.println(String.format("签名个数: %s", signs.length() / 130));
+        System.out.println(String.format("Number of signatures: %s", signs.length() / 130));
 
 
     }
@@ -824,7 +824,7 @@ public class ETHIIWalletApiTest extends BaseII {
             System.out.println(directTxHash + "\t" + typeList.get(0).toString() + "\t" + new BigDecimal(tx.getGasPrice()).movePointLeft(9).toPlainString());
             //String signs = HexUtil.encode((byte[]) typeList.get(5));
             //System.out.println(signs);
-            //System.out.println(String.format("签名个数: %s", signs.length() / 130));
+            //System.out.println(String.format("Number of signatures: %s", signs.length() / 130));
         }
 
 
@@ -956,7 +956,7 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void erc20DepositByCrossOutTest() throws Exception {
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0x6abc5a7f2f50e644bb0e75caae0a460d0f8793c19da7b272074784ebee5b8ab5";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         HtgParseTxHelper helper = new HtgParseTxHelper();
@@ -1022,7 +1022,7 @@ public class ETHIIWalletApiTest extends BaseII {
 
     @Test
     public void getTestNetTxReceipt() throws Exception {
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0x466dd4be78d49664d24dce9564a0ff58758e31280d0ff897d8a65bd2cc7f80e2";
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
@@ -1068,7 +1068,7 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1089,7 +1089,7 @@ public class ETHIIWalletApiTest extends BaseII {
         );
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1121,7 +1121,7 @@ public class ETHIIWalletApiTest extends BaseII {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }

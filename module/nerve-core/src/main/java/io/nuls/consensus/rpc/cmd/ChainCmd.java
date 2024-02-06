@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 共识链相关接口
+ * Consensus Chain Related Interface
  *
  * @author tag
  * 2018/11/7
@@ -32,14 +32,14 @@ public class ChainCmd extends BaseCmd {
     private ChainService service;
 
     /**
-     * 查看本节点是否为共识节点
+     * Check if this node is a consensus node
      * */
-    @CmdAnnotation(cmd = CMD_IS_CONSENSUS_AGENT, version = 1.0, description = "查询指定账户是否为出块地址")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_BLOCK_HEADER, parameterType = "String", parameterDes = "区块头")
-    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "地址")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "是否为共识节点")
+    @CmdAnnotation(cmd = CMD_IS_CONSENSUS_AGENT, version = 1.0, description = "Query whether the specified account is an outgoing address")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_BLOCK_HEADER, parameterType = "String", parameterDes = "Block head")
+    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "address")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "Is it a consensus node")
     }))
     public Response isConsensusAgent(Map<String, Object> params) {
         Result result = service.isConsensusAgent(params);
@@ -50,14 +50,14 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 区块分叉记录
+     * Block fork record
      */
-    @CmdAnnotation(cmd = CMD_ADD_EVIDENCE_RECORD, version = 1.0, description = "链分叉证据记录/add evidence record")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_BLOCK_HEADER, parameterType = "String", parameterDes = "分叉区块头一")
-    @Parameter(parameterName = PARAM_EVIDENCE_HEADER, parameterType = "String", parameterDes = "分叉区块头二")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "处理结果")
+    @CmdAnnotation(cmd = CMD_ADD_EVIDENCE_RECORD, version = 1.0, description = "Chain fork evidence record/add evidence record")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_BLOCK_HEADER, parameterType = "String", parameterDes = "Fork block head one")
+    @Parameter(parameterName = PARAM_EVIDENCE_HEADER, parameterType = "String", parameterDes = "Fork block head two")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "Processing results")
     }))
     public Response addEvidenceRecord(Map<String, Object> params) {
         Result result = service.addEvidenceRecord(params);
@@ -68,14 +68,14 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 双花交易记录
+     * Shuanghua transaction records
      */
-    @CmdAnnotation(cmd = CMD_ADD_DOUBLE_SPEND_RECORD, version = 1.0, description = "双花交易记录/double spend transaction record ")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_BLOCK, parameterType = "String", parameterDes = "区块信息")
-    @Parameter(parameterName = PARAM_TX, parameterType = "String",parameterDes = "分叉交易")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "处理结果")
+    @CmdAnnotation(cmd = CMD_ADD_DOUBLE_SPEND_RECORD, version = 1.0, description = "Shuanghua transaction records/double spend transaction record ")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_BLOCK, parameterType = "String", parameterDes = "Block information")
+    @Parameter(parameterName = PARAM_TX, parameterType = "String",parameterDes = "Forked transaction")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "Processing results")
     }))
     public Response doubleSpendRecord(Map<String, Object> params) {
         Result result = service.doubleSpendRecord(params);
@@ -86,15 +86,15 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询惩罚列表
+     * Query penalty list
      */
-    @CmdAnnotation(cmd = CMD_GET_PUNISH_LIST, version = 1.0, description = "查询红黄牌记录/query punish list")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "地址")
-    @Parameter(parameterName = PARAM_TYPE, requestType = @TypeDescriptor(value = int.class), parameterDes = "惩罚类型 0红黄牌记录 1红牌记录 2黄牌记录")
-    @ResponseData(name = "返回值", description = "返回一个Map对象，包含两个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RED_PUNISH,valueType = List.class, valueElement = String.class,  description = "获得的红牌列表"),
-            @Key(name = PARAM_YELLOW_PUNISH, valueType = List.class, valueElement = String.class, description = "获得的黄牌惩罚列表")
+    @CmdAnnotation(cmd = CMD_GET_PUNISH_LIST, version = 1.0, description = "Query red and yellow card records/query punish list")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "address")
+    @Parameter(parameterName = PARAM_TYPE, requestType = @TypeDescriptor(value = int.class), parameterDes = "Punishment type 0Red and yellow card records 1Red Card Record 2Yellow card record")
+    @ResponseData(name = "Return value", description = "Return aMapObject, containing twokey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RED_PUNISH,valueType = List.class, valueElement = String.class,  description = "List of red cards obtained"),
+            @Key(name = PARAM_YELLOW_PUNISH, valueType = List.class, valueElement = String.class, description = "List of yellow card penalties obtained")
     }))
     public Response getPublishList(Map<String, Object> params) {
         Result result = service.getPublishList(params);
@@ -105,11 +105,11 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询全网共识信息
+     * Query consensus information across the entire network
      */
-    @CmdAnnotation(cmd = CMD_GET_WHOLE_INFO, version = 1.0, description = "查询全网共识数据/query the consensus information of the whole network")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = WholeNetConsensusInfoDTO.class))
+    @CmdAnnotation(cmd = CMD_GET_WHOLE_INFO, version = 1.0, description = "Query consensus data across the entire network/query the consensus information of the whole network")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = WholeNetConsensusInfoDTO.class))
     public Response getWholeInfo(Map<String, Object> params) {
         Result result = service.getWholeInfo(params);
         if (result.isFailed()) {
@@ -119,12 +119,12 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询指定账户的共识信息
+     * Query consensus information for specified accounts
      */
-    @CmdAnnotation(cmd = CMD_GET_INFO, version = 1.0, description = "查询指定账户共识数据/query consensus information for specified accounts")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "账户地址")
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = AccountConsensusInfoDTO.class))
+    @CmdAnnotation(cmd = CMD_GET_INFO, version = 1.0, description = "Query consensus data for specified accounts/query consensus information for specified accounts")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_ADDRESS, parameterType = "String", parameterDes = "Account address")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = AccountConsensusInfoDTO.class))
     public Response getInfo(Map<String, Object> params) {
         Result result = service.getInfo(params);
         if (result.isFailed()) {
@@ -134,11 +134,11 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 获取当前轮次信息
+     * Obtain current round information
      */
-    @CmdAnnotation(cmd = CMD_GET_ROUND_INFO, version = 1.0, description = "获取当前轮次信息/get current round information")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = MeetingRound.class))
+    @CmdAnnotation(cmd = CMD_GET_ROUND_INFO, version = 1.0, description = "Obtain current round information/get current round information")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = MeetingRound.class))
     public Response getCurrentRoundInfo(Map<String, Object> params) {
         Result result = service.getCurrentRoundInfo(params);
         if (result.isFailed()) {
@@ -148,13 +148,13 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询指定区块所在轮次成员列表
+     * Query the member list of the specified block in the round
      */
-    @CmdAnnotation(cmd = CMD_GET_ROUND_MEMBER_INFO, version = 1.0, description = "查询指定区块所在轮次的成员列表/Query the membership list of the specified block's rounds")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_EXTEND, parameterType = "String", parameterDes = "区块头扩展信息")
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_PACKING_ADDRESS_LIST,valueType = List.class, valueElement = String.class,  description = "当前伦次出块地址列表")
+    @CmdAnnotation(cmd = CMD_GET_ROUND_MEMBER_INFO, version = 1.0, description = "Query the member list of the specified block in the round/Query the membership list of the specified block's rounds")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_EXTEND, parameterType = "String", parameterDes = "Block header extension information")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_PACKING_ADDRESS_LIST,valueType = List.class, valueElement = String.class,  description = "Current block address list")
     }))
     public Response getRoundMemberList(Map<String, Object> params) {
         Result result = service.getRoundMemberList(params);
@@ -165,16 +165,16 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 获取共模块识配置信息
+     * Obtain common module recognition configuration information
      */
-    @CmdAnnotation(cmd = CMD_GET_CONSENSUS_CONFIG, version = 1.0, description = "获取共识模块配置信息/get consensus config")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_SEED_NODES, description = "种子节点列表"),
-            @Key(name = PARAM_INFLATION_AMOUNT,valueType = Integer.class, description = "委托金额最大值"),
-            @Key(name = PARAM_AGENT_ASSET_ID,valueType = Integer.class, description = "共识资产ID"),
-            @Key(name = PARAM_AGENT_CHAIN_ID,valueType = Integer.class, description = "共识资产链ID"),
-            @Key(name = PARAM_AWARD_ASSERT_ID,valueType = Integer.class, description = "奖励资产ID（共识奖励为本链资产）"),
+    @CmdAnnotation(cmd = CMD_GET_CONSENSUS_CONFIG, version = 1.0, description = "Obtain consensus module configuration information/get consensus config")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_SEED_NODES, description = "Seed node list"),
+            @Key(name = PARAM_INFLATION_AMOUNT,valueType = Integer.class, description = "Maximum entrusted amount"),
+            @Key(name = PARAM_AGENT_ASSET_ID,valueType = Integer.class, description = "Consensus assetsID"),
+            @Key(name = PARAM_AGENT_CHAIN_ID,valueType = Integer.class, description = "Consensus Asset ChainID"),
+            @Key(name = PARAM_AWARD_ASSERT_ID,valueType = Integer.class, description = "Reward assetsID（Consensus rewards are assets of this chain）"),
     }))
     @SuppressWarnings("unchecked")
     public Response getConsensusConfig(Map<String, Object> params) {
@@ -186,14 +186,14 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 获取当前节点的出块账户信息
+     * Obtain the outbound account information of the current node
      * */
-    @CmdAnnotation(cmd = CMD_GET_SEED_NODE_INFO, version = 1.0, description = "获取种子节点信息/get seed node info")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_ADDRESS, description = "当前节点出块地址"),
-            @Key(name = PARAM_PASSWORD, description = "当前节点密码"),
-            @Key(name = PARAM_PACKING_ADDRESS_LIST, valueType = List.class, valueElement = String.class, description = "当前打包地址列表"),
+    @CmdAnnotation(cmd = CMD_GET_SEED_NODE_INFO, version = 1.0, description = "Obtain seed node information/get seed node info")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_ADDRESS, description = "Current node block address"),
+            @Key(name = PARAM_PASSWORD, description = "Current node password"),
+            @Key(name = PARAM_PACKING_ADDRESS_LIST, valueType = List.class, valueElement = String.class, description = "Current packaging address list"),
     }))
     public Response getSeedNodeInfo(Map<String,Object> params){
         Result result = service.getSeedNodeInfo(params);
@@ -204,12 +204,12 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询Stacking利率加成信息
+     * queryStackingInterest rate markup information
      * */
-    @CmdAnnotation(cmd = CMD_GET_RATE_ADDITION, version = 1.0, description = "查询Stacking利率加成信息")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "是否为共识节点")
+    @CmdAnnotation(cmd = CMD_GET_RATE_ADDITION, version = 1.0, description = "queryStackingInterest rate markup information")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RESULT_VALUE,valueType = Boolean.class, description = "Is it a consensus node")
     }))
     public Response getRateAddition(Map<String, Object> params) {
         Result result = service.getRateAddition(params);
@@ -220,13 +220,13 @@ public class ChainCmd extends BaseCmd {
     }
 
     /**
-     * 查询指定高度区块共识奖励单位
+     * Query specified height block consensus reward units
      * */
-    @CmdAnnotation(cmd = CMD_GET_REWARD_UNIT, version = 1.0, description = "查询指定高度区块共识奖励单位")
-    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
-    @Parameter(parameterName = PARAM_HEIGHT, requestType = @TypeDescriptor(value = int.class),parameterDes = "区块高度")
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = PARAM_RESULT_VALUE,valueType = double.class, description = "指定高度区块共识奖励单位")
+    @CmdAnnotation(cmd = CMD_GET_REWARD_UNIT, version = 1.0, description = "Query specified height block consensus reward units")
+    @Parameter(parameterName = PARAM_CHAIN_ID, requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
+    @Parameter(parameterName = PARAM_HEIGHT, requestType = @TypeDescriptor(value = int.class),parameterDes = "block height")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = PARAM_RESULT_VALUE,valueType = double.class, description = "Specify high block consensus reward units")
     }))
     public Response getRewardUnit(Map<String, Object> params) {
         Result result = service.getRewardUnit(params);

@@ -60,7 +60,7 @@ import static network.nerve.quotation.heterogeneouschain.constant.EthConstant.ET
 import static network.nerve.quotation.heterogeneouschain.constant.HtConstant.HECO_CHAIN;
 
 /**
- * 获取第三方价格 发交易
+ * Obtain third-party prices Trading
  * Price Collect Process
  *
  * @author: Loki
@@ -83,7 +83,7 @@ public class CollectorTask implements Runnable {
     @Override
     public void run() {
         try {
-//用于测试            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
+//Used for testing            for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
 //                if ("5-146-18".equals(quContractCfg.getTokenInfo())) {
 //                    Double price = NerveSwapUtil.getPrice(chain, quContractCfg);
 //                    chain.getLogger().info("==========price: {}", price);
@@ -104,17 +104,17 @@ public class CollectorTask implements Runnable {
             for (QuotationActuator qa : quteList) {
                 String anchorToken = qa.getAnchorToken();
                 if (QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)) {
-                    //当天已存在该key的已确认报价交易
+                    //This already exists on the same daykeyConfirmed quotation transaction for
                     continue;
                 }
                 if (QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.containsKey(anchorToken)) {
-                    //如果未确认的报价交易缓存中已存在该key, 则需要从交易模块获取该笔交易是否已确认
+                    //If the unconfirmed quote transaction already exists in the cachekey, Then it is necessary to obtain whether the transaction has been confirmed from the transaction module
                     String txHash = QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.get(anchorToken);
                     boolean confirmed = QuotationCall.isConfirmed(chain, txHash);
-                    chain.getLogger().info("[CollectorTask] 获取交易是否已确认：{}, hash:{}", confirmed, txHash);
+                    chain.getLogger().info("[CollectorTask] Obtain whether the transaction has been confirmed：{}, hash:{}", confirmed, txHash);
                     if (confirmed) {
-                        chain.getLogger().info("[CollectorTask] {}已报价", anchorToken);
-                        //加入已报价确认
+                        chain.getLogger().info("[CollectorTask] {}Quoted", anchorToken);
+                        //Add Quoted Confirmation
                         QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
                         continue;
                     } else {
@@ -131,17 +131,17 @@ public class CollectorTask implements Runnable {
                     }
                 }/* else if (ANCHOR_TOKEN_OKT.equals(anchorToken)) {
                  *//**
-                 * 2021-03-29 新增OKT报价，使用OKB报价结果。
+                 * 2021-03-29 New additionOKTQuotation, usingOKBQuotation results.
                  *//*
                     if (blockHeight < oktKeyHeight) {
                         continue;
                     }
                     Double priceDouble = pricesMap.get(ANCHOR_TOKEN_OKB);
                     if (null != priceDouble) {
-                        // 直接使用OKB的报价
+                        // Direct useOKBQuotation for
                         pricesMap.put(anchorToken, priceDouble);
                     } else {
-                        // 如果没有OKB报价，则直接获取计算OKB报价
+                        // If notOKBQuote, then directly obtain the calculationOKBoffer
                         Collector collector = getCollector(qa.getCollector());
                         price = collector.enquiry(chain, ANCHOR_TOKEN_OKB);
                     }
@@ -240,36 +240,42 @@ public class CollectorTask implements Runnable {
                             continue;
                         }
                     }
+                    if (ANCHOR_TOKEN_DOGE.equals(anchorToken)
+                            || ANCHOR_TOKEN_ZETA.equals(anchorToken)) {
+                        if (blockHeight < protocol31Height) {
+                            continue;
+                        }
+                    }
 
                     Collector collector = getCollector(qa.getCollector());
                     price = collector.enquiry(chain, anchorToken);
                 }
                 if (null == price || price.doubleValue() == 0) {
-                    chain.getLogger().error("[CollectorTask] [{}]没有获取到第三方平均报价", anchorToken);
+                    chain.getLogger().error("[CollectorTask] [{}]No average third-party quotation obtained", anchorToken);
                     continue;
                 }
-                chain.getLogger().info("[CollectorTask] [{}]第三方平均报价为：{} \n\n", anchorToken, price.doubleValue());
+                chain.getLogger().info("[CollectorTask] [{}]The average third-party quotation is：{} \n\n", anchorToken, price.doubleValue());
                 pricesMap.put(anchorToken, price.doubleValue());
             }
 
-            // swap合约报价
+            // swapContract quotation
             for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
                 if (blockHeight < quContractCfg.getEffectiveHeight()) {
                     continue;
                 }
                 String anchorToken = quContractCfg.getAnchorToken();
                 if (QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.contains(anchorToken)) {
-                    //当天已存在该key的已确认报价交易
+                    //This already exists on the same daykeyConfirmed quotation transaction for
                     continue;
                 }
                 if (QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.containsKey(anchorToken)) {
-                    //如果未确认的报价交易缓存中已存在该key, 则需要从交易模块获取该笔交易是否已确认
+                    //If the unconfirmed quote transaction already exists in the cachekey, Then it is necessary to obtain whether the transaction has been confirmed from the transaction module
                     String txHash = QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.get(anchorToken);
                     boolean confirmed = QuotationCall.isConfirmed(chain, txHash);
-                    chain.getLogger().info("[CollectorTask] 获取交易是否已确认：{}, hash:{}", confirmed, txHash);
+                    chain.getLogger().info("[CollectorTask] Obtain whether the transaction has been confirmed：{}, hash:{}", confirmed, txHash);
                     if (confirmed) {
-                        chain.getLogger().info("[CollectorTask] {}已报价", anchorToken);
-                        //加入已报价确认
+                        chain.getLogger().info("[CollectorTask] {}Quoted", anchorToken);
+                        //Add Quoted Confirmation
                         QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
                         continue;
                     } else {
@@ -279,7 +285,7 @@ public class CollectorTask implements Runnable {
                 String baseAnchorToken = quContractCfg.getBaseAnchorToken();
                 Double unitPrice = pricesMap.get(baseAnchorToken);
                 if (null == unitPrice && !quContractCfg.getChain().equals("NERVE")) {
-                    chain.getLogger().error("[CollectorTask] {}不能进行合约SWAP报价, [{}]没有获取到第三方报价", quContractCfg.getKey(), baseAnchorToken);
+                    chain.getLogger().error("[CollectorTask] {}Cannot proceed with contractSWAPoffer, [{}]No third-party quotation obtained", quContractCfg.getKey(), baseAnchorToken);
                     continue;
                 }
                 Double resultPrice = null;
@@ -305,7 +311,7 @@ public class CollectorTask implements Runnable {
                     default:
                 }
                 if (null != resultPrice) {
-                    chain.getLogger().info("[CollectorTask] 合约SWAP报价, [{}]：{} \n\n", anchorToken, resultPrice);
+                    chain.getLogger().info("[CollectorTask] contractSWAPoffer, [{}]：{} \n\n", anchorToken, resultPrice);
                     pricesMap.put(anchorToken, resultPrice);
                 }
             }
@@ -314,9 +320,9 @@ public class CollectorTask implements Runnable {
             if (pricesMap.isEmpty() || null == (tx = createAndSendTx(chain, pricesMap))) {
                 return;
             }
-            chain.getLogger().info("[Quotation] 节点执行报价交易 txHash: {}", tx.getHash().toHex());
+            chain.getLogger().info("[Quotation] Node executes quotation transactions txHash: {}", tx.getHash().toHex());
             chain.getLogger().info("{}", tx.format(Quotation.class));
-            //记录成功发送报价交易的token (如果由自己节点交易确认的时候来记录,容易出现重复报价)
+            //Record successful quotation transactions senttoken (If it is recorded during the transaction confirmation of one's own node,Frequent occurrence of duplicate quotations)
             String txHash = tx.getHash().toHex();
             pricesMap.forEach((key, value) -> {
                 QuotationContext.NODE_QUOTED_TX_TOKENS_TEMP.put(key, txHash);
@@ -330,7 +336,7 @@ public class CollectorTask implements Runnable {
     }
 
     /**
-     * 组装交易, 并广播到网络中
+     * Assembly transaction, And broadcast it to the network
      *
      * @param chain
      * @param pricesMap
@@ -363,16 +369,16 @@ public class CollectorTask implements Runnable {
 
 
     /**
-     * ETH网络 计算 UNI-V2 token价格
+     * ETHnetwork calculate UNI-V2 tokenprice
      *
-     * @param swapTokenContractAddress swap UNI-V2合约地址
-     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
-     * @param baseTokenUnitPrice       基准token的单价
+     * @param swapTokenContractAddress swap UNI-V2Contract address
+     * @param baseTokenContractAddress Benchmark for calculating pricestoken(Trading against one of themtokenAs a basis for calculation)
+     * @param baseTokenUnitPrice       benchmarktokenUnit price of
      * @throws Exception
      */
     public Double ethContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
         try {
-            // 池子里ETH的数量
+            // Chi Zi LiETHQuantity of
             chain.getLogger().debug("ETH,  V2-LP:{}, WETH:{}", swapTokenContractAddress, baseTokenContractAddress);
             BigInteger wethBalance = ethWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
             chain.getLogger().debug("wethBalance:" + wethBalance);
@@ -402,19 +408,19 @@ public class CollectorTask implements Runnable {
 
 
     /**
-     * BSC网络 计算 Cake_LP token价格
+     * BSCnetwork calculate Cake_LP tokenprice
      *
-     * @param swapTokenContractAddress swap UNI-V2合约地址
-     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
-     * @param baseTokenUnitPrice       基准token的单价
+     * @param swapTokenContractAddress swap UNI-V2Contract address
+     * @param baseTokenContractAddress Benchmark for calculating pricestoken(Trading against one of themtokenAs a basis for calculation)
+     * @param baseTokenUnitPrice       benchmarktokenUnit price of
      * @return
      * @throws Exception
      */
     public Double bscContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
         try {
-            // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+            // calculateETHUnder the network CAKE_LP The price of cakeLp
             chain.getLogger().debug("BSC,  Cake-LP:{}, WBNB:{}", swapTokenContractAddress, baseTokenContractAddress);
-            // 池子里ETH的数量
+            // Chi Zi LiETHQuantity of
             BigInteger wethBalance = bnbWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
             chain.getLogger().debug("wethBalance:" + wethBalance);
             int wethDecimals = bnbWalletApi.getContractTokenDecimals(baseTokenContractAddress);
@@ -442,19 +448,19 @@ public class CollectorTask implements Runnable {
     }
 
     /**
-     * Heco网络 计算 HSwap LP token价格
+     * Heconetwork calculate HSwap LP tokenprice
      *
-     * @param swapTokenContractAddress swap HSwap LP合约地址
-     * @param baseTokenContractAddress 计算价格时基准token(以交易对其中一个token作为计算依据)
-     * @param baseTokenUnitPrice       基准token的单价
+     * @param swapTokenContractAddress swap HSwap LPContract address
+     * @param baseTokenContractAddress Benchmark for calculating pricestoken(Trading against one of themtokenAs a basis for calculation)
+     * @param baseTokenUnitPrice       benchmarktokenUnit price of
      * @return
      * @throws Exception
      */
     public Double hecoContractQuote(String swapTokenContractAddress, String baseTokenContractAddress, String baseTokenUnitPrice) {
         try {
-            // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+            // calculateETHUnder the network CAKE_LP The price of cakeLp
             chain.getLogger().debug("HECO,  Cake-LP:{}, HUSD:{}", swapTokenContractAddress, baseTokenContractAddress);
-            // 池子里HUSD的数量
+            // Chi Zi LiHUSDQuantity of
             BigInteger husdBalance = hecoWalletApi.getERC20Balance(swapTokenContractAddress, baseTokenContractAddress);
             chain.getLogger().debug("husdBalance:" + husdBalance);
             int husdDecimals = hecoWalletApi.getContractTokenDecimals(baseTokenContractAddress);

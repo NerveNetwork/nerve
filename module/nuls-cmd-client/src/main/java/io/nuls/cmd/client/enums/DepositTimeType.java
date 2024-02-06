@@ -4,36 +4,36 @@ public enum DepositTimeType {
 //    TEST((byte)7, 5, 300),
 
     /**
-     * 定期委托3个月
+     * Regular commission3Months
      * */
     THREE_MONTHS((byte)0, 1.2, 7776000),
 
     /**
-     * 半年
+     * Half a year
      * */
     HALF_YEAR((byte)1, 1.5, 15552000),
     /**
-     * 一年
+     * One year
      * */
     ONE_YEAR((byte)2, 2, 31104000),
 
     /**
-     * 两年
+     * two years
      * */
     TOW_YEARS((byte)3, 2.5, 62208000),
 
     /**
-     * 三年
+     * Three years
      * */
     THREE_YEARS((byte)4, 3, 93312000),
 
     /**
-     * 五年
+     * five years
      * */
     FIVE_YEARS((byte)5, 4, 155520000),
 
     /**
-     * 十年
+     * Ten years
      * */
     TEN_YEARS((byte)6, 5, 311040000);
     private final byte type;
@@ -61,8 +61,8 @@ public enum DepositTimeType {
     }
 
     /**
-     * 根据委托时间类型获取信息
-     * @param type  委托时间
+     * Obtain information based on the type of delegation time
+     * @param type  Entrustment time
      * @return      DepositTimeType
      */
     public static DepositTimeType getValue(byte type){

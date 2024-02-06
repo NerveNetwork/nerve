@@ -47,7 +47,7 @@ import java.util.Arrays;
 
 /**
  * @author: zhoulijun
- * 使用多签账户进行委托共识（不是委托到多签账户创建的节点）
+ * Using multiple signed accounts for delegated consensus（Not delegated to nodes created by multiple signed accounts）
  */
 public abstract class DepositForMultiSignProcessor extends ConsensusBaseProcessor implements CommandProcessor {
 

@@ -26,7 +26,6 @@ package network.nerve.converter.model.txdata;
 
 import io.nuls.base.basic.NulsByteBuffer;
 import io.nuls.base.basic.NulsOutputStreamBuffer;
-import io.nuls.base.data.Address;
 import io.nuls.base.data.BaseNulsData;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.parse.SerializeUtils;
@@ -36,29 +35,29 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 
 /**
- * 一键跨链
+ * One click cross chain
  * @author: PierreLuo
  * @date: 2022/3/21
  */
 public class OneClickCrossChainTxData extends BaseNulsData {
 
     /**
-     * 异构链充值交易hash
+     * Heterogeneous chain recharge transactionshash
      */
     private HeterogeneousHash originalTxHash;
     /**
-     * 异构链交易所在区块高度
+     * Heterogeneous chain exchanges at block height
      */
     private long heterogeneousHeight;
     /**
-     * 异构链网络中 充值的from地址
+     * In heterogeneous chain networks Rechargeablefromaddress
      */
     private String heterogeneousFromAddress;
-    // 目标链跨链信息
+    // Cross chain information of the target chain
     private int desChainId;
     private String desToAddress;
     private String desExtend;
-    // 预留字段
+    // Reserved fields
     private byte[] extend;
 
 

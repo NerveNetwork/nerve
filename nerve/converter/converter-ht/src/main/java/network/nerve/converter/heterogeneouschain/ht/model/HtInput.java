@@ -27,7 +27,7 @@ import network.nerve.converter.enums.HeterogeneousChainTxType;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgInput;
 
 /**
- * 这几个model，历史数据遗留，protostuff的反序列化要使用它们，不能删除
+ * These fewmodelHistorical data legacy,protostuffTo deserialize, they need to be used and cannot be deleted
  * @author: Mimi
  * @date: 2020-05-21
  */

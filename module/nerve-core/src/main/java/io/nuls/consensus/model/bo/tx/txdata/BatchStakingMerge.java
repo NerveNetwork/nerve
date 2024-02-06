@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 活期staking合并交易的txData
+ * currentstakingMerger transactionstxData
  */
 public class BatchStakingMerge extends BaseNulsData {
 

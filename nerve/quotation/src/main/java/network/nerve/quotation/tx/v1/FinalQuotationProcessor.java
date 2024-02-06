@@ -76,24 +76,24 @@ public class FinalQuotationProcessor implements TransactionProcessor {
     }
 
     /**
-     * 最终喂价交易业务验证
-     * 0.当前块只能有一个该交易类型交易
-     * 0.5.对应的key是否存在于配置的中
+     * Verification of final pricing transaction business
+     * 0.The current block can only have one transaction of this transaction type
+     * 0.5.CorrespondingkeyDoes it exist in the configuration
      * <p>
-     * 1.验证对应的key当天没有已确认的喂价交易
-     * 确认业务数据中不存在 key+区块日期）
+     * 1.Verify the correspondingkeyThere are no confirmed feed rate transactions on that day
+     * Confirm that there is no presence in the business data key+Block date）
      * <p>
-     * 2.待验证交易中对应key的业务数据与本地重新计算的最终报价交易业务数据相同
-     * （key+区块日期+价格 相等）
+     * 2.Corresponding to the transaction to be verifiedkeyThe business data is the same as the final quotation transaction business data recalculated locally
+     * （key+Block date+price equal）
      * <p>
-     * 3.验证coindata为空null/length==0;
+     * 3.validatecoindataEmptynull/length==0;
      * <p>
-     * 4.验证签名为空null/length==0;
+     * 4.Verify that the signature is emptynull/length==0;
      *
-     * @param chainId     链Id
-     * @param txs         类型为{@link #getType()}的所有交易集合
-     * @param txMap       不同交易类型与其对应交易列表键值对
-     * @param blockHeader 区块头
+     * @param chainId     chainId
+     * @param txs         Type is{@link #getType()}All transaction sets for
+     * @param txMap       Different transaction types and their corresponding transaction list key value pairs
+     * @param blockHeader Block head
      * @return
      */
     @Override
@@ -101,7 +101,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
         if (txs.isEmpty()) {
             return null;
         }
-        //业务数据校验
+        //Business data verification
         Chain chain = null;
         Map<String, Object> result = null;
         try {
@@ -110,7 +110,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(QuotationConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //块里面不能有多个最终喂价交易
+            //There cannot be multiple final feed transactions within a block
             if (txs.size() > 1) {
                 failsList.addAll(txs);
                 log.error(QuotationErrorCode.TXDATA_EMPTY.getMsg());
@@ -119,7 +119,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                 return result;
             }
             Transaction tx = txs.get(0);
-            //验证业务数据
+            //Verify business data
             Prices prices = CommonUtil.getInstance(tx.getTxData(), Prices.class);
             List<Price> pricesList = prices.getPrices();
             if (null == pricesList || pricesList.isEmpty()) {
@@ -140,7 +140,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     log.error(QuotationErrorCode.QUOTATION_COINDATA_NOT_EMPTY.getMsg());
                 }
                 if (tx.getTransactionSignature() != null && tx.getTransactionSignature().length != 0) {
-                    // 最终喂价交易为系统交易, 不通过网络转发, 只能由打包节点打包到区块中, 不含签名数据
+                    // The final feed price transaction is a system transaction, Not forwarding through the network, Can only be packaged into blocks by packaging nodes, Without signature data
                     failsList.add(tx);
                     errorCode = QuotationErrorCode.FINAL_QUOTATION_SIGN_NOT_EMPTY.getCode();
                     log.error(QuotationErrorCode.FINAL_QUOTATION_SIGN_NOT_EMPTY.getMsg());
@@ -154,20 +154,20 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     log.error(QuotationErrorCode.QUOTATION_KEY_NOT_EXIST.getMsg());
                 }
 
-                //调验证器时交易可能没有打入区块
+                //The transaction may not have entered the block when calling the validator
                 String date = null == blockHeader ? TimeUtil.nowUTCDate() : TimeUtil.toUTCDate(blockHeader.getTime());
                 String dbKey = CommonUtil.assembleKey(date, key);
-                //该日期key是否确认过
+                //This datekeyHave you confirmed
                 if (!validNoConfirmed(chain, dbKey)) {
                     failsList.add(tx);
                     errorCode = QuotationErrorCode.FINAL_QUOTATION_CONFIRMED.getCode();
                     log.error(QuotationErrorCode.FINAL_QUOTATION_CONFIRMED.getMsg());
                 }
 
-                //对应报价与各节点报价是统计出来的结果是否一致
+                //Is the corresponding quotation consistent with the statistics of each node's quotation
                 /**
-                 * 3. 通过区块日期和txdata中的key，获取各节点已确认报价统计一次最终价格
-                 * 如果与交易中txdata中的价格一致，则验证通过
+                 * 3. By block date andtxdataMiddlekeyObtain the confirmed quotes from each node and calculate the final price once
+                 * If it is related to the transactiontxdataIf the prices in are consistent, the verification is successful
                  */
                 Double calcPrice = calculatorProcessor.calcFinal(chain, key, date);
                 if (price.getValue() != calcPrice.doubleValue()) {
@@ -187,7 +187,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
     }
 
     /**
-     * 0.验证对应的key存在于配置的中
+     * 0.Verify the correspondingkeyExists in the configuration
      */
     public boolean validCfg(Chain chain, String key, long height) {
         List<QuotationActuator> quteList = chain.getQuote();
@@ -199,26 +199,26 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             }
         }
         if (cfgKey) {
-            // 协议升级特殊处理
+            // Protocol upgrade special handling
             if (key.equals(ANCHOR_TOKEN_USDT)
                     || key.equals(ANCHOR_TOKEN_DAI)
                     || key.equals(ANCHOR_TOKEN_USDC)
                     || key.equals(ANCHOR_TOKEN_PAX)) {
                 if (height < usdtDaiUsdcPaxKeyHeight) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
             if (key.equals(ANCHOR_TOKEN_BNB)) {
                 if (height < bnbKeyHeight) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
             if(key.equals(ANCHOR_TOKEN_HT)
                 || key.equals(ANCHOR_TOKEN_OKB)) {
                 if (height < htOkbKeyHeight) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -227,14 +227,14 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     || key.equals(ANCHOR_TOKEN_MATIC)
                     || key.equals(ANCHOR_TOKEN_KCS)) {
                 if (height < oneMaticKcsHeight) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
 
             if (key.equals(ANCHOR_TOKEN_TRX)) {
                 if (height < trxKeyHeight) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -243,7 +243,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     || key.equals(ANCHOR_TOKEN_AVAX)
                     || key.equals(ANCHOR_TOKEN_FTM)) {
                 if (height < protocol16Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -253,7 +253,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                     || key.equals(ANCHOR_TOKEN_KLAY)
                     || key.equals(ANCHOR_TOKEN_BCH)) {
                 if (height < protocol21Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -261,21 +261,21 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             if(key.equals(ANCHOR_TOKEN_KAVA)
                     || key.equals(ANCHOR_TOKEN_ETHW)) {
                 if (height < protocol22Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
 
             if(key.equals(ANCHOR_TOKEN_REI)) {
                 if (height < protocol24Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
 
             if(key.equals(ANCHOR_TOKEN_EOS)) {
                 if (height < protocol26Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -283,21 +283,28 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             if(key.equals(ANCHOR_TOKEN_CELO)
                     || key.equals(ANCHOR_TOKEN_ETC)) {
                 if (height < protocol27Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
 
             if(key.equals(ANCHOR_TOKEN_BRISE)) {
                 if (height < protocol29Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
 
             if(key.equals(ANCHOR_TOKEN_JNS)) {
                 if (height < protocol30Height) {
-                    chain.getLogger().error("没达到协议升级高度, 不支持该交易对报价. {} , {}", key, height);
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
+                    return false;
+                }
+            }
+            if(key.equals(ANCHOR_TOKEN_DOGE)
+                    || key.equals(ANCHOR_TOKEN_ZETA)) {
+                if (height < protocol31Height) {
+                    chain.getLogger().error("Not reaching the protocol upgrade height, This transaction is not supported for quotation. {} , {}", key, height);
                     return false;
                 }
             }
@@ -314,8 +321,8 @@ public class FinalQuotationProcessor implements TransactionProcessor {
     }
 
     /**
-     * 1.验证对应的key当天没有已确认的喂价交易(查已确认数据)
-     * 确认业务数据中不存在 key+区块日期
+     * 1.Verify the correspondingkeyThere are no confirmed feed rate transactions on that day(Check confirmed data)
+     * Confirm that there is no presence in the business data key+Block date
      */
     public boolean validNoConfirmed(Chain chain, String dbKey) {
         ConfirmFinalQuotationPO cfrFinalQuotationPO = cfrFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey);
@@ -332,12 +339,12 @@ public class FinalQuotationProcessor implements TransactionProcessor {
     }
 
     /**
-     * 提交业务数据
+     * Submit business data
      *
      * @param chainId
      * @param txs
      * @param blockHeader
-     * @param failRollback 异常是否触发回滚
+     * @param failRollback Does the exception trigger a rollback
      * @return
      */
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus, boolean failRollback) {
@@ -349,7 +356,7 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             chain = chainManager.getChain(chainId);
             Transaction tx = txs.get(0);
             String date = TimeUtil.toUTCDate(blockHeader.getTime());
-            //验证业务数据
+            //Verify business data
             Prices prices = CommonUtil.getInstance(tx.getTxData(), Prices.class);
             List<Price> pricesList = prices.getPrices();
             for (Price price : pricesList) {
@@ -361,14 +368,14 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                 cfrFinalQuotation.setTxHash(tx.getHash().toHex());
                 //yyyyMMdd-anchorToken
                 String dbKey = CommonUtil.assembleKey(date, anchorToken);
-                //保存最新报价（key含日期）
+                //Save the latest quotation（keyIncluding date）
                 cfrFinalQuotationStorageService.saveCfrFinalQuotation(chain, dbKey, cfrFinalQuotation);
-                //覆盖最新报价（key不含日期）
+                //Cover the latest quotation（keyExcluding dates）
                 cfrFinalQuotationStorageService.saveCfrFinalLastQuotation(chain, anchorToken, cfrFinalQuotation);
-                //加入当天缓存
+                //Add Today's Cache
                 QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.add(anchorToken);
 
-                chain.getLogger().info("[commit] 确认最终报价交易 Final-quotation anchorToken:{}, dbKey:{}, price:{}, hash:{}",
+                chain.getLogger().info("[commit] Confirm final quotation transaction Final-quotation anchorToken:{}, dbKey:{}, price:{}, hash:{}",
                         anchorToken, dbKey, price.getValue(), tx.getHash().toHex());
             }
             return true;
@@ -395,9 +402,9 @@ public class FinalQuotationProcessor implements TransactionProcessor {
             chain = chainManager.getChain(chainId);
             Transaction tx = txs.get(0);
             String date = TimeUtil.toUTCDate(blockHeader.getTime());
-            //前一天
+            //The day before
             String theDayBefore = TimeUtil.theDayBeforeUTCDate(blockHeader.getTime());
-            //验证业务数据
+            //Verify business data
             Prices prices = CommonUtil.getInstance(tx.getTxData(), Prices.class);
             List<Price> pricesList = prices.getPrices();
             for (Price price : pricesList) {
@@ -406,17 +413,17 @@ public class FinalQuotationProcessor implements TransactionProcessor {
                 String dbKey = CommonUtil.assembleKey(date, anchorToken);
                 cfrFinalQuotationStorageService.deleteCfrFinalQuotationByKey(chain, dbKey);
 
-                //删除当前最近一次报价
+                //Delete the current most recent quotation
                 cfrFinalQuotationStorageService.deleteCfrFinalLastTimeQuotationByKey(chain, anchorToken);
 
-                //将前一天的最终报价覆盖到最近一次报价中
+                //Overlay the final quotation from the previous day with the latest quotation
                 String theDayBeforeDbKey = CommonUtil.assembleKey(theDayBefore, anchorToken);
                 ConfirmFinalQuotationPO cfrFinalQuotationPO = cfrFinalQuotationStorageService.getCfrFinalQuotation(chain, theDayBeforeDbKey);
                 if (null == cfrFinalQuotationPO) {
                     return true;
                 }
                 cfrFinalQuotationStorageService.saveCfrFinalLastQuotation(chain, anchorToken, cfrFinalQuotationPO);
-                //从当天缓存中清除
+                //Clear from today's cache
                 QuotationContext.INTRADAY_NEED_NOT_QUOTE_TOKENS.remove(anchorToken);
             }
             return true;

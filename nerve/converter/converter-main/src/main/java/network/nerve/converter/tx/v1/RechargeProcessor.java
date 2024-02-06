@@ -81,15 +81,15 @@ public class RechargeProcessor implements TransactionProcessor {
     private HeterogeneousAssetHelper heterogeneousAssetHelper;
 
     /**
-     * 主要验证逻辑
-     * 1.验证原始交易hash
-     * 2.验证充值金额与原始充值金额是否一致
-     * 3.验证到账地址是否一致
+     * Main verification logic
+     * 1.Verify original transactionhash
+     * 2.Verify whether the recharge amount is consistent with the original recharge amount
+     * 3.Verify if the delivery address is consistent
      *
-     * @param chainId     链Id
-     * @param txs         类型为{@link #getType()}的所有交易集合
-     * @param txMap       不同交易类型与其对应交易列表键值对
-     * @param blockHeader 区块头
+     * @param chainId     chainId
+     * @param txs         Type is{@link #getType()}All transaction sets for
+     * @param txMap       Different transaction types and their corresponding transaction list key value pairs
+     * @param blockHeader Block head
      * @return
      */
     @Override
@@ -105,12 +105,12 @@ public class RechargeProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
                 if(!setDuplicate.add(txData.getOriginalTxHash().toLowerCase())){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
@@ -118,14 +118,14 @@ public class RechargeProcessor implements TransactionProcessor {
                     continue;
                 }
                 if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
-                    // 该原始交易已执行过充值
+                    // The original transaction has already been recharged
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                             tx.getHash().toHex(), txData.getOriginalTxHash());
                 }
 
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -157,7 +157,7 @@ public class RechargeProcessor implements TransactionProcessor {
         Chain chain = chainManager.getChain(chainId);
         boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
         try {
-            // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
+            // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-12
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
                 NulsHash hash = tx.getHash();
@@ -168,21 +168,21 @@ public class RechargeProcessor implements TransactionProcessor {
                 }
                 ProposalPO proposalPO = null;
                 if(!Numeric.containsHexPrefix(txData.getOriginalTxHash())) {
-                    // 表明不是异构链交易hash 可能为提案
+                    // Indicates that it is not a heterogeneous chain transactionhash May be a proposal
                     proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
                 }
 
-                // 节点正常运行状态下 并且不是提案执行的充值交易，才执行异构链交易确认函数
+                // Under normal operation of the node And it is not a recharge transaction executed by the proposal, only the heterogeneous chain transaction confirmation function is executed
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector && null == proposalPO) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                     docking.txConfirmedCompleted(txData.getOriginalTxHash(), blockHeader.getHeight(), hash.toHex());
                 }
                 if (null != proposalPO && syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
-                    // 如果是执行提案 需要发布提案确认交易
+                    // If it is to execute the proposal Need to publish a proposal to confirm the transaction
                     publishProposalConfirmed(chain, hash, proposalPO, blockHeader.getTime());
                 }
 
-                chain.getLogger().info("[commit]Recharge 充值交易 hash:{}", hash.toHex());
+                chain.getLogger().info("[commit]Recharge Recharge transaction hash:{}", hash.toHex());
             }
             return true;
         } catch (Exception e) {
@@ -195,10 +195,10 @@ public class RechargeProcessor implements TransactionProcessor {
     }
 
     /**
-     * 发布提案TRANSFER类型的确认交易
-     * @param txHash 当前充值交易hash
-     * @param proposalPO 对应的提案
-     * @param time 当前区块时间
+     * Publish proposalTRANSFERConfirmation transactions of types
+     * @param txHash Current recharge transactionhash
+     * @param proposalPO Corresponding proposal
+     * @param time Current block time
      * @throws NulsException
      */
     private void publishProposalConfirmed(Chain chain, NulsHash txHash, ProposalPO proposalPO, long time) throws NulsException {
@@ -213,7 +213,7 @@ public class RechargeProcessor implements TransactionProcessor {
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
-        // 发布提案确认交易
+        // Publish proposal to confirm transaction
         assembleTxService.createConfirmProposalTx(chain, txData, time);
     }
 
@@ -228,15 +228,15 @@ public class RechargeProcessor implements TransactionProcessor {
         }
         Chain chain = chainManager.getChain(chainId);
         try {
-            // 回滚异构链组件交易状态 // add by Mimi at 2020-03-13
+            // Rolling back the transaction status of heterogeneous chain components // add by Mimi at 2020-03-13
             for(Transaction tx : txs) {
                 RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
                 ProposalPO proposalPO = null;
                 if(!Numeric.containsHexPrefix(txData.getOriginalTxHash())) {
-                    // 表明不是异构链交易hash 可能为提案
+                    // Indicates that it is not a heterogeneous chain transactionhash May be a proposal
                     proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
                 }
-                // 不是提案执行的充值交易，才执行异构链交易确认回滚
+                // Perform heterogeneous chain transaction confirmation rollback only for recharge transactions that are not proposed for execution
                 if (null == proposalPO) {
                     if (txData.getHeterogeneousChainId() > 0) {
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
@@ -249,7 +249,7 @@ public class RechargeProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
 
-                chain.getLogger().info("[rollback]Recharge 充值交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[rollback]Recharge Recharge transaction hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (Exception e) {

@@ -33,7 +33,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 节点报价交易的业务数据
+ * Business data for node quotation transactions
  * @author: Loki
  * @date: 2019/11/27
  */
@@ -41,22 +41,22 @@ public class NodeQuotationPO extends BaseNulsData {
 
     private String txHash;
     /**
-     * token 交易key
+     * token transactionkey
      */
     private String token;
 
     /**
-     * 节点签名(打包)地址
+     * Node Signature(pack)address
      */
     private String address;
 
     /**
-     * 价格
+     * price
      */
     private double price;
 
     /**
-     * 交易区块时间
+     * Transaction block time
      */
     private long blockTime;
 

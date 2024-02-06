@@ -80,7 +80,7 @@ public class StakingLimitStorageServiceImpl implements StakingLimitStorageServic
                 return getTotalAmount(chain, key);
             }
             if (null == bytes) {
-                //代码合并错误买单的兼容代码
+                //Compatibility code for paying for code merge errors
                 bytes = RocksDBService.get(ConsensusConstant.DB_NAME_CONFIG, key.getBytes("UTF-8"));
             }
             if (null == bytes) {

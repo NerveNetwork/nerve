@@ -115,7 +115,7 @@ public class DataTest {
                 ));
             });
             double finalPrice = avgCalc(list);
-            System.out.println(String.format("当前节基于%s个节点的报价，最终报价计算结果:%s", list.size(), (new BigDecimal(Double.toString(finalPrice))).toPlainString()));
+            System.out.println(String.format("The current section is based on%sQuotation for nodes, final quotation calculation result:%s", list.size(), (new BigDecimal(Double.toString(finalPrice))).toPlainString()));
 
         }
     }
@@ -137,7 +137,7 @@ public class DataTest {
             }
             for (String address : distinctAddress) {
                 if (address.equals(nq.getAddress())) {
-                    System.out.println(String.format("CalculatorProcessor, 节点重复报价 address:%s, key:%s", address, nq.getToken()));
+                    System.out.println(String.format("CalculatorProcessor, Node duplicate quotation address:%s, key:%s", address, nq.getToken()));
                     it.remove();
                 }
             }
@@ -152,7 +152,7 @@ public class DataTest {
             list.clear();
             return list;
         }
-        //排序
+        //sort
         list.sort(new Comparator<NodeQuotationPO>() {
             @Override
             public int compare(NodeQuotationPO o1, NodeQuotationPO o2) {
@@ -166,7 +166,7 @@ public class DataTest {
             }
         });
         List<NodeQuotationPO> rsList = new ArrayList<>();
-        //去掉头尾各两个元素
+        //Remove two elements at the beginning and two at the end
         for (int i = QuotationContext.removeMaxMinCount; i < list.size() - QuotationContext.removeMaxMinCount; i++) {
             rsList.add(list.get(i));
         }

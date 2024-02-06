@@ -40,11 +40,11 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
- * 消费共享队列中的区块
+ * Blocks in the consumption sharing queue
  *
  * @author captain
  * @version 1.0
- * @date 18-11-8 下午5:45
+ * @date 18-11-8 afternoon5:45
  */
 public class BlockConsumer implements Callable<Boolean> {
 
@@ -81,7 +81,7 @@ public class BlockConsumer implements Callable<Boolean> {
                             return ++v;
                         });
                         if (value > 3) {
-                            logger.info("连续3次同步区块失败，开始进行停止节点操作");
+                            logger.info("continuity3Secondary synchronization block failed, starting to stop node operation");
                             context.stopBlock();
                         }
                         logger.error("saving block exception, height-" + pendingHeight + ", hash-" + block.getHeader().getHash());
@@ -96,7 +96,7 @@ public class BlockConsumer implements Callable<Boolean> {
                 }
                 Thread.sleep(10);
                 long end = System.nanoTime();
-                //超过1秒没有高度更新
+                //exceed1No height update in seconds
                 if ((end - begin) / 1000000 > 1000) {
                     updateNodeStatus(context);
                     punishNode(pendingHeight, params.getNodes(), context);
@@ -136,9 +136,9 @@ public class BlockConsumer implements Callable<Boolean> {
     }
 
     /**
-     * 下载失败重试,直到成功为止(批量下载失败,重试就一个一个下载)
+     * Download failed and retry,Until successful(Batch download failed,Try again and download one by one)
      *
-     * @param height 已下载的区块
+     * @param height Downloaded blocks
      * @return
      */
     private void retryDownload(long height, ChainContext context) throws NulsException {
@@ -174,7 +174,7 @@ public class BlockConsumer implements Callable<Boolean> {
             }
         }
         if (!download) {
-            //如果从所有节点下载这个高度的区块失败,就停止同步进程,等待下次同步
+            //If downloading this height block from all nodes fails,Stop the synchronization process,Waiting for next synchronization
             throw new NulsException(BlockErrorCode.BLOCK_SYN_ERROR);
         }
     }

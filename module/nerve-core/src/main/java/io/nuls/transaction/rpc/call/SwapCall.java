@@ -41,13 +41,13 @@ import java.util.Map;
 public class SwapCall {
 
     /**
-     * 打包SWAP通知
+     * packSWAPnotice
      * @param chain
      * @param blockHeight
      * @param blockTime
      * @param packingAddress
      * @param preStateRoot
-     * @param blockType 该调用的处理模式, 打包:0, 验证区块:1
+     * @param blockType The processing mode of this call, pack:0, Verify Block:1
      * @return
      * @throws NulsException
      */
@@ -68,10 +68,10 @@ public class SwapCall {
 
     }
     /**
-     * 调用SWAP, 交易执行成功与否,不影响交易的打包
+     * callSWAP, Whether the transaction execution was successful or not,Does not affect the packaging of transactions
      * @param chain
      * @param tx
-     * @param blockType 该调用的处理模式, 打包:0, 验证区块:1
+     * @param blockType The processing mode of this call, pack:0, Verify Block:1
      * @return
      * @throws NulsException
      */
@@ -97,7 +97,7 @@ public class SwapCall {
     }
 
     /**
-     * 终止调用SWAP交易执行
+     * Terminate callSWAPTransaction Execution
      * @param chain
      * @param blockHeight
      * @return

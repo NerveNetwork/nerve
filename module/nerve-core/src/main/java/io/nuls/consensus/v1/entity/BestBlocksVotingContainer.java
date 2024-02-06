@@ -17,11 +17,11 @@ import java.util.concurrent.locks.ReentrantLock;
 public class BestBlocksVotingContainer {
 
     /**
-     * 已投票的记录
+     * Voted records
      */
     private HashSetDuplicateProcessor<String> localStage1VotedRecorder = new HashSetDuplicateProcessor<>(1024);
     /**
-     * 已得到结果记录
+     * Obtained result record
      */
     private HashSetDuplicateProcessor<String> stage1ResultRecorder = new HashSetDuplicateProcessor<>(1024);
 
@@ -47,7 +47,7 @@ public class BestBlocksVotingContainer {
                     this.listener.onChange(header);
                 }
             } else {
-                chain.getLogger().info("本区块不投票：" + header.getHash().toHex());
+                chain.getLogger().info("This block does not vote：" + header.getHash().toHex());
             }
             map.put(header.getHash(), header);
         } finally {
@@ -74,12 +74,12 @@ public class BestBlocksVotingContainer {
             }
 
             BlockExtendsData data = header.getExtendsData();
-            //如果轮次是确认的，那么区块也不许和轮次一致
+            //If the round is confirmed, then the block must not match the round either
             if (roundIndex == data.getRoundIndex() && packingIndexOfRound == data.getPackingIndexOfRound()
                     && roundStartTime == data.getRoundStartTime()) {
                 return header;
 //            } else {
-//                chain.getLogger().info("区块不适合本次投票：{}", header.getHash().toHex());
+//                chain.getLogger().info("The block is not suitable for this vote：{}", header.getHash().toHex());
             }
 
         }

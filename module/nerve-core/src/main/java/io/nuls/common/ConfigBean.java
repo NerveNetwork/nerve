@@ -51,299 +51,299 @@ public class ConfigBean extends BaseNulsData {
     private int assetId;
     /*-------------------------[Block]-----------------------------*/
     /**
-     * 区块大小阈值
+     * Block size threshold
      */
     private long blockMaxSize;
     /**
-     * 网络重置阈值
+     * Network reset threshold
      */
     private long resetTime;
     /**
-     * 分叉链比主链高几个区块就进行链切换
+     * Chain switching occurs when the fork chain is several blocks higher than the main chain
      */
     private byte chainSwtichThreshold;
     /**
-     * 分叉链、孤儿链区块最大缓存数量
+     * Forked chain、The maximum cache size of orphan chain blocks
      */
     private int cacheSize;
     /**
-     * 接收新区块的范围
+     * Scope of receiving new blocks
      */
     private int heightRange;
     /**
-     * 每次回滚区块最大值
+     * Maximum block size for each rollback
      */
     private int maxRollback;
     /**
-     * 一致节点比例
+     * Consistent node ratio
      */
     private byte consistencyNodePercent;
     /**
-     * 系统运行最小节点数
+     * Minimum number of nodes for system operation
      */
     private byte minNodeAmount;
     /**
-     * 每次从一个节点下载多少区块
+     * How many blocks are downloaded from a node each time
      */
     private byte downloadNumber;
     /**
-     * 区块头中扩展字段的最大长度
+     * The maximum length of the extended field in the block header
      */
     private int extendMaxSize;
     /**
-     * 为阻止恶意节点提前出块,设置此参数
-     * 区块时间戳大于当前时间多少就丢弃该区块
+     * To prevent malicious nodes from leaving the block prematurely,Set this parameter
+     * Discard the block if its timestamp is greater than the current time
      */
     private int validBlockInterval;
     /**
-     * 系统正常运行时最多缓存多少个从别的节点接收到的小区块
+     * How many cell blocks can be cached at most when the system is running normally and received from other nodes
      */
     private byte smallBlockCache;
     /**
-     * 孤儿链最大年龄
+     * Orphan Chain Maximum Age
      */
     private byte orphanChainMaxAge;
     /**
-     * 日志级别
+     * log level
      */
     private String logLevel;
     /**
-     * 下载单个区块的超时时间
+     * The timeout for downloading a single block
      */
     private int singleDownloadTimeout;
 
     /**
-     * 等待网络稳定的时间间隔
+     * Waiting for the time interval for network stability
      */
     private int waitNetworkInterval;
 
     /**
-     * 创世区块配置文件路径
+     * Genesis block configuration file path
      */
     private String genesisBlockPath;
 
     /**
-     * 区块同步过程中缓存的区块字节数上限
+     * Maximum number of cached block bytes during block synchronization process
      */
     private long cachedBlockSizeLimit;
     /*-------------------------[Protocol]-----------------------------*/
     /**
-     * 统计区间
+     * Statistical interval
      */
     private short interval;
     /**
-     * 每个统计区间内的最小生效比例
+     * The minimum effective ratio within each statistical interval
      */
     private byte effectiveRatioMinimum;
     /**
-     * 协议生效要满足的连续区间数最小值
+     * The minimum number of consecutive intervals that a protocol must meet in order to take effect
      */
     private short continuousIntervalCountMinimum;
     /*-------------------------[CrossChain]-----------------------------*/
     /**
-     * 最小链接数
+     * Minimum number of links
      * Minimum number of links
      * */
     private int minNodes;
 
     /**
-     * 最大链接数
+     * Maximum number of links
      * */
     private int maxOutAmount;
 
     /**
-     * 最大被链接数
+     * Maximum number of links
      * */
     private int maxInAmount;
 
     /**
-     * 跨链交易被打包多少块之后广播给其他链
+     * How many blocks are packaged for cross chain transactions and broadcast to other chains
      * */
     private int sendHeight;
 
     /**
-     * 拜占庭比例
+     * Byzantine proportion
      * */
     private int byzantineRatio;
 
     /**
-     * 最小签名数
+     * Minimum number of signatures
      * */
     private int minSignature;
 
     /**
-     * 主网验证人信息
+     * Main network verifier information
      * */
     private String verifiers;
 
     /**
-     * 主网拜占庭比例
+     * Main network Byzantine proportion
      * */
     private int mainByzantineRatio;
 
     /**
-     * 主网最大签名验证数
+     * Maximum number of signature verifications on the main network
      * */
     private int maxSignatureCount;
 
     /**
-     * 主网验证人列表
+     * List of main network validators
      * */
     private Set<String> verifierSet = new HashSet<>();
 
     /*-------------------------[Consensus]-----------------------------*/
     /**
-     * 打包间隔时间
+     * Packaging interval time
      * Packing interval time
      */
     private long packingInterval;
 
     /**
-     * 获得红牌保证金锁定时间
+     * Obtaining red card deposit lock up time
      * Lock-in time to get a red card margin
      */
     private long redPublishLockTime;
 
     /**
-     * 注销节点保证金锁定时间
+     * Cancellation of node margin locking time
      * Log-off node margin locking time
      */
     private long stopAgentLockTime;
 
     /**
-     * 减少保证金锁定时间
+     * Reduce margin lock up time
      * Reduce margin lock-in time
      */
     private long reducedDepositLockTime;
 
     /**
-     * 创建节点的保证金最小值
+     * Minimum margin value for creating nodes
      * Minimum margin for creating nodes
      */
     private BigInteger depositMin;
 
     /**
-     * 节点的保证金最大值
+     * Maximum margin value for nodes
      * Maximum margin for creating nodes
      */
     private BigInteger depositMax;
 
     /**
-     * 节点参与共识节点竞选最小委托金
+     * Node participation consensus node election minimum commission
      * Minimum Trust Fund for node participating in consensus node campaign
      */
     private BigInteger packDepositMin;
 
     /**
-     * 委托最小金额
+     * Minimum amount entrusted
      * Minimum amount entrusted
      */
     private BigInteger entrustMin;
 
     /**
-     * 种子节点
+     * Seed node
      * Seed node
      */
     private String seedNodes;
 
     /**
-     * 种子节点对应公钥
+     * The corresponding public key of the seed node
      */
     private String pubKeyList;
 
     /**
-     * 出块节点密码
+     * Block node password
      */
     private String password;
 
     /**
-     * 打包区块最大值
+     * Maximum value of packaged blocks
      */
     private long blockConsensusMaxSize;
 
     /**
-     * 创建节点资产ID
+     * Create node assetsID
      * agent assets id
      */
     private int agentAssetId;
 
     /**
-     * 创建节点资产链ID
+     * Create a node asset chainID
      * Create node asset chain ID
      */
     private int agentChainId;
 
     /**
-     * 共识奖励资产ID
+     * Consensus reward assetsID
      * Award asset chain ID
      */
     private int awardAssetId;
 
     /**
-     * 交易手续费单价
+     * Transaction fee unit price
      * Transaction fee unit price
      */
     private long feeUnit;
 
     /**
-     * 总通缩量
+     * Total shrinkage
      * Total inflation amount
      */
     private BigInteger totalInflationAmount;
 
     /**
-     * 初始通胀金额
+     * Initial inflation amount
      * Initial Inflation Amount
      */
     private BigInteger inflationAmount;
 
     /**
-     * 通胀开始时间
+     * Inflation start time
      */
     private long initHeight;
 
     /**
-     * 通缩比例
+     * Deflationary ratio
      */
     private double deflationRatio;
 
     /**
-     * 通缩间隔时间
+     * Deflation interval time
      */
     private long deflationHeightInterval;
     /**
-     * 追加保证金最小金额
+     * Minimum amount of additional margin
      * Minimum amount of additional margin
      */
     private BigInteger appendAgentDepositMin;
 
     /**
-     * 退出保证金最小金额
+     * Minimum amount of withdrawal margin
      * Minimum amount of withdrawal deposit
      */
     private BigInteger reduceAgentDepositMin;
 
     private int byzantineRate;
     /**
-     * 共识节点最大数量
+     * Maximum number of consensus nodes
      */
     private int agentCountMax;
 
     /**
-     * 本链主资产的权重基数
+     * The weight base of the main asset in this chain
      */
     private double localAssertBase;
 
     /**
-     * 节点保证金基数
+     * Node margin base
      */
     private double agentDepositBase;
     /**
-     * 虚拟银行保证金基数
+     * Virtual Bank Margin Base
      */
     private double superAgentDepositBase;
     /**
-     * 后备节点保证金基数
+     * Reserve node margin base
      */
     private double reservegentDepositBase;
 
@@ -457,7 +457,7 @@ public class ConfigBean extends BaseNulsData {
     }
 
     public String getSeedNodes() {
-        //不再配置种子节点地址，而是从公钥计算得到
+        //No longer configuring the seed node address, but calculating it from the public key
         if (StringUtils.isBlank(seedNodes)) {
             String[] pubkeys = this.pubKeyList.split(",");
             StringBuilder ss = new StringBuilder("");

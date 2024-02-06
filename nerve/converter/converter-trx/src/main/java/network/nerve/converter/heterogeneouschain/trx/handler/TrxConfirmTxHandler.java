@@ -94,34 +94,34 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         try {
             if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+                LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 return;
             }
             try {
                 BigInteger energyFee = htgWalletApi.getCurrentGasPrice();
-                htgContext.logger().debug("当前{}网络的EnergyFee: {}.", htgContext.getConfig().getSymbol(), energyFee);
+                htgContext.logger().debug("current{}Network basedEnergyFee: {}.", htgContext.getConfig().getSymbol(), energyFee);
                 TrxContext trxContext = (TrxContext) htgContext;
                 if (energyFee != null && trxContext.SUN_PER_ENERGY.intValue() != energyFee.intValue()) {
                     trxContext.FEE_LIMIT_OF_WITHDRAW = TrxConstant.FEE_LIMIT_OF_WITHDRAW_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
                     trxContext.FEE_LIMIT_OF_CHANGE = TrxConstant.FEE_LIMIT_OF_CHANGE_BASE.multiply(energyFee).divide(SUN_PER_ENERGY_BASE);
                     trxContext.SUN_PER_ENERGY = energyFee;
                     trxContext.gasInfo = null;
-                    htgContext.logger().info("更新当前{}网络的EnergyFee: {}, FEE_LIMIT_OF_WITHDRAW: {}, FEE_LIMIT_OF_CHANGE: {}.", htgContext.getConfig().getSymbol(), energyFee, trxContext.FEE_LIMIT_OF_WITHDRAW, trxContext.FEE_LIMIT_OF_CHANGE);
+                    htgContext.logger().info("Update current{}Network basedEnergyFee: {}, FEE_LIMIT_OF_WITHDRAW: {}, FEE_LIMIT_OF_CHANGE: {}.", htgContext.getConfig().getSymbol(), energyFee, trxContext.FEE_LIMIT_OF_WITHDRAW, trxContext.FEE_LIMIT_OF_CHANGE);
                 }
             } catch (Exception e) {
-                htgContext.logger().error(String.format("同步%s当前EnergyFee失败", htgContext.getConfig().getSymbol()), e);
+                htgContext.logger().error(String.format("synchronization%scurrentEnergyFeefail", htgContext.getConfig().getSymbol()), e);
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+                LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
                 return;
             }
             htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
-            LoggerUtil.LOG.debug("[{}交易确认任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
-            // 等待重启应用时，加载的持久化未确认交易
+            LoggerUtil.LOG.debug("[{}Transaction confirmation task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getConfirmTxQueuePeriod());
+            // Persistent unconfirmed transactions loaded while waiting for application restart
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             long ethNewestHeight = htgWalletApi.getBlockHeight();
             int size = htgContext.UNCONFIRMED_TX_QUEUE().size();
@@ -129,18 +129,18 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("移除空值PO");
+                        logger().debug("Remove null valuesPO");
                     }
                     continue;
                 }
-                // 清理无用的变更任务
+                // Clean up useless change tasks
                 if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
                     clearUnusedChange();
                     break;
                 }
-                // 当充值确认任务异常超过重试次数后，丢弃这个任务
+                // When the recharge confirmation task is abnormal and exceeds the number of retries, discard the task
                 if (po.isDepositExceedErrorTime(RESEND_TIME)) {
-                    logger().error("充值确认任务异常超过重试次数，移除此交易，详情: {}", po.toString());
+                    logger().error("The recharge confirmation task has exceeded the number of retries. Please remove this transaction. Details: {}", po.toString());
                     this.clearDB(po.getTxHash());
                     continue;
                 }
@@ -152,37 +152,37 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                     }
                 }
                 if (po.getBlockHeight() == null) {
-                    // 区块高度为空，检查10次后，查询eth交易所在高度，若节点同步的eth高度大于了交易所在高度，则说明此交易已经被其他节点处理过，应移除此交易
+                    // Block height is empty, check10Next time, queryethThe exchange is at a height, if the nodes are synchronizedethIf the height is greater than the exchange's height, it indicates that the transaction has already been processed by other nodes and should be removed
                     boolean needRemovePo = checkBlockHeightTimes(po);
                     if(needRemovePo) {
-                        logger().info("区块高度为空，此交易已处理过，移除此交易，详情: {}", po.toString());
+                        logger().info("Block height is empty, this transaction has been processed. Remove this transaction, details: {}", po.toString());
                         this.clearDB(po.getTxHash());
                         continue;
                     }
                     if(logger().isDebugEnabled()) {
-                        logger().debug("区块高度为空，放回队列等待下次处理，详情: {}", po.toString());
+                        logger().debug("Block height is empty, put back in queue for next processing, details: {}", po.toString());
                     }
                     queue.offer(po);
                     continue;
                 }
 
-                // 交易触发重新验证后，等待`skipTimes`的轮次，再做验证
+                // Wait for transaction triggering revalidation`skipTimes`The round will be verified again
                 if (po.getSkipTimes() > 0) {
                     po.setSkipTimes(po.getSkipTimes() - 1);
                     queue.offer(po);
                     if(logger().isDebugEnabled()) {
-                        logger().debug("交易触发重新验证，剩余等待再次验证的轮次数量: {}", po.getSkipTimes());
+                        logger().debug("Transaction triggered revalidation, remaining number of rounds waiting for revalidation: {}", po.getSkipTimes());
                     }
                     continue;
                 }
-                // 未达到确认高度，放回队列中，下次继续检查
+                // Not reaching the confirmed height, put it back in the queue and continue checking next time
                 int confirmation = htgContext.getConfig().getTxBlockConfirmations();
                 if (po.getTxType() == HeterogeneousChainTxType.WITHDRAW) {
                     confirmation = htgContext.getConfig().getTxBlockConfirmationsOfWithdraw();
                 }
                 if (ethNewestHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("交易[{}]确认高度等待: {}", po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("transaction[{}]Confirm altitude waiting: {}", po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -191,7 +191,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                     case DEPOSIT:
                         if (dealDeposit(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("充值交易重新放回队列, 详情: {}", poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("Recharge transactions are placed back in the queue, details: {}", poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -201,7 +201,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                     case UPGRADE:
                         if (dealBroadcastTx(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("广播交易重新放回队列, 详情: {}", poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("Broadcast transactions are put back into the queue, details: {}", poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -246,7 +246,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             return false;
         }
         long blockNumber = txReceipt.getBlockNumber();
-        // 本地最新的区块
+        // Latest local blocks
         HtgSimpleBlockHeader localMax = htgLocalBlockHelper.getLatestLocalBlockHeader();
         if(localMax == null) {
             return false;
@@ -261,7 +261,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         boolean isReOfferQueue = true;
         String htgTxHash = po.getTxHash();
         if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
-            logger().warn("[充值地址异常] 交易[{}], 移除队列, [1]充值地址: {}", htgTxHash, po.getNerveAddress());
+            logger().warn("[Abnormal recharge address] transaction[{}], Remove queue, [1]Recharge address: {}", htgTxHash, po.getNerveAddress());
             this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
@@ -270,33 +270,33 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
         }
         if (txPo == null) {
-            logger().warn("[充值任务异常] DB中未获取到PO，队列中PO: {}", po.toString());
+            logger().warn("[Recharge task exception] DBNot obtained inPOIn the queuePO: {}", po.toString());
             return !isReOfferQueue;
         }
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，从队列中移除
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBRemove from queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
-                logger().info("[{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
         }
         if (!po.isValidateTx()) {
-            //再次验证交易
+            //Verify transaction again
             boolean validateTx = validateDepositTxConfirmedInHtgNet(htgTxHash, po.isIfContractAsset());
             if (!validateTx) {
-                // 验证失败，从DB和队列中移除交易
+                // Verification failed, fromDBRemove transactions from the queue
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
             po.setValidateTx(validateTx);
         }
-        // 回调充值交易
+        // Callback recharge transaction
         String nerveTxHash;
         Long height = po.getBlockHeight();
         Long txTime = po.getTxTime();
@@ -307,23 +307,23 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 byte[] feeAddress = AddressTool.getAddressByPubKeyStr(converterConfig.getFeePubkey(), converterConfig.getChainId());
                 nerveTxHash = this.submitNerveAddFeeCrossChainTx(po, height, txTime, feeAddress);
                 if (StringUtils.isNotBlank(nerveTxHash)) {
-                    // 此交易是跨链追加手续费交易
+                    // This transaction is a cross chain additional handling fee transaction
                     break;
                 }
                 nerveTxHash = this.submitNerveOneClickCrossChainTx(po, height, txTime, withdrawalBlackhole);
                 if (StringUtils.isNotBlank(nerveTxHash)) {
-                    // 此交易是一键跨链交易
+                    // This transaction is a one click cross chain transaction
                     break;
                 }
-                // 充值的nerve接收地址不能是黑洞或者手续费补贴地址
+                // RechargeablenerveThe receiving address cannot be a black hole or a fee subsidy address
                 if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole) || Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
-                    logger().error("[{}][充值地址异常][黑洞或者手续费补贴地址]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
-                    // 验证失败，从DB和队列中移除交易
+                    logger().error("[{}][Abnormal recharge address][Black hole or subsidy address for handling fees]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                    // Verification failed, fromDBRemove transactions from the queue
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (po.isDepositIIMainAndToken()) {
-                    // 同时充值两种资产的充值交易
+                    // Recharge transactions for two types of assets simultaneously
                     nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmit(
                             htgTxHash,
                             height,
@@ -354,7 +354,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
 
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
-            // 当未确认交易数据产生变化时，更新DB数据
+            // Update when there is a change in unconfirmed transaction dataDBdata
             boolean nerveTxHashNotBlank = StringUtils.isNotBlank(nerveTxHash);
             if (nerveTxHashNotBlank) {
                 String updateHash = nerveTxHash;
@@ -364,11 +364,11 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 }
             }
         } catch (Exception e) {
-            // 交易已存在，移除队列
+            // Transaction already exists, remove queue
             if (e instanceof NulsException &&
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("Nerve交易已存在，从队列中移除待确认的{}交易[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
                 return !isReOfferQueue;
             }
             po.increaseDepositErrorTime();
@@ -385,12 +385,12 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         if (data == null) {
             return null;
         }
-        // 跨链追加手续费的nerve接收地址只能是手续费补贴地址
+        // Cross chain additional handling feesnerveThe receiving address can only be a service fee subsidy address
         if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
             logger().error("[{}]AddFeeCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
             return null;
         }
-        // 不能有token资产
+        // Cannot havetokenasset
         if (po.isIfContractAsset()) {
             logger().error("[{}]AddFeeCrossChain Asset error, token address: {}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getContractAddress(), po.getTxHash());
             return null;
@@ -408,7 +408,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         return nerveTxHash;
     }
 
-    // P21生效, 一键跨链交易
+    // P21take effect, One click cross chain transaction
     private String submitNerveOneClickCrossChainTx(HtgUnconfirmedTxPo po, Long height, Long txTime, byte[] withdrawalBlackhole) throws Exception {
         if (!htgContext.getConverterCoreApi().isProtocol21()) {
             return null;
@@ -417,7 +417,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         if (data == null) {
             return null;
         }
-        // 一键跨链的nerve接收地址只能是黑洞地址
+        // One click cross chainnerveThe receiving address can only be a black hole address
         if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
             logger().error("[{}]OneClickCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
             return null;
@@ -469,20 +469,20 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
         }
         if (txPo == null) {
-            logger().warn("[{}任务异常] DB中未获取到PO，队列中PO: {}", po.getTxType(), po.toString());
+            logger().warn("[{}Task exception] DBNot obtained inPOIn the queuePO: {}", po.getTxType(), po.toString());
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，不放回队列
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBDelete in, do not put back in queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
                 htgResendHelper.clear(nerveTxHash);
-                logger().info("[{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
@@ -493,48 +493,48 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 break;
             case FAILED:
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, RESEND_TIME);
+                    logger().warn("Nervetransaction[{}]Resend over{}Second, discard transaction", nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(htgTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                logger().info("失败的{}交易[{}]，检查当前节点是否可发交易", htgContext.getConfig().getSymbol(), htgTxHash);
-                // 检查自己的顺序是否可发交易
+                logger().info("Failed{}transaction[{}]Check if the current node can send transactions", htgContext.getConfig().getSymbol(), htgTxHash);
+                // Check if your order is eligible for trading
                 HtgWaitingTxPo waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
-                // 检查三个轮次是否有waitingTxPo，否则移除此FAILED任务
+                // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
                 if (waitingTxPo == null && !po.checkFailedTimeOut()) {
                     return isReOfferQueue;
                 }
-                // 查询nerve交易对应的eth交易是否成功
+                // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("Nerve tx 在NERVE网络已确认, 成功移除队列, nerveHash: {}", nerveTxHash);
+                    logger().info("Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", nerveTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (waitingTxPo == null) {
-                    logger().info("检查三个轮次没有waitingTxPo，移除此FAILED任务, htgTxHash: {}", htgTxHash);
+                    logger().info("Check three rounds without any issueswaitingTxPoRemove thisFAILEDtask, htgTxHash: {}", htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (this.checkIfSendByOwn(waitingTxPo, txPo.getFrom())) {
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                // 失败的交易，不由当前节点处理，从队列和DB中移除
-                logger().info("失败的{}交易[{}]，当前节点不是下一顺位，不由当前节点处理，移除队列", htgContext.getConfig().getSymbol(), htgTxHash);
+                // Failed transactions, not handled by the current node, from the queue andDBRemove from middle
+                logger().info("Failed{}transaction[{}]The current node is not in the next order and will not be processed by the current node. Remove the queue", htgContext.getConfig().getSymbol(), htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             case COMPLETED:
                 if (!po.isValidateTx()) {
-                    //再次验证交易
+                    //Verify transaction again
                     BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInHtgNet(po);
                     switch (validate) {
                         case RE_VALIDATE:
-                            // 放回队列，再次验证
+                            // Put it back in the queue and verify again
                             return isReOfferQueue;
                         case RE_SEND:
-                            // 若交易状态已完成，再次验证失败，则重发交易
+                            // If the transaction status is completed and verification fails again, resend the transaction
                             HtgWaitingTxPo _waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
-                            // 检查三个轮次是否有waitingTxPo，否则移除此FAILED任务
+                            // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
                             if (_waitingTxPo == null && po.checkFailedTimeOut()) {
                                 return isReOfferQueue;
                             }
@@ -549,8 +549,8 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 try {
                     String realNerveTxHash = nerveTxHash;
-                    logger().info("[{}]签名完成的{}交易[{}]调用Nerve确认[{}]", po.getTxType(), htgContext.getConfig().getSymbol(), htgTxHash, realNerveTxHash);
-                    // 签名完成的交易将触发回调Nerve Core
+                    logger().info("[{}]Signed{}transaction[{}]callNerveconfirm[{}]", po.getTxType(), htgContext.getConfig().getSymbol(), htgTxHash, realNerveTxHash);
+                    // The signed transaction will trigger a callbackNerve Core
                     htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
                             po.getTxType(),
                             realNerveTxHash,
@@ -560,9 +560,9 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
                             htgContext.MULTY_SIGN_ADDRESS(),
                             txPo.getSigners());
                 } catch (NulsException e) {
-                    // 交易已存在，等待确认移除
+                    // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
-                        logger().info("Nerve交易[{}]已存在，从队列中移除待确认的{}交易[{}]", txPo.getNerveTxHash(), htgContext.getConfig().getSymbol(), htgTxHash);
+                        logger().info("Nervetransaction[{}]Exists, remove pending confirmation from queue{}transaction[{}]", txPo.getNerveTxHash(), htgContext.getConfig().getSymbol(), htgTxHash);
                         return !isReOfferQueue;
                     }
                     throw e;
@@ -573,7 +573,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 若eth交易失败，则检查当前节点是否为下一顺位发交易，是则重发交易
+     * ifethIf the transaction fails, check if the current node is the next sequential transaction. If it is, resend the transaction
      */
     private boolean checkIfSendByOwn(HtgWaitingTxPo waitingTxPo, String txFrom) throws Exception {
         String nerveTxHash = waitingTxPo.getNerveTxHash();
@@ -581,19 +581,19 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
         Integer totalBank = virtualBanks.size();
         Integer sendOrderCurrentNode = waitingTxPo.getCurrentNodeSendOrder();//
         int sendOrderFailure = virtualBanks.get(txFrom);
-        // 检查失败的order是否为管理员顺位中最后一位，是则重置当前节点已发HT交易的记录，重置节点等待时间，从第一顺位开始重发交易
+        // Check failedorderIs it the last in the administrator's ranking? If so, reset the current node to have been sentHTRecord of transactions, reset node waiting time, and resend transactions starting from the first order
         if (sendOrderFailure == totalBank) {
             htgInvokeTxHelper.clearRecordOfCurrentNodeSentEthTx(nerveTxHash, waitingTxPo);
             if (sendOrderCurrentNode == 1) {
-                // 发起交易
+                // Initiate transaction
                 htgResendHelper.reSend(waitingTxPo);
                 return true;
             }
         }
         if (sendOrderFailure + 1 == sendOrderCurrentNode) {
-            // 当前节点是下一顺位发交易，检查是否已发出交易，否则发出交易
+            // The current node is the next sequential transaction. Check if the transaction has been sent out, otherwise the transaction will be sent out
             if (!htgInvokeTxHelper.currentNodeSentEthTx(nerveTxHash)) {
-                // 发起交易
+                // Initiate transaction
                 htgResendHelper.reSend(waitingTxPo);
                 return true;
             }
@@ -602,21 +602,21 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 验证充值交易
+     * Verify recharge transactions
      */
     private boolean validateDepositTxConfirmedInHtgNet(String htgTxHash, boolean ifContractAsset) throws Exception {
         boolean validateTx = false;
         do {
             Response.TransactionInfo receipt = htgWalletApi.getTransactionReceipt(htgTxHash);
             if (receipt == null) {
-                logger().error("再次验证交易[{}]失败，获取不到receipt", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed, unable to obtainreceipt", htgTxHash);
                 break;
             }
             if (!TrxUtil.checkTransactionSuccess(receipt)) {
-                logger().error("再次验证交易[{}]失败，receipt状态不正确", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed,receiptIncorrect status", htgTxHash);
                 break;
             } else if (ifContractAsset && (receipt.getLogCount() == 0)) {
-                logger().error("再次验证交易[{}]失败，receipt.Log状态不正确", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed,receipt.LogIncorrect status", htgTxHash);
                 break;
             }
             validateTx = true;
@@ -625,7 +625,7 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 验证发到TRX网络的交易是否确认，若有异常情况，则根据条件重发交易
+     * Verification sent toTRXIs the online transaction confirmed? If there are any abnormal situations, resend the transaction according to the conditions
      */
     private BroadcastTxValidateStatus validateBroadcastTxConfirmedInHtgNet(HtgUnconfirmedTxPo po) throws Exception {
 
@@ -635,12 +635,12 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             Response.TransactionInfo receipt = htgWalletApi.getTransactionReceipt(htgTxHash);
             if (receipt == null) {
                 boolean timeOut = System.currentTimeMillis() - po.getCreateDate() > HtgConstant.MINUTES_20;
-                logger().error("再次验证交易[{}]失败，获取不到receipt", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed, unable to obtainreceipt", htgTxHash);
                 if (timeOut) {
-                    // 交易二十分钟未确认，则重发交易
+                    // If the transaction is not confirmed within 20 minutes, resend the transaction
                     status = BroadcastTxValidateStatus.RE_SEND;
                 } else {
-                    // 未获取到交易收据，20分钟内，每3轮验证一次
+                    // Transaction receipt not obtained,20Within minutes, every3One round of verification
                     po.setSkipTimes(3);
                     status = BroadcastTxValidateStatus.RE_VALIDATE;
                 }
@@ -648,11 +648,11 @@ public class TrxConfirmTxHandler implements Runnable, BeanInitial {
             }
             if (!TrxUtil.checkTransactionSuccess(receipt)) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("再次验证交易[{}]失败，receipt状态不正确", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed,receiptIncorrect status", htgTxHash);
                 break;
             } else if (receipt.getLogCount() == 0) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("再次验证交易[{}]失败，receipt.Log状态不正确", htgTxHash);
+                logger().error("Verify transaction again[{}]Failed,receipt.LogIncorrect status", htgTxHash);
                 break;
             }
             status = BroadcastTxValidateStatus.SUCCESS;

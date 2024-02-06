@@ -12,29 +12,29 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 public class TradingDeal extends BaseNulsData {
-    //交易对hash
+    //Transaction pairshash
     private byte[] tradingHash;
-    //买单交易hash
+    //Buy order transactionhash
     private byte[] buyHash;
 
     private byte[] buyNonce;
-    //卖单交易hash
+    //Sell order transactionhash
     private byte[] sellHash;
 
     private byte[] sellNonce;
-    //交易币种成交量
+    //Trading Currency Trading Volume
     private BigInteger quoteAmount;
-    //计价币种成交量
+    //Pricing currency transaction volume
     private BigInteger baseAmount;
-    //买家支付手续费
+    //Buyer pays handling fees
     private BigInteger buyFee;
-    //卖家支付手续费
+    //Seller pays handling fees
     private BigInteger sellFee;
-    //成交价
+    //Transaction price
     private BigInteger price;
-    //成交状态: 1 买单已完全成交，2 卖单已完全成交，3 买卖双方都完全成交
+    //Transaction status: 1 The purchase order has been fully completed,2 The sales order has been fully completed,3 Both buyers and sellers have a complete transaction
     private byte type;
-    //主动成交方：1买单主动成交， 2卖单主动成交
+    //Active trading party：1Proactively closing the purchase order, 2Active closing of sales orders
     private byte taker;
 
     @Override

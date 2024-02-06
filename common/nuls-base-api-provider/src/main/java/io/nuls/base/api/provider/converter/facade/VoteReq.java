@@ -33,7 +33,7 @@ import io.nuls.base.api.provider.BaseReq;
 public class VoteReq extends BaseReq {
 
     /**
-     * 提案hash
+     * proposalhash
      */
     private String proposalTxHash;
 
@@ -41,17 +41,17 @@ public class VoteReq extends BaseReq {
     private byte choice;
 
     /**
-     * 提现备注
+     * Withdrawal remarks
      */
     private String remark;
 
     /**
-     * 提现赎回地址(转出)
+     * Withdrawal and redemption address(Transfer out)
      */
     private String address;
 
     /**
-     * 赎回地址密码
+     * Redemption address password
      */
     private String password;
 

@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.celo.context.CeloContext;
 
 
 /**
- * 向Nerve核心注册
+ * towardsNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

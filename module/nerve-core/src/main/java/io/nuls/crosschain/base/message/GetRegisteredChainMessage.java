@@ -7,7 +7,7 @@ import io.nuls.crosschain.base.message.base.BaseMessage;
 import java.io.IOException;
 
 /**
- * 查询已注册跨链交易信息
+ * Query registered cross chain transaction information
  * @author tag
  * @date 2019/5/17
  */

@@ -18,7 +18,7 @@ import io.nuls.consensus.constant.ConsensusErrorCode;
 import java.io.IOException;
 
 /**
- * 注销节点交易验证器
+ * Unregister node transaction validator
  * @author  tag
  * */
 @Component
@@ -27,7 +27,7 @@ public class StopAgentValidator extends BaseValidator {
     private AgentManager agentManager;
     @Override
     public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
-        //txData验证
+        //txDatavalidate
         if (tx.getTxData() == null) {
             chain.getLogger().error("CreateAgent -- TxData is null");
             return Result.getFailed(ConsensusErrorCode.TX_DATA_VALIDATION_ERROR);
@@ -35,13 +35,13 @@ public class StopAgentValidator extends BaseValidator {
         StopAgent txData = new StopAgent();
         txData.parse(tx.getTxData(), 0);
 
-        //验证交易发起者是否为节点创建者
+        //Verify if the transaction initiator is the node creator
         Result rs = agentManager.creatorValid(chain, txData.getCreateTxHash(), txData.getAddress());
         if(rs.isFailed()){
             return rs;
         }
 
-        //coinData验证
+        //coinDatavalidate
         AgentPo po = (AgentPo) rs.getData();
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(), 0);
@@ -49,12 +49,12 @@ public class StopAgentValidator extends BaseValidator {
         if(rs.isFailed()){
             return rs;
         }
-        //CoinData nonce验证
+        //CoinData noncevalidate
         if(!AgentDepositNonceManager.coinDataNonceVerify(chain, coinData, po.getHash())){
             return Result.getFailed(ConsensusErrorCode.COIN_DATA_VALID_ERROR);
         }
 
-        //验证手续费是否足够
+        //Verify if the handling fee is sufficient
         rs = validFee(chain, coinData, tx);
         if (rs.isFailed()) {
             return rs;

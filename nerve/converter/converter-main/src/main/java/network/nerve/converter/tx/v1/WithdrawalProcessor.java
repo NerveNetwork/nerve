@@ -91,14 +91,14 @@ public class WithdrawalProcessor implements TransactionProcessor {
     private ConverterCoreApi converterCoreApi;
 
     /**
-     * 提现异构链与资产是否有效
-     * 账户是否有足够提现金额（账本验证）
-     * 验证签名
+     * Whether the withdrawal of heterogeneous chains and assets is effective
+     * Is there sufficient withdrawal amount in the account（Ledger verification）
+     * Verify signature
      *
-     * @param chainId     链Id
-     * @param txs         类型为{@link #getType()}的所有交易集合
-     * @param txMap       不同交易类型与其对应交易列表键值对
-     * @param blockHeader 区块头
+     * @param chainId     chainId
+     * @param txs         Type is{@link #getType()}All transaction sets for
+     * @param txMap       Different transaction types and their corresponding transaction list key value pairs
+     * @param blockHeader Block head
      * @return
      */
     @Override
@@ -117,14 +117,14 @@ public class WithdrawalProcessor implements TransactionProcessor {
         if (txs.isEmpty()) {
             return true;
         }
-        // 当区块出块正常运行状态时（非区块同步模式），才执行
+        // When the block is in normal operation state（Non block synchronization mode）Only then will it be executed
         if (syncStatus == SyncStatusEnum.RUNNING.value()) {
             Chain chain = chainManager.getChain(chainId);
             try {
                 boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
                 if (isCurrentDirector) {
                     for (Transaction tx : txs) {
-                        //放入类似队列处理机制 准备通知异构链组件执行提现
+                        //Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute withdrawals
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setBlockHeader(blockHeader);
@@ -133,7 +133,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offer(pendingPO);
-                        chain.getLogger().info("[commit] 提现交易加入待处理队列 hash:{}", tx.getHash().toHex());
+                        chain.getLogger().info("[commit] Withdrawal transaction added to pending queue hash:{}", tx.getHash().toHex());
                     }
                 }
             } catch (Exception e) {
@@ -146,7 +146,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
 
     @Override
     public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
-        //提现无业务回滚
+        //Withdrawal without business rollback
         return true;
     }
 
@@ -168,7 +168,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
                 if (StringUtils.isBlank(txData.getHeterogeneousAddress())) {
                     failsList.add(tx);
-                    // 异构链地址不能为空
+                    // Heterogeneous chain address cannot be empty
                     errorCode = ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getMsg());
                     continue;
@@ -180,7 +180,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 if(height >= WITHDRAWAL_RECHARGE_CHAIN_HEIGHT) {
                     if (txData.getHeterogeneousChainId() <= 0) {
                         failsList.add(tx);
-                        // 异构链id不能为空
+                        // Heterogeneous chainidCannot be empty
                         errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
                         log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
                         continue;
@@ -191,104 +191,104 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
                 String withdrawalFromInfo = null;
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize == COIN_SIZE_1) {
-                    // 只有一个from表示 提现NVT
+                    // Only onefromexpress WithdrawalNVT
                     CoinFrom coinFrom = coinData.getFrom().get(0);
                     if (coinFrom.getAssetsChainId() != chain.getConfig().getChainId()
                             || coinFrom.getAssetsId() != chain.getConfig().getAssetId()) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
-                        log.error("提现coinData组装错误(手续费不存在), 只有一个from 但不是主资产. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
+                        log.error("WithdrawalcoinDataAssembly error(The handling fee does not exist), Only onefrom But not the main asset. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
                                 hash,
                                 coinFrom.getAssetsChainId(),
                                 coinFrom.getAssetsId(),
                                 ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue;
                     }
-                    // 临时记录提现资产信息,稍后比对
+                    // Temporary record of withdrawal asset information,Compare later
                     withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                 } else if (txFromSize == COIN_SIZE_2) {
                     boolean hasCurrentAsset = false;
                     for (CoinFrom coinFrom : coinData.getFrom()) {
-                        // 判断是手续费
+                        // Judging it as a handling fee
                         if (coinFrom.getAssetsChainId() == chain.getConfig().getChainId()
                                 && coinFrom.getAssetsId() == chain.getConfig().getAssetId()) {
                             hasCurrentAsset = true;
                         } else {
-                            // 临时记录提现资产信息,稍后比对
+                            // Temporary record of withdrawal asset information,Compare later
                             withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                         }
                     }
                     if (!hasCurrentAsset) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
                         log.error(ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getMsg());
                         continue;
                     }
                 } else {
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 if(coinData.getTo().size() != COIN_SIZE_2){
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 BigInteger feeTo = BigInteger.ZERO;
                 String withdrawalToInfo = null;
-                // 补贴手续费收集分发地址
+                // Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-                // 销毁转出的链内资产黑洞
+                // Destroy the black hole of in chain assets transferred out
                 byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                 for (CoinTo coinTo : coinData.getTo()) {
-                    // 该to是当前链的主资产
+                    // ThistoIt is the main asset of the current chain
                     boolean currentChainAsset = coinTo.getAssetsChainId() == chain.getConfig().getChainId()
                             && coinTo.getAssetsId() == chain.getConfig().getAssetId();
                     if (currentChainAsset && Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-                        // 组装的补贴手续费的coinTo
+                        // Subsidies for assembly and handling feescoinTo
                         feeTo = coinTo.getAmount();
                     } else if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                        // 提现资产的coinTo
+                        // Withdrawal of assetscoinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         HeterogeneousAssetInfo heterogeneousAssetInfo =
                                 heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                         if (null == heterogeneousAssetInfo) {
                             failsList.add(tx);
-                            // 异构链资产不存在
+                            // Heterogeneous chain assets do not exist
                             errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
-                            log.error("不支持该资产提现, txhash:{}, AssetChainId:{}, AssetId:{}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
+                            log.error("The asset withdrawal is not supported, txhash:{}, AssetChainId:{}, AssetId:{}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
                             continue;
                         }
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
                         boolean rs = docking.validateAddress(txData.getHeterogeneousAddress());
                         if (!rs) {
                             failsList.add(tx);
-                            // 异构链地址错误
+                            // Heterogeneous chain address error
                             errorCode = ConverterErrorCode.ADDRESS_ERROR.getCode();
-                            log.error("{},提现异构链地址错误, HeterogeneousAddress:{}",
+                            log.error("{},Withdrawal of heterogeneous chain address error, HeterogeneousAddress:{}",
                                     ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg(),
                                     txData.getHeterogeneousAddress());
                             continue;
                         }
                     } else {
                         failsList.add(tx);
-                        // 提现to组装错误
+                        // WithdrawaltoAssembly error
                         errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                        log.error("提现coinData组装错误, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                        log.error("WithdrawalcoinDataAssembly error, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue;
                     }
                 }
@@ -296,20 +296,20 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 if(height < FEE_ADDITIONAL_HEIGHT){
                     if (BigIntegerUtils.isLessThan(feeTo, DISTRIBUTION_FEE_10)) {
                         failsList.add(tx);
-                        // 提现补贴手续费不足
+                        // Insufficient withdrawal subsidy handling fees
                         errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
                         log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
-                        log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee:{}, coinTo_amount:{}",
+                        log.error("Insufficient transaction subsidy fees for withdrawal. txHash:{}, distribution_fee:{}, coinTo_amount:{}",
                                 hash, DISTRIBUTION_FEE_10, feeTo);
                         continue;
                     }
                 } else {
                     if (BigIntegerUtils.isLessThan(feeTo, NORMAL_PRICE_PRE_1024_BYTES)) {
                         failsList.add(tx);
-                        // 提现补贴手续费不足
+                        // Insufficient withdrawal subsidy handling fees
                         errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
                         log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
-                        log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee_min:{}, coinTo_amount:",
+                        log.error("Insufficient transaction subsidy fees for withdrawal. txHash:{}, distribution_fee_min:{}, coinTo_amount:",
                                 hash, NORMAL_PRICE_PRE_1024_BYTES, feeTo);
                         continue;
                     }
@@ -317,7 +317,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
 
                 if (StringUtils.isBlank(withdrawalFromInfo) || (txFromSize == COIN_SIZE_2 && !withdrawalFromInfo.equals(withdrawalToInfo))) {
                     failsList.add(tx);
-                    // 提现资产金额错误
+                    // Incorrect withdrawal amount of assets
                     errorCode = ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getCode();
                     log.error(ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getMsg());
                     continue;
@@ -351,7 +351,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
                 if (StringUtils.isBlank(txData.getHeterogeneousAddress())) {
                     failsList.add(tx);
-                    // 异构链地址不能为空
+                    // Heterogeneous chain address cannot be empty
                     errorCode = ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getMsg());
                     continue;
@@ -359,7 +359,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 int htgChainId = txData.getHeterogeneousChainId();
                 if (htgChainId <= 0) {
                     failsList.add(tx);
-                    // 异构链id不能为空
+                    // Heterogeneous chainidCannot be empty
                     errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
                     continue;
@@ -368,134 +368,134 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
                 Coin feeCoin = null;
                 String withdrawalFromInfo = null;
                 BigInteger feeTo = BigInteger.ZERO;
                 String withdrawalToInfo = null;
-                // 补贴手续费收集分发地址
+                // Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-                // 销毁转出的链内资产黑洞
+                // Destroy the black hole of in chain assets transferred out
                 byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                 for (CoinTo coinTo : coinData.getTo()) {
-                    // 手续费资产
+                    // Handling fee assets
                     if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-                        // 即不是NVT，也不是异构链网络主资产
+                        // That is not to sayNVT, nor is it the main asset of heterogeneous chain networks
                         if ((coinTo.getAssetsChainId() != chain.getConfig().getChainId() || coinTo.getAssetsId() != chain.getConfig().getAssetId())
                                 && !converterCoreApi.isHtgMainAsset(coinTo)) {
                             failsList.add(tx);
-                            // 手续费不存在
+                            // The handling fee does not exist
                             errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
-                            log.error("提现coinData组装错误(手续费不存在), 只有一个from 但不是主资产. txhash:{}, assetChainId:{}, assetId:{}, {}",
+                            log.error("WithdrawalcoinDataAssembly error(The handling fee does not exist), Only onefrom But not the main asset. txhash:{}, assetChainId:{}, assetId:{}, {}",
                                     hash,
                                     coinTo.getAssetsChainId(),
                                     coinTo.getAssetsId(),
                                     ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                             continue outer;
                         }
-                        // 组装的补贴手续费的coinTo
+                        // Subsidies for assembly and handling feescoinTo
                         feeCoin = coinTo;
                         feeTo = coinTo.getAmount();
                     } else if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                        // 提现资产的coinTo
+                        // Withdrawal of assetscoinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         HeterogeneousAssetInfo heterogeneousAssetInfo =
                                 heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                         if (null == heterogeneousAssetInfo) {
                             failsList.add(tx);
-                            // 异构链资产不存在
+                            // Heterogeneous chain assets do not exist
                             errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
-                            log.error("不支持该资产提现, txhash:{}, AssetChainId:{}, AssetId:{}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
+                            log.error("The asset withdrawal is not supported, txhash:{}, AssetChainId:{}, AssetId:{}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
                             continue outer;
                         }
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousAssetInfo.getChainId());
                         boolean rs = docking.validateAddress(txData.getHeterogeneousAddress());
                         if (!rs) {
                             failsList.add(tx);
-                            // 异构链地址错误
+                            // Heterogeneous chain address error
                             errorCode = ConverterErrorCode.ADDRESS_ERROR.getCode();
-                            log.error("{},提现异构链地址错误, HeterogeneousAddress:{}",
+                            log.error("{},Withdrawal of heterogeneous chain address error, HeterogeneousAddress:{}",
                                     ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg(),
                                     txData.getHeterogeneousAddress());
                             continue outer;
                         }
                     } else {
                         failsList.add(tx);
-                        // 提现to组装错误
+                        // WithdrawaltoAssembly error
                         errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                        log.error("提现coinData组装错误, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                        log.error("WithdrawalcoinDataAssembly error, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue outer;
                     }
                 }
 
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize == COIN_SIZE_1) {
-                    // 只有一个from表示 提现NVT，或者其他异构链网络的主资产
+                    // Only onefromexpress WithdrawalNVT, or other main assets of heterogeneous chain networks
                     CoinFrom coinFrom = coinData.getFrom().get(0);
                     if (coinFrom.getAssetsChainId() != feeCoin.getAssetsChainId()
                             || coinFrom.getAssetsId() != feeCoin.getAssetsId()) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
-                        log.error("提现coinData组装错误(手续费不存在), 只有一个from 但不是主资产. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
+                        log.error("WithdrawalcoinDataAssembly error(The handling fee does not exist), Only onefrom But not the main asset. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
                                 hash,
                                 coinFrom.getAssetsChainId(),
                                 coinFrom.getAssetsId(),
                                 ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue;
                     }
-                    // 临时记录提现资产信息,稍后比对
+                    // Temporary record of withdrawal asset information,Compare later
                     withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                 } else if (txFromSize == COIN_SIZE_2) {
                     boolean hasFeeAsset = false;
                     for (CoinFrom coinFrom : coinData.getFrom()) {
-                        // 判断是手续费
+                        // Judging it as a handling fee
                         if (coinFrom.getAssetsChainId() == feeCoin.getAssetsChainId()
                                 && coinFrom.getAssetsId() == feeCoin.getAssetsId()) {
                             hasFeeAsset = true;
                         } else {
-                            // 临时记录提现资产信息,稍后比对
+                            // Temporary record of withdrawal asset information,Compare later
                             withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                         }
                     }
                     if (!hasFeeAsset) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
                         log.error(ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getMsg());
                         continue;
                     }
                 } else {
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 if(coinData.getTo().size() != COIN_SIZE_2){
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 if (BigIntegerUtils.isLessThan(feeTo, NORMAL_PRICE_PRE_1024_BYTES)) {
                     failsList.add(tx);
-                    // 提现补贴手续费不足
+                    // Insufficient withdrawal subsidy handling fees
                     errorCode = ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getCode();
                     log.error(ConverterErrorCode.TX_INSUFFICIENT_SUBSIDY_FEE.getMsg());
-                    log.error("提现交易补贴手续费不足. txHash:{}, distribution_fee_min:{}, coinTo_amount:",
+                    log.error("Insufficient transaction subsidy fees for withdrawal. txHash:{}, distribution_fee_min:{}, coinTo_amount:",
                             hash, NORMAL_PRICE_PRE_1024_BYTES, feeTo);
                     continue;
                 }
 
                 if (StringUtils.isBlank(withdrawalFromInfo) || (txFromSize == COIN_SIZE_2 && !withdrawalFromInfo.equals(withdrawalToInfo))) {
                     failsList.add(tx);
-                    // 提现资产金额错误
+                    // Incorrect withdrawal amount of assets
                     errorCode = ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getCode();
                     log.error(ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getMsg());
                     continue;
@@ -529,7 +529,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 WithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalTxData.class);
                 if (StringUtils.isBlank(txData.getHeterogeneousAddress())) {
                     failsList.add(tx);
-                    // 异构链地址不能为空
+                    // Heterogeneous chain address cannot be empty
                     errorCode = ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL.getMsg());
                     continue;
@@ -537,7 +537,7 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 int htgChainId = txData.getHeterogeneousChainId();
                 if (htgChainId <= 0) {
                     failsList.add(tx);
-                    // 异构链id不能为空
+                    // Heterogeneous chainidCannot be empty
                     errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
                     continue;
@@ -546,53 +546,53 @@ public class WithdrawalProcessor implements TransactionProcessor {
                 if (null == coinData.getFrom() || null == coinData.getTo()) {
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from/to is null. txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
                 Coin feeCoin = null;
                 String withdrawalFromInfo = null;
                 String withdrawalToInfo = null;
-                // 补贴手续费收集分发地址
+                // Subsidy handling fee collection and distribution address
                 byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
-                // 销毁转出的链内资产黑洞
+                // Destroy the black hole of in chain assets transferred out
                 byte[] withdrawalBlackhole = AddressTool.getAddress(ConverterContext.WITHDRAWAL_BLACKHOLE_PUBKEY, chain.getChainId());
                 for (CoinTo coinTo : coinData.getTo()) {
-                    // 手续费资产
+                    // Handling fee assets
                     if (Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-                        // 即不是NVT，也不是异构链网络主资产
+                        // That is not to sayNVT, nor is it the main asset of heterogeneous chain networks
                         if ((coinTo.getAssetsChainId() != chain.getConfig().getChainId() || coinTo.getAssetsId() != chain.getConfig().getAssetId())
                                 && !converterCoreApi.isHtgMainAsset(coinTo)) {
                             failsList.add(tx);
-                            // 手续费不存在
+                            // The handling fee does not exist
                             errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
-                            log.error("提现coinData组装错误(手续费不存在), 只有一个from 但不是主资产. txhash:{}, assetChainId:{}, assetId:{}, {}",
+                            log.error("WithdrawalcoinDataAssembly error(The handling fee does not exist), Only onefrom But not the main asset. txhash:{}, assetChainId:{}, assetId:{}, {}",
                                     hash,
                                     coinTo.getAssetsChainId(),
                                     coinTo.getAssetsId(),
                                     ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                             continue outer;
                         }
-                        // 组装的补贴手续费的coinTo
+                        // Subsidies for assembly and handling feescoinTo
                         feeCoin = coinTo;
                     } else if (Arrays.equals(withdrawalBlackhole, coinTo.getAddress())) {
-                        // 提现资产的coinTo
+                        // Withdrawal of assetscoinTo
                         withdrawalToInfo = coinTo.getAssetsChainId() + "-" + coinTo.getAssetsId() + "-" + coinTo.getAmount().toString();
                         HeterogeneousAssetInfo heterogeneousAssetInfo =
                                 heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                         if (null == heterogeneousAssetInfo) {
                             failsList.add(tx);
-                            // 异构链资产不存在
+                            // Heterogeneous chain assets do not exist
                             errorCode = ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getCode();
-                            log.error("不支持该资产提现, txhash:{}, AssetChainId:{}, AssetId:{}, error: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
+                            log.error("The asset withdrawal is not supported, txhash:{}, AssetChainId:{}, AssetId:{}, error: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg());
                             continue outer;
                         }
-                        // add by pierre at 2022/7/1 提现暂停机制
+                        // add by pierre at 2022/7/1 Withdrawal suspension mechanism
                         boolean pauseOut = converterCoreApi.isPauseOutHeterogeneousAsset(heterogeneousAssetInfo.getChainId(), heterogeneousAssetInfo.getAssetId());
                         if (pauseOut) {
                             failsList.add(tx);
-                            // 异构链资产不存在
+                            // Heterogeneous chain assets do not exist
                             errorCode = ConverterErrorCode.WITHDRAWAL_PAUSE.getCode();
-                            log.error("[暂停资产提现], txhash:{}, AssetChainId:{}, AssetId:{}, heterogeneousId: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), txData.getHeterogeneousChainId());
+                            log.error("[Suspend asset withdrawals], txhash:{}, AssetChainId:{}, AssetId:{}, heterogeneousId: {}", hash, coinTo.getAssetsChainId(), coinTo.getAssetsId(), txData.getHeterogeneousChainId());
                             continue outer;
                         }
                         // end code by pierre
@@ -600,78 +600,78 @@ public class WithdrawalProcessor implements TransactionProcessor {
                         boolean rs = docking.validateAddress(txData.getHeterogeneousAddress());
                         if (!rs) {
                             failsList.add(tx);
-                            // 异构链地址错误
+                            // Heterogeneous chain address error
                             errorCode = ConverterErrorCode.ADDRESS_ERROR.getCode();
-                            log.error("{},提现异构链地址错误, HeterogeneousAddress:{}",
+                            log.error("{},Withdrawal of heterogeneous chain address error, HeterogeneousAddress:{}",
                                     ConverterErrorCode.HETEROGENEOUS_ASSET_NOT_FOUND.getMsg(),
                                     txData.getHeterogeneousAddress());
                             continue outer;
                         }
                     } else {
                         failsList.add(tx);
-                        // 提现to组装错误
+                        // WithdrawaltoAssembly error
                         errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                        log.error("提现coinData组装错误, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                        log.error("WithdrawalcoinDataAssembly error, txhash:{}, {}", hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue outer;
                     }
                 }
 
                 int txFromSize = coinData.getFrom().size();
                 if (txFromSize == COIN_SIZE_1) {
-                    // 只有一个from表示 提现NVT，或者其他异构链网络的主资产
+                    // Only onefromexpress WithdrawalNVT, or other main assets of heterogeneous chain networks
                     CoinFrom coinFrom = coinData.getFrom().get(0);
                     if (coinFrom.getAssetsChainId() != feeCoin.getAssetsChainId()
                             || coinFrom.getAssetsId() != feeCoin.getAssetsId()) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
-                        log.error("提现coinData组装错误(手续费不存在), 只有一个from 但不是主资产. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
+                        log.error("WithdrawalcoinDataAssembly error(The handling fee does not exist), Only onefrom But not the main asset. txhash:{}, fromChainId:{}, fromAssetId:{}, {}",
                                 hash,
                                 coinFrom.getAssetsChainId(),
                                 coinFrom.getAssetsId(),
                                 ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                         continue;
                     }
-                    // 临时记录提现资产信息,稍后比对
+                    // Temporary record of withdrawal asset information,Compare later
                     withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                 } else if (txFromSize == COIN_SIZE_2) {
                     boolean hasFeeAsset = false;
                     for (CoinFrom coinFrom : coinData.getFrom()) {
-                        // 判断是手续费
+                        // Judging it as a handling fee
                         if (coinFrom.getAssetsChainId() == feeCoin.getAssetsChainId()
                                 && coinFrom.getAssetsId() == feeCoin.getAssetsId()) {
                             hasFeeAsset = true;
                         } else {
-                            // 临时记录提现资产信息,稍后比对
+                            // Temporary record of withdrawal asset information,Compare later
                             withdrawalFromInfo = coinFrom.getAssetsChainId() + "-" + coinFrom.getAssetsId() + "-" + coinFrom.getAmount().toString();
                         }
                     }
                     if (!hasFeeAsset) {
                         failsList.add(tx);
-                        // 手续费不存在
+                        // The handling fee does not exist
                         errorCode = ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getCode();
                         log.error(ConverterErrorCode.WITHDRAWAL_FEE_NOT_EXIST.getMsg());
                         continue;
                     }
                 } else {
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, from size:{}, txhash:{}, {}", txFromSize, hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 if(coinData.getTo().size() != COIN_SIZE_2){
                     failsList.add(tx);
-                    // 提现coin from size 组装错误
+                    // Withdrawalcoin from size Assembly error
                     errorCode = ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getCode();
-                    log.error("提现coinData组装错误, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
+                    log.error("WithdrawalcoinDataAssembly error, to size:{}, txhash:{}, {}", coinData.getTo().size(), hash, ConverterErrorCode.WITHDRAWAL_COIN_SIZE_ERROR.getMsg());
                     continue;
                 }
 
                 if (StringUtils.isBlank(withdrawalFromInfo) || (txFromSize == COIN_SIZE_2 && !withdrawalFromInfo.equals(withdrawalToInfo))) {
                     failsList.add(tx);
-                    // 提现资产金额错误
+                    // Incorrect withdrawal amount of assets
                     errorCode = ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getCode();
                     log.error(ConverterErrorCode.WITHDRAWAL_FROM_TO_ASSET_AMOUNT_ERROR.getMsg());
                     continue;

@@ -34,54 +34,54 @@ import network.nerve.quotation.model.po.NodeQuotationWrapperPO;
 public interface QuotationStorageService {
 
     /**
-     * 存各节点的报价交易业务数据
+     * Store quotation transaction business data for each node
      *
      * @param chain
-     * @param key     结构yyyyMMdd-token, 例 20191201-NULS
-     * @param wrapper 存放相同token 以天为单位的所有报价
+     * @param key     structureyyyyMMdd-token, example 20191201-NULS
+     * @param wrapper Store the sametoken All quotations in days
      * @return
      */
     boolean saveNodeQuotation(Chain chain, String key, NodeQuotationWrapperPO wrapper);
 
     /**
-     * 获取各节点的报价交易业务数据
+     * Obtain quotation transaction business data for each node
      * @param chain
-     * @param key 结构yyyyMMdd-token, 例 20191201-NULS
+     * @param key structureyyyyMMdd-token, example 20191201-NULS
      * @return
      */
     NodeQuotationWrapperPO getNodeQuotationsBykey(Chain chain, String key);
 
     /**
-     * 存经过统计后的最终报价
+     * Save the final quotation after statistical analysis
      * @param chain
-     * @param key 结构yyyyMMdd-token, 例 20191201-NULS
+     * @param key structureyyyyMMdd-token, example 20191201-NULS
      * @param finalQuotationPO
      * @return
      */
 //    boolean saveFinalQuotation(Chain chain, String key, FinalQuotationPO finalQuotationPO);
 
     /**
-     * 获取对应token最后一次报价 key包含日期
+     * Get correspondingtokenLast quotation keyInclude date
      * @param chain
-     * @param key 结构yyyyMMdd-token, 例 20191201-NULS
+     * @param key structureyyyyMMdd-token, example 20191201-NULS
      * @return
      */
 //    FinalQuotationPO getFinalQuotation(Chain chain, String key);
 
 
     /**
-     * 储存对应key最后一次报价 key不含日期
+     * Store correspondingkeyLast quotation keyExcluding dates
      * @param chain
-     * @param key 不含日期 例:NULSUSDT
+     * @param key Excluding dates example:NULSUSDT
      * @param finalQuotationPO
      * @return
      */
 //    boolean saveFinalLastQuotation(Chain chain, String key, FinalQuotationPO finalQuotationPO);
 
     /**
-     * 获取对应key最后一次报价 key不含日期
+     * Get correspondingkeyLast quotation keyExcluding dates
      * @param chain
-     * @param key 不含日期 例:NULSUSDT
+     * @param key Excluding dates example:NULSUSDT
      * @return
      */
 //    FinalQuotationPO getFinalLastTimeQuotation(Chain chain, String key);

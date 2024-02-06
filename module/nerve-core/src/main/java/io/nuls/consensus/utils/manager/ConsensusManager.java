@@ -52,24 +52,24 @@ public class ConsensusManager {
         BlockData bd = new BlockData(packageHeight, bestBlock.getHash(), packingTime, extendsData);
         fillProtocol(extendsData, chainId);
         /*
-         * 添加底层随机数支持
+         * Add support for underlying random numbers
          */
         byte[] packingAddress = member.getAgent().getPackingAddress();
         String packingAddressString = AddressTool.getStringAddressByBytes(packingAddress);
         //supportRandomSeed(extendsData, chainId, packingAddress, packageHeight);
 
-        //组装区块打包交易
-//        chain.getLogger().info("开始获取交易：{}", NulsDateUtils.timeStamp2Str(bd.getTime() * 1000));
+        //Assembly block packaging transaction
+//        chain.getLogger().info("Start obtaining transactions：{}", NulsDateUtils.timeStamp2Str(bd.getTime() * 1000));
         bd.setTxList(assembleBlockTx(chain, bd));
-//        chain.getLogger().info("获取完成：");
+//        chain.getLogger().info("Acquisition completed：");
 
         /*
-        组装系统交易（CoinBase/红牌/黄牌）
+        Assembly system transactions（CoinBase/Red card/Yellow card）
         Assembly System Transactions (CoinBase/Red/Yellow)
         */
         assembleSystemTx(chain, bestBlock, bd.getTxList(), member, round, packingTime, settleConsensusAward);
 
-        //组装区块
+        //Assembling blocks
         Block newBlock = createBlock(chain, bd, packingAddress, packingAddressString);
 
         if (newBlock == null) {
@@ -83,12 +83,12 @@ public class ConsensusManager {
 
 
     /**
-     * 底层随机数支持
+     * Low level random number support
      *
-     * @param extendsData    区块拓展数据
-     * @param chainId        链ID
-     * @param packingAddress 处快地址
-     * @param blockHeight    区块高度
+     * @param extendsData    Block expansion data
+     * @param chainId        chainID
+     * @param packingAddress Delivery address
+     * @param blockHeight    block height
      */
     private static void supportRandomSeed(BlockExtendsData extendsData, int chainId, byte[] packingAddress, long blockHeight) {
         RandomSeedStatusPo status = randomSeedsStorageService.getAddressStatus(chainId, packingAddress);
@@ -111,7 +111,7 @@ public class ConsensusManager {
     @SuppressWarnings("unchecked")
     private static List<Transaction> assembleBlockTx(Chain chain, BlockData bd) throws Exception {
         /*
-         * 获取打包的交易
+         * Get packaged transactions
          */
         Map<String, Object> resultMap = CallMethodUtils.getPackingTxList(chain, bd.getTime());
         List<Transaction> packingTxList = new ArrayList<>();
@@ -137,22 +137,22 @@ public class ConsensusManager {
 
 
     /**
-     * 组装区块交易并检查是否中途收到新区块
+     * Assemble block transactions and check if new blocks have been received midway
      *
-     * @param chain                链信息
-     * @param bd                   区块组装数据
-     * @param packageHeight        打包高度
-     * @param packingAddressString 出块地址
+     * @param chain                Chain information
+     * @param bd                   Block assembly data
+     * @param packageHeight        loading height
+     * @param packingAddressString Block address
      */
     @SuppressWarnings("unchecked")
     private static AssembleBlockTxResult assembleBlockTxResult(Chain chain, BlockData bd, String packingAddressString, long packageHeight) throws Exception {
         /*
-         * 获取打包的交易
+         * Get packaged transactions
          */
         Map<String, Object> resultMap = CallMethodUtils.getPackingTxList(chain, bd.getTime());
         List<Transaction> packingTxList = new ArrayList<>();
         /*
-         * 检查组装交易过程中是否收到新区块
+         * Check if new blocks have been received during the assembly transaction process
          * Verify that new blocks are received halfway through packaging
          * */
         BlockHeader bestBlock = chain.getBestHeader();
@@ -188,16 +188,16 @@ public class ConsensusManager {
     }
 
     /**
-     * 组装系统交易
+     * Assembly system transactions
      * CoinBase transaction & Punish transaction
      *
      * @param chain                chain info
-     * @param bestBlock            local highest block/本地最新区块
-     * @param txList               all tx of block/需打包的交易列表
-     * @param member               agent meeting entity/节点打包信息
-     * @param round                latest local round/本地最新轮次信息
-     * @param time                 出块时间
-     * @param settleConsensusAward 是否清算共识奖励
+     * @param bestBlock            local highest block/Latest local blocks
+     * @param txList               all tx of block/List of transactions that need to be packaged
+     * @param member               agent meeting entity/Node packaging information
+     * @param round                latest local round/Latest local round information
+     * @param time                 Blocking time
+     * @param settleConsensusAward Whether to liquidate consensus rewards
      */
     private static void assembleSystemTx(Chain chain, BlockHeader bestBlock, List<Transaction> txList, MeetingMember member, MeetingRound round, long time, boolean settleConsensusAward) throws Exception {
         Transaction coinBaseTransaction = createCoinBaseTx(chain, member.getAgent().getRewardAddress(), txList, time, settleConsensusAward, true);
@@ -207,10 +207,10 @@ public class ConsensusManager {
 
 
     /**
-     * 协议数据组装
+     * Protocol data assembly
      *
-     * @param extendsData 区块扩展数据
-     * @param chainId     链ID
+     * @param extendsData Block extension data
+     * @param chainId     chainID
      */
     private static void fillProtocol(BlockExtendsData extendsData, int chainId) throws NulsException {
         if (ModuleHelper.isSupportProtocolUpdate()) {
@@ -233,22 +233,22 @@ public class ConsensusManager {
     }
 
     /**
-     * 组装CoinBase交易
+     * assembleCoinBasetransaction
      * Assembling CoinBase transactions
      *
      * @param chain                chain info
-     * @param rewardAddress        打包信息/packing info
-     * @param txList               交易列表/transaction list
-     * @param time                 出块时间
-     * @param settleConsensusAward 是否清算共识奖励
-     * @param isPack               是打包途中还是验证中
+     * @param rewardAddress        packaging information/packing info
+     * @param txList               Transaction List/transaction list
+     * @param time                 Blocking time
+     * @param settleConsensusAward Whether to liquidate consensus rewards
+     * @param isPack               Is it during packaging or verification
      * @return Transaction
      */
     public static Transaction createCoinBaseTx(Chain chain, byte[] rewardAddress, List<Transaction> txList, long time, boolean settleConsensusAward, boolean isPack) throws Exception {
         Transaction tx = new Transaction(TxType.COIN_BASE);
         tx.setTime(time);
         /*
-        计算共识奖励
+        Calculate consensus rewards
         Calculating consensus Awards
         */
         List<CoinTo> rewardList = calcReward(chain, txList, rewardAddress, time, settleConsensusAward, isPack);
@@ -266,28 +266,28 @@ public class ConsensusManager {
     }
 
     /**
-     * 计算共识奖励
+     * Calculate consensus rewards
      * Calculating consensus Awards
      *
      * @param chain                chain info
-     * @param txList               交易列表/transaction list
-     * @param rewardAddress        本地打包信息/local agent packing info
-     * @param time                 区块时间
-     * @param settleConsensusAward 是否清算共识奖励
-     * @param isPack               是打包途中还是验证中
+     * @param txList               Transaction List/transaction list
+     * @param rewardAddress        Local packaging information/local agent packing info
+     * @param time                 Block time
+     * @param settleConsensusAward Whether to liquidate consensus rewards
+     * @param isPack               Is it during packaging or verification
      * @return List<CoinTo>
      */
     private static List<CoinTo> calcReward(Chain chain, List<Transaction> txList, byte[] rewardAddress, long time, boolean settleConsensusAward, boolean isPack) throws NulsException {
         /*
-        资产与共识奖励键值对
+        Asset and consensus reward key value pairs
         Assets and Consensus Award Key Value Pairs
         Key：assetChainId_assetId
-        Value: 共识奖励金额
+        Value: Consensus reward amount
         */
         Map<String, BigInteger> awardAssetMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_4);
 
         /*
-        计算区块中交易产生的链内和跨链手续费
+        Calculate intra chain and cross chain transaction fees generated by transactions in blocks
         Calculating intra-chain and cross-chain handling fees for transactions in blocks
         */
         for (Transaction tx : txList) {
@@ -312,7 +312,7 @@ public class ConsensusManager {
             }
         }
         List<CoinTo> coinToList = new ArrayList<>();
-        //组装手续费CoinData
+        //Assembly handling feeCoinData
         if (!awardAssetMap.isEmpty()) {
             for (Map.Entry<String, BigInteger> entry : awardAssetMap.entrySet()) {
                 String[] assetInfo = entry.getKey().split(NulsEconomicConstant.SEPARATOR);
@@ -321,7 +321,7 @@ public class ConsensusManager {
             }
         }
 
-        //如果本区块需要结算当天共识奖励，则结算当天的共识奖励
+        //If this block requires settlement of consensus rewards on the same day, then the consensus rewards on the settlement day
         if (settleConsensusAward) {
             if (isPack) {
                 ConsensusAwardUtil.packConsensusAward(chain, coinToList, time);
@@ -333,10 +333,10 @@ public class ConsensusManager {
     }
 
     /**
-     * 计算交易手续费
+     * Calculate transaction fees
      * Calculating transaction fees
      *
-     * @param tx    transaction/交易
+     * @param tx    transaction/transaction
      * @param chain chain info
      * @return ChargeResultData
      */
@@ -346,25 +346,25 @@ public class ConsensusManager {
         int feeAssetId = chain.getConfig().getAssetId();
         coinData.parse(tx.getCoinData(), 0);
         /*
-        跨链交易计算手续费
+        Cross chain transaction calculation fees
         Cross-Chain Transactions Calculate Processing Fees
         */
         if (tx.getType() == TxType.CROSS_CHAIN) {
             /*
-            计算链内手续费，from中链内主资产 - to中链内主资产的和
+            Calculate in chain transaction fees,fromMain assets within the medium chain - toSum of main assets within the mid chain
             Calculate in-chain handling fees, from in-chain main assets - to in-chain main assets and
             */
             if (AddressTool.getChainIdByAddress(coinData.getFrom().get(0).getAddress()) == feeChainId) {
                 return getFee(coinData, feeChainId, feeAssetId);
             }
             /*
-            计算主链和友链手续费,首先计算CoinData中总的跨链手续费，然后根据比例分跨链手续费
+            Calculate main chain and friend chain transaction fees,First, calculateCoinDataTotal cross chain handling fees in the middle, and then divide the cross chain handling fees according to the proportion
             Calculate the main chain and friendship chain handling fees, first calculate the total cross-chain handling fees in CoinData,
             and then divide the cross-chain handling fees according to the proportion.
             */
             ChargeResult feeData = getFee(coinData, config.getMainChainId(), config.getMainAssetId());
             /*
-            如果当前链为主链,且跨链交易目标连为主链则主链收取全部跨链手续费，如果目标连为其他链则主链收取一定比例的跨链手续费
+            If the current chain is the main chain,If the cross chain transaction target is the main chain, the main chain will charge all cross chain transaction fees. If the target is other chains, the main chain will charge a certain proportion of cross chain transaction fees
             If the current chain is the main chain and the target of cross-chain transaction is connected to the main chain, the main chain charges all cross-chain handling fees,
             and if the target is connected to other chains, the main chain charges a certain proportion of cross-chain handling fees.
             */
@@ -390,12 +390,12 @@ public class ConsensusManager {
     }
 
     /**
-     * 计算指定手续费
+     * Calculate designated handling fees
      *
      * @param coinData     coinData
-     * @param assetChainId 指定资产链ID
-     * @param assetId      指定资产ID
-     * @return 手续费大小
+     * @param assetChainId Designated asset chainID
+     * @param assetId      Designated assetsID
+     * @return Handling fee size
      */
     public static ChargeResult getFee(CoinData coinData, int assetChainId, int assetId) {
         ChargeResult result = new ChargeResult();
@@ -445,13 +445,13 @@ public class ConsensusManager {
     }
 
     /**
-     * 创建区块
+     * Create blocks
      * create block
      *
      * @param chain                chain info
-     * @param blockData            block entity/区块数据
-     * @param packingAddress       packing address/打包地址
-     * @param packingAddressString packing address/打包地址
+     * @param blockData            block entity/Block data
+     * @param packingAddress       packing address/Packaging address
+     * @param packingAddressString packing address/Packaging address
      * @return Block
      */
     private static Block createBlock(Chain chain, BlockData blockData, byte[] packingAddress, String packingAddressString) {

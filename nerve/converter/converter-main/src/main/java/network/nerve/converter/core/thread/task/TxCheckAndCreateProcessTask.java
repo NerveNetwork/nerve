@@ -56,22 +56,22 @@ public class TxCheckAndCreateProcessTask implements Runnable {
             Set<PendingCheckTx> toRemoveSet = new HashSet<>();
             List<PendingCheckTx> list = new ArrayList<>(chain.getPendingCheckTxSet());
             for(PendingCheckTx checkTx : list){
-                // 扫描交易是否存在, 如果存在就移除checkTx
+                // Scan whether the transaction exists, If it exists, remove itcheckTx
                 TransactionPO txPO = txStorageService.get(chain, checkTx.getHash());
                 if(null != txPO){
-                    chain.getLogger().info("[PendingCheck] 异构链已解析到交易 hash:{}, type:{}",
+                    chain.getLogger().info("[PendingCheck] Heterogeneous chain resolved to transaction hash:{}, type:{}",
                             checkTx.getHash().toHex(), checkTx.getType());
                     toRemoveSet.add(checkTx);
                     continue;
                 }else if(null == txPO && checkTx.getCheckTimes() <= 0){
-                    // 检查次数耗尽, 还是没有交易 则执行创建
+                    // Exhausted number of checks, There is still no transaction Then execute the creation
                     try {
                         boolean rs = byzantineTransactionHelper.genByzantineTransaction(chain,
                                 checkTx.getHash().toHex(),
                                 checkTx.getType(),
                                 checkTx.getOriginalHash(),
                                 checkTx.getHeterogeneousHashList());
-                        chain.getLogger().info("[PendingCheck] 异构链没有解析到交易, 调用异构链组件创建交易 hash:{}, type:{}, rs:{}",
+                        chain.getLogger().info("[PendingCheck] Heterogeneous chain not resolved to transaction, Calling heterogeneous chain components to create transactions hash:{}, type:{}, rs:{}",
                                 checkTx.getHash().toHex(), checkTx.getType(), rs);
                         toRemoveSet.add(checkTx);
                         continue;
@@ -81,7 +81,7 @@ public class TxCheckAndCreateProcessTask implements Runnable {
                         continue;
                     }
                 }
-                chain.getLogger().debug("[PendingCheck] 异构链组件没有获取到该交易 hash:{}, type:{}",
+                chain.getLogger().debug("[PendingCheck] The heterogeneous chain component did not obtain the transaction hash:{}, type:{}",
                         checkTx.getHash().toHex(), checkTx.getType());
                 checkTx.setCheckTimes(checkTx.getCheckTimes() - 1);
             }

@@ -90,12 +90,13 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
             Set<String> unregisterSet = new HashSet<>();
             Set<String> pauseSet = new HashSet<>();
             Set<String> resumeSet = new HashSet<>();
+            Set<String> stableSwapCoinSet = new HashSet<>();
             for (Transaction tx : txs) {
-                // 异构合约资产注册 OR (NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定 / 取消绑定) OR 异构合约资产取消注册 OR (异构链资产充值 暂停 / 恢复)
+                // Heterogeneous Contract Asset Registration OR (NERVEAsset binding heterogeneous contract assets: New binding / Overwrite binding / Unbind) OR Unregistration of heterogeneous contract assets OR (Heterogeneous chain asset recharge suspend / recovery)
                 HeterogeneousContractAssetRegPendingTxData txData = new HeterogeneousContractAssetRegPendingTxData();
                 txData.parse(tx.getTxData(), 0);
                 String contractAddress = addressToLowerCase(txData.getContractAddress());
-                // 签名验证(种子虚拟银行)
+                // Signature verification(Seed Virtual Bank)
                 try {
                     ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
                 } catch (NulsException e) {
@@ -104,7 +105,7 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
                     continue;
                 }
                 errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(),
-                        contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, false);
+                        contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, stableSwapCoinSet, false);
                 if (StringUtils.isNotBlank(errorCode)) {
                     failsList.add(tx);
                 }
@@ -124,14 +125,14 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
         if (txs.isEmpty()) {
             return true;
         }
-        // 当区块出块正常运行状态时（非区块同步模式），才执行
+        // When the block is in normal operation state（Non block synchronization mode）Only then will it be executed
         if (syncStatus == SyncStatusEnum.RUNNING.value()) {
             Chain chain = chainManager.getChain(chainId);
             try {
                 boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
                 if (isCurrentDirector) {
                     for (Transaction tx : txs) {
-                        //放入类似队列处理机制 准备通知异构链组件执行合约资产注册
+                        //Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to perform contract asset registration
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setBlockHeader(blockHeader);
@@ -139,7 +140,7 @@ public class HeterogeneousContractAssetRegPendingProcessor implements Transactio
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offer(pendingPO);
                         if(chain.getLogger().isDebugEnabled()) {
-                            chain.getLogger().info("[commit] 合约资产注册等待交易 hash:{}", tx.getHash().toHex());
+                            chain.getLogger().info("[commit] Contract asset registration waiting for transaction hash:{}", tx.getHash().toHex());
                         }
                     }
                 }

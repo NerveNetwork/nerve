@@ -122,42 +122,42 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == p2PHKSignature || null == p2PHKSignature.getPublicKey() || null == p2PHKSignature.getSignData()) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        // v15波场协议升级后，特殊处理hash，历史遗留问题，polygon区块回滚导致的交易高度和时间不一致的问题
+        // v15Special handling after upgrading the wavefield protocolhashHistorical legacy issues,polygonThe issue of inconsistent transaction height and time caused by block rollback
         if (converterCoreApi.isSupportProtocol15TrxCrossChain() && "e7650127c55c7fa90e8cfded861b9aba0a71e025c318f0e31d53721d864d1e26".equalsIgnoreCase(hash.toHex())) {
-            LoggerUtil.LOG.warn("过滤交易hash: {}", hash.toHex());
+            LoggerUtil.LOG.warn("Filter transactionshash: {}", hash.toHex());
             return;
         }
-        LoggerUtil.LOG.info("收到节点[{}]新交易签名 hash: {}, 签名地址:{}", nodeId, hash.toHex(),
+        LoggerUtil.LOG.info("Received node[{}]New transaction signature hash: {}, Signature address:{}", nodeId, hash.toHex(),
                 AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chainId)));
         TransactionPO txPO = txStorageService.get(chain, hash);
         if (null == txPO) {
             try {
-                //如果为第一次收到该交易,暂存该消息并向广播过来的节点获取完整交易
+                //If this is the first time the transaction has been received,Temporarily store the message and retrieve the complete transaction from the broadcast node
                 UntreatedMessage untreatedMessage = new UntreatedMessage(chainId, nodeId, message, hash);
                 List<UntreatedMessage> untreatedMsgList = chain.getFutureMessageMap().computeIfAbsent(hash, v -> new ArrayList<>());
                 untreatedMsgList.add(untreatedMessage);
-                LoggerUtil.LOG.info("当前节点还未确认该交易，缓存签名消息 hash:{}", hash.toHex());
+                LoggerUtil.LOG.info("The current node has not yet confirmed the transaction, caching signature messages hash:{}", hash.toHex());
             } catch (Exception e) {
                 LoggerUtil.LOG.error(e);
             }
 
             if (TxType.PROPOSAL == message.getType()) {
-                // 如果是提案交易, 则需要主动向发送索要交易,非交易发起节点 无法创建该交易
+                // If it is a proposal transaction, Then it is necessary to actively request transactions from the sender,Non transaction initiating node Unable to create the transaction
                 GetTxMessage msg = new GetTxMessage(hash);
                 NetWorkCall.broadcast(chain, msg, null, ConverterCmdConstant.GET_TX_MESSAGE);
                 return;
             }
             /**
-             * 特殊处理 将交易hash放入 task 一定时间后去获取交易信息,
-             * 防止刚加入虚拟银行的节点 异构链同步机制的延迟导致不能创建对应的交易
+             * Special treatment Transfer the transactionhashInsert task Obtain transaction information after a certain period of time,
+             * Prevent nodes that have just joined virtual banks The delay of heterogeneous chain synchronization mechanism prevents the creation of corresponding transactions
              */
             PendingCheckTx pendingCheckTx = new PendingCheckTx(message);
             chain.getPendingCheckTxSet().add(pendingCheckTx);
             return;
         }
-        //如果该交易已经被打包了，所以不需要再广播该交易的签名
+        //If the transaction has already been packaged, there is no need to broadcast the signature of the transaction again
         if (txPO.getStatus() != ByzantineStateEnum.UNTREATED.getStatus() || message.getP2PHKSignature() == null) {
-            LoggerUtil.LOG.info("交易在本节点已经处理完成,Hash:{}\n\n", hash.toHex());
+            LoggerUtil.LOG.info("The transaction has been processed at this node,Hash:{}\n\n", hash.toHex());
             return;
         }
         try {
@@ -187,20 +187,20 @@ public class MessageServiceImpl implements MessageService {
     public void getTx(Chain chain, String nodeId, GetTxMessage message) {
         NulsHash hash = message.getHash();
         String nativeHex = hash.toHex();
-        LoggerUtil.LOG.info("节点:{},向本节点获取完整的交易，Hash:{}", nodeId, nativeHex);
+        LoggerUtil.LOG.info("node:{},Obtain complete transactions from this node,Hash:{}", nodeId, nativeHex);
         TransactionPO txPO = txStorageService.get(chain, hash);
         if (null == txPO) {
-            chain.getLogger().error("当前节点不存在该交易,Hash:{}", nativeHex);
+            chain.getLogger().error("The transaction does not exist at the current node,Hash:{}", nativeHex);
             return;
         }
         NewTxMessage newTxMessage = new NewTxMessage();
         newTxMessage.setTx(txPO.getTx());
-        //把完整交易发送给请求节点
+        //Send the complete transaction to the requesting node
         if (!NetWorkCall.sendToNode(chain, newTxMessage, nodeId, ConverterCmdConstant.NEW_TX_MESSAGE)) {
-            LoggerUtil.LOG.info("发送完整的交易到节点:{}, 失败! Hash:{}\n\n", nodeId, nativeHex);
+            LoggerUtil.LOG.info("Send complete transaction to node:{}, fail! Hash:{}\n\n", nodeId, nativeHex);
             return;
         }
-        LoggerUtil.LOG.info("将完整的交易发送给链内节点:{}, Hash:{}\n\n", nodeId, nativeHex);
+        LoggerUtil.LOG.info("Send the complete transaction to the in chain nodes:{}, Hash:{}\n\n", nodeId, nativeHex);
     }
 
     @Override
@@ -208,18 +208,18 @@ public class MessageServiceImpl implements MessageService {
         Transaction tx = message.getTx();
         NulsHash localHash = tx.getHash();
         String localHashHex = localHash.toHex();
-        LoggerUtil.LOG.info("收到链内节点:{}发送过来的完整交易,Hash:{}", nodeId, localHashHex);
-        //判断本节点是否已经收到过该交易，如果已收到过直接忽略
+        LoggerUtil.LOG.info("Received in chain node:{}The complete transaction sent over,Hash:{}", nodeId, localHashHex);
+        //Determine whether this node has received the transaction. If it has, ignore it directly
         TransactionPO txPO = txStorageService.get(chain, localHash);
         if (txPO != null) {
-            LoggerUtil.LOG.info("已收到并处理过该交易,Hash:{}\n\n", localHashHex);
+            LoggerUtil.LOG.info("The transaction has been received and processed,Hash:{}\n\n", localHashHex);
             return;
         }
-        // 验证该交易
+        // Verify the transaction
         try {
             proposalVerifier.validate(chain, tx);
         } catch (NulsException e) {
-            chain.getLogger().error("收到完整交易, 验证失败. hash:{}", localHashHex);
+            chain.getLogger().error("Received complete transaction, Verification failed. hash:{}", localHashHex);
             chain.getLogger().error(e);
             return;
         }
@@ -229,7 +229,7 @@ public class MessageServiceImpl implements MessageService {
             for (UntreatedMessage msg : listMsg) {
                 chain.getSignMessageByzantineQueue().offer(msg);
             }
-            // 清空缓存的签名
+            // Clear cached signatures
             chain.getFutureMessageMap().remove(localHash);
         }
         if (TxType.PROPOSAL == message.getTx().getType()) {
@@ -243,7 +243,7 @@ public class MessageServiceImpl implements MessageService {
             }
             BroadcastHashSignMessage msg = new BroadcastHashSignMessage(tx, p2PHKSignature);
             NetWorkCall.broadcast(chain, msg, ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
-            LoggerUtil.LOG.debug("[newTx-message] 广播本节点对提案的签名 txhash:{}, 签名地址:{}",
+            LoggerUtil.LOG.debug("[newTx-message] Broadcast the signature of this node on the proposal txhash:{}, Signature address:{}",
                     message.getTx().getHash().toHex(),
                     AddressTool.getStringAddressByBytes(AddressTool.getAddress(p2PHKSignature.getPublicKey(), chain.getChainId())));
         }
@@ -258,13 +258,13 @@ public class MessageServiceImpl implements MessageService {
         }
         String hash = txStorageService.getHeterogeneousHash(chain, heterogeneousTxHash);
         if (StringUtils.isNotBlank(hash)) {
-            // 已经处理过
+            // Processed
             return;
         }
         IDepositTxSubmitter submitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(chain.getChainId(), heterogeneousChainId);
         Result result = submitter.validateDepositTx(heterogeneousTxHash);
         if (result.isFailed()) {
-            chain.getLogger().error("重新解析异构交易, validateDepositTx 验证失败, {}", result.getErrorCode().getCode());
+            chain.getLogger().error("Re analyze heterogeneous transactions, validateDepositTx Verification failed, {}", result.getErrorCode().getCode());
             return;
         }
         try {
@@ -273,7 +273,7 @@ public class MessageServiceImpl implements MessageService {
             if (rs) {
                 txStorageService.saveHeterogeneousHash(chain, heterogeneousTxHash);
                 NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.CHECK_RETRY_PARSE_MESSAGE);
-                chain.getLogger().info("[checkRetryParse 消息处理完成] 异构chainId: {}, 异构hash:{}", heterogeneousChainId, heterogeneousTxHash);
+                chain.getLogger().info("[checkRetryParse Message processing completed] isomerismchainId: {}, isomerismhash:{}", heterogeneousChainId, heterogeneousTxHash);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -297,10 +297,10 @@ public class MessageServiceImpl implements MessageService {
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
             if (address.equalsIgnoreCase(docking.getCurrentSignAddress())) {
                 String hash = docking.cancelHtgTx(nonce, priceGwei);
-                chain.getLogger().info("[cancelHtgTx 消息处理完成] 异构chainId: {}, 异构address:{}, 取消操作的hash:{}", heterogeneousChainId, address, hash);
+                chain.getLogger().info("[cancelHtgTx Message processing completed] isomerismchainId: {}, isomerismaddress:{}, Cancel operationhash:{}", heterogeneousChainId, address, hash);
             } else {
                 NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
-                chain.getLogger().info("[cancelHtgTx 消息转发完成] 异构chainId: {}, 异构address:{}", heterogeneousChainId, address);
+                chain.getLogger().info("[cancelHtgTx Message forwarding completed] isomerismchainId: {}, isomerismaddress:{}", heterogeneousChainId, address);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -322,12 +322,12 @@ public class MessageServiceImpl implements MessageService {
                 }
             }
         }
-        // 收到过该消息
+        // Received this message
         return existMsg;
     }
 
     private ComponentSignByzantinePO initCompSignPO(ComponentSignByzantinePO compSignPO, NulsHash hash) {
-        // 初始化存储签名的对象
+        // Initialize the object for storing signatures
         if (null == compSignPO) {
             compSignPO = new ComponentSignByzantinePO(hash, new ArrayList<>(), false, false);
         } else if (null == compSignPO.getListMsg()) {
@@ -351,7 +351,7 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == listSign || listSign.size() == 0) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        // 获取交易
+        // Obtain transactions
         try {
             Transaction tx = TransactionCall.getConfirmedTx(chain, hash);
             if (null == tx) {
@@ -361,7 +361,7 @@ public class MessageServiceImpl implements MessageService {
                     ids += sign.getHeterogeneousAddress().getChainId() + " ";
                     signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
                 }
-                LoggerUtil.LOG.error("[异构链地址签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
+                LoggerUtil.LOG.error("[Heterogeneous chain address signature message-The transaction was not found], Heterogeneous chain address signature message, Received node[{}] txhash:{}, Heterogeneous chainId:{}, Signature address:{}",
                         nodeId, hash.toHex(), ids, signAddress);
                 return;
             }
@@ -380,7 +380,7 @@ public class MessageServiceImpl implements MessageService {
                             refundMessageProcess(chain, nodeId, tx, proposalPO, message);
                             break;
                         case UPGRADE:
-                            // 判断提案类型是合约升级, 广播的是对应的提案交易hash 和对该hash的签名
+                            // Determine if the proposal type is contract upgrade, Broadcasting corresponds to proposal transactionshash And for thehashSignature of
                             upgradeMessageProcess(chain, nodeId, tx, proposalPO, message);
                             break;
                         default:
@@ -396,7 +396,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * 协议v21 支持一键跨链
+     * protocolv21 Support one click cross chain
      */
     private void componentSignV21(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate) {
         NulsHash hash = message.getHash();
@@ -404,7 +404,7 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == listSign || listSign.size() == 0) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        // 获取交易
+        // Obtain transactions
         try {
             Transaction tx = TransactionCall.getConfirmedTx(chain, hash);
             if (null == tx) {
@@ -414,7 +414,7 @@ public class MessageServiceImpl implements MessageService {
                     ids += sign.getHeterogeneousAddress().getChainId() + " ";
                     signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
                 }
-                LoggerUtil.LOG.error("[异构链地址签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
+                LoggerUtil.LOG.error("[Heterogeneous chain address signature message-The transaction was not found], Heterogeneous chain address signature message, Received node[{}] txhash:{}, Heterogeneous chainId:{}, Signature address:{}",
                         nodeId, hash.toHex(), ids, signAddress);
                 return;
             }
@@ -434,7 +434,7 @@ public class MessageServiceImpl implements MessageService {
                             refundMessageProcess(chain, nodeId, tx, proposalPO, message);
                             break;
                         case UPGRADE:
-                            // 判断提案类型是合约升级, 广播的是对应的提案交易hash 和对该hash的签名
+                            // Determine if the proposal type is contract upgrade, Broadcasting corresponds to proposal transactionshash And for thehashSignature of
                             upgradeMessageProcess(chain, nodeId, tx, proposalPO, message);
                             break;
                         default:
@@ -456,7 +456,7 @@ public class MessageServiceImpl implements MessageService {
         if (null == hash || null == listSign || listSign.size() == 0) {
             chain.getLogger().error(new NulsException(ConverterErrorCode.NULL_PARAMETER));
         }
-        // 获取交易
+        // Obtain transactions
         try {
             Transaction tx = TransactionCall.getConfirmedTx(chain, hash);
             if (null == tx) {
@@ -466,12 +466,12 @@ public class MessageServiceImpl implements MessageService {
                     ids += sign.getHeterogeneousAddress().getChainId() + " ";
                     signAddress += sign.getHeterogeneousAddress().getAddress() + " ";
                 }
-                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-未查询到该交易], 异构链地址签名消息, 收到节点[{}] txhash:{}, 异构链Id:{}, 签名地址:{}",
+                LoggerUtil.LOG.error("[Resend virtual bank signature change message-The transaction was not found], Heterogeneous chain address signature message, Received node[{}] txhash:{}, Heterogeneous chainId:{}, Signature address:{}",
                         nodeId, hash.toHex(), ids, signAddress);
                 return;
             }
             if (tx.getType() != TxType.CHANGE_VIRTUAL_BANK) {
-                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-交易类型错误]-{}", tx.getType());
+                LoggerUtil.LOG.error("[Resend virtual bank signature change message-Transaction type error]-{}", tx.getType());
                 return;
             }
             this.retryVirtualBankMessageProcess(chain, nodeId, tx, message, isCreate);
@@ -484,10 +484,10 @@ public class MessageServiceImpl implements MessageService {
 
 
     /**
-     * 处理虚拟银行变更交易的消息
-     * 1.验证签名
-     * 2.处理消息, 存储, 转发,
-     * 3.计算拜占庭, 如果拜占庭通过则调异构链组件
+     * Processing messages for virtual bank change transactions
+     * 1.Verify signature
+     * 2.Processing messages, storage, transmit,
+     * 3.Calculate Byzantium, If Byzantium passes, adjust heterogeneous chain components
      *
      * @param chain
      * @param tx
@@ -498,28 +498,28 @@ public class MessageServiceImpl implements MessageService {
         synchronized (objectBankLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
-            // 判断是否收到过该消息
+            // Determine if you have received the message
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
             boolean existMessage = isExistMessage(compSignPO, message);
             //if (isExistMessage(compSignPO, message)) {
             //    return;
             //}
             compSignPO = initCompSignPO(compSignPO, hash);
-            LoggerUtil.LOG.info("[异构链地址签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
+            LoggerUtil.LOG.info("[Heterogeneous chain address signature message - handlechangeVirtualBank], Received node[{}]  hash:{}", nodeId, txHash);
             List<IHeterogeneousChainDocking> chainDockings = new ArrayList<>(heterogeneousDockingManager.getAllHeterogeneousDocking());
             if (null == chainDockings || chainDockings.isEmpty()) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
             }
             int htgChainSize = chainDockings.size();
-            // 验证
+            // validate
             ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
             int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
             int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
-            // 缓存变更的虚拟银行在各条链对应的地址
+            // The virtual bank with cache changes corresponds to the addresses on each chain
             Map<Integer, String[][]> addressCache = new HashMap<>();
             for (IHeterogeneousChainDocking docking : chainDockings) {
                 int hChainId = docking.getChainId();
-                // 组装加入参数
+                // Assembly with added parameters
                 String[] inAddress = new String[inSize];
                 if (null != txData.getInAgents()) {
                     getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents());
@@ -531,7 +531,7 @@ public class MessageServiceImpl implements MessageService {
                 }
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
-            // 验证收到的消息的正确性
+            // Verify the correctness of the received message
             Map<Integer, IHeterogeneousChainDocking> chainDockingMap = chainDockings.stream().collect(Collectors.toMap(IHeterogeneousChainDocking::getChainId, Function.identity()));
             do {
                 if (existMessage) {
@@ -542,16 +542,16 @@ public class MessageServiceImpl implements MessageService {
                     String signAddress = sign.getHeterogeneousAddress().getAddress();
                     IHeterogeneousChainDocking docking = chainDockingMap.get(sign.getHeterogeneousAddress().getChainId());
                     if (docking == null) {
-                        LoggerUtil.LOG.error("[虚拟银行变更签名消息-异构链ID错误], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                        LoggerUtil.LOG.error("[Virtual Bank Change Signature Message-Heterogeneous chainIDerror], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                                 nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress, HexUtil.encode(sign.getSignature()));
                         break;
                     }
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
-                    // 验证消息签名
+                    // Verify message signature
                     Boolean msgPass = docking.verifySignManagerChangesII(
                             signAddress,
                             txHash,
@@ -561,34 +561,34 @@ public class MessageServiceImpl implements MessageService {
                             HexUtil.encode(sign.getSignature()));
                     if (!msgPass) {
                         verifySignManagerChangesII = false;
-                        LoggerUtil.LOG.error("[虚拟银行变更签名消息-签名验证失败-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                        LoggerUtil.LOG.error("[Virtual Bank Change Signature Message-Signature verification failed-changeVirtualBank], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                                 nodeId, txHash, hChainId, signAddress, HexUtil.encode(sign.getSignature()));
                         break;
                     }
                 }
                 if (verifySignManagerChangesII) {
-                    // 添加本次收到的消息
+                    // Add the message received this time
                     compSignPO.getListMsg().add(message);
-                    // 验证通过, 转发消息
+                    // Verification passed, relay the message
                     NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
                 }
             } while (false);
             ComponentSignMessage currentMessage = null;
             /**
-             * (签名针对变更交易,为多组件统一业务)
-             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             * (Signature for change transaction,Unified business for multiple components)
+             * Unified identification of multiple components, When a single component is completed, multiple components must be completed simultaneously.
              */
             boolean signed = false;
             boolean completed = false;
             boolean bztPass = false;
-            // 当前节点签名
+            // Current node signature
             do {
                 if (compSignPO.getCurrentSigned()){
                     break;
                 }
-                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                // If the current node has not been signed, Then a signature is required, collect, broadcast.
                 List<HeterogeneousSign> currentSignList = new ArrayList<>();
-                // 检查当前节点是否新加入的 则不用签名
+                // Check if the current node has been newly added No need to sign
                 boolean currentJoin = false;
                 SignAccountDTO packerInfo = ConsensusCall.getPackerInfo(chain);
                 VirtualBankDirector director = chain.getMapVirtualBank().get(packerInfo.getAddress());
@@ -602,21 +602,21 @@ public class MessageServiceImpl implements MessageService {
                         }
                     }
                 }
-                // 当前节点是否新加入的 则不用签名
+                // Is the current node newly joined No need to sign
                 if (currentJoin) {
                     break;
                 }
-                // 消息签名
+                // Message signature
                 for (IHeterogeneousChainDocking docking : chainDockings) {
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
                     /**
-                     * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
-                     * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
-                     * 并且加入到一个消息中广播.
+                     * If the current node has not yet signed, trigger the collection of signatures from various heterogeneous chain components of the current node
+                     * Due to the virtual banking change involving all heterogeneous chain components, So each component needs to be signed
+                     * And join the broadcast in a message.
                      */
                     String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                     String currentHaddress = docking.getCurrentSignAddress();
@@ -637,15 +637,15 @@ public class MessageServiceImpl implements MessageService {
                     }
                 }
             } while (false);
-            // 检查是否收集到足够的节点签名
+            // Check if sufficient node signatures have been collected
             do {
                 boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
                 if (!byzantinePass) {
-                    // 未达到足够的签名
+                    // Not enough signatures reached
                     break;
                 }
                 if (compSignPO.getByzantinePass()) {
-                    // 已执行过此流程
+                    // This process has already been executed
                     break;
                 }
                 List<Map<Integer, HeterogeneousSign>> list = compSignPO.getListMsg().stream().map(m -> m.getListSign().stream().collect(Collectors.toMap(hSign -> hSign.getHeterogeneousAddress().getChainId(), Function.identity()))).collect(Collectors.toList());
@@ -653,25 +653,25 @@ public class MessageServiceImpl implements MessageService {
                 List<ComponentCallParm> callParmsList = new ArrayList<>();
                 for (IHeterogeneousChainDocking docking : chainDockings) {
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
-                    // 处理消息并拜占庭验证, 更新compSignPO等
+                    // Processing messages and Byzantine verification, updatecompSignPOetc.
                     if (isCreate) {
-                        // 创建异构链交易
+                        // Create heterogeneous chain transactions
                         StringBuilder signatureDataBuilder = new StringBuilder();
                         int count = 0;
                         for (Map<Integer, HeterogeneousSign> map : list) {
                             HeterogeneousSign heterogeneousSign = map.get(hChainId);
                             if (heterogeneousSign == null) {
-                                LoggerUtil.LOG.warn("[虚拟银行变更签名消息-签名信息不完整-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}", nodeId, txHash, hChainId);
+                                LoggerUtil.LOG.warn("[Virtual Bank Change Signature Message-Incomplete signature information-changeVirtualBank], Received node[{}], txhash: {}, Heterogeneous chainId:{}", nodeId, txHash, hChainId);
                                 continue;
                             }
                             signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
                             count++;
                         }
-                        // 达到最小签名数才是有效的调用数据
+                        // Reaching the minimum number of signatures is the only valid call data
                         if (count >= byzantineMinPassCount) {
                             ComponentCallParm callParm = new ComponentCallParm(
                                     hChainId,
@@ -682,7 +682,7 @@ public class MessageServiceImpl implements MessageService {
                                     1,
                                     signatureDataBuilder.toString());
                             callParmsList.add(callParm);
-                            chain.getLogger().info("[虚拟银行变更签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
+                            chain.getLogger().info("[Virtual Bank Change Signature Message-Byzantine passage-changeVirtualBank] Storage heterogeneous chain components execute virtual bank change call parameters. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
                         }
                     } else {
                         completed = true;
@@ -701,22 +701,22 @@ public class MessageServiceImpl implements MessageService {
             }
             if (signed) {
                 compSignPO.setCurrentSigned(true);
-                // 广播当前节点签名消息
+                // Broadcast current node signature message
                 NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
 
             /*List<HeterogeneousSign> currentSignList = null;
             if (!compSignPO.getCurrentSigned()) {
-                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                // If the current node has not been signed, Then a signature is required, collect, broadcast.
                 currentSignList = new ArrayList<>();
             }
             ComponentSignMessage currentMessage = null;
 
             *//**
-             * (签名针对变更交易,为多组件统一业务)
-             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             * (Signature for change transaction,Unified business for multiple components)
+             * Unified identification of multiple components, When a single component is completed, multiple components must be completed simultaneously.
              *//*
             boolean signed = false;
             boolean completed = false;
@@ -727,7 +727,7 @@ public class MessageServiceImpl implements MessageService {
                     if (hInterface.getChainId() == sign.getHeterogeneousAddress().getChainId()) {
                         int hChainId = hInterface.getChainId();
                         String signAddress = sign.getHeterogeneousAddress().getAddress();
-                        // 组装加入参数
+                        // Assembly with added parameters
                         String[] inAddress = new String[inSize];
                         if (null != txData.getInAgents()) {
                             getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents());
@@ -737,7 +737,7 @@ public class MessageServiceImpl implements MessageService {
                         if (null != txData.getOutAgents()) {
                             getHeterogeneousAddress(chain, hChainId, outAddress, txData.getOutAgents());
                         }
-                        // 验证消息签名
+                        // Verify message signature
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hInterface.getChainId());
                         Boolean msgPass = docking.verifySignManagerChangesII(
                                 signAddress,
@@ -747,14 +747,14 @@ public class MessageServiceImpl implements MessageService {
                                 1,
                                 HexUtil.encode(sign.getSignature()));
                         if (!msgPass) {
-                            LoggerUtil.LOG.error("[异构链地址签名消息-签名验证失败-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                            LoggerUtil.LOG.error("[Heterogeneous chain address signature message-Signature verification failed-changeVirtualBank], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                                     nodeId, txHash, hChainId, signAddress, HexUtil.encode(sign.getSignature()));
                             continue;
                         }
-                        // 验证通过, 转发消息
+                        // Verification passed, relay the message
                         NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
                         if (!addedMsg) {
-                            //先添加本次收到的消息
+                            //Add the message received this time first
                             compSignPO.getListMsg().add(message);
                             addedMsg = true;
                         }
@@ -772,12 +772,12 @@ public class MessageServiceImpl implements MessageService {
                                     }
                                 }
                             }
-                            // 当前节点是新加入的 则不用签名
+                            // The current node is newly added No need to sign
                             if (!currentJoin) {
                                 *//**
-                                 * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
-                                 * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
-                                 * 并且加入到一个消息中广播.
+                                 * If the current node has not yet signed, trigger the collection of signatures from various heterogeneous chain components of the current node
+                                 * Due to the virtual banking change involving all heterogeneous chain components, So each component needs to be signed
+                                 * And join the broadcast in a message.
                                  *//*
                                 String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                                 String currentHaddress = docking.getCurrentSignAddress();
@@ -796,11 +796,11 @@ public class MessageServiceImpl implements MessageService {
                                 signed = true;
                             }
                         }
-                        // 处理消息并拜占庭验证, 更新compSignPO等
+                        // Processing messages and Byzantine verification, updatecompSignPOetc.
                         boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
                         if (byzantinePass && !compSignPO.getByzantinePass()) {
                             if (isCreate) {
-                                // 创建异构链交易
+                                // Create heterogeneous chain transactions
                                 StringBuilder signatureDataBuilder = new StringBuilder();
                                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
                                     for (HeterogeneousSign sig : msg.getListSign()) {
@@ -825,7 +825,7 @@ public class MessageServiceImpl implements MessageService {
                                 chain.getLogger().info("[test] callParm chainId:{}, address", callParm.getHeterogeneousId(), callParm.getSignAddress());
                                 compSignPO.setCallParms(callParmsList);
                                 bztPass = true;
-                                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}", txHash);
+                                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-changeVirtualBank] Storage heterogeneous chain components execute virtual bank change call parameters. hash:{}", txHash);
                             } else {
                                 completed = true;
                             }
@@ -838,16 +838,16 @@ public class MessageServiceImpl implements MessageService {
             compSignPO.setCurrentSigned(signed);
             if (null != currentSignList && !currentSignList.isEmpty()) {
                 compSignPO.setCurrentSigned(true);
-                // 广播当前节点签名消息
+                // Broadcast current node signature message
                 NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);*/
         }
     }
 
     /**
-     * 获取异构链地址
+     * Obtain heterogeneous chain addresses
      */
     private void getHeterogeneousAddress(Chain chain, int heterogeneousChainId, String[] address, List<byte[]> list) throws NulsException {
         for (int i = 0; i < list.size(); i++) {
@@ -861,8 +861,8 @@ public class MessageServiceImpl implements MessageService {
             VirtualBankDirector director = virtualBankAllHistoryStorageService.findBySignAddress(chain, signAddress);
             HeterogeneousAddress heterogeneousAddress = director.getHeterogeneousAddrMap().get(heterogeneousChainId);
             if (null == heterogeneousAddress) {
-                chain.getLogger().warn("异构链地址签名消息[changeVirtualBank] 没有获取到异构链地址, agentAddress:{}", agentAddress);
-                chain.getLogger().warn("(可忽略)获取不到异构链地址: 如果当前节点处理虚拟银行变更交易稍慢(还没有执行完commit, 导致获取不到异构链地址)");
+                chain.getLogger().warn("Heterogeneous chain address signature message[changeVirtualBank] No heterogeneous chain address obtained, agentAddress:{}", agentAddress);
+                chain.getLogger().warn("(Negligible)Unable to obtain heterogeneous chain address: If the current node processes virtual bank change transactions slightly slower(Not yet completedcommit, Causing inability to obtain heterogeneous chain addresses)");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_ADDRESS_NULL);
             }
             address[i] = heterogeneousAddress.getAddress();
@@ -870,10 +870,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * 处理提现交易的消息
-     * 1.验证签名
-     * 2.处理消息, 存储, 转发,
-     * 3.计算拜占庭, 如果拜占庭通过则调异构链组件
+     * Message processing withdrawal transactions
+     * 1.Verify signature
+     * 2.Processing messages, storage, transmit,
+     * 3.Calculate Byzantium, If Byzantium passes, adjust heterogeneous chain components
      *
      * @param chain
      * @param tx
@@ -884,7 +884,7 @@ public class MessageServiceImpl implements MessageService {
         synchronized (objectWithdrawLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
-            // 判断是否收到过该消息
+            // Determine if you have received the message
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
             if (isExistMessage(compSignPO, message)) {
                 return;
@@ -893,9 +893,9 @@ public class MessageServiceImpl implements MessageService {
             HeterogeneousSign sign = message.getListSign().get(0);
             int signAddressChainId = sign.getHeterogeneousAddress().getChainId();
             String signAddress = sign.getHeterogeneousAddress().getAddress();
-            LoggerUtil.LOG.debug("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
+            LoggerUtil.LOG.debug("[Heterogeneous chain address signature message-handlewithdraw], Received node[{}]  hash: {}, Signature address:{}-{}",
                     nodeId, txHash, signAddressChainId, signAddress);
-            // 验证
+            // validate
             int htgChainId = 0;
             String toAddress = null;
             if (TxType.WITHDRAWAL == tx.getType()) {
@@ -921,13 +921,13 @@ public class MessageServiceImpl implements MessageService {
                 }
             }
             if (null == assetInfo) {
-                chain.getLogger().error("[异构链地址签名消息-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
+                chain.getLogger().error("[Heterogeneous chain address signature message-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
             int heterogeneousChainId = assetInfo.getChainId();
             BigInteger amount = withdrawCoinTo.getAmount();
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            // 根据交易验证签名正确性
+            // Verify the correctness of the signature based on the transaction
             Boolean msgPass = docking.verifySignWithdrawII(
                     signAddress,
                     txHash,
@@ -936,17 +936,17 @@ public class MessageServiceImpl implements MessageService {
                     assetInfo.getAssetId(),
                     HexUtil.encode(sign.getSignature()));
             if (!msgPass) {
-                LoggerUtil.LOG.error("[异构链地址签名消息 - 签名验证失败-withdraw], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                LoggerUtil.LOG.error("[Heterogeneous chain address signature message - Signature verification failed-withdraw], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                         nodeId, txHash, heterogeneousChainId, signAddress, HexUtil.encode(sign.getSignature()));
                 return;
             }
-            // 验证通过, 转发消息
+            // Verification passed, relay the message
             NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
 
-            // 处理消息并拜占庭验证, 更新compSignPO等
+            // Processing messages and Byzantine verification, updatecompSignPOetc.
             if (!compSignPO.getCurrentSigned()) {
-                LoggerUtil.LOG.debug("[异构链地址签名消息 执行当前节点签名] txHash:{}", txHash);
-                // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+                LoggerUtil.LOG.debug("[Heterogeneous chain address signature message Execute current node signature] txHash:{}", txHash);
+                // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
                 String signStrData = docking.signWithdrawII(txHash, toAddress, amount, assetInfo.getAssetId());
                 String currentHaddress = docking.getCurrentSignAddress();
                 if (StringUtils.isBlank(currentHaddress)) {
@@ -956,9 +956,9 @@ public class MessageServiceImpl implements MessageService {
             }
             boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
             if (byzantinePass && !compSignPO.getByzantinePass()) {
-                // 创建异构链交易
+                // Create heterogeneous chain transactions
                 StringBuilder signatureDataBuilder = new StringBuilder();
-                // 拼接所有签名
+                // Splice all signatures
                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
                     signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature()));
                 }
@@ -977,9 +977,9 @@ public class MessageServiceImpl implements MessageService {
                 callParmsList.add(callParm);
                 compSignPO.setCallParms(callParmsList);
                 compSignPO.setByzantinePass(byzantinePass);
-                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-withdraw] 存储异构链组件执行提现调用参数. hash:{}", txHash);
+                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-withdraw] Storage heterogeneous chain component execution withdrawal call parameters. hash:{}", txHash);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
         }
     }
@@ -993,13 +993,13 @@ public class MessageServiceImpl implements MessageService {
                 hash, listSign);
         compSignPO.getListMsg().add(currentMessage);
         compSignPO.setCurrentSigned(true);
-        // 广播当前节点签名消息
+        // Broadcast current node signature message
         NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
     }
 
 
     /**
-     * 提案原路退回 version2
+     * Proposal returned by the original route version2
      *
      * @param chain
      * @param nodeId
@@ -1011,7 +1011,7 @@ public class MessageServiceImpl implements MessageService {
         synchronized (objectRefundLock) {
             NulsHash hash = proposalPO.getHash();
             String txHash = hash.toHex();
-            // 判断是否收到过该消息
+            // Determine if you have received the message
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
             if (isExistMessage(compSignPO, message)) {
                 return;
@@ -1020,7 +1020,7 @@ public class MessageServiceImpl implements MessageService {
             HeterogeneousSign sign = message.getListSign().get(0);
             String signAddress = sign.getHeterogeneousAddress().getAddress();
             int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
-            LoggerUtil.LOG.info("[异构链地址签名消息-处理refund], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
+            LoggerUtil.LOG.info("[Heterogeneous chain address signature message-handlerefund], Received node[{}]  hash: {}, Signature address:{}-{}",
                     nodeId, txHash, heterogeneousChainId, signAddress);
 
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
@@ -1031,10 +1031,10 @@ public class MessageServiceImpl implements MessageService {
                     this.heterogeneousDockingManager,
                     docking);
             if (null == info) {
-                chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+                chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
             }
-            // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+            // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
             Boolean msgPass = docking.verifySignWithdrawII(
                     signAddress,
                     txHash,
@@ -1043,17 +1043,17 @@ public class MessageServiceImpl implements MessageService {
                     info.getAssetId(),
                     HexUtil.encode(sign.getSignature()));
             if (!msgPass) {
-                LoggerUtil.LOG.error("[异构链地址签名消息 - 签名验证失败-refund], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                LoggerUtil.LOG.error("[Heterogeneous chain address signature message - Signature verification failed-refund], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                         nodeId, txHash, heterogeneousChainId, signAddress, HexUtil.encode(sign.getSignature()));
                 return;
             }
-            // 验证通过, 转发消息
+            // Verification passed, relay the message
             NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
 
-            // 处理消息并拜占庭验证, 更新compSignPO等
+            // Processing messages and Byzantine verification, updatecompSignPOetc.
             if (!compSignPO.getCurrentSigned()) {
-                LoggerUtil.LOG.info("[异构链地址签名消息 执行当前节点签名] txHash:{}", txHash);
-                // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+                LoggerUtil.LOG.info("[Heterogeneous chain address signature message Execute current node signature] txHash:{}", txHash);
+                // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
                 String signStrData = docking.signWithdrawII(txHash, info.getFrom(), info.getValue(), info.getAssetId());
                 String currentHaddress = docking.getCurrentSignAddress();
                 if (StringUtils.isBlank(currentHaddress)) {
@@ -1063,9 +1063,9 @@ public class MessageServiceImpl implements MessageService {
             }
             boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
             if (byzantinePass && !compSignPO.getByzantinePass()) {
-                // 创建异构链交易
+                // Create heterogeneous chain transactions
                 StringBuilder signatureDataBuilder = new StringBuilder();
-                // 拼接所有签名
+                // Splice all signatures
                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
                     signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature()));
                 }
@@ -1085,9 +1085,9 @@ public class MessageServiceImpl implements MessageService {
                 callParmsList.add(callParm);
                 compSignPO.setCallParms(callParmsList);
                 compSignPO.setByzantinePass(byzantinePass);
-                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-refund] 存储异构链组件执行原路退回调用参数. hash:{}", txHash);
+                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-refund] Store heterogeneous chain components to execute backhaul call parameters. hash:{}", txHash);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
 
         }
@@ -1095,10 +1095,10 @@ public class MessageServiceImpl implements MessageService {
 
 
     /**
-     * 处理异构链合约升级交易的消息
-     * 1.验证签名
-     * 2.处理消息, 存储, 转发,
-     * 3.计算拜占庭, 如果拜占庭通过则调异构链组件
+     * Processing messages for upgrading transactions of heterogeneous chain contracts
+     * 1.Verify signature
+     * 2.Processing messages, storage, transmit,
+     * 3.Calculate Byzantium, If Byzantium passes, adjust heterogeneous chain components
      *
      * @param chain
      * @param proposalPO
@@ -1109,7 +1109,7 @@ public class MessageServiceImpl implements MessageService {
         synchronized (objectUpgradeLock) {
             NulsHash hash = proposalPO.getHash();
             String txHash = hash.toHex();
-            // 判断是否收到过该消息
+            // Determine if you have received the message
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
             if (isExistMessage(compSignPO, message)) {
                 return;
@@ -1117,13 +1117,13 @@ public class MessageServiceImpl implements MessageService {
             compSignPO = initCompSignPO(compSignPO, hash);
             HeterogeneousSign sign = message.getListSign().get(0);
             String signAddress = sign.getHeterogeneousAddress().getAddress();
-            // 验证消息签名
+            // Verify message signature
             int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
-            LoggerUtil.LOG.info("[异构链地址签名消息-处理withdraw], 收到节点[{}]  hash: {}, 签名地址:{}-{}",
+            LoggerUtil.LOG.info("[Heterogeneous chain address signature message-handlewithdraw], Received node[{}]  hash: {}, Signature address:{}-{}",
                     nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress);
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            // 新合约多签地址
-            // 兼容非以太系地址 update by pierre at 2021/11/16
+            // New contract with multiple signed addresses
+            // Compatible with non Ethernet addresses update by pierre at 2021/11/16
             String newMultySignAddress = docking.getAddressString(proposalPO.getAddress());
             Boolean msgPass = docking.verifySignUpgradeII(
                     signAddress,
@@ -1131,15 +1131,15 @@ public class MessageServiceImpl implements MessageService {
                     newMultySignAddress,
                     HexUtil.encode(sign.getSignature()));
             if (!msgPass) {
-                LoggerUtil.LOG.error("[异构链地址签名消息 - 签名验证失败-upgrade], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                LoggerUtil.LOG.error("[Heterogeneous chain address signature message - Signature verification failed-upgrade], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                         nodeId, txHash, heterogeneousChainId, signAddress, HexUtil.encode(sign.getSignature()));
                 return;
             }
-            // 验证通过, 转发消息
+            // Verification passed, relay the message
             NetWorkCall.broadcast(chain, message, nodeId, ConverterCmdConstant.COMPONENT_SIGN);
-            // 处理消息并拜占庭验证, 更新compSignPO等
+            // Processing messages and Byzantine verification, updatecompSignPOetc.
             if (!compSignPO.getCurrentSigned()) {
-                // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+                // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
                 String signStrData = docking.signUpgradeII(txHash, newMultySignAddress);
                 String currentHaddress = docking.getCurrentSignAddress();
                 if (StringUtils.isBlank(currentHaddress)) {
@@ -1149,7 +1149,7 @@ public class MessageServiceImpl implements MessageService {
             }
             boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO);
             if (byzantinePass && !compSignPO.getByzantinePass()) {
-                // 创建异构链交易
+                // Create heterogeneous chain transactions
                 StringBuilder signatureDataBuilder = new StringBuilder();
                 for (ComponentSignMessage msg : compSignPO.getListMsg()) {
                     signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature()));
@@ -1168,12 +1168,12 @@ public class MessageServiceImpl implements MessageService {
                 callParmsList.add(callParm);
                 compSignPO.setCallParms(callParmsList);
                 compSignPO.setByzantinePass(byzantinePass);
-                // 执行提案后的业务处理
+                // Business processing after executing proposals
                 this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
                 proposalPO.setHeterogeneousMultySignAddress(docking.getCurrentMultySignAddress());
-                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-upgrade] 存储调用异构链组件执行合约升级调用参数. hash:{}", txHash);
+                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-upgrade] Store and call heterogeneous chain components to perform contract upgrade call parameters. hash:{}", txHash);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
         }
     }
@@ -1183,25 +1183,25 @@ public class MessageServiceImpl implements MessageService {
     }
 
     private boolean processComponentSignMsgByzantine(Chain chain, ComponentSignMessage message, ComponentSignByzantinePO compSignPO, boolean addMsg) {
-        // 添加当前签名消息
+        // Add current signature message
         List<ComponentSignMessage> list = compSignPO.getListMsg();
         if (addMsg) {
             list.add(message);
         }
-        // 拜占庭验证
+        // Byzantine verification
         int byzantineMinPassCount = VirtualBankUtil.getByzantineCount(chain, message.getVirtualBankTotal());
         if (list.size() >= byzantineMinPassCount) {
-            // 调试日志
+            // Debugging logs
             String signAddress = "";
             for (ComponentSignMessage msg : list) {
                 for (HeterogeneousSign sign : msg.getListSign()) {
                     signAddress += sign.getHeterogeneousAddress().getChainId() + ":" + sign.getHeterogeneousAddress().getAddress() + " ";
                 }
             }
-            LoggerUtil.LOG.info("[异构链地址签名消息 拜占庭通过] 当前签名数:{}, 签名地址:{}", list.size(), signAddress);
+            LoggerUtil.LOG.info("[Heterogeneous chain address signature message Byzantine passage] Current number of signatures:{}, Signature address:{}", list.size(), signAddress);
             return true;
         }
-        LoggerUtil.LOG.info("[异构链地址签名消息 - 暂时未达到拜占庭签名数], txhash: {}, 拜占庭需达到的签名数:{}, 当前签名数:{}, ",
+        LoggerUtil.LOG.info("[Heterogeneous chain address signature message - The number of Byzantine signatures has not yet reached], txhash: {}, The number of signatures that Byzantium needs to reach:{}, Current number of signatures:{}, ",
                 message.getHash().toHex(), byzantineMinPassCount, list.size());
         return false;
     }
@@ -1210,19 +1210,19 @@ public class MessageServiceImpl implements MessageService {
         synchronized (objectBankLock) {
             NulsHash hash = tx.getHash();
             String txHash = hash.toHex();
-            LoggerUtil.LOG.info("[重发虚拟银行变更签名消息 - 处理changeVirtualBank], 收到节点[{}]  hash:{}", nodeId, txHash);
+            LoggerUtil.LOG.info("[Resend virtual bank signature change message - handlechangeVirtualBank], Received node[{}]  hash:{}", nodeId, txHash);
             ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, hash.toHex());
-            // 准备阶段，重置compSignPO
+            // Preparation phase, resetcompSignPO
             if (_message.getPrepare() == 1) {
-                // 判断是否收到过该消息
+                // Determine if you have received the message
                 if (compSignPO != null) {
                     componentSignStorageService.delete(chain, hash.toHex());
                     NetWorkCall.broadcast(chain, _message, nodeId, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
-                    LoggerUtil.LOG.info("[重发虚拟银行变更签名消息 - 重置本节点状态], 收到节点[{}]  hash:{}", nodeId, txHash);
+                    LoggerUtil.LOG.info("[Resend virtual bank signature change message - Reset the status of this node], Received node[{}]  hash:{}", nodeId, txHash);
                 }
                 return;
             } else if (_message.getPrepare() != 2) {
-                LoggerUtil.LOG.error("[重发虚拟银行变更签名消息 - 消息类型错误], prepareID: {}, 收到节点[{}]  hash:{}", _message.getPrepare(), nodeId, txHash);
+                LoggerUtil.LOG.error("[Resend virtual bank signature change message - Message type error], prepareID: {}, Received node[{}]  hash:{}", _message.getPrepare(), nodeId, txHash);
                 return;
             }
 
@@ -1235,15 +1235,15 @@ public class MessageServiceImpl implements MessageService {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
             }
             int htgChainSize = chainDockings.size();
-            // 验证
+            // validate
             ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
             int inSize = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
             int outSize = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
-            // 缓存变更的虚拟银行在各条链对应的地址
+            // The virtual bank with cache changes corresponds to the addresses on each chain
             Map<Integer, String[][]> addressCache = new HashMap<>();
             for (IHeterogeneousChainDocking docking : chainDockings) {
                 int hChainId = docking.getChainId();
-                // 组装加入参数
+                // Assembly with added parameters
                 String[] inAddress = new String[inSize];
                 if (null != txData.getInAgents()) {
                     getHeterogeneousAddress(chain, hChainId, inAddress, txData.getInAgents());
@@ -1255,7 +1255,7 @@ public class MessageServiceImpl implements MessageService {
                 }
                 addressCache.put(hChainId, new String[][]{inAddress, outAddress});
             }
-            // 验证收到的消息的正确性
+            // Verify the correctness of the received message
             Map<Integer, IHeterogeneousChainDocking> chainDockingMap = chainDockings.stream().collect(Collectors.toMap(IHeterogeneousChainDocking::getChainId, Function.identity()));
             do {
                 if (existMessage) {
@@ -1266,16 +1266,16 @@ public class MessageServiceImpl implements MessageService {
                     String signAddress = sign.getHeterogeneousAddress().getAddress();
                     IHeterogeneousChainDocking docking = chainDockingMap.get(sign.getHeterogeneousAddress().getChainId());
                     if (docking == null) {
-                        LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-异构链ID错误], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                        LoggerUtil.LOG.error("[Resend virtual bank signature change message-Heterogeneous chainIDerror], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                                 nodeId, txHash, sign.getHeterogeneousAddress().getChainId(), signAddress, HexUtil.encode(sign.getSignature()));
                         break;
                     }
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
-                    // 验证消息签名
+                    // Verify message signature
                     Boolean msgPass = docking.verifySignManagerChangesII(
                             signAddress,
                             txHash,
@@ -1285,35 +1285,35 @@ public class MessageServiceImpl implements MessageService {
                             HexUtil.encode(sign.getSignature()));
                     if (!msgPass) {
                         verifySignManagerChangesII = false;
-                        LoggerUtil.LOG.error("[重发虚拟银行变更签名消息-签名验证失败-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}, 签名地址:{}, 签名hex:{}",
+                        LoggerUtil.LOG.error("[Resend virtual bank signature change message-Signature verification failed-changeVirtualBank], Received node[{}], txhash: {}, Heterogeneous chainId:{}, Signature address:{}, autographhex:{}",
                                 nodeId, txHash, hChainId, signAddress, HexUtil.encode(sign.getSignature()));
                         break;
                     }
                 }
                 if (verifySignManagerChangesII) {
-                    // 添加本次收到的消息
+                    // Add the message received this time
                     compSignPO.getListMsg().add(message);
-                    // 验证通过, 转发消息
+                    // Verification passed, relay the message
                     NetWorkCall.broadcast(chain, _message, nodeId, ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
                 }
             } while (false);
 
             ComponentSignMessage currentMessage = null;
             /**
-             * (签名针对变更交易,为多组件统一业务)
-             * 多组件统一标识, 单个组件完成必然多个组件同时完成.
+             * (Signature for change transaction,Unified business for multiple components)
+             * Unified identification of multiple components, When a single component is completed, multiple components must be completed simultaneously.
              */
             boolean signed = false;
             boolean completed = false;
             boolean bztPass = false;
-            // 当前节点签名
+            // Current node signature
             do {
                 if (compSignPO.getCurrentSigned()){
                     break;
                 }
-                // 如果当前节点没有签过名, 则需要进行签名, 收集, 广播.
+                // If the current node has not been signed, Then a signature is required, collect, broadcast.
                 List<HeterogeneousSign> currentSignList = new ArrayList<>();
-                // 检查当前节点是否新加入的 则不用签名
+                // Check if the current node has been newly added No need to sign
                 boolean currentJoin = false;
                 SignAccountDTO packerInfo = ConsensusCall.getPackerInfo(chain);
                 VirtualBankDirector director = chain.getMapVirtualBank().get(packerInfo.getAddress());
@@ -1327,21 +1327,21 @@ public class MessageServiceImpl implements MessageService {
                         }
                     }
                 }
-                // 当前节点是否新加入的 则不用签名
+                // Is the current node newly joined No need to sign
                 if (currentJoin) {
                     break;
                 }
-                // 消息签名
+                // Message signature
                 for (IHeterogeneousChainDocking docking : chainDockings) {
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
                     /**
-                     * 如果当前节点还没签名则触发收集当前节点各个异构链组件签名
-                     * 由于虚拟银行变更涉及到所有异构链组件, 所以每个组件都要签名
-                     * 并且加入到一个消息中广播.
+                     * If the current node has not yet signed, trigger the collection of signatures from various heterogeneous chain components of the current node
+                     * Due to the virtual banking change involving all heterogeneous chain components, So each component needs to be signed
+                     * And join the broadcast in a message.
                      */
                     String signStrData = docking.signManagerChangesII(txHash, inAddress, outAddress, 1);
                     String currentHaddress = docking.getCurrentSignAddress();
@@ -1363,15 +1363,15 @@ public class MessageServiceImpl implements MessageService {
 
                 }
             } while (false);
-            // 检查是否收集到足够的节点签名
+            // Check if sufficient node signatures have been collected
             do {
                 boolean byzantinePass = processComponentSignMsgByzantine(chain, message, compSignPO, false);
                 if (!byzantinePass) {
-                    // 未达到足够的签名
+                    // Not enough signatures reached
                     break;
                 }
                 if (compSignPO.getByzantinePass()) {
-                    // 已执行过此流程
+                    // This process has already been executed
                     break;
                 }
                 List<Map<Integer, HeterogeneousSign>> list = compSignPO.getListMsg().stream().map(m -> m.getListSign().stream().collect(Collectors.toMap(hSign -> hSign.getHeterogeneousAddress().getChainId(), Function.identity()))).collect(Collectors.toList());
@@ -1379,25 +1379,25 @@ public class MessageServiceImpl implements MessageService {
                 List<ComponentCallParm> callParmsList = new ArrayList<>();
                 for (IHeterogeneousChainDocking docking : chainDockings) {
                     int hChainId = docking.getChainId();
-                    // 组装加入参数
+                    // Assembly with added parameters
                     String[][] addressData = addressCache.get(hChainId);
                     String[] inAddress = addressData[0];
                     String[] outAddress = addressData[1];
-                    // 处理消息并拜占庭验证, 更新compSignPO等
+                    // Processing messages and Byzantine verification, updatecompSignPOetc.
                     if (isCreate) {
-                        // 创建异构链交易
+                        // Create heterogeneous chain transactions
                         StringBuilder signatureDataBuilder = new StringBuilder();
                         int count = 0;
                         for (Map<Integer, HeterogeneousSign> map : list) {
                             HeterogeneousSign heterogeneousSign = map.get(hChainId);
                             if (heterogeneousSign == null) {
-                                LoggerUtil.LOG.warn("[重发虚拟银行变更签名消息-签名信息不完整-changeVirtualBank], 收到节点[{}], txhash: {}, 异构链Id:{}", nodeId, txHash, hChainId);
+                                LoggerUtil.LOG.warn("[Resend virtual bank signature change message-Incomplete signature information-changeVirtualBank], Received node[{}], txhash: {}, Heterogeneous chainId:{}", nodeId, txHash, hChainId);
                                 continue;
                             }
                             signatureDataBuilder.append(HexUtil.encode(heterogeneousSign.getSignature()));
                             count++;
                         }
-                        // 达到最小签名数才是有效的调用数据
+                        // Reaching the minimum number of signatures is the only valid call data
                         if (count >= byzantineMinPassCount) {
                             ComponentCallParm callParm = new ComponentCallParm(
                                     hChainId,
@@ -1408,7 +1408,7 @@ public class MessageServiceImpl implements MessageService {
                                     1,
                                     signatureDataBuilder.toString());
                             callParmsList.add(callParm);
-                            chain.getLogger().info("[重发虚拟银行变更签名消息-拜占庭通过-changeVirtualBank] 存储异构链组件执行虚拟银行变更调用参数. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
+                            chain.getLogger().info("[Resend virtual bank signature change message-Byzantine passage-changeVirtualBank] Storage heterogeneous chain components execute virtual bank change call parameters. hash:{}, callParm chainId:{}", txHash, callParm.getHeterogeneousId());
                         }
                     } else {
                         completed = true;
@@ -1427,10 +1427,10 @@ public class MessageServiceImpl implements MessageService {
             }
             if (signed) {
                 compSignPO.setCurrentSigned(true);
-                // 广播当前节点签名消息
+                // Broadcast current node signature message
                 NetWorkCall.broadcast(chain, VirtualBankSignMessage.of(currentMessage, _message.getPrepare()), ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
             }
-            // 存储更新后的 compSignPO
+            // Store updated compSignPO
             componentSignStorageService.save(chain, compSignPO);
         }
     }

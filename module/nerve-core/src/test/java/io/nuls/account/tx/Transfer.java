@@ -227,7 +227,7 @@ public class Transfer implements Runnable {
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
-        System.out.println(String.format("交易大小: %s", tx.size()));
+        System.out.println(String.format("Transaction size: %s", tx.size()));
 
         String[] pubkeys = new String[]{
                 "0225a6a872a4110c9b9c9a71bfdbe896e04bc83bb9fe38e27f3e18957d9b2a25ad",
@@ -283,7 +283,7 @@ public class Transfer implements Runnable {
         coinData.addTo(new CoinTo(from, assetChainId, assetId, BigInteger.ZERO, (byte) 0));
         tx.setCoinData(coinData.serialize());
         List<Object[]> blockDatas = new ArrayList<>();
-        // 锁定列表: 地址，操作类型(1-加入白名单 2-移除白名单)，白名单交易类型清单
+        // Lock List: Address, operation type(1-Join the whitelist 2-Remove whitelist)List of whitelist transaction types
         blockDatas.add(new Object[]{"TNVTdTSPRyJgExG4HQu5g1sVxhVVFcpCa6fqw", 1, List.of(2, 3)});
         blockDatas.add(new Object[]{"TNVTdTSPUR5vYdstWDHfn5P8MtHB6iZZw3Edv", 1, List.of(61)});
         blockDatas.add(new Object[]{"TNVTdTSPPXtSg6i5sPPrSg3TfFrhYHX5JvMnD", 1, List.of(71)});
@@ -293,7 +293,7 @@ public class Transfer implements Runnable {
         tx.setTxData(data.serialize());
         tx.setTime(System.currentTimeMillis() / 1000);
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
-        System.out.println(String.format("交易大小: %s", tx.size()));
+        System.out.println(String.format("Transaction size: %s", tx.size()));
 
         String[] pubkeys = new String[]{
                 "0225a6a872a4110c9b9c9a71bfdbe896e04bc83bb9fe38e27f3e18957d9b2a25ad",
@@ -479,12 +479,12 @@ public class Transfer implements Runnable {
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
         TransactionSignature transactionSignature = new TransactionSignature();
         List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
-        //根据密码获得ECKey get ECKey from Password
+        //Obtained based on passwordECKey get ECKey from Password
         ECKey ecKey =  ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(fromKey)));
         byte[] signBytes = SignatureUtil.signDigest(tx.getHash().getBytes(), ecKey).serialize();
         P2PHKSignature signature = new P2PHKSignature(signBytes, ecKey.getPubKey()); // TxUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
         p2PHKSignatures.add(signature);
-        //交易签名
+        //Transaction signature
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         tx.setTransactionSignature(transactionSignature.serialize());
         Response response = this.newTx(tx);
@@ -551,12 +551,12 @@ public class Transfer implements Runnable {
         tx.setHash(NulsHash.calcHash(tx.serializeForHash()));
         TransactionSignature transactionSignature = new TransactionSignature();
         List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
-        //根据密码获得ECKey get ECKey from Password
+        //Obtained based on passwordECKey get ECKey from Password
         ECKey ecKey =  ECKey.fromPrivate(new BigInteger(1, HexUtil.decode(fromKey)));
         byte[] signBytes = SignatureUtil.signDigest(tx.getHash().getBytes(), ecKey).serialize();
         P2PHKSignature signature = new P2PHKSignature(signBytes, ecKey.getPubKey()); // TxUtil.getInstanceRpcStr(signatureStr, P2PHKSignature.class);
         p2PHKSignatures.add(signature);
-        //交易签名
+        //Transaction signature
         transactionSignature.setP2PHKSignatures(p2PHKSignatures);
         tx.setTransactionSignature(transactionSignature.serialize());
         Response response = this.newTx(tx);

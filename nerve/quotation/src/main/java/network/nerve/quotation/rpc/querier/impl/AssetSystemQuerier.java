@@ -34,7 +34,7 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 /**
- * 去DEX获取价格
+ * goDEXGet price
  *
  * @author: Loki
  * @date: 2020/6/16
@@ -43,7 +43,7 @@ import java.util.Map;
 public class AssetSystemQuerier implements Querier {
 
     /**
-     * 获取交易对价格接口
+     * Obtain transaction pair price interface
      */
     private final String CMD = "price/";
 
@@ -58,10 +58,10 @@ public class AssetSystemQuerier implements Querier {
                 return null;
             }
             BigDecimal res = new BigDecimal(data);
-            chain.getLogger().info("AS 获取到交易对[{}]价格:{}", symbol, res);
+            chain.getLogger().info("AS Obtaining transaction pairs[{}]price:{}", symbol, res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("AS, 调用接口 {}, anchorToken:{} 获取价格失败", url, symbol);
+            chain.getLogger().error("AS, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, symbol);
             return null;
         }
     }

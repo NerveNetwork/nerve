@@ -73,7 +73,7 @@ package org.web3j.crypto;///*
 //    }
 //
 //    public static SignatureData signMessage(byte[] message, ECKeyPair keyPair, boolean needToHash) {
-//        System.out.println("签名数据message: " + HexUtil.encode(message));
+//        System.out.println("Signature datamessage: " + HexUtil.encode(message));
 //        //boolean x = true;
 //        //if(x) {
 //        //    throw new RuntimeException(
@@ -86,7 +86,7 @@ package org.web3j.crypto;///*
 //        } else {
 //            messageHash = message;
 //        }
-//        System.out.println("签名数据messageHash: " + HexUtil.encode(messageHash));
+//        System.out.println("Signature datamessageHash: " + HexUtil.encode(messageHash));
 //        ECDSASignature sig = keyPair.sign(messageHash);
 //        // Now we have to work backwards to figure out the recId needed to recover the signature.
 //        int recId = -1;

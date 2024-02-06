@@ -35,7 +35,7 @@ import java.util.Map;
 /**
  * @Author: zhoulijun
  * @Time: 2020-05-28 15:09
- * @Description: 功能描述
+ * @Description: Function Description
  */
 public class BackupAccountBalanceTest {
 
@@ -47,7 +47,7 @@ public class BackupAccountBalanceTest {
 
 
     /**
-     * 备份资产到文件
+     * Back up assets to files
      * @throws Exception
      */
     @Test
@@ -81,7 +81,7 @@ public class BackupAccountBalanceTest {
 
 
     /**
-     * 从文件中恢复资产，从指定地址转出资产
+     * Restore assets from files and transfer assets from specified addresses
      * @throws IOException
      */
     @Test
@@ -109,7 +109,7 @@ public class BackupAccountBalanceTest {
                             .addTo(chainId, assetId, address, amount);
             Result<String> result = transferService.transfer(builder.build(new TransferReq()));
             if(result.isFailed()){
-                Log.error("失败:{}",result.getMessage());
+                Log.error("fail:{}",result.getMessage());
             }else{
                 Log.info("{}",result);
             }
@@ -183,7 +183,7 @@ public class BackupAccountBalanceTest {
                                 .addTo(chainId, assetId, caddress, amount);
                 Result<String> result = transferService.transfer(builder.build(new TransferReq()));
                 if(result.isFailed()){
-                    Log.error("失败:{}",result.getMessage());
+                    Log.error("fail:{}",result.getMessage());
                 }else{
                     Log.info("{}",result);
                 }

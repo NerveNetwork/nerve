@@ -94,7 +94,7 @@ public class AliasStorageServiceImpl implements AliasStorageService, Initializin
         }
         AliasPO aliasPo = new AliasPO();
         try {
-            //将byte数组反序列化为AliasPo返回
+            //takebyteDeserialize an array asAliasPoreturn
             aliasPo.parse(aliasBytes, 0);
         } catch (Exception e) {
             LoggerUtil.LOG.error("",e);
@@ -116,7 +116,7 @@ public class AliasStorageServiceImpl implements AliasStorageService, Initializin
                 return null;
             }
             aliasPo = new AliasPO();
-            //将byte数组反序列化为AliasPo返回
+            //takebyteDeserialize an array asAliasPoreturn
             aliasPo.parse(aliasBytes, 0);
         } catch (Exception e) {
             LoggerUtil.LOG.error("",e);

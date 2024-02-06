@@ -41,7 +41,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * 用于异构链提现(赎回)资产
+ * Used for heterogeneous chain withdrawals(redemption)asset
  * @author: Charlie
  * @date: 2020/4/28
  */
@@ -101,7 +101,7 @@ public class WithdrawalProcessor implements CommandProcessor {
      * @return
      */
     public BigInteger toSimallUnit(int heterogeneousChainId, int heterogeneousAssetId, BigDecimal value){
-        // 默认8位
+        // default8position
         int decimals = AssetsUtil.getAssetDecimal(heterogeneousChainId,heterogeneousAssetId);
         return config.toSmallUnit(value, decimals);
     }

@@ -1,7 +1,7 @@
 package io.nuls.consensus.model.dto.input;
 
 /**
- * 节点保证金变更（追加保证金，退出保证金）
+ * Node margin change（Additional margin, withdrawal of margin）
  * Node margin change (additional margin, withdrawal margin)
  *
  * @author tag

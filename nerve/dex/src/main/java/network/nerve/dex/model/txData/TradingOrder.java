@@ -14,22 +14,22 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 币对交易委托挂单协议
+ * Coin to coin trading commission order agreement
  */
 public class TradingOrder extends BaseNulsData {
-    //币对hash
+    //Coin pairshash
     private byte[] tradingHash;
-    //委托人
+    //Principal
     private byte[] address;
-    //1买入 2卖出
+    //1Buy 2Selling
     private byte type;
-    //委托交易币种数量
+    //Number of entrusted transaction currencies
     private BigInteger amount;
-    //委托价格
+    //Commission price
     private BigInteger price;
-    //参与分红地址
+    //Participating dividend addresses
     private byte[] feeAddress;
-    //参与分红比例，取值0-5
+    //Participating dividend ratio, value0-5
     private byte feeScale;
 
     @Override

@@ -21,20 +21,20 @@ import java.util.Set;
 public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     /*-------------------------[Common]-----------------------------*/
-    /** ROCK DB 数据库文件存储路径*/
+    /** ROCK DB Database file storage path*/
     private String dataPath;
-    /** 主链链ID*/
+    /** Main chainID*/
     private int mainChainId;
-    /** 主链主资产ID*/
+    /** Main asset of the main chainID*/
     private int mainAssetId;
-    /** 编码*/
+    /** coding*/
     private String encoding;
     /**
-     * 国际化
+     * internationalization
      */
     private String language;
     /**
-     * 链ID
+     * chainID
      */
     private int chainId;
     private int assetId;
@@ -42,23 +42,23 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
     private String  symbol;
     private String addressPrefix;
     /**
-     * 日志级别
+     * log level
      */
     private String logLevel;
     /*-------------------------[Transaction]-----------------------------*/
-    /** 黑洞公钥*/
+    /** Black hole public key*/
     private String blackHolePublicKey;
-    /** 交易时间所在区块时间的默认范围值(在区块时间±本值范围内)*/
+    /** The default range value of the block time where the transaction time is located(At block time±Within the range of this value)*/
     private long blockTxTimeRangeSec;
-    /** 孤儿交易生命时间,超过会被清理**/
+    /** Orphan Trading Lifetime,Exceeding will be cleared**/
     private int orphanLifeTimeSec;
-    /** 未确认交易过期时间秒 */
+    /** Unconfirmed transaction expiration time in seconds */
     private long unconfirmedTxExpireSec;
-    /** 单个交易数据最大值(B)*/
+    /** Maximum value of individual transaction data(B)*/
     private long txMaxSize;
-    /** coinTo 不支持金额等于0 的协议生效高度*/
+    /** coinTo Amount equal to is not supported0 The effective height of the agreement*/
     private long coinToPtlHeightFirst;
-    /** coinTo 支持金额等于0, 只禁止金额为0的锁定 的协议生效高度*/
+    /** coinTo Support amount equal to0, Only prohibit amounts of0Locked The effective height of the agreement*/
     private long coinToPtlHeightSecond;
 
     private String blackListPath;
@@ -102,7 +102,7 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     private int updatePeerInfoType = 0;
     /**
-     * 中心化网络服务接口
+     * Centralized Network Service Interface
      */
     private String timeServers;
     /*-------------------------[Ledger]-----------------------------*/
@@ -115,71 +115,71 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     private boolean mainNet;
 
-    /**默认链接到的跨链节点*/
+    /**Default cross chain node linked to*/
     private String crossSeedIps;
     /**
-     * 本链种子节点地址
+     * The address of the seed node in this chain
      */
     private Set<String> seedNodeSet;
 
     private Long version1_6_0_height;
     /*-------------------------[Block]-----------------------------*/
     /**
-     * 分叉链监视线程执行间隔
+     * Fork chain monitoring thread execution interval
      */
     private int forkChainsMonitorInterval;
 
     /**
-     * 孤儿链监视线程执行间隔
+     * Orphan chain monitoring thread execution interval
      */
     private int orphanChainsMonitorInterval;
 
     /**
-     * 孤儿链维护线程执行间隔
+     * Orphan chain maintenance thread execution interval
      */
     private int orphanChainsMaintainerInterval;
 
     /**
-     * 数据库监视线程执行间隔
+     * Database monitoring thread execution interval
      */
     private int storageSizeMonitorInterval;
 
     /**
-     * 网络监视线程执行间隔
+     * Network monitoring thread execution interval
      */
     private int networkResetMonitorInterval;
 
     /**
-     * 节点数量监控线程执行间隔
+     * Node count monitoring thread execution interval
      */
     private int nodesMonitorInterval;
     /**
-     * BZT缓存数据清理监控线程执行间隔
+     * BZTCache data cleaning monitoring thread execution interval
      */
     private int blockBZTClearMonitorInterval;
 
     /**
-     * TxGroup请求器线程执行间隔
+     * TxGroupRequestor thread execution interval
      */
     private int txGroupRequestorInterval;
 
     /**
-     * TxGroup请求器任务执行延时
+     * TxGroupRequestor task execution delay
      */
     private int txGroupTaskDelay;
 
     /**
-     * 启动后自动回滚多少个区块
+     * How many blocks will be automatically rolled back after startup
      */
     private int testAutoRollbackAmount;
 
     /**
-     * 回滚到指定高度
+     * Rollback to specified height
      */
     private int rollbackHeight;
     /*-------------------------[Account]-----------------------------*/
     /**
-     * key store 存储文件夹
+     * key store Storage folder
      */
     private String keystoreFolder;
 
@@ -194,7 +194,7 @@ public class NerveCoreConfig extends ConfigBean implements ModuleConfig {
 
     /*-------------------------[Consensus]-----------------------------*/
     /**
-     * 跨链交易手续费主链收取手续费比例
+     * Cross chain transaction fees: The proportion of fees charged by the main chain
      * Cross-Chain Transaction Fee Proportion of Main Chain Fee Collection
      * */
     private int mainChainCommissionRatio;

@@ -11,7 +11,7 @@ import io.nuls.base.api.provider.farm.facade.*;
 public interface FarmProvider {
 
     /**
-     * 创建farm
+     * establishfarm
      * create farm
      *
      * @param req

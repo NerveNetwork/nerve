@@ -57,7 +57,7 @@ import java.util.*;
 import static io.nuls.consensus.constant.ParameterConstant.*;
 
 /**
- * 共识模块RPC接口实现类
+ * Consensus moduleRPCInterface implementation class
  * Consensus Module RPC Interface Implementation Class
  *
  * @author tag
@@ -100,22 +100,22 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         try {
-            //1.参数验证
+            //1.Parameter validation
             if (!AddressTool.isNormalAddress(dto.getPackingAddress(), dto.getChainId())) {
                 throw new NulsRuntimeException(ConsensusErrorCode.ADDRESS_ERROR);
             }
-            //2.账户验证
+            //2.Account verification
             HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAgentAddress(), dto.getPassword());
-            //3.组装创建节点交易
+            //3.Assemble and create node transactions
             Transaction tx = new Transaction(TxType.REGISTER_AGENT);
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
-            //3.1.组装共识节点信息
+            //3.1.Assembly consensus node information
             Agent agent = new Agent(dto);
             tx.setTxData(agent.serialize());
-            //3.2.组装coinData
+            //3.2.assemblecoinData
             CoinData coinData = coinDataManager.getCoinData(agent.getAgentAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + P2PHKSignature.SERIALIZE_LENGTH);
             tx.setCoinData(coinData.serialize());
-            //4.交易签名
+            //4.Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAgentAddress(), dto.getPassword(), priKey, tx);
             String txStr = RPCUtil.encode(tx.serialize());
@@ -154,7 +154,7 @@ public class AgentServiceImpl implements AgentService {
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //验证节点是否存在且交易发起者是否为节点创建者
+            //Verify if the node exists and if the transaction initiator is the node creator
             Result rs = agentManager.creatorValid(chain, agentHash, address);
             if (rs.isFailed()) {
                 return rs;
@@ -204,14 +204,14 @@ public class AgentServiceImpl implements AgentService {
             }
             NulsHash agentHash = agent.getTxHash();
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //验证节点是否存在且交易发起者是否为节点创建者
+            //Verify if the node exists and if the transaction initiator is the node creator
             Result rs = agentManager.creatorValid(chain, agentHash, address);
             if (rs.isFailed()) {
                 return rs;
             }
             AgentPo agentPo = (AgentPo) rs.getData();
             BigInteger amount = new BigInteger(dto.getAmount());
-            //金额小于允许的最小金额
+            //The amount is less than the minimum allowed amount
             BigInteger minReduceAmount = chain.getConfig().getReduceAgentDepositMin();
 
             if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
@@ -223,7 +223,7 @@ public class AgentServiceImpl implements AgentService {
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
             }
             BigInteger maxReduceAmount = agentPo.getDeposit().subtract(chain.getConfig().getDepositMin());
-            //退出金额大于当前允许退出的最大金额
+            //The exit amount is greater than the current maximum allowed exit amount
             if (amount.compareTo(maxReduceAmount) > 0) {
                 chain.getLogger().error("Exit amount is greater than the current maximum amount allowed,deposit:{},maxReduceAmount:{},reduceAmount:{}", agentPo.getDeposit(), maxReduceAmount, amount);
                 return Result.getFailed(ConsensusErrorCode.REDUCE_DEPOSIT_OUT_OF_RANGE);
@@ -301,7 +301,7 @@ public class AgentServiceImpl implements AgentService {
             BigInteger fee = TransactionFeeCalculator.getConsensusTxFee(tx.size() + P2PHKSignature.SERIALIZE_LENGTH + coinData.serialize().length, chain.getConfig().getFeeUnit());
             coinData.getTo().get(0).setAmount(coinData.getTo().get(0).getAmount().subtract(fee));
             tx.setCoinData(coinData.serialize());
-            //交易签名
+            //Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAddress(), dto.getPassword(), priKey, tx);
             String txStr = RPCUtil.encode(tx.serialize());
@@ -357,7 +357,7 @@ public class AgentServiceImpl implements AgentService {
                 String agentAddress = AddressTool.getStringAddressByBytes(agent.getAgentAddress()).toUpperCase();
                 String packingAddress = AddressTool.getStringAddressByBytes(agent.getPackingAddress()).toUpperCase();
                 String agentId = agentManager.getAgentId(agent.getTxHash()).toUpperCase();
-                //从账户模块获取账户别名
+                //Obtain account alias from account module
                 String agentAlias = CallMethodUtils.getAlias(chain, agentAddress);
                 String packingAlias = CallMethodUtils.getAlias(chain, packingAddress);
                 boolean b = agentId.contains(keyword);
@@ -377,7 +377,7 @@ public class AgentServiceImpl implements AgentService {
         }
         int start = pageNumber * pageSize - pageSize;
         Page<AgentDTO> page = new Page<>(pageNumber, pageSize, handleList.size());
-        //表示查询的起始位置大于数据总数即查询的该页不存在数据
+        //Indicates that the starting position of the query is greater than the total number of data, indicating that there is no data on the page being queried
         if (start >= page.getTotal()) {
             return Result.getSuccess(ConsensusErrorCode.SUCCESS).setData(page);
         }
@@ -451,7 +451,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     /**
-     * 获取指定节点状态
+     * Get the specified node status
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -496,7 +496,7 @@ public class AgentServiceImpl implements AgentService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         chain.setConsensusStatus(ConsensusStatus.RUNNING);
-        chain.getLogger().info("updateAgentConsensusStatus-修改节点共识状态成功......");
+        chain.getLogger().info("updateAgentConsensusStatus-Successfully modified node consensus status......");
         return Result.getSuccess(ConsensusErrorCode.SUCCESS);
     }
 
@@ -514,11 +514,11 @@ public class AgentServiceImpl implements AgentService {
         if (chain == null) {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
-        chain.getLogger().info("节点高度同步状态变更，修改后的状态为，status：{}", status);
+        chain.getLogger().info("The node height synchronization status has changed, and the modified status is,status：{}", status);
         if (status == 1) {
             chain.setSynchronizedHeight(true);
         } else {
-            //共识状态变更为不可打包状态，清理当前投票信息，断开共识网络
+            //Change consensus status to non packable status, clear current voting information, and disconnect consensus network
             chain.setSynchronizedHeight(false);
         }
         return Result.getSuccess(ConsensusErrorCode.SUCCESS);
@@ -560,7 +560,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     /**
-     * 获取所有节点出块地址/指定N个区块出块指定
+     * Get all node block addresses/specifyNBlock assignment
      *
      * @param params
      * @return Result
@@ -585,7 +585,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     /**
-     * 获取当前节点的出块账户信息
+     * Obtain the outbound account information of the current node
      *
      * @param params
      * @return Result
@@ -608,7 +608,7 @@ public class AgentServiceImpl implements AgentService {
             MeetingRound round = RoundUtils.getCurrentRound();
             MeetingMember member = null;
             if (round == null && chain.getBestHeader() != null && chain.getBestHeader().getHeight() != 0) {
-                chain.getLogger().info("初始化轮次");
+                chain.getLogger().info("Initialize round");
                 round = RoundUtils.getRoundController().tempRound();
             }
             if (round != null) {

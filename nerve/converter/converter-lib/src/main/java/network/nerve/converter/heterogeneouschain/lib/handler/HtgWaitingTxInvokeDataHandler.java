@@ -42,7 +42,7 @@ import static network.nerve.converter.heterogeneouschain.lib.context.HtgConstant
 
 
 /**
- * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
+ * Waiting for the transaction queue, the current node saves the call parameters for the transaction（The transaction is sent out by a certain administrator, and the administrator who ranks first in the order of the administrator sends out the transaction. If the sending fails or is not sent out, the transaction is sent out in the next order, and so on）
  *
  * @author: Mimi
  * @date: 2020-08-26
@@ -67,48 +67,48 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
         HtgWaitingTxPo po = null;
         try {
             if (!converterCoreApi.isRunning()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", symbol);
+                LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", symbol);
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!converterCoreApi.isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", symbol);
+                LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", symbol);
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", symbol);
+                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", symbol);
                 return;
             }
-            LoggerUtil.LOG.debug("[{}交易调用数据等待任务] - 每隔{}秒执行一次。", symbol, htgContext.getConfig().getWaitingTxQueuePeriod());
+            LoggerUtil.LOG.debug("[{}Transaction call data waiting task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getWaitingTxQueuePeriod());
             htgWalletApi.checkApi(converterCoreApi.getVirtualBankOrder());
-            // 等待重启应用时，加载的持久化任务
+            // Persistence tasks loaded while waiting for application restart
             htgContext.INIT_WAITING_TX_QUEUE_LATCH().await();
             int size = queue.size();
             for (int i = 0; i < size; i++) {
                 po = queue.poll();
                 if (po == null) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]移除empty对象", symbol);
+                        logger().debug("[{}]removeemptyobject", symbol);
                     }
                     continue;
                 }
                 String nerveTxHash = po.getNerveTxHash();
-                // 查询nerve交易是否理事遗留的问题交易
+                // querynerveIs the transaction an issue left by the board of directors? Transaction
                 if (converterCoreApi.skippedTransaction(nerveTxHash)) {
-                    logger().info("[{}][交易调用数据等待队列] 历史遗留的问题数据, 移除交易, hash:{}", symbol, nerveTxHash);
+                    logger().info("[{}][Transaction call data waiting queue] Historical legacy problem data, Remove transaction, hash:{}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
-                // 查询nerve交易对应的eth交易是否成功
+                // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("[{}]Nerve tx 在NERVE网络已确认, 成功移除队列, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}]Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
-                // 每30个区块检查一次，查询合约中，nerve交易key是否是已完成
+                // each30Check each block once and check the contract,nervetransactionkeyIs it completed
                 Long validateHeight = po.getValidateHeight();
                 if (validateHeight == null) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
@@ -116,7 +116,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
                     if (htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
-                        logger().info("Nerve tx 在{}网络已确认, 成功移除队列, nerveHash: {}", symbol, nerveTxHash);
+                        logger().info("Nerve tx stay{}Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;
                     }
@@ -124,7 +124,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 po.setValidateHeight(validateHeight);
 
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("[{}]Nerve交易[{}]重发超过{}次，丢弃交易", symbol, nerveTxHash, RESEND_TIME);
+                    logger().warn("[{}]Nervetransaction[{}]Resend over{}Second, discard transaction", symbol, nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
@@ -134,33 +134,33 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 long maxWaitingEndTime = po.getMaxWaitingEndTime();
                 int currentNodeSendOrder = po.getCurrentNodeSendOrder();
                 logger().info("[{}]hash: {}, now: {}, waiting: {}, maxWaiting: {}, order: {}, isSend: {}", symbol, nerveTxHash, now, waitingEndTime, maxWaitingEndTime, currentNodeSendOrder, po.isInvokeResend());
-                // 检查若所有管理员均发送交易失败，则返回从第一顺位继续发交易
+                // If all administrators fail to send transactions, return to continue sending transactions from the first order
                 if (now >= maxWaitingEndTime) {
-                    logger().info("[{}]最大等待时间已结束，从第一顺位开始重发交易, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}]The maximum waiting time has ended, resend transactions starting from the first order, nerveHash: {}", symbol, nerveTxHash);
                     htgInvokeTxHelper.clearRecordOfCurrentNodeSentEthTx(nerveTxHash, po);
                     if (currentNodeSendOrder == 1) {
-                        logger().info("[{}]第一顺位重发交易, nerveHash: {}", symbol, nerveTxHash);
-                        // 发起交易
+                        logger().info("[{}]First priority resend transaction, nerveHash: {}", symbol, nerveTxHash);
+                        // Initiate transaction
                         htgResendHelper.reSend(po);
-                        // 记录已调用重发函数的标志
+                        // Flag for recording called resend function
                         po.setInvokeResend(true);
                     }
-                    // 未完成，放回队列
+                    // Incomplete, put back in queue
                     queue.offer(po);
                     continue;
                 }
-                // nerve交易未完成，[非首位节点] 检查等待时间是否结束，结束后，检查是否已发起交易，否则发起交易
+                // nerveTransaction not completed,[Non primary node] Check if the waiting time has ended. After that, check if the transaction has been initiated. Otherwise, initiate the transaction
                 if (now >= waitingEndTime && currentNodeSendOrder != 1 && !po.isInvokeResend()) {
-                    logger().info("[{}]等待时间已结束，重发交易, nerveHash: {}", symbol, nerveTxHash);
-                    // 发起交易
+                    logger().info("[{}]Waiting time has ended, resend transaction, nerveHash: {}", symbol, nerveTxHash);
+                    // Initiate transaction
                     htgResendHelper.reSend(po);
-                    // 记录已调用重发函数的标志
+                    // Flag for recording called resend function
                     po.setInvokeResend(true);
-                    // 未完成，放回队列
+                    // Incomplete, put back in queue
                     queue.offer(po);
                     continue;
                 }
-                // 未完成，放回队列
+                // Incomplete, put back in queue
                 queue.offer(po);
             }
         } catch (Exception e) {

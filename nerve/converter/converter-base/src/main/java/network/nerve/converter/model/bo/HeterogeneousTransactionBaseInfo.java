@@ -36,44 +36,44 @@ public class HeterogeneousTransactionBaseInfo {
     private String txHash;
     private Long blockHeight;
     /**
-     * 异构链网络发出地址
+     * Heterogeneous chain network outgoing address
      */
     private String from;
     /**
-     * 异构链网络接收地址
+     * Heterogeneous chain network receiving address
      */
     private String to;
     /**
-     * 转账金额
+     * Transfer amount
      */
     private BigInteger value;
     /**
-     * 交易时间
+     * Transaction time
      */
     private Long txTime;
 
     /**
-     * 资产小数位数
+     * Decimal places of assets
      */
     private Integer decimals;
     /**
-     * 是否合约资产
+     * Is it a contractual asset
      */
     private boolean ifContractAsset;
     /**
-     * 合约地址
+     * Contract address
      */
     private String contractAddress;
     /**
-     * Nerve网络下该资产的资产id
+     * NerveThe assets of this asset under the networkid
      */
     private Integer assetId;
     /**
-     * Nerve网络下from地址对应的nerve格式地址(充值交易的充值地址)
+     * NerveUnder the networkfromCorresponding to addressnerveFormat Address(The recharge address for the recharge transaction)
      */
     private String nerveAddress;
     /**
-     * 多签交易的签名列表(提现、管理员变更)
+     * Signature list for multi signature transactions(Withdrawal、Administrator Change)
      */
     private List<HeterogeneousAddress> signers;
 

@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 默认配置项
+ * Default configuration items
  * @author: Loki
  * @date: 2020-03-02
  */
@@ -43,96 +43,96 @@ public class ConverterContext {
 
     public static long LATEST_BLOCK_HEIGHT = 0L;
     /**
-     * 触发执行虚拟银行变更交易的高度周期 配置
-     * 按2秒一个块 大约1天的出块数量
+     * Trigger the high cycle of executing virtual bank change transactions allocation
+     * according to2One block per second about1Number of blocks produced per day
      */
     public static long EXECUTE_CHANGE_VIRTUAL_BANK_PERIODIC_HEIGHT = ConverterConstant.DAY_BLOCKS;
 
     /**
-     * 手续费汇集分发公钥
+     * Collection and distribution of public keys for handling fees
      */
     public static byte[] FEE_PUBKEY = null;
 
     /**
-     * 提现黑洞公钥
+     * Withdrawal of black hole public key
      */
     public static byte[] WITHDRAWAL_BLACKHOLE_PUBKEY = null;
 
     /**
-     * 触发初始化虚拟银行的区块高度
+     * Trigger the block height for initializing virtual banks
      */
     public static long INIT_VIRTUAL_BANK_HEIGHT = 10;
     /**
-     * 虚拟银行共识节点数（非种子节点）
+     * Number of consensus nodes in virtual banking（Non seed nodes）
      */
     public static int VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED = 10;
 
     /**
-     * 虚拟银行成员席位总数（包含种子节点成员）
+     * Total number of virtual bank member seats（Include seed node members）
      */
     public static int VIRTUAL_BANK_AGENT_TOTAL = 15;
 
     /**
-     * 虚拟银行种子节点成员个数
-     * 网络第一次开启节点变更服务的节点总数阈值
+     * Number of virtual bank seed node members
+     * The threshold for the total number of nodes that enable node change services for the first time in the network
      */
     public static int INITIAL_VIRTUAL_BANK_SEED_COUNT = 5;
 
     /**
-     * 是否已经开启节点变更服务
+     * Has the node change service been enabled
      */
     public static boolean ENABLED_VIRTUAL_BANK_CHANGES_SERVICE = false;
 
     /**
-     * 发提案费用
+     * Proposal fee
      */
     public static BigInteger PROPOSAL_PRICE = new BigInteger("1000000000");
     /**
-     * 提案投票时长对应的区块高度
-     * 2秒一块 一天出块数为 43,200
-     * 默认投票时长约10天, 出块数为: 43200 * 10
+     * The block height corresponding to the duration of proposal voting
+     * 2One piece per second The number of blocks produced per day is 43,200
+     * Default voting duration is approximately10day, The number of blocks produced is: 43200 * 10
      */
     public static long PROPOSAL_VOTE_TIME_BLOCKS = ConverterConstant.DAY_BLOCKS * 10L;
 
 
     /**
-     * 签名拜占庭比例
+     * Signature Byzantine Ratio
      */
     public static int BYZANTINERATIO = 66;
 
     /**
-     * 第一次协议升级高度 提现手续费100
+     * The height of the first protocol upgrade Withdrawal fees100
      */
     public static long FEE_EFFECTIVE_HEIGHT_FIRST = 0L;
     /**
-     * 第二次协议升级高度 提现手续费10
+     * Second protocol upgrade height Withdrawal fees10
      */
     public static long FEE_EFFECTIVE_HEIGHT_SECOND = 0L;
 
     /**
-     * 第三次协议升级高度 提现异构链手续费改为(自定义(不低于最小值) + 追加的方式)
+     * Third protocol upgrade height Withdrawal of heterogeneous chain handling fees changed to(custom(Not less than the minimum value) + Additional methods)
      */
     public static long FEE_ADDITIONAL_HEIGHT = 0L;
     /**
-     * 协议升级高度 修改提现和充值交易协议,增加异构链id
+     * Protocol upgrade height Modify withdrawal and recharge transaction agreements,Add heterogeneous chainsid
      */
     public static long WITHDRAWAL_RECHARGE_CHAIN_HEIGHT = 0L;
     /**
-     * v1.8.0 协议升级高度 支持火币生态链跨链
+     * v1.8.0 Protocol upgrade height Support cross chain of Huobi ecological chain
      */
     public static long PROTOCOL_8_HUOBI_CROSS_CHAIN_HEIGHT = 0L;
     /**
-     * v1.11.0 协议升级高度 支持欧科生态链跨链
+     * v1.11.0 Protocol upgrade height Supporting the cross chain of the Euclidean ecosystem
      */
     public static long PROTOCOL_11_OKT_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
-     * v1.12.0 协议升级高度 支持转账即销毁部分的ERC20
+     * v1.12.0 Protocol upgrade height Support transfer and partial destructionERC20
      */
     public static long PROTOCOL_12_ERC20_OF_TRANSFER_BURN_HEIGHT = 0L;
 
     /**
-     * v1.13.0 协议升级高度 支持异构链ERC20充值的新验证方式，支持Harmony,Polygon,Kucoin生态链跨链
+     * v1.13.0 Protocol upgrade height Support heterogeneous chainsERC20A new verification method for recharging, supportingHarmony,Polygon,KucoinCross chain ecological chain
      */
     public static long PROTOCOL_13_NEW_VALIDATION_OF_ERC20 = 0L;
     public static long PROTOCOL_13_ONE_CROSS_CHAIN_HEIGHT = 0L;
@@ -140,80 +140,86 @@ public class ConverterContext {
     public static long PROTOCOL_13_KUCOIN_CROSS_CHAIN_HEIGHT = 0L;
 
     /**
-     * v1.14.0 协议升级高度
+     * v1.14.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_14_0 = 0L;
     /**
-     * v1.15.0 协议升级高度 支持波场生态链跨链
+     * v1.15.0 Protocol upgrade height Support cross chain of wave field ecosystem
      */
     public static long PROTOCOL_15_TRX_CROSS_CHAIN_HEIGHT = 0L;
     /**
-     * v1.16.0 协议升级高度
+     * v1.16.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_16_0 = 0L;
     /**
-     * v1.21.0 协议升级高度
+     * v1.21.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_21_0 = 0L;
     /**
-     * v1.22.0 协议升级高度
+     * v1.22.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_22_0 = 0L;
     /**
-     * v1.23.0 协议升级高度
+     * v1.23.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_23_0 = 0L;
     /**
-     * v1.24.0 协议升级高度
+     * v1.24.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_24_0 = 0L;
     /**
-     * v1.26.0 协议升级高度
+     * v1.26.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_26_0 = 0L;
     /**
-     * v1.27.0 协议升级高度
+     * v1.27.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_27_0 = 0L;
     /**
-     * v1.29.0 协议升级高度
+     * v1.29.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_29_0 = 0L;
     /**
-     * v1.30.0 协议升级高度
+     * v1.30.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_30_0 = 0L;
+    /**
+     * v1.31.0 Protocol upgrade height
+     */
+    public static long PROTOCOL_1_31_0 = 0L;
     /**
      * 0=local,1=signatrue-machine
      */
     public static long SIG_MODE = 0L;
 
     /**
-     * 协议升级对应的高度
+     * The height corresponding to protocol upgrade
      */
     public static Map<Integer, Long> protocolHeightMap = new HashMap<>();
     /**
-     * 价格key
+     * pricekey
      */
     public static Map<String, String> priceKeyMap = new HashMap<>();
 
     /**
-     * 初始化虚拟银行公钥
+     * Initialize virtual bank public key
      */
     public static List<String> INIT_VIRTUAL_BANK_PUBKEY_LIST = new ArrayList<>();
     /**
-     * 虚拟银行管理员详情列表(包含各异构链对应余额)
+     * Virtual Bank Administrator Details List(Including balances corresponding to different heterogeneous chains)
      */
     public static List<VirtualBankDirectorDTO> VIRTUAL_BANK_DIRECTOR_LIST = new ArrayList<>();
     /**
-     * 虚拟银行管理员详情列表(包含各异构链对应余额)(用于查询接口)
+     * Virtual Bank Administrator Details List(Including balances corresponding to different heterogeneous chains)(Used for querying interfaces)
      */
     public static List<VirtualBankDirectorDTO> VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD = new ArrayList<>();
     /**
-     * 缓存记录时间，用于过期缓存的替换
+     * Cache record time, used for replacing expired cache
      */
     public static long VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = 0L;
     public static Map<String, HeterogeneousAssetInfo> assetRegisterNetwork = new HashMap<>();
 
     public static Map<Long, Map> HTG_RPC_CHECK_MAP = new HashMap<>();
+
+    public static byte[] AWARD_FEE_SYSTEM_ADDRESS_PROTOCOL_1_17_0;
 }

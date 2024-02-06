@@ -50,7 +50,7 @@ public class ThirdPartyAPITest extends Base {
         //this.address = "0x06012c8cf97bead5deae237070f9587f8e7a266d";// mainnet
         String url = String.format("https://web3api.io/api/v2/addresses/%s/information", address);
         List<BasicHeader> headers = new ArrayList<>();
-        //headers.add(new BasicHeader("x-amberdata-blockchain-id", "ethereum-ropsten"));// 不支持
+        //headers.add(new BasicHeader("x-amberdata-blockchain-id", "ethereum-ropsten"));// Not supported
         //headers.add(new BasicHeader("x-amberdata-blockchain-id", "ethereum-mainnet"));
         headers.add(new BasicHeader("x-amberdata-blockchain-id", "ethereum-rinkeby"));
         headers.add(new BasicHeader("x-api-key", "UAK7d32cfddcdd4b3d95e9e31ecf8e8747c"));

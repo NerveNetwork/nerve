@@ -44,7 +44,7 @@ public class BaseCall {
         return requestAndResponse(moduleCode, cmd, params, null);
     }
     /**
-     * 调用其他模块接口
+     * Call other module interfaces
      * Call other module interfaces
      */
     public static Object requestAndResponse(String moduleCode, String cmd, Map params, Long timeout) throws NulsException {

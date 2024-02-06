@@ -100,7 +100,7 @@ public class FarmServiceImpl implements FarmService {
             return Result.getFailed(SwapErrorCode.CHAIN_NOT_EXIST);
         }
         NulsLogger logger = chain.getLogger();
-        //账户验证
+        //Account verification
         String prikeyHex;
         try {
             prikeyHex = AccountCall.getAccountPrikey(chainId, address, password);
@@ -112,14 +112,14 @@ public class FarmServiceImpl implements FarmService {
         if (StringUtils.isBlank(prikeyHex)) {
             return Result.getFailed(SwapErrorCode.ACCOUNT_VALID_ERROR);
         }
-        // 验证2种资产存在
+        // validate2Existing assets
         NerveToken stakeToken = SwapUtils.parseTokenStr(stakeTokenStr);
         if (stakeToken == null) {
             return Result.getFailed(SwapErrorCode.FARM_TOKEN_ERROR);
         }
         LedgerAssetDTO stakeAssetInfo = ledgerService.getNerveAsset(chainId, stakeToken.getChainId(), stakeToken.getAssetId());
         if (stakeAssetInfo == null) {
-            logger.warn("质押资产类型不正确");
+            logger.warn("The type of pledged assets is incorrect");
             return Result.getFailed(SwapErrorCode.FARM_TOKEN_ERROR);
         }
         NerveToken syrupToken = SwapUtils.parseTokenStr(syrupTokenStr);
@@ -128,20 +128,20 @@ public class FarmServiceImpl implements FarmService {
         }
         LedgerAssetDTO syrupAssetInfo = ledgerService.getNerveAsset(chainId, syrupToken.getChainId(), syrupToken.getAssetId());
         if (syrupAssetInfo == null) {
-            logger.warn("糖果资产类型不正确");
+            logger.warn("The candy asset type is incorrect");
             return Result.getFailed(SwapErrorCode.FARM_TOKEN_ERROR);
         }
         BigInteger realSyrupPerBlock = BigDecimal.valueOf(syrupPerBlock).movePointRight(syrupAssetInfo.getDecimalPlace()).toBigInteger();
         BigInteger realTotalSyrupAmount = BigDecimal.valueOf(totalSyrupAmount).movePointRight(syrupAssetInfo.getDecimalPlace()).toBigInteger();
 
-        // 验证每个区块奖励数额区间正确
+        // Verify that the reward amount range for each block is correct
         if (realSyrupPerBlock.compareTo(BigInteger.ZERO) <= 0) {
-            logger.warn("每块奖励数量必须大于0");
+            logger.warn("Each reward quantity must be greater than0");
             return Result.getFailed(SwapErrorCode.FARM_SYRUP_PER_BLOCK_ERROR);
         }
 
         if (startHeight > lockedTime) {
-            logger.warn("锁定截止高度不正确");
+            logger.warn("Incorrect locking cutoff height");
             return Result.getFailed(SwapErrorCode.FARM_LOCK_HEIGHT_ERROR);
         }
         Transaction tx = new Transaction();
@@ -208,7 +208,7 @@ public class FarmServiceImpl implements FarmService {
             return Result.getFailed(SwapErrorCode.CHAIN_NOT_EXIST);
         }
         NulsLogger logger = chain.getLogger();
-        //账户验证
+        //Account verification
         String prikeyHex;
         try {
             prikeyHex = AccountCall.getAccountPrikey(chainId, userAddress, password);
@@ -296,7 +296,7 @@ public class FarmServiceImpl implements FarmService {
             return Result.getFailed(SwapErrorCode.FARM_NOT_EXIST);
         }
         NulsLogger logger = chain.getLogger();
-        //账户验证
+        //Account verification
         String prikeyHex;
         try {
             prikeyHex = AccountCall.getAccountPrikey(chainId, userAddress, password);

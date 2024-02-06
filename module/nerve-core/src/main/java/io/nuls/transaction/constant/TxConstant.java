@@ -18,48 +18,48 @@ public interface TxConstant {
 
     String RPC_VERSION = "1.0";
 
-    /** 新交易线程名称*/
+    /** New transaction thread name*/
     String TX_THREAD = "newNetTxThread";
-    /** 孤儿交易处理线程名称*/
+    /** Orphan transaction processing thread name*/
     String TX_ORPHAN_THREAD = "orphanTxThread";
-    /** 未确认交易清理机制线程名称 */
+    /** Unconfirmed transaction cleaning mechanism thread name */
     String TX_CLEAN_THREAD = "cleanTxThread";
-    /** 验证交易签名线程 */
+    /** Verify transaction signature thread */
     String VERIFY_TX_SIGN_THREAD = "verifyTxSignThread";
 
-    /** 孤儿交易处理task, 初始延迟值(秒) */
+    /** Orphan transaction processingtask, Initial delay value(second) */
     int TX_ORPHAN_TASK_INITIALDELAY = 1;
-    /** 孤儿交易处理task, 运行周期间隔(秒) */
+    /** Orphan transaction processingtask, Run cycle interval(second) */
     int TX_ORPHAN_TASK_PERIOD = 3;
 
-    /** 未确认交易清理机制task,初始延迟值 */
+    /** Unconfirmed transaction clearance mechanismtask,Initial delay value */
     int TX_CLEAN_TASK_INITIALDELAY = 60;
-    /** 未确认交易清理机制task, 运行周期间隔(秒) */
+    /** Unconfirmed transaction clearance mechanismtask, Run cycle interval(second) */
     int TX_CLEAN_TASK_PERIOD = 10;
 
-    /** 打包时孤儿交易返回待打包队列重新处理的最大次数，超过该次数则不再处理该孤儿交易(丢弃) */
+    /** The maximum number of times an orphan transaction can be reprocessed in the waiting queue during packaging. If this number is exceeded, the orphan transaction will no longer be processed(discard) */
     int PACKAGE_ORPHAN_MAXCOUNT = 3;
     int PACKAGE_ORPHAN_MAP_MAXCOUNT = 1000;
-    /** 处理网络新交易时，一次从待处理集合中获取新交易的最大值 */
+    /** When processing new transactions on the network, retrieve the maximum value of the new transaction from the set to be processed at once */
     int NET_TX_PROCESS_NUMBER_ONCE = 1000;
 
-    /** 接收网络新交易队列的最大容量 未处理的交易队列**/
+    /** The maximum capacity of receiving new transaction queues in the network Unprocessed transaction queue**/
     int TX_UNVERIFIED_QUEUE_SIZE = 10000;
 
 
-    /** Map初始值 */
+    /** MapInitial value */
     int INIT_CAPACITY_32 = 32;
     int INIT_CAPACITY_16 = 16;
     int INIT_CAPACITY_8 = 8;
     int INIT_CAPACITY_4 = 4;
     int INIT_CAPACITY_2 = 2;
 
-    /** nonce值初始值 */
+    /** nonceInitial value */
     byte[] DEFAULT_NONCE = HexUtil.decode("0000000000000000");
 
     int CACHED_SIZE = 5000;
 
-    /** 待打包队列存储交易的map 所有交易size 最大限制 (B)*/
+    /** Store transactions in the queue to be packagedmap All transactionssize Maximum limit (B)*/
     int PACKABLE_TX_MAP_STRESS_DATA_SIZE = 40000 * 300;
     int PACKABLE_TX_MAP_HEAVY_DATA_SIZE = 50000 * 300;
     int PACKABLE_TX_MAP_MAX_DATA_SIZE = 70000 * 300;
@@ -68,16 +68,16 @@ public interface TxConstant {
 
     long REQUEST_TIME_OUT = 600 * 1000L;
 
-    /** 基础打包参数配置 不包含智能合约**/
-    /** 打包的最大交易数 **/
+    /** Basic packaging parameter configuration Excluding smart contracts**/
+    /** Maximum number of transactions packaged **/
     int BASIC_PACKAGE_TX_MAX_COUNT = 1200;
-    /** 打包时模块验证等预留时间 **/
+    /** Reserve time for module validation during packaging **/
     long BASIC_PACKAGE_RESERVE_TIME = 400L;
-    /** 一个区块中最大允许跨链模块交易的数量*/
+    /** The maximum number of allowed cross chain module transactions in a block*/
     int BASIC_PACKAGE_CROSS_TX_MAX_COUNT = 50;
-    /** 打包时,账本验证一批次的数量*/
+    /** When packaging,Verify the quantity of a batch in the ledger*/
     int BASIC_PACKAGE_VERIFY_COINDATA_BATCH = 800;
-    /**rpc预留时间 **/
+    /**rpcReserve time **/
     long BASIC_PACKAGE_RPC_RESERVE_TIME = 20L;
 
     String BASIC_VERIFY_TX_SIGN_THREAD = "basicVerifyTxSignThread";

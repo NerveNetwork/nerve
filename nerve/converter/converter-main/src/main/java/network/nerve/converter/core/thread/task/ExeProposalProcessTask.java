@@ -31,6 +31,7 @@ import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.btc.model.BtcTxInfo;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterCmdConstant;
 import network.nerve.converter.constant.ConverterConstant;
@@ -48,6 +49,7 @@ import network.nerve.converter.model.bo.HeterogeneousAddress;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.model.dto.RechargeTxOfBtcSysDTO;
 import network.nerve.converter.model.po.*;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
@@ -99,31 +101,31 @@ public class ExeProposalProcessTask implements Runnable {
         try {
             LinkedBlockingDeque<ExeProposalPO> exeProposalQueue = chain.getExeProposalQueue();
             while (!exeProposalQueue.isEmpty()) {
-                // 只取出,不移除头部元素
+                // Only remove,Do not remove head elements
                 ExeProposalPO pendingPO = exeProposalQueue.peekFirst();
                 NulsHash hash = pendingPO.getProposalTxHash();
                 if (null != proposalExeStorageService.find(chain, hash.toHex())
                         || null != asyncProcessedTxStorageService.getProposalExe(chain, hash.toHex())) {
-                    // 判断已执行过, 从队列中移除, 并从持久库中移除
-                    // 执行成功移除队列头部元素
+                    // Judging that it has been executed, Remove from queue, And remove it from the persistent library
+                    // Successfully removed queue header elements
                     exeProposalQueue.remove();
-                    chain.getLogger().debug("[提案待执行队列] 判断已执行过移除交易, hash:{}", hash.toHex());
-                    // 并且从持久化库中移除
+                    chain.getLogger().debug("[Proposal pending queue] Determine if the removal transaction has been executed, hash:{}", hash.toHex());
+                    // And remove it from the persistence library
                     exeProposalStorageService.delete(chain, hash.toHex());
                     continue;
                 }
 
-                // 判断是否已确认
+                // Determine if it has been confirmed
                 if (null == TransactionCall.getConfirmedTx(chain, hash)) {
                     if (pendingPO.getIsConfirmedVerifyCount() > ConverterConstant.CONFIRMED_VERIFY_COUNT) {
                         exeProposalQueue.remove();
-                        chain.getLogger().debug("[提案待执行队列] 交易未确认(移除处理), hash:{}", hash.toHex());
-                        // 并且从持久化库中移除
+                        chain.getLogger().debug("[Proposal pending queue] Transaction unconfirmed(Remove processing), hash:{}", hash.toHex());
+                        // And remove it from the persistence library
                         exeProposalStorageService.delete(chain, hash.toHex());
                         continue;
                     }
                     pendingPO.setIsConfirmedVerifyCount(pendingPO.getIsConfirmedVerifyCount() + 1);
-                    // 终止本次执行，等待下一次执行再次检查交易是否确认
+                    // Terminate this execution and wait for the next execution to check if the transaction is confirmed again
                     break;
                 }
 
@@ -131,7 +133,7 @@ public class ExeProposalProcessTask implements Runnable {
                 ProposalTypeEnum proposalTypeEnum = ProposalTypeEnum.getEnum(proposalPO.getType());
                 switch (proposalTypeEnum) {
                     case REFUND:
-                        // 异构链原路退回
+                        // Heterogeneous chain backtracking
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             refund(pendingPO, proposalPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
@@ -141,14 +143,14 @@ public class ExeProposalProcessTask implements Runnable {
                                 continue;
                             }
                         }
-                        // 记录原始充值hash 保证在提案中只执行一次
+                        // Record the original rechargehash Ensure only one execution in the proposal
                         asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash());
                         break;
                     case TRANSFER:
-                        // 转到其他账户
+                        // Transfer to another account
                         NulsHash rechargeHash;
                         if(null != (rechargeHash = rechargeStorageService.find(chain, hash.toHex()))) {
-                            chain.getLogger().info("[提案-{}] 已执行, proposalHash:{}, rechargeHash:{}",
+                            chain.getLogger().info("[proposal-{}] executed, proposalHash:{}, rechargeHash:{}",
                                     ProposalTypeEnum.TRANSFER,
                                     hash.toHex(),
                                     rechargeHash.toHex());
@@ -158,32 +160,32 @@ public class ExeProposalProcessTask implements Runnable {
                         asyncProcessedTxStorageService.saveProposalExe(chain, proposalPO.getHeterogeneousTxHash());
                         break;
                     case LOCK:
-                        // 冻结账户
+                        // Freeze account
                         lock(proposalPO.getAddress());
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[执行提案-{}] proposalHash:{}",
+                        chain.getLogger().info("[Execute proposal-{}] proposalHash:{}",
                                 ProposalTypeEnum.LOCK,
                                 proposalPO.getHash().toHex());
                         break;
                     case UNLOCK:
-                        // 解冻账户
+                        // Unfreezing accounts
                         unlock(proposalPO.getAddress());
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[执行提案-{}] proposalHash:{}",
+                        chain.getLogger().info("[Execute proposal-{}] proposalHash:{}",
                                 ProposalTypeEnum.UNLOCK,
                                 proposalPO.getHash().toHex());
                         break;
                     case EXPELLED:
-                        // 撤销银行资格
+                        // Revocation of bank qualification
                         if (chain.getResetVirtualBank().get()) {
-                            chain.getLogger().warn("正在重置虚拟银行异构链(合约), 提案等待1分钟后执行..");
+                            chain.getLogger().warn("Resetting Virtual Bank Heterogeneous Chain(contract), Proposal waiting1Execute in minutes..");
                             Thread.sleep(60000L);
                             continue;
                         }
                         disqualification(pendingPO, proposalPO);
                         break;
                     case UPGRADE:
-                        // 升级合约
+                        // Upgrade contract
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             upgrade(pendingPO, proposalPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
@@ -195,37 +197,37 @@ public class ExeProposalProcessTask implements Runnable {
                         }
                         break;
                     case WITHDRAW:
-                        // 提现提案
+                        // Withdrawal proposal
                         if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
                             withdrawProposal(pendingPO, proposalPO);
                         } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
                             withdrawProposalByzantine(pendingPO, proposalPO);
                         }
                     case ADDCOIN:
-                        // swap模块 稳定币兑换交易对 - 添加币种
+                        // swapmodule Stable currency exchange transactions - Add Currency
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
                                 ProposalTypeEnum.ADDCOIN,
                                 proposalPO.getHash().toHex());
                         break;
                     case REMOVECOIN:
-                        // swap模块 稳定币兑换交易对 - 移除币种
+                        // swapmodule Stable currency exchange transactions - Remove Currency
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
                                 ProposalTypeEnum.REMOVECOIN,
                                 proposalPO.getHash().toHex());
                         break;
                     case MANAGE_STABLE_PAIR_FOR_SWAP_TRADE:
-                        // swap模块 管理稳定币交易对-用于Swap交易
+                        // swapmodule Managing stablecoin transactions-Used forSwaptransaction
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
                                 ProposalTypeEnum.MANAGE_STABLE_PAIR_FOR_SWAP_TRADE,
                                 proposalPO.getHash().toHex());
                         break;
                     case MANAGE_SWAP_PAIR_FEE_RATE:
-                        // swap模块 用于Swap交易对定制手续费
+                        // swapmodule Used forSwapCustomized transaction fees
                         publishProposalConfirmed(proposalPO, pendingPO);
-                        chain.getLogger().info("[创建提案确认-{}] proposalHash:{}",
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
                                 ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE,
                                 proposalPO.getHash().toHex());
                         break;
@@ -233,12 +235,12 @@ public class ExeProposalProcessTask implements Runnable {
                     default:
                         break;
                 }
-                // 存储已执行成功的交易hash, 执行过的不再执行 (当前节点处于同步区块模式时,也要存该hash, 表示已执行过)
+                // Store successfully executed transactionshash, Executed items will no longer be executed (When the current node is in synchronous block mode,We also need to save thishash, Indicates that it has been executed)
                 asyncProcessedTxStorageService.saveProposalExe(chain, hash.toHex());
-                chain.getLogger().debug("[异构链待处理队列] 执行成功移除交易, hash:{}", hash.toHex());
-                // 并且从持久化库中移除
+                chain.getLogger().debug("[Heterogeneous chain pending queue] Successfully executed to remove transaction, hash:{}", hash.toHex());
+                // And remove it from the persistence library
                 exeProposalStorageService.delete(chain, hash.toHex());
-                // 执行成功移除队列头部元素
+                // Successfully removed queue header elements
                 exeProposalQueue.remove();
             }
         } catch (Exception e) {
@@ -256,7 +258,7 @@ public class ExeProposalProcessTask implements Runnable {
 
 
     /**
-     * 提现提案 version2
+     * Withdrawal proposal version2
      *
      * @param pendingPO
      * @param proposalPO
@@ -284,7 +286,7 @@ public class ExeProposalProcessTask implements Runnable {
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
         }
         String txHash = withdrawHash.toHex();
-        // 判断是否收到过该消息, 并签了名
+        // Determine if you have received the message, And signed it
         ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
         boolean sign = false;
         if (null != compSignPO) {
@@ -310,14 +312,14 @@ public class ExeProposalProcessTask implements Runnable {
                 }
             }
             if (null == assetInfo) {
-                chain.getLogger().error("[异构链地址签名消息-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
+                chain.getLogger().error("[Heterogeneous chain address signature message-withdraw] no withdrawCoinTo. hash:{}", tx.getHash().toHex());
                 throw new NulsException(ConverterErrorCode.DATA_ERROR);
             }
             int heterogeneousChainId = assetInfo.getChainId();
             BigInteger amount = withdrawCoinTo.getAmount();
             String toAddress = txData.getHeterogeneousAddress();
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+            // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
             String signStrData = docking.signWithdrawII(txHash, toAddress, amount, assetInfo.getAssetId());
             String currentHaddress = docking.getCurrentSignAddress();
             if (StringUtils.isBlank(currentHaddress)) {
@@ -329,7 +331,7 @@ public class ExeProposalProcessTask implements Runnable {
             listSign.add(currentSign);
             ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
                     withdrawHash, listSign);
-            // 初始化存储签名的对象
+            // Initialize the object for storing signatures
             if (null == compSignPO) {
                 compSignPO = new ComponentSignByzantinePO(withdrawHash, new ArrayList<>(), false, false);
             } else if (null == compSignPO.getListMsg()) {
@@ -337,15 +339,15 @@ public class ExeProposalProcessTask implements Runnable {
             }
             compSignPO.getListMsg().add(currentMessage);
             compSignPO.setCurrentSigned(true);
-            // 广播当前节点签名消息
+            // Broadcast current node signature message
             NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
-            chain.getLogger().info("[withdraw] 调用异构链组件执行签名, 发送签名消息. hash:{}", txHash);
+            chain.getLogger().info("[withdraw] Calling heterogeneous chain components to execute signatures, Send signed message. hash:{}", txHash);
 
-            // (提现)业务交易hash 与提案交易的关系
+            // (Withdrawal)Business transactionshash Relationship with proposed transactions
             this.proposalStorageService.saveExeBusiness(chain, txHash, proposalPO.getHash());
         }
 
-        // 为txSubsequentPO提供一个提现的po
+        // bytxSubsequentPOProvide a withdrawal optionpo
         TxSubsequentProcessPO txSubsequentPO = new TxSubsequentProcessPO();
         txSubsequentPO.setTx(tx);
         txSubsequentPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
@@ -354,13 +356,13 @@ public class ExeProposalProcessTask implements Runnable {
         txSubsequentPO.setBlockHeader(header);
         chain.getPendingTxQueue().offer(txSubsequentPO);
         txSubsequentProcessStorageService.save(chain, txSubsequentPO);
-        chain.getLogger().info("[提现提案-放入执行异构链提现task中] hash:{}", txHash);
-        // 存储更新后的 compSignPO
+        chain.getLogger().info("[Withdrawal proposal-Put and execute heterogeneous chain withdrawalstaskin] hash:{}", txHash);
+        // Store updated compSignPO
         componentSignStorageService.save(chain, compSignPO);
     }
 
     /**
-     * 提现提案
+     * Withdrawal proposal
      *
      * @param pendingPO
      * @param proposalPO
@@ -392,7 +394,7 @@ public class ExeProposalProcessTask implements Runnable {
     }
 
     /**
-     * 执行提现调用异构链
+     * Execute withdrawal calls to heterogeneous chains
      *
      * @param withdrawTx
      * @throws NulsException
@@ -426,18 +428,18 @@ public class ExeProposalProcessTask implements Runnable {
     }
 
     /**
-     * 处理合约升级, 拜占庭签名
-     * 判断并发送异构链交易
+     * Handling contract upgrades, Byzantine signature
+     * Determine and send heterogeneous chain transactions
      *
      * @param pendingPO
      * @param proposalPO
-     * @return true:需要删除队列的元素(已调用异构链, 或无需, 无权限执行等) false: 放队尾
+     * @return true:Need to delete elements from the queue(Heterogeneous chain called, Or no need to, No permission to execute, etc) false: Put the team at the end of the line
      * @throws NulsException
      */
     private boolean upgradeByzantine(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         NulsHash hash = proposalPO.getHash();
         String txHash = hash.toHex();
-        // 新的合约多签地址
+        // New contract with multiple signed addresses
         int heterogeneousChainId = proposalPO.getHeterogeneousChainId();
         if (pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
             return true;
@@ -445,7 +447,7 @@ public class ExeProposalProcessTask implements Runnable {
         if (!hasExecutePermission(txHash)) {
             return true;
         }
-        // 判断是否收到过该消息, 并签了名
+        // Determine if you have received the message, And signed it
         ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, txHash);
         boolean sign = false;
         if (null != compSignPO) {
@@ -457,9 +459,9 @@ public class ExeProposalProcessTask implements Runnable {
         }
         if (sign) {
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-            // 兼容非以太系地址 update by pierre at 2021/11/16
+            // Compatible with non Ethernet addresses update by pierre at 2021/11/16
             String newMultySignAddress = docking.getAddressString(proposalPO.getAddress());
-            // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+            // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
             String signStrData = docking.signUpgradeII(txHash, newMultySignAddress);
             String currentHaddress = docking.getCurrentSignAddress();
             if (StringUtils.isBlank(currentHaddress)) {
@@ -471,7 +473,7 @@ public class ExeProposalProcessTask implements Runnable {
             listSign.add(currentSign);
             ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
                     hash, listSign);
-            // 初始化存储签名的对象
+            // Initialize the object for storing signatures
             if (null == compSignPO) {
                 compSignPO = new ComponentSignByzantinePO(hash, new ArrayList<>(), false, false);
             } else if (null == compSignPO.getListMsg()) {
@@ -479,19 +481,19 @@ public class ExeProposalProcessTask implements Runnable {
             }
             compSignPO.getListMsg().add(currentMessage);
             compSignPO.setCurrentSigned(true);
-            // 广播当前节点签名消息
+            // Broadcast current node signature message
             NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
-            chain.getLogger().info("[执行提案-{}] proposalHash:{}",
+            chain.getLogger().info("[Execute proposal-{}] proposalHash:{}",
                     ProposalTypeEnum.UPGRADE, proposalPO.getHash().toHex());
         }
 
         boolean rs = false;
         if (compSignPO.getByzantinePass()) {
             if (!compSignPO.getCompleted()) {
-                // 执行调用异构链
+                // Execute calls to heterogeneous chains
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
                 if (null == callParmsList) {
-                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    chain.getLogger().info("Virtual Bank Change, Call heterogeneous chain parameter is empty");
                     return false;
                 }
                 ComponentCallParm callParm = callParmsList.get(0);
@@ -501,18 +503,18 @@ public class ExeProposalProcessTask implements Runnable {
                         callParm.getUpgradeContract(),
                         callParm.getSigned());
                 compSignPO.setCompleted(true);
-                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-upgrade] 调用异构链组件执行合约升级. hash:{}, ethHash:{}", txHash, ethTxHash);
+                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-upgrade] Calling heterogeneous chain components to perform contract upgrades. hash:{}, ethHash:{}", txHash, ethTxHash);
             }
             rs = true;
         }
-        // 存储更新后的 compSignPO
+        // Store updated compSignPO
         componentSignStorageService.save(chain, compSignPO);
         return rs;
 
     }
 
     /**
-     * 合约升级
+     * Contract upgrade
      */
     private void upgrade(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         String hash = proposalPO.getHash().toHex();
@@ -524,36 +526,36 @@ public class ExeProposalProcessTask implements Runnable {
             return;
         }
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
-        // 向异构链发起合约升级交易
+        // Initiate contract upgrade transactions to heterogeneous chains
         String exeTxHash = docking.createOrSignUpgradeTx(hash);
         this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
 
         proposalPO.setHeterogeneousMultySignAddress(docking.getCurrentMultySignAddress());
-        // 存储提案执行的链内hash
+        // On chain execution of storage proposalshash
         proposalStorageService.save(chain, proposalPO);
-        chain.getLogger().info("[执行提案-{}] proposalHash:{}, exeTxHash:{}",
+        chain.getLogger().info("[Execute proposal-{}] proposalHash:{}, exeTxHash:{}",
                 ProposalTypeEnum.UPGRADE,
                 proposalPO.getHash().toHex(),
                 exeTxHash);
     }
 
     /**
-     * 执行权限判断
+     * Execution permission judgment
      *
      * @param hash
      * @return
      */
     private boolean hasExecutePermission(String hash) {
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            chain.getLogger().debug("只有虚拟银行才能执行, 非虚拟银行节点不执行, hash:{}", hash);
+            chain.getLogger().debug("Only virtual banks can execute, Non virtual banking nodes not executed, hash:{}", hash);
             return false;
         }
         return true;
     }
 
     /**
-     * 检查异构链业务重放攻击
-     * 对于 type:1 原路退回 type:2 充值到其他地址, 同一异构链hash只允许执行一次
+     * Check for heterogeneous chain business replay attacks
+     * about type:1 Return to the original route type:2 Recharge to another address, Same heterogeneous chainhashOnly allowed to execute once
      *
      * @param hash
      * @param heterogeneousTxHash
@@ -561,19 +563,19 @@ public class ExeProposalProcessTask implements Runnable {
      */
     private boolean replyAttack(String hash, String heterogeneousTxHash) {
         if(null != rechargeStorageService.find(chain, heterogeneousTxHash)){
-            chain.getLogger().error("[replyAttack!! 提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
+            chain.getLogger().error("[replyAttack!! Proposal pending queue] The heterogeneous chain transaction in the proposal has already been executed, proposalhash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
             return false;
         }
         if (null != asyncProcessedTxStorageService.getProposalExe(chain, heterogeneousTxHash)) {
-            chain.getLogger().error("[replyAttack!! 提案待执行队列] 提案中该异构链交易已执行过, 提案hash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
+            chain.getLogger().error("[replyAttack!! Proposal pending queue] The heterogeneous chain transaction in the proposal has already been executed, proposalhash:{} heterogeneousTxHash:{}", hash, heterogeneousTxHash);
             return false;
         }
         return true;
     }
 
     /**
-     * 原路退回
-     * 根据异构链充值交易hash, 查询充值from地址资产与金额, 再通过异构链发还回去.
+     * Return to the original route
+     * According to heterogeneous chain recharge transactionshash, Query rechargefromAddress Assets and Amount, Then send it back through heterogeneous chains.
      *
      * @throws NulsException
      */
@@ -581,7 +583,7 @@ public class ExeProposalProcessTask implements Runnable {
         NulsHash proposalHash = proposalPO.getHash();
         String hash = proposalHash.toHex();
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布退回交易");
+            chain.getLogger().debug("Non virtual bank members, Or the node is in synchronous block mode, No need to publish a return transaction");
             return;
         }
         if (!hasExecutePermission(hash) || !replyAttack(hash, proposalPO.getHeterogeneousTxHash())) {
@@ -595,21 +597,21 @@ public class ExeProposalProcessTask implements Runnable {
                 this.heterogeneousDockingManager,
                 heterogeneousInterface);
         if (null == info) {
-            chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+            chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
         String exeTxHash = heterogeneousInterface.createOrSignWithdrawTx(hash, info.getFrom(), info.getValue(), info.getAssetId());
         this.proposalStorageService.saveExeBusiness(chain, proposalPO.getHash().toHex(), proposalPO.getHash());
-        chain.getLogger().info("[执行提案-{}] proposalHash:{}, exeTxHash:{}",
+        chain.getLogger().info("[Execute proposal-{}] proposalHash:{}, exeTxHash:{}",
                 ProposalTypeEnum.REFUND,
                 proposalPO.getHash().toHex(),
                 exeTxHash);
     }
 
     /**
-     * 原路退回 version2
-     * 根据异构链充值交易hash, 查询充值from地址资产与金额, 再通过异构链发还回去.
-     * 判断并发送异构链交易
+     * Return to the original route version2
+     * According to heterogeneous chain recharge transactionshash, Query rechargefromAddress Assets and Amount, Then send it back through heterogeneous chains.
+     * Determine and send heterogeneous chain transactions
      *
      * @throws NulsException
      */
@@ -617,13 +619,13 @@ public class ExeProposalProcessTask implements Runnable {
         NulsHash proposalTxHash = proposalPO.getHash();
         String proposalHash = proposalTxHash.toHex();
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布退回交易");
+            chain.getLogger().debug("Non virtual bank members, Or the node is in synchronous block mode, No need to publish a return transaction");
             return true;
         }
         if (!hasExecutePermission(proposalHash) || !replyAttack(proposalHash, proposalPO.getHeterogeneousTxHash())) {
             return true;
         }
-        // 判断是否收到过该消息, 并签了名
+        // Determine if you have received the message, And signed it
         ComponentSignByzantinePO compSignPO = componentSignStorageService.get(chain, proposalHash);
         boolean sign = false;
         if (null != compSignPO) {
@@ -642,10 +644,10 @@ public class ExeProposalProcessTask implements Runnable {
                     this.heterogeneousDockingManager,
                     docking);
             if (null == info) {
-                chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+                chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
             }
-            // 如果当前节点还没签名则触发当前节点签名,存储 并广播
+            // If the current node has not yet signed, trigger the current node's signature,storage And broadcast
             String signStrData = docking.signWithdrawII(proposalHash, info.getFrom(), info.getValue(), info.getAssetId());
             String currentHaddress = docking.getCurrentSignAddress();
             if (StringUtils.isBlank(currentHaddress)) {
@@ -657,7 +659,7 @@ public class ExeProposalProcessTask implements Runnable {
             listSign.add(currentSign);
             ComponentSignMessage currentMessage = new ComponentSignMessage(pendingPO.getCurrenVirtualBankTotal(),
                     proposalTxHash, listSign);
-            // 初始化存储签名的对象
+            // Initialize the object for storing signatures
             if (null == compSignPO) {
                 compSignPO = new ComponentSignByzantinePO(proposalTxHash, new ArrayList<>(), false, false);
             } else if (null == compSignPO.getListMsg()) {
@@ -665,27 +667,27 @@ public class ExeProposalProcessTask implements Runnable {
             }
             compSignPO.getListMsg().add(currentMessage);
             compSignPO.setCurrentSigned(true);
-            // 广播当前节点签名消息
+            // Broadcast current node signature message
             NetWorkCall.broadcast(chain, currentMessage, ConverterCmdConstant.COMPONENT_SIGN);
-            chain.getLogger().info("[执行提案-{}] 调用异构链组件执行签名, 发送签名消息, 提案hash:{}", ProposalTypeEnum.REFUND, proposalHash);
+            chain.getLogger().info("[Execute proposal-{}] Calling heterogeneous chain components to execute signatures, Send signed message, proposalhash:{}", ProposalTypeEnum.REFUND, proposalHash);
         }
 
         boolean rs = false;
         if (compSignPO.getByzantinePass()) {
             if (!compSignPO.getCompleted()) {
-                // 执行调用异构链
+                // Execute calls to heterogeneous chains
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();
                 if (null == callParmsList) {
-                    chain.getLogger().info("虚拟银行变更, 调用异构链参数为空");
+                    chain.getLogger().info("Virtual Bank Change, Call heterogeneous chain parameter is empty");
                     return false;
                 }
                 ComponentCallParm callParm = callParmsList.get(0);
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(callParm.getHeterogeneousId());
                 if (chain.getLatestBasicBlock().getHeight() >= FEE_ADDITIONAL_HEIGHT) {
                     BigInteger totalFee = assembleTxService.calculateRefundTotalFee(chain, proposalHash);
-                    boolean enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId());
+                    boolean enoughFeeOfWithdraw = docking.isEnoughNvtFeeOfWithdraw(new BigDecimal(totalFee), callParm.getAssetId(), callParm.getTxHash());
                     if (!enoughFeeOfWithdraw) {
-                        chain.getLogger().error("[withdraw] 提现手续费计算, 手续费不足以支付提现费用. amount:{}", callParm.getValue());
+                        chain.getLogger().error("[withdraw] Withdrawal fee calculation, The handling fee is insufficient to cover the withdrawal fee. amount:{}", callParm.getValue());
                         throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
                     }
                 }
@@ -697,57 +699,77 @@ public class ExeProposalProcessTask implements Runnable {
                         callParm.getSigned());
                 compSignPO.setCompleted(true);
                 this.proposalStorageService.saveExeBusiness(chain, proposalHash, proposalTxHash);
-                chain.getLogger().info("[异构链地址签名消息-拜占庭通过-refund] 调用异构链组件执行原路退回. hash:{}, ethHash:{}", callParm.getTxHash(), ethTxHash);
+                chain.getLogger().info("[Heterogeneous chain address signature message-Byzantine passage-refund] Calling heterogeneous chain components to perform original route rollback. hash:{}, ethHash:{}", callParm.getTxHash(), ethTxHash);
             }
             rs = true;
         }
-        // 存储更新后的 compSignPO
+        // Store updated compSignPO
         componentSignStorageService.save(chain, compSignPO);
         return rs;
     }
 
     /**
-     * 转到其他地址
+     * Go to another address
      *
      * @throws NulsException
      */
     private void transfer(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         String hash = proposalPO.getHash().toHex();
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
+            chain.getLogger().debug("Non virtual bank members, Or the node is in synchronous block mode, No need to publish confirmation transactions");
             return;
         }
         if (!hasExecutePermission(hash) || !replyAttack(hash, proposalPO.getHeterogeneousTxHash())) {
             return;
         }
-        HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
-                proposalPO.getHeterogeneousChainId(),
-                proposalPO.getHeterogeneousTxHash(),
-                HeterogeneousTxTypeEnum.DEPOSIT,
-                this.heterogeneousDockingManager);
+        int htgChainId = proposalPO.getHeterogeneousChainId();
+        HeterogeneousTransactionInfo info;
+        try {
+            IHeterogeneousChainDocking docking = this.heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
+            info = docking.getUnverifiedDepositTransaction(proposalPO.getHeterogeneousTxHash());
+        } catch (Exception e) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
+        }
         if (null == info) {
-            chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+            chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
-
-        RechargeTxDTO rechargeTxDTO = new RechargeTxDTO();
-        rechargeTxDTO.setOriginalTxHash(hash);
-        rechargeTxDTO.setHeterogeneousChainId(proposalPO.getHeterogeneousChainId());
-        rechargeTxDTO.setHeterogeneousAssetId(info.getAssetId());
-        rechargeTxDTO.setAmount(info.getValue());
-        rechargeTxDTO.setToAddress(AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
-        rechargeTxDTO.setTxtime(pendingPO.getTime());
-        rechargeTxDTO.setExtend(info.getDepositIIExtend());
-        if (info.isDepositIIMainAndToken()) {
-            // 支持同时转入token和main
-            rechargeTxDTO.setDepositII(true);
-            rechargeTxDTO.setMainAmount(info.getDepositIIMainAssetValue());
+        Transaction tx;
+        if (htgChainId < 200) {
+            RechargeTxDTO rechargeTxDTO = new RechargeTxDTO();
+            rechargeTxDTO.setOriginalTxHash(hash);
+            rechargeTxDTO.setHeterogeneousChainId(htgChainId);
+            rechargeTxDTO.setHeterogeneousAssetId(info.getAssetId());
+            rechargeTxDTO.setAmount(info.getValue());
+            rechargeTxDTO.setToAddress(AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
+            rechargeTxDTO.setTxtime(pendingPO.getTime());
+            rechargeTxDTO.setExtend(info.getDepositIIExtend());
+            if (info.isDepositIIMainAndToken()) {
+                // Support simultaneous transfer intokenandmain
+                rechargeTxDTO.setDepositII(true);
+                rechargeTxDTO.setMainAmount(info.getDepositIIMainAssetValue());
+            }
+            tx = assembleTxService.createRechargeTx(chain, rechargeTxDTO);
+        } else if (htgChainId < 300) {
+            BtcTxInfo txInfo = (BtcTxInfo) info;
+            RechargeTxOfBtcSysDTO dto = new RechargeTxOfBtcSysDTO();
+            dto.setHtgTxHash(hash);
+            dto.setHtgFrom(txInfo.getFrom());
+            dto.setHtgChainId(htgChainId);
+            dto.setHtgAssetId(txInfo.getAssetId());
+            dto.setHtgTxTime(pendingPO.getTime());
+            dto.setHtgBlockHeight(txInfo.getBlockHeight());
+            dto.setTo(AddressTool.getStringAddressByBytes(proposalPO.getAddress()));
+            dto.setAmount(txInfo.getValue().add(txInfo.getFee()));
+            dto.setExtend(txInfo.getExtend0());
+            tx = assembleTxService.createRechargeTxOfBtcSys(chain, dto);
+        } else {
+            throw new NulsException(ConverterErrorCode.PROPOSAL_EXECUTIVE_FAILED);
         }
-        Transaction tx = assembleTxService.createRechargeTx(chain, rechargeTxDTO);
         proposalPO.setNerveHash(tx.getHash().getBytes());
-        // 存储提案执行的链内hash
+        // On chain execution of storage proposalshash
         proposalStorageService.save(chain, proposalPO);
-        chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}",
+        chain.getLogger().info("[Execute proposal-{}] proposalHash:{}, txHash:{}",
                 ProposalTypeEnum.TRANSFER,
                 proposalPO.getHash().toHex(),
                 tx.getHash().toHex());
@@ -762,7 +784,7 @@ public class ExeProposalProcessTask implements Runnable {
     }
 
     /**
-     * 发布(解锁/锁定账户)提案的确认交易
+     * release(Unlock/Lock account)Confirmation transaction of proposal
      *
      * @param proposalPO
      * @param pendingPO
@@ -770,7 +792,7 @@ public class ExeProposalProcessTask implements Runnable {
      */
     private void publishProposalConfirmed(ProposalPO proposalPO, ExeProposalPO pendingPO) throws NulsException {
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
+            chain.getLogger().debug("Non virtual bank members, Or the node is in synchronous block mode, No need to publish confirmation transactions");
             return;
         }
         ProposalExeBusinessData businessData = new ProposalExeBusinessData();
@@ -784,28 +806,28 @@ public class ExeProposalProcessTask implements Runnable {
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
-        // 发布提案确认交易
+        // Publish proposal to confirm transaction
         assembleTxService.createConfirmProposalTx(chain, txData, pendingPO.getTime());
     }
 
 
     private void disqualification(ExeProposalPO pendingPO, ProposalPO proposalPO) throws NulsException {
         if (!VirtualBankUtil.isCurrentDirector(chain) || pendingPO.getSyncStatusEnum() == SyncStatusEnum.SYNC) {
-            chain.getLogger().debug("非虚拟银行成员, 或节点处于同步区块模式, 无需发布确认交易");
+            chain.getLogger().debug("Non virtual bank members, Or the node is in synchronous block mode, No need to publish confirmation transactions");
             return;
         }
         List<byte[]> outList = new ArrayList<>();
         outList.add(proposalPO.getAddress());
-        // 创建虚拟银行变更交易
+        // Create virtual bank change transaction
         Transaction tx = null;
         try {
             tx = assembleTxService.assembleChangeVirtualBankTx(chain, null, outList, pendingPO.getHeight(), pendingPO.getTime());
             proposalPO.setNerveHash(tx.getHash().getBytes());
-            // 存储提案执行的链内hash
+            // On chain execution of storage proposalshash
             proposalStorageService.save(chain, proposalPO);
             boolean rs = this.proposalStorageService.saveExeBusiness(chain, tx.getHash().toHex(), proposalPO.getHash());
             TransactionCall.newTx(chain, tx);
-            chain.getLogger().info("[执行提案-{}] proposalHash:{}, txHash:{}, saveExeBusiness:{}",
+            chain.getLogger().info("[Execute proposal-{}] proposalHash:{}, txHash:{}, saveExeBusiness:{}",
                     ProposalTypeEnum.EXPELLED,
                     proposalPO.getHash().toHex(),
                     tx.getHash().toHex(),
@@ -817,7 +839,7 @@ public class ExeProposalProcessTask implements Runnable {
                     && !e.getErrorCode().getCode().equals("tx_0013")) {
                 throw e;
             }
-            chain.getLogger().warn("[执行提案] 该节点已经不是银行成员, 无需执行变更交易, 提案完成.");
+            chain.getLogger().warn("[Execute proposal] This node is no longer a bank member, No need to execute change transactions, Proposal completed.");
         }
 
     }

@@ -56,17 +56,17 @@ public class HtgPendingTxHelper implements BeanInitial {
     public void commitNervePendingDepositTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousOneClickCrossChainData> parseOneClickCrossChainData, BiFunction<String, NulsLogger, HeterogeneousAddFeeCrossChainData> parseAddFeeCrossChainData) {
         String htTxHash = po.getTxHash();
         try {
-            // 使用 depositII.extend 来判断，检查是否为跨链追加手续费
+            // apply depositII.extend To determine whether it is a cross chain additional handling fee
             if (this.addFeeCrossChainTx(po, parseAddFeeCrossChainData)) {
                 return;
             }
-            // 使用 depositII.extend 来判断，检查是否为一键跨链的数据 oneClickCrossChainProcessor
+            // apply depositII.extend To determine whether it is one click cross chain data oneClickCrossChainProcessor
             if (this.commitNervePendingOneClickCrossChainTx(po, parseOneClickCrossChainData)) {
                 return;
             }
             ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
             byte[] withdrawalBlackhole = AddressTool.getAddressByPubKeyStr(converterConfig.getBlackHolePublicKey(), converterConfig.getChainId());
-            // 充值的nerve接收地址不能是黑洞地址
+            // RechargeablenerveThe receiving address cannot be a black hole address
             if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
                 logger().error("[{}]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
                 return;
@@ -99,18 +99,18 @@ public class HtgPendingTxHelper implements BeanInitial {
                         po.getNerveAddress());
             }
         } catch (Exception e) {
-            // 交易已存在，移除队列
+            // Transaction already exists, remove queue
             if (e instanceof NulsException &&
                     (HtgConstant.TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || HtgConstant.TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("Nerve充值待确认交易已存在，忽略[{}]", htTxHash);
+                logger().info("NerveRecharge pending confirmation transaction already exists, ignore[{}]", htTxHash);
                 return;
             }
-            logger().error("在NERVE网络发出充值待确认交易异常", e);
+            logger().error("stayNERVEAbnormal transaction sent by network for recharging pending confirmation", e);
         }
     }
 
-    // P21生效, 使用 depositII.extend 来判断，检查是否为跨链追加手续费
+    // P21take effect, apply depositII.extend To determine whether it is a cross chain additional handling fee
     private boolean addFeeCrossChainTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousAddFeeCrossChainData> parseAddFeeCrossChainData) {
         if (!htgContext.getConverterCoreApi().isProtocol21()) {
             return false;
@@ -122,7 +122,7 @@ public class HtgPendingTxHelper implements BeanInitial {
         return true;
     }
 
-    // P21生效, 使用 depositII.extend 来判断，检查是否为一键跨链的数据 oneClickCrossChainProcessor.
+    // P21take effect, apply depositII.extend To determine whether it is one click cross chain data oneClickCrossChainProcessor.
     private boolean commitNervePendingOneClickCrossChainTx(HtgUnconfirmedTxPo po, BiFunction<String, NulsLogger, HeterogeneousOneClickCrossChainData> parseOneClickCrossChainData) throws Exception {
         if (!htgContext.getConverterCoreApi().isProtocol21()) {
             return false;
@@ -133,7 +133,7 @@ public class HtgPendingTxHelper implements BeanInitial {
         }
         ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
         byte[] withdrawalBlackhole = AddressTool.getAddressByPubKeyStr(converterConfig.getBlackHolePublicKey(), converterConfig.getChainId());
-        // 一键跨链的nerve接收地址只能是黑洞地址
+        // One click cross chainnerveThe receiving address can only be a black hole address
         if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
             logger().error("[{}]OneClickCrossChain Nerve address(only blackHole) error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
             return false;
@@ -181,12 +181,12 @@ public class HtgPendingTxHelper implements BeanInitial {
         try {
             htgCallBackManager.getTxConfirmedProcessor().pendingTxOfWithdraw(nerveTxHash, htTxHash);
         } catch (Exception e) {
-            // 交易已存在，等待确认移除
+            // Transaction already exists, waiting for confirmation to remove
             if (e instanceof NulsException && HtgConstant.TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode()) || HtgConstant.TX_ALREADY_EXISTS_1.equals(((NulsException) e).getErrorCode())) {
-                logger().info("Nerve提现待确认交易[{}]已存在，忽略[{}]", nerveTxHash, htTxHash);
+                logger().info("NerveWithdrawal pending confirmation transaction[{}]Already exists, ignoring[{}]", nerveTxHash, htTxHash);
                 return;
             }
-            logger().warn("在NERVE网络发出提现待确认交易异常, error: {}", e.getMessage());
+            logger().warn("stayNERVEOnline withdrawal pending confirmation transaction abnormality, error: {}", e.getMessage());
         }
     }
 }

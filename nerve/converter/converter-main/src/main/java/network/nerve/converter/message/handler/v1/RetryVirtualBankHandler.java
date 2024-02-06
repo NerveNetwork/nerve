@@ -66,7 +66,7 @@ public class RetryVirtualBankHandler implements MessageProcessor {
             return;
         }
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            LoggerUtil.LOG.debug("当前非虚拟银行成员节点, 不处理消息:{}", ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
+            LoggerUtil.LOG.debug("Current non virtual bank member nodes, Do not process messages:{}", ConverterCmdConstant.RETRY_VIRTUAL_BANK_MESSAGE);
             return;
         }
         VirtualBankSignMessage virtualBankSignMessage = RPCUtil.getInstanceRpcStr(message, VirtualBankSignMessage.class);

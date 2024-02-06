@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.optimism.constant;
  */
 public interface OptimismDBConstant {
     /**
-     * Optimism信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * OptimismInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_OPTIMISM = "cv_table_optimism";

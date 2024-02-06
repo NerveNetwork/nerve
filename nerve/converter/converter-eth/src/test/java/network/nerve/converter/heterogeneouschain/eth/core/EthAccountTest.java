@@ -39,20 +39,16 @@ import io.nuls.core.parse.SerializeUtils;
 import network.nerve.converter.heterogeneouschain.eth.base.Base;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
-import network.nerve.converter.heterogeneouschain.eth.utils.BTCUtilsTest;
+import network.nerve.converter.heterogeneouschain.btc.BTCUtilsTest;
 import network.nerve.converter.heterogeneouschain.eth.utils.EthUtil;
-import org.bitcoinj.core.Bech32;
+import org.bitcoinj.base.SegwitAddress;
 import org.bitcoinj.core.NetworkParameters;
-import org.bitcoinj.core.SegwitAddress;
 import org.bitcoinj.crypto.*;
 import org.bitcoinj.params.MainNetParams;
-import org.bitcoinj.script.Script;
-import org.bitcoinj.wallet.DeterministicKeyChain;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
 import org.bouncycastle.math.ec.ECPoint;
 import org.bouncycastle.math.ec.FixedPointCombMultiplier;
-import org.bouncycastle.math.ec.custom.sec.SecP256K1Point;
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +60,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.*;
 
 import static io.nuls.core.crypto.ECKey.CURVE;
@@ -98,7 +93,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
+        String prikey = "912b6f010e024327865784dd3388d906d4813c236458183574eda28762373d49";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -362,7 +357,7 @@ public class EthAccountTest extends Base {
         //System.out.println("hrp: " + decode.hrp);
         //System.out.println("encoding: " + decode.encoding.toString());
 
-        //org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        //org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         //ecKey.decompress();
         //ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         //System.out.println(HexUtil.encode(pubKeyPoint.getEncoded(true)));
@@ -371,19 +366,19 @@ public class EthAccountTest extends Base {
         //byte[] t = taggedHash("TapTweak", x);
         //
         //BigInteger bigT = new BigInteger(t);
-        //ECPoint tMultiplyG = point_mul(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        //ECPoint tMultiplyG = point_mul(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
         //ECPoint Q = point_add(pubKeyPoint, tMultiplyG);
 
         //BigInteger bigT = new BigInteger(1, t);
-        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
         //ECPoint Q = pubKeyPoint.add(tMultiplyG);
 
         //BigInteger bigT = new BigInteger(1, t);
-        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
-        //tMultiplyG = org.bitcoinj.core.ECKey.CURVE.validatePublicPoint(tMultiplyG);
+        //ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
+        //tMultiplyG = org.bitcoinj.crypto.ECKey.CURVE.validatePublicPoint(tMultiplyG);
         //ECPoint Q = pubKeyPoint.add(tMultiplyG);
 
-        //org.bitcoinj.core.ECKey ecKeyT = org.bitcoinj.core.ECKey.fromPrivate(t);
+        //org.bitcoinj.crypto.ECKey ecKeyT = org.bitcoinj.crypto.ECKey.fromPrivate(t);
         //ECPoint Q = pubKeyPoint.add(ecKeyT.getPubKeyPoint());
 
         //byte[] resultBytes = Q.getXCoord().getEncoded();
@@ -405,13 +400,13 @@ public class EthAccountTest extends Base {
     String pub = "02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115";
     @Test
     public void test5() throws Exception {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] x = pubKeyPoint.getXCoord().getEncoded();
         byte[] t = taggedHash("TapTweak", x);
 
         BigInteger bigT = new BigInteger(1, t);
-        org.bitcoinj.core.ECKey tKey = org.bitcoinj.core.ECKey.fromPrivate(bigT);
+        org.bitcoinj.crypto.ECKey tKey = org.bitcoinj.crypto.ECKey.fromPrivate(bigT);
         System.out.println(tKey.getPublicKeyAsHex());
         ECPoint Q = pubKeyPoint.add(tKey.getPubKeyPoint());
 
@@ -432,33 +427,33 @@ public class EthAccountTest extends Base {
     }
     @Test
     public void test2() throws Exception {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ecKey.decompress();
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] x = pubKeyPoint.getXCoord().getEncoded();
         byte[] t = taggedHash("TapTweak", x);
 
         BigInteger bigT = new BigInteger(t);
-        ECPoint tMultiplyG = point_mul(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        ECPoint tMultiplyG = point_mul(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
         ECPoint Q = point_add(pubKeyPoint, tMultiplyG);
 
         printQxcoordAndSegwitAddress(Q);
     }
     @Test
     public void test1() throws Exception {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] x = pubKeyPoint.getXCoord().getEncoded();
         byte[] t = taggedHash("TapTweak", x);
         System.out.println("t: " + HexUtil.encode(t));
 
         BigInteger bigT = new BigInteger(1, t);
-        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
+        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
         ECPoint Q = pubKeyPoint.add(tMultiplyG);
 
         printQxcoordAndSegwitAddress(Q);
     }
-    /** taproot地址生成规则 (ECPoint.add方法错误，与taproot规则不兼容，原因未知)
+    /** taprootAddress generation rules (ECPoint.addMethod error, related totaprootIncompatible rules, unknown reason)
     Compute the public key P = privkey * G.
     Let Pb be the serialization of P in x-only form.
     Compute the tweak t = SHA256(SHA256("TapTweak") || SHA256("TapTweak") || Pb), interpreted as 32-byte big endian encoded integer.
@@ -468,14 +463,14 @@ public class EthAccountTest extends Base {
     */
     @Test
     public void test3() throws Exception {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode(pub));
+        org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode(pub));
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] x = pubKeyPoint.getXCoord().getEncoded();
         byte[] t = taggedHash("TapTweak", x);
 
         BigInteger bigT = new BigInteger(1, t);
-        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.core.ECKey.CURVE.getG(), bigT);
-        tMultiplyG = org.bitcoinj.core.ECKey.CURVE.validatePublicPoint(tMultiplyG);
+        ECPoint tMultiplyG = new FixedPointCombMultiplier().multiply(org.bitcoinj.crypto.ECKey.CURVE.getG(), bigT);
+        tMultiplyG = org.bitcoinj.crypto.ECKey.CURVE.validatePublicPoint(tMultiplyG);
         ECPoint Q = pubKeyPoint.add(tMultiplyG);
 
         printQxcoordAndSegwitAddress(Q);
@@ -488,7 +483,7 @@ public class EthAccountTest extends Base {
     }
     @Test
     public void test4() throws Exception {
-        org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(HexUtil.decode("02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115"));
+        org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(HexUtil.decode("02cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115"));
         //ecKey.decompress();
         ECPoint pubKeyPoint = ecKey.getPubKeyPoint();
         byte[] x = pubKeyPoint.getXCoord().getEncoded();
@@ -502,8 +497,8 @@ public class EthAccountTest extends Base {
         System.out.println("py: " + new BigInteger(1, y));
         System.out.println("px hex: " + new BigInteger(1, x).toString(16));
         System.out.println("py hex: " + new BigInteger(1, y).toString(16));
-        org.bitcoinj.core.ECKey tKey = org.bitcoinj.core.ECKey.fromPrivate(t);
-        //ECPoint ecPoint = org.bitcoinj.core.ECKey.publicPointFromPrivate(new BigInteger(t));
+        org.bitcoinj.crypto.ECKey tKey = org.bitcoinj.crypto.ECKey.fromPrivate(t);
+        //ECPoint ecPoint = org.bitcoinj.crypto.ECKey.publicPointFromPrivate(new BigInteger(t));
         byte[] tweakX = tKey.getPubKeyPoint().getXCoord().getEncoded();
         byte[] tweakY = tKey.getPubKeyPoint().getYCoord().getEncoded();
         System.out.println("tx: " + new BigInteger(1, tweakX));
@@ -563,7 +558,7 @@ public class EthAccountTest extends Base {
             lam = ((y(P2).subtract(y(P1))).multiply((x(P2).subtract(x(P1))).modPow(p.subtract(BigInteger.valueOf(2)), p))).mod(p);
         }
         BigInteger x3 = (lam.multiply(lam).subtract(x(P1)).subtract(x(P2))).mod(p);
-        return org.bitcoinj.core.ECKey.CURVE.getCurve().createPoint(x3, (lam.multiply(x(P1).subtract(x3)).subtract(y(P1))).mod(p));
+        return org.bitcoinj.crypto.ECKey.CURVE.getCurve().createPoint(x3, (lam.multiply(x(P1).subtract(x3)).subtract(y(P1))).mod(p));
     }
 
     public static byte[] taggedHash(String tag, byte[] msg) {
@@ -609,7 +604,7 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 隔离见证地址 原生
+     * Isolation Witness Address Native
      * @param pubKey
      * @return
      */
@@ -624,7 +619,7 @@ public class EthAccountTest extends Base {
     //}
     //
     ///**
-    // * 隔离见证地址 兼容
+    // * Isolation Witness Address compatible
     // * @param pubKey
     // * @return
     // */
@@ -640,11 +635,13 @@ public class EthAccountTest extends Base {
 
     @Test
     public void btcAddressTest() {
-        //getBtcSegregatedWitnessAddress("71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc");
-        getBtcSegregatedWitnessAddressByPubkey("03cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115");
+        boolean mainnet = true;
+        String pubKey = "03c08a1dc38138e28be8af6268da3d3bb58db64fd13c8cd2bc9870ac4ad59787b5";
+        System.out.println(genSegWitCompatibleAddress(pubKey, mainnet));
+        System.out.println(getBtcSegregatedWitnessAddressByPubkey(pubKey));
     }
     /**
-     * 生成隔离见证地址兼容
+     * Generate native isolation witness address
      * @param mnemonic
      * @return
      */
@@ -653,13 +650,32 @@ public class EthAccountTest extends Base {
         try {
             NetworkParameters networkParameters = MainNetParams.get();
             BigInteger privkeybtc = new BigInteger(1, HexUtil.decode(prikey));
-            org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPrivate(privkeybtc);
+            org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPrivate(privkeybtc);
             SegwitAddress segwitAddress = SegwitAddress.fromKey(networkParameters, ecKey);
             address = segwitAddress.toBech32();
-            System.out.println("隔离见证兼容地址："+address);
+            System.out.println("Native Isolation Witness Address："+address);
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return address;
+    }
+
+    @Test
+    public void segWitCompatibleAddressTest() {
+        boolean mainnet = true;
+        //String pubKey = "03f028892bad7ed57d2fb57bf33081d5cfcf6f9ed3d3d7f159c2e2fff579dc341a";
+        String pubKey = "03c08a1dc38138e28be8af6268da3d3bb58db64fd13c8cd2bc9870ac4ad59787b5";
+        System.out.println(genSegWitCompatibleAddress(pubKey, mainnet));
+    }
+
+    public static String genSegWitCompatibleAddress(String pubKey, boolean mainnet) {
+        byte[] rip = SerializeUtils.sha256hash160(HexUtil.decode(pubKey));
+        byte[] redeem_script = new byte[22];
+        redeem_script[0] = 0x0;
+        redeem_script[1] = 0x14;
+        System.arraycopy(rip, 0, redeem_script, 2, 20);
+        byte[] redeem_rip = SerializeUtils.sha256hash160(redeem_script);
+        String address = org.bitcoinj.base.Base58.encodeChecked(mainnet ? 0x05 : 0xc4, redeem_rip);
         return address;
     }
 
@@ -667,7 +683,7 @@ public class EthAccountTest extends Base {
         String address = "";
         try {
             NetworkParameters networkParameters = MainNetParams.get();
-            org.bitcoinj.core.ECKey ecKey = org.bitcoinj.core.ECKey.fromPublicOnly(Numeric.hexStringToByteArray(pubKey));
+            org.bitcoinj.crypto.ECKey ecKey = org.bitcoinj.crypto.ECKey.fromPublicOnly(Numeric.hexStringToByteArray(pubKey));
             SegwitAddress segwitAddress = SegwitAddress.fromKey(networkParameters, ecKey);
             address = segwitAddress.toBech32();
         } catch (Exception e) {
@@ -687,9 +703,9 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 使用evm系私钥计算btc私钥
-     * @param evmPrikey 以太系私钥
-     * @param mainnet 是否主网
+     * applyevmSystem private key calculationbtcPrivate key
+     * @param evmPrikey Ethereum private key
+     * @param mainnet Is it the main network
      * @return
      */
     public String calcBtcPriByEvmPri(String evmPrikey, boolean mainnet) {
@@ -709,9 +725,9 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 使用btc私钥计算evm系私钥
-     * @param btcPrikey btc网络私钥
-     * @param mainnet 是否主网
+     * applybtcPrivate key calculationevmSeries private key
+     * @param btcPrikey btcNetwork private key
+     * @param mainnet Is it the main network
      * @return
      */
     public String calcEvmPriByBtcPri(String btcPrikey, boolean mainnet) {
@@ -780,7 +796,7 @@ public class EthAccountTest extends Base {
             if (s[0].equalsIgnoreCase(ethAddress)) {
                 System.out.println(String.format("address: %s == %s", ethAddress, AddressTool.getAddressString(HexUtil.decode(compressedPubkey), 9)));
             } else {
-                System.out.println(String.format("错误: %s != %s", ethAddress, s[0]));
+                System.out.println(String.format("error: %s != %s", ethAddress, s[0]));
             }
 //                    String pub = Numeric.toHexStringNoPrefix(ecKeyPair.getPublicKey());
 //                    byte[] bytes = HexUtil.decode(pub);
@@ -920,7 +936,7 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * keystore导入测试
+     * keystoreImport Test
      */
     @Test
     public void importKeystoreTest() throws Exception {
@@ -937,7 +953,7 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 助记词导入测试
+     * Introduction test for mnemonic words
      */
     @Test
     public void importByMnemonicest() throws Exception {
@@ -947,7 +963,7 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 助记词导入测试II
+     * Introduction test for mnemonic wordsII
      */
     @Test
     public void importByMnemonicestII() throws Exception {
@@ -966,43 +982,43 @@ public class EthAccountTest extends Base {
     }
 
     /**
-     * 通过助记词导入钱包
+     * Importing wallets through mnemonics
      *
-     * @param path      助记词路径  用户提供使用什么协议生成
-     * @param mnemonics 助记词
-     * @param password  密码
+     * @param path      Mnemonic path  What protocol does the user provide for generating
+     * @param mnemonics Mnemonic words
+     * @param password  password
      * @return
      */
     private Map importByMnemonic(String path, List<String> mnemonics, String password) {
-        //协议跟路径这个是有规定的，这里也要校验一下
+        //There are regulations regarding the protocol and path, and it is also necessary to verify them here
         if (!path.startsWith("m") && !path.startsWith("M")) {
-            throw new RuntimeException("请输入正确路径");
+            throw new RuntimeException("Please enter the correct path");
         }
 
         String[] pathArray = path.split("/");
         long creationTimeSeconds = System.currentTimeMillis() / 1000;
-        //主要就是这里会有不同，原来是随机生成，这次我们替换成用户助记词构建
+        //The main difference here is that it will be different. Originally, it was randomly generated, but this time we will replace it with user mnemonic word construction
         DeterministicSeed ds = new DeterministicSeed(mnemonics, null, "", creationTimeSeconds);
-        //根私钥
+        //Root private key
         byte[] seedBytes = ds.getSeedBytes();
         System.out.println("seedBytes: " + Numeric.toHexString(seedBytes));
-        //助记词
+        //Mnemonic words
         List<String> mnemonic = ds.getMnemonicCode();
         try {
-            //助记词种子
+            //Mnemonic seed
             byte[] mnemonicSeedBytes = MnemonicCode.INSTANCE.toEntropy(mnemonic);
             ECKeyPair mnemonicKeyPair = ECKeyPair.create(mnemonicSeedBytes);
             WalletFile walletFile = Wallet.createLight(password, mnemonicKeyPair);
             ObjectMapper objectMapper = ObjectMapperFactory.getObjectMapper();
-            //存这个keystore 用完后删除
+            //Save thiskeystore Delete after use
             String jsonStr = objectMapper.writeValueAsString(walletFile);
-            //验证
+            //validate
             WalletFile checkWalletFile = objectMapper.readValue(jsonStr, WalletFile.class);
             ECKeyPair ecKeyPair = Wallet.decrypt(password, checkWalletFile);
             byte[] checkMnemonicSeedBytes = Numeric.hexStringToByteArray(ecKeyPair.getPrivateKey().toString(16));
             List<String> checkMnemonic = MnemonicCode.INSTANCE.toMnemonic(checkMnemonicSeedBytes);
         } catch (MnemonicException.MnemonicLengthException | MnemonicException.MnemonicWordException | MnemonicException.MnemonicChecksumException | CipherException | IOException e) {
-            Log.error("账号生成异常", e);
+            Log.error("Account generation exception", e);
         }
         if (seedBytes == null) {
             return null;

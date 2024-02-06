@@ -18,7 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * 链区块管理类
+ * Chain blockchain management
  * Chain Block Management Class
  *
  * @author tag
@@ -36,7 +36,7 @@ public class BlockManager {
     private Long lastHeight;
 
     /**
-     * 收到最新区块头，更新链区块缓存数据
+     * Received the latest block header and updated the blockchain cache data
      * Receive the latest block header, update the chain block cache entity
      *
      * @param chain       chain info
@@ -49,10 +49,10 @@ public class BlockManager {
         }
         lastHeight = blockHeader.getHeight();
 
-        //保存共识奖励结算信息
+        //Save consensus reward settlement information
         ConsensusAwardUtil.saveAndSwitchSettleRecord(chain, blockHeader);
         /*
-        如果新增区块有轮次变化，则删除最小轮次区块
+        If there is a round change in the newly added block, delete the minimum round block
          */
         BlockHeader newestHeader = chain.getBestHeader();
         BlockExtendsData newestExtendsData = newestHeader.getExtendsData();
@@ -71,33 +71,33 @@ public class BlockManager {
                         break;
                     }
                 }
-                //清理轮次缓存
+                //Cleaning the round cache
                 punishManager.clear(chain);
             }
         }
 
-        //这里切换轮次
+        //Switch rounds here
         RoundController roundController = SpringLiteContext.getBean(RoundController.class);
         roundController.switchPackingIndex(receiveExtendsData.getRoundIndex(), receiveExtendsData.getRoundStartTime(),
                 receiveExtendsData.getPackingIndexOfRound() + 1, blockHeader.getTime() + chain.getConfig().getPackingInterval());
 
         chain.getBlockHeaderList().add(blockHeader);
         chain.setBestHeader(blockHeader);
-        chain.getLogger().info("区块保存，高度为：" + blockHeader.getHeight() + " , txCount: " + blockHeader.getTxCount() + ",本地最新区块高度为：" + chain.getBestHeader().getHeight() + ", 轮次:" + receiveExtendsData.getRoundIndex() + "\n\n");
+        chain.getLogger().info("Block save, with a height of：" + blockHeader.getHeight() + " , txCount: " + blockHeader.getTxCount() + ",The latest local block height is：" + chain.getBestHeader().getHeight() + ", Round:" + receiveExtendsData.getRoundIndex() + "\n\n");
 
 
-        //如果存在没保存公钥节点则保存节点公钥
+        //If there is a node that has not saved its public key, save the node's public key
         if (!chain.getUnBlockAgentList().isEmpty()) {
             agentManager.setPubkey(chain, blockHeader.getBlockSignature().getPublicKey());
         }
 
-// 准备修改共识奖励计算的触发器
+// Prepare to modify the trigger for consensus reward calculation
 //        chain.getConsensusCache().getBlockHeaderQueue().offer(blockHeader);
 
     }
 
     /**
-     * 链分叉，区块回滚
+     * Chain fork, block rollback
      * Chain bifurcation, block rollback
      *
      * @param chain  chain info
@@ -107,7 +107,7 @@ public class BlockManager {
         if (height > 0) {
             throw new NulsRuntimeException(ConsensusErrorCode.SYS_UNKOWN_EXCEPTION);
         }
-        chain.getLogger().info("区块开始回滚，回滚到的高度：" + height);
+        chain.getLogger().info("The height at which the block starts rolling back：" + height);
         List<BlockHeader> headerList = chain.getBlockHeaderList();
         headerList.sort(new BlockHeaderComparator());
         BlockHeader originalBlocHeader = chain.getBestHeader();
@@ -127,7 +127,7 @@ public class BlockManager {
         BlockHeader newestBlocHeader = chain.getBestHeader();
         BlockExtendsData bestExtendsData = newestBlocHeader.getExtendsData();
         long currentRound = bestExtendsData.getRoundIndex();
-        //如果有轮次变化，回滚之后如果本地区块不足指定轮次的区块，则需向区块获取区块补足并回滚本地
+        //If there is a round change, after rolling back, if the local block is not enough for the specified round of blocks, it is necessary to obtain blocks from the block to make up for it and roll back the local block
         if (currentRound != originalRound) {
             BlockHeader lastestBlocHeader = chain.getBlockHeaderList().get(0);
             BlockExtendsData lastestExtendsData = lastestBlocHeader.getExtendsData();
@@ -142,7 +142,7 @@ public class BlockManager {
                 }
             }
             long roundIndex;
-            //回滚轮次
+            //Rollback round
             if (bestExtendsData.getPackingIndexOfRound() > 1) {
                 roundIndex = bestExtendsData.getRoundIndex();
             } else {
@@ -150,6 +150,6 @@ public class BlockManager {
             }
 //            roundManager.rollBackRound(chain, roundIndex);
         }
-        chain.getLogger().info("区块回滚成功，回滚到的高度为：" + height + ",本地最新区块高度为：" + chain.getBestHeader().getHeight());
+        chain.getLogger().info("Block rollback successful, rolled back to a height of：" + height + ",The latest local block height is：" + chain.getBestHeader().getHeight());
     }
 }

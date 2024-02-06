@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 
 
 /**
- * KCS组件向Nerve核心注册
+ * KCSComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

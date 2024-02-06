@@ -44,27 +44,27 @@ public class StageOneProcessor extends BasicRunnable {
     private void doit() throws InterruptedException {
         VoteResultStageOneQueue queue = chain.getConsensusCache().getStageOneQueue();
         VoteStageResult result = queue.take();
-//            log.info("收到第一阶段结果：{}-{}-{}-{}: {}",result.getHeight(),result.getRoundIndex(),result.getPackingIndexOfRound(),
+//            log.info("Received the results of the first stage：{}-{}-{}-{}: {}",result.getHeight(),result.getRoundIndex(),result.getPackingIndexOfRound(),
 //                    result.getVoteRoundIndex(),result.getBlockHash().toHex());
         if (result.getRoundIndex() < chain.getConsensusCache().getLastConfirmedRoundIndex() ||
                 (result.getRoundIndex() == chain.getConsensusCache().getLastConfirmedRoundIndex() && result.getPackingIndexOfRound() <= chain.getConsensusCache().getLastConfirmedRoundPackingIndex())) {
             return;
         }
-        //修改得到结果标识，判断是否已超时
+        //Modify the result identifier to determine if it has timed out
         chain.getConsensusCache().getBestBlocksVotingContainer().getStage1ResultRecorder()
                 .insertAndCheck(result.getHeight() + ConsensusConstant.SEPARATOR + result.getVoteRoundIndex());
-        //最要紧的事：赶紧投票第二轮
+        //The most important thing：Hurry up and vote for the second round
         MeetingRound round = roundController.getRound(result.getRoundIndex(), result.getRoundStartTime());
         MeetingMember meetingMember = round.getLocalMember();
         if (null == meetingMember) {
-            log.info("本地不是共识节点。。。。");
+            log.info("Local is not a consensus node....");
             return;
         }
         String address = AddressTool.getStringAddressByBytes(meetingMember.getAgent().getPackingAddress());
 
         VoteMessage message = CsUtils.createStageTwoVoteMessage(chain, address, result);
         if (null == message) {
-            log.warn("生成第二阶段投票失败！！！");
+            log.warn("Generation of second stage voting failed！！！");
             return;
         }
         this.voteController.voteStageTwo(message);

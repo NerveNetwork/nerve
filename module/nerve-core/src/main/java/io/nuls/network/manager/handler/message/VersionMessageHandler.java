@@ -52,8 +52,8 @@ import java.util.concurrent.*;
 
 /**
  * version message handler
- * client 先发起version消息，server接收到后，
- * 1 是否自连接 2.校验业务连接重叠，连接过载
+ * client Initiate firstversionMessage,serverAfter receiving it,
+ * 1 Whether it is self connected 2.Verify overlapping business connections and overloaded connections
  *
  * @author lan
  * @date 2018/10/20
@@ -74,10 +74,10 @@ public class VersionMessageHandler extends BaseMessageHandler {
     }
 
     /**
-     * 服务器被动连接规则
-     * 1. 不超过最大被动连接数
-     * 2. 如果自己已经主动连接了对方，不接受对方的被动连接
-     * 3. 相同的IP的被动连接不超过n次
+     * Server passive connection rule
+     * 1. Not exceeding the maximum number of passive connections
+     * 2. If you have already actively connected to the other party and do not accept their passive connection
+     * 3. SameIPThe passive connection of does not exceednsecond
      *
      * @param ip
      * @param port
@@ -95,11 +95,11 @@ public class VersionMessageHandler extends BaseMessageHandler {
 
         int sameIpCount = 0;
         for (Node node : connectedNodes.values()) {
-            //不会存在两次被动连接都是同一个端口的，即使是同一台服务器
+            //There will not be two passive connections that are on the same port, even on the same server
             //if(ip.equals(node.getIp()) && (node.getPort().intValue() == port || node.getType() == Node.OUT)) {
             if (ip.equals(node.getIp()) && node.getType() == Node.OUT) {
-                //也可能存在自己连接自己进入这个逻辑
-                //这里需要一个机制来判定相互连接时候保留哪个?
+                //It is also possible that there is self connection and self entry into this logic
+                //We need a mechanism here to determine which one to keep when connecting to each other?
                 LoggerUtil.logger(chainId).info("refuse canConnectIn ip={},node.getIp()={}, node.getType={}", ip, node.getIp(), node.getType());
                 return false;
             }
@@ -125,7 +125,7 @@ public class VersionMessageHandler extends BaseMessageHandler {
         VersionMessageBody versionBody = (VersionMessageBody) message.getMsgBody();
         NodeGroup nodeGroup = nodeGroupManager.getNodeGroupByMagic(message.getHeader().getMagicNumber());
         String myIp = versionBody.getAddrYou().getIp().getHostAddress();
-        //设置magicNumber
+        //set upmagicNumber
         node.setMagicNumber(nodeGroup.getMagicNumber());
         String ip = node.getIp();
         node.setExternalIp(myIp);
@@ -133,18 +133,18 @@ public class VersionMessageHandler extends BaseMessageHandler {
         NodesContainer nodesContainer = null;
         int sameIpMaxCount = nodeGroup.getSameIpMaxCount(node.isCrossConnect());
         if (node.isCrossConnect()) {
-            //是主网本地magic网络，但是连接了跨链节点,主网magicNumber不存在跨链连接
+            //It's local to the main networkmagicNetwork, but connected to cross chain nodes,Main networkmagicNumberThere is no cross chain connection
             if (nodeGroup.isMoonGroup()) {
                 LoggerUtil.logger(nodeGroup.getChainId()).error("close!!! node={} status={}, version canConnectIn fail..Cross=true, but group is moon net", node.getId(), node.getStatus());
                 node.getChannel().close();
                 return;
             } else {
-                //判断本地是否出块了，还未出块则取消连接
+                //Check if the local block has been generated, and cancel the connection if it has not been generated yet
                 BlockRpcService blockRpcService = SpringLiteContext.getBean(BlockRpcServiceImpl.class);
                 if (nodeGroup.isMoonNode()) {
-                    //主网节点，不用判断，主网卫星链不会存在高度0的情况
+                    //Main network node, no need to judge, there will be no height in the main network satellite chain0The situation
                 } else {
-                    //看跨链节点的高度是否不为0
+                    //Check if the height of cross chain nodes is not0
                     if (!nodeGroup.isHadBlockHeigh()) {
                         BestBlockInfo bestBlockInfo = blockRpcService.getBestBlockHeader(nodeGroup.getChainId());
                         if (bestBlockInfo.getBlockHeight() < 1) {
@@ -170,11 +170,11 @@ public class VersionMessageHandler extends BaseMessageHandler {
             return;
         }
 
-        //判断对方节点是否可以连接，若不能连接，则直接断链，不加入到已连接列表里
-        LoggerUtil.logger(nodeGroup.getChainId()).info("----是否检查对方网络节点可连接，reverseCheck:" + versionBody.getReverseCheck());
+        //Determine if the other node can be connected. If it cannot be connected, simply disconnect the link and not add it to the connected list
+        LoggerUtil.logger(nodeGroup.getChainId()).info("----Do you want to check if the other party's network nodes can connect,reverseCheck:" + versionBody.getReverseCheck());
         if (versionBody.getReverseCheck() != 0) {
             if (!checkNodeCanConnect(node, versionBody.getAddrMe().getPort())) {
-                LoggerUtil.logger(nodeGroup.getChainId()).info("close!!! 对方节点服务器连接验证失败！node={} status={}", node.getId(), node.getStatus());
+                LoggerUtil.logger(nodeGroup.getChainId()).info("close!!! Server connection verification failed for the other node！node={} status={}", node.getId(), node.getStatus());
                 node.getChannel().close();
 
                 return;
@@ -184,7 +184,7 @@ public class VersionMessageHandler extends BaseMessageHandler {
         node.setConnectStatus(NodeConnectStatusEnum.CONNECTED);
         nodesContainer.getConnectedNodes().put(node.getId(), node);
         nodesContainer.markCanuseNodeByIp(ip, NodeStatusEnum.AVAILABLE);
-        //监听被动连接的断开
+        //Listening for passive connection disconnection
         node.setDisconnectListener(() -> {
             Log.info("~~~~~~~ in node {} disconnect ! status= {}", node.getId(), node.getStatus());
 
@@ -198,12 +198,12 @@ public class VersionMessageHandler extends BaseMessageHandler {
             }
             BusinessGroupManager.getInstance().removeNode(ip);
         });
-        //存储需要的信息,协议版本信息，远程跨链端口信息
+        //Store the required information,Protocol version information, remote cross chain port information
         node.setVersionProtocolInfos(versionBody.getProtocolVersion(), versionBody.getBlockHeight(), versionBody.getBlockHash());
-        //回复version
+        //replyversion
         VersionMessage versionMessage = MessageFactory.getInstance().buildVersionMessage(node, message.getHeader().getMagicNumber());
         LoggerUtil.logger(nodeGroup.getChainId()).info("rec node={} ver msg success.go response versionMessage..cross={}", node.getId(), node.isCrossConnect());
-        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------服务器回执握手连接，ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
+        LoggerUtil.logger(nodeGroup.getChainId()).info("--------------Server receipt handshake connection,ip:" + versionMessage.getMsgBody().getAddrMe().getIp() + ", port:" + versionMessage.getMsgBody().getAddrMe().getPort());
         send(versionMessage, node, true);
     }
 
@@ -234,7 +234,7 @@ public class VersionMessageHandler extends BaseMessageHandler {
         CompletableFuture<Boolean> future = new CompletableFuture<>();
         node.setConnectStatus(NodeConnectStatusEnum.CONNECTING);
         node.setConnectedListener(() -> {
-            //探测可连接后，断开连接
+            //After detecting connectivity, disconnect
             LoggerUtil.logger(node.getNodeGroup().getChainId()).info("close!!! checkNodeCanConnect node:{},connect success", node.getId());
             node.setConnectStatus(NodeConnectStatusEnum.CONNECTED);
             node.getChannel().close();
@@ -244,7 +244,7 @@ public class VersionMessageHandler extends BaseMessageHandler {
             LoggerUtil.logger(node.getNodeGroup().getChainId()).debug("checkNodeCanConnect node:{},disconnect,failCount={}", node.getId(), node.getFailCount());
             node.setChannel(null);
             if (node.getConnectStatus() == NodeConnectStatusEnum.CONNECTED) {
-                //探测可连接
+                //Detect connectable
                 node.setConnectStatus(NodeConnectStatusEnum.DISCONNECT);
                 future.complete(true);
             } else {
@@ -275,11 +275,11 @@ public class VersionMessageHandler extends BaseMessageHandler {
         VersionMessageBody versionBody = (VersionMessageBody) message.getMsgBody();
         String myIp = versionBody.getAddrYou().getIp().getHostAddress();
         int myPort = versionBody.getAddrYou().getPort();
-        //设置magicNumber
+        //set upmagicNumber
         node.setExternalIp(myIp);
-        //client发出version后获得，得到server回复，建立握手
+        //clientissueversionPost acquisitionserverReply, establish handshake
 //       Log.debug("VersionMessageHandler Recieve:Client"+":"+node.getIp()+":"+node.getRemotePort()+"==CMD=" +message.getHeader().getCommandStr());
-        //存储需要的信息
+        //Store the required information
         node.setVersionProtocolInfos(versionBody.getProtocolVersion(), versionBody.getBlockHeight(), versionBody.getBlockHash());
         node.setConnectStatus(NodeConnectStatusEnum.AVAILABLE);
         node.setFailCount(0);
@@ -289,18 +289,18 @@ public class VersionMessageHandler extends BaseMessageHandler {
         } else {
             node.getNodeGroup().getLocalNetNodeContainer().setLatestHandshakeSuccTime(TimeManager.currentTimeMillis());
         }
-        //client:接收到server端消息，进行verack答复
+        //client:ReceivedserverEnd message, proceedingverackreply
         VerackMessage verackMessage = MessageFactory.getInstance().buildVerackMessage(node, message.getHeader().getMagicNumber(), VerackMessageBody.VER_SUCCESS);
 //        LoggerUtil.logger(node.getNodeGroup().getChainId()).info("rec node={} ver msg success.go response verackMessage..cross={}", node.getId(), node.isCrossConnect());
         MessageManager.getInstance().sendHandlerMsg(verackMessage, node, true);
         if (node.isSeedNode()) {
-            //向种子节点请求地址
+            //Requesting address from seed node
             MessageManager.getInstance().sendGetAddressMessage(node, false, false, true);
         }
     }
 
     /**
-     * 接收消息处理
+     * Receive message processing
      * Receive message processing
      *
      * @param message message
@@ -325,7 +325,7 @@ public class VersionMessageHandler extends BaseMessageHandler {
 //        LoggerUtil.logger(chainId).info("VersionMessageHandler send:" + (node.isServer() ? "Server" : "Client") + ":" + node.getIp() + ":" + node.getRemotePort() + "==CMD=" + message.getHeader().getCommandStr());
         VersionMessage versionMessage = (VersionMessage) message;
         if (node.isCrossConnect()) {
-            //跨链不需要区块信息，cross chain no request block info
+            //Cross chain does not require block information,cross chain no request block info
             versionMessage.getMsgBody().setBlockHash("");
             versionMessage.getMsgBody().setBlockHeight(0);
         } else {

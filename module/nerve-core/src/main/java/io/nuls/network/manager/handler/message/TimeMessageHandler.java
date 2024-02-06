@@ -51,7 +51,7 @@ public class TimeMessageHandler extends BaseMessageHandler {
     }
 
     /**
-     * 接收消息处理
+     * Receive message processing
      * Receive message processing
      *
      * @param message address message
@@ -61,7 +61,7 @@ public class TimeMessageHandler extends BaseMessageHandler {
     @Override
     public NetworkEventResult recieve(BaseMessage message, Node node) {
         /*
-         * 处理应答消息
+         * Processing response messages
          */
         TimeMessage timeMessage = (TimeMessage) message;
         TimeManager.addPeerTime(node.getId(), timeMessage.getMsgBody().getMessageId(), timeMessage.getMsgBody().getTime());

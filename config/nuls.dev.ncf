@@ -4,23 +4,23 @@ language=en
 logPath=/Users/niels/workspace/nerve-network/logs
 logLevel=INFO
 dataPath=/Users/niels/workspace/nerve-network/data
-#默认本链ID
+#Default This ChainID
 chainId=5
-#地址前缀
+#Address prefix
 addressPrefix=TNVT
-#默认本链主资产ID
+#Default main asset of this chainID
 assetId=1
-#默认资产小数位数
+#Default Decimal Places for Assets
 decimals=8
-#默认链名称
+#Default Chain Name
 chainName=nerve
-#本链默认资产符号
+#The default asset symbol for this chain
 symbol=NVT
-#主网链id
+#Main network chainid
 mainChainId=2
-#主网主资产id
+#Main network assetsid
 mainAssetId=1
-#主网主资产符号
+#Main network main asset symbol
 mainSymbol=NULS
 blackHolePublicKey=000000000000000000000000000000000000000000000000000000000000000000
 packageVersion=%PACKAGE_VERSION%
@@ -29,16 +29,16 @@ serviceManagerPort=8771
 [network]
 port=17001
 crossPort=17002
-#魔法参数
+#Magic parameters
 packetMagic=20210810
 reverseCheck=0
-#种子节点
+#Seed node
 selfSeedIps=192.168.1.121:17001,192.168.1.122:17001,192.168.1.123:17001
-#主网的跨链种子连接节点
+#Cross chain seed connection nodes of the main network
 moonSeedIps=192.168.1.116:8002,192.168.1.117:8002,192.168.1.118:8002
-#最大入网连接数
+#Maximum number of network connections
 maxInCount=300
-#最大出网连接数
+#Maximum number of outbound connections
 maxOutCount=50
 reverseCheck=0
 
@@ -46,74 +46,74 @@ reverseCheck=0
 keystoreFolder=/keystore/backup
 
 [block]
-#区块最大字节数
+#Maximum number of bytes in a block
 blockMaxSize=5242880
-#区块扩展字段最大字节数
+#Maximum number of bytes for block extension fields
 extendMaxSize=1024
-#引发分叉链切换的高度差阈值
+#Threshold of height difference that triggers fork chain switching
 chainSwtichThreshold=3
-#最小链接节点数,当链接到的网络节点低于此参数时,会持续等待
+#Minimum number of linked nodes,When the network node linked to is below this parameter,Will continue to wait
 minNodeAmount=0
-#区块同步过程中,每次从网络上节点下载的区块数量
+#During block synchronization process,The number of blocks downloaded from nodes on the network each time
 downloadNumber=10
-#从网络节点下载单个区块的超时时间
+#The timeout for downloading a single block from a network node
 singleDownloadTimeout=2000
-#区块同步过程中缓存的区块字节数上限(20M)
+#Maximum number of cached block bytes during block synchronization process(20M)
 cachedBlockSizeLimit=20971520
-#创世块文件路径(支持绝对路径与相对路径,相对路径相对于此配置文件的目录)
+#Genesis block file path(Supports absolute and relative paths,Relative path relative to the directory of this configuration file)
 genesisBlockPath=genesis-block.json
 
 [consensus]
 seedNodes=TNVTdTSPLGfeN8cS9tLBnYnjYjk4MrMabDgcK
-#种子节点对应的公钥列表
+#List of public keys corresponding to seed nodes
 pubKeyList=0308784e3d4aff68a24964968877b39d22449596c1c789136a4e25e2db78198260
-#出块地址密码
+#Block address password
 password=nuls123456
-#出块间隔时间(单位：s)
+#Block output interval time(unit：s)
 packingInterval=5
-#共识委托抵押资产链ID
+#Consensus entrusted mortgage asset chainID
 agentChainId=5
-#共识委托抵押资产ID
+#Consensus entrusted mortgage assetsID
 agentAssetId=1
-#共识奖励资产ID(共识奖励必须为本链资产)
+#Consensus reward assetsID(Consensus rewards must be assets of the same chain)
 awardAssetId=1
-#共识交易手续费单价
+#Consensus transaction fee unit price
 feeUnit=100000
-#NULS权重基数
+#NULSWeight base
 mainAssertBase=2
-#NVT权重基数
+#NVTWeight base
 localAssertBase=2
-#节点保证金基数
+#Node margin base
 reservegentDepositBase=1.5
-#节点保证金基数
+#Node margin base
 agentDepositBase=3
-#虚拟银行保证金基数
+#Virtual Bank Margin Base
 superAgentDepositBase=4
-#总通胀量(10亿枚)
+#Total Inflation(10Billion pieces)
 totalInflationAmount=100000000000000000
-#初始通胀金额（每个抵减周期）
+#Initial inflation amount（Each deduction cycle）
 inflationAmount=864000000000000
-#通胀开始计算高度
+#Inflation begins to be calculated at a high level
 initHeight=1
-#通缩比例(如果没有通缩则设为0)
+#Deflationary ratio(If there is no deflation, set to0)
 deflationRatio=0.0082
-#通缩间隔高度,100天
+#Deflation interval height,100day
 deflationHeightInterval=4320000
 
 [public-service]
-#public-service模块对外的rpc端口号
+#public-serviceModule ExternalrpcPort number
 rpcPort=17003
-#数据库url地址
+#databaseurladdress
 databaseUrl=127.0.0.1
-#数据库端口号
+#Database port number
 databasePort=27017
-#连接池最大数
+#Maximum number of connection pools
 maxAliveConnect=20
-#连接最大等待时间
+#Maximum waiting time for connection
 maxWaitTime=120000
-#连接最大持续时间
+#Maximum duration of connection
 socketTimeout=300000
-#连接超时时间
+#Connection timeout
 connectTimeOut=30000
 mongoUser=nuls
 mongoPwd=nuls123456
@@ -121,23 +121,23 @@ nulsApiUrl=https://api.nuls.io/jsonrpc
 lockedAddress=NULSd6HgjNHAs4W6RL6wy9XRaLtNNd3SyJ7Er,NULSd6HgYYmifVKWPjjiMUU7zgYJbmcCXv5wi,NERVEepb63T1M8JgQ26jwZpZXYL8ZMLdUAK31L,NERVEepb6FhfgWLyqHUQgHoHwRGuw3huvchBus,NERVEepb6Chtj1NEaxu8VC5LqojAoxknX4RExF,NERVEepb6BJ5ckPsEbhWE3zxFeEKkgHSTz1Fqt,NERVEepb66ndAQdnZanwjcvNbML3ex6HnHCqDG,NERVEepb6AHhD8hBtVnUbf4Ynxf5Kgek6du4KC,NERVEepb61XqfUyQSfEfqf8XrV6qgjgjqkYio1,NERVEepb6DYgJrFnLQVf7U9dNny6RzMDGhPQ1P,NERVEepb64Fc8yoW786NTdqaEDGbw7LvK2twRX,NERVEepb642YtQrJ8y8C9KxqY7Yzvc2FQxcZyT,NERVEepb65oPwX3XKDMSEmmYgLTVMv6MKJhjJY,NERVEepb6BKFc2usbP1mUfmvNyZGELaFRm1L5G
 
 [cross-chain]
-#跨链节点链接的最小值
+#The minimum value of cross chain node links
 minNodeAmount=3
-#跨链节点链接的最大值 注：此配置已过时
+#Maximum value of cross chain node links notes：This configuration is outdated
 sendHeight=6
-#跨链交易拜占庭比例
+#Byzantine proportion of cross chain transactions
 byzantineRatio=66
-#主网跨链种子节点列表
+#Main network cross chain seed node list
 crossSeedIps=192.168.1.116:8002,192.168.1.117:8002,192.168.1.118:8002
-#主网验证人列表
+#List of main network validators
 verifiers=NULSd6HgcjSWUbG4SSPYsvQysbsT5R3Rvmbom,NULSd6HgUxj3weGguFo3sbPu5cqStBAsxy8ZP,NULSd6HgVK1WCJercC8DvKCmHHNycEtsrKeW1
-#主网签名拜占庭比列
+#Main network signature Byzantine comparison
 mainByzantineRatio=66
-#主网最大签名数
+#Maximum number of signatures on the main network
 maxSignatureCount=100
 
 [protocol-update]
-#每隔多少个区块统计一次协议占比
+#How many blocks do we count the proportion of protocols per second
 interval=5
 height_1_6_0=10
 height_1_8_0=10
@@ -148,9 +148,9 @@ height_1_14_0=10
 height_1_15_0=10
 
 [nuls-api]
-#httpServer的启动ip
+#httpServerStart ofip
 serverIp=0.0.0.0
-#httpServer的启动port
+#httpServerStart ofport
 serverPort=17004
 
 [nerve-network-wallet]
@@ -164,11 +164,11 @@ webWalletPort=17005
 webWalletHost=0.0.0.0
 
 [dex]
-#系统收取手续费地址
+#Address for system fee collection
 sysFeeAddress=TNVTdTSPQ9yhsrG8az1JqK2MhcVDvJi9ukD81
-#系统收取手续费比例（3，表示3/10000）
+#System fee collection ratio（3, represents3/10000）
 sysFeeScale=2
-#创建交易对费用
+#Create transaction pair fees
 createTradingAmount=20000000000
 
 [dex-api]
@@ -180,9 +180,9 @@ btcAssetId=4
 walletPSUrl=http://beta.public.nerve.network/
 walletApiUrl=http://beta.api.nerve.network/
 autoOrderAddress=TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg,TNVTdTSPPmY8DsWpNkBCHZPfvyJ4p7uUjJCFg
-#运行节点设置手续费收取地址
+#Set the service fee collection address for operating nodes
 feeAddress=TNVTdTSPVMJBn8J7xsqhF6f5mrY86LJKK4VYf
-#运行节点设置手续费收取比例，最高不能超过5
+#Set the commission collection ratio for operating nodes, which cannot exceed a maximum of5
 feeScale=5
 
 
@@ -218,7 +218,7 @@ feeEffectiveHeightFirst=0
 feeEffectiveHeightSecond=0
 
 [swap]
-#手续费开发团队接收地址-TNVTdTSPP6vD8BuWUYibYRx5qHFUPfkztAFo4
+#Handling fee development team receiving address-TNVTdTSPP6vD8BuWUYibYRx5qHFUPfkztAFo4
 awardFeeSystemAddressPublicKey=031672b023ef35e37eb1d570015b54e1c29a6cc57d5a11c4733e960efe7ca56b80
-#手续费销毁地址-TNVTdTSPVnoPACtKgRmQy4s7SG3vm6XyR2Ffv
+#Handling fee destruction address-TNVTdTSPVnoPACtKgRmQy4s7SG3vm6XyR2Ffv
 awardFeeDestructionAddressPublicKey=0310346f49dc59c150756f0cc004d9d6a1e940fcfe09e851fff1ee48d6dc3a9653

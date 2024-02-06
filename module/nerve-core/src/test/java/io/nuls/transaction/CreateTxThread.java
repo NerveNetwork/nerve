@@ -90,7 +90,7 @@ public class CreateTxThread implements Runnable {
 
     private void createTransfer() throws Exception {
         Map transferMap = this.createTransferTx(address26, address25, password,"100000000");
-        //调用接口
+        //Calling interfaces
         Response cmdResp = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_transfer", transferMap);
         HashMap result = (HashMap) (((HashMap) cmdResp.getResponseData()).get("ac_transfer"));
         Assert.assertTrue(null != result);
@@ -98,7 +98,7 @@ public class CreateTxThread implements Runnable {
     }
 
     /**
-     * 创建普通转账交易
+     * Create a regular transfer transaction
      * @return
      */
     private Map createTransferTx(String fromAddress, String toAddress, String pwd, String amount)

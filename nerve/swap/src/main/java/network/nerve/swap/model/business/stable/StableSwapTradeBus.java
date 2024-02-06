@@ -37,31 +37,31 @@ public class StableSwapTradeBus extends BaseBus {
 
     private byte[] pairAddress;
     /**
-     * 交易后的余额变化量
+     * Change in balance after transaction
      */
     private BigInteger[] changeBalances;
     /**
-     * 交易前的余额
+     * Balance before transaction
      */
     private BigInteger[] balances;
     /**
-     * 进入池子的token数量
+     * Entering the pooltokenquantity
      */
     private BigInteger[] amountsIn;
     /**
-     * `非`流动性提供者可奖励的交易手续费
+     * `wrong`Transaction fees that liquidity providers can reward
      */
     private BigInteger[] unLiquidityAwardFees;
     /**
-     * 流出池子的token的位置
+     * Flowing out of the pooltokenLocation of
      */
     private byte tokenOutIndex;
     /**
-     * 流出池子的token数量
+     * Flowing out of the pooltokenquantity
      */
     private BigInteger amountOut;
     /**
-     * 流出的token接收地址
+     * OutflowtokenReceiving address
      */
     private byte[] to;
 

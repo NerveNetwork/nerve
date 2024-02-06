@@ -32,29 +32,29 @@ import java.util.Set;
  */
 public class TxContext {
 
-    /** 交易数据最大值 默认300K**/
+    /** Maximum transaction data value default300K**/
     public static long TX_MAX_SIZE = 307200L;
 
-    /** 未确认交易过期时间秒 */
+    /** Unconfirmed transaction expiration time in seconds */
     public static long UNCONFIRMED_TX_EXPIRE_SEC = 20L;
 
-    /** 孤儿交易生命时间,超过会被清理**/
+    /** Orphan Trading Lifetime,Exceeding will be cleared**/
     public static long ORPHAN_LIFE_TIME_SEC = 300L;
 
-    /**交易时间所在区块时间的默认范围值(在区块时间±本值范围内)*/
+    /**The default range value of the block time where the transaction time is located(At block time±Within the range of this value)*/
     public static long BLOCK_TX_TIME_RANGE_SEC = 600L;
 
-    /** coinTo 不支持金额等于0 的协议生效高度*/
+    /** coinTo Amount equal to is not supported0 The effective height of the agreement*/
     public static long COINTO_PTL_HEIGHT_FIRST = 0L;
 
-    /** coinTo 支持金额等于0, 只禁止金额为0的锁定 的协议生效高度*/
+    /** coinTo Support amount equal to0, Only prohibit amounts of0Locked The effective height of the agreement*/
     public static long COINTO_PTL_HEIGHT_SECOND = 0L;
 
     public static long PROTOCOL_1_18_0 = 0L;
     public static long PROTOCOL_1_19_0 = 0L;
     public static long PROTOCOL_1_20_0 = 0L;
     public static Set<String> ACCOUNT_BLOCK_MANAGER_ADDRESS_SET = new HashSet<>();
-    // 最小签名数
+    // Minimum number of signatures
     public static int ACCOUNT_BLOCK_MIN_SIGN_COUNT = 0;
 
 }

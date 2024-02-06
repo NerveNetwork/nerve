@@ -42,30 +42,30 @@ public class QuotationContext {
     public static int quoteEndH = 0;
     public static int quoteEndM = 10;
 
-    /** 统计报价时, 有效报价节点的数量*/
+    /** When calculating quotations, The number of valid quotation nodes*/
     public static int effectiveQuotation = 5;
      /**
-     * 统计最终报价时, 去掉最高和最低 数据的数量
-     * 如果为2 则去掉2个最高和2个最低，共计4条价格数据
+     * When compiling the final quotation, Remove the highest and lowest values The quantity of data
+     * If it is2 Then remove it2Maximum and2Lowest, total4Price data
      * */
      public static int removeMaxMinCount = 2;
     /**
-     * 采集第三方价格时 去掉一个最高价 去掉一个最低价
+     * When collecting third-party prices Remove a maximum price Remove a minimum price
      */
     public static int enquiryRemoveMaxMinCount = 1;
     /**
-     * 记录当天无需再计算最终报价的token
-     * 1. 记录当前已提供最终报价的token,以防2次报价
-     * 2. 当天都不能再提供最终报价的token, 例如报价节点数不足，没有获取到价格等。
+     * Record that there is no need to calculate the final quotation on the same daytoken
+     * 1. Record the final quotation currently providedtoken,in case2Secondary quotation
+     * 2. We cannot provide the final quotation on the same daytoken, For example, insufficient number of quotation nodes and failure to obtain prices.
      */
     public static final Set<String> INTRADAY_NEED_NOT_QUOTE_TOKENS = new HashSet<>();
 
-    /** 记录当天已成功组装到交易中的token, 未确认
-     *  k: anchorToken, value: 交易hash
+    /** Record the successful assembly into the transaction on that daytoken, Unconfirmed
+     *  k: anchorToken, value: transactionhash
      * */
     public static final Map<String, String> NODE_QUOTED_TX_TOKENS_TEMP = new HashMap<>();
 
-    /** 当天已成功组装到交易中的token, 并且已确认*/
+    /** Successfully assembled into the transaction on the same daytoken, And it has been confirmed that*/
     public static final Set<String> NODE_QUOTED_TX_TOKENS_CONFIRMED = new HashSet<>();
 
     public static long usdtDaiUsdcPaxKeyHeight = 0L;
@@ -82,9 +82,10 @@ public class QuotationContext {
     public static long protocol27Height = 0L;
     public static long protocol29Height = 0L;
     public static long protocol30Height = 0L;
+    public static long protocol31Height = 0L;
 
     /**
-     * 日志实例
+     * Log instance
      */
     private static NulsLogger logger;
 

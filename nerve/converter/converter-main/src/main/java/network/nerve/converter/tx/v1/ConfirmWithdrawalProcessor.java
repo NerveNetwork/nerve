@@ -91,24 +91,24 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 ConfirmWithdrawalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ConfirmWithdrawalTxData.class);
                 String originalHash = txData.getWithdrawalTxHash().toHex();
                 if (setDuplicate.contains(originalHash)) {
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.TX_DUPLICATION.getMsg());
                     continue;
                 }
-                // 判断该提现交易是否已经有对应的确认提现交易
+                // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
                 ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, txData.getWithdrawalTxHash());
                 if (null != po) {
-                    // 说明该提现交易 已经发出过确认提现交易,本次交易为重复的确认提现交易
+                    // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out,This transaction is a duplicate confirmed withdrawal transaction
                     failsList.add(tx);
-                    // Nerve提现交易不存在
+                    // NerveWithdrawal transaction does not exist
                     errorCode = ConverterErrorCode.CFM_IS_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.CFM_IS_DUPLICATION.getMsg());
                     continue;
@@ -119,7 +119,7 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
-                // 签名验证
+                // Signature verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -168,11 +168,11 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                         true);
                 asyncProcessedTxStorageService.saveComponentCall(chain, callPO, false);
 
-                // 更新异构链组件交易状态 // add by Mimi at 2020-03-12
+                // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-12
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                     docking.txConfirmedCompleted(txData.getHeterogeneousTxHash(), blockHeader.getHeight(), txData.getWithdrawalTxHash().toHex());
-                    //放入后续处理队列, 可能发起手续费补贴交易
+                    //Put into the subsequent processing queue, Possible initiation of handling fee subsidy transactions
                     TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                     pendingPO.setTx(tx);
                     pendingPO.setBlockHeader(blockHeader);
@@ -181,7 +181,7 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     chain.getPendingTxQueue().offer(pendingPO);
 
                 }
-                chain.getLogger().info("[commit] 确认提现交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit] Confirm withdrawal transactions hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (Exception e) {
@@ -213,11 +213,11 @@ public class ConfirmWithdrawalProcessor implements TransactionProcessor {
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
                 if (isCurrentDirector) {
-                    // 更新异构链组件交易状态 // add by Mimi at 2020-03-13
+                    // Update the transaction status of heterogeneous chain components // add by Mimi at 2020-03-13
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getHeterogeneousChainId());
                     docking.txConfirmedRollback(txData.getHeterogeneousTxHash());
                 }
-                chain.getLogger().info("[rollback] 确认提现交易 hash:{}, 原始提现交易hash:{}", tx.getHash().toHex(), txData.getWithdrawalTxHash().toHex());
+                chain.getLogger().info("[rollback] Confirm withdrawal transactions hash:{}, Original withdrawal transactionhash:{}", tx.getHash().toHex(), txData.getWithdrawalTxHash().toHex());
             }
             return true;
         } catch (Exception e) {

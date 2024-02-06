@@ -32,6 +32,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
+import network.nerve.converter.btc.model.BtcTxInfo;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
@@ -41,6 +42,7 @@ import network.nerve.converter.helper.LedgerAssetRegisterHelper;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.model.dto.AddFeeCrossChainTxDTO;
 import network.nerve.converter.model.dto.RechargeTxDTO;
+import network.nerve.converter.model.dto.RechargeTxOfBtcSysDTO;
 import network.nerve.converter.model.po.HeterogeneousConfirmedChangeVBPo;
 import network.nerve.converter.model.po.ProposalPO;
 import network.nerve.converter.model.txdata.*;
@@ -49,6 +51,7 @@ import network.nerve.converter.storage.HeterogeneousAssetConverterStorageService
 import network.nerve.converter.storage.HeterogeneousConfirmedChangeVBStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -120,7 +123,7 @@ public class ByzantineTransactionHelper {
 
     private boolean proposal(Chain nerveChain, String byzantineTxhash, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
         if (nerveChain.getLogger().isDebugEnabled()) {
-            nerveChain.getLogger().debug("生成确认提案交易: {}, nerveTxHash: {}, hashList: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
+            nerveChain.getLogger().debug("Generate Confirmation Proposal Transaction: {}, nerveTxHash: {}, hashList: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
         }
         NulsHash proposalHash = NulsHash.fromHex(nerveTxHash);
         ProposalPO proposalPO = proposalStorageService.find(nerveChain, proposalHash);
@@ -155,7 +158,7 @@ public class ByzantineTransactionHelper {
         }
         Transaction tx = assembleTxService.createConfirmProposalTxWithoutSign(nerveChain, txData, heterogeneousTxTime);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[提案]拜占庭交易验证失败, 交易详情: {}", tx.format(ConfirmProposalTxData.class));
+            nerveChain.getLogger().error("[proposal]Byzantine transaction verification failed, transaction details: {}", tx.format(ConfirmProposalTxData.class));
             return false;
         }
         assembleTxService.createConfirmProposalTx(nerveChain, txData, heterogeneousTxTime);
@@ -165,7 +168,7 @@ public class ByzantineTransactionHelper {
     private ConfirmProposalTxData createCommonConfirmProposalTx(ProposalTypeEnum proposalType, NulsHash proposalTxHash, NulsHash proposalExeHash, HeterogeneousHash heterogeneousHash, byte[] address, List<HeterogeneousAddress> signers, long heterogeneousTxTime) throws NulsException {
         ProposalExeBusinessData businessData = new ProposalExeBusinessData();
         businessData.setProposalTxHash(proposalTxHash);
-        // 只有剔除会新生成nerve交易，从而存在nerve执行交易hash
+        // Only by removing will a new generation be generatednerveTransaction, thus existingnerveExecute transactionshash
         if (proposalType == ProposalTypeEnum.EXPELLED) {
             businessData.setProposalExeHash(proposalExeHash);
         }
@@ -192,7 +195,7 @@ public class ByzantineTransactionHelper {
         businessData.setHeterogeneousChainId(htgChainId);
         businessData.setHeterogeneousTxHash(heterogeneousTxHash.getHeterogeneousHash());
         businessData.setAddress(address);
-        // 兼容非以太系地址 update by pierre at 2021/11/16
+        // Compatible with non Ethernet addresses update by pierre at 2021/11/16
         businessData.setOldAddress(docking.getAddressBytes(multiSignAddress));
         businessData.setListDistributionFee(signers);
 
@@ -207,7 +210,17 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean recharge(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
-        nerveChain.getLogger().info("创建[充值]拜占庭交易[{}]消息, 异构链交易hash: {}", byzantineTxhash, hTxHash);
+        if (hChainId < 200) {
+            return rechargeOfEvmSys(nerveChain, byzantineTxhash, hChainId, hTxHash);
+        } else if (hChainId < 300) {
+            return rechargeOfBtcSys(nerveChain, byzantineTxhash, hChainId, hTxHash);
+        } else {
+            return false;
+        }
+    }
+
+    private boolean rechargeOfEvmSys(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        nerveChain.getLogger().info("establish[Recharge]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
         RechargeTxDTO dto = new RechargeTxDTO();
@@ -220,21 +233,53 @@ public class ByzantineTransactionHelper {
         dto.setTxtime(depositTx.getTxTime());
         dto.setExtend(depositTx.getDepositIIExtend());
         if (depositTx.isDepositIIMainAndToken()) {
-            // 支持同时转入token和main
+            // Support simultaneous transfer intokenandmain
             dto.setDepositII(true);
             dto.setMainAmount(depositTx.getDepositIIMainAssetValue());
         }
         Transaction tx = assembleTxService.createRechargeTxWithoutSign(nerveChain, dto);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));
+            nerveChain.getLogger().error("[Recharge-Ethereumsystem]Byzantine transaction verification failed, transaction details: {}", tx.format(RechargeTxData.class));
             return false;
         }
         assembleTxService.createRechargeTx(nerveChain, dto);
         return true;
     }
 
+    private boolean rechargeOfBtcSys(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
+        nerveChain.getLogger().info("establish[Recharge-BitCoinsystem]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, hTxHash);
+        IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
+        HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
+        RechargeTxOfBtcSysDTO dto = getRechargeTxOfBtcSysDTO(hChainId, (BtcTxInfo) depositTx);
+        Transaction tx = assembleTxService.createRechargeTxOfBtcSysWithoutSign(nerveChain, dto);
+        if(!byzantineTxhash.equals(tx.getHash().toHex())) {
+            nerveChain.getLogger().error("[RechargeBtcSys-Ethereumsystem]Byzantine transaction verification failed, transaction details: {}", tx.format(RechargeTxData.class));
+            return false;
+        }
+        assembleTxService.createRechargeTxOfBtcSys(nerveChain, dto);
+        return true;
+    }
+
+    @NotNull
+    private static RechargeTxOfBtcSysDTO getRechargeTxOfBtcSysDTO(int hChainId, BtcTxInfo depositTx) {
+        BtcTxInfo txInfo = depositTx;
+        RechargeTxOfBtcSysDTO dto = new RechargeTxOfBtcSysDTO();
+        dto.setHtgTxHash(txInfo.getTxHash());
+        dto.setHtgFrom(txInfo.getFrom());
+        dto.setHtgChainId(hChainId);
+        dto.setHtgAssetId(txInfo.getAssetId());
+        dto.setHtgTxTime(txInfo.getTxTime());
+        dto.setHtgBlockHeight(txInfo.getBlockHeight());
+        dto.setTo(txInfo.getNerveAddress());
+        dto.setAmount(txInfo.getValue());
+        dto.setFee(txInfo.getFee());
+        dto.setFeeTo(txInfo.getNerveFeeTo());
+        dto.setExtend(txInfo.getExtend0());
+        return dto;
+    }
+
     private boolean rechargeUnconfirmed(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
-        nerveChain.getLogger().info("创建[充值待确认]拜占庭交易[{}]消息, 异构链交易hash: {}", byzantineTxhash, hTxHash);
+        nerveChain.getLogger().info("establish[Recharge to be confirmed]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo depositTx = docking.getDepositTransaction(hTxHash);
         RechargeUnconfirmedTxData dto = new RechargeUnconfirmedTxData();
@@ -249,7 +294,7 @@ public class ByzantineTransactionHelper {
         dto.setAssetChainId(nerveAssetInfo.getAssetChainId());
         dto.setAssetId(nerveAssetInfo.getAssetId());
         if (depositTx.isDepositIIMainAndToken()) {
-            // 同时充值token和main，记录主资产充值数据
+            // Simultaneously rechargetokenandmainRecord main asset recharge data
             NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
             dto.setMainAssetAmount(depositTx.getDepositIIMainAssetValue());
             dto.setMainAssetChainId(mainAsset.getAssetChainId());
@@ -257,7 +302,7 @@ public class ByzantineTransactionHelper {
         }
         Transaction tx = assembleTxService.rechargeUnconfirmedTxWithoutSign(nerveChain, dto, depositTx.getTxTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[充值]拜占庭交易验证失败, 交易详情: {}", tx.format(RechargeTxData.class));
+            nerveChain.getLogger().error("[Recharge]Byzantine transaction verification failed, transaction details: {}", tx.format(RechargeTxData.class));
             return false;
         }
         assembleTxService.rechargeUnconfirmedTx(nerveChain, dto, depositTx.getTxTime());
@@ -265,13 +310,13 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean oneClickCrossChainUnconfirmed(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
-        nerveChain.getLogger().info("创建[一键跨链待确认]拜占庭交易[{}]消息, 异构链交易hash: {}", byzantineTxhash, hTxHash);
+        nerveChain.getLogger().info("establish[One click cross chain pending confirmation]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo occcTx = docking.getDepositTransaction(hTxHash);
         String extend = occcTx.getDepositIIExtend();
         HeterogeneousOneClickCrossChainData data = docking.parseOneClickCrossChainData(extend);
         if (data == null) {
-            nerveChain.getLogger().error("[一键跨链待确认]拜占庭交易验证失败, extend: {}", extend);
+            nerveChain.getLogger().error("[One click cross chain pending confirmation]Byzantine transaction verification failed, extend: {}", extend);
             return false;
         }
         BigInteger tipping = data.getTipping();
@@ -303,12 +348,12 @@ public class ByzantineTransactionHelper {
         txData.setNerveToAddress(AddressTool.getAddress(occcTx.getNerveAddress()));
         txData.setTipping(tipping);
         txData.setTippingAddress(tippingAddress);
-        // 记录主资产充值数据
+        // Record main asset recharge data
         NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
         txData.setMainAssetAmount(mainAssetValue);
         txData.setMainAssetChainId(mainAsset.getAssetChainId());
         txData.setMainAssetId(mainAsset.getAssetId());
-        // 记录token充值数据
+        // recordtokenRecharge data
         txData.setErc20Amount(erc20Value);
         if (erc20AssetId > 1) {
             NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
@@ -323,7 +368,7 @@ public class ByzantineTransactionHelper {
 
         Transaction tx = assembleTxService.oneClickCrossChainUnconfirmedTxWithoutSign(nerveChain, txData, txTime);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[一键跨链待确认]拜占庭交易验证失败, 交易详情: {}", tx.format(OneClickCrossChainUnconfirmedTxData.class));
+            nerveChain.getLogger().error("[One click cross chain pending confirmation]Byzantine transaction verification failed, transaction details: {}", tx.format(OneClickCrossChainUnconfirmedTxData.class));
             return false;
         }
         assembleTxService.oneClickCrossChainUnconfirmedTx(nerveChain, txData, txTime);
@@ -331,14 +376,14 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean oneClickCrossChain(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
-        // 创建一键跨链pending check
-        nerveChain.getLogger().info("[{}]创建[一键跨链]拜占庭交易[{}]消息, 异构链交易hash: {}", hChainId, byzantineTxhash, hTxHash);
+        // Create one click cross chainpending check
+        nerveChain.getLogger().info("[{}]establish[One click cross chain]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", hChainId, byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo occcTx = docking.getDepositTransaction(hTxHash);
         String extend = occcTx.getDepositIIExtend();
         HeterogeneousOneClickCrossChainData data = docking.parseOneClickCrossChainData(extend);
         if (data == null) {
-            nerveChain.getLogger().error("[一键跨链]拜占庭交易验证失败, extend: {}", extend);
+            nerveChain.getLogger().error("[One click cross chain]Byzantine transaction verification failed, extend: {}", extend);
             return false;
         }
         BigInteger tipping = data.getTipping();
@@ -370,12 +415,12 @@ public class ByzantineTransactionHelper {
         dto.setNerveToAddress(AddressTool.getAddress(occcTx.getNerveAddress()));
         dto.setTipping(tipping);
         dto.setTippingAddress(tippingAddress);
-        // 记录主资产充值数据
+        // Record main asset recharge data
         NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
         dto.setMainAssetAmount(mainAssetValue);
         dto.setMainAssetChainId(mainAsset.getAssetChainId());
         dto.setMainAssetId(mainAsset.getAssetId());
-        // 记录token充值数据
+        // recordtokenRecharge data
         dto.setErc20Amount(erc20Value);
         if (erc20AssetId > 1) {
             NerveAssetInfo tokenAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, erc20AssetId);
@@ -390,7 +435,7 @@ public class ByzantineTransactionHelper {
 
         Transaction tx = assembleTxService.createOneClickCrossChainTxWithoutSign(nerveChain, dto, txTime);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[一键跨链]拜占庭交易验证失败, 交易详情: {}", tx.format(OneClickCrossChainTxData.class));
+            nerveChain.getLogger().error("[One click cross chain]Byzantine transaction verification failed, transaction details: {}", tx.format(OneClickCrossChainTxData.class));
             return false;
         }
         assembleTxService.createOneClickCrossChainTx(nerveChain, dto, txTime);
@@ -398,14 +443,14 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean addFeeCrossChain(Chain nerveChain, String byzantineTxhash, int hChainId, String hTxHash) throws Exception {
-        // 创建跨链追加手续费pending check
-        nerveChain.getLogger().info("[{}]创建[跨链追加手续费]拜占庭交易[{}]消息, 异构链交易hash: {}", hChainId, byzantineTxhash, hTxHash);
+        // Create cross chain additional transaction feespending check
+        nerveChain.getLogger().info("[{}]establish[Cross chain additional handling fees]Byzantine transactions[{}]news, Heterogeneous Chain Tradinghash: {}", hChainId, byzantineTxhash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo afccTx = docking.getDepositTransaction(hTxHash);
         String extend = afccTx.getDepositIIExtend();
         HeterogeneousAddFeeCrossChainData data = docking.parseAddFeeCrossChainData(extend);
         if (data == null) {
-            nerveChain.getLogger().error("[跨链追加手续费]拜占庭交易验证失败, extend: {}", extend);
+            nerveChain.getLogger().error("[Cross chain additional handling fees]Byzantine transaction verification failed, extend: {}", extend);
             return false;
         }
         BigInteger mainAssetValue = afccTx.getValue();
@@ -415,7 +460,7 @@ public class ByzantineTransactionHelper {
         dto.setHeterogeneousHeight(afccTx.getBlockHeight());
         dto.setHeterogeneousFromAddress(afccTx.getFrom());
         dto.setNerveToAddress(AddressTool.getAddress(afccTx.getNerveAddress()));
-        // 记录主资产充值数据
+        // Record main asset recharge data
         NerveAssetInfo mainAsset = ledgerAssetRegisterHelper.getNerveAssetInfo(hChainId, 1);
         dto.setMainAssetChainId(mainAsset.getAssetChainId());
         dto.setMainAssetId(mainAsset.getAssetId());
@@ -425,7 +470,7 @@ public class ByzantineTransactionHelper {
 
         Transaction tx = assembleTxService.createAddFeeCrossChainTxWithoutSign(nerveChain, dto, txTime);
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[跨链追加手续费]拜占庭交易验证失败, 交易详情: {}", tx.format(WithdrawalAddFeeByCrossChainTxData.class));
+            nerveChain.getLogger().error("[Cross chain additional handling fees]Byzantine transaction verification failed, transaction details: {}", tx.format(WithdrawalAddFeeByCrossChainTxData.class));
             return false;
         }
         assembleTxService.createAddFeeCrossChainTx(nerveChain, dto, txTime);
@@ -433,7 +478,7 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean withdraw(Chain nerveChain, String byzantineTxhash, String nerveTxHash, int hChainId, String hTxHash) throws Exception {
-        nerveChain.getLogger().info("创建[确认提现]拜占庭交易[{}]消息, nerveTxHash: {}, 异构链交易hash: {}", byzantineTxhash, nerveTxHash, hTxHash);
+        nerveChain.getLogger().info("establish[Confirm withdrawal]Byzantine transactions[{}]news, nerveTxHash: {}, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, nerveTxHash, hTxHash);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
         HeterogeneousTransactionInfo hTx = docking.getWithdrawTransaction(hTxHash);
         ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
@@ -444,7 +489,7 @@ public class ByzantineTransactionHelper {
         txData.setListDistributionFee(hTx.getSigners());
         Transaction tx = assembleTxService.createConfirmWithdrawalTxWithoutSign(nerveChain, txData, hTx.getTxTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[确认提现]拜占庭交易验证失败, 交易详情: {}", tx.format(ConfirmWithdrawalTxData.class));
+            nerveChain.getLogger().error("[Confirm withdrawal]Byzantine transaction verification failed, transaction details: {}", tx.format(ConfirmWithdrawalTxData.class));
             return false;
         }
         assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, hTx.getTxTime());
@@ -452,7 +497,7 @@ public class ByzantineTransactionHelper {
     }
 
     private boolean change(Chain nerveChain, String byzantineTxhash, String nerveTxHash, List<HeterogeneousHash> hashList) throws Exception {
-        nerveChain.getLogger().info("创建[确认变更]拜占庭交易[{}]消息, nerveTxHash: {}, 异构链交易hash: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
+        nerveChain.getLogger().info("establish[Confirm changes]Byzantine transactions[{}]news, nerveTxHash: {}, Heterogeneous Chain Tradinghash: {}", byzantineTxhash, nerveTxHash, JSONUtils.obj2json(hashList));
         HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
         if(vbPo == null) {
             vbPo = new HeterogeneousConfirmedChangeVBPo();
@@ -491,7 +536,7 @@ public class ByzantineTransactionHelper {
         VirtualBankUtil.sortListByChainId(hList);
         Transaction tx = assembleTxService.createConfirmedChangeVirtualBankTxWithoutSign(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
         if(!byzantineTxhash.equals(tx.getHash().toHex())) {
-            nerveChain.getLogger().error("[确认变更]拜占庭交易验证失败, 交易详情: {}", tx.format(ConfirmedChangeVirtualBankTxData.class));
+            nerveChain.getLogger().error("[Confirm changes]Byzantine transaction verification failed, transaction details: {}", tx.format(ConfirmedChangeVirtualBankTxData.class));
             return false;
         }
         assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());

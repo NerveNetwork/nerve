@@ -101,10 +101,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
     @Override
     public SwapResult execute(int chainId, Transaction tx, long blockHeight, long blockTime) {
         if (swapHelper.isSupportProtocol24()) {
-            //协议24: 交易对手续费定制
+            //protocol24: Customized transaction fees
             return executeProtocol24(chainId, iPairFactory, tx, blockHeight, blockTime);
         } else if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return executeProtocol17(chainId, iPairFactory, tx, blockHeight, blockTime);
         } else {
             return _execute(chainId, tx, blockHeight, blockTime);
@@ -113,10 +113,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
 
     public SwapTradeBus calSwapTradeBusiness(int chainId, IPairFactory iPairFactory, BigInteger _amountIn, byte[] _to, NerveToken[] path, BigInteger amountOutMin, byte[] feeTo) throws NulsException {
         if (swapHelper.isSupportProtocol24()) {
-            //协议24: 交易对手续费定制
+            //protocol24: Customized transaction fees
             return calSwapTradeBusinessProtocol24(chainId, iPairFactory, _amountIn, _to, path, amountOutMin, feeTo);
         } else if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return calSwapTradeBusinessProtocol17(chainId, iPairFactory, _amountIn, _to, path, amountOutMin, feeTo);
         } else {
             return _calSwapTradeBusiness(chainId, iPairFactory, _amountIn, _to, path, amountOutMin, feeTo);
@@ -124,20 +124,20 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
     }
 
     /**
-     * [手续费分配]
+     * [Fee allocation]
      *
-     * 交易金额的千分之三手续费, 千分之二给流动性提供者
-     * 剩下千分之一，销毁地址占比50%
-     * 剩余50%的部分
-     *     若在交易中指定了手续费地址，则分70%，剩余30%给系统地址
-     *     若在交易中未指定手续费地址，则给系统地址
+     * Transaction fee of 0.3% of transaction amount, Two thousandths to liquidity providers
+     * One thousandth remaining, the proportion of destruction addresses50%
+     * surplus50%Part of
+     *     If a handling fee address is specified in the transaction, it will be divided into70%, Remaining30%Provide system address
+     *     If no fee address is specified in the transaction, provide the system address
      */
     public Transaction makeSystemDealTx(int chainId, IPairFactory iPairFactory, SwapTradeBus bus, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo) throws Exception{
         if (swapHelper.isSupportProtocol24()) {
-            //协议24: 交易对手续费定制
+            //protocol24: Customized transaction fees
             return makeSystemDealTxProtocol24(chainId, iPairFactory, bus, orginTxHash, blockTime, tempBalanceManager, feeTo);
         } else if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return makeSystemDealTxProtocol17(chainId, iPairFactory, bus, orginTxHash, blockTime, tempBalanceManager, feeTo);
         } else {
             return _makeSystemDealTx(bus, orginTxHash, blockTime, tempBalanceManager, feeTo);
@@ -151,14 +151,14 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getSwapTradeInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             SwapTradeData txData = new SwapTradeData();
             txData.parse(tx.getTxData(), 0);
             long deadline = txData.getDeadline();
             if (blockTime > deadline) {
                 throw new NulsException(SwapErrorCode.EXPIRED);
             }
-            // 检查firstPairAddress是否和path中的一致
+            // inspectfirstPairAddressIs it related topathConsistent in
             NerveToken[] path = txData.getPath();
             int pathLength = path.length;
             if (pathLength < 2) {
@@ -167,27 +167,27 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (!Arrays.equals(SwapUtils.getPairAddress(chainId, path[0], path[1]), dto.getFirstPairAddress())) {
                 throw new NulsException(SwapErrorCode.PAIR_INCONSISTENCY);
             }
-            // 用户卖出的资产数量
+            // Number of assets sold by users
             BigInteger amountIn = dto.getAmountIn();
 
-            // 整合计算数据
+            // Integrate computing data
             SwapTradeBus bus = this._calSwapTradeBusiness(chainId, iPairFactory, amountIn,
                     txData.getTo(), path, txData.getAmountOutMin(), txData.getFeeTo());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this._makeSystemDealTx(bus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             List<TradePairBus> busList = bus.getTradePairBuses();
             for (TradePairBus pairBus : busList) {
                 IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairBus.getPairAddress()));
@@ -195,7 +195,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             }
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -206,7 +206,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
             NerveToken tokenIn = dto.getTokenIn();
             BigInteger amountIn = dto.getAmountIn();
@@ -224,7 +224,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
@@ -239,14 +239,14 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getSwapTradeInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             SwapTradeData txData = new SwapTradeData();
             txData.parse(tx.getTxData(), 0);
             long deadline = txData.getDeadline();
             if (blockTime > deadline) {
                 throw new NulsException(SwapErrorCode.EXPIRED);
             }
-            // 检查firstPairAddress是否和path中的一致
+            // inspectfirstPairAddressIs it related topathConsistent in
             NerveToken[] path = txData.getPath();
             int pathLength = path.length;
             if (pathLength < 2) {
@@ -255,13 +255,13 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (!Arrays.equals(this.calcPairAddressProtocol17(chainId, path[0], path[1]), dto.getFirstPairAddress())) {
                 throw new NulsException(SwapErrorCode.PAIR_INCONSISTENCY);
             }
-            // 用户卖出的资产数量
+            // Number of assets sold by users
             BigInteger amountIn = dto.getAmountIn();
 
-            // 整合计算数据
+            // Integrate computing data
             SwapTradeBus bus = this.calSwapTradeBusinessProtocol17(chainId, iPairFactory, amountIn,
                     txData.getTo(), path, txData.getAmountOutMin(), txData.getFeeTo());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
@@ -269,19 +269,19 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
             result.setSwapTradeBus(bus);
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTxProtocol17(chainId, iPairFactory, bus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             List<TradePairBus> busList = bus.getTradePairBuses();
             for (TradePairBus pairBus : busList) {
-                //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+                //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
                 if (bus.isExistStablePair() && SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                    // 临时缓存更新应该移动到 swapTradeHandler 的 execute 函数中，防止交易验证流程污染了缓存
+                    // Temporary cache updates should be moved to swapTradeHandler of execute In the function, prevent the transaction verification process from contaminating the cache
                     stableSwapTradeHandler.updateCacheByCombining(iPairFactory, pairBus.getStableSwapTradeBus(), blockHeight, blockTime);
                     continue;
                 }
@@ -290,7 +290,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             }
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -301,7 +301,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
             NerveToken tokenIn = dto.getTokenIn();
             BigInteger amountIn = dto.getAmountIn();
@@ -319,7 +319,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
@@ -334,14 +334,14 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getSwapTradeInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             SwapTradeData txData = new SwapTradeData();
             txData.parse(tx.getTxData(), 0);
             long deadline = txData.getDeadline();
             if (blockTime > deadline) {
                 throw new NulsException(SwapErrorCode.EXPIRED);
             }
-            // 检查firstPairAddress是否和path中的一致
+            // inspectfirstPairAddressIs it related topathConsistent in
             NerveToken[] path = txData.getPath();
             int pathLength = path.length;
             if (pathLength < 2) {
@@ -350,13 +350,13 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (!Arrays.equals(this.calcPairAddressProtocol17(chainId, path[0], path[1]), dto.getFirstPairAddress())) {
                 throw new NulsException(SwapErrorCode.PAIR_INCONSISTENCY);
             }
-            // 用户卖出的资产数量
+            // Number of assets sold by users
             BigInteger amountIn = dto.getAmountIn();
 
-            // 整合计算数据
+            // Integrate computing data
             SwapTradeBus bus = this.calSwapTradeBusinessProtocol24(chainId, iPairFactory, amountIn,
                     txData.getTo(), path, txData.getAmountOutMin(), txData.getFeeTo());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
@@ -364,19 +364,19 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
             result.setSwapTradeBus(bus);
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTxProtocol24(chainId, iPairFactory, bus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             List<TradePairBus> busList = bus.getTradePairBuses();
             for (TradePairBus pairBus : busList) {
-                //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+                //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
                 if (bus.isExistStablePair() && SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                    // 临时缓存更新应该移动到 swapTradeHandler 的 execute 函数中，防止交易验证流程污染了缓存
+                    // Temporary cache updates should be moved to swapTradeHandler of execute In the function, prevent the transaction verification process from contaminating the cache
                     stableSwapTradeHandler.updateCacheByCombining(iPairFactory, pairBus.getStableSwapTradeBus(), blockHeight, blockTime);
                     continue;
                 }
@@ -385,7 +385,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             }
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -396,7 +396,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
             NerveToken tokenIn = dto.getTokenIn();
             BigInteger amountIn = dto.getAmountIn();
@@ -414,7 +414,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
@@ -440,20 +440,20 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                     .setToAssetsChainId(tokenOut.getChainId())
                     .setToAssetsId(tokenOut.getAssetId())
                     .setToAmount(amountOut).endTo();
-            /** 计算手续费分配 */
+            /** Calculate the distribution of handling fees */
             do {
 
                 LedgerBalance ledgerBalanceFeeOut = tempBalanceManager.getBalance(pairBus.getPairAddress(), tokenIn.getChainId(), tokenIn.getAssetId()).getData();
-                // `非`流动性提供者可奖励的交易手续费
+                // `wrong`Transaction fees that liquidity providers can reward
                 BigInteger unLiquidityAwardFee = pairBus.getUnLiquidityAwardFee();
                 if (unLiquidityAwardFee.equals(BigInteger.ZERO)) {
                     break;
                 }
                 sysDeal.newFrom()
                         .setFrom(ledgerBalanceFeeOut, unLiquidityAwardFee).endFrom();
-                // 销毁地址的手续费奖励，占比50%（在`非`流动性提供者可奖励的交易手续费当中）
+                // Reward for handling fees for destroying addresses, percentage50%（stay`wrong`Among the transaction fees that liquidity providers can reward）
                 BigInteger destructionAwardFee = unLiquidityAwardFee.divide(BI_2);
-                // 金额太小时，不足以 divide 2，则全分配给销毁地址
+                // The amount is too small, not enough divide 2Then all will be allocated to the destruction address
                 if (destructionAwardFee.equals(BigInteger.ZERO)) {
                     sysDeal.newTo()
                             .setToAddress(SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS)
@@ -467,18 +467,18 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                         .setToAssetsChainId(tokenIn.getChainId())
                         .setToAssetsId(tokenIn.getAssetId())
                         .setToAmount(destructionAwardFee).endTo();
-                // 系统地址的手续费奖励
+                // Reward for system address handling fees
                 BigInteger systemAwardFee;
-                // 当前交易的指定地址的手续费奖励
+                // Reward for handling fees at the specified address of the current transaction
                 BigInteger assignAddrAwardFee;
                 if (feeTo == null) {
-                    // 交易未指定手续费奖励地址，则剩余部分手续费奖励分发给系统地址（在扣除销毁部分后）
+                    // If the transaction does not specify a fee reward address, the remaining fee reward will be distributed to the system address（After deducting the destroyed portion）
                     systemAwardFee = unLiquidityAwardFee.subtract(destructionAwardFee);
                 } else {
                     BigInteger tempFee = unLiquidityAwardFee.subtract(destructionAwardFee);
-                    // 其中奖励给当前交易指定地址的交易手续费，占比70%（在扣除销毁部分后）
+                    // The percentage of transaction fees awarded to the designated address of the current transaction70%（After deducting the destroyed portion）
                     assignAddrAwardFee= tempFee.multiply(BI_7).divide(BI_10);
-                    // 剩余给系统的交易手续费
+                    // Remaining transaction fees to the system
                     systemAwardFee  = tempFee.subtract(assignAddrAwardFee);
                     if (!assignAddrAwardFee.equals(BigInteger.ZERO)) {
                         sysDeal.newTo()
@@ -506,7 +506,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         for (TradePairBus pairBus : busList) {
             tokenIn = pairBus.getTokenIn();
             tokenOut = pairBus.getTokenOut();
-            // 整合稳定币币池后，稳定币币种1:1兑换
+            // After integrating the stablecoin pool, stablecoin currencies1:1exchange
             if (bus.isExistStablePair() && SwapUtils.groupCombining(tokenIn, tokenOut)) {
                 StableSwapTradeBus stableSwapTradeBus = stableSwapTradeHandler.tradeByCombining(chainId, iPairFactory, pairBus.getPairAddress(), pairBus.getTo(),
                         tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal);
@@ -524,19 +524,19 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                     .setToAssetsChainId(tokenOut.getChainId())
                     .setToAssetsId(tokenOut.getAssetId())
                     .setToAmount(amountOut).endTo();
-            /** 计算手续费分配 */
+            /** Calculate the distribution of handling fees */
             do {
                 LedgerBalance ledgerBalanceFeeOut = tempBalanceManager.getBalance(pairBus.getPairAddress(), tokenIn.getChainId(), tokenIn.getAssetId()).getData();
-                // `非`流动性提供者可奖励的交易手续费
+                // `wrong`Transaction fees that liquidity providers can reward
                 BigInteger unLiquidityAwardFee = pairBus.getUnLiquidityAwardFee();
                 if (unLiquidityAwardFee.equals(BigInteger.ZERO)) {
                     break;
                 }
                 sysDeal.newFrom()
                         .setFrom(ledgerBalanceFeeOut, unLiquidityAwardFee).endFrom();
-                // 销毁地址的手续费奖励，占比50%（在`非`流动性提供者可奖励的交易手续费当中）
+                // Reward for handling fees for destroying addresses, percentage50%（stay`wrong`Among the transaction fees that liquidity providers can reward）
                 BigInteger destructionAwardFee = unLiquidityAwardFee.divide(BI_2);
-                // 金额太小时，不足以 divide 2，则全分配给销毁地址
+                // The amount is too small, not enough divide 2Then all will be allocated to the destruction address
                 if (destructionAwardFee.equals(BigInteger.ZERO)) {
                     sysDeal.newTo()
                             .setToAddress(SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS)
@@ -550,18 +550,18 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                         .setToAssetsChainId(tokenIn.getChainId())
                         .setToAssetsId(tokenIn.getAssetId())
                         .setToAmount(destructionAwardFee).endTo();
-                // 系统地址的手续费奖励
+                // Reward for system address handling fees
                 BigInteger systemAwardFee;
-                // 当前交易的指定地址的手续费奖励
+                // Reward for handling fees at the specified address of the current transaction
                 BigInteger assignAddrAwardFee;
                 if (feeTo == null) {
-                    // 交易未指定手续费奖励地址，则剩余部分手续费奖励分发给系统地址（在扣除销毁部分后）
+                    // If the transaction does not specify a fee reward address, the remaining fee reward will be distributed to the system address（After deducting the destroyed portion）
                     systemAwardFee = unLiquidityAwardFee.subtract(destructionAwardFee);
                 } else {
                     BigInteger tempFee = unLiquidityAwardFee.subtract(destructionAwardFee);
-                    // 其中奖励给当前交易指定地址的交易手续费，占比70%（在扣除销毁部分后）
+                    // The percentage of transaction fees awarded to the designated address of the current transaction70%（After deducting the destroyed portion）
                     assignAddrAwardFee= tempFee.multiply(BI_7).divide(BI_10);
-                    // 剩余给系统的交易手续费
+                    // Remaining transaction fees to the system
                     systemAwardFee  = tempFee.subtract(assignAddrAwardFee);
                     if (!assignAddrAwardFee.equals(BigInteger.ZERO)) {
                         sysDeal.newTo()
@@ -589,7 +589,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         for (TradePairBus pairBus : busList) {
             tokenIn = pairBus.getTokenIn();
             tokenOut = pairBus.getTokenOut();
-            // 整合稳定币币池后，稳定币币种1:1兑换
+            // After integrating the stablecoin pool, stablecoin currencies1:1exchange
             if (bus.isExistStablePair() && SwapUtils.groupCombining(tokenIn, tokenOut)) {
                 StableSwapTradeBus stableSwapTradeBus = stableSwapTradeHandler.tradeByCombining(chainId, iPairFactory, pairBus.getPairAddress(), pairBus.getTo(),
                         tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal);
@@ -607,19 +607,19 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                     .setToAssetsChainId(tokenOut.getChainId())
                     .setToAssetsId(tokenOut.getAssetId())
                     .setToAmount(amountOut).endTo();
-            /** 计算手续费分配 */
+            /** Calculate the distribution of handling fees */
             do {
                 LedgerBalance ledgerBalanceFeeOut = tempBalanceManager.getBalance(pairBus.getPairAddress(), tokenIn.getChainId(), tokenIn.getAssetId()).getData();
-                // `非`流动性提供者可奖励的交易手续费
+                // `wrong`Transaction fees that liquidity providers can reward
                 BigInteger unLiquidityAwardFee = pairBus.getUnLiquidityAwardFee();
                 if (unLiquidityAwardFee.equals(BigInteger.ZERO)) {
                     break;
                 }
                 sysDeal.newFrom()
                         .setFrom(ledgerBalanceFeeOut, unLiquidityAwardFee).endFrom();
-                // 销毁地址的手续费奖励，占比50%（在`非`流动性提供者可奖励的交易手续费当中）
+                // Reward for handling fees for destroying addresses, percentage50%（stay`wrong`Among the transaction fees that liquidity providers can reward）
                 BigInteger destructionAwardFee = unLiquidityAwardFee.divide(BI_2);
-                // 金额太小时，不足以 divide 2，则全分配给销毁地址
+                // The amount is too small, not enough divide 2Then all will be allocated to the destruction address
                 if (destructionAwardFee.equals(BigInteger.ZERO)) {
                     sysDeal.newTo()
                             .setToAddress(SwapContext.AWARD_FEE_DESTRUCTION_ADDRESS)
@@ -633,18 +633,18 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
                         .setToAssetsChainId(tokenIn.getChainId())
                         .setToAssetsId(tokenIn.getAssetId())
                         .setToAmount(destructionAwardFee).endTo();
-                // 系统地址的手续费奖励
+                // Reward for system address handling fees
                 BigInteger systemAwardFee;
-                // 当前交易的指定地址的手续费奖励
+                // Reward for handling fees at the specified address of the current transaction
                 BigInteger assignAddrAwardFee;
                 if (feeTo == null) {
-                    // 交易未指定手续费奖励地址，则剩余部分手续费奖励分发给系统地址（在扣除销毁部分后）
+                    // If the transaction does not specify a fee reward address, the remaining fee reward will be distributed to the system address（After deducting the destroyed portion）
                     systemAwardFee = unLiquidityAwardFee.subtract(destructionAwardFee);
                 } else {
                     BigInteger tempFee = unLiquidityAwardFee.subtract(destructionAwardFee);
-                    // 其中奖励给当前交易指定地址的交易手续费，占比70%（在扣除销毁部分后）
+                    // The percentage of transaction fees awarded to the designated address of the current transaction70%（After deducting the destroyed portion）
                     assignAddrAwardFee= tempFee.multiply(BI_7).divide(BI_10);
-                    // 剩余给系统的交易手续费
+                    // Remaining transaction fees to the system
                     systemAwardFee  = tempFee.subtract(assignAddrAwardFee);
                     if (!assignAddrAwardFee.equals(BigInteger.ZERO)) {
                         sysDeal.newTo()
@@ -711,7 +711,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             NerveToken[] tokens = SwapUtils.tokenSort(input, output);
             NerveToken token0 = tokens[0];
             BigInteger amountIn = amounts[i];
-            // `非`流动性提供者可奖励的交易手续费, 占交易金额的0.1%
+            // `wrong`Transaction fees that liquidity providers can reward, % of transaction amount0.1%
             BigInteger unLiquidityAwardFee = amountIn.divide(BI_1000);
             BigInteger amountOut = amounts[i + 1];
             BigInteger amount0Out, amount1Out, amount0In, amount1In, amount0InUnLiquidityAwardFee, amount1InUnLiquidityAwardFee;
@@ -752,10 +752,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (balance0Adjusted.multiply(balance1Adjusted).compareTo(_reserve0.multiply(_reserve1).multiply(BI_1000_000)) < 0) {
                 throw new NulsException(SwapErrorCode.K);
             }
-            // balance要扣除即时分配出的手续费奖励
+            // balanceTo deduct the immediately allocated handling fee reward
             balance0 = balance0.subtract(amount0InUnLiquidityAwardFee);
             balance1 = balance1.subtract(amount1InUnLiquidityAwardFee);
-            // 组装业务数据
+            // Assembling business data
             TradePairBus _bus = new TradePairBus(pairPO.getAddress(), balance0, balance1, _reserve0, _reserve1, input, amountIn, unLiquidityAwardFee, output, amountOut, to);
             _bus.setPreBlockHeight(pair.getBlockHeightLast());
             _bus.setPreBlockTime(pair.getBlockTimeLast());
@@ -785,12 +785,12 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             input = path[i];
             output = path[i + 1];
             BigInteger amountIn = amounts[i];
-            // swap trade 的path，计算to地址时，若计算的to地址使用的两个token正好是稳定币池币种的话，就使用稳定币交易池地址
+            // swap trade ofpath, CalculatetoWhen calculating the address, iftoTwo addresses usedtokenIf it happens to be a stablecoin pool currency, use the stablecoin trading pool address
             byte[] to = this.calcAddressOfTradeToProtocol17(chainId, i, _to, path);
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             int groupIndex;
             if ((groupIndex = SwapContext.stableCoinGroup.groupIndex(input, output)) != -1) {
-                // 组装业务数据
+                // Assembling business data
                 BigInteger amountOut = SwapUtils.getStableOutAmountByGroupIndex(groupIndex, input, amountIn, output, iPairFactory, SwapContext.stableCoinGroup);
                 TradePairBus _bus = new TradePairBus(AddressTool.getAddress(SwapContext.stableCoinGroup.getAddressByIndex(groupIndex)), BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, input, amountIn, BigInteger.ZERO, output, amountOut, to);
                 list.add(_bus);
@@ -799,7 +799,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             }
             NerveToken[] tokens = SwapUtils.tokenSort(input, output);
             NerveToken token0 = tokens[0];
-            // `非`流动性提供者可奖励的交易手续费, 占交易金额的0.1%
+            // `wrong`Transaction fees that liquidity providers can reward, % of transaction amount0.1%
             BigInteger unLiquidityAwardFee = amountIn.divide(BI_1000);
             BigInteger amountOut = amounts[i + 1];
             BigInteger amount0Out, amount1Out, amount0In, amount1In, amount0InUnLiquidityAwardFee, amount1InUnLiquidityAwardFee;
@@ -839,10 +839,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (balance0Adjusted.multiply(balance1Adjusted).compareTo(_reserve0.multiply(_reserve1).multiply(BI_1000_000)) < 0) {
                 throw new NulsException(SwapErrorCode.K);
             }
-            // balance要扣除即时分配出的手续费奖励
+            // balanceTo deduct the immediately allocated handling fee reward
             balance0 = balance0.subtract(amount0InUnLiquidityAwardFee);
             balance1 = balance1.subtract(amount1InUnLiquidityAwardFee);
-            // 组装业务数据
+            // Assembling business data
             TradePairBus _bus = new TradePairBus(pairPO.getAddress(), balance0, balance1, _reserve0, _reserve1, input, amountIn, unLiquidityAwardFee, output, amountOut, to);
             _bus.setPreBlockHeight(pair.getBlockHeightLast());
             _bus.setPreBlockTime(pair.getBlockTimeLast());
@@ -873,12 +873,12 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             input = path[i];
             output = path[i + 1];
             BigInteger amountIn = amounts[i];
-            // swap trade 的path，计算to地址时，若计算的to地址使用的两个token正好是稳定币池币种的话，就使用稳定币交易池地址
+            // swap trade ofpath, CalculatetoWhen calculating the address, iftoTwo addresses usedtokenIf it happens to be a stablecoin pool currency, use the stablecoin trading pool address
             byte[] to = this.calcAddressOfTradeToProtocol17(chainId, i, _to, path);
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             int groupIndex;
             if ((groupIndex = SwapContext.stableCoinGroup.groupIndex(input, output)) != -1) {
-                // 组装业务数据
+                // Assembling business data
                 BigInteger amountOut = SwapUtils.getStableOutAmountByGroupIndex(groupIndex, input, amountIn, output, iPairFactory, SwapContext.stableCoinGroup);
                 TradePairBus _bus = new TradePairBus(AddressTool.getAddress(SwapContext.stableCoinGroup.getAddressByIndex(groupIndex)), BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, input, amountIn, BigInteger.ZERO, output, amountOut, to);
                 list.add(_bus);
@@ -887,7 +887,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             }
             NerveToken[] tokens = SwapUtils.tokenSort(input, output);
             NerveToken token0 = tokens[0];
-            // `非`流动性提供者可奖励的交易手续费, 占交易金额的0.1%
+            // `wrong`Transaction fees that liquidity providers can reward, % of transaction amount0.1%
             BigInteger unLiquidityAwardFee = amountIn.divide(BI_1000);
             BigInteger amountOut = amounts[i + 1];
             BigInteger amount0Out, amount1Out, amount0In, amount1In, amount0InUnLiquidityAwardFee, amount1InUnLiquidityAwardFee;
@@ -928,10 +928,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             if (balance0Adjusted.multiply(balance1Adjusted).compareTo(_reserve0.multiply(_reserve1).multiply(BI_1000_000)) < 0) {
                 throw new NulsException(SwapErrorCode.K);
             }
-            // balance要扣除即时分配出的手续费奖励
+            // balanceTo deduct the immediately allocated handling fee reward
             balance0 = balance0.subtract(amount0InUnLiquidityAwardFee);
             balance1 = balance1.subtract(amount1InUnLiquidityAwardFee);
-            // 组装业务数据
+            // Assembling business data
             TradePairBus _bus = new TradePairBus(pairPO.getAddress(), balance0, balance1, _reserve0, _reserve1, input, amountIn, unLiquidityAwardFee, output, amountOut, to);
             _bus.setPreBlockHeight(pair.getBlockHeightLast());
             _bus.setPreBlockTime(pair.getBlockTimeLast());
@@ -942,7 +942,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         return bus;
     }
 
-    // swap trade 的path，计算to地址时，若计算的to地址使用的两个token正好是稳定币池币种的话，就使用稳定币交易池地址
+    // swap trade ofpath, CalculatetoWhen calculating the address, iftoTwo addresses usedtokenIf it happens to be a stablecoin pool currency, use the stablecoin trading pool address
     private byte[] calcAddressOfTradeToProtocol17(int chainId, int i, byte[] _to, NerveToken[] path) {
         int length = path.length;
         if (i < length - 2) {

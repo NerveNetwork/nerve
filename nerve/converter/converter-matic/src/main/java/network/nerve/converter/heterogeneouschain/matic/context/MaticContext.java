@@ -26,6 +26,7 @@ package network.nerve.converter.heterogeneouschain.matic.context;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
@@ -55,25 +56,25 @@ public class MaticContext extends HtgContext implements Serializable {
     public final int HTG_CHAIN_ID = 106;
     public final int HTG_ASSET_ID = 1;
     public byte VERSION = 2;
-    public HtgDocking DOCKING;
+    public IHeterogeneousChainDocking DOCKING;
     /**
-     * 当 importAccountByPriKey 或者 importAccountByKeystore 被调用时，覆写这个地址作为虚拟银行管理员地址
+     * When importAccountByPriKey perhaps importAccountByKeystore When called, overwrite this address as the virtual bank administrator address
      */
     public String ADMIN_ADDRESS;
     public String ADMIN_ADDRESS_PASSWORD;
     public String ADMIN_ADDRESS_PUBLIC_KEY;
 
     /**
-     * 待确认交易队列
+     * Pending confirmation transaction queue
      */
     public LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
     public CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
-    // 初始化配置地址
+    // Initialize configuration address
     public Set<String> FILTER_ACCOUNT_SET = new HashSet<>();
 
     /**
-     * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
+     * Waiting for the transaction queue, the current node saves the call parameters for the transaction（The transaction is sent out by a certain administrator, and the administrator who ranks first in the order of the administrator sends out the transaction. If the sending fails or is not sent out, the transaction is sent out in the next order, and so on）
      */
     public LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
     public CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
@@ -83,7 +84,7 @@ public class MaticContext extends HtgContext implements Serializable {
     public List<String> RPC_ADDRESS_LIST = new ArrayList<>();
     public List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
-     * 日志实例
+     * Log instance
      */
     public NulsLogger logger;
     public HeterogeneousCfg config;
@@ -260,7 +261,7 @@ public class MaticContext extends HtgContext implements Serializable {
     }
 
     @Override
-    public HtgDocking DOCKING() {
+    public IHeterogeneousChainDocking DOCKING() {
         return DOCKING;
     }
 
@@ -297,7 +298,7 @@ public class MaticContext extends HtgContext implements Serializable {
     }
 
     @Override
-    public void SET_DOCKING(HtgDocking docking) {
+    public void SET_DOCKING(IHeterogeneousChainDocking docking) {
         DOCKING = docking;
     }
 }

@@ -75,12 +75,12 @@ public class ConfirmExpelledProposal implements IConfirmProposal, InitializingBe
 
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if(null == proposalPO){
-            chain.getLogger().error("[ConfirmExpelledProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmExpelledProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
 
         if(chain.isVirtualBankByAgentAddr(AddressTool.getStringAddressByBytes(proposalPO.getAddress()))){
-            chain.getLogger().error("[ConfirmExpelledProposal] 提案执行未成功, 该节点仍是虚拟银行 txHash:{}, ProposalTxHash:{}",
+            chain.getLogger().error("[ConfirmExpelledProposal] Proposal execution unsuccessful, This node is still a virtual bank txHash:{}, ProposalTxHash:{}",
                     tx.getHash().toHex(), businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.AGENT_IS_VIRTUAL_BANK);
         }
@@ -91,7 +91,7 @@ public class ConfirmExpelledProposal implements IConfirmProposal, InitializingBe
                 HeterogeneousTxTypeEnum.WITHDRAWAL,
                 heterogeneousDockingManager);
         if(null == txInfo){
-            chain.getLogger().error("[ConfirmExpelledProposal] 未查询到异构链交易 heterogeneousTxHash:{}", businessData.getHeterogeneousTxHash());
+            chain.getLogger().error("[ConfirmExpelledProposal] No heterogeneous chain transactions found heterogeneousTxHash:{}", businessData.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
     }

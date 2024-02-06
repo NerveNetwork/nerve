@@ -39,7 +39,7 @@ import java.util.Map;
 public class BlockCall {
 
     /**
-     * 通知区块清理系统交易缓存
+     * Notify block clearing system transaction cache
      * @return
      */
     public static void txRegisterNotify(Chain chain) {

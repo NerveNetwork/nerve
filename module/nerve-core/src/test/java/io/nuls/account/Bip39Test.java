@@ -8,7 +8,7 @@ public class Bip39Test {
 
     /**
      * generate a random group of mnemonics
-     * 生成一组随机的助记词
+     * Generate a random set of mnemonic words
      */
     /*public static String generateMnemonics() {
         StringBuilder sb = new StringBuilder();
@@ -25,18 +25,18 @@ public class Bip39Test {
     public static void main(String[] args) throws NoSuchAlgorithmException, CipherException {
         String s = generateMnemonics();
         Log.info("sssssssssss =============== " + s);
-        //根据助记词和密码生成种子seed
+        //Generate seeds based on mnemonics and passwordsseed
         byte[] seed = new SeedCalculator().calculateSeed(generateMnemonics(), "");
-        // 根据seed生成公钥、私钥等
+        // according toseedGenerate public key、Private keys, etc
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         byte[] hash = messageDigest.digest(seed);
         ECKeyPair ecKeyPair = ECKeyPair.create(hash);
         Numeric.toHexStringWithPrefix(ecKeyPair.getPrivateKey());
         Numeric.toHexStringWithPrefix(ecKeyPair.getPublicKey());
-        //根据公钥或者ECKeyPair获取钱包地址
+        //Based on public key orECKeyPairGet wallet address
         String address = Keys.getAddress(ecKeyPair);
         Log.info("address ================= "+ address);
-        // 根据公钥 私钥 密码 得到 生成钱包文件keystore
+        // According to the public key Private key password obtain Generate wallet filekeystore
         WalletFile walletFile = Wallet.createLight("", ecKeyPair);
         Log.info("prikey ============= "+ ECKey.fromPrivate(ecKeyPair.getPrivateKey()).getPrivateKeyAsHex());
         Log.info("walletFile =================== " + walletFile);

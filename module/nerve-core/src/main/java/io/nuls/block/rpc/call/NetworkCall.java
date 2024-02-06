@@ -42,18 +42,18 @@ import static io.nuls.block.constant.CommandConstant.*;
 
 
 /**
- * 调用网络模块接口的工具
+ * Tools for calling network module interfaces
  *
  * @author captain
  * @version 1.0
- * @date 18-11-9 下午3:48
+ * @date 18-11-9 afternoon3:48
  */
 public class NetworkCall {
 
     /**
-     * 根据链ID获取可用节点
+     * According to the chainIDGet available nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static List<Node> getAvailableNodes(int chainId) {
@@ -95,9 +95,9 @@ public class NetworkCall {
     }
 
     /**
-     * 根据链ID重置网络节点
+     * According to the chainIDReset network nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      */
     public static void resetNetwork(int chainId) {
         NulsLogger logger = ContextManager.getContext(chainId).getLogger();
@@ -114,11 +114,11 @@ public class NetworkCall {
     }
 
     /**
-     * 给网络上节点广播消息
+     * Broadcast messages to nodes on the network
      *
-     * @param chainId      链Id/chain id
+     * @param chainId      chainId/chain id
      * @param message
-     * @param excludeNodes 排除的节点
+     * @param excludeNodes Excluded nodes
      * @return
      */
     public static boolean broadcast(int chainId, BaseBusinessMessage message, String excludeNodes, String command) {
@@ -158,9 +158,9 @@ public class NetworkCall {
         }
     }
     /**
-     * 给指定节点发送消息
+     * Send messages to specified nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param message
      * @param nodeId
      * @return
@@ -184,9 +184,9 @@ public class NetworkCall {
     }
 
     /**
-     * 给网络上节点广播消息
+     * Broadcast messages to nodes on the network
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param message
      * @return
      */
@@ -198,9 +198,9 @@ public class NetworkCall {
     }
 
     /**
-     * 针对某个异步消息返回执行结果
+     * Return execution result for a certain asynchronous message
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param hash
      * @param nodeId
      */
@@ -212,9 +212,9 @@ public class NetworkCall {
     }
 
     /**
-     * 针对某个异步消息返回执行结果
+     * Return execution result for a certain asynchronous message
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param hash
      * @param nodeId
      */
@@ -226,11 +226,11 @@ public class NetworkCall {
     }
 
     /**
-     * 更新网络节点最新高度与hash
-     * 1.收到smallblock时更新
-     * 2.收到转发请求并且本地确定有这个hash的区块时更新
+     * Update the latest height of network nodes to matchhash
+     * 1.receivesmallblockUpdate on time
+     * 2.Received forwarding request and confirmed locally that this is presenthashWhen updating blocks
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param hash
      * @param height
      * @param nodeId

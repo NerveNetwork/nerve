@@ -40,6 +40,7 @@ import network.nerve.swap.handler.ISwapInvoker;
 import network.nerve.swap.handler.SwapHandlerConstraints;
 import network.nerve.swap.help.IPairFactory;
 import network.nerve.swap.help.IStablePair;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
 import network.nerve.swap.model.NerveToken;
@@ -74,6 +75,8 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
     private ChainManager chainManager;
     @Autowired
     private StableSwapPairCache stableSwapPairCache;
+    @Autowired
+    private SwapHelper swapHelper;
 
     @Override
     public Integer txType() {
@@ -93,36 +96,36 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getStableAddLiquidityInfo(chainId, coinData, iPairFactory);
-            // 提取业务参数
+            // Extract business parameters
             StableAddLiquidityData txData = new StableAddLiquidityData();
             txData.parse(tx.getTxData(), 0);
 
             String pairAddress = dto.getPairAddress();
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
             StableSwapPairPo pairPo = stablePair.getPair();
-            // 整合计算数据
-            StableAddLiquidityBus bus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), txData.getTo());
+            // Integrate computing data
+            StableAddLiquidityBus bus = SwapUtils.calStableAddLiquididy(swapHelper, chainId, iPairFactory, pairAddress, dto.getFrom(), dto.getAmounts(), txData.getTo());
             //SwapContext.logger.info("[{}]handler add bus: {}", blockHeight, bus.toString());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTx(bus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             stablePair.update(bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeight, blockTime);
 
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -133,7 +136,7 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             SwapSystemRefundTransaction refund = new SwapSystemRefundTransaction(tx.getHash().toHex(), blockTime);
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             String pairAddress = dto.getPairAddress();
@@ -162,7 +165,7 @@ public class StableAddLiquidityHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);

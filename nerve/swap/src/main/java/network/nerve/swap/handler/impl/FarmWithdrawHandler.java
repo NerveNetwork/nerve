@@ -90,7 +90,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         SwapResult result = new SwapResult();
         BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
         try {
-            // 提取业务参数
+            // Extract business parameters
             FarmStakeChangeData txData = new FarmStakeChangeData();
             txData.parse(tx.getTxData(), 0);
             ValidaterResult validaterResult = helper.validateTxData(chain, tx, txData, batchInfo.getFarmTempManager(), blockTime);
@@ -103,18 +103,18 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
                 FarmPoolPO realPo = farmCache.get(txData.getFarmHash());
                 farm = realPo.copy();
             }
-            //处理
+            //handle
             executeBusiness(chain, tx, txData, farm, batchInfo, result, blockHeight, blockTime);
 
 //            batchInfo.getFarmTempManager().putFarm(farm);
 
-            // 装填执行结果
+            // Loading execution result
             result.setSuccess(true);
             result.setBlockHeight(blockHeight);
 
         } catch (NulsException e) {
             chain.getLogger().error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setSuccess(false);
             result.setErrorMessage(e.format());
         }
@@ -141,7 +141,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
 
         byte[] address = SwapUtils.getSingleAddressFromTX(tx, chain.getChainId(), false);
         bus.setUserAddress(address);
-        //获取用户状态数据
+        //Obtain user status data
         FarmUserInfoPO user = batchInfo.getFarmUserTempManager().getUserInfo(farm.getFarmHash(), address);
         if (null == user) {
             user = this.userInfoStorageService.load(chain.getChainId(), farm.getFarmHash(), address);
@@ -151,7 +151,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         }
         bus.setUserAmountOld(user.getAmount());
         bus.setUserRewardDebtOld(user.getRewardDebt());
-        //生成领取奖励的交易
+        //Generate transactions to claim rewards
         BigInteger expectedReward = user.getAmount().multiply(farm.getAccSyrupPerShare()).divide(SwapConstant.BI_1E12).subtract(user.getRewardDebt());
         BigInteger realReward = expectedReward;
 
@@ -162,7 +162,7 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
         LedgerBalance syrupBalance = tempBalanceManager.getBalance(SwapUtils.getFarmAddress(chain.getChainId()), farm.getSyrupToken().getChainId(), farm.getSyrupToken().getAssetId()).getData();
 
         if (syrupBalance.getBalance().compareTo(realReward) < 0) {
-            //能领多少算多少，应该不会出现这种情况
+            //As much as you can receive, there shouldn't be such a situation
             realReward = BigInteger.ZERO.add(syrupBalance.getBalance());
         }
         farm.setSyrupTokenBalance(farm.getSyrupTokenBalance().subtract(realReward));
@@ -176,9 +176,9 @@ public class FarmWithdrawHandler extends SwapHandlerConstraints {
             }
         }
         farm.setStakeTokenBalance(farm.getStakeTokenBalance().subtract(txData.getAmount()));
-        //更新池子信息
+        //Update pool information
         batchInfo.getFarmTempManager().putFarm(farm);
-        //更新用户状态数据
+        //Update user status data
         user.setAmount(user.getAmount().subtract(txData.getAmount()));
 
         BigInteger difference = expectedReward.subtract(realReward);

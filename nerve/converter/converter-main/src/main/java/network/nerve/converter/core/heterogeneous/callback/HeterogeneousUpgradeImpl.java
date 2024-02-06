@@ -37,20 +37,19 @@ import network.nerve.converter.storage.VirtualBankStorageService;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static network.nerve.converter.config.ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST;
 
 /**
- * 合约升级后，异构链组件调用CORE，切换docking实例
+ * After contract upgrade, heterogeneous chain components callCORE, switchdockingexample
  * @author: Mimi
  * @date: 2020-08-31
  */
 public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
     private Chain nerveChain;
     /**
-     * 异构链chainId
+     * Heterogeneous chainchainId
      */
     private int hChainId;
     private HeterogeneousDockingManager heterogeneousDockingManager;
@@ -65,7 +64,7 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
 
     @Override
     public void switchDocking(IHeterogeneousChainDocking newDocking) {
-        nerveChain.getLogger().info("合约升级，调用流程切换");
+        nerveChain.getLogger().info("Contract upgrade, call process switching");
         this.heterogeneousDockingManager.registerHeterogeneousDocking(hChainId, newDocking);
         virtualBankUpgradeProcess();
     }
@@ -76,7 +75,7 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
         ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED =
                 ConverterContext.VIRTUAL_BANK_AGENT_TOTAL - ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT;
 
-        // 版本升级 从虚拟银行移除非配置的种子节点成员
+        // Version upgrade Remove non configured seed node members from virtual banks
         //try {
         //    nerveChain.getLogger().warn("pierre test===3 chain info: {}, {}", nerveChain.getCurrentHeterogeneousVersion(), Arrays.toString(ConverterContext.INIT_VIRTUAL_BANK_PUBKEY_LIST.toArray()));
         //    nerveChain.getLogger().warn("pierre test===3 current virtualBankMap: {}", JSONUtils.obj2json(nerveChain.getMapVirtualBank()));
@@ -99,7 +98,7 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
             }
         }
         for(VirtualBankDirector outDirector : listOutDirector){
-            // 如果踢出了的银行节点是当前节点, 则修改状态
+            // If the kicked out bank node is the current node, Then modify the status
            if(VirtualBankUtil.isCurrentDirector(nerveChain)){
                SignAccountDTO info = VirtualBankUtil.getCurrentDirectorSignInfo(nerveChain);
                if(outDirector.getSignAddress().equals(info.getAddress())){
@@ -107,10 +106,10 @@ public class HeterogeneousUpgradeImpl implements IHeterogeneousUpgrade {
                }
            }
         }
-        // 移除时更新顺序
+        // Update order when removing
         VirtualBankUtil.virtualBankRemove(nerveChain, nerveChain.getMapVirtualBank(), listOutDirector, virtualBankStorageService);
         try {
-            nerveChain.getLogger().info("异构链组件版本切换完成, 当前异构链版本:{}, 当前虚拟银行成员:{}",
+            nerveChain.getLogger().info("Heterogeneous chain component version switch completed, Current heterogeneous chain version:{}, Current virtual bank members:{}",
                     2, JSONUtils.obj2json(nerveChain.getMapVirtualBank()));
         } catch (JsonProcessingException e) {
             nerveChain.getLogger().warn("MapVirtualBank log print error ");

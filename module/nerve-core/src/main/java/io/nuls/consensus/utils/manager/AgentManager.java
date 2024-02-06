@@ -30,7 +30,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 节点管理类，负责节点的相关操作
+ * Node management class, responsible for node related operations
  * Node management class, responsible for the operation of the node
  *
  * @author tag
@@ -46,10 +46,10 @@ public class AgentManager {
     private VirtualAgentStorageService virtualAgentStorageService;
 
     /**
-     * 加载节点信息
+     * Load node information
      * Initialize node information
      *
-     * @param chain 链信息/chain info
+     * @param chain Chain information/chain info
      */
     public void loadAgents(Chain chain) throws Exception {
         List<Agent> allAgentList = new ArrayList<>();
@@ -63,7 +63,7 @@ public class AgentManager {
     }
 
     /**
-     * 添加指定链节点
+     * Add specified chain nodes
      * Adding specified chain nodes
      *
      * @param chain chain info
@@ -79,7 +79,7 @@ public class AgentManager {
     }
 
     /**
-     * 修改指定链节点
+     * Modify specified chain nodes
      * Modifying specified chain nodes
      *
      * @param chain     chain info
@@ -103,11 +103,11 @@ public class AgentManager {
     }
 
     /**
-     * 删除指定链节点
+     * Delete specified chain nodes
      * Delete the specified link node
      *
      * @param chain  chain info
-     * @param txHash 创建该节点交易的HASH/Creating the node transaction hash
+     * @param txHash Create transactions for this nodeHASH/Creating the node transaction hash
      */
     public boolean removeAgent(Chain chain, NulsHash txHash) {
         if (!agentStorageService.delete(txHash, chain.getConfig().getChainId())) {
@@ -119,11 +119,11 @@ public class AgentManager {
     }
 
     /**
-     * 查询指定节点
+     * Query specified nodes
      * Query specified nodes
      *
      * @param chain  chain info
-     * @param txHash 创建该节点交易的HASH/Creating the node transaction hash
+     * @param txHash Create transactions for this nodeHASH/Creating the node transaction hash
      */
     public Agent getAgentByHash(Chain chain, NulsHash txHash) {
         for (Agent agent : chain.getAgentList()) {
@@ -135,11 +135,11 @@ public class AgentManager {
     }
 
     /**
-     * 查询指定节点
+     * Query specified nodes
      * Query specified nodes
      *
      * @param chain        chain info
-     * @param agentAddress 节点地址
+     * @param agentAddress Node address
      */
     public Agent getAgentByAddress(Chain chain, byte[] agentAddress) {
         for (Agent agent : chain.getAgentList()) {
@@ -154,11 +154,11 @@ public class AgentManager {
     }
 
     /**
-     * 查询指定节点
+     * Query specified nodes
      * Query specified nodes
      *
      * @param chain        chain info
-     * @param agentAddress 节点地址
+     * @param agentAddress Node address
      */
     public Agent getValidAgentByAddress(Chain chain, byte[] agentAddress) {
         for (Agent agent : chain.getAgentList()) {
@@ -170,11 +170,11 @@ public class AgentManager {
     }
 
     /**
-     * 查询指定节点
+     * Query specified nodes
      * Query specified nodes
      *
      * @param chain       chain info
-     * @param packAddress 节点地址
+     * @param packAddress Node address
      */
     public Agent getAgentByPackAddress(Chain chain, byte[] packAddress) {
         for (Agent agent : chain.getAgentList()) {
@@ -189,10 +189,10 @@ public class AgentManager {
     }
 
     /**
-     * 设置节点公钥
+     * Set node public key
      *
-     * @param chain  链信息
-     * @param pubKey 出块地址公钥
+     * @param chain  Chain information
+     * @param pubKey Block address public key
      */
     public void setPubkey(Chain chain, byte[] pubKey) {
         byte[] packAddressByte = AddressTool.getAddress(pubKey, chain.getChainId());
@@ -212,10 +212,10 @@ public class AgentManager {
     }
 
     /**
-     * 获取节点id
+     * Get nodesid
      * Get agent id
      *
-     * @param hash 节点HASH/Agent hash
+     * @param hash nodeHASH/Agent hash
      * @return String
      */
     public String getAgentId(NulsHash hash) {
@@ -246,13 +246,13 @@ public class AgentManager {
     }
 
     /**
-     * 验证节点是否存在且指定地址是否为创建者
+     * Verify if the node exists and if the specified address is the creator
      * Verify that the node exists
      *
-     * @param chain     链信息
-     * @param agentHash 节点Hash
-     * @param address   创建者地址
-     * @return 创建者是否正确
+     * @param chain     Chain information
+     * @param agentHash nodeHash
+     * @param address   Creator Address
+     * @return Is the creator correct
      */
     @SuppressWarnings("unchecked")
     public Result creatorValid(Chain chain, NulsHash agentHash, byte[] address) {
@@ -270,10 +270,10 @@ public class AgentManager {
 
 
     /**
-     * 获取当前未注销的所有节点列表(创建节点时避免账户重复创建节点)
+     * Get a list of all nodes that have not been logged out yet(Avoid duplicate account creation when creating nodes)
      * Get a list of nodes that meet block requirements
      *
-     * @param chain 链信息
+     * @param chain Chain information
      * @return List<agent>
      **/
     public List<Agent> getAgentList(Chain chain, long height) {
@@ -291,11 +291,11 @@ public class AgentManager {
     }
 
     /**
-     * 获取指定高度出块节点地址列表
+     * Get a list of block node addresses at a specified height
      * Get a list of nodes that meet block requirements
      *
-     * @param chain  链信息
-     * @param height 区块高度
+     * @param chain  Chain information
+     * @param height block height
      * @return List<agent>
      **/
     public Set<String> getPackAddressList(Chain chain, long height) {
@@ -308,11 +308,11 @@ public class AgentManager {
     }
 
     /**
-     * 获取指定高度出块节点列表
+     * Get a list of block nodes at a specified height
      * Get the node list of the specified height out of block
      *
-     * @param chain  链信息
-     * @param height 指定区块高度
+     * @param chain  Chain information
+     * @param height Specify block height
      * @return List<agent>
      **/
     public List<Agent> getPackAgentList(Chain chain, long height) {
@@ -339,11 +339,11 @@ public class AgentManager {
     }
 
     /**
-     * 获取指定高度出块节点基础信息列表
+     * Obtain the basic information list of block nodes at a specified height
      * Get the node list of the specified height out of block
      *
-     * @param chain  链信息
-     * @param height 指定区块高度
+     * @param chain  Chain information
+     * @param height Specify block height
      * @return List<agent>
      **/
     public List<AgentBasicDTO> getPackBasicAgentList(Chain chain, long height, boolean isNewest) {
@@ -386,11 +386,11 @@ public class AgentManager {
     }
 
     /**
-     * 获取当前区块之前的某个高度出块节点列表
+     * Obtain a list of block nodes at a certain height before the current block
      * Get a list of out of block nodes before the current block
      *
-     * @param chain  链信息
-     * @param height 指定区块高度
+     * @param chain  Chain information
+     * @param height Specify block height
      * @return List<agent>
      */
     private List<Agent> getBeforeAgentList(Chain chain, long height) {
@@ -408,7 +408,7 @@ public class AgentManager {
                 chain.getLogger().error(e);
             }
         }
-        //获取该高度之后的退出保证金交易
+        //Exit margin trading after obtaining this height
         Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, height);
         BigInteger realDeposit;
         if (!reduceDepositMap.isEmpty()) {
@@ -420,7 +420,7 @@ public class AgentManager {
                 }
             }
         }
-        //获取该高度之后的追加保证金交易
+        //Additional margin trading after obtaining this height
         Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, height);
         if (!appendDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : appendDepositMap.entrySet()) {
@@ -435,12 +435,12 @@ public class AgentManager {
     }
 
     /**
-     * 计算个账户的保证金并返回总的保证金
+     * Calculate the deposit for each account and return the total deposit
      *
-     * @param chain       链信息
-     * @param endHeight   高度
-     * @param depositMap  委托
-     * @param totalAmount 总委托金额
+     * @param chain       Chain information
+     * @param endHeight   height
+     * @param depositMap  entrust
+     * @param totalAmount Total entrusted amount
      */
     public BigDecimal getAgentDepositByHeight(Chain chain, long startHeight, long endHeight, Map<String, BigDecimal> depositMap, BigDecimal totalAmount) {
         List<AgentPo> poList;
@@ -468,7 +468,7 @@ public class AgentManager {
         if (agentMap.isEmpty()) {
             return totalAmount;
         }
-        //获取该高度之后的退出保证金交易
+        //Exit margin trading after obtaining this height
         Map<NulsHash, BigInteger> reduceDepositMap = agentDepositManager.getReduceDepositAfterHeight(chain, endHeight);
         BigInteger tempDeposit;
         AgentPo po;
@@ -482,7 +482,7 @@ public class AgentManager {
                 }
             }
         }
-        //获取该高度之后的追加保证金交易
+        //Additional margin trading after obtaining this height
         Map<NulsHash, BigInteger> appendDepositMap = agentDepositManager.getAppendDepositAfterHeight(chain, endHeight);
         if (!appendDepositMap.isEmpty()) {
             for (Map.Entry<NulsHash, BigInteger> entry : appendDepositMap.entrySet()) {
@@ -500,7 +500,7 @@ public class AgentManager {
 
 //        Map<NulsHash, AgentPo> sortAgentMap = new HashMap<>(ConsensusConstant.INIT_CAPACITY_64);
 //        agentMap.entrySet().stream().sorted(Comparator.comparing(e -> e.getValue().getDeposit())).forEach(e -> sortAgentMap.put(e.getKey(), e.getValue()));
-        //虚拟银行权重*4，共识节点权重*3，未出快节点权重*1
+        //Virtual banking weight*4Consensus node weight*3No fast node weights have been released*1
         int maxConsensusAgentCount = chain.getConsensusAgentCountMax();
         List<String> virtualBankList = new ArrayList<>();
         VirtualAgentPo virtualAgentPo = virtualAgentStorageService.get(endHeight);
@@ -521,16 +521,16 @@ public class AgentManager {
 
             rewardAddress = AddressTool.getStringAddressByBytes(agentPo.getRewardAddress());
             agentAddress = AddressTool.getStringAddressByBytes(agentPo.getAgentAddress());
-            //如果为虚拟银行则按虚拟银行计算
+            //If it is a virtual bank, it will be calculated based on the virtual bank
             realDeposit = new BigDecimal(agentPo.getDeposit());
             if (!virtualBankList.isEmpty() && virtualBankList.contains(agentAddress)) {
-                ss.append("-虚拟银行");
+                ss.append("-Virtual banking");
                 baseWeight = baseWeight * chain.getConfig().getSuperAgentDepositBase();
             } else if (count <= maxConsensusAgentCount) {
-                ss.append("-共识节点");
+                ss.append("-Consensus node");
                 baseWeight = baseWeight * chain.getConfig().getAgentDepositBase();
             } else if (count > maxConsensusAgentCount) {
-                ss.append("-后补节点");
+                ss.append("-Subsequent nodes");
                 baseWeight = baseWeight * chain.getConfig().getReservegentDepositBase();
             }
             ss.append("-");

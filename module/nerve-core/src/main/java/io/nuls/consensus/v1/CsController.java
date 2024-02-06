@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CsController extends BasicObject {
     /**
-     * 投票超时时间,默认三秒
+     * Voting timeout,Default three seconds
      */
     private long VOTE_TIME_OUT = 3000L;
 
@@ -36,10 +36,10 @@ public class CsController extends BasicObject {
         this.voteController = voteController;
     }
 
-    //这里有几种情况：1启动网络从0开始，2重启网络从某个高度，3启动本节点/
-    //目标是不管哪种情况，都能尽快达成共识（轮次一致）
+    //There are several situations here：1Start network from0Start,2Restart the network from a certain height,3Start this node/
+    //The goal is to reach consensus as soon as possible in any situation（Consistent rounds）
     public void consensus() {
-        //等待上一个确认的区块保存
+        //Waiting for the previous confirmed block to be saved
         int index = 0;
         while (chain.getBestHeader().getHeight() < comfirmedHeight) {
             try {
@@ -63,22 +63,22 @@ public class CsController extends BasicObject {
         MeetingMember localMember = round.getLocalMember();
         if (null == localMember) {
             if (chain.isConsonsusNode()) {
-                //实时监测
+                //Real time monitoring
                 chain.setConsonsusNode(false);
             }
             log.info("here1112");
             return;
         }
 
-        //如果轮次没有确认，则每次都重新计算,因为没有确认，所以每次都根据时间进行计算
+        //If the round is not confirmed, recalculate each time,Because there was no confirmation, calculations were made based on time each time
         if (!round.isConfirmed()) {
             VoteStageResult result = tryIt(round, 0);
             if (result != null) {
-                //得到结果，修改正确的轮次，返回
-                log.info("tryIt得到结果：");
+                //Obtain the result, modify the correct round, and return
+                log.info("tryItObtain results：");
                 MeetingRound newRound = roundController.getRound(result.getRoundIndex(), result.getRoundStartTime());
                 newRound.setPackingIndexOfRound(result.getPackingIndexOfRound());
-                // 计算本轮是否有延迟，有的话计算出来设置进去
+                // Calculate whether there is a delay in this round, and if so, calculate and set it in
                 checkDelayedTime(newRound);
                 this.comfirmedResult(newRound, result);
             }
@@ -87,27 +87,27 @@ public class CsController extends BasicObject {
         }
 
         if (round.getPackingIndexOfRound() > round.getMemberCount()) {
-            log.info("切换下一轮：");
+            log.info("Switch to the next round：");
             roundController.nextRound(round);
             return;
         }
         long packStartTime = round.getStartTime() + round.getDelayedSeconds() + chain.getConfig().getPackingInterval() * (round.getPackingIndexOfRound() - 1);
         long packEndTime = packStartTime + chain.getConfig().getPackingInterval();
-        //如果轮次已经确认，并且刚好应该本地出块,时间上 增加一倍的容错时间
+        //If the round has been confirmed and it happens that the block should be produced locally,Time wise Double the fault tolerance time
         boolean timeOk = (packEndTime * 1000 + VOTE_TIME_OUT) > NulsDateUtils.getCurrentTimeMillis();
         if (localMember.getPackingIndexOfRound() == round.getPackingIndexOfRound() && timeOk) {
-            //本地出块，只有round被确认是大家都认同的，才开始出块
+            //Local block output, only availableroundIt was only after being confirmed that everyone agreed that the block began to be produced
             PackingData packingData = new PackingData();
             packingData.setMember(localMember);
             packingData.setPackStartTime(packStartTime);
             packingData.setRound(round);
             chain.getConsensusCache().getPackingQueue().offer(packingData);
-            log.info("准备出块{}-{},高度：{},开始时间：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
+            log.info("Prepare to produce blocks{}-{},height：{},start time：" + NulsDateUtils.timeStamp2Str(packingData.getPackStartTime() * 1000)
                     , round.getIndex(), localMember.getPackingIndexOfRound(), chain.getBestHeader().getHeight() + 1);
         }
         long wait = 0;
         if (!timeOk) {
-            log.info("时间超过了，应该下一个人出块");
+            log.info("Time has passed, the next person should come out with a block");
             this.voteController.voteEmptyHash(chain.getBestHeader().getHeight() + 1, round.getIndex(), round.getStartTime(), round.getPackingIndexOfRound(), 0, packEndTime, round.getLocalMember().getAgent().getPackingAddressStr());
         } else {
             wait = chain.getConfig().getPackingIntervalMills() + packStartTime * 1000 - NulsDateUtils.getCurrentTimeMillis();
@@ -116,46 +116,46 @@ public class CsController extends BasicObject {
 
     }
 
-    //迭代尝试得到最终结果
-    //区块验证通过后，需要进行投票
+    //Iterative attempt to obtain final result
+    //After block verification is passed, a vote is required
     private void waitComfirmed(MeetingRound round, long packingTimeMills, int voteRoundIndex, String address) {
-        //记录当前时间用于重新；
+        //Record the current time for re recording；
         long time = System.currentTimeMillis() + packingTimeMills;
         if (!chain.isConsonsusNode() || !chain.isSynchronizedHeight() || !chain.isNetworkStateOk()) {
             return;
         }
-        //这里如果等待太多次，就算了吧
+        //If you wait too many times here, forget it
         if (voteRoundIndex > 5) {
             round.setConfirmed(false);
 //            checkRoundTimeout();
-            //这里清理缓存的数据
+            //Clear cached data here
             this.voteController.clearCache();
             this.voteController.clearMap(chain.getBestHeader().getHeight());
             return;
         }
-        log.debug("等待达成一致！" + voteRoundIndex);
+        log.debug("Waiting for consensus to be reached！" + voteRoundIndex);
         this.chain.getConsensusCache().getBestBlocksVotingContainer().setCurrentVoteRoundIndex(voteRoundIndex);
 
         long realWait = packingTimeMills + VOTE_TIME_OUT - (NulsDateUtils.getCurrentTimeMillis() % 1000);
         VoteStageResult result = chain.getConsensusCache().getStageTwoQueue().poll(realWait, TimeUnit.MILLISECONDS);
         if (null == result) {
-            log.debug("超时，得到一个空的结果：wait:" + realWait);
-            // 如果之前投了区块，就不应该再投空块了
-            //同一个高度的所有数据都缓存起来，包括当前的投票index
+            log.debug("Time out, get an empty result：wait:" + realWait);
+            // If we had invested in blocks before, we shouldn't have invested in empty blocks again
+            //All data at the same height are cached, including the current voteindex
             this.voteController.startNextVoteRound(chain.getBestHeader().getHeight() + 1, round.getIndex(), round.getPackingIndexOfRound(),
                     round.getStartTime(), voteRoundIndex + 1, address);
             round.setDelayedSeconds(round.getDelayedSeconds() + VOTE_TIME_OUT / 1000);
             this.waitComfirmed(round, 0, voteRoundIndex + 1, address);
 
         } else if (null != result && !this.comfirmedResult(round, result)) {
-            //从等待时间中，去除已经过去的部分
+            //Remove the parts that have already passed from the waiting time
             this.waitComfirmed(round, time - System.currentTimeMillis(), voteRoundIndex + 1, address);
         }
     }
 
     private boolean comfirmedResult(MeetingRound round, VoteStageResult result) {
         log.info("here1114");
-        //这里清理缓存的数据
+        //Clear cached data here
         this.voteController.clearCache();
         round.setConfirmed(true);
         if (result.getRoundIndex() < chain.getConsensusCache().getLastConfirmedRoundIndex() ||
@@ -167,7 +167,7 @@ public class CsController extends BasicObject {
         chain.getConsensusCache().setLastConfirmed(result.getRoundIndex(), result.getPackingIndexOfRound());
         if (result.getBlockHash().equals(NulsHash.EMPTY_NULS_HASH)) {
 
-            log.debug("下一个节点");
+            log.debug("Next node");
 
             long packTime = result.getRoundStartTime() + result.getPackingIndexOfRound() * chain.getConfig().getPackingInterval();
             if (result.getRoundIndex() == round.getIndex()) {
@@ -179,7 +179,7 @@ public class CsController extends BasicObject {
         }
 
         if (result.getHeight() <= chain.getBestHeader().getHeight()) {
-            log.info("重复的投票结果：" + result.getHeight());
+            log.info("Repeated voting results：" + result.getHeight());
             return false;
         }
         if (result.getHeight() > this.comfirmedHeight) {
@@ -187,17 +187,17 @@ public class CsController extends BasicObject {
         } else {
             return false;
         }
-        //缓存本区块的签名记录
+        //Cache signature records for this block
         this.voteController.cacheSignResult(result);
 
-        //先通知区块模块,保存区块时才切换打包人
-        log.info("通知区块模块，拜占庭验证通过：" + result.getHeight() + "-" + result.getBlockHash().toHex());
+        //Notify the block module first,Switch packagers only when saving blocks
+        log.info("Notification block module, Byzantine verification passed：" + result.getHeight() + "-" + result.getBlockHash().toHex());
         CallMethodUtils.noticeByzantineResult(chain, result.getHeight(), false, result.getBlockHash(), null);
-        log.info("通知区块模块，拜占庭验证通过完成");
+        log.info("Notification block module, Byzantine verification completed");
         return true;
     }
 
-    //如果找得到大多数，就迭代持续找下去，找不到大多数，就重试
+    //If you can find the majority, iterate and continue to search. If you can't find the majority, try again
     private VoteStageResult tryIt(MeetingRound round, int count) {
         if (round == null) {
             round = roundController.tempRound();
@@ -206,7 +206,7 @@ public class CsController extends BasicObject {
             return null;
         }
 
-        //这里清理缓存的数据
+        //Clear cached data here
         if (count >= 30) {
             this.voteController.clearCache();
             chain.getConsensusCache().clear();
@@ -214,16 +214,16 @@ public class CsController extends BasicObject {
             this.voteController.clearMap();
             count = 0;
         }
-        //保证round的时效性
+        //ensureroundTimeliness of
         round = checkRoundByTime(round);
         MeetingMember localMember = round.getLocalMember();
         if (null == localMember) {
             return null;
         }
-        log.debug("尝试获取一个确认的轮次，tryIt");
+        log.debug("Attempt to obtain a confirmed round,tryIt");
         long packEndTime = round.getStartTime() + round.getDelayedSeconds() + chain.getConfig().getPackingInterval() * round.getPackingIndexOfRound();
-        //先表明下自己的态度
-//        log.info("投空块：{}-{}-{}/{},roundStart:{}", height, round.getIndex(), round.getPackingIndexOfRound(), round.getMemberCount(), NulsDateUtils.timeStamp2Str(round.getStartTime() * 1000));
+        //First, express your attitude
+//        log.info("Throwing empty blocks：{}-{}-{}/{},roundStart:{}", height, round.getIndex(), round.getPackingIndexOfRound(), round.getMemberCount(), NulsDateUtils.timeStamp2Str(round.getStartTime() * 1000));
         this.voteController.voteEmptyHash(chain.getBestHeader().getHeight() + 1, round.getIndex(), round.getStartTime(), round.getPackingIndexOfRound(), 1,
                 packEndTime, localMember.getAgent().getPackingAddressStr());
         long wait = packEndTime * 1000 - NulsDateUtils.getCurrentTimeMillis();
@@ -232,14 +232,14 @@ public class CsController extends BasicObject {
         }
         VoteStageResult result = chain.getConsensusCache().getStageTwoQueue().poll(wait, TimeUnit.MILLISECONDS);
         if (result == null) {
-            log.debug("超时，没得到有效结果:{}ms", wait);
+            log.debug("Timed out, no valid result obtained:{}ms", wait);
             return this.tryIt(roundController.getCurrentRound(), count + 1);
         }
         return result;
     }
 
     private boolean checkRoundTimeout() {
-        //大于五分钟
+        //More than five minutes
         MeetingRound currentRound = roundController.getCurrentRound();
         if (NulsDateUtils.getCurrentTimeSeconds() - currentRound.getStartTime() > 300) {
             voteController.clearCache();
@@ -251,12 +251,12 @@ public class CsController extends BasicObject {
         return true;
     }
 
-    //如果轮次没有确认，则每次都重新计算,因为没有确认，所以每次都根据时间进行计算
+    //If the round is not confirmed, recalculate each time,Because there was no confirmation, calculations were made based on time each time
     private MeetingRound checkRoundByTime(MeetingRound round) {
         long roundEndTimeMills = round.getStartTimeMills() + round.getMemberCount() * chain.getConfig().getPackingIntervalMills();
         if (roundEndTimeMills <= NulsDateUtils.getCurrentTimeMillis()) {
-            //轮次已过时，就重新根据时间计算
-            chain.getLogger().debug("尚未达成一致时，初始化轮次，寻找共同的机会");
+            //The round has expired, so recalculate based on time
+            chain.getLogger().debug("When consensus has not yet been reached, initiate the round and seek common opportunities");
             round = roundController.initRound();
         }
         long index = (NulsDateUtils.getCurrentTimeMillis() - round.getStartTimeMills()) / chain.getConfig().getPackingIntervalMills();
@@ -264,31 +264,31 @@ public class CsController extends BasicObject {
         return round;
     }
 
-    // 计算本轮是否有延迟，有的话计算出来设置进去
+    // Calculate whether there is a delay in this round, and if so, calculate and set it in
     private void checkDelayedTime(MeetingRound newRound) {
-        // 如果延迟时间不为0，则说明这个轮次之前已经存在，不是初始化出来的，不用管
+        // If the delay time is not0This indicates that this round already existed before and was not initialized, so there is no need to worry about it
         if (newRound.getDelayedSeconds() != 0) {
             return;
         }
-        // 获取到最新一个确认区块的轮次信息
+        // Obtain the latest confirmation block's round information
         BlockHeader bestHeader = chain.getBestHeader();
         if (bestHeader == null) {
             return;
         }
         BlockExtendsData bestRoundData = bestHeader.getExtendsData();
         if (bestRoundData.getRoundIndex() != newRound.getIndex()) {
-            // 都跳轮了，这种情况不管了
+            // We've all jumped the wheels, let's ignore this situation
             return;
         }
-        // 计算出最近区块应该出的时间和实际时间，做一个对比，就能算出在这之前有多久的延迟
+        // Calculate the expected and actual time of the recent block, compare them, and then calculate how long the delay is before that
         long realTime = bestHeader.getTime();
         long expectedTime = bestRoundData.getRoundStartTime() + bestRoundData.getPackingIndexOfRound() * chain.getConfig().getPackingInterval();
         long delayedTime = realTime - expectedTime;
-        // 对比最新区块和当前时间，看是否有延迟
+        // Compare the latest block with the current time to see if there is any delay
         long diffTime = NulsDateUtils.getCurrentTimeSeconds() - realTime;
         if (diffTime > chain.getConfig().getPackingInterval()) {
             long newestDelayedTime = (diffTime - (newRound.getPackingIndexOfRound() - bestRoundData.getPackingIndexOfRound()) * chain.getConfig().getPackingInterval());
-            // 这里由于取的当前实际，和实际运行中的节点可能不一致，尽量向实际靠拢，向后取VOTE_TIME_OUT的整数
+            // Here, due to the inconsistency between the current reality and the actual running nodes, it is advisable to approach reality as closely as possible and retrieve backwardsVOTE_TIME_OUTInteger of
             delayedTime += Math.ceil((float) newestDelayedTime / (float) VOTE_TIME_OUT) * VOTE_TIME_OUT;
         }
         newRound.setDelayedSeconds(delayedTime);

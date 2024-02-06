@@ -42,26 +42,26 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param tokenA 资产A类型
-     * @param tokenB 资产B类型
+     * @param address Trading account
+     * @param password Account password
+     * @param tokenA assetAtype
+     * @param tokenB assetBtype
      * @return
      */
     Result<String> swapCreatePair(int chainId, String address, String password, String tokenA, String tokenB);
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amountA 添加的资产A数量
-     * @param amountB 添加的资产B数量
-     * @param tokenA 资产A类型
-     * @param tokenB 资产B类型
-     * @param amountAMin 资产A最小添加值
-     * @param amountBMin 资产B最小添加值
-     * @param deadline 过期时间
-     * @param to 流动性份额接收地址
+     * @param address Trading account
+     * @param password Account password
+     * @param amountA Added assetsAquantity
+     * @param amountB Added assetsBquantity
+     * @param tokenA assetAtype
+     * @param tokenB assetBtype
+     * @param amountAMin assetAMinimum added value
+     * @param amountBMin assetBMinimum added value
+     * @param deadline Expiration time
+     * @param to Liquidity share receiving address
      * @return
      */
     Result<String> swapAddLiquidity(int chainId, String address, String password,
@@ -72,16 +72,16 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amountLP LP资产数量
-     * @param tokenLP LP资产的类型
-     * @param tokenA 资产A类型
-     * @param tokenB 资产B类型
-     * @param amountAMin 资产A最小移除值
-     * @param amountBMin 资产B最小移除值
-     * @param deadline 过期时间
-     * @param to 资产接收地址
+     * @param address Trading account
+     * @param password Account password
+     * @param amountLP LPAsset quantity
+     * @param tokenLP LPTypes of assets
+     * @param tokenA assetAtype
+     * @param tokenB assetBtype
+     * @param amountAMin assetAMinimum removal value
+     * @param amountBMin assetBMinimum removal value
+     * @param deadline Expiration time
+     * @param to Asset receiving address
      * @return
      */
     Result<String> swapRemoveLiquidity(int chainId, String address, String password,
@@ -91,14 +91,14 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amountIn 卖出的资产数量
-     * @param amountOutMin 最小买进的资产数量
-     * @param tokenPath 币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]
-     * @param feeTo 交易手续费取出一部分给指定的接收地址
-     * @param deadline 过期时间
-     * @param to 资产接收地址
+     * @param address Trading account
+     * @param password Account password
+     * @param amountIn Number of assets sold
+     * @param amountOutMin Minimum number of assets to be purchased
+     * @param tokenPath Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]
+     * @param feeTo Withdraw a portion of the transaction fee to the designated receiving address
+     * @param deadline Expiration time
+     * @param to Asset receiving address
      * @return
      */
     Result<String> swapTokenTrade(int chainId, String address, String password,
@@ -107,23 +107,23 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param coins 创建交易对的资产数组
-     * @param symbol LP名称
+     * @param address Trading account
+     * @param password Account password
+     * @param coins Create an asset array for transaction pairs
+     * @param symbol LPname
      * @return
      */
     Result<String> stableSwapCreatePair(int chainId, String address, String password, String[] coins, String symbol);
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amounts 添加的资产数量列表
-     * @param tokens 添加的资产类型列表
-     * @param pairAddress 交易对地址
-     * @param deadline 过期时间
-     * @param to 流动性份额接收地址
+     * @param address Trading account
+     * @param password Account password
+     * @param amounts List of added asset quantities
+     * @param tokens List of added asset types
+     * @param pairAddress Transaction to address
+     * @param deadline Expiration time
+     * @param to Liquidity share receiving address
      * @return
      */
     Result<String> stableSwapAddLiquidity(int chainId, String address, String password,
@@ -134,14 +134,14 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amountLP LP资产数量
-     * @param tokenLP LP资产类型
-     * @param receiveOrderIndexs 按币种索引顺序接收资产
-     * @param pairAddress 交易对地址
-     * @param deadline 过期时间
-     * @param to 资产接收地址
+     * @param address Trading account
+     * @param password Account password
+     * @param amountLP LPAsset quantity
+     * @param tokenLP LPAsset type
+     * @param receiveOrderIndexs Receive assets in currency index order
+     * @param pairAddress Transaction to address
+     * @param deadline Expiration time
+     * @param to Asset receiving address
      * @return
      */
     Result<String> stableSwapRemoveLiquidity(int chainId, String address, String password,
@@ -151,17 +151,17 @@ public interface SwapService {
 
     /**
      * @param chainId
-     * @param address 交易账户
-     * @param password 账户密码
-     * @param amountsIn 卖出的资产数量列表
-     * @param tokensIn 卖出的资产类型列表
-     * @param tokenOutIndex 买进的资产索引
-     * @param feeTo 交易手续费接收地址
-     * @param pairAddress 交易对地址
-     * @param deadline 过期地址
-     * @param to 资产接收地址
-     * @param feeTokenStr 手续费资产类型
-     * @param feeAmountStr 交易手续费
+     * @param address Trading account
+     * @param password Account password
+     * @param amountsIn List of sold assets
+     * @param tokensIn List of asset types sold
+     * @param tokenOutIndex Index of purchased assets
+     * @param feeTo Transaction fee receiving address
+     * @param pairAddress Transaction to address
+     * @param deadline Expired address
+     * @param to Asset receiving address
+     * @param feeTokenStr Handling fee asset type
+     * @param feeAmountStr Transaction fees
      * @return
      */
     Result<String> stableSwapTokenTrade(int chainId, String address, String password,
@@ -172,7 +172,7 @@ public interface SwapService {
                                         long deadline, String to, String feeTokenStr, String feeAmountStr);
 
     /**
-     * 根据LP资产获取交易对地址
+     * according toLPAsset acquisition transaction against address
      */
     Result<String> getPairAddressByTokenLP(int chainId, String tokenLP);
 

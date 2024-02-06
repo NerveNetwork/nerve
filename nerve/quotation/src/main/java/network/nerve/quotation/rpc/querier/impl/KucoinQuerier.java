@@ -41,7 +41,7 @@ import java.util.Map;
 @Component
 public class KucoinQuerier implements Querier {
     /**
-     * 获取交易对价格接口
+     * Obtain transaction pair price interface
      */
     private final String CMD = "/api/v1/market/orderbook/level1?symbol=";
 
@@ -59,10 +59,10 @@ public class KucoinQuerier implements Querier {
                 return null;
             }
             BigDecimal res = new BigDecimal((String) resultMap.get("price"));
-            chain.getLogger().info("Kucoin 获取到交易对[{}]价格:{}", symbol.toUpperCase(), res);
+            chain.getLogger().info("Kucoin Obtaining transaction pairs[{}]price:{}", symbol.toUpperCase(), res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Kucoin, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("Kucoin, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

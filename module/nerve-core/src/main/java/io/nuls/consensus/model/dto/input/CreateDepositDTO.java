@@ -1,6 +1,6 @@
 package io.nuls.consensus.model.dto.input;
 /**
- * 创建委托交易参数类
+ * Create entrusted transaction parameter class
  * Create delegate transaction parameter class
  *
  * @author tag
@@ -8,35 +8,35 @@ package io.nuls.consensus.model.dto.input;
  * */
 public class CreateDepositDTO {
     /**
-     * 链ID
+     * chainID
      * */
     private int chainId;
     /**
-     * 账户
+     * account
      * */
     private String address;
     /**
-     * 委托金额
+     * Entrusted amount
      * */
     private String deposit;
     /**
-     * 账户密码
+     * Account password
      * */
     private String password;
     /**
-     * 委托资产链ID
+     * Entrusted asset chainID
      * */
     private int assetChainId;
     /**
-     * 委托资产ID
+     * Entrusted assetsID
      * */
     private int assetId;
     /**
-     * 委托类型 0：活期  1：定期
+     * Entrustment type 0：current  1：regular
      * */
     private byte depositType;
     /**
-     * 委托定期的类型（半年，一年等）
+     * The type of commission period（Half a year, one year, etc）
      * */
     private byte timeType;
 

@@ -7,21 +7,21 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import java.util.ArrayList;
 import java.util.List;
 
-@ApiModel(name = "节点利率加成类")
+@ApiModel(name = "Node interest rate bonus category")
 public class RateAdditionDTO {
-    @ApiModelProperty(description = "抵押资产ID")
+    @ApiModelProperty(description = "Mortgage assetsID")
     private int assetChainId;
-    @ApiModelProperty(description = "资产ID")
+    @ApiModelProperty(description = "assetID")
     private int assetId;
     @ApiModelProperty(description = "oracleKey")
     private String oracleKey;
     @ApiModelProperty(description = "symbol")
     private String symbol;
-    @ApiModelProperty(description = "委托基础利率")
+    @ApiModelProperty(description = "Entrusted basic interest rate")
     private double basicRate;
-    @ApiModelProperty(description = "是否支持定期")
+    @ApiModelProperty(description = "Does it support regular reporting")
     private boolean canBePeriodically;
-    @ApiModelProperty(description = "委托类型利率加成明细")
+    @ApiModelProperty(description = "Details of commission type interest rate markup")
     private List<RateAdditionDetailDTO> detailList;
 
     public RateAdditionDTO(StackingAsset stackingAsset, double basicRate, boolean canBePeriodically){

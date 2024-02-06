@@ -13,7 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * 链的基础数据和运行状态数据
+ * Basic data and operational status data of the chain
  * Chain information class
  *
  * @author: Loki
@@ -22,96 +22,96 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Chain {
 
     /**
-     * 链基础配置信息
+     * Chain basic configuration information
      * Chain Foundation Configuration Information
      */
     private ConfigBean config;
 
     /**
-     * 日志
+     * journal
      */
     private NulsLogger logger;
 
     /**
-     * 当前节点是否是虚拟银行节点
+     * Is the current node a virtual bank node
      */
     private AtomicBoolean currentIsDirector = new AtomicBoolean(false);
 
     /**
-     * 最新区块高度等简略信息
+     * Latest block height and other brief information
      */
     private LatestBasicBlock latestBasicBlock = new LatestBasicBlock();
 
     /**
-     * 当前虚拟银行成员
-     * K: 打包地址（签名地址）, V:成员对象
+     * Current virtual bank members
+     * K: Packaging address（Signature address）, V:member object
      */
     private Map<String, VirtualBankDirector> mapVirtualBank = new ConcurrentHashMap<>();
 
     /**
-     * 异构链配置
+     * Heterogeneous Chain Configuration
      */
     private List<HeterogeneousCfg> listHeterogeneous = new ArrayList<>();
 
     /**
-     * 待处理
+     * Pending processing
      */
     private LinkedBlockingDeque<TxSubsequentProcessPO> pendingTxQueue = new LinkedBlockingDeque<>();
 
     /**
-     * 待执行提案
+     * Pending Proposal
      */
     private LinkedBlockingDeque<ExeProposalPO> exeProposalQueue = new LinkedBlockingDeque<>();
 
     /**
-     * 需要检查广播的交易hash 本地异构链组件是否生成
+     * Need to check the transactions of the broadcasthash Is the local heterogeneous chain component generated
      */
     private Set<PendingCheckTx> pendingCheckTxSet = new HashSet<>();
 
     /**
-     * 启动是否执行向异构组件,注册当前节点信息
+     * Start whether to execute towards heterogeneous components,Register current node information
      */
     private boolean initLocalSignPriKeyToHeterogeneous = false;
 
     /**
-     * 待处理签名集合
-     * 先收到交易签名和hash, 而本节点还没有创建该交易, 先暂存交易hash和签名 -2
+     * Pending signature set
+     * First, receive the transaction signature andhash, And this node has not yet created the transaction, Temporarily store transactions firsthashAnd signature -2
      */
     private Map<NulsHash, List<UntreatedMessage>> futureMessageMap = new ConcurrentHashMap<>();
 
     /**
-     * 异构链签过名但未进行拜占庭处理的签名消息
+     * Signature messages signed by heterogeneous chains but not Byzantine processed
      */
 //    private Map<NulsHash, List<ComponentSignMessage>> heterogeneousFutureMessageMap = new ConcurrentHashMap<>();
 
 
     /**
-     * 未处理的收到的交易签名消息 -2
+     * Unprocessed received transaction signature messages -2
      */
     private LinkedBlockingQueue<UntreatedMessage> signMessageByzantineQueue = new LinkedBlockingQueue<>();
 
     /**
-     * 投票中的提案
+     * Proposals in voting
      */
     private Map<NulsHash, ProposalPO> votingProposalMap = new HashMap<>();
 
     /**
-     * 异构链正在执行虚拟银行变更交易, 暂停执行新的虚拟银行变更交易
+     * Heterogeneous chain is executing virtual bank change transactions, Suspend the execution of new virtual bank change transactions
      */
     private AtomicBoolean heterogeneousChangeBankExecuting = new AtomicBoolean(false);
 
     /**
-     * 正在执行取消节点银行资格的提案
+     * Executing proposal to cancel node bank qualification
      */
     private AtomicBoolean exeDisqualifyBankProposal = new AtomicBoolean(false);
 
     /**
-     * 是否正在重置异构链(合约)
+     * Are you resetting heterogeneous chains(contract)
      */
     private AtomicBoolean resetVirtualBank = new AtomicBoolean(false);
 
     /**
-     * 当前异构链组件运行的版本
+     * The current version of heterogeneous chain components running
      */
     private int currentHeterogeneousVersion = 1;
 
@@ -229,7 +229,7 @@ public class Chain {
     }
 
     /**
-     * 根据异构chainId、type获取异构链配置信息
+     * According to heterogeneitychainId、typeObtain heterogeneous chain configuration information
      *
      * @param chainId
      * @param type
@@ -245,7 +245,7 @@ public class Chain {
     }
 
     /**
-     * 根据节点地址获取虚拟银行成员
+     * Obtain virtual bank members based on node addresses
      * @param agentAddress
      * @return
      */
@@ -259,7 +259,7 @@ public class Chain {
     }
 
     /**
-     * 根据节点地址判断该节点是否是虚拟银行节点
+     * Determine whether the node is a virtual bank node based on its address
      *
      * @param agentAddress
      * @return
@@ -274,7 +274,7 @@ public class Chain {
     }
 
     /**
-     * 根据签名地址(打包地址)判断该节点是否是虚拟银行节点
+     * Based on the signature address(Packaging address)Determine whether the node is a virtual bank node
      *
      * @param signAdderss
      * @return
@@ -284,7 +284,21 @@ public class Chain {
     }
 
     /**
-     * 获取虚拟银行非种子节点的数量
+     * Based on the signature address(Packaging address)Determine whether the node is a virtual bank seed node
+     *
+     * @param signAdderss
+     * @return
+     */
+    public boolean isSeedVirtualBankBySignAddr(String signAdderss) {
+        VirtualBankDirector director = mapVirtualBank.get(signAdderss);
+        if (director == null) {
+            return false;
+        }
+        return director.getSeedNode();
+    }
+
+    /**
+     * Obtain the number of non seed nodes for virtual banks
      */
     public int getVirtualBankCountWithoutSeedNode() {
         int count = 0;
@@ -298,7 +312,7 @@ public class Chain {
 
 
     /**
-     * 根据银行节点地址和异构链chanId 获取异构链地址
+     * Based on bank node addresses and heterogeneous chainschanId Obtain heterogeneous chain addresses
      *
      * @param agentAddress
      * @param heterogeneousChainId
@@ -319,7 +333,7 @@ public class Chain {
     }
 
     /**
-     * 根据银行节点签名地址和异构链chanId 获取异构链地址
+     * Based on the signature address of the bank node and the heterogeneous chainchanId Obtain heterogeneous chain addresses
      *
      * @param sginAddress
      * @param heterogeneousChainId
@@ -333,7 +347,7 @@ public class Chain {
     }
 
     /**
-     * 根据异构链地址获取对应节点的奖励地址
+     * Obtain reward addresses for corresponding nodes based on heterogeneous chain addresses
      *
      * @param heterogeneousAddress
      * @return

@@ -37,7 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 确认提现成功状态交易txdata
+ * Confirm successful withdrawal status transactiontxdata
  * @author: Loki
  * @date: 2020-02-17
  */
@@ -45,22 +45,22 @@ public class ConfirmWithdrawalTxData extends BaseNulsData {
 
     private int heterogeneousChainId;
     /**
-     * 异构链中对应的提现交易确认高度
+     * Confirmation height of corresponding withdrawal transactions in heterogeneous chains
      */
     private long heterogeneousHeight;
 
     /**
-     * 异构链中对应的提现交易hash
+     * Corresponding withdrawal transactions in heterogeneous chainshash
      */
     private String heterogeneousTxHash;
 
     /**
-     * 网络中对应的提现交易hash
+     * Corresponding withdrawal transactions in the networkhash
      */
     private NulsHash withdrawalTxHash;
 
     /**
-     * 需要分发提现手续费的节点异构链地址
+     * Node heterogeneous chain addresses that require distribution of withdrawal fees
      */
     private List<HeterogeneousAddress> listDistributionFee;
 

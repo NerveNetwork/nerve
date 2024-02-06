@@ -34,10 +34,10 @@ import network.nerve.converter.model.bo.Chain;
 public interface ConfirmResetBankStorageService {
 
     /**
-     * 确认重置虚拟银行异构链
+     * Confirm resetting the virtual banking heterogeneous chain
      * @param chain
-     * @param resetTxhash key 原始交易 重置虚拟银行异构链交易hash
-     * @param confirmTxHash value 确认交易 hash
+     * @param resetTxhash key Original transaction Reset Virtual Bank Heterogeneous Chain Transactionshash
+     * @param confirmTxHash value Confirm transaction hash
      * @return
      */
     boolean save(Chain chain, NulsHash resetTxhash, NulsHash confirmTxHash);

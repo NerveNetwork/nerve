@@ -5,7 +5,7 @@ import io.nuls.core.rpc.model.Key;
 /**
  * @Author: zhoulijun
  * @Time: 2020-05-25 10:11
- * @Description: 功能描述
+ * @Description: Function Description
  */
 public class HeterogeneousAssetInfo {
 

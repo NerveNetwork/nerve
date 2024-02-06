@@ -37,7 +37,7 @@ public class DexTradingResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_getCoinTrading", version = 1.0, description = "get CoinTrading info")
     @Parameters(value = {
-            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易对hash")
+            @Parameter(parameterName = "tradingHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction pairshash")
     })
     public Response getCoinTrading(Map params) {
         try {
@@ -71,7 +71,7 @@ public class DexTradingResource extends BaseCmd {
 
     @CmdAnnotation(cmd = "dx_getTradingOrder", version = 1.0, description = "get TradingOrder info")
     @Parameters(value = {
-            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "挂单hash")
+            @Parameter(parameterName = "orderHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Order placementhash")
     })
     public Response getTradingOrderTx(Map params) {
         try {

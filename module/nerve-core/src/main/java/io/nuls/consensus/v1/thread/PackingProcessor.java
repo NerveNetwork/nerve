@@ -56,7 +56,7 @@ public class PackingProcessor extends BasicRunnable {
             chain.getLogger().error(e);
             return;
         }
-        //投票
+        //vote
         chain.getConsensusCache().getBestBlocksVotingContainer().addBlock(chain,block.getHeader());
 
     }

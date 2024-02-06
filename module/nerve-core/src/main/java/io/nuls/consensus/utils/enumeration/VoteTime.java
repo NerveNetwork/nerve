@@ -1,7 +1,7 @@
 package io.nuls.consensus.utils.enumeration;
 
 /**
- * 投票时间类型
+ * Voting time type
  * Voting time type
  *
  * @author tag
@@ -9,19 +9,19 @@ package io.nuls.consensus.utils.enumeration;
  */
 public enum VoteTime {
     /**
-     * 当前投票轮次之前的投票数据
+     * Voting data before the current voting round
      * */
     PREVIOUS(0),
     /**
-     * 当前第一阶段投票
+     * Current first stage voting
      * */
     CURRENT_STAGE_ONE(1),
     /**
-     * 当前第二阶段投票
+     * Current second stage voting
      * */
     CURRENT_STAGE_TWO(2),
     /**
-     * 当前投票轮次之后的投票数据
+     * Voting data after the current voting round
      * */
     FUTURE(4);
     private final byte code;

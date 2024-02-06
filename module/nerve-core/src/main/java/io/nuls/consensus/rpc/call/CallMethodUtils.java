@@ -36,7 +36,7 @@ import static io.nuls.consensus.constant.CommandConstant.*;
 import static io.nuls.consensus.constant.ParameterConstant.*;
 
 /**
- * 公共远程方法调用工具类
+ * Public Remote Method Calling Tool Class
  * Common Remote Method Call Tool Class
  *
  * @author tag
@@ -47,7 +47,7 @@ public class CallMethodUtils {
     public static final long CALL_BACK_HANDLE_TIME = 200;
 
     /**
-     * 账户验证
+     * Account verification
      * account validate
      *
      * @param chainId
@@ -123,7 +123,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 查询多签账户信息
+     * Query multi signature account information
      * Query for multi-signature account information
      *
      * @param chainId
@@ -155,7 +155,7 @@ public class CallMethodUtils {
 
 
     /**
-     * 交易签名
+     * Transaction signature
      * transaction signature
      *
      * @param chainId
@@ -195,7 +195,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 区块签名
+     * Block signature
      * block signature
      *
      * @param chain
@@ -251,7 +251,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取可用余额和nonce
+     * Obtain available balance andnonce
      * Get the available balance and nonce
      *
      * @param chain
@@ -276,7 +276,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取账户锁定金额和可用余额
+     * Obtain account lock amount and available balance
      * Acquire account lock-in amount and available balance
      *
      * @param chain
@@ -301,7 +301,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取打包交易
+     * Get packaged transactions
      * Getting Packaged Transactions
      *
      * @param chain chain info
@@ -315,7 +315,7 @@ public class CallMethodUtils {
             long currentTime = NulsDateUtils.getCurrentTimeMillis();
             long surplusTime = packEndTime - currentTime;
             if (surplusTime <= MIN_PACK_SURPLUS_TIME) {
-                chain.getLogger().warn("打包时间太短，出空块");
+                chain.getLogger().warn("The packaging time is too short, resulting in empty blocks");
                 return null;
             }
             params.put(PARAM_END_TIME_STAMP, packEndTime - CALL_BACK_HANDLE_TIME);
@@ -325,7 +325,7 @@ public class CallMethodUtils {
             byte[] preStateRoot = preExtendsData.getStateRoot();
             params.put("preStateRoot", RPCUtil.encode(preStateRoot));
 
-//            chain.getLogger().info("packEndTime:{},currentTime:{},打包时间为：{}",packEndTime,currentTime,surplusTime);
+//            chain.getLogger().info("packEndTime:{},currentTime:{},Packaging time is：{}",packEndTime,currentTime,surplusTime);
             Response cmdResp = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.TX.abbr, CALL_TX_PACKABLE_TXS, params, surplusTime - CALL_BACK_HANDLE_TIME);
             if (!cmdResp.isSuccess()) {
                 chain.getLogger().error("Packaging transaction acquisition failure!");
@@ -340,7 +340,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取指定交易
+     * Obtain specified transaction
      * Acquisition of transactions based on transactions Hash
      *
      * @param chain  chain info
@@ -373,7 +373,7 @@ public class CallMethodUtils {
 
 
     /**
-     * 将新创建的交易发送给交易管理模块
+     * Send the newly created transaction to the transaction management module
      * The newly created transaction is sent to the transaction management module
      *
      * @param chain chain info
@@ -398,7 +398,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 共识状态修改通知交易模块
+     * Consensus status modification notification transaction module
      * Consensus status modification notification transaction module
      *
      * @param chain   chain info
@@ -420,9 +420,9 @@ public class CallMethodUtils {
     }
 
     /**
-     * 批量验证交易
+     * Batch Verify Transactions
      *
-     * @param chainId      链Id/chain id
+     * @param chainId      chainId/chain id
      * @param transactions
      * @return
      */
@@ -446,7 +446,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 根据交易HASH获取NONCE（交易HASH后8位）
+     * According to the transactionHASHobtainNONCE（transactionHASHafter8position）
      * Obtain NONCE according to HASH (the last 8 digits of HASH)
      */
     public static byte[] getNonce(byte[] txHash) {
@@ -456,7 +456,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 查询本地加密账户
+     * Query local encrypted account
      * Search for Locally Encrypted Accounts
      */
     @SuppressWarnings("unchecked")
@@ -479,7 +479,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 查询账户别名
+     * Query account alias
      * Query account alias
      */
     public static String getAlias(Chain chain, String address) {
@@ -501,7 +501,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 初始化链区块头数据，缓存指定数量的区块头
+     * Initialize chain block header data and cache a specified number of block headers
      * Initialize chain block header entity to cache a specified number of block headers
      *
      * @param chain chain info
@@ -527,7 +527,7 @@ public class CallMethodUtils {
                 blockHeaderHexs = (List<String>) result.get(PARAM_RESULT_VALUE);
                 break;
             }
-            Log.debug("---------------------------区块加载失败！");
+            Log.debug("---------------------------Block loading failed！");
             Thread.sleep(1000);
         }
         List<BlockHeader> blockHeaders = new ArrayList<>();
@@ -539,12 +539,12 @@ public class CallMethodUtils {
         blockHeaders.sort(new BlockHeaderComparator());
         chain.setBlockHeaderList(blockHeaders);
         chain.setBestHeader(blockHeaders.get(blockHeaders.size() - 1));
-        Log.debug("---------------------------区块加载成功！");
+        Log.debug("---------------------------Block loading successful！");
     }
 
 
     /**
-     * 初始化链区块头数据，缓存指定数量的区块头
+     * Initialize chain block header data and cache a specified number of block headers
      * Initialize chain block header entity to cache a specified number of block headers
      *
      * @param chain chain info
@@ -573,7 +573,7 @@ public class CallMethodUtils {
                 break;
             }
             tryCount++;
-            Log.debug("---------------------------回滚区块轮次变化从新加载区块失败！");
+            Log.debug("---------------------------Rollback block round change failed to load block from scratch！");
             Thread.sleep(1000);
         }
         List<BlockHeader> blockHeaders = new ArrayList<>();
@@ -584,19 +584,19 @@ public class CallMethodUtils {
         }
         blockHeaders.sort(new BlockHeaderComparator());
         chain.getBlockHeaderList().addAll(0, blockHeaders);
-        Log.debug("---------------------------回滚区块轮次变化从新加载区块成功！");
+        Log.debug("---------------------------Rollback block round change successfully reloading block from scratch！");
     }
 
 
     /**
-     * 通知区块模块有区块拜占庭验证成功
+     * Notify the block module of successful Byzantine verification of a block
      * Notification block module has block Byzantine verification succeeded
      *
-     * @param chain      链信息
-     * @param bifurcate  是否分叉
-     * @param height     区块高度
-     * @param firstHash  第一个区块Hash
-     * @param secondHash 如果分叉则为分叉块Hash否则为NULL
+     * @param chain      Chain information
+     * @param bifurcate  Is it forked
+     * @param height     block height
+     * @param firstHash  The first blockHash
+     * @param secondHash If there is a fork, it is a fork blockHashOtherwiseNULL
      */
     @SuppressWarnings("unchecked")
     public static void noticeByzantineResult(Chain chain, long height, boolean bifurcate, NulsHash firstHash, NulsHash secondHash) {
@@ -611,7 +611,7 @@ public class CallMethodUtils {
             params.put(PARAM_SECOND_HASH, null);
         }
         while (!noticeByzantineResult(chain, params)) {
-            chain.getLogger().info("重新推送拜占庭验证结果");
+            chain.getLogger().info("Re push Byzantine verification results");
         }
     }
 
@@ -627,14 +627,14 @@ public class CallMethodUtils {
     }
 
     /**
-     * 通知区块模块向节点获取区块信息
+     * Notify the block module to obtain block information from nodes
      * Notify the block module to obtain the block information from the node
      *
-     * @param chain      链信息
-     * @param height     区块高度
-     * @param nodeId     节点信息
-     * @param firstHash  第一个区块Hash
-     * @param secondHash 如果分叉则为分叉块Hash否则为NULL
+     * @param chain      Chain information
+     * @param height     block height
+     * @param nodeId     Node information
+     * @param firstHash  The first blockHash
+     * @param secondHash If there is a fork, it is a fork blockHashOtherwiseNULL
      */
     @SuppressWarnings("unchecked")
     public static void noticeGetBlock(Chain chain, long height, String nodeId, NulsHash firstHash, NulsHash secondHash) {
@@ -657,7 +657,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 将打包的新区块发送给区块管理模块
+     * Send the packaged new blocks to the block management module
      *
      * @param chainId chain ID
      * @param block   new block Info
@@ -677,7 +677,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取主网节点版本
+     * Obtain the version of the main network node
      * Acquire account lock-in amount and available balance
      *
      * @param chainId
@@ -698,7 +698,7 @@ public class CallMethodUtils {
     }
 
     /**
-     * 获取主网节点版本
+     * Obtain the version of the main network node
      * Acquire account lock-in amount and available balance
      *
      * @param chainId

@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 停止节点交易处理器
+ * Stop node transaction processor
  *
  * @author tag
  * @date 2019/6/1
@@ -81,7 +81,7 @@ public class StopAgentProcessor implements TransactionProcessor {
         Result rs;
         for (Transaction stopAgentTx : txs) {
             try {
-                //验证停止节点交易时间正确性
+                //Verify the correctness of stopping node transaction time
                 long time = NulsDateUtils.getCurrentTimeSeconds();
                 if (blockHeader != null) {
                     time = blockHeader.getTime();
@@ -149,7 +149,7 @@ public class StopAgentProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //回滚已提交成功的交易
+        //Roll back transactions that have been successfully submitted
         if (!commitResult) {
             for (Transaction rollbackTx : commitSuccessList) {
                 stopAgentRollBack(rollbackTx, chain);
@@ -175,7 +175,7 @@ public class StopAgentProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 stopAgentCommit(commitTx, blockHeader, chain);
@@ -186,7 +186,7 @@ public class StopAgentProcessor implements TransactionProcessor {
 
 
     private boolean stopAgentCommit(Transaction transaction, BlockHeader blockHeader, Chain chain) {
-        //找到需要注销的节点信息
+        //Find the node information that needs to be logged out
         StopAgent stopAgent = new StopAgent();
         try {
             stopAgent.parse(transaction.getTxData(), 0);
@@ -210,7 +210,7 @@ public class StopAgentProcessor implements TransactionProcessor {
             chain.getLogger().error("Stop agent tx update nonce data commit error");
             return false;
         }
-        //保存数据库和缓存
+        //Save database and cache
         return true;
     }
 
@@ -230,7 +230,7 @@ public class StopAgentProcessor implements TransactionProcessor {
 
         Agent agent = agentManager.getAgentByHash(chain, stopAgent.getCreateTxHash());
         agent.setDelHeight(-1);
-        //保存数据库和缓存
+        //Save database and cache
         if (!agentManager.updateAgent(chain, agent)) {
             AgentDepositNonceManager.unLockTxCommit(chain, stopAgent.getCreateTxHash(), transaction, true);
             chain.getLogger().error("Stop agent tx rollback error");

@@ -34,8 +34,8 @@ import network.nerve.converter.model.po.MergedComponentCallPO;
 public interface MergeComponentStorageService {
 
     /**
-     * 记录调用异构链时合并的交易
-     * key为合并交易列表的第一个交易hash, 用于异构链识别
+     * Record the merged transactions when calling heterogeneous chains
+     * keyTo merge the first transaction in the transaction listhash, Used for heterogeneous chain identification
      *
      * @param chain
      * @param hash
@@ -45,7 +45,7 @@ public interface MergeComponentStorageService {
     boolean saveMergeComponentCall(Chain chain, String hash, MergedComponentCallPO po);
 
     /**
-     * 根据合并时的hash 来获取合并的各独立交易
+     * Based on the mergerhash To obtain the merged independent transactions
      *
      * @param chain
      * @param hash
@@ -54,7 +54,7 @@ public interface MergeComponentStorageService {
     MergedComponentCallPO findMergedTx(Chain chain, String hash);
 
     /**
-     * 根据合并的成员hash 查询key的hash
+     * According to the merged membershash querykeyofhash
      *
      * @param chain
      * @param hash

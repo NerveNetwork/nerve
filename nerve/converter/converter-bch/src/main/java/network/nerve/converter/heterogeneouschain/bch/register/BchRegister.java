@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
 
 
 /**
- * Bch组件向Nerve核心注册
+ * BchComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

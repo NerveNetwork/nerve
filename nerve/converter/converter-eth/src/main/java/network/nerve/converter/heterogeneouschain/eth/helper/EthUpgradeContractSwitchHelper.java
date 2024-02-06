@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 当动态升级合约交易确认后，会调用注册的升级函数
+ * After confirming the dynamic upgrade contract transaction, the registered upgrade function will be called
  * @author: Mimi
  * @date: 2020-08-28
  */

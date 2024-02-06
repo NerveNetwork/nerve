@@ -69,7 +69,7 @@ public class SwapPairDataTest {
         paramMap.put("id", "1234");
         String response = HttpClientUtil.post(requestURL, paramMap);
         if (StringUtils.isBlank(response)) {
-            System.err.println("未能得到返回数据");
+            System.err.println("Failed to obtain return data");
             return null;
         }
         Map<String, Object> map = JSONUtils.json2map(response);

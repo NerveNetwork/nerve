@@ -83,9 +83,9 @@ public class TrxERC20Helper implements BeanInitial {
                 if (eventHash.equals(TrxConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
                     String toAddress = trc20Event.getTo();
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = trc20Event.getValue();
-                    // 接收地址不是监听的多签地址
+                    // The receiving address is not a listening multi signature address
                     if (!isListening.test(toAddress)) {
                         continue;
                     }
@@ -115,7 +115,7 @@ public class TrxERC20Helper implements BeanInitial {
             if (objects.isEmpty() || objects.size() != 2)
                 return false;
             String toAddress = objects.get(0).toString();
-            // 接收地址不是监听的多签地址
+            // The receiving address is not a listening multi signature address
             if (!isListening.test(toAddress)) {
                 return false;
             }
@@ -126,7 +126,7 @@ public class TrxERC20Helper implements BeanInitial {
             if (objects.isEmpty() || objects.size() != 3)
                 return false;
             String toAddress = objects.get(1).toString();
-            // 接收地址不是监听的多签地址
+            // The receiving address is not a listening multi signature address
             if (!isListening.test(toAddress)) {
                 return false;
             }

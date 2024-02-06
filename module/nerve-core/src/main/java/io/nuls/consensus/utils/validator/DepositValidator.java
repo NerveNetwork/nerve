@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 减少保证金交易验证器
+ * Reduce margin trading validators
  *
  * @author tag
  */
@@ -44,7 +44,7 @@ public class DepositValidator extends BaseValidator {
         Deposit deposit = new Deposit();
         deposit.parse(tx.getTxData(), 0);
 
-        //验证资产是否可以参与stacking
+        //Verify whether assets can participatestacking
         StackingAsset stackingAsset = chainManager.assetStackingVerify(deposit.getAssetChainId(), deposit.getAssetId());
         if (null == stackingAsset) {
             chain.getLogger().error("The asset cannot participate in staking");
@@ -56,7 +56,7 @@ public class DepositValidator extends BaseValidator {
         }
 
 
-        //如果为存定期则验证定期类型是否存在
+        //If it is a fixed term, verify whether the fixed term type exists
         if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
             if (!stackingAsset.isCanBePeriodically()) {
                 chain.getLogger().error("The asset cannot participate in periodic staking");
@@ -70,7 +70,7 @@ public class DepositValidator extends BaseValidator {
             }
         }
 
-        //验证委托金额是否是否小于最小委托金额
+        //Verify if the commission amount is less than the minimum commission amount
         BigInteger realAmount = ConsensusAwardUtil.getRealAmount(chain.getChainId(), deposit.getDeposit(), stackingAsset, tx.getTime() * 1000L);
         boolean pass = tx.getBlockHeight() > 0 && tx.getBlockHeight() < chain.getConfig().getDepositVerifyHeight();
 
@@ -96,7 +96,7 @@ public class DepositValidator extends BaseValidator {
             return rs;
         }
 
-        //验证手续费是否足够
+        //Verify if the handling fee is sufficient
         rs = validFee(chain, coinData, tx);
         if (rs.isFailed()) {
             return rs;

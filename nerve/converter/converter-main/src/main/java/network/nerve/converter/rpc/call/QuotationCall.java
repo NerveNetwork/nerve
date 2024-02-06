@@ -35,7 +35,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static network.nerve.converter.constant.ConverterConstant.*;
+import static network.nerve.converter.constant.ConverterConstant.ORACLE_KEY_NVT_PRICE;
 
 /**
  * @author: Loki
@@ -44,17 +44,17 @@ import static network.nerve.converter.constant.ConverterConstant.*;
 public class QuotationCall {
 
     /**
-     * 根据喂价key获取最终喂价
+     * According to the feeding pricekeyObtain final feed price
      * @param chain
      * @param oracleKey
      * @return
      */
     public static BigDecimal getPriceByOracleKey(Chain chain, String oracleKey) {
-        /********************* 测试用 ***************************/
+        /********************* For testing purposes ***************************/
         /*if("ETH_PRICE".equals(oracleKey)){
-            return new BigDecimal("2050.6417");
+            return new BigDecimal("2217.30564502");
         } else if (ORACLE_KEY_NVT_PRICE.equals(oracleKey)){
-            return new BigDecimal("0.0135");
+            return new BigDecimal("0.00848648");
         } else if ("BNB_PRICE".equals(oracleKey)){
             return new BigDecimal("306.3948");
         } else if ("HT_PRICE".equals(oracleKey)){
@@ -103,6 +103,16 @@ public class QuotationCall {
             return new BigDecimal("0.0000001382");
         } else if ("JNS_PRICE".equals(oracleKey)){
             return new BigDecimal("0.07283");
+        } else if ("FCH_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.01");
+        } else if ("BTC_PRICE".equals(oracleKey)){
+            return new BigDecimal("46249.56");
+        } else if ("OKB_PRICE".equals(oracleKey)){
+            return new BigDecimal("54.6444");
+        } else if ("FCH_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.01993");
+        } else if ("ZETA_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.01993");
         }*/
         /************************************************/
         try {

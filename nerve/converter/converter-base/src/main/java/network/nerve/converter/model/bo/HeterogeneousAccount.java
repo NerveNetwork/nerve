@@ -37,7 +37,7 @@ import org.bouncycastle.crypto.params.KeyParameter;
 import java.io.Serializable;
 
 /**
- * 异构链账户类
+ * Heterogeneous chain account class
  *
  * @author: Mimi
  * @date: 2020-02-26
@@ -48,22 +48,22 @@ public abstract class HeterogeneousAccount implements Serializable {
     private String address;
 
     /**
-     * 账户公钥
+     * Account public key
      */
     private byte[] pubKey;
 
     /**
-     * 加密私钥
+     * Encrypt private key
      */
     private byte[] encryptedPriKey;
 
     /**
-     * 明文私钥
+     * Clear text private key
      */
     private byte[] priKey;
 
     /**
-     * 账户是否被加密(是否设置过密码)
+     * Is the account encrypted(Have you ever set a password)
      * Whether the account is encrypted (Whether the password is set)
      */
     private boolean isEncrypted() {
@@ -79,7 +79,7 @@ public abstract class HeterogeneousAccount implements Serializable {
     }
 
     /**
-     * 验证账户密码是否正确
+     * Verify if the account password is correct
      * Verify that the account password is correct
      */
     public boolean validatePassword(String password) {
@@ -98,7 +98,7 @@ public abstract class HeterogeneousAccount implements Serializable {
 
 
     /**
-     * 根据密码加密账户(给账户设置密码)
+     * Encrypt account based on password(Set password for account)
      * Password-encrypted account (set password for account)
      */
     public void encrypt(String password) {
@@ -116,7 +116,7 @@ public abstract class HeterogeneousAccount implements Serializable {
     }
 
     /**
-     * 根据解密账户, 包括生成账户明文私钥
+     * According to the decryption account, Including generating account plaintext private keys
      * According to the decryption account, including generating the account plaintext private key
      */
     public boolean decrypt(String password) throws NulsException {
@@ -128,7 +128,7 @@ public abstract class HeterogeneousAccount implements Serializable {
             }
             byte[] unencryptedPrivateKey = AESEncrypt.decrypt(this.getEncryptedPriKey(), password);
 
-            // 解密后的明文生成公钥，与原公钥校验
+            // Generate a public key from decrypted plaintext and verify it with the original public key
             if (!validatePubKey(unencryptedPrivateKey, getPubKey())) {
                 return false;
             }

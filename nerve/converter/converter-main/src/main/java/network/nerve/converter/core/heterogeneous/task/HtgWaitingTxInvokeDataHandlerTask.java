@@ -50,7 +50,7 @@ public class HtgWaitingTxInvokeDataHandlerTask implements Runnable{
                 runnable.run();
             }
         } catch (Exception e) {
-            converterCoreApi.logger().warn("异构链交易调用数据等待任务执行异常: {}", e.getMessage());
+            converterCoreApi.logger().warn("Heterogeneous chain transaction call data waiting for task execution exception: {}", e.getMessage());
         }
     }
 }

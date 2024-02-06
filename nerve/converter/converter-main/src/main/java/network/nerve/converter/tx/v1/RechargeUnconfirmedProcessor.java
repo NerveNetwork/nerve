@@ -71,19 +71,19 @@ public class RechargeUnconfirmedProcessor implements TransactionProcessor {
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 RechargeUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeUnconfirmedTxData.class);
                 if(!setDuplicate.add(txData.getOriginalTxHash().getHeterogeneousHash().toLowerCase())){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
                             tx.getHash().toHex(), txData.getOriginalTxHash());
                     continue;
                 }
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -112,7 +112,7 @@ public class RechargeUnconfirmedProcessor implements TransactionProcessor {
         try {
             for (Transaction tx : txs) {
                 RechargeUnconfirmedTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeUnconfirmedTxData.class);
-                chain.getLogger().info("[commit] [Pending] 异构链组件解析到新充值交易 hash:{}, 异构链充值交易hash:{}", tx.getHash().toHex(), txData.getOriginalTxHash());
+                chain.getLogger().info("[commit] [Pending] Analysis of Heterogeneous Chain Components to New Recharge Transactions hash:{}, Heterogeneous chain recharge transactionshash:{}", tx.getHash().toHex(), txData.getOriginalTxHash());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

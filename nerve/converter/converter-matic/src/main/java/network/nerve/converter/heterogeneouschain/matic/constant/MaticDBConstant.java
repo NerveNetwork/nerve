@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.matic.constant;
  */
 public interface MaticDBConstant {
     /**
-     * MATIC信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * MATICInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_MATIC = "cv_table_matic";

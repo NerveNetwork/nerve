@@ -12,11 +12,11 @@ import java.util.concurrent.TimeUnit;
 public class VoteResultStageTwoQueue {
 
     /**
-     * 投票结果去重
+     * Voting result deduplication
      */
     private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(1024);
     /**
-     * 所有第二阶段的结果都提交到这里
+     * All results from the second stage are submitted here
      */
     private LinkedBlockingQueue<VoteStageResult> voteMessageQueue = new LinkedBlockingQueue<>();
 

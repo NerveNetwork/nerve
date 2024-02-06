@@ -170,7 +170,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 主资产提现
+     * Withdrawal of main assets
      */
     @Test
     public void mainWithdrawBy10Managers() throws Exception {
@@ -180,21 +180,21 @@ public class TrxWalletApiTest extends Base {
         String value = "0.03";
         int signCount = 10;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("MainAsset提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("MainAssetWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * 授权清零
+     * Authorization reset
      */
     @Test
     public void cleanAllowance() throws Exception {
         setUX();
         setErc20DX();
-        // 清零授权
+        // Zero authorization
         String approveAmount = "0";
         Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
         String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
-        System.out.println(String.format("TRC20授权清零, 授权hash: %s", authHash));
+        System.out.println(String.format("TRC20Authorization reset, authorizationhash: %s", authHash));
 
     }
 
@@ -219,7 +219,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 主资产充值
+     * Main asset recharge
      */
     @Test
     public void depositTRXByCrossOut() throws Exception {
@@ -234,7 +234,7 @@ public class TrxWalletApiTest extends Base {
         System.out.println(callContract.toString());
     }
     /**
-     * TRC20充值
+     * TRC20Recharge
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
@@ -243,9 +243,9 @@ public class TrxWalletApiTest extends Base {
         //setErc20NVT();
         setErc20USDT();
         //setErc20DX();
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "3.3";
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger();
@@ -256,45 +256,45 @@ public class TrxWalletApiTest extends Base {
 
         BigInteger allowanceAmount = (BigInteger) walletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
-            // erc20授权
+            // erc20authorization
             String approveAmount = "99999999";
             Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
-            System.out.println(String.format("TRC20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+            System.out.println(String.format("TRC20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
             while (walletApi.getTransactionReceipt(authHash) == null) {
-                System.out.println("等待8秒查询[TRC20授权]交易打包结果");
+                System.out.println("wait for8Second query[TRC20authorization]Transaction packaging results");
                 TimeUnit.SECONDS.sleep(8);
             }
             //TimeUnit.SECONDS.sleep(8);
             BigInteger tempAllowanceAmount = (BigInteger) walletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("等待8秒查询[TRC20授权]交易额度");
+                System.out.println("wait for8Second query[TRC20authorization]Transaction limit");
                 TimeUnit.SECONDS.sleep(8);
                 tempAllowanceAmount = (BigInteger) walletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
-        System.out.println("[TRC20授权]额度已满足条件");
-        // crossOut erc20转账
+        System.out.println("[TRC20authorization]The limit has met the conditions");
+        // crossOut erc20Transfer
         Function crossOutFunction = TrxUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        System.out.println(String.format("TRC20充值[%s], 充值hash: %s", sendAmount, hash));
+        System.out.println(String.format("TRC20Recharge[%s], Rechargehash: %s", sendAmount, hash));
     }
 
     /**
-     * 一键跨链USDT
+     * One click cross chainUSDT
      */
     @Test
     public void oneClickCrossChainUSDTTest() throws Exception {
         setUX();
         int desChainId = 102;
         String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        // 一键跨链手续费 TRX
+        // One click cross chain handling fee TRX
         String feeAmount = "14";
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "0.25";
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         setErc20USDT();
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
         // tipping
         String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
@@ -302,31 +302,31 @@ public class TrxWalletApiTest extends Base {
         BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
 
         BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
-        // crossOut erc20转账
+        // crossOut erc20Transfer
         BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(6).toBigInteger();
         Function oneClickCrossChainFunction = TrxUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
         String data = FunctionEncoder.encode(oneClickCrossChainFunction);
         Function crossOutFunction = TrxUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
 
-        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20One click cross chain[%s], transactionhash: %s", sendAmount, hash));
     }
 
     /**
-     * 一键跨链NVT
+     * One click cross chainNVT
      */
     @Test
     public void oneClickCrossChainNVTTest() throws Exception {
         setUX();
         int desChainId = 102;
         String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        // 一键跨链手续费 TRX
+        // One click cross chain handling fee TRX
         String feeAmount = "14";
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "2.5";
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         setErc20NVT();
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
         // tipping
         String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
@@ -334,29 +334,29 @@ public class TrxWalletApiTest extends Base {
         BigInteger convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
 
         BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
-        // crossOut erc20转账
+        // crossOut erc20Transfer
         BigInteger feeCrossChain = new BigDecimal(feeAmount).movePointRight(6).toBigInteger();
         Function oneClickCrossChainFunction = TrxUtil.getOneClickCrossChainFunction(feeCrossChain, desChainId, desToAddress, convertTipping, tippingAddress, null);
         String data = FunctionEncoder.encode(oneClickCrossChainFunction);
         Function crossOutFunction = TrxUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, data);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, feeCrossChain, multySignContractAddress);
 
-        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20One click cross chain[%s], transactionhash: %s", sendAmount, hash));
     }
 
     /**
-     * 一键跨链TRX
+     * One click cross chainTRX
      */
     @Test
     public void oneClickCrossChainMainAssetTest() throws Exception {
         setUX();
         int desChainId = 102;
         String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        // 一键跨链手续费 TRX
+        // One click cross chain handling fee TRX
         String feeAmount = "14";
-        // TRX 转账数量
+        // TRX Transfer quantity
         String sendAmount = "0.2";
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
         // tipping
         String tippingAddress = "TNVTdTSPVcqUCdfVYWwrbuRtZ1oM6GpSgsgF5";
@@ -370,11 +370,11 @@ public class TrxWalletApiTest extends Base {
         Function crossOutFunction = TrxUtil.getCrossOutIIFunction(to, BigInteger.ZERO, TrxConstant.ZERO_ADDRESS, data);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount.add(feeCrossChain), multySignContractAddress);
 
-        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20One click cross chain[%s], transactionhash: %s", sendAmount, hash));
     }
 
     /**
-     * 一键跨链 试错
+     * One click cross chain Trial and error
      */
     @Test
     public void oneClickCrossChainErrorTest() throws Exception {
@@ -383,11 +383,11 @@ public class TrxWalletApiTest extends Base {
         setUX();
         int desChainId = 102;
         String desToAddress = "0xc11D9943805e56b630A401D4bd9A29550353EFa1";
-        String feeAmount = "14";// 一键跨链手续费 TRX
-        setErc20USDT();// 初始化 ERC20 地址信息
-        String sendErc20Amount = "2.6";// ERC20 转账数量
-        String sendMainAmount = "0";// 主资产 转账数量
-        // Nerve 接收地址
+        String feeAmount = "14";// One click cross chain handling fee TRX
+        setErc20USDT();// initialization ERC20 Address information
+        String sendErc20Amount = "2.6";// ERC20 Transfer quantity
+        String sendMainAmount = "0";// Main assets Transfer quantity
+        // Nerve Receiving address
         String to = "TNVTdTSPGwjgRMtHqjmg8yKeMLnpBpVN5ZuuY";
         //String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
@@ -402,7 +402,7 @@ public class TrxWalletApiTest extends Base {
         } else {
             convertTipping = new BigDecimal(tipping).movePointRight(erc20Decimals).toBigInteger();
         }
-        // crossOut erc20转账
+        // crossOut erc20Transfer
         BigInteger convertFeeAmount = new BigDecimal(feeAmount).movePointRight(6).toBigInteger();
         String data = "0x";
         Function oneClickCrossChainFunction = TrxUtil.getOneClickCrossChainFunction(convertFeeAmount, desChainId, desToAddress, convertTipping, tippingAddress, null);
@@ -410,11 +410,11 @@ public class TrxWalletApiTest extends Base {
         Function crossOutFunction = TrxUtil.getCrossOutIIFunction(to, convertErc20Amount, erc20Address, data);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertFeeAmount.add(convertMainAmount), multySignContractAddress);
 
-        System.out.println(String.format("erc20一键跨链[%s], 交易hash: %s", sendErc20Amount, hash));
+        System.out.println(String.format("erc20One click cross chain[%s], transactionhash: %s", sendErc20Amount, hash));
     }
 
     /**
-     * TRC20提现
+     * TRC20Withdrawal
      */
     @Test
     public void trc20Withdraw() throws Exception {
@@ -427,14 +427,14 @@ public class TrxWalletApiTest extends Base {
         String value = "20";
         int signCount = 10;
         String hash = this.sendTRC20Withdraw(txKey, toAddress, value, erc20Address, erc20Decimals, signCount);
-        System.out.println(String.format("TRC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("TRC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     protected void setMainTest() {
         list = new ArrayList<>();
-        list.add("0000000000000000000000000000000000000000000000000000000000000000");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        list.add("0000000000000000000000000000000000000000000000000000000000000000");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("???");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("???");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
 
         this.multySignContractAddress = "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN";
         this.priKey = list.get(0);
@@ -446,50 +446,50 @@ public class TrxWalletApiTest extends Base {
         setMainTest();
         setMain();
         String txKey = "0e4a998f625e39942b1041276a354b07e7069bb236fb93c91fe9e34650b30534";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "TMKPjep6FqqsKnSijrfSkbBAsdYuTvE7m9";
-        // 造币数量
+        // Mint quantity
         String value = "0.997";
-        // token合约
+        // tokencontract
         String erc20 = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
         int tokenDecimals = 6;
         String signData = "3f71d98786e64583814c115dc031bd3c7a1cbb9025b8630bca7443c96f0b056b0d72c81d78c5b1fb223bb84dc8bbf40bbef1bf6ee21f471eaec5eb4ee051ee951cc95df08fb8d22b67a32bde75d45b53606fa18f07e14f54e0cf2ae61fdcabafc76143b79439ebbdacfe138bf2c5ad0c47ec85d688be7d0d0c3e44313b8d0a70c21c6668e50151b3db94b5d55b84466f2158555af300cea245a5efba51f57fa88f9d0dc30747990f93b68ee755ccafb3f395b32703b1d2a13ead6de6191e763605b01b816d2e6faf044884c8263f26beeb1bcad8e92dbdcc1de6cb17efc63ace87702432e614207ed04346f6d18172b646373f95ec0cc70444a06c0f904bed023606d71c8c326db466dab6cd9d7809ac32fcaf7898d69c6772d03459194c01cb3a13177b783ee693f3ee1fcfe5613a557ad9f195c9d73f4ee81211813bdbd001aafc178a1ced438f5d86d1a57afaedce17165cf5fe7c00046ceebdc73342503dd02cca6a180f4e2573275e34f4fd684a6117a1b6e98f5f59da8728c545173ad51e47372ec21b00402ad5e4ea754d6e8f32130c97069ba5beab4467f89b9fcb8da80880f82fc5261f47a4f2457f5be9e6c6e6917847660029d8c4458ba39d34948bff6662de9c1c56b943ce7d184164a992739c8b756e9e6ea714585a2e940bbf32260380f2e506646e4f74d42ef87f852c2e5e02fa3899c1dd8519b79b1905e58966c5c79807ba1c84c187fe24ff75de8829d7d2127574dfee4b57907a3b176ede2bcaf6b3592c990b12046eb2ac274f3ef27a10d89b6d9473bc5d18c04a59f17dfa5244a0f9389c1c32edd07c7b99d700998aae4ea8a07ec42560fb240b06796a2f0ca29b918e44250364335fc84337dc64df9cdbe33ba5a60fd0c56981bd1aed53eb49856ee7d00c1c";
 
         String hash = this.sendTRC20WithdrawBySignData(txKey, toAddress, value, erc20, tokenDecimals, signData);
-        System.out.println(String.format("ERC20提现%s个，hash: %s", value, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,hash: %s", value, hash));
     }
 
     @Test
     public void sendTRXWithdrawBySignDataTest() throws Exception {
         setMainTest();
         setMain();
-        // 私钥
+        // Private key
         this.priKey = "";
         this.address = new KeyPair(priKey).toBase58CheckAddress();
         // nerve hash
         String txKey = "143bb68beda256a3d742fc256022866446322f9782a140beeca9dfa55b03afc1";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "TGcn3Zn53NJHWSJwHMk4AgRykJSv9wRtfA";
-        // trx数量
+        // trxquantity
         String value = "121.230509";
         String signData = "e9ded8ad1ff28ea5195e4234c97829bfbeb257f256907f0dab3e089637e140110e3261fa5aba34c594e8610c722b87f66ddcabac618d8a1d1acf35fc35b9d2061b21152d91ffb3ad85528d6742a3aa05faaa3dd07ca2d6b0e4117d7329930276f602520006423db069ed5f1c4658b7bdd4cfec5069d6fd3b94f97479d39129bb741cf71b8dfd07f429f46246a2d35ea0d4642e9b2030fe8874e173211971c82144ae69fe4f63022b49e970b1e69673aaa13ebcf0d048947e7fe2811a0a368557795d1bdc721c321b9fa271842af34aa1f8e7c95e578568bc2a181d07313d0ac42428cc13fa5a2dc3a995d17284c3b523daf5b13d071761eec6fa6a07d0b603b610fd181b5efbd80a53cbdd9d37881d3632c2ea3d036fa10b7240db430b0452fa8ea7a5c830cbde8f3ff23adbd07b769daf85d463a764be1c9ef0729f3f5ed6207592ea5d1c0dd8e8c447466a1da7c828529b87e9734797b3c2202f721ffdf2f210d8ff33b03e563d3749185847488cc39e6c454f46f2e4c5d2a86ee5c2856cf5100fb968751ba80802341b8649a69aebc5c7c66a258da656b34e8892b1dca762c42bb10ef6754545eed7ca8039a594d3e3eb2b39b68f90305b5a9eaf97319f20729c05c908021bbfe4577c960776f58f17b18388db8af62812667c78c2c798ed94f4bbe3ea1c9e301f5b9915c0d1a4bc1f87362cb4227a2c62fdd9dbf14511ffcd3164e91481771cc92d5896b1d45112700e336c6f4fe73f366cfa3ec4b8839ab9531d0ea13e44c52ba1b2ae34e3a830badf373b937d1f950858494d0977dfca80cb91ae69cfe1ad1b83049eff6f4a9e2b7464b0bbebd59c63aecd7d4a58fab3682d3198cb67ad2e343e29c151719f54d383372bc340a996edfe4b8f0b24a5044fd3aece4de4d4e7091c";
 
         String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
-        System.out.println(String.format("TRX提现%s个，hash: %s", value, hash));
+        System.out.println(String.format("TRXWithdrawal%sPieces,hash: %s", value, hash));
     }
 
     @Test
     public void sendTRXWithdrawBySignDataTest2() throws Exception {
         setMainTest();
         setMain();
-        // 私钥
+        // Private key
         this.priKey = "";
         this.address = new KeyPair(priKey).toBase58CheckAddress();
         // nerve hash
         String txKey = "143bb68beda256a3d742fc256022866446322f9782a140beeca9dfa55b03afc1";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "TGcn3Zn53NJHWSJwHMk4AgRykJSv9wRtfA";
-        // trx数量
+        // trxquantity
         String value = "121.230509";
         String signData = "e9ded8ad1ff28ea5195e4234c97829bfbeb257f256907f0dab3e089637e140110e3261fa5aba34c594e8610c722b87f66ddcabac618d8a1d1acf35fc35b9d2061b21152d91ffb3ad85528d6742a3aa05faaa3dd07ca2d6b0e4117d7329930276f602520006423db069ed5f1c4658b7bdd4cfec5069d6fd3b94f97479d39129bb741cf71b8dfd07f429f46246a2d35ea0d4642e9b2030fe8874e173211971c82144ae69fe4f63022b49e970b1e69673aaa13ebcf0d048947e7fe2811a0a368557795d1bdc721c321b9fa271842af34aa1f8e7c95e578568bc2a181d07313d0ac42428cc13fa5a2dc3a995d17284c3b523daf5b13d071761eec6fa6a07d0b603b610fd181b5efbd80a53cbdd9d37881d3632c2ea3d036fa10b7240db430b0452fa8ea7a5c830cbde8f3ff23adbd07b769daf85d463a764be1c9ef0729f3f5ed6207592ea5d1c0dd8e8c447466a1da7c828529b87e9734797b3c2202f721ffdf2f210d8ff33b03e563d3749185847488cc39e6c454f46f2e4c5d2a86ee5c2856cf5100fb968751ba80802341b8649a69aebc5c7c66a258da656b34e8892b1dca762c42bb10ef6754545eed7ca8039a594d3e3eb2b39b68f90305b5a9eaf97319f20729c05c908021bbfe4577c960776f58f17b18388db8af62812667c78c2c798ed94f4bbe3ea1c9e301f5b9915c0d1a4bc1f87362cb4227a2c62fdd9dbf14511ffcd3164e91481771cc92d5896b1d45112700e336c6f4fe73f366cfa3ec4b8839ab9531d0ea13e44c52ba1b2ae34e3a830badf373b937d1f950858494d0977dfca80cb91ae69cfe1ad1b83049eff6f4a9e2b7464b0bbebd59c63aecd7d4a58fab3682d3198cb67ad2e343e29c151719f54d383372bc340a996edfe4b8f0b24a5044fd3aece4de4d4e7091c";
 
@@ -509,20 +509,20 @@ public class TrxWalletApiTest extends Base {
         TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
         builder.setFeeLimit(feeLimit.longValue());
         Chain.Transaction txn = builder.build();
-        System.out.println(String.format("TRX签名前 hash: %s", TrxUtil.calcTxHash(txn)));
+        System.out.println(String.format("TRXBefore signing hash: %s", TrxUtil.calcTxHash(txn)));
         String txStr = Numeric.toHexStringNoPrefix(txn.toByteArray());
         String signTronTxData = HexUtil.encode(tronTxSign(priKey, HexUtil.decode(txStr)));
         Chain.Transaction signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signTronTxData))).build();
         Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
         if (!ret.getResult()) {
-            System.out.println(String.format("调用合约交易广播失败, 原因: %s", ret.getMessage().toStringUtf8()));
+            System.out.println(String.format("Call to contract transaction broadcast failed, reason: %s", ret.getMessage().toStringUtf8()));
         } else {
-            System.out.println(String.format("TRX提现%s个，hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
+            System.out.println(String.format("TRXWithdrawal%sPieces,hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
         }
     }
 
     /**
-     * TRX转账
+     * TRXTransfer
      */
     @Test
     public void transferTrxSignMachine() throws Exception {
@@ -538,15 +538,15 @@ public class TrxWalletApiTest extends Base {
         TransactionBuilder builder = new TransactionBuilder(txnExt.getTransaction());
         builder.setFeeLimit(TRX_10.longValue());
         Chain.Transaction txn = builder.build();
-        System.out.println(String.format("TRX签名前 hash: %s", TrxUtil.calcTxHash(txn)));
+        System.out.println(String.format("TRXBefore signing hash: %s", TrxUtil.calcTxHash(txn)));
         String txStr = Numeric.toHexStringNoPrefix(txn.toByteArray());
         String signTronTxData = HexUtil.encode(tronTxSign(fromPriKey, HexUtil.decode(txStr)));
         Chain.Transaction signedTxn = txn.toBuilder().addSignature(ByteString.copyFrom(Numeric.hexStringToByteArray(signTronTxData))).build();
         Response.TransactionReturn ret = wrapper.blockingStub.broadcastTransaction(signedTxn);
         if (!ret.getResult()) {
-            System.out.println(String.format("调用合约交易广播失败, 原因: %s", ret.getMessage().toStringUtf8()));
+            System.out.println(String.format("Call to contract transaction broadcast failed, reason: %s", ret.getMessage().toStringUtf8()));
         } else {
-            System.out.println(String.format("TRX转账%s个，hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
+            System.out.println(String.format("TRXTransfer%sPieces,hash: %s", value, TrxUtil.calcTxHash(signedTxn)));
         }
     }
 
@@ -576,7 +576,7 @@ public class TrxWalletApiTest extends Base {
 
 
     /**
-     * TRX转账
+     * TRXTransfer
      */
     @Test
     public void transferTrx() throws Exception {
@@ -589,7 +589,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * TRX转账（触发callback）
+     * TRXTransfer（triggercallback）
      */
     @Test
     public void transferTrxForCallback() throws Exception {
@@ -605,7 +605,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * TRC20转账
+     * TRC20Transfer
      */
     @Test
     public void transferTRC20() throws Exception {
@@ -618,14 +618,14 @@ public class TrxWalletApiTest extends Base {
         setErc20USDT();
         String to = "TLr94azKSz8L4HKE17V7ip12uJ5muXMBxH";
         String value = "100";
-        // 估算feeLimit
+        // estimatefeeLimit
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(to), new Uint256(new BigInteger(value).multiply(BigInteger.TEN.pow(erc20Decimals)))),
                 Arrays.asList(new TypeReference<Type>() {}));
         TrxEstimateSun estimateSun = walletApi.estimateSunUsed(from, erc20Address, function);
         if (estimateSun.isReverted()) {
-            System.err.println(String.format("交易验证失败，原因: %s", estimateSun.getRevertReason()));
+            System.err.println(String.format("Transaction verification failed, reason: %s", estimateSun.getRevertReason()));
             return;
         }
 
@@ -639,7 +639,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 估算feeLimit
+     * estimatefeeLimit
      */
     @Test
     public void estimateSun() throws Exception {
@@ -686,7 +686,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 估算feeLimit
+     * estimatefeeLimit
      */
     @Test
     public void viewFunctionCall() throws Exception {
@@ -758,7 +758,7 @@ public class TrxWalletApiTest extends Base {
     }
 
     /**
-     * 管理员变更
+     * Administrator Change
      */
     @Test
     public void managerChange() throws Exception {
@@ -784,11 +784,11 @@ public class TrxWalletApiTest extends Base {
         int signCount = list.size();
         context.SET_VERSION((byte) 3);
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     /**
-     * 查询多签合约的所有管理员地址
+     * Query all administrator addresses for multiple contracts
      */
     @Test
     public void allManagers() {
@@ -873,7 +873,7 @@ public class TrxWalletApiTest extends Base {
                     return;
                 String toAddress = objects.get(0).toString();
                 System.out.println(String.format("input: %s", input));
-                // 接收地址不是监听的多签地址
+                // The receiving address is not a listening multi signature address
                 System.out.println(Arrays.toString(TrxUtil.parseInput(input, INPUT_TRC20_TRANSFER).toArray()));
                 System.out.println(Arrays.toString(objects.toArray()));
             } catch (Exception e) {
@@ -893,10 +893,16 @@ public class TrxWalletApiTest extends Base {
         String s = Numeric.toHexString(txInfo.getContractResult(0).toByteArray());
         System.out.println(TrxUtil.getRevertReason(s));
         Response.ResourceReceipt receipt = txInfo.getReceipt();
-        // 消耗能量
+        // Energy consumption
         long energyFee = receipt.getEnergyFee();
-        // 消耗带宽
+        // Bandwidth consumption
         long netFee = receipt.getNetFee();
+    }
+
+    @Test
+    public void errorParseTest() {
+        String s = "0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001e5472616e73616374696f6e20686173206265656e20636f6d706c657465640000";
+        System.out.println(TrxUtil.getRevertReason(s));
     }
 
     @Test
@@ -925,7 +931,7 @@ public class TrxWalletApiTest extends Base {
             if (TrxConstant.EVENT_HASH_ERC20_TRANSFER.equals(eventHash)) {
                 trc20Event = parseTRC20Event(log);
             } else {
-                System.err.println("未知事件");
+                System.err.println("Unknown event");
             }
             if (trc20Event != null) {
                 System.out.println(trc20Event.toString());
@@ -955,7 +961,7 @@ public class TrxWalletApiTest extends Base {
                 }
 
                 TrxTransaction txInfo = TrxUtil.generateTxInfo(tx);
-                // 过滤 非TRX转账和调用合约交易
+                // filter wrongTRXTransfer and Call Contract Transactions
                 if (txInfo == null) {
                     continue;
                 }
@@ -1043,17 +1049,17 @@ public class TrxWalletApiTest extends Base {
             System.out.println(txHash);
             Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
             Chain.Transaction.Contract.ContractType type = contract.getType();
-            // 转账
+            // Transfer
             if (Chain.Transaction.Contract.ContractType.TransferContract == type) {
                 Contract.TransferContract tc = Contract.TransferContract.parseFrom(contract.getParameter().getValue());
-                System.out.println(String.format("[转账] from: %s, to: %s, amount: %s", TrxUtil.ethAddress2trx(tc.getOwnerAddress().toByteArray()),
+                System.out.println(String.format("[Transfer] from: %s, to: %s, amount: %s", TrxUtil.ethAddress2trx(tc.getOwnerAddress().toByteArray()),
                         TrxUtil.ethAddress2trx(tc.getToAddress().toByteArray()),
                         tc.getAmount()));
             }
-            // 调用合约
+            // Call Contract
             if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type) {
                 Contract.TriggerSmartContract tg = Contract.TriggerSmartContract.parseFrom(contract.getParameter().getValue());
-                System.out.println(String.format("[调用合约] from: %s, contract: %s, callValue: %s, callTokenValue: %s, data: %s",
+                System.out.println(String.format("[Call Contract] from: %s, contract: %s, callValue: %s, callTokenValue: %s, data: %s",
                         TrxUtil.ethAddress2trx(tg.getOwnerAddress().toByteArray()),
                         TrxUtil.ethAddress2trx(tg.getContractAddress().toByteArray()),
                         tg.getCallValue(),
@@ -1196,7 +1202,7 @@ public class TrxWalletApiTest extends Base {
         String _contractAddress = "TXCWs4vtLW2wYFHfi7xWeiC9Kuj2jxpKqJ";
         String _to = "TLr94azKSz8L4HKE17V7ip12uJ5muXMBxH";
         BigInteger _erc20Value = new BigDecimal("100").movePointRight(6).toBigInteger();
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(_to), new Uint256(_erc20Value)),
@@ -1297,8 +1303,8 @@ public class TrxWalletApiTest extends Base {
             String signed = signed10.substring(0 + i * 130, 130 * (i + 1));
 
             String vHash = TrxUtil.encoderWithdraw(context, txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION());
-            System.out.println(String.format("[验证签名] 提现数据: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
-            System.out.println(String.format("[验证签名] 提现vHash: %s", vHash));
+            System.out.println(String.format("[Verify signature] Withdrawal data: %s, %s, %s, %s, %s, %s", txHash, toAddress, value, isContractAsset, contractAddressERC20, context.VERSION()));
+            System.out.println(String.format("[Verify signature] WithdrawalvHash: %s", vHash));
             byte[] hashBytes = org.web3j.utils.Numeric.hexStringToByteArray(vHash);
 
             signed = Numeric.cleanHexPrefix(signed);

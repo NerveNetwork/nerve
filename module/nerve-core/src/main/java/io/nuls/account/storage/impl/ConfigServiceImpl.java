@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 配置信息存储管理类
+ * Configuration Information Storage Management Class
  * Configuration Information Storage Management Class
  *
  * @author qinyifeng

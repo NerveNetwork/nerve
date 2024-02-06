@@ -43,7 +43,7 @@ import java.util.Map;
  */
 public class BlockCall {
     /**
-     * 区块最新高度
+     * Latest height of blocks
      * */
     public static boolean subscriptionNewBlockHeight(Chain chain) {
         try {

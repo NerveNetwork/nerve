@@ -26,7 +26,6 @@ package network.nerve.converter.heterogeneouschain.lib.register;
 
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
-import io.nuls.core.rockdb.service.RocksDBService;
 import io.nuls.core.thread.ThreadUtils;
 import io.nuls.core.thread.commom.NulsThreadFactory;
 import network.nerve.converter.config.ConverterConfig;
@@ -58,16 +57,16 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class HtgRegister implements IHeterogeneousChainRegister {
 
-    private HtgListener htgListener;
-    private HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
-    private HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
-    private HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
-    private HtgCallBackManager htgCallBackManager;
+    protected HtgListener htgListener;
+    protected HtgUnconfirmedTxStorageService htgUnconfirmedTxStorageService;
+    protected HtgMultiSignAddressHistoryStorageService htgMultiSignAddressHistoryStorageService;
+    protected HtgTxInvokeInfoStorageService htgTxInvokeInfoStorageService;
+    protected HtgCallBackManager htgCallBackManager;
 
-    private ScheduledThreadPoolExecutor blockSyncExecutor;
-    private boolean isInitial = false;
-    private boolean newProcessActivated = false;
-    private BeanMap beanMap = new BeanMap();
+    protected ScheduledThreadPoolExecutor blockSyncExecutor;
+    protected boolean isInitial = false;
+    protected boolean newProcessActivated = false;
+    protected BeanMap beanMap = new BeanMap();
 
     public abstract ConverterConfig getConverterConfig();
     public abstract HtgContext getHtgContext();
@@ -84,26 +83,26 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
             isInitial = true;
-            // 初始化实例
+            // Initialize instance
             initBean();
-            // 存放日志实例
+            // Storing log instances
             getHtgContext().setLogger(logger);
-            // 存放配置实例
+            // Storing configuration instances
             getHtgContext().setConfig(config);
-            // 初始化默认API
+            // Initialize defaultAPI
             initDefualtAPI();
-            // 解析HT API URL
+            // analysisHT API URL
             initEthWalletRPC();
-            // 存放nerveChainId
+            // depositnerveChainId
             getHtgContext().setNERVE_CHAINID(getConverterConfig().getChainId());
             //RocksDBService.createTable(DBName());
-            // 初始化地址过滤集合
+            // Initialize address filtering set
             initFilterAddresses();
         }
         return DBName();
     }
 
-    private void initBean() {
+    protected void initBean() {
         beanMap = HtgUtil.initBeanV2(getHtgContext(), getConverterConfig(), null, DBName());
         htgListener = (HtgListener) beanMap.get(HtgListener.class);
         htgMultiSignAddressHistoryStorageService = (HtgMultiSignAddressHistoryStorageService) beanMap.get(HtgMultiSignAddressHistoryStorageService.class);
@@ -129,38 +128,42 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
     @Override
     public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
         if (!this.newProcessActivated) {
-            String multiSigAddress = registerInfo.getMultiSigAddress().toLowerCase();
-            // 监听多签地址交易
+            String multiSigAddress = registerInfo.getMultiSigAddress();
+            if (getHtgContext().HTG_CHAIN_ID() < 200) {
+                multiSigAddress = multiSigAddress.toLowerCase();
+            }
+
+            // Listening for multi signature address transactions
             htgListener.addListeningAddress(multiSigAddress);
-            // 管理回调函数实例
+            // Manage callback function instances
             htgCallBackManager.setDepositTxSubmitter(registerInfo.getDepositTxSubmitter());
             htgCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
             htgCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
-            // 存放CORE查询API实例
+            // depositCOREqueryAPIexample
             getHtgContext().setConverterCoreApi(registerInfo.getConverterCoreApi());
             getHtgContext().getConverterCoreApi().addChainDBName(getChainId(), DBName());
-            // 更新多签地址
+            // Update multiple signed addresses
             getHtgContext().SET_MULTY_SIGN_ADDRESS(multiSigAddress);
-            // 保存当前多签地址到多签地址历史列表中
+            // Save the current multi signature address to the multi signature address history list
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
-            // 初始化待确认任务队列
+            // Initialize the pending confirmation task queue
             initUnconfirmedTxQueue();
-            // 初始化交易等待任务队列
+            // Initialize transaction waiting task queue
             initWaitingTxQueue();
-            // 启动新流程的工作任务池
+            // Start a new process's work task pool
             initScheduled();
-            // 设置新流程切换标志
+            // Set new process switching flag
             this.newProcessActivated = true;
         }
-        getHtgContext().logger().info("{} 注册完成.", getHtgContext().getConfig().getSymbol());
+        getHtgContext().logger().info("{} Registration completed.", getHtgContext().getConfig().getSymbol());
     }
 
-    private void initDefualtAPI() throws Exception {
+    protected void initDefualtAPI() throws Exception {
         HtgWalletApi htgWalletApi = (HtgWalletApi) beanMap.get(HtgWalletApi.class);
         htgWalletApi.init(ethWalletRpcProcessing(getHtgContext().getConfig().getCommonRpcAddress()));
     }
 
-    private void initEthWalletRPC() {
+    protected void initEthWalletRPC() {
         String orderRpcAddresses = getHtgContext().getConfig().getOrderRpcAddresses();
         if(StringUtils.isNotBlank(orderRpcAddresses)) {
             String[] rpcArray = orderRpcAddresses.split(",");
@@ -177,7 +180,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         }
     }
 
-    private String ethWalletRpcProcessing(String rpc) {
+    protected String ethWalletRpcProcessing(String rpc) {
         if (StringUtils.isBlank(rpc)) {
             return rpc;
         }
@@ -185,7 +188,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         return rpc;
     }
 
-    private void initFilterAddresses() {
+    protected void initFilterAddresses() {
         String filterAddresses = getHtgContext().getConfig().getFilterAddresses();
         if(StringUtils.isNotBlank(filterAddresses)) {
             String[] filterArray = filterAddresses.split(",");
@@ -196,14 +199,14 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         }
     }
 
-    private void initUnconfirmedTxQueue() {
+    protected void initUnconfirmedTxQueue() {
         List<HtgUnconfirmedTxPo> list = htgUnconfirmedTxStorageService.findAll();
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     getHtgContext().UNCONFIRMED_TX_QUEUE().offer(po);
-                    // 把待确认的交易加入到监听交易hash列表中
+                    // Add pending transactions to listening transactionshashIn the list
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
@@ -211,7 +214,7 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         getHtgContext().INIT_UNCONFIRMEDTX_QUEUE_LATCH().countDown();
     }
 
-    private void initScheduled() {
+    protected void initScheduled() {
         blockSyncExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory(blockSyncThreadName()));
         blockSyncExecutor.scheduleWithFixedDelay((Runnable) beanMap.get(HtgBlockHandler.class), 60, getHtgContext().getConfig().getBlockQueuePeriod(), TimeUnit.SECONDS);
 
@@ -220,12 +223,12 @@ public abstract class HtgRegister implements IHeterogeneousChainRegister {
         getHtgContext().getConverterCoreApi().addHtgRpcAvailableHandler((Runnable) beanMap.get(HtgRpcAvailableHandler.class));
     }
 
-    private void initWaitingTxQueue() {
+    protected void initWaitingTxQueue() {
         List<HtgWaitingTxPo> list = htgTxInvokeInfoStorageService.findAllWaitingTxPo();
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     getHtgContext().WAITING_TX_QUEUE().offer(po);
                 }
             });

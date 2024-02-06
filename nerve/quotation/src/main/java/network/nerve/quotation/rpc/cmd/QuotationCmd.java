@@ -73,7 +73,7 @@ public class QuotationCmd extends BaseCmd {
     @Autowired
     private ChainManager chainManager;
 
-    @CmdAnnotation(cmd = "qu_quote", version = 1.0, description = "创建节点报价交易 测试")
+    @CmdAnnotation(cmd = "qu_quote", version = 1.0, description = "Create node quotation transactions test")
     public Response quote(Map params) {
         Chain chain = null;
         try {
@@ -99,11 +99,11 @@ public class QuotationCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = "qu_final_quotation", version = 1.0, description = "获取最终报价")
+    @CmdAnnotation(cmd = "qu_final_quotation", version = 1.0, description = "Obtain final quotation")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
             @Parameter(parameterName = "key", parameterType = "String", parameterDes = "key"),
-            @Parameter(parameterName = "date", parameterType = "String", parameterDes = "获取指定UTC日期的报价, yyyyMMdd")
+            @Parameter(parameterName = "date", parameterType = "String", parameterDes = "Get specifiedUTCQuotation for dates, yyyyMMdd")
     })
     public Response intradayFinalQuotation(Map params) {
         Chain chain = null;
@@ -129,13 +129,13 @@ public class QuotationCmd extends BaseCmd {
                     String dbKey = CommonUtil.assembleKey(date, anchorToken);
                     confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey);
                     if (null == confirmFinalQuotationPO) {
-                        // 带日期的查不到就查最近一次的(不带日期key)
+                        // If you can't find the date, check the most recent one(Without datekey)
                         confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalLastTimeQuotation(chain, anchorToken);
                     }
                     break;
                 }
             }
-            // swap合约报价key
+            // swapContract quotationkey
             for (QuotationContractCfg quContractCfg : chain.getContractQuote()) {
                 if (key.equals(quContractCfg.getKey())) {
                     keyExist = true;
@@ -143,7 +143,7 @@ public class QuotationCmd extends BaseCmd {
                     String dbKey = CommonUtil.assembleKey(date, anchorToken);
                     confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalQuotation(chain, dbKey);
                     if (null == confirmFinalQuotationPO) {
-                        // 带日期的查不到就查最近一次的(不带日期key)
+                        // If you can't find the date, check the most recent one(Without datekey)
                         confirmFinalQuotationPO = confirmFinalQuotationStorageService.getCfrFinalLastTimeQuotation(chain, anchorToken);
                     }
                     break;
@@ -156,10 +156,10 @@ public class QuotationCmd extends BaseCmd {
                 } else {
                     confirmFinalQuotationPO = new ConfirmFinalQuotationPO();
                     confirmFinalQuotationPO.setPrice(0.0);
-                    chain.getLogger().warn("暂无任何最终报价. key:{}", key);
+                    chain.getLogger().warn("There is currently no final quotation available. key:{}", key);
                 }
             }
-            chain.getLogger().debug("取: " + JSONUtils.obj2json(confirmFinalQuotationPO));
+            chain.getLogger().debug("take: " + JSONUtils.obj2json(confirmFinalQuotationPO));
             return success(confirmFinalQuotationPO);
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -170,7 +170,7 @@ public class QuotationCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = "test_final", version = 1.0, description = "测试接口")
+    @CmdAnnotation(cmd = "test_final", version = 1.0, description = "Test interface")
     public Response testFinal(Map params) {
         Chain chain = null;
         try {

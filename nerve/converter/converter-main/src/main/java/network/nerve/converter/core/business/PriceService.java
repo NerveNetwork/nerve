@@ -29,15 +29,15 @@ import network.nerve.converter.model.bo.Chain;
 import java.math.BigDecimal;
 
 /**
- * 获取/计算价格
+ * obtain/Calculate price
  * @author: Loki
  * @date: 2020/10/10
  */
 public interface PriceService {
 
     /**
-     * 计算两个token报价的兑换价格
-     * 例如通过两个token各自对USDT的价格 来计算这两个token相互兑换的价格
+     * Calculate twotokenExchange price for quotation
+     * For example, through twotokenEach person is responsible forUSDTThe price of To calculate these twotokenThe price of mutual exchange
      * @param priceFront
      * @param priceBehind
      * @return
@@ -45,7 +45,7 @@ public interface PriceService {
     BigDecimal getTickerPrice(BigDecimal priceFront, BigDecimal priceBehind);
 
     /**
-     * 通过两个oracleKey 来计算这个两个token的兑换价格
+     * Through twooracleKey To calculate these twotokenExchange price
      * @param oracleKeyFront
      * @param oracleKeyBehind
      * @return

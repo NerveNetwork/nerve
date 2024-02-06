@@ -50,7 +50,7 @@ public class HtgRpcAvailableHandlerTask implements Runnable{
                 runnable.run();
             }
         } catch (Exception e) {
-            converterCoreApi.logger().warn("异构链网络RPC可用性检查任务执行异常: {}", e.getMessage());
+            converterCoreApi.logger().warn("Heterogeneous Chain NetworkRPCAbnormal execution of availability check task: {}", e.getMessage());
         }
     }
 }

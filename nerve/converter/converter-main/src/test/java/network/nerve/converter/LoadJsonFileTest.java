@@ -129,7 +129,7 @@ public class LoadJsonFileTest {
             ConfirmWithdrawalTxData txData2 = new ConfirmWithdrawalTxData();
             txData2.parse(HexUtil.decode(txDataHex), 0);
             if (txData2.getHeterogeneousChainId() != 101) {
-                System.out.println("不是 Ethereum 交易.");
+                System.out.println("No, it's not Ethereum transaction.");
                 continue;
             }
             System.out.println(hash + ":\n " + txData2.toString());
@@ -157,7 +157,7 @@ public class LoadJsonFileTest {
                 int format = Integer.parseInt(sdf.format(new Date(time)));
                 String format1 = sdf1.format(new Date(time));
                 if (format != 20210409) {
-                    System.out.println(String.format("时间不在范围: %s", format1));
+                    System.out.println(String.format("Time is not within the range: %s", format1));
                     continue;
                 }
                 String _hash = dataMap.get("hash").toString();
@@ -175,7 +175,7 @@ public class LoadJsonFileTest {
             WithdrawalHeterogeneousSendTxData txData2 = new WithdrawalHeterogeneousSendTxData();
             txData2.parse(HexUtil.decode(txDataHex), 0);
             if (txData2.getHeterogeneousChainId() != 101) {
-                System.out.println("不是 Ethereum 交易.");
+                System.out.println("No, it's not Ethereum transaction.");
                 continue;
             }
             System.out.println(String.format("hash: %s, time: %s, data:\n %s", hash, hashTime.get(hash), txData2.toString()));

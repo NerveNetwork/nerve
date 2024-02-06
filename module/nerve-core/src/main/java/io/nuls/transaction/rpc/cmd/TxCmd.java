@@ -61,15 +61,15 @@ public class TxCmd extends BaseCmd {
     @Autowired
     private LockedAddressStorageService lockedAddressStorageService;
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_REGISTER, version = 1.0, description = "注册模块交易/Register module transactions")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_REGISTER, version = 1.0, description = "Registration module transaction/Register module transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "moduleCode", parameterType = "String", parameterDes = "注册交易的模块code"),
-            @Parameter(parameterName = "list", requestType = @TypeDescriptor(value = List.class, collectionElement = TxRegisterDetail.class), parameterDes = "待注册交易的数据"),
-            @Parameter(parameterName = "delList", requestType = @TypeDescriptor(value = List.class, collectionElement = Integer.class), parameterDes = "待移除已注册交易数据", canNull = true)
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "moduleCode", parameterType = "String", parameterDes = "Module for registering transactionscode"),
+            @Parameter(parameterName = "list", requestType = @TypeDescriptor(value = List.class, collectionElement = TxRegisterDetail.class), parameterDes = "Data to be registered for transactions"),
+            @Parameter(parameterName = "delList", requestType = @TypeDescriptor(value = List.class, collectionElement = Integer.class), parameterDes = "Pending removal of registered transaction data", canNull = true)
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否注册成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Is registration successful")
     }))
     public Response register(Map params) {
         Map<String, Boolean> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
@@ -103,14 +103,14 @@ public class TxCmd extends BaseCmd {
         return success(map);
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_NEWTX, version = 1.0, description = "接收本地新交易/receive a new transaction")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_NEWTX, version = 1.0, description = "Receive local new transactions/receive a new transaction")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "tx", parameterType = "String", parameterDes = "交易序列化数据字符串")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "tx", parameterType = "String", parameterDes = "Transaction serialization data string")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功"),
-            @Key(name = "hash", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful"),
+            @Key(name = "hash", description = "transactionhash")
     }))
     public Response newTx(Map params) {
         Chain chain = null;
@@ -122,9 +122,9 @@ public class TxCmd extends BaseCmd {
                 throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
             }
             String txStr = (String) params.get("tx");
-            //将txStr转换为Transaction对象
+            //taketxStrConvert toTransactionobject
             Transaction transaction = TxUtil.getInstanceRpcStr(txStr, Transaction.class);
-            //将交易放入待验证本地交易队列中
+            //Put the transaction into the local transaction queue to be verified
             txService.newTx(chain, transaction);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
             map.put("value", true);
@@ -140,16 +140,16 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_PACKABLETXS, version = 1.0, description = "获取可打包的交易集/returns a list of packaged transactions")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_PACKABLETXS, version = 1.0, description = "Obtain a packable transaction set/returns a list of packaged transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "endTimestamp", requestType = @TypeDescriptor(value = long.class), parameterDes = "截止时间"),
-            @Parameter(parameterName = "blockTime", requestType = @TypeDescriptor(value = long.class), parameterDes = "本次出块区块时间"),
-            @Parameter(parameterName = "maxTxDataSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易集最大容量"),
-            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "前一个区块的状态根")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "endTimestamp", requestType = @TypeDescriptor(value = long.class), parameterDes = "Deadline"),
+            @Parameter(parameterName = "blockTime", requestType = @TypeDescriptor(value = long.class), parameterDes = "Time of block production this time"),
+            @Parameter(parameterName = "maxTxDataSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "Maximum capacity of transaction set"),
+            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "The state root of the previous block")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "可打包交易集")
+    @ResponseData(name = "Return value", description = "Return aMap, including onekey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "Packable transaction set")
     }))
     public Response packableTxs(Map params) {
         Chain chain = null;
@@ -162,13 +162,13 @@ public class TxCmd extends BaseCmd {
             if (null == chain) {
                 throw new NulsException(TxErrorCode.CHAIN_NOT_FOUND);
             }
-            //结束打包的时间
+            //End packaging time
             long endTimestamp = Long.parseLong(params.get("endTimestamp").toString());
-            //交易数据最大容量值
+            //Maximum capacity value of transaction data
             int maxTxDataSize = (int) params.get("maxTxDataSize");
             long blockTime = Long.parseLong(params.get("blockTime").toString());
             String preStateRoot = (String) params.get("preStateRoot");
-//            chain.getLogger().info("总可用:{}", endTimestamp - NulsDateUtils.getCurrentTimeMillis());
+//            chain.getLogger().info("Total available:{}", endTimestamp - NulsDateUtils.getCurrentTimeMillis());
             TxPackage txPackage = txPackageService.packageBasic(chain, endTimestamp, maxTxDataSize, blockTime, preStateRoot);
             List<String> list = txPackage.getList();
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_4);
@@ -184,13 +184,13 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BACKPACKABLETXS, version = 1.0, description = "共识模块把不能打包的交易还回来，重新加入待打包列表/back packaged transactions")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BACKPACKABLETXS, version = 1.0, description = "The consensus module returns transactions that cannot be packaged and adds them back to the list to be packaged/back packaged transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "交易序列化数据字符串集合")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction serialization data string collection")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response backPackableTxs(Map params) {
         Chain chain = null;
@@ -221,20 +221,20 @@ public class TxCmd extends BaseCmd {
 
     /**
      * Save the transaction in the new block that was verified to the database
-     * 保存新区块的交易
+     * Save transactions for new blocks
      *
      * @param params Map
      * @return Response
      */
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_SAVE, priority = CmdPriority.HIGH, version = 1.0, description = "保存新区块的交易/Save the confirmed transaction")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_SAVE, priority = CmdPriority.HIGH, version = 1.0, description = "Save transactions for new blocks/Save the confirmed transaction")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待保存的交易集合"),
-            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "区块头"),
-            @Parameter(parameterName = "syncStatus", requestType = @TypeDescriptor(value = int.class), parameterDes = "运行状态")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction set to be saved"),
+            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "Block head"),
+            @Parameter(parameterName = "syncStatus", requestType = @TypeDescriptor(value = int.class), parameterDes = "running state")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response txSave(Map params) {
         Map<String, Boolean> map = new HashMap<>(TxConstant.INIT_CAPACITY_16);
@@ -268,15 +268,15 @@ public class TxCmd extends BaseCmd {
         return success(resultMap);
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GENGSIS_SAVE, version = 1.0, description = "保存创世块的交易/Save the transactions of the Genesis block ")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GENGSIS_SAVE, version = 1.0, description = "Save transactions for Genesis blocks/Save the transactions of the Genesis block ")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待保存的交易集合"),
-            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "区块头"),
-            @Parameter(parameterName = "syncStatus", requestType = @TypeDescriptor(value = int.class), parameterDes = "运行状态")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction set to be saved"),
+            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "Block head"),
+            @Parameter(parameterName = "syncStatus", requestType = @TypeDescriptor(value = int.class), parameterDes = "running state")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response txGengsisSave(Map params) {
         Map<String, Boolean> map = new HashMap<>(TxConstant.INIT_CAPACITY_16);
@@ -307,14 +307,14 @@ public class TxCmd extends BaseCmd {
         return success(resultMap);
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ROLLBACK, priority = CmdPriority.HIGH, version = 1.0, description = "回滚区块的交易/transaction rollback")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ROLLBACK, priority = CmdPriority.HIGH, version = 1.0, description = "Rollback block transactions/transaction rollback")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待回滚交易集合"),
-            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "区块头")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Collection of transactions to be rolled back"),
+            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "Block head")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response txRollback(Map params) {
         boolean result;
@@ -329,11 +329,11 @@ public class TxCmd extends BaseCmd {
             }
             List<String> txHashStrList = (List<String>) params.get("txHashList");
             List<NulsHash> txHashList = new ArrayList<>();
-            //将交易hashHex解码为交易hash字节数组
+            //Transfer the transactionhashHexDecode as transactionhashByte array
             for (String hashStr : txHashStrList) {
                 txHashList.add(NulsHash.fromHex(hashStr));
             }
-            //批量回滚已确认交易
+            //Batch rollback of confirmed transactions
             result = confirmedTxService.rollbackTxList(chain, txHashList, (String) params.get("blockHeader"));
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -347,12 +347,12 @@ public class TxCmd extends BaseCmd {
         return success(resultMap);
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_SYSTEM_TYPES, version = 1.0, description = "获取所有系统交易类型/Get system transaction types")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_SYSTEM_TYPES, version = 1.0, description = "Get all system transaction types/Get system transaction types")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = Integer.class, description = "系统交易类型集合")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = Integer.class, description = "System transaction type collection")
     }))
     public Response getSystemTypes(Map params) {
         Chain chain = null;
@@ -375,13 +375,13 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GETTX, version = 1.0, description = "根据hash获取交易, 先查未确认, 查不到再查已确认/Get transaction by tx hash")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GETTX, version = 1.0, description = "according tohashObtain transactions, First check for unconfirmed information, Can't find it, check again. Confirmed/Get transaction by tx hash")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "待查询交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "Transaction to be queriedhash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "tx", description = "获取到的交易的序列化数据的字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "tx", description = "The string of serialized data obtained from the transaction")
     }))
     public Response getTx(Map params) {
         Chain chain = null;
@@ -416,13 +416,13 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_CONFIRMED_TX, version = 1.0, description = "根据hash获取已确认交易(只查已确认)/Get confirmed transaction by tx hash")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_CONFIRMED_TX, version = 1.0, description = "according tohashObtain confirmed transactions(Only check confirmed)/Get confirmed transaction by tx hash")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "待查询交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "Transaction to be queriedhash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "tx", description = "获取到的交易的序列化数据的字符串")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "tx", description = "The string of serialized data obtained from the transaction")
     }))
     public Response getConfirmedTx(Map params) {
         Chain chain = null;
@@ -457,12 +457,12 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ISCONFIRMED, version = 1.0, description = "根据hash获取交易是否已确认(只查已确认)/Check tx is confirmed by tx hash")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ISCONFIRMED, version = 1.0, description = "according tohashObtain whether the transaction has been confirmed(Only check confirmed)/Check tx is confirmed by tx hash")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "待查询交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "Transaction to be queriedhash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "value", description = "true: confirmed; false:unconfirmed")
     }))
     public Response isConfirmed(Map params) {
@@ -498,13 +498,13 @@ public class TxCmd extends BaseCmd {
     }
 
     @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_BLOCK_TXS, version = 1.0,
-            description = "获取区块的完整交易，如果没有查询到，或者查询到的不是区块完整的交易数据，则返回空集合/Get block transactions")
+            description = "Obtain the complete transaction of the block. If no query is found, or if the query does not include the complete transaction data of the block, return an empty set/Get block transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待查询交易hash集合")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction to be queriedhashaggregate")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "返回交易序列化数据字符串集合")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "Returns a collection of transaction serialization data strings")
     }))
     public Response getBlockTxs(Map params) {
         Chain chain = null;
@@ -529,14 +529,14 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_BLOCK_TXS_EXTEND, version = 1.0, description = "根据hash列表，获取交易，已确认未确认都查/Get transactions by hashs")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_BLOCK_TXS_EXTEND, version = 1.0, description = "according tohashList, retrieve transactions, check for confirmed or unconfirmed items/Get transactions by hashs")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待查询交易hash集合"),
-            @Parameter(parameterName = "allHits", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "true：必须全部查到才返回数据，否则返回空list； false：查到几个返回几个")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction to be queriedhashaggregate"),
+            @Parameter(parameterName = "allHits", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "true：All data must be found before returning, otherwise return emptylist； false：How many were found and how many were returned")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "返回交易序列化数据字符串集合")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "Returns a collection of transaction serialization data strings")
     }))
     public Response getBlockTxsExtend(Map params) {
         Chain chain = null;
@@ -564,13 +564,13 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_NONEXISTENT_UNCONFIRMED_HASHS, version = 1.0, description = "查询传入的交易hash中,不在未确认库中的交易hash/Get nonexistent unconfirmed transaction hashs")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_GET_NONEXISTENT_UNCONFIRMED_HASHS, version = 1.0, description = "Query incoming transactionshashin,Transactions that are not in the unconfirmed databasehash/Get nonexistent unconfirmed transaction hashs")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待查询交易hash集合")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHashList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Transaction to be queriedhashaggregate")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "返回交易序列化数据字符串集合")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "Returns a collection of transaction serialization data strings")
     }))
     public Response getNonexistentUnconfirmedHashs(Map params) {
         Chain chain = null;
@@ -595,15 +595,15 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BATCHVERIFY, priority = CmdPriority.HIGH, version = 1.0, description = "验证区块所有交易/Verify all transactions in the block")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BATCHVERIFY, priority = CmdPriority.HIGH, version = 1.0, description = "Verify all transactions in the block/Verify all transactions in the block")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "待验证交易序列化数据字符串集合"),
-            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "对应的区块头"),
-            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "前一个区块状态根")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txList", requestType = @TypeDescriptor(value = List.class, collectionElement = String.class), parameterDes = "Collection of serialized data strings for transactions to be verified"),
+            @Parameter(parameterName = "blockHeader", parameterType = "String", parameterDes = "Corresponding block header"),
+            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "Previous block state root")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map，包含一个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class,  description = "是否验证成功")
+    @ResponseData(name = "Return value", description = "Return aMap, including onekey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class,  description = "Verified successfully")
     }))
     public Response batchVerify(Map params) {
         VerifyLedgerResult verifyLedgerResult = null;
@@ -633,13 +633,13 @@ public class TxCmd extends BaseCmd {
 
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_SET_MODULE_GENERATE_TX_TYPES, priority = CmdPriority.HIGH, version = 1.0, description = "设置模块生成的系统交易类型")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_SET_MODULE_GENERATE_TX_TYPES, priority = CmdPriority.HIGH, version = 1.0, description = "Set the system transaction type generated by the module")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "moduleAbbr", requestType = @TypeDescriptor(value = String.class), parameterDes = "模块名称"),
-            @Parameter(parameterName = "txTypeList", requestType = @TypeDescriptor(value = List.class, collectionElement = Integer.class), parameterDes = "设置模块生成的系统交易类型"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "moduleAbbr", requestType = @TypeDescriptor(value = String.class), parameterDes = "Module Name"),
+            @Parameter(parameterName = "txTypeList", requestType = @TypeDescriptor(value = List.class, collectionElement = Integer.class), parameterDes = "Set the system transaction type generated by the module"),
     })
-    @ResponseData(description = "无特定返回值，没有错误即设置成功")
+    @ResponseData(description = "No specific return value, set successfully without errors")
     public Response setContractGenerateTxTypes(Map params) {
         Chain chain = null;
         try {
@@ -656,7 +656,7 @@ public class TxCmd extends BaseCmd {
             }
             String moduleAbbr = (String) params.get("moduleAbbr");
             chain.getModuleGenerateTxTypesMap().put(moduleAbbr, new HashSet<>(txTypeList));
-            chain.getLogger().info("设置模块{}生成交易类型: {}", moduleAbbr, Arrays.toString(txTypeList.toArray()));
+            chain.getLogger().info("Set module{}Generate transaction types: {}", moduleAbbr, Arrays.toString(txTypeList.toArray()));
             return success();
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -668,12 +668,12 @@ public class TxCmd extends BaseCmd {
 
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_CS_STATE, version = 1.0, description = "设置节点打包状态(由共识模块设置)/Set the node packaging state")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_CS_STATE, version = 1.0, description = "Set node packaging status(Set by consensus module)/Set the node packaging state")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "packaging", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "是否正在打包")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "packaging", requestType = @TypeDescriptor(value = boolean.class), parameterDes = "Is packaging in progress")
     })
-    @ResponseData(description = "无特定返回值，没有错误即设置成功")
+    @ResponseData(description = "No specific return value, set successfully without errors")
     public Response packaging(Map params) {
         Chain chain = null;
         try {
@@ -687,7 +687,7 @@ public class TxCmd extends BaseCmd {
                 throw new NulsException(TxErrorCode.PARAMETER_ERROR);
             }
             chain.getPackaging().set(packaging);
-            chain.getLogger().debug("Task-Packaging 节点是否是打包节点,状态变更为: {}", chain.getPackaging().get());
+            chain.getLogger().debug("Task-Packaging Is the node a packaging node,Status changed to: {}", chain.getPackaging().get());
             return success();
         } catch (NulsException e) {
             errorLogProcess(chain, e);
@@ -699,12 +699,12 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BL_STATE, version = 1.0, description = "设置节点区块同步状态(由区块模块设置)/Set the node block state")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BL_STATE, version = 1.0, description = "Set node block synchronization status(Set by block module)/Set the node block state")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "status", requestType = @TypeDescriptor(value = int.class), parameterDes = "是否进入等待, 不处理交易")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "status", requestType = @TypeDescriptor(value = int.class), parameterDes = "Is waiting entered, Do not process transactions")
     })
-    @ResponseData(description = "无特定返回值，没有错误即设置成功")
+    @ResponseData(description = "No specific return value, set successfully without errors")
     public Response blockNotice(Map params) {
         Chain chain = null;
         try {
@@ -719,10 +719,10 @@ public class TxCmd extends BaseCmd {
             }
             if (1 == status) {
                 chain.getProcessTxStatus().set(true);
-                chain.getLogger().info("节点区块同步状态变更为: true");
+                chain.getLogger().info("Node block synchronization status changed to: true");
             } else {
                 chain.getProcessTxStatus().set(false);
-                chain.getLogger().info("节点区块同步状态变更为: false");
+                chain.getLogger().info("Node block synchronization status changed to: false");
             }
             return success();
         } catch (NulsException e) {
@@ -735,18 +735,18 @@ public class TxCmd extends BaseCmd {
     }
 
     /**
-     * 最新区块高度
+     * Latest block height
      *
      * @param params
      * @return
      */
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BLOCK_HEIGHT, priority = CmdPriority.HIGH, version = 1.0, description = "接收最新区块高度/Receive the latest block height")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_BLOCK_HEIGHT, priority = CmdPriority.HIGH, version = 1.0, description = "Receive the latest block height/Receive the latest block height")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "block height")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response height(Map params) {
         Chain chain = null;
@@ -758,7 +758,7 @@ public class TxCmd extends BaseCmd {
             }
             Long height = Long.parseLong(params.get("height").toString());
             chain.setBestBlockHeight(height);
-            chain.getLogger().debug("最新已确认区块高度更新为: [{}]" + TxUtil.nextLine() + TxUtil.nextLine(), height);
+            chain.getLogger().debug("The latest confirmed block height update is: [{}]" + TxUtil.nextLine() + TxUtil.nextLine(), height);
             Map<String, Object> resultMap = new HashMap<>(TxConstant.INIT_CAPACITY_2);
             resultMap.put("value", true);
             return success(resultMap);
@@ -772,13 +772,13 @@ public class TxCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = "tx_getTxSigners", version = 1.0, description = "获取交易合法签名的签名者列表/Gets the list of signers of the transaction's legal signature")
+    @CmdAnnotation(cmd = "tx_getTxSigners", version = 1.0, description = "Obtain a list of legitimate signatories for the transaction/Gets the list of signers of the transaction's legal signature")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "交易字符串")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHex", parameterType = "String", parameterDes = "Transaction String")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = List.class, valueElement = String.class, description = "交易的合法签名账户"),
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = List.class, valueElement = String.class, description = "Legal signature account for transactions"),
 
     }))
     public Response getTxSigners(Map params){
@@ -822,13 +822,13 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_LOCK, version = 1.0, description = "锁定账户")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_LOCK, version = 1.0, description = "Lock account")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response lockAddress(Map params){
         Chain chain = null;
@@ -853,13 +853,13 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_UNLOCK, version = 1.0, description = "解锁账户")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_UNLOCK, version = 1.0, description = "Unlock account")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     }))
     public Response unLockAddress(Map params){
         Chain chain = null;
@@ -884,13 +884,13 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ISLOCKED, version = 1.0, description = "返回地址是否已被锁定")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ISLOCKED, version = 1.0, description = "Is the return address locked")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "待检查地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Address to be checked")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "true:已锁定, false:未锁定")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "true:Locked, false:Unlocked")
     }))
     public Response isLocked(Map params){
         Chain chain = null;
@@ -905,7 +905,7 @@ public class TxCmd extends BaseCmd {
             String address = (String)params.get("address");
             String lockedAddress =  lockedAddressStorageService.find(chain.getChainId(), address);
             Map<String, Object> map = new HashMap<>(TxConstant.INIT_CAPACITY_2);
-            // 返回true 表示被锁定
+            // returntrue Indicates being locked
             map.put("value", StringUtils.isNotBlank(lockedAddress));
             return success(map);
         } catch (NulsException e) {
@@ -917,12 +917,12 @@ public class TxCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ALL_LOCKED_ADDRESS, version = 1.0, description = "获取所有已被锁定的地址列表")
+    @CmdAnnotation(cmd = io.nuls.transaction.constant.TxCmd.TX_ALL_LOCKED_ADDRESS, version = 1.0, description = "Get a list of all locked addresses")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = List.class, description = "地址列表")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = List.class, description = "Address List")
     }))
     public Response getAllLocked(Map params){
         Chain chain = null;

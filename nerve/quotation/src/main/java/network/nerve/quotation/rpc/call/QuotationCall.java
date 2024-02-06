@@ -91,7 +91,7 @@ public class QuotationCall {
     }
 
     /**
-     * 区块最新高度
+     * Latest height of blocks
      */
     public static boolean subscriptionNewBlockHeight(Chain chain) {
         try {
@@ -135,7 +135,7 @@ public class QuotationCall {
     }
 
     /**
-     * 查询本节点是不是共识节点，如果是则返回，共识账户和密码
+     * Query whether this node is a consensus node. If so, return the consensus account and password
      * Query whether the node is a consensus node, if so, return, consensus account and password
      */
     public static Map<String, String> getPackerInfo(Chain chain) {
@@ -170,7 +170,7 @@ public class QuotationCall {
     }
 
     /**
-     * 发起新交易
+     * Initiate new transactions
      */
     public static void newTx(Chain chain, Transaction tx) throws NulsException {
         try {
@@ -225,7 +225,7 @@ public class QuotationCall {
     }
 
     /**
-     * 调用其他模块接口
+     * Call other module interfaces
      * Call other module interfaces
      */
     public static Object requestAndResponse(String moduleCode, String cmd, Map params, Long timeout) throws NulsException {

@@ -45,7 +45,7 @@ import network.nerve.converter.utils.ConverterUtil;
 public class TxStorageServiceImpl implements TxStorageService  {
 
     /**
-     * 异构链 交易key前缀
+     * Heterogeneous chain transactionkeyprefix
      */
     private static final String HETEROGENEOUS_TX_PREFIX = "HETEROGENEOUS_TX_PREFIX_";
     private static final String WITHDRAWAL_ADDITIONAL_FEE_PREFIX = "WITHDRAWAL_ADDITIONAL_FEE_PREFIX_";

@@ -33,7 +33,7 @@ import java.util.List;
 public class SwapTradeBus {
 
     /**
-     * 交易对的变化数据
+     * Change data of transaction pairs
      */
     private List<TradePairBus> tradePairBuses;
     private transient boolean existStablePair;

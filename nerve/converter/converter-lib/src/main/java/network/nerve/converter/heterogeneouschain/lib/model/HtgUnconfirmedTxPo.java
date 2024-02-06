@@ -36,7 +36,7 @@ import java.io.Serializable;
 public class HtgUnconfirmedTxPo extends HeterogeneousTransactionInfo implements Serializable {
 
     /**
-     * 提现或管理员变更的ETH交易多签状态
+     * Withdrawals or administrator changesETHTransaction multi signature status
      */
     private MultiSignatureStatus status;
     private boolean validateTx;

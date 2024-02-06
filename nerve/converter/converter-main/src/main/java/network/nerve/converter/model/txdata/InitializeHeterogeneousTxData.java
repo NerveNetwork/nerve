@@ -33,8 +33,8 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 初始化异构链交易
- * 特殊的节点变更交易
+ * Initialize heterogeneous chain transactions
+ * Special node change transactions
  * @author: Loki
  * @date: 2020/3/20
  */
@@ -42,7 +42,7 @@ public class InitializeHeterogeneousTxData extends BaseNulsData {
 
     private int heterogeneousChainId;
     /**
-     * 除种子节点外所有虚拟银行成员节点地址
+     * All virtual bank member node addresses except for seed nodes
      */
 //    private List<byte[]> listDirector;
 

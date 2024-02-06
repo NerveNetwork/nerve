@@ -86,7 +86,7 @@ public class LedgerBootstrap implements INerveCoreBootstrap {
         ConfigurationLoader configurationLoader = SpringLiteContext.getBean(ConfigurationLoader.class);
         try {
             long heightVersion1_17_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_17_0"));
-            // v1.17.0 协议升级高度
+            // v1.17.0 Protocol upgrade height
             LedgerConstant.PROTOCOL_1_17_0 = heightVersion1_17_0;
         } catch (Exception e) {
             LoggerUtil.COMMON_LOG.warn("Failed to get height_1_17_0", e);
@@ -98,7 +98,7 @@ public class LedgerBootstrap implements INerveCoreBootstrap {
         try {
             LoggerUtil.COMMON_LOG.info("Ledger onDependenciesReady");
             //ProtocolLoader.load(ledgerConfig.getChainId());
-            /*处理区块信息*/
+            /*Processing block information*/
             LedgerChainManager ledgerChainManager = SpringLiteContext.getBean(LedgerChainManager.class);
             ledgerChainManager.syncBlockHeight();
             NulsDateUtils.getInstance().start(5 * 60 * 1000);

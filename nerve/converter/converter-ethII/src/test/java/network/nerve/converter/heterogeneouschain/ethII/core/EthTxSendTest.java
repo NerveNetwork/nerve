@@ -66,10 +66,10 @@ public class EthTxSendTest {
                 nonce,
                 gasPrice, gasLimit, to, BigInteger.ZERO, data
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, 1, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (send.hasError()) {
             System.out.println(String.format("errorMsg: %s", send.getError().getMessage()));
@@ -84,7 +84,7 @@ public class EthTxSendTest {
         //System.out.println(String.format("args0: %s", _args[0]));
         //System.out.println(String.format("args1: %s", _args[1]));
         //System.out.println(String.format("args2: %s", _args[2]));
-        // 测试网转账给自己
+        // Transfer funds to oneself through testing network
         String privateKey = "d8cdccd432fd1bb7711505d97c441672c540ccfcdbba17397619702eeef1d403";
         String gasPriceStr = "10";
         BigInteger nonce = new BigInteger("31");
@@ -99,10 +99,10 @@ public class EthTxSendTest {
                 nonce,
                 gasPrice, gasLimit, to, BigInteger.ZERO, data
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, 3, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (send.hasError()) {
             System.out.println(String.format("errorMsg: %s", send.getError().getMessage()));
@@ -129,10 +129,10 @@ public class EthTxSendTest {
                 nonce,
                 gasPrice, gasLimit, contractAddress, BigInteger.ZERO, data
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, 1, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (send.hasError()) {
             System.out.println(String.format("errorMsg: %s", send.getError().getMessage()));
@@ -146,7 +146,7 @@ public class EthTxSendTest {
     public static void testNetManagerChange(String... _args) throws Exception {
         System.out.println(String.format("args0: %s", _args[0]));
         System.out.println(String.format("args1: %s", _args[1]));
-        // 测试网跨链转入0.1eth
+        // Test network cross chain transfer0.1eth
         String privateKey = "d8cdccd432fd1bb7711505d97c441672c540ccfcdbba17397619702eeef1d403";
         String gasPriceStr = "10";
         String contractAddress = "0x7d759a3330cec9b766aa4c889715535eed3c0484";
@@ -163,10 +163,10 @@ public class EthTxSendTest {
                 nonce,
                 gasPrice, gasLimit, contractAddress, new BigDecimal("0.1").scaleByPowerOfTen(18).toBigInteger(), data
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, 3, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         System.out.println(String.format("hash: %s", send.getTransactionHash()));
     }
@@ -197,10 +197,10 @@ public class EthTxSendTest {
                 nonce,
                 gasPrice, gasLimit, contractAddress, BigInteger.ZERO, data
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, 1, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         if (send.hasError()) {
             System.out.println(String.format("errorMsg: %s", send.getError().getMessage()));

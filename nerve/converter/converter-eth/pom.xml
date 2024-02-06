@@ -184,7 +184,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.7.7</version>
+            <version>${slf4j.version}</version>
             <scope>compile</scope>
             <optional>true</optional>
         </dependency>
@@ -266,7 +266,7 @@
         <dependency>
             <groupId>org.bitcoinj</groupId>
             <artifactId>bitcoinj-core</artifactId>
-            <version>0.16.2</version>
+            <version>0.17-alpha3</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
@@ -274,6 +274,13 @@
                     <groupId>com.google.guava</groupId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.bitsoex.btcd-cli4j</groupId>
+            <artifactId>btcd-cli4j-core</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -309,6 +316,18 @@
                 <exclusion>
                     <artifactId>nuls-base</artifactId>
                     <groupId>io.nuls.v2</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-access</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-classic</artifactId>
+                    <groupId>ch.qos.logback</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>logback-core</artifactId>
+                    <groupId>ch.qos.logback</groupId>
                 </exclusion>
             </exclusions>
         </dependency>

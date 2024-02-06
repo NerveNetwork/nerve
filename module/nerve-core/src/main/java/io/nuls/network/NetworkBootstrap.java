@@ -90,7 +90,7 @@ public class NetworkBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 配置信息初始化
+     * Configuration information initialization
      * Configuration information initialization
      */
     private void jsonCfgInit() throws Exception {
@@ -133,7 +133,7 @@ public class NetworkBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 管理器初始化
+     * Manager initialization
      * Manager initialization
      */
     private void managerInit() throws Exception {
@@ -183,7 +183,7 @@ public class NetworkBootstrap implements INerveCoreBootstrap {
                 TaskManager.getInstance().start();
                 hadRun = true;
             } else {
-                //恢复连接
+                //Restore Connection
                 ConnectionManager.getInstance().change(ManagerStatusEnum.RUNNING);
                 NodeGroupManager.getInstance().change(ManagerStatusEnum.RUNNING);
             }

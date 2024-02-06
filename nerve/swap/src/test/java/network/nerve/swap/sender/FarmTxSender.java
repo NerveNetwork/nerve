@@ -51,10 +51,10 @@ public class FarmTxSender extends ApiTxSender {
         if (changeType == 0) {
             amount = changeTotalSyrupAmount;
         }
-        //追加糖果资产的总额
+        //Total amount of additional candy assets
         LedgerBalance balance = getLedgerBalance(chainId, address, syrupAssetChainId, syrupAssetId);
         if (null == balance) {
-            System.out.println("余额获取失败");
+            System.out.println("Balance acquisition failed");
             return;
         }
         aTx.newFrom().setFrom(balance, amount).endFrom();

@@ -34,18 +34,18 @@ import network.nerve.quotation.model.po.ConfirmFinalQuotationPO;
 public interface ConfirmFinalQuotationStorageService {
 
     /**
-     * 存区块链确认的最终报价
+     * Final quotation confirmed by blockchain storage
      * @param chain
-     * @param key 结构yyyyMMdd-token, 例 20191201-NULS
+     * @param key structureyyyyMMdd-token, example 20191201-NULS
      * @param cfrFinalQuotationPO
      * @return
      */
     boolean saveCfrFinalQuotation(Chain chain, String key, ConfirmFinalQuotationPO cfrFinalQuotationPO);
 
     /**
-     * 获取区块链确认的对应token最后一次报价 key包含日期
+     * Obtain the corresponding blockchain confirmationtokenLast quotation keyInclude date
      * @param chain
-     * @param key 结构yyyyMMdd-token, 例 20191201-NULS
+     * @param key structureyyyyMMdd-token, example 20191201-NULS
      * @return
      */
     ConfirmFinalQuotationPO getCfrFinalQuotation(Chain chain, String key);
@@ -54,18 +54,18 @@ public interface ConfirmFinalQuotationStorageService {
     boolean deleteCfrFinalQuotationByKey(Chain chain, String key);
 
     /**
-     * 储存区块链确认的对应key最后一次报价 key不含日期
+     * Store corresponding blockchain confirmationskeyLast quotation keyExcluding dates
      * @param chain
-     * @param key 不含日期 例:NULSUSDT
+     * @param key Excluding dates example:NULSUSDT
      * @param cfrFinalQuotationPO
      * @return
      */
     boolean saveCfrFinalLastQuotation(Chain chain, String key, ConfirmFinalQuotationPO cfrFinalQuotationPO);
 
     /**
-     * 获取区块链确认的对应key最后一次报价 key不含日期
+     * Obtain the corresponding blockchain confirmationkeyLast quotation keyExcluding dates
      * @param chain
-     * @param key 不含日期 例:NULSUSDT
+     * @param key Excluding dates example:NULSUSDT
      * @return
      */
     ConfirmFinalQuotationPO getCfrFinalLastTimeQuotation(Chain chain, String key);

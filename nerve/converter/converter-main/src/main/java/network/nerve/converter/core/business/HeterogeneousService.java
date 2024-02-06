@@ -34,16 +34,16 @@ import network.nerve.converter.model.bo.Chain;
 public interface HeterogeneousService {
 
     /**
-     * 判断是否需要组装当前网络的主资产补贴异构链交易手续费
-     * 异构链是合约类型,并且提现资产不是异构链主资产,才收取当前网络主资产作为手续费补贴
+     * Determine whether it is necessary to assemble the main assets of the current network to subsidize heterogeneous chain transaction fees
+     * Heterogeneous chains are contract types,And the withdrawal asset is not a heterogeneous chain main asset,Only then will the current network's main assets be collected as a subsidy for handling fees
      * @param heterogeneousChainId
      * @param heterogeneousAssetId
-     * @return true 要组装补贴手续费
+     * @return true Assembly subsidy handling fee required
      */
     boolean isAssembleCurrentAssetFee(int heterogeneousChainId, int heterogeneousAssetId) throws NulsException;
 
     /**
-     * 缓存并持久化异构链正在执行虚拟银行变更交易 状态
+     * Caching and Persisting Heterogeneous Chains Executing Virtual Bank Change Transactions state
      * @param chain
      * @param status
      * @return
@@ -51,7 +51,7 @@ public interface HeterogeneousService {
     boolean saveExeHeterogeneousChangeBankStatus(Chain chain, Boolean status);
 
     /**
-     * 持久化正在执行取消节点银行资格的提案 状态
+     * Persistence is implementing a proposal to revoke node banking eligibility state
      * @param chain
      * @param status
      * @return
@@ -59,7 +59,7 @@ public interface HeterogeneousService {
     boolean saveExeDisqualifyBankProposalStatus(Chain chain, Boolean status);
 
     /**
-     * 是否正在重置异构链(合约) 状态
+     * Are you resetting heterogeneous chains(contract) state
      * @param chain
      * @param status
      * @return

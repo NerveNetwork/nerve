@@ -65,15 +65,15 @@ public class BlockController {
     BlockTools blockTools;
 
     @RpcMethod("info")
-    @ApiOperation(description = "获取本链相关信息,其中共识资产为本链创建共识节点交易和创建委托共识交易时，需要用到的资产", order = 001)
-    @ResponseData(name = "返回值", description = "返回本链信息", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "chainId", description = "本链的ID"),
-            @Key(name = "assetId", description = "本链默认主资产的ID"),
-            @Key(name = "inflationAmount", description = "本链默认主资产的初始数量"),
-            @Key(name = "agentChainId", description = "本链共识资产的链ID"),
-            @Key(name = "agentAssetId", description = "本链共识资产的ID"),
-            @Key(name = "addressPrefix", description = "本链地址前缀"),
-            @Key(name = "symbol", description = "本链主资产符号")
+    @ApiOperation(description = "Obtain information related to this chain,Among them, consensus assets are the assets required for creating consensus node transactions and creating delegated consensus transactions in this chain", order = 001)
+    @ResponseData(name = "Return value", description = "Return this chain information", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", description = "This chain'sID"),
+            @Key(name = "assetId", description = "This chain defaults to the main asset'sID"),
+            @Key(name = "inflationAmount", description = "The initial quantity of the default main asset in this chain"),
+            @Key(name = "agentChainId", description = "The chain of consensus assets in this chainID"),
+            @Key(name = "agentAssetId", description = "The consensus assets of this chainID"),
+            @Key(name = "addressPrefix", description = "Prefix for this chain address"),
+            @Key(name = "symbol", description = "Main asset symbol of this chain")
     }))
     public RpcResult getInfo(List<Object> params) {
         Result<Map> result = blockTools.getInfo(config.getChainId());
@@ -97,12 +97,12 @@ public class BlockController {
     }
 
     @RpcMethod("getHeaderByHeight")
-    @ApiOperation(description = "根据区块高度查询区块头", order = 201)
+    @ApiOperation(description = "Query block headers based on block height", order = 201)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "block height")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
     public RpcResult getHeaderByHeight(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -137,12 +137,12 @@ public class BlockController {
     }
 
     @RpcMethod("getHeaderByHash")
-    @ApiOperation(description = "根据区块hash查询区块头", order = 202)
+    @ApiOperation(description = "Based on blockshashQuery block header", order = 202)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "hash", parameterDes = "区块hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "hash", parameterDes = "blockhash")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
     public RpcResult getHeaderByHash(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -177,11 +177,11 @@ public class BlockController {
 
 
     @RpcMethod("getBestBlockHeader")
-    @ApiOperation(description = "查询最新区块头信息", order = 203)
+    @ApiOperation(description = "Query the latest block header information", order = 203)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockHeaderDto.class))
     public RpcResult getBestBlockHeader(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
@@ -207,11 +207,11 @@ public class BlockController {
 
 
     @RpcMethod("getBestBlock")
-    @ApiOperation(description = "查询最新区块", order = 204, detailDesc = "包含区块打包的所有交易信息，此接口返回数据量较多，谨慎调用")
+    @ApiOperation(description = "Query the latest block", order = 204, detailDesc = "This interface contains all transaction information packaged in blocks. It returns a large amount of data and should be called with caution")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockDto.class))
     public RpcResult getBestBlock(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;
@@ -240,12 +240,12 @@ public class BlockController {
 
 
     @RpcMethod("getBlockByHeight")
-    @ApiOperation(description = "根据区块高度查询区块", order = 205, detailDesc = "包含区块打包的所有交易信息，此接口返回数据量较多，谨慎调用")
+    @ApiOperation(description = "Query blocks based on block height", order = 205, detailDesc = "This interface contains all transaction information packaged in blocks. It returns a large amount of data and should be called with caution")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "block height")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockDto.class))
     public RpcResult getBlockByHeight(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -281,12 +281,12 @@ public class BlockController {
     }
 
     @RpcMethod("getBlockByHash")
-    @ApiOperation(description = "根据区块hash查询区块", order = 206, detailDesc = "包含区块打包的所有交易信息，此接口返回数据量较多，谨慎调用")
+    @ApiOperation(description = "Based on blockshashQuery Block", order = 206, detailDesc = "This interface contains all transaction information packaged in blocks. It returns a large amount of data and should be called with caution")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "hash", parameterDes = "区块hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "hash", parameterDes = "blockhash")
     })
-    @ResponseData(name = "返回值", responseType = @TypeDescriptor(value = BlockDto.class))
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = BlockDto.class))
     public RpcResult getBlockByHash(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -322,12 +322,12 @@ public class BlockController {
     }
 
     @RpcMethod("getBlockSerializationByHeight")
-    @ApiOperation(description = "根据区块高度查询区块序列化字符串", order = 207, detailDesc = "包含区块打包的所有交易信息，此接口返回数据量较多，谨慎调用")
+    @ApiOperation(description = "Query block serialization strings based on block height", order = 207, detailDesc = "This interface contains all transaction information packaged in blocks. It returns a large amount of data and should be called with caution")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "区块高度")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "block height")
     })
-    @ResponseData(name = "返回值", description = "返回区块序列化后的HEX字符串", responseType = @TypeDescriptor(value = String.class))
+    @ResponseData(name = "Return value", description = "Return the serialized blockHEXcharacter string", responseType = @TypeDescriptor(value = String.class))
     public RpcResult getBlockSerializationByHeight(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -353,12 +353,12 @@ public class BlockController {
     }
 
     @RpcMethod("getBlockSerializationByHash")
-    @ApiOperation(description = "根据区块hash查询区块序列化字符串", order = 208, detailDesc = "包含区块打包的所有交易信息，此接口返回数据量较多，谨慎调用")
+    @ApiOperation(description = "Based on blockshashQuery block serialization string", order = 208, detailDesc = "This interface contains all transaction information packaged in blocks. It returns a large amount of data and should be called with caution")
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
-            @Parameter(parameterName = "hash", parameterDes = "区块hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "hash", parameterDes = "blockhash")
     })
-    @ResponseData(name = "返回值", description = "返回区块序列化后的HEX字符串", responseType = @TypeDescriptor(value = String.class))
+    @ResponseData(name = "Return value", description = "Return the serialized blockHEXcharacter string", responseType = @TypeDescriptor(value = String.class))
     public RpcResult getBlockSerializationByHash(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -384,11 +384,11 @@ public class BlockController {
     }
 
     @RpcMethod("getLatestHeight")
-    @ApiOperation(description = "获取最新主链高度", order = 209)
+    @ApiOperation(description = "Get the latest main chain height", order = 209)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID")
     })
-    @ResponseData(name = "返回值", description = "获取最新主链高度", responseType = @TypeDescriptor(value = Long.class))
+    @ResponseData(name = "Return value", description = "Get the latest main chain height", responseType = @TypeDescriptor(value = Long.class))
     public RpcResult getLatestHeight(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int chainId;

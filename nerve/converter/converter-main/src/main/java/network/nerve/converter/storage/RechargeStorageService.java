@@ -28,8 +28,8 @@ import io.nuls.base.data.NulsHash;
 import network.nerve.converter.model.bo.Chain;
 
 /**
- * 充值交易业务数据
- * k:原始交易hash(异构链交易hash/提案hash), v:充值交易hash
+ * Recharge transaction business data
+ * k:Original transactionhash(Heterogeneous Chain Tradinghash/proposalhash), v:Recharge transactionhash
  * @author: Loki
  * @date: 2020/5/20
  */

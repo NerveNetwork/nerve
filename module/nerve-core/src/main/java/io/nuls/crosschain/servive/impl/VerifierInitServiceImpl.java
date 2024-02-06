@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * 验证人初始化交易实现类
+ * Verifier initializes transaction implementation class
  *
  * @author tag
  * @date 2019/8/7
@@ -60,7 +60,7 @@ public class VerifierInitServiceImpl implements VerifierInitService {
                 List<String> initVerifierList = verifierInitData.getVerifierList();
                 int verifierChainId = verifierInitData.getRegisterChainId();
                 if (initVerifierList == null || initVerifierList.isEmpty() || verifierChainId <= 0) {
-                    chain.getLogger().error("验证人变更信息无效,chainId:{}", verifierChainId);
+                    chain.getLogger().error("Verifier change information is invalid,chainId:{}", verifierChainId);
                 }
 
                 if (!config.isMainNet()) {
@@ -73,22 +73,22 @@ public class VerifierInitServiceImpl implements VerifierInitService {
                 } else {
                     chainInfo = chainManager.getChainInfo(verifierChainId);
                     if (chainInfo == null) {
-                        chain.getLogger().error("链未注册,chainId:{}", verifierChainId);
+                        chain.getLogger().error("Chain not registered,chainId:{}", verifierChainId);
                         throw new NulsException(NulsCrossChainErrorCode.CHAIN_UNREGISTERED);
                     }
                     verifierList = new ArrayList<>(chainInfo.getVerifierList());
                     minPassCount = chainInfo.getMinPassCount();
                 }
                 if (verifierList.isEmpty()) {
-                    chain.getLogger().error("链还未注册验证人,chainId:{}", verifierChainId);
+                    chain.getLogger().error("The chain has not registered a verifier yet,chainId:{}", verifierChainId);
                     throw new NulsException(NulsCrossChainErrorCode.CHAIN_UNREGISTERED_VERIFIER);
                 }
                 if (!SignatureUtil.validateCtxSignture(verifierInitTx)) {
-                    chain.getLogger().info("主网协议跨链交易签名验证失败！");
+                    chain.getLogger().info("Main network protocol cross chain transaction signature verification failed！");
                     throw new NulsException(NulsCrossChainErrorCode.SIGNATURE_ERROR);
                 }
                 if (!TxUtil.signByzantineVerify(chain, verifierInitTx, verifierList, minPassCount, verifierChainId)) {
-                    chain.getLogger().info("签名拜占庭验证失败！");
+                    chain.getLogger().info("Signature Byzantine verification failed！");
                     throw new NulsException(NulsCrossChainErrorCode.CTX_SIGN_BYZANTINE_FAIL);
                 }
             } catch (NulsException e) {
@@ -125,7 +125,7 @@ public class VerifierInitServiceImpl implements VerifierInitService {
                 }
                 ChainInfo chainInfo = chainManager.getChainInfo(verifierChainId);
                 chainInfo.setVerifierList(new HashSet<>(initVerifierList));
-                chain.getLogger().info("链{}初始化验证人列表为{}", verifierChainId, chainInfo.getVerifierList().toString());
+                chain.getLogger().info("chain{}Initialize the list of validators as{}", verifierChainId, chainInfo.getVerifierList().toString());
                 RegisteredChainMessage registeredChainMessage = new RegisteredChainMessage();
                 registeredChainMessage.setChainInfoList(chainManager.getRegisteredCrossChainList());
                 if (!registeredCrossChainService.save(registeredChainMessage)) {

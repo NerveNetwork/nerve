@@ -104,7 +104,7 @@ public class HtgResendHelper implements BeanInitial {
     }
 
     /**
-     * 交易重发
+     * Transaction resend
      */
     public String reSend(HtgWaitingTxPo po) throws Exception {
         return this.reSend(po, 0);
@@ -114,30 +114,30 @@ public class HtgResendHelper implements BeanInitial {
         boolean checkOrder = false;
         String nerveTxHash = po.getNerveTxHash();
         if (!this.canResend(nerveTxHash)) {
-            logger().warn("Nerve交易[{}]重发超过{}次，丢弃交易", nerveTxHash, HtgConstant.RESEND_TIME);
+            logger().warn("Nervetransaction[{}]Resend over{}Second, discard transaction", nerveTxHash, HtgConstant.RESEND_TIME);
             return EMPTY_STRING;
         }
         this.increase(nerveTxHash);
         try {
-            HtgDocking docking = htgContext.DOCKING();
-            logger().info("[{}]交易[{}]准备重发, 详情: {}", po.getTxType(), nerveTxHash, po.toString());
+            HtgDocking docking = (HtgDocking) htgContext.DOCKING();
+            logger().info("[{}]transaction[{}]Prepare to resend, details: {}", po.getTxType(), nerveTxHash, po.toString());
             switch (po.getTxType()) {
                 case WITHDRAW:
                     String ethWithdrawHash = docking.createOrSignWithdrawTxII(nerveTxHash, po.getTo(), po.getValue(), po.getAssetId(), po.getSignatures(), checkOrder);
                     if(StringUtils.isBlank(ethWithdrawHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", nerveTxHash);
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", nerveTxHash);
                     }
                     return ethWithdrawHash;
                 case CHANGE:
                     String ethChangesHash = docking.createOrSignManagerChangesTxII(nerveTxHash, po.getAddAddresses(), po.getRemoveAddresses(), po.getOrginTxCount(), po.getSignatures(), checkOrder);
                     if(StringUtils.isBlank(ethChangesHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", nerveTxHash);
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", nerveTxHash);
                     }
                     return ethChangesHash;
                 case UPGRADE:
                     String ethUpgradeHash = docking.createOrSignUpgradeTxII(nerveTxHash, po.getUpgradeContract(), po.getSignatures(), checkOrder);
                     if(StringUtils.isBlank(ethUpgradeHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", nerveTxHash);
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", nerveTxHash);
                     }
                     return ethUpgradeHash;
                 default:
@@ -145,16 +145,16 @@ public class HtgResendHelper implements BeanInitial {
             }
             return EMPTY_STRING;
         } catch (Exception e) {
-            // 当出现交易签名不足导致的执行失败时，向CORE重新索要交易的拜占庭签名
+            // When execution fails due to insufficient transaction signatures, report toCORERequesting Byzantine signatures for the transaction again
             if (e instanceof NulsException && ConverterUtil.isInsufficientSignature((NulsException) e) && this.regainSignatures(po, times + 1)) {
-                logger().info("Nerve交易[{}]重发完成, htgTxHash: {}", nerveTxHash, po.getTxHash());
+                logger().info("Nervetransaction[{}]Resend completed, htgTxHash: {}", nerveTxHash, po.getTxHash());
                 return po.getTxHash();
             }
             if (e instanceof NulsException && INSUFFICIENT_FEE_OF_WITHDRAW.equals(((NulsException) e).getErrorCode())) {
-                // 当提现手续费不足时，不计入重发次数
+                // When the withdrawal fee is insufficient, it will not be counted as the number of resends
                 this.decrease(nerveTxHash);
             }
-            logger().error("交易重发失败，等待再次重发交易", e);
+            logger().error("Transaction resend failed, waiting for resend transaction", e);
             throw e;
         }
     }
@@ -162,28 +162,28 @@ public class HtgResendHelper implements BeanInitial {
     private boolean regainSignatures(HtgWaitingTxPo po, int times) {
         try {
             String nerveTxHash = po.getNerveTxHash();
-            logger().info("[{}] [{}]重新索要拜占庭签名", htgContext.getConfig().getChainId(), nerveTxHash);
-            // 只执行一次，等待下一轮任务再执行
+            logger().info("[{}] [{}]Requesting a new Byzantine signature", htgContext.getConfig().getChainId(), nerveTxHash);
+            // Execute only once, wait for the next round of tasks before executing
             if (times > 1) {
-                logger().warn("[{}] 只执行一次，等待下一轮任务再执行", nerveTxHash);
+                logger().warn("[{}] Execute only once, wait for the next round of tasks before executing", nerveTxHash);
                 return false;
             }
-            // 索要拜占庭签名
+            // Requesting Byzantine signatures
             List<HeterogeneousSign> regainSignatures = htgContext.getConverterCoreApi().regainSignatures(htgContext.NERVE_CHAINID(), nerveTxHash, htgContext.getConfig().getChainId());
             if (regainSignatures.size() > HtgConstant.MAX_MANAGERS) {
-                logger().warn("获取拜占庭签名超过了最大数值, 获取数值: {}, 最大数值: {}", regainSignatures.size(), HtgConstant.MAX_MANAGERS);
+                logger().warn("Obtaining Byzantine signature exceeds the maximum value, Obtain numerical values: {}, Maximum value: {}", regainSignatures.size(), HtgConstant.MAX_MANAGERS);
                 regainSignatures = regainSignatures.subList(0, HtgConstant.MAX_MANAGERS);
             }
             StringBuilder builder = new StringBuilder(HtgConstant.HEX_PREFIX);
             regainSignatures.stream().forEach(signature -> builder.append(HexUtil.encode(signature.getSignature())));
-            // 重置当前waitingPo的校验时间和校验高度
+            // Reset CurrentwaitingPoVerification time and verification height
             htgInvokeTxHelper.clearEthWaitingTxPo(po);
             po.setSignatures(builder.toString());
             String htTxHash = this.reSend(po, times);
             po.setTxHash(htTxHash);
             return true;
         } catch (Exception e) {
-            logger().error("重新获取拜占庭签名失败", e);
+            logger().error("Failed to retrieve Byzantine signature again", e);
             return false;
         }
     }
@@ -201,7 +201,7 @@ public class HtgResendHelper implements BeanInitial {
     }
 
     /**
-     * 是否当前节点发出的交易
+     * Is the transaction sent by the current node
      */
     public boolean currentNodeSent(String htTxHash) {
         if (StringUtils.isBlank(htTxHash)) {
@@ -211,7 +211,7 @@ public class HtgResendHelper implements BeanInitial {
     }
 
     /**
-     * 获取已发出的交易信息
+     * Obtain transaction information that has been sent out
      */
     public HtgSendTransactionPo getSentTransactionInfo(String htTxHash) {
         return htTxRelationStorageService.findEthSendTxPo(htTxHash);

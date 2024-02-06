@@ -8,7 +8,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class VoteResultStageOneQueue {
 
     /**
-     * 所有第一阶段的结果都提交到这里
+     * All the results of the first stage are submitted here
      */
     private LinkedBlockingQueue<VoteStageResult> voteMessageQueue = new LinkedBlockingQueue<>();
 

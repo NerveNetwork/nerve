@@ -32,8 +32,10 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import network.nerve.converter.constant.ConverterErrorCode;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Random;
 
 import static io.nuls.core.constant.CommonCodeConstanst.FAILED;
 import static network.nerve.converter.utils.LoggerUtil.LOG;
@@ -58,7 +60,7 @@ public class ConverterUtil {
             return address;
         }
         String validAddress = cleanHexPrefix(address);
-        if (isHexStr(validAddress)) {
+        if (containsHexPrefix(address) && isHexStr(validAddress)) {
             address = address.toLowerCase();
         }
         return address;
@@ -147,7 +149,7 @@ public class ConverterUtil {
     }
 
     /**
-     * RPCUtil 反序列化
+     * RPCUtil Deserialization
      *
      * @param data
      * @param clazz
@@ -160,7 +162,7 @@ public class ConverterUtil {
     }
 
     /**
-     * HEX反序列化
+     * HEXDeserialization
      *
      * @param hex
      * @param clazz
@@ -183,4 +185,26 @@ public class ConverterUtil {
             return 0;
         }
     };
+
+    public static Comparator BALANCE_SORT = new Comparator<Map.Entry<String, BigDecimal>>() {
+        @Override
+        public int compare(Map.Entry<String, BigDecimal> o1, Map.Entry<String, BigDecimal> o2) {
+            if(o1.getValue().compareTo(o2.getValue()) > 0) {
+                return -1;
+            } else if(o1.getValue().compareTo(o2.getValue()) < 0) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
+    public static void shuffleArray(int[] array) {
+        Random rand = new Random();
+        for (int i = array.length - 1; i > 0; i--) {
+            int j = rand.nextInt(i + 1);
+            int temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+        }
+    }
 }

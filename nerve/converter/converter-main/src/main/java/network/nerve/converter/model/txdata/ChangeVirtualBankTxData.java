@@ -37,26 +37,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 虚拟银行变更交易
+ * Virtual Bank Change Transaction
  * @author: Loki
  * @date: 2020-02-17
  */
 public class ChangeVirtualBankTxData extends BaseNulsData {
 
     /**
-     * 加入虚拟银行节点地址
+     * Add virtual bank node address
      */
     private List<byte[]> inAgents;
 
     /**
-     * 退出虚拟银行节点地址
+     * Exit virtual bank node address
      */
     private List<byte[]> outAgents;
 
     /**
-     * 退出节点stopAgent交易确认高度
-     * 退出节点时,本交易会立即触发,
-     * 所以一个交易中ouAgents退出列表中的节点,都是在同一高度退出的节点
+     * Exit nodestopAgentTransaction confirmation height
+     * When exiting a node,This transaction will be triggered immediately,
+     * So in a transactionouAgentsExit nodes from the list,All nodes that exit at the same height
      */
     private long outHeight;
 

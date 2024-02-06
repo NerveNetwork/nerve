@@ -34,15 +34,15 @@ import java.math.BigInteger;
 @ApiModel
 public class ContractCall extends ContractBase {
 
-    @ApiModelProperty(description = "智能合约地址", required = true)
+    @ApiModelProperty(description = "Smart contract address", required = true)
     private String contractAddress;
-    @ApiModelProperty(description = "调用者向合约地址转入的主网资产金额，没有此业务时填0")
+    @ApiModelProperty(description = "The amount of main network assets transferred by the caller to the contracted address, to be filled in when this service is not available0")
     private BigInteger value;
-    @ApiModelProperty(description = "方法名", required = true)
+    @ApiModelProperty(description = "Method name", required = true)
     private String methodName;
-    @ApiModelProperty(description = "方法描述，若合约内方法没有重载，则此参数可以为空", required = false)
+    @ApiModelProperty(description = "Method description, if the method in the contract is not overloaded, this parameter can be empty", required = false)
     private String methodDesc;
-    @ApiModelProperty(description = "参数列表", required = false)
+    @ApiModelProperty(description = "parameter list", required = false)
     private Object[] args;
 
     public String getContractAddress() {

@@ -32,7 +32,7 @@ public class VoteController extends BasicObject {
 
     private BestBlocksVotingContainer votingContainer;
     /**
-     * key: 高度+轮次信息+区块hash
+     * key: height+Round information+blockhash
      */
     private Map<String, VoteSummaryData> summaryMap = new ConcurrentHashMap<>();
     private Map<String, VoteSummaryData> summaryMapBak = new ConcurrentHashMap<>();
@@ -45,7 +45,7 @@ public class VoteController extends BasicObject {
 
     public void addVote(VoteMessage vote) {
         //TargetKey: height + blockhash+roundIndex +packingIndex
-//        log.info("收到投票：{}-({}-{}),vote:{}-{},from:{}-{}", vote.getHeight(), vote.getRoundIndex(), vote.getPackingIndexOfRound(),
+//        log.info("Received vote：{}-({}-{}),vote:{}-{},from:{}-{}", vote.getHeight(), vote.getRoundIndex(), vote.getPackingIndexOfRound(),
 //                vote.getVoteRoundIndex(), vote.getVoteStage(), vote.getAddress(chain), vote.getBlockHash().toHex());
         if (chain.getBestHeader().getHeight() >= vote.getHeight()) {
             vote.clear();
@@ -57,14 +57,14 @@ public class VoteController extends BasicObject {
         }
         VoteSummaryData data = summaryMap.computeIfAbsent(vote.getTargetKey(), val -> new VoteSummaryData(chain));
         MeetingRound round = roundController.getRound(vote.getRoundIndex(), vote.getRoundStartTime());
-        //如果不是轮次中的投票，则丢弃
+        //If it is not a vote in the round, discard it
         if (!round.getMemberAddressSet().contains(vote.getAddress(chain))) {
-//            log.info("丢弃投票，不是共识成员：" + vote.getHeight() + "-" + vote.getVoteRoundIndex() + "-" + vote.getVoteStage() + ": " + vote.getBlockHash().toHex());
+//            log.info("Discard voting, not a consensus member：" + vote.getHeight() + "-" + vote.getVoteRoundIndex() + "-" + vote.getVoteStage() + ": " + vote.getBlockHash().toHex());
             vote.clear();
             return;
         }
         data.addVote(vote, round);
-        //区块不存在，则获取区块
+        //If the block does not exist, obtain the block
         if (vote.getBlockHash().equals(NulsHash.EMPTY_NULS_HASH)) {
             return;
         }
@@ -77,22 +77,22 @@ public class VoteController extends BasicObject {
     private HashSetDuplicateProcessor<String> duplicateProcessor = new HashSetDuplicateProcessor<>(100);
 
     /**
-     * 广播投票消息
+     * Broadcast voting messages
      *
      * @param message
      */
     public void broadcastVote(VoteMessage message) {
-        //   去重
+        //   Deduplication
         if (!duplicateProcessor.insertAndCheck(message.getMessageKey())) {
-            log.info("重复投票！！！");
+            log.info("Repeated voting！！！");
             return;
         }
         ConsensusNetUtil.broadcastInConsensus(chain.getChainId(), CommandConstant.MESSAGE_VOTE, message.getRawData(), message.getSendNode());
-        log.debug("广播投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+        log.debug("Broadcast voting：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
     }
 
     /**
-     * 上一轮没有得到结果，下一轮继续
+     * The previous round did not yield results, the next round will continue
      *
      * @param votingHeight
      * @param roundIndex
@@ -102,7 +102,7 @@ public class VoteController extends BasicObject {
      */
     public void startNextVoteRound(long votingHeight, long roundIndex, int packingIndexOfRound,
                                    long roundStartTime, long voteRoundIndex, String address) {
-        //根据上次投票记录，进行本次的选择
+        //Based on the last voting record, make this selection
         VoteMessage message = new VoteMessage();
         message.setVoteRoundIndex(voteRoundIndex);
         message.setRoundStartTime(roundStartTime);
@@ -110,7 +110,7 @@ public class VoteController extends BasicObject {
         message.setRoundIndex(roundIndex);
         message.setPackingIndexOfRound(packingIndexOfRound);
 
-        //这里计算可能需要保证，必须是已确认轮次的
+        //The calculation here may require assurance that it must be a confirmed round
         BlockHeader header = this.votingContainer.calcNextVotingItem(chain, votingHeight, roundIndex, packingIndexOfRound, roundStartTime);
         NulsHash hash = NulsHash.EMPTY_NULS_HASH;
         if (null != header) {
@@ -137,12 +137,12 @@ public class VoteController extends BasicObject {
         message.setSign(sign);
 
 //        this.votingContainer.votedStage1(message);
-        log.debug("超时投票：{}-{}-{}-{}:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
-//        log.info("=========================本地投票：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
+        log.debug("Overtime voting：{}-{}-{}-{}:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+//        log.info("=========================Local voting：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
 //                message.getRoundIndex(), message.getPackingIndexOfRound());
-        //广播
+        //broadcast
         this.broadcastVote(message);
-        //再给本地
+        //Give it to the local area again
         chain.getConsensusCache().getVoteMessageQueue().offer(message);
     }
 
@@ -151,14 +151,14 @@ public class VoteController extends BasicObject {
     }
 
     /**
-     * 避免删除其他节点提前投票的数据
+     * Avoid deleting data from early voting by other nodes
      *
      * @param votingHeight
      */
     public void clearMap(long votingHeight) {
         Map<String, VoteSummaryData> temp = summaryMapBak;
         summaryMapBak = summaryMap;
-        //把不应该删除的summary放到新的map里
+        //Remove things that should not be deletedsummaryPut it in a new onemapin
         for (Map.Entry<String, VoteSummaryData> entry : summaryMapBak.entrySet()) {
             VoteSummaryData value = entry.getValue();
             if (value.getHeight() > votingHeight) {
@@ -171,7 +171,7 @@ public class VoteController extends BasicObject {
 
 
     /**
-     * 第一阶段直接投一个空块，代表轮次中的出块人，没有出块
+     * In the first stage, directly throw an empty block, representing the person who produced the block in the round, without producing the block
      *
      * @param votingHeight
      * @param roundIndex
@@ -185,8 +185,8 @@ public class VoteController extends BasicObject {
     }
 
     /**
-     * 第一阶段，投票给一个区块，尽快广播到全网
-     * 给自己节点也一份
+     * In the first stage, vote for a block and broadcast it to the entire network as soon as possible
+     * Give yourself a share of the node as well
      *
      * @param header
      */
@@ -194,7 +194,7 @@ public class VoteController extends BasicObject {
         BlockExtendsData extendsData = header.getExtendsData();
         MeetingRound round = roundController.getCurrentRound();
         if (round == null || round.getLocalMember() == null) {
-            log.debug("本地不是共识节点。");
+            log.debug("Local is not a consensus node.");
             return;
         }
         String address = round.getLocalMember().getAgent().getPackingAddressStr();
@@ -204,7 +204,7 @@ public class VoteController extends BasicObject {
     }
 
     private void realVote(long votingHeight, long roundIndex, long roundStartTime, int packingIndexOfRound, long voteRoundIndex, long packEndTime, String address, NulsHash blockHash) {
-        //先标记，避免重复投票
+        //Mark first to avoid duplicate voting
         this.votingContainer.getLocalStage1VotedRecorder()
                 .insertAndCheck(votingHeight + ConsensusConstant.SEPARATOR + voteRoundIndex);
         VoteMessage message = new VoteMessage();
@@ -224,26 +224,26 @@ public class VoteController extends BasicObject {
         }
         message.setSign(sign);
 //        this.votingContainer.votedStage1(message);
-//        log.info("=========================本地投票：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
+//        log.info("=========================Local voting：({}-{})" + message.getHeight() + "-" + message.getVoteRoundIndex() + "-" + message.getVoteStage() + ": " + message.getBlockHash().toHex(),
 //                message.getRoundIndex(), message.getPackingIndexOfRound());
-        //广播
+        //broadcast
         this.broadcastVote(message);
-        //再给本地
+        //Give it to the local area again
         chain.getConsensusCache().getVoteMessageQueue().offer(message);
     }
 
     public void cacheSignResult(VoteStageResult result) {
         chain.getConsensusCache().cacheSignResult(result.getResultMessage());
-        //本高度的记录没用了
+        //The record of this height is useless
         this.clearMap(result.getHeight());
     }
 
     public void voteStageTwo(VoteMessage message) {
         this.votingContainer.votedStage2(message);
-        log.debug("投票2轮投票：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
-        //广播
+        log.debug("vote2Round voting：{}-{}-{}-{}-{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(), message.getVoteRoundIndex(), message.getBlockHash().toHex());
+        //broadcast
         this.broadcastVote(message);
-        //再给本地
+        //Give it to the local area again
         chain.getConsensusCache().getVoteMessageQueue().offer(message);
     }
 

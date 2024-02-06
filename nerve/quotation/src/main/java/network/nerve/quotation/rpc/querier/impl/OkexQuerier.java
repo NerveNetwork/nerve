@@ -70,10 +70,10 @@ public class OkexQuerier implements Querier {
             }
             Map<String, Object> obj = (Map<String, Object>) realData.get(0);
             BigDecimal res = new BigDecimal((String) obj.get("last"));
-            chain.getLogger().info("Okex 获取到交易对[{}]价格:{}", symbol, res);
+            chain.getLogger().info("Okex Obtaining transaction pairs[{}]price:{}", symbol, res);
             return res;
         } catch (Throwable e) {
-            chain.getLogger().error("Okex, 调用接口 {}, anchorToken:{} 获取价格失败", url, anchorToken);
+            chain.getLogger().error("Okex, Calling interfaces {}, anchorToken:{} Failed to obtain price", url, anchorToken);
             return null;
         }
     }

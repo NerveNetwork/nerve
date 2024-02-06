@@ -27,6 +27,7 @@ import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.enums.HeterogeneousChainTxType;
+import network.nerve.converter.heterogeneouschain.lib.core.WalletApi;
 import network.nerve.converter.heterogeneouschain.optimism.context.OptimismContext;
 import network.nerve.converter.heterogeneouschain.optimism.core.BeanUtilTest;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgConstant;
@@ -34,6 +35,7 @@ import network.nerve.converter.heterogeneouschain.lib.core.HtgWalletApi;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
+import okhttp3.OkHttpClient;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.web3j.abi.TypeReference;
@@ -51,10 +53,14 @@ import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static okhttp3.ConnectionSpec.CLEARTEXT;
 
 
 /**
@@ -71,6 +77,13 @@ public class Base {
     protected List<String> list;
     protected OptimismContext htgContext;
 
+    String testEthRpcAddress = "https://kovan.optimism.io/";
+    int testChainId = 69;
+    //String mainEthRpcAddress = "https://endpoints.omniatech.io/v1/op/goerli/public";
+    String mainEthRpcAddress = "https://optimism-mainnet.public.blastapi.io";
+    //String mainEthRpcAddress = "https://mainnet.optimism.io/";
+    int mainChainId = 10;
+
     @BeforeClass
     public static void initClass() {
         Log.info("init");
@@ -78,44 +91,100 @@ public class Base {
 
     @Before
     public void setUp() throws Exception {
-        String ethRpcAddress = "https://kovan.optimism.io/";
         htgWalletApi = new HtgWalletApi();
-        Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
-        htgWalletApi.setEthRpcAddress(ethRpcAddress);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
         htgContext = new OptimismContext();
         htgContext.setLogger(Log.BASIC_LOGGER);
         HeterogeneousCfg cfg = new HeterogeneousCfg();
-        cfg.setChainIdOnHtgNetwork(69);
+        cfg.setChainIdOnHtgNetwork(testChainId);
         htgContext.setConfig(cfg);
         BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
+    }
+
+    protected void setTestProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(testEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(testEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(testChainId);
     }
 
     protected void setMain() {
         if(htgWalletApi.getWeb3j() != null) {
             htgWalletApi.getWeb3j().shutdown();
         }
-        //String mainEthRpcAddress = "https://endpoints.omniatech.io/v1/op/goerli/public";
-        String mainEthRpcAddress = "https://1rpc.io/op";
         Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
         htgWalletApi.setWeb3j(web3j);
         htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
-        htgContext.config.setChainIdOnHtgNetwork(10);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
     }
+
+    protected void setMainProxy() {
+        if(htgWalletApi.getWeb3j() != null) {
+            htgWalletApi.getWeb3j().shutdown();
+        }
+        final OkHttpClient.Builder builder =
+                new OkHttpClient.Builder().proxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 1087))).connectionSpecs(Arrays.asList(WalletApi.INFURA_CIPHER_SUITE_SPEC, CLEARTEXT));
+        OkHttpClient okHttpClient = builder.build();
+        Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress, okHttpClient));
+        htgWalletApi.setWeb3j(web3j);
+        htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+        htgContext.getConfig().setChainIdOnHtgNetwork(mainChainId);
+    }
+
+    //@BeforeClass
+    //public static void initClass() {
+    //    Log.info("init");
+    //}
+    //
+    //@Before
+    //public void setUp() throws Exception {
+    //    String ethRpcAddress = "https://kovan.optimism.io/";
+    //    htgWalletApi = new HtgWalletApi();
+    //    Web3j web3j = Web3j.build(new HttpService(ethRpcAddress));
+    //    htgWalletApi.setWeb3j(web3j);
+    //    htgWalletApi.setEthRpcAddress(ethRpcAddress);
+    //    htgContext = new OptimismContext();
+    //    htgContext.setLogger(Log.BASIC_LOGGER);
+    //    HeterogeneousCfg cfg = new HeterogeneousCfg();
+    //    cfg.setChainIdOnHtgNetwork(69);
+    //    htgContext.setConfig(cfg);
+    //    BeanUtilTest.setBean(htgWalletApi, "htgContext", htgContext);
+    //}
+    //
+    //protected void setMain() {
+    //    if(htgWalletApi.getWeb3j() != null) {
+    //        htgWalletApi.getWeb3j().shutdown();
+    //    }
+    //    //String mainEthRpcAddress = "https://endpoints.omniatech.io/v1/op/goerli/public";
+    //    //String mainEthRpcAddress = "https://optimism-mainnet.public.blastapi.io";
+    //    String mainEthRpcAddress = "https://mainnet.optimism.io/";
+    //    Web3j web3j = Web3j.build(new HttpService(mainEthRpcAddress));
+    //    htgWalletApi.setWeb3j(web3j);
+    //    htgWalletApi.setEthRpcAddress(mainEthRpcAddress);
+    //    htgContext.config.setChainIdOnHtgNetwork(10);
+    //}
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
         return this.sendTx(fromAddress, priKey, txFunction, txType, null, multySignContractAddress);
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
-        Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
+        Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
-            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败, {}", txType, estimateGasObj.getError().getMessage());
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
+            Log.error("[{}]Transaction verification failed, reason: estimateGasLimitfail, {}", txType, estimateGasObj.getError().getMessage());
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail");
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas;

@@ -79,6 +79,7 @@ public class Base {
     protected BnbContext htgContext;
 
     String testEthRpcAddress = "https://bsc-testnet.public.blastapi.io";
+    //String testEthRpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
     int testChainId = 97;
     //String mainEthRpcAddress = "https://bsc-dataseed.binance.org/";
     String mainEthRpcAddress = "https://bsc-dataseed1.defibit.io/";//1
@@ -155,7 +156,7 @@ public class Base {
          "orderRpcAddresses": "https://data-seed-prebsc-1-s1.binance.org:8545/,https://data-seed-prebsc-2-s1.binance.org:8545/",
          "standbyRpcAddresses": "https://data-seed-prebsc-1-s3.binance.org:8545/,https://data-seed-prebsc-2-s3.binance.org:8545/",
          *//*
-        // 删除
+        // delete
         // 1-s2, 2-s1, 2-s2
         //String ethRpcAddress = "https://data-seed-prebsc-1-s1.binance.org:8545/";
 
@@ -214,20 +215,20 @@ public class Base {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 验证合约交易合法性
+        // Verify the legality of contract transactions
         EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
-            Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
-        Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
+        Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
-            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败, {}", txType, estimateGasObj.getError().getMessage());
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败, " + estimateGasObj.getError().getMessage());
+            Log.error("[{}]Transaction verification failed, reason: estimateGasLimitfail, {}", txType, estimateGasObj.getError().getMessage());
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail, " + estimateGasObj.getError().getMessage());
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger gasLimit = estimateGas;

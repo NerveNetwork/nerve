@@ -34,7 +34,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 重置虚拟银行异构链(合约)
+ * Reset Virtual Bank Heterogeneous Chain(contract)
  * @author: Loki
  * @date: 2020/6/26
  */

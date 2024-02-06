@@ -3,6 +3,7 @@ package io.nuls.transaction.rpc.call;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.core.exception.NulsException;
+import io.nuls.core.log.Log;
 import io.nuls.core.model.BigIntegerUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
@@ -23,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 调用其他模块跟交易相关的接口
+ * Calling other modules and transaction related interfaces
  *
  * @author: qinyifeng
  * @date: 2018/12/20
@@ -32,8 +33,8 @@ public class LedgerCall {
 
 
     /**
-     * 验证单个交易的CoinData(外部使用)
-     * 有异常直接抛出
+     * Verify the performance of a single transactionCoinData(External use)
+     * Throw exceptions directly
      *
      * @param chain
      * @param tx
@@ -58,7 +59,7 @@ public class LedgerCall {
 
 
     /**
-     * 验证单个交易与未确认交易提交
+     * Verify individual transaction and unconfirmed transaction submissions
      * @param chain
      * @param txStr
      */
@@ -85,7 +86,7 @@ public class LedgerCall {
     }
 
     /**
-     * 新交易验证账本(批量)
+     * New transaction verification ledger(batch)
      * @param chain
      * @param txNetList
      */
@@ -113,7 +114,7 @@ public class LedgerCall {
 
 
     /**
-     * 批量验证CoinData时的单个发送(不用于单个交易的独立验证)
+     * Batch verificationCoinDataSingle sending of time(Independent verification not used for individual transactions)
      * @param chain
      * @param tx
      * @return
@@ -141,7 +142,7 @@ public class LedgerCall {
     }
 
     /**
-     * 打包验证交易coinData(批量)
+     * Package verification transactioncoinData(batch)
      * @param chain
      * @param txStrList
      * @return
@@ -161,7 +162,7 @@ public class LedgerCall {
     }
 
     /**
-     * 验证区块中的交易CoinData
+     * Verify transactions in the blockCoinData
      * @param chain
      * @param txList
      * @param blockHeight
@@ -190,7 +191,7 @@ public class LedgerCall {
     }
 
     /**
-     * 查询nonce值
+     * querynoncevalue
      *
      * @param chain
      * @param address
@@ -221,7 +222,7 @@ public class LedgerCall {
     }
 
     /**
-     * 查询账户特定资产的余额(只获取已确认的余额)
+     * Query the balance of specific assets in the account(Only obtain confirmed balances)
      * Check the balance of an account-specific asset
      */
     public static BigInteger getBalance(Chain chain, byte[] address, int assetChainId, int assetId) throws NulsException {
@@ -247,7 +248,7 @@ public class LedgerCall {
     }
 
     /**
-     * 开始批量验证coindata的通知
+     * Start batch validationcoindataNotification for
      * @param chain
      * @return
      * @throws NulsException
@@ -273,7 +274,7 @@ public class LedgerCall {
 
 
     /**
-     * 提交已确认交易给账本
+     * Submit confirmed transactions to the ledger
      * @param chain
      * @param txList
      */
@@ -299,7 +300,7 @@ public class LedgerCall {
     }
 
     /**
-     * 调用账本修改未确认的交易状态
+     * Call ledger to modify unconfirmed transaction status
      * @param chain
      * @param txStr
      */
@@ -318,7 +319,7 @@ public class LedgerCall {
     }
 
     /**
-     * 调用账本回滚未确认的交易
+     * Call ledger to roll back unconfirmed transactions
      * @param chain
      * @param txStr
      */
@@ -337,7 +338,7 @@ public class LedgerCall {
     }
 
     /**
-     * 调用账本回滚已确认的交易
+     * Call ledger to roll back confirmed transactions
      * @param chain
      * @param txList
      */
@@ -373,5 +374,18 @@ public class LedgerCall {
         }
     }
 
-
+    public static HashMap getAssetInfo(Chain chain,int assetChainId,int assetId) {
+        try {
+            Map<String, Object> params = new HashMap<>(TxConstant.INIT_CAPACITY_8);
+            params.put(Constants.VERSION_KEY_STR, TxConstant.RPC_VERSION);
+            params.put(Constants.CHAIN_ID, chain.getChainId());
+            params.put("assetChainId",assetChainId);
+            params.put("assetId",assetId);
+            HashMap result = (HashMap) TransactionCall.requestAndResponse(ModuleE.LG.abbr, "lg_get_asset", params);
+            return result;
+        } catch (Exception e) {
+            Log.error(e);
+            return null;
+        }
+    }
 }

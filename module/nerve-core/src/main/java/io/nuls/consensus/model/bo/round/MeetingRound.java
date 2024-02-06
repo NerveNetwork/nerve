@@ -41,60 +41,60 @@ import io.nuls.core.log.Log;
 import java.util.*;
 
 /**
- * 轮次信息类
+ * Round information class
  * Information about rotation
  *
  * @author tag
  * 2018/11/12
  */
-@ApiModel(name = "轮次信息")
+@ApiModel(name = "Round information")
 public class MeetingRound {
     /**
-     * 本地打包节点在当前轮次的下标
+     * The index of the local packaging node in the current round
      * Subscription of Local Packing Node in Current Round
      */
-    @ApiModelProperty(description = "轮次下标")
+    @ApiModelProperty(description = "Round index")
     private long index;
     /**
-     * 当前轮次开始打包时间
+     * Starting packaging time of the current round
      * Current Round Start Packing Time
      */
-    @ApiModelProperty(description = "轮次开始时间")
+    @ApiModelProperty(description = "Start time of round")
     private long startTime;
     /**
-     * 当前轮次打包节点数量
+     * Number of packaging nodes in the current round
      * Number of Packing Nodes in Current Round
      */
-    @ApiModelProperty(description = "本轮次出块节点数")
+    @ApiModelProperty(description = "The number of block nodes in this round")
     private int memberCount;
     /**
-     * 当前轮次打包成员列表
+     * Current round packaging member list
      * Current rounds packaged membership list
      */
-    @ApiModelProperty(description = "本轮次出块成员信息", type = @TypeDescriptor(value = List.class, collectionElement = MeetingMember.class))
+    @ApiModelProperty(description = "Member information for this round of block production", type = @TypeDescriptor(value = List.class, collectionElement = MeetingMember.class))
     private List<MeetingMember> memberList;
     /**
-     * 上一轮轮次信息
+     * Previous round information
      * Last round of information
      */
-    @ApiModelProperty(description = "上一轮信息")
+    @ApiModelProperty(description = "Previous round information")
     private MeetingRound preRound;
     /**
-     * 本地打包成员信息
+     * Local packaging member information
      * Locally packaged member information
      */
-    @ApiModelProperty(description = "当前节点出块信息")
+    @ApiModelProperty(description = "Current node block information")
     private MeetingMember localMember;
 
     /**
-     * 本轮次出块节点地址列表
+     * Node address list for this round of block output
      * Node address list of block out this round
      */
     private Set<String> memberAddressSet;
     private int packingIndexOfRound = 1;
     private boolean confirmed;
     /**
-     * 当前轮次的延迟时间
+     * The delay time of the current round
      */
     private long delayedSeconds;
 
@@ -131,10 +131,10 @@ public class MeetingRound {
     }
 
     /**
-     * 初始化轮次信息
+     * Initialize round information
      * Initialization Round Information
      *
-     * @param memberList 打包成员信息列表/Packaged Member Information List
+     * @param memberList Package member information list/Packaged Member Information List
      */
     public void init(List<MeetingMember> memberList) {
         assert (startTime > 0L);
@@ -193,7 +193,7 @@ public class MeetingRound {
     }
 
     /**
-     * 根据节点地址获取节点对应的打包信息
+     * Obtain packaging information corresponding to nodes based on their addresses
      * Get the packing information corresponding to the node according to the address of the node
      */
     public MeetingMember getMemberByAgentAddress(byte[] address) {

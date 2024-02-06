@@ -72,7 +72,7 @@ public class SwapHelper {
             throw new NulsException(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         List<SwapPairVO> swapPairs = new ArrayList<>();
-        // pairs为空时使用全部地址
+        // pairsUse all addresses when empty
         if (pairs == null || pairs.isEmpty()) {
             Collection<SwapPairDTO> list = swapPairCache.getList();
             for (SwapPairDTO pairDTO : list) {
@@ -115,6 +115,9 @@ public class SwapHelper {
     public boolean isSupportProtocol28() {
         return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_28_0;
     }
+    public boolean isSupportProtocol31() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= SwapContext.PROTOCOL_1_31_0;
+    }
 
     public boolean updateSwapPairFeeRate(int chainId, String swapPairAddress, int feeRate) throws Exception {
         nerveChain.getLogger().info("[Commit SwapFeeRate] swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);
@@ -125,7 +128,7 @@ public class SwapHelper {
         }
         pair.setFeeRate(feeRate);
         swapPairStorageService.savePair(address, pair);
-        // 更新缓存
+        // Update cache
         swapPairCache.reload(swapPairAddress);
         return true;
     }

@@ -42,62 +42,62 @@ import static io.protostuff.ByteString.EMPTY_STRING;
 public interface IHeterogeneousChainDocking {
 
     /**
-     * 当前链是否支持合约资产
+     * Does the current chain support contract assets
      */
     boolean isSupportContractAssetByCurrentChain();
     /**
-     * 当前异构链ID
+     * Current heterogeneous chainID
      */
     Integer getChainId();
     /**
-     * 当前异构链Symbol
+     * Current heterogeneous chainSymbol
      */
     String getChainSymbol();
     /**
-     * 当前签名地址
+     * Current signature address
      */
     String getCurrentSignAddress();
     /**
-     * 当前多签合约地址
+     * Current address for multiple signed contracts
      */
     String getCurrentMultySignAddress();
 
     /**
-     * 根据压缩公钥生成异构链地址
+     * Generate heterogeneous chain addresses based on compressed public keys
      */
     String generateAddressByCompressedPublicKey(String compressedPublicKey);
 
     /**
-     * 根据私钥导入地址，只允许导入一个地址，新导入的将覆盖已有的
+     * According to the private key import address, only one address is allowed to be imported, and the newly imported address will overwrite the existing one
      */
     HeterogeneousAccount importAccountByPriKey(String priKey, String password) throws NulsException;
 
     /**
-     * 验证账户密码是否正确
+     * Verify if the account password is correct
      */
     boolean validateAccountPassword(String address, String password) throws NulsException;
 
     /**
-     * 查询账户详情
+     * Query account details
      */
     HeterogeneousAccount getAccount(String address);
 
     /**
-     * 验证地址格式
+     * Verify address format
      */
     boolean validateAddress(String address);
 
     /**
-     * 查询地址余额
+     * Query address balance
      *
-     * @return 地址余额
+     * @return Address balance
      */
     BigDecimal getBalance(String address);
 
     /**
-     * 更新多签地址
+     * Update multiple signed addresses
      *
-     * @return 多签地址
+     * @return Multiple signed addresses
      */
     void updateMultySignAddress(String multySignAddress) throws Exception;
 
@@ -106,121 +106,121 @@ public interface IHeterogeneousChainDocking {
     };
 
     /**
-     * 确认异构链的交易状态
+     * Confirm the transaction status of heterogeneous chains
      */
     void txConfirmedCompleted(String ethTxHash, Long blockHeight, String nerveTxHash) throws Exception;
 
     /**
-     * 回滚`确认异构链的交易状态`
+     * RollBACK`Confirm the transaction status of heterogeneous chains`
      */
     void txConfirmedRollback(String txHash) throws Exception;
 
     /**
-     * 查询异构链主资产信息
+     * Query heterogeneous chain master asset information
      */
     HeterogeneousAssetInfo getMainAsset();
 
     /**
-     * 根据合约地址查询异构链合约资产信息
+     * Query heterogeneous chain contract asset information based on contract address
      */
     HeterogeneousAssetInfo getAssetByContractAddress(String contractAddress);
 
     /**
-     * 根据资产ID查询异构链资产信息
+     * Based on assetsIDQuery heterogeneous chain asset information
      */
     HeterogeneousAssetInfo getAssetByAssetId(int assetId);
 
     /**
-     * 从异构链网络上查询异构链合约资产信息，验证资产数据是否正确
+     * Query heterogeneous chain contract asset information from heterogeneous chain networks and verify if asset data is correct
      */
     boolean validateHeterogeneousAssetInfoFromNet(String contractAddress, String symbol, int decimals) throws Exception;
 
     /**
-     * 保存异构链合约资产
+     * Save heterogeneous chain contract assets
      */
     void saveHeterogeneousAssetInfos(List<HeterogeneousAssetInfo> assetInfos) throws Exception;
     /**
-     * 回滚异构链合约资产
+     * Rolling back heterogeneous chain contract assets
      */
     void rollbackHeterogeneousAssetInfos(List<HeterogeneousAssetInfo> assetInfos) throws Exception;
 
     /**
-     * 获取充值交易信息
+     * Obtain recharge transaction information
      *
-     * @return 交易信息
+     * @return Transaction information
      */
     HeterogeneousTransactionInfo getDepositTransaction(String txHash) throws Exception;
 
     /**
-     * 获取提现交易信息
+     * Obtain withdrawal transaction information
      *
-     * @return 交易信息
+     * @return Transaction information
      */
     HeterogeneousTransactionInfo getWithdrawTransaction(String txHash) throws Exception;
 
     /**
-     * 获取确认交易的信息
+     * Obtain information for confirming transactions
      */
     HeterogeneousConfirmedInfo getConfirmedTxInfo(String txHash) throws Exception;
 
     /**
-     * 获取变更管理员待处理交易的信息
+     * Obtain information on pending transactions for change administrators
      */
     HeterogeneousChangePendingInfo getChangeVirtualBankPendingInfo(String nerveTxHash) throws Exception;
 
     /**
-     * 创建或签名提现交易
+     * Create or sign withdrawal transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     String createOrSignWithdrawTx(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException;
 
     /**
-     * 创建或签名管理员变更交易
+     * Create or sign administrator change transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     String createOrSignManagerChangesTx(String txHash, String[] addAddresses,
                                         String[] removeAddresses, int orginTxCount) throws NulsException;
 
     /**
-     * 创建或签名合约升级授权交易
+     * Create or sign contract upgrade authorization transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     String createOrSignUpgradeTx(String txHash) throws NulsException;
 
     /**
-     * 强制恢复一致
+     * Force consistent recovery
      */
     String forceRecovery(String nerveTxHash, String[] seedManagers, String[] allManagers) throws NulsException;
 
     /**
-     * 重新解析充值交易（当前节点遗漏了异构链交易解析）
+     * Re analyze recharge transactions（The current node has missed the analysis of heterogeneous chain transactions）
      */
     Boolean reAnalysisDepositTx(String ethTxHash) throws Exception;
 
     /**
-     * 重新解析交易（当前节点遗漏了异构链交易解析）
+     * Re analyze transactions（The current node has missed the analysis of heterogeneous chain transactions）
      */
     Boolean reAnalysisTx(String ethTxHash) throws Exception;
 
     /**
-     * 异构链网络内部chainId
+     * Within heterogeneous chain networkschainId
      */
     long getHeterogeneousNetworkChainId();
 
     /**
-     * 创建或签名提现交易
+     * Create or sign withdrawal transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     default String createOrSignWithdrawTxII(String txHash, String toAddress, BigInteger value, Integer assetId, String signatureData) throws NulsException {
         return EMPTY_STRING;
     }
 
     /**
-     * 验证管理员变更交易
+     * Verify administrator change transactions
      */
     default boolean validateManagerChangesTxII(String txHash, String[] addAddresses,
                                           String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
@@ -228,9 +228,9 @@ public interface IHeterogeneousChainDocking {
     }
 
     /**
-     * 创建或签名管理员变更交易
+     * Create or sign administrator change transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     default String createOrSignManagerChangesTxII(String txHash, String[] addAddresses,
                                           String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
@@ -238,23 +238,23 @@ public interface IHeterogeneousChainDocking {
     }
 
     /**
-     * 创建或签名合约升级授权交易
+     * Create or sign contract upgrade authorization transactions
      *
-     * @return 异构链交易hash
+     * @return Heterogeneous Chain Tradinghash
      */
     default String createOrSignUpgradeTxII(String txHash, String upgradeContract, String signatureData) throws NulsException {
         return EMPTY_STRING;
     }
 
     /**
-     * 签名提现
+     * Signature withdrawal
      */
     default String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
         return EMPTY_STRING;
     }
 
     /**
-     * 签名管理员变更
+     * Signature administrator change
      */
     default String signManagerChangesII(String txHash, String[] addAddresses,
                                           String[] removeAddresses, int orginTxCount) throws NulsException {
@@ -262,21 +262,21 @@ public interface IHeterogeneousChainDocking {
     }
 
     /**
-     * 签名合约升级授权
+     * Signing contract upgrade authorization
      */
     default String signUpgradeII(String txHash, String upgradeContract) throws NulsException {
         return EMPTY_STRING;
     }
 
     /**
-     * 验证签名提现
+     * Verify signature withdrawal
      */
     default Boolean verifySignWithdrawII(String signAddress, String txHash, String toAddress, BigInteger value, Integer assetId, String signed) throws NulsException {
         return false;
     }
 
     /**
-     * 验证签名管理员变更
+     * Verify signature administrator changes
      */
     default Boolean verifySignManagerChangesII(String signAddress, String txHash, String[] addAddresses,
                                           String[] removeAddresses, int orginTxCount, String signed) throws NulsException {
@@ -284,24 +284,24 @@ public interface IHeterogeneousChainDocking {
     }
 
     /**
-     * 验证签名合约升级授权
+     * Verify signature contract upgrade authorization
      */
     default Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
         return false;
     }
 
     /**
-     * 当前流程处理接口的版本
+     * The version of the current process processing interface
      */
     default int version() {
         return 0;
     }
 
-    default boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
+    default boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId, String remark) {
         return false;
     }
 
-    default boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
+    default boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId, String remark) {
         return false;
     }
 
@@ -341,5 +341,12 @@ public interface IHeterogeneousChainDocking {
 
     default boolean isAvailableRPC() {
         return true;
+    }
+    default BigInteger currentGasPrice() {
+        return null;
+    }
+
+    default HeterogeneousTransactionInfo getUnverifiedDepositTransaction(String txHash) throws Exception {
+        return getDepositTransaction(txHash);
     }
 }

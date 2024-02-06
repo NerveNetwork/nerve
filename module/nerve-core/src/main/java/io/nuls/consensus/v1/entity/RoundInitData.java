@@ -16,7 +16,7 @@ public class RoundInitData {
 
     private List<Agent> agentList;
 
-    //    当前轮次的前一轮的第一个区块头
+    //    The first block head of the previous round in the current round
     private BlockHeader startHeader;
     private long delayedSeconds;
 

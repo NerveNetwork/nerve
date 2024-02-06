@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 共识模块RPC接口实现类
+ * Consensus moduleRPCInterface implementation class
  * Consensus Module RPC Interface Implementation Class
  *
  * @author tag
@@ -56,7 +56,7 @@ public class BlockServiceImpl implements BlockService {
     private BlockValidator blockValidator;
 
     /**
-     * 缓存最新区块
+     * Cache the latest block
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -88,7 +88,7 @@ public class BlockServiceImpl implements BlockService {
     }
 
     /**
-     * 链分叉区块回滚
+     * Chain fork block rollback
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -145,19 +145,19 @@ public class BlockServiceImpl implements BlockService {
     }
 
     /**
-     * 验证区块正确性
+     * Verify block correctness
      */
     @Override
     @SuppressWarnings("unchecked")
     public Result validBlock(Map<String, Object> params) {
         if (params == null) {
-            Log.info("参数错误：param_error");
+            Log.info("Parameter error：param_error");
             return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
         }
 
         ValidBlockDTO dto = JSONUtils.map2pojo(params, ValidBlockDTO.class);
         if (dto.getChainId() <= MIN_VALUE || dto.getBlock() == null) {
-            Log.info("参数错误：param_error");
+            Log.info("Parameter error：param_error");
             return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
         }
 
@@ -167,7 +167,7 @@ public class BlockServiceImpl implements BlockService {
             return Result.getFailed(ConsensusErrorCode.CHAIN_NOT_EXIST);
         }
         /*
-         * 0区块下载中，1接收到最新区块
+         * 0In block downloading,1Received the latest block
          * */
         String blockHex = dto.getBlock();
         Map<String, Object> validResult = new HashMap<>(2);
@@ -185,13 +185,13 @@ public class BlockServiceImpl implements BlockService {
         if (dto.isBasicVerify()) {
             boolean settleConsensusAward = ConsensusAwardUtil.settleConsensusAward(chain, block.getHeader().getTime());
             try {
-                //chain.getLogger().debug("接收到区块验证消息，hash:{}", block.getHeader().getHash());
+                //chain.getLogger().debug("Received block verification message,hash:{}", block.getHeader().getHash());
                 blockValidator.validate(chain, block, settleConsensusAward);
-                //chain.getLogger().debug("区块基础验证完成，开始验证区块交易，hash:{}", block.getHeader().getHash());
+                //chain.getLogger().debug("The basic verification of the block is completed, and the verification of the block transaction begins,hash:{}", block.getHeader().getHash());
                 Response response = CallMethodUtils.verify(chainId, block.getTxs(), block.getHeader(), chain.getBestHeader(), chain.getLogger());
-                chain.getLogger().info("区块交易验证完成，hash:{}", block.getHeader().getHash().toHex());
+                chain.getLogger().info("Block transaction verification completed,hash:{}", block.getHeader().getHash().toHex());
                 if (response != null && response.isSuccess()) {
-                    //区块验证成功，则将本轮次投票信
+                    //If the block verification is successful, the voting letter for this round will be sent
                     if (dto.getDownload() == 1) {
                         chain.getConsensusCache().getBestBlocksVotingContainer().addBlock(chain,block.getHeader());
                     }
@@ -218,18 +218,18 @@ public class BlockServiceImpl implements BlockService {
         }
         if (dto.isByzantineVerify()) {
 
-            //chain.getLogger().debug("对新区块做拜占庭验证，向节点{}获取区块投票信息", dto.getNodeId());
+            //chain.getLogger().debug("Perform Byzantine verification on the new block and move towards the node{}Obtain block voting information", dto.getNodeId());
             BlockHeader blockHeader = block.getHeader();
 
-            //从内存先获取投票结果，如果有，要
+            //Retrieve the voting results from memory first, and if there are any, you need to
             VoteResultMessage result = chain.getConsensusCache().getVoteResult(blockHeader.getHash());
             if (null == result) {
-                //区块拜占庭验证
+                //Block Byzantine Verification
                 GetVoteResultMessage getVoteResultMessage = new GetVoteResultMessage(blockHeader.getHash());
-                chain.getLogger().info("获取投票结果：" + dto.getNodeId() + ", height={},hash={}", blockHeader.getHeight(), blockHeader.getHash().toHex());
+                chain.getLogger().info("Obtain voting results：" + dto.getNodeId() + ", height={},hash={}", blockHeader.getHeight(), blockHeader.getHash().toHex());
                 NetWorkCall.sendToNode(chainId, getVoteResultMessage, dto.getNodeId(), CommandConstant.MESSAGE_GET_VOTE_RESULT);
             } else {
-                //通知区块模块，拜占庭完成
+                //Notification block module, Byzantine completed
 //                CallMethodUtils.noticeByzantineResult(chain, result.getHeight(), false, result.getBlockHash(), null);
                 validResult.put("bzt_value", result != null);
             }
@@ -241,7 +241,7 @@ public class BlockServiceImpl implements BlockService {
 
 
     /**
-     * 获取投票结果
+     * Obtain voting results
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -270,7 +270,7 @@ public class BlockServiceImpl implements BlockService {
     }
 
     /**
-     * 推送区块投票结果
+     * Push block voting results
      */
     @Override
     @SuppressWarnings("unchecked")

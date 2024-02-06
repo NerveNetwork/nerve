@@ -33,19 +33,19 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * Quotation 类型为1时, Data中的数据结构
+ * Quotation Type is1Time, DataData structure in
  * @author: Loki
  * @date: 2019/11/25
  */
 public class Price extends BaseNulsData {
 
     /**
-     * 每个key不超过20个字符
+     * eachkeyNot exceeding20Characters
      */
     private String key;
 
     /**
-     * 价格,每个value占8个字节
+     * price,eachvalueoccupy8Bytes
      */
     private double value;
 

@@ -35,12 +35,12 @@ import java.io.Serializable;
 public class ConfirmedChangeVirtualBankPO implements Serializable {
 
     /**
-     * 虚拟银行变更交易hash
+     * Virtual Bank Change Transactionhash
      */
     private NulsHash changeVirtualBankTxHash;
 
     /**
-     * 确认交易hash
+     * Confirm transactionhash
      */
     private NulsHash confirmedChangeVirtualBank;
 

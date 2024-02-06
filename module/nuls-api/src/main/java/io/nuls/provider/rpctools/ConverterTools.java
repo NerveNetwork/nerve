@@ -17,7 +17,7 @@ public class ConverterTools implements CallRpc {
 
 
     /**
-     * 查询异构链地址
+     * Query heterogeneous chain addresses
      */
     public Result getHeterogeneousAddress(int chainId, int heterogeneousChainId, String packingAddress) {
         Map<String, Object> params = new HashMap<>(2);
@@ -32,7 +32,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 查询异构链主资产信息
+     * Query heterogeneous chain master asset information
      */
     public Result getHeterogeneousMainAsset(int heterogeneousChainId) {
         Map<String, Object> params = new HashMap<>(2);
@@ -46,7 +46,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 查询资产的异构链注册网络
+     * Heterogeneous chain registration network for querying assets
      */
     public Result getHeterogeneousRegisterNetwork(int chainId, int assetId) {
         Map<String, Object> params = new HashMap<>(2);
@@ -60,7 +60,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 查询资产的异构链资产信息
+     * Query heterogeneous chain asset information of assets
      */
     public Result getHeterogeneousAssetInfo(int chainId, int assetId) {
         Map<String, Object> params = new HashMap<>(2);
@@ -74,7 +74,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 重新将异构链提现交易放入task, 重发消息
+     * Repositioning heterogeneous chain withdrawal transactionstask, Resend message
      */
     public Result retryWithdrawalMsg(int chainId, String hash) {
         Map<String, Object> params = new HashMap<>(2);
@@ -88,14 +88,14 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 虚拟银行成员信息
+     * Virtual Bank Member Information
      * @param chainId
      * @return
      */
     public Result<List<VirtualBankDirectorDTO>> getVirtualBankInfo(int chainId) {
         Map<String, Object> params = new HashMap<>(2);
         params.put("chainId", chainId);
-        // 默认不查余额 容易超时
+        // Default not checking balance Easy to timeout
 //        params.put("balance", true);
         try {
             return callRpc(ModuleE.CV.abbr, "cv_virtualBankInfo", params, (Function<Map<String, Object>, Result<List<VirtualBankDirectorDTO>>>) res -> {
@@ -110,7 +110,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 获取已撤销虚拟银行资格节点地址列表
+     * Obtain a list of revoked virtual bank qualification node addresses
      * @param chainId
      * @return
      */
@@ -130,7 +130,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 申请提案
+     * Application proposal
      * @param chainId
      * @return
      */
@@ -148,7 +148,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 追加手续费
+     * Additional handling fees
      * @return
      */
     public Result<String> withdrawalAdditionalFee(Map params) {
@@ -165,7 +165,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 查询提案信息（序列化字符串）
+     * Query proposal information（Serializing strings）
      */
     public Result<String> getProposalInfo(int chainId, String proposalTxHash) {
         Map<String, Object> params = new HashMap<>(2);
@@ -179,7 +179,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 根据异构链跨链转入的交易hash查询NERVE的交易hash
+     * Transactions transferred across heterogeneous chainshashqueryNERVETransactionhash
      */
     public Result<String> getRechargeNerveHash(int chainId, String heterogeneousTxHash) {
         Map<String, Object> params = new HashMap<>(2);
@@ -193,7 +193,7 @@ public class ConverterTools implements CallRpc {
     }
 
     /**
-     * 根据提现交易hash获取确认信息
+     * Based on withdrawal transactionshashObtain confirmation information
      */
     public Result<Map<String, Object>> findByWithdrawalTxHash(int chainId, String txHash) {
         Map<String, Object> params = new HashMap<>(2);

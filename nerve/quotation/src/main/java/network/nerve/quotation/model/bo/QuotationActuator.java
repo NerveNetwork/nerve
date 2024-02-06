@@ -25,14 +25,14 @@
 package network.nerve.quotation.model.bo;
 
 /**
- * 将配置文件转化为单一的执行结构
+ * Convert configuration files into a single execution structure
  * @author: Loki
  * @date: 2019/12/5
  */
 public class QuotationActuator extends TokenCfg {
-    /** txData 类型*/
+    /** txData type*/
     private int type;
-    /** txData解析器 */
+    /** txDataParser */
     private String dataParser;
 
     public int getType() {

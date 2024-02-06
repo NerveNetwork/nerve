@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ThreadController extends BasicObject {
 
     /**
-     * 专用线程池
+     * Dedicated thread pool
      */
     private ThreadPoolExecutor threadPool;
     private List<BasicRunnable> list = new ArrayList<>();

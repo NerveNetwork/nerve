@@ -42,7 +42,7 @@ public class AgentBasic {
     private boolean seedNode;
     private String pubKey;
     /**
-     * 计算虚拟银行排序, 当保证金相同时的排序值
+     * Calculate virtual bank sorting, When ensuring the same metallographic sorting value
      */
     private int index;
 

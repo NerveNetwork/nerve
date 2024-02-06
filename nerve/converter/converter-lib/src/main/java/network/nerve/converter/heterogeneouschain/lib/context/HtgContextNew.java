@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.lib.context;
 
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
@@ -49,25 +50,25 @@ public abstract class HtgContextNew extends HtgContext implements Serializable {
 
     private final int HTG_ASSET_ID = 1;
     private byte version;
-    private HtgDocking DOCKING;
+    private IHeterogeneousChainDocking DOCKING;
     /**
-     * 当 importAccountByPriKey 或者 importAccountByKeystore 被调用时，覆写这个地址作为虚拟银行管理员地址
+     * When importAccountByPriKey perhaps importAccountByKeystore When called, overwrite this address as the virtual bank administrator address
      */
     private String ADMIN_ADDRESS;
     private String ADMIN_ADDRESS_PASSWORD;
     private String ADMIN_ADDRESS_PUBLIC_KEY;
 
     /**
-     * 待确认交易队列
+     * Pending confirmation transaction queue
      */
     private LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
     private CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
-    // 初始化配置地址
+    // Initialize configuration address
     private Set<String> FILTER_ACCOUNT_SET = new HashSet<>();
 
     /**
-     * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
+     * Waiting for the transaction queue, the current node saves the call parameters for the transaction（The transaction is sent out by a certain administrator, and the administrator who ranks first in the order of the administrator sends out the transaction. If the sending fails or is not sent out, the transaction is sent out in the next order, and so on）
      */
     private LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
     private CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
@@ -77,12 +78,12 @@ public abstract class HtgContextNew extends HtgContext implements Serializable {
     private List<String> RPC_ADDRESS_LIST = new ArrayList<>();
     private List<String> STANDBY_RPC_ADDRESS_LIST = new ArrayList<>();
     /**
-     * 日志实例
+     * Log instance
      */
     private NulsLogger logger;
     private HeterogeneousCfg config;
     private IConverterCoreApi converterCoreApi;
-    // RPC检查标记
+    // RPCCheck markings
     private volatile boolean availableRPC = true;
 
     public abstract int HTG_CHAIN_ID();
@@ -93,7 +94,7 @@ public abstract class HtgContextNew extends HtgContext implements Serializable {
     }
 
     @Override
-    public void SET_DOCKING(HtgDocking docking) {
+    public void SET_DOCKING(IHeterogeneousChainDocking docking) {
         DOCKING = docking;
     }
 
@@ -249,7 +250,7 @@ public abstract class HtgContextNew extends HtgContext implements Serializable {
     }
 
     @Override
-    public HtgDocking DOCKING() {
+    public IHeterogeneousChainDocking DOCKING() {
         return DOCKING;
     }
 

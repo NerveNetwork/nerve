@@ -33,40 +33,40 @@ import java.math.BigInteger;
 public class WithdrawalTxDTO {
 
     /**
-     * 提现资产 资产id
+     * Withdrawal of assets assetid
      */
     private int assetChainId;
     /**
-     * 提现资产 资产id
+     * Withdrawal of assets assetid
      */
     private int assetId;
     /**
-     * 提现异构链id
+     * Withdrawal of heterogeneous chainsid
      */
     private int heterogeneousChainId;
     /**
-     * 提现异构链地址
+     * Withdrawal of heterogeneous chain addresses
      */
     private String heterogeneousAddress;
     /**
-     * 提现金额
+     * Withdrawal amount
      */
     private BigInteger amount;
     /**
-     * 交易备注
+     * Transaction notes
      */
     private String remark;
 
     /**
-     * 提现发起(签名)地址信息
+     * Withdrawal initiation(autograph)Address information
      */
     private SignAccountDTO signAccount;
     /**
-     * 手续费链ID(5/9,101,102,103....)
+     * Service fee chainID(5/9,101,102,103....)
      */
     private int feeChainId;
     /**
-     * 用于支付异构链交易的手续费
+     * Used to pay transaction fees for heterogeneous chain transactions
      */
     private BigInteger distributionFee;
 

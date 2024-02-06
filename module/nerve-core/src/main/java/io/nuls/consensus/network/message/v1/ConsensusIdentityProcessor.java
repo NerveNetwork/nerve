@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * 处理收到的{@link ConsensusIdentitiesMsg},解析身份
+ * Process received{@link ConsensusIdentitiesMsg},Identity analysis
  *
  * @author lanjinsheng
  * @version 1.0

@@ -33,8 +33,8 @@ import java.util.Map;
  */
 public enum ProposalTypeEnum {
 
-    //类型 1:退回资金, 2:转到其他账户, 3:冻结账户, 4:解冻账户, 5:撤销银行资格, 6:其他类型, 7:多签合约升级, 8:提现,
-    //    9:稳定币交易对添加币种(swap module), 10:管理稳定币交易对-用于Swap交易(swap module), 11: 管理SWAP交易对定制手续费
+    //type 1:Refund of funds, 2:Transfer to another account, 3:Freeze account, 4:Unfreezing accounts, 5:Revocation of bank qualification, 6:Other types, 7:Upgrade by signing multiple contracts, 8:Withdrawal,
+    //    9:Adding currency to stablecoin transactions(swap module), 10:Managing stablecoin transactions-Used forSwaptransaction(swap module), 11: AdministrationSWAPCustomized transaction fees
     REFUND((byte) 1),
 
     TRANSFER((byte) 2),

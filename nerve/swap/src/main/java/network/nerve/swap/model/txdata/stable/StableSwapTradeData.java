@@ -16,7 +16,7 @@ public class StableSwapTradeData extends BaseNulsData {
     private byte[] to;
     private byte tokenOutIndex;
     /**
-     * 手续费接收地址
+     * Handling fee receiving address
      */
     private byte[] feeTo;
 

@@ -10,14 +10,14 @@ import java.util.Map;
  * */
 public interface DepositService {
     /**
-     * 委托共识
+     * Commission consensus
      * @param params
      * @return Result
      * */
     Result depositToAgent(Map<String,Object> params);
 
     /**
-     * 退出共识
+     * Exit consensus
      * @param params
      * @return Result
      * */
@@ -25,21 +25,21 @@ public interface DepositService {
 
 
     /**
-     * 查询委托信息列表
+     * Query delegation information list
      * @param params
      * @return Result
      * */
     Result getDepositList(Map<String,Object> params);
 
     /**
-     * 通过Simple查询抵押资产的资产id和资产链id
+     * adoptSimpleQuery the assets of mortgaged assetsidAnd asset chainid
      * @param params
      * @return Result
      * */
     Result getAssetBySymbol(Map<String,Object> params);
 
     /**
-     * 查询可参与stacking的资产列表
+     * Query participationstackingAsset List for
      * @param params
      * @return Result
      * */

@@ -7,7 +7,7 @@ import io.nuls.core.exception.NulsException;
 import java.util.List;
 
 /**
- * 减少保证金数据库管理类
+ * Reduce margin database management
  * Reduce margin database management
  *
  * @author  tag
@@ -15,43 +15,43 @@ import java.util.List;
  * */
 public interface ReduceDepositStorageService {
     /**
-     * 保存退出保证金数据
+     * Save exit margin data
      * Save reduce margin data
      *
-     * @param  po        追加保证金数据
-     * @param chainID    链ID/chain id
+     * @param  po        Additional margin data
+     * @param chainID    chainID/chain id
      * @return boolean
      * */
     boolean save(ChangeAgentDepositPo po, int chainID);
 
     /**
-     * 根据交易Hash查询退出保证金交易详细数据
+     * According to the transactionHashQuery detailed data on exit margin trading
      * Query exit margin transaction details according to transaction hash
      *
-     * @param  txHash    交易Hash
-     * @param chainID    链ID/chain id
-     * @return           指定交易对应的详细信息
+     * @param  txHash    transactionHash
+     * @param chainID    chainID/chain id
+     * @return           Specify detailed information corresponding to the transaction
      * */
     ChangeAgentDepositPo get(NulsHash txHash, int chainID);
 
     /**
-     * 删除指定退出保证金交易详细信息
+     * Delete specified exit margin transaction details
      * Delete specified exit margin transaction details
      *
-     * @param txHash     交易Hash
-     * @param chainID    链ID/chain id
+     * @param txHash     transactionHash
+     * @param chainID    chainID/chain id
      * @return boolean
      * */
     boolean delete(NulsHash txHash,int chainID);
 
 
     /**
-     * 获取所有退出保证金信息
+     * Obtain all exit margin information
      * Get all exit margin call information
      *
-     * @param  chainID               链ID/chain id
+     * @param  chainID               chainID/chain id
      * @exception NulsException      Data serialization exception
-     * @return                       追加保证金列表
+     * @return                       Additional margin list
      * */
     List<ChangeAgentDepositPo> getList(int chainID) throws NulsException;
 }

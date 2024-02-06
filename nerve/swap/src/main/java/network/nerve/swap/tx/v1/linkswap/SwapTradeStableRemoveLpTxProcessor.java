@@ -120,14 +120,14 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                     continue;
                 }
 
-                // 提取业务参数
+                // Extract business parameters
                 SwapTradeStableRemoveLpData txData = new SwapTradeStableRemoveLpData();
                 txData.parse(tx.getTxData(), 0);
                 long deadline = txData.getDeadline();
                 if (blockHeader.getTime() > deadline) {
                     throw new NulsException(SwapErrorCode.EXPIRED);
                 }
-                // 检查交易路径
+                // Check transaction path
                 NerveToken[] path = txData.getPath();
                 int pathLength = path.length;
                 if (pathLength < 2) {
@@ -143,7 +143,7 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                     if (i == pathLength - 1) {
                         continue;
                     }
-                    // 检查地址
+                    // Check address
                     if (!swapPairCache.isExist(SwapUtils.getStringPairAddress(chainId, token, path[i + 1]))) {
                         throw new NulsException(SwapErrorCode.PAIR_ADDRESS_ERROR);
                     }
@@ -156,15 +156,15 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                     errorCode = SwapErrorCode.PAIR_INCONSISTENCY.getCode();
                     continue;
                 }
-                // 路径中的稳定币LP
+                // Stable coins in the pathLP
                 NerveToken stableLpToken = path[pathLength - 1];
                 String stablePairAddress = stableSwapPairCache.getPairAddressByTokenLP(chainId, stableLpToken);
-                // 验证最后一个token是否为stableLp的token
+                // Verify the last onetokenIs itstableLpoftoken
                 if (StringUtils.isBlank(stablePairAddress)) {
                     throw new NulsException(SwapErrorCode.PAIR_ADDRESS_ERROR);
                 }
                 byte[] stablePairAddressBytes = AddressTool.getAddress(stablePairAddress);
-                // 验证targetToken是否为当前stable池子里的token
+                // validatetargetTokenIs it currentstableIn the pondtoken
                 NerveToken targetToken = txData.getTargetToken();
                 StableSwapPairDTO stableSwapPairDTO = stableSwapPairCache.get(stablePairAddress);
                 NerveToken[] coins = stableSwapPairDTO.getPo().getCoins();
@@ -180,10 +180,10 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                     throw new NulsException(SwapErrorCode.INVALID_COINS);
                 }
 
-                // 整合计算数据
+                // Integrate computing data
                 SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
                         stablePairAddressBytes, txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
-                //协议17: 增加校验，稳定币兑换的逻辑
+                //protocol17: Add verification and logic for stablecoin exchange
                 if (swapTradeBus.isExistStablePair()) {
                     swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
                 }
@@ -214,7 +214,7 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[commit] Swap Trade Stable Remove LP, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -223,29 +223,29 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                 SwapTradeStableRemoveLpBus swapTradeStableRemoveLpBus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), SwapTradeStableRemoveLpBus.class);
                 StableRemoveLiquidityBus stableRemoveLiquidityBus = swapTradeStableRemoveLpBus.getStableRemoveLiquidityBus();
                 SwapTradeBus swapTradeBus = swapTradeStableRemoveLpBus.getSwapTradeBus();
-                // 提取业务参数
+                // Extract business parameters
                 SwapTradeStableRemoveLpData txData = new SwapTradeStableRemoveLpData();
                 txData.parse(tx.getTxData(), 0);
                 NerveToken[] path = txData.getPath();
-                // 路径中的稳定币LP
+                // Stable coins in the pathLP
                 NerveToken stableLpToken = path[path.length - 1];
                 String stablePairAddress = stableSwapPairCache.getPairAddressByTokenLP(chainId, stableLpToken);
 
                 IStablePair stablePair = iPairFactory.getStablePair(stablePairAddress);
 
-                // 更新SwapPair的资金池和发行总量
+                // updateSwapPairThe fund pool and total issuance amount of
                 List<TradePairBus> busList = swapTradeBus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
-                    //协议17: 更新稳定币池 整合稳定币币池后，稳定币币种1:1兑换
+                    //protocol17: Update stablecoin pool After integrating the stablecoin pool, stablecoin currencies1:1exchange
                     if (swapTradeBus.isExistStablePair() && SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                        // 持久化更新稳定币池的数据
+                        // Persistently updating data from the stablecoin pool
                         stableSwapTradeTxProcessor.updatePersistence(pairBus.getStableSwapTradeBus(), blockHeader.getHeight(), blockHeader.getTime());
                         continue;
                     }
                     IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairBus.getPairAddress()));
                     pair.update(BigInteger.ZERO, pairBus.getBalance0(), pairBus.getBalance1(), pairBus.getReserve0(), pairBus.getReserve1(), blockHeader.getHeight(), blockHeader.getTime());
                 }
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 stablePair.update(stableRemoveLiquidityBus.getLiquidity().negate(), SwapUtils.convertNegate(stableRemoveLiquidityBus.getAmounts()), stableRemoveLiquidityBus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -275,23 +275,23 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                 SwapTradeStableRemoveLpBus swapTradeStableRemoveLpBus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), SwapTradeStableRemoveLpBus.class);
                 StableRemoveLiquidityBus stableRemoveLiquidityBus = swapTradeStableRemoveLpBus.getStableRemoveLiquidityBus();
                 SwapTradeBus swapTradeBus = swapTradeStableRemoveLpBus.getSwapTradeBus();
-                // 提取业务参数
+                // Extract business parameters
                 SwapTradeStableRemoveLpData txData = new SwapTradeStableRemoveLpData();
                 txData.parse(tx.getTxData(), 0);
                 NerveToken[] path = txData.getPath();
-                // 路径中的稳定币LP
+                // Stable coins in the pathLP
                 NerveToken stableLpToken = path[path.length - 1];
                 String stablePairAddress = stableSwapPairCache.getPairAddressByTokenLP(chainId, stableLpToken);
                 IStablePair stablePair = iPairFactory.getStablePair(stablePairAddress);
 
-                // 回滚StablePair的资金池
+                // RollBACKStablePairOur fund pool
                 stablePair.rollback(stableRemoveLiquidityBus.getLiquidity().negate(), stableRemoveLiquidityBus.getBalances(), stableRemoveLiquidityBus.getPreBlockHeight(), stableRemoveLiquidityBus.getPreBlockTime());
-                // 回滚SwapPair的资金池
+                // RollBACKSwapPairOur fund pool
                 List<TradePairBus> busList = swapTradeBus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
-                    //协议17: 回滚更新稳定币池 整合稳定币币池后，稳定币币种1:1兑换
+                    //protocol17: Rolling back and updating the stablecoin pool After integrating the stablecoin pool, stablecoin currencies1:1exchange
                     if (SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                        // 回滚持久化更新稳定币池的数据
+                        // Rolling back persistent updates to stablecoin pool data
                         stableSwapTradeTxProcessor.rollbackPersistence(pairBus);
                         continue;
                     }

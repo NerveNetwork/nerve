@@ -29,7 +29,7 @@ import network.nerve.converter.model.bo.Chain;
 import java.util.List;
 
 /**
- * 撤销银行资格的地址列表
+ * Address list for revoking bank qualification
  * @author: Loki
  * @date: 2020/5/19
  */

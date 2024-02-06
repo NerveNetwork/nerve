@@ -30,15 +30,15 @@ import java.io.IOException;
 /**
  * @author lanjinsheng
  * @date 2019/10/17
- * @description 节点身份消息
+ * @description Node identity message
  */
 public class NodeIdentity extends BaseNulsData {
     /**
-     * 密文
+     * ciphertext
      */
     private byte[] identity;
     /**
-     * 公钥
+     * Public key
      */
     private byte[] pubKey;
 

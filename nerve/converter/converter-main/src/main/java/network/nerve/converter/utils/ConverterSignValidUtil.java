@@ -40,13 +40,13 @@ import java.util.Set;
 public class ConverterSignValidUtil {
 
     /**
-     * 验证由虚拟银行节点签名的交易签名
+     * Verify transaction signatures signed by virtual bank nodes
      * @param chain
      * @param tx
      * @throws NulsException
      */
     public static void validateVirtualBankSign(Chain chain, Transaction tx) throws NulsException {
-        // 签名资格 从交易签名中获取签名地址
+        // Signature Qualification Obtain signature address from transaction signature
         Set<String> addressSet = SignatureUtil.getAddressFromTX(tx, chain.getChainId());
         if (addressSet == null) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
@@ -54,7 +54,7 @@ public class ConverterSignValidUtil {
         boolean hasVirtualBankSigner = false;
         for (String address : addressSet) {
             if (chain.isVirtualBankBySignAddr(address)) {
-                //签名地址存属于虚拟银行节点
+                //The signature address belongs to the virtual bank node
                 hasVirtualBankSigner = true;
                 break;
             }
@@ -62,7 +62,7 @@ public class ConverterSignValidUtil {
         if (!hasVirtualBankSigner) {
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
         }
-        // 验证签名本身正确性
+        // Verify the correctness of the signature itself
         boolean rs = SignatureUtil.validateTransactionSignture(chain.getChainId(), tx);
         if (!rs) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
@@ -70,35 +70,35 @@ public class ConverterSignValidUtil {
     }
 
     /**
-     * 验证拜占庭签名
+     * Verify Byzantine signatures
      *
      * @param chain
      * @param tx
      * @throws NulsException
      */
     public static void validateByzantineSign(Chain chain, Transaction tx) throws NulsException {
-        // 从交易签名中获取签名地址(去重)
+        // Obtain signature address from transaction signature(Deduplication)
         Set<String> addressSet = SignatureUtil.getAddressFromTX(tx, chain.getChainId());
         if (addressSet == null) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
         }
 
-        // 统计签名地址中, 是当前虚拟银行节点地址的个数(有资格的签名数)
+        // Statistical signature addresses, Is the current number of virtual bank node addresses(Number of qualified signatures)
         int signCount = 0;
         for (String address : addressSet) {
             if (chain.isVirtualBankBySignAddr(address)) {
-                //签名地址存属于虚拟银行节点
+                //The signature address belongs to the virtual bank node
                 signCount++;
             }
         }
 
-        //虚拟银行节点签名数需要达到的拜占庭数
+        //The number of Byzantine signatures required for virtual bank nodes
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
-        // 判断签名数是否足够
+        // Check if the number of signatures is sufficient
         if (signCount < byzantineCount) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_BYZANTINE_ERROR);
         }
-        // 验证交易签名列表中所有签名本身正确性
+        // Verify the correctness of all signatures in the transaction signature list
         boolean rs = SignatureUtil.validateTransactionSignture(chain.getChainId(), tx);
         if (!rs) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
@@ -107,13 +107,13 @@ public class ConverterSignValidUtil {
 
 
     /**
-     * 验证由种子(虚拟银行)节点签名,以及正确性
+     * Verify by Seed(Virtual banking)Node Signature,And correctness
      * @param chain
      * @param tx
      * @throws NulsException
      */
     public static void validateSeedNodeSign(Chain chain, Transaction tx) throws NulsException {
-        // 签名资格 从交易签名中获取签名地址
+        // Signature Qualification Obtain signature address from transaction signature
         Set<String> addressSet = SignatureUtil.getAddressFromTX(tx, chain.getChainId());
         if (addressSet == null) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);
@@ -129,7 +129,7 @@ public class ConverterSignValidUtil {
         if (!hasSeedSigner) {
             throw new NulsException(ConverterErrorCode.SIGNER_NOT_SEED);
         }
-        // 验证签名本身正确性
+        // Verify the correctness of the signature itself
         boolean rs = SignatureUtil.validateTransactionSignture(chain.getChainId(), tx);
         if (!rs) {
             throw new NulsException(ConverterErrorCode.SIGNATURE_ERROR);

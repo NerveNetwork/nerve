@@ -33,7 +33,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 异构链地址类
+ * Heterogeneous chain address class
  *
  * @author: Loki
  * @date: 2020-02-17

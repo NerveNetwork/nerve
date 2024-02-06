@@ -71,7 +71,7 @@ public class WithdrawalHeterogeneousSendProcessor implements TransactionProcesso
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 WithdrawalHeterogeneousSendTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalHeterogeneousSendTxData.class);
@@ -80,19 +80,19 @@ public class WithdrawalHeterogeneousSendProcessor implements TransactionProcesso
                 if(null == withdrawalTx){
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getCode();
-                    log.error("链内提现交易不存在 txHash:{}, withdrawalTxHash:{}",
+                    log.error("Chain withdrawal transaction does not exist txHash:{}, withdrawalTxHash:{}",
                             tx.getHash().toHex(), nerveTxHash);
                     continue;
                 }
                 if(!setDuplicate.add(nerveTxHash)){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
-                    log.error("区块内交易冲突,业务重复 txHash:{}, withdrawalTxHash:{}",
+                    log.error("Conflict in block transactions,Business duplication txHash:{}, withdrawalTxHash:{}",
                             tx.getHash().toHex(), nerveTxHash);
                     continue;
                 }
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
@@ -121,7 +121,7 @@ public class WithdrawalHeterogeneousSendProcessor implements TransactionProcesso
         try {
             for (Transaction tx : txs) {
                 WithdrawalHeterogeneousSendTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalHeterogeneousSendTxData.class);
-                chain.getLogger().info("[commit] 提现发布到异构链网络交易 hash:{}, withdrawalTxHash:{}, heterogeneousTxHash:{}",
+                chain.getLogger().info("[commit] Withdrawal and publishing to heterogeneous chain network transactions hash:{}, withdrawalTxHash:{}, heterogeneousTxHash:{}",
                         tx.getHash().toHex(), txData.getNerveTxHash(), txData.getHeterogeneousTxHash());
             }
         } catch (NulsException e) {

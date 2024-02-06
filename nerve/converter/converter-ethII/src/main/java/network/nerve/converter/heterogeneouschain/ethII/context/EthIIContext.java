@@ -25,6 +25,7 @@ package network.nerve.converter.heterogeneouschain.ethII.context;
 
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
@@ -50,19 +51,19 @@ public class EthIIContext extends HtgContext implements Serializable {
     public static int HTG_CHAIN_ID = 101;
     public static int HTG_ASSET_ID = 1;
     public static byte VERSION = 2;
-    public static HtgDocking DOCKING;
+    public static IHeterogeneousChainDocking DOCKING;
 
     /**
-     * 待确认交易队列
+     * Pending confirmation transaction queue
      */
     public static LinkedBlockingDeque<HtgUnconfirmedTxPo> UNCONFIRMED_TX_QUEUE = new LinkedBlockingDeque<>();
     public static CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH = new CountDownLatch(1);
 
-    // 初始化配置地址
+    // Initialize configuration address
     public static Set<String> FILTER_ACCOUNT_SET = new HashSet<>();
 
     /**
-     * 等待交易队列，当前节点保存交易的调用参数（交易由某一个管理员发出，按管理员顺序，排在首位的管理员发出交易，若发送失败或者未发出，则由下一顺位发出交易，以此类推）
+     * Waiting for the transaction queue, the current node saves the call parameters for the transaction（The transaction is sent out by a certain administrator, and the administrator who ranks first in the order of the administrator sends out the transaction. If the sending fails or is not sent out, the transaction is sent out in the next order, and so on）
      */
     public static LinkedBlockingDeque<HtgWaitingTxPo> WAITING_TX_QUEUE = new LinkedBlockingDeque<>();
     public static CountDownLatch INIT_WAITING_TX_QUEUE_LATCH = new CountDownLatch(1);
@@ -222,7 +223,7 @@ public class EthIIContext extends HtgContext implements Serializable {
     }
 
     @Override
-    public HtgDocking DOCKING() {
+    public IHeterogeneousChainDocking DOCKING() {
         return DOCKING;
     }
 
@@ -259,7 +260,7 @@ public class EthIIContext extends HtgContext implements Serializable {
     }
 
     @Override
-    public void SET_DOCKING(HtgDocking docking) {
+    public void SET_DOCKING(IHeterogeneousChainDocking docking) {
         DOCKING = docking;
     }
 

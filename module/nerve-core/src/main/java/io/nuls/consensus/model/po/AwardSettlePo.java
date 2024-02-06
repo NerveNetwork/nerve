@@ -14,23 +14,23 @@ import java.util.List;
 
 public class AwardSettlePo extends BaseNulsData {
     /**
-     * 开始高度
+     * Starting height
      */
     private long startHeight;
     /**
-     * 结束高度
+     * End height
      */
     private long endHeight;
     /**
-     * 结算日期
+     * Settlement date
      */
     private String date;
     /**
-     * 是否为本地定时任务生成，如果为本地任务生成的数据如果结算区块验证不过不需要删除否则需要清除
+     * Is it generated for local scheduled tasks? If the data generated for local tasks is verified by settlement blocks, it does not need to be deleted. Otherwise, it needs to be cleared
      */
     private boolean settled;
     /**
-     * 结算明细
+     * Settlement details
      */
     private List<CoinTo> settleDetails;
 

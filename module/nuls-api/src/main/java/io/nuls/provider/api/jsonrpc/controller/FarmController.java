@@ -22,12 +22,12 @@ public class FarmController {
     private FarmTools farmTools;
 
     @RpcMethod("getFarmInfo")
-    @ApiOperation(description = "根据hash查询farm详情", order = 801)
+    @ApiOperation(description = "according tohashqueryfarmdetails", order = 801)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "farmHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "farmHash的hex字符串"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "farmHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "farmHashofhexcharacter string"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getFarmInfo(List<Object> params) {
         int chainId;
         String farmHash;
@@ -46,13 +46,13 @@ public class FarmController {
 
 
     @RpcMethod("getUserStakeInfo")
-    @ApiOperation(description = "根据地址和farmhash查询质押详情", order = 802)
+    @ApiOperation(description = "Based on address andfarmhashQuery pledge details", order = 802)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "farmHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "farmHash的hex字符串"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "用户地址"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "farmHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "farmHashofhexcharacter string"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "User address"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getUserStakeInfo(List<Object> params) {
         int chainId;
         String farmHash;
@@ -76,11 +76,11 @@ public class FarmController {
     }
 
     @RpcMethod("getFarmList")
-    @ApiOperation(description = "获取所有farm列表", order = 803)
+    @ApiOperation(description = "Get Allfarmlist", order = 803)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult getFarmList(List<Object> params) {
         int chainId;
         try {

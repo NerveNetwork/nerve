@@ -49,7 +49,7 @@ public class FarmWithdrawHelper {
 
     public ValidaterResult validateTxData(Chain chain, Transaction tx, FarmStakeChangeData data, FarmTempManager farmTempManager, long blockTime) {
         NulsLogger logger = chain.getLogger();
-        //验证farm是否存在
+        //validatefarmDoes it exist
         FarmPoolPO farm = farmCache.get(data.getFarmHash());
         String farmHash = data.getFarmHash().toHex();
         if (farmTempManager != null && farmTempManager.getFarm(farmHash) != null) {

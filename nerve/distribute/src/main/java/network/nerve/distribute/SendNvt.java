@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 /**
  * @Author: zhoulijun
  * @Time: 2020/7/2 12:04
- * @Description: 空投转账
+ * @Description: Airdrop transfer
  */
 public class SendNvt extends Base {
 
@@ -76,12 +76,12 @@ public class SendNvt extends Base {
         });
         Result<String> result = transferService.transfer(builder.build(new TransferReq()));
         if(result.isFailed()){
-            Log.error("转账失败,原因:{}",result.getMessage());
+            Log.error("Transfer failed,reason:{}",result.getMessage());
             Log.error("{}",result);
-            Log.error("失败地址列表:\n{}",buf.toString());
+            Log.error("Failed Address List:\n{}",buf.toString());
             System.exit(0);
         }
-        Log.info("转账成功:hash:{}\n{}",result.getData(),buf.toString());
+        Log.info("Transfer successful:hash:{}\n{}",result.getData(),buf.toString());
     }
 
     static List<Item> read(File file) throws IOException {
@@ -137,17 +137,17 @@ public class SendNvt extends Base {
     public static void main(String[] args) throws Exception {
 //        ServiceManager.init(CHAIN_ID, Provider.ProviderType.RPC);
 //        NoUse.mockModule(7771);
-//        //向NRC20持币地址转账
+//        //towardsNRC20Transfer to coin holding address
 ////        sendNvtForNRC20();
 ////        TimeUnit.SECONDS.sleep(20);
-//        //向NULS持币地址空投
+//        //towardsNULSAirdrop of coin holding address
 //        sendNvtForNuls();
-//        //向pocm委托地址空投
+//        //towardspocmEntrusted address airdrop
 //        sendNvtForPocm();
 //        System.exit(0);
         BufferedWriter writer = new BufferedWriter(new FileWriter(new File(System.getProperty("user.dir") + File.separator + "total")));
         List<Item> list = read(NULS).stream().map(d-> new Item(d.getAddress(),d.getAmount().divide(BigInteger.valueOf(10)))).collect(Collectors.toList());
-        writer.write("NULS持仓空投");
+        writer.write("NULSPosition airdrop");
         writer.newLine();
         list.forEach(d->{
             try {
@@ -157,7 +157,7 @@ public class SendNvt extends Base {
                 e.printStackTrace();
             }
         });
-        writer.write("POCM持仓空投");
+        writer.write("POCMPosition airdrop");
         writer.newLine();
          list = read(POCM).stream().map(d-> new Item(d.getAddress(),d.getAmount().divide(BigInteger.valueOf(10)))).collect(Collectors.toList());
         list.forEach(d->{

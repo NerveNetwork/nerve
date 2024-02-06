@@ -13,9 +13,9 @@ import java.util.Map;
 public class CrossChainCall {
 
     /**
-     * 批量保存交易
+     * Batch save transactions
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param height
      * @param blockHeader
      * @return
@@ -38,10 +38,10 @@ public class CrossChainCall {
     }
 
     /**
-     * 节点同步状态变更通知跨链模块
+     * Node synchronization status change notification cross chain module
      *
-     * @param chainId 链Id/chain id
-     * @param status  1-工作,0-等待
+     * @param chainId chainId/chain id
+     * @param status  1-work,0-wait for
      * @return
      */
     public static boolean notice(int chainId, int status) {

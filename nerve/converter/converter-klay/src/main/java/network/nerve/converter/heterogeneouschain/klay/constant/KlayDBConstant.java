@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.klay.constant;
  */
 public interface KlayDBConstant {
     /**
-     * Klay信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * KlayInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_KLAY = "cv_table_klay";

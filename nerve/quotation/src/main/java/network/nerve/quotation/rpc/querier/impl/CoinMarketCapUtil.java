@@ -47,7 +47,7 @@ import java.util.List;
  */
 @Deprecated
 public class CoinMarketCapUtil {
-    //改成配置
+    //Change to configuration
     private static final String API_KEY = "5d29cb59-503a-401f-979e-4b20bd02829c";
 
     private static final String BASE_URL = "https://pro-api.coinmarketcap.com";

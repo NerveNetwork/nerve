@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * 当前通胀阶段详情
+ * Details of current inflation stage
  * Details of the current inflation stage
  *
  * @author tag

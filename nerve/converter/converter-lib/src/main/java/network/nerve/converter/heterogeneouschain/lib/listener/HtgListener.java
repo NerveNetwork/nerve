@@ -34,16 +34,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HtgListener {
     /**
-     * 监听收款交易的指定地址的集合
+     * Collection of specified addresses for listening to payment transactions
      */
     private Set<String> listeningAddressSet = ConcurrentHashMap.newKeySet();
     /**
-     * 监听指定交易的集合
+     * Listen to a collection of specified transactions
      */
     private Set<String> listeningTxHashSet = ConcurrentHashMap.newKeySet();
 
     /**
-     * 是否为监听地址
+     * Is it a listening address
      */
     public boolean isListeningAddress(String address) {
         if (StringUtils.isBlank(address)) {
@@ -53,7 +53,7 @@ public class HtgListener {
     }
 
     /**
-     * 是否为监听交易
+     * Is it a listening transaction
      */
     public boolean isListeningTx(String txHash) {
         if (StringUtils.isBlank(txHash)) {
@@ -63,28 +63,28 @@ public class HtgListener {
     }
 
     /**
-     * 增加监听地址
+     * Add listening address
      */
     public void addListeningAddress(String address) {
         listeningAddressSet.add(address.toLowerCase());
     }
 
     /**
-     * 移除监听地址
+     * Remove listening address
      */
     public void removeListeningAddress(String address) {
         listeningAddressSet.remove(address.toLowerCase());
     }
 
     /**
-     * 增加监听交易
+     * Increase monitoring transactions
      */
     public void addListeningTx(String txHash) {
         listeningTxHashSet.add(txHash);
     }
 
     /**
-     * 移除监听交易
+     * Remove listening transactions
      */
     public void removeListeningTx(String txHash) {
         listeningTxHashSet.remove(txHash);

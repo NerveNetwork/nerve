@@ -159,7 +159,7 @@ public class FarmWithdrawHandlerTest {
                 assertNotNull(result);
                 Assert.assertTrue(result.isSuccess());
                 assertNotNull(result.getSubTx());
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -187,11 +187,11 @@ public class FarmWithdrawHandlerTest {
 
                 assertEquals(bus.getSyrupBalanceNew(), bus.getSyrupBalanceOld().subtract(reward));
                 assertEquals(bus.getStakingBalanceNew(), bus.getStakingBalanceOld().subtract(BigInteger.ONE));
-                System.out.println("【通过】Test Farm-Withdraw tx execute: 第二次退出退出！");
+                System.out.println("【adopt】Test Farm-Withdraw tx execute: Second Exit Exit！");
 
             }
         };
-        return new JunitCase("第二次退出退出", handler, new Object[]{tx1, 20001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Second Exit Exit", handler, new Object[]{tx1, 20001L, tx1.getTime()}, null, false, null, callback1);
     }
     private JunitCase getCase3() throws IOException {
         FarmPoolPO po = tempFarm();
@@ -204,11 +204,11 @@ public class FarmWithdrawHandlerTest {
                 Assert.assertFalse(result.isSuccess());
                 assertNull(result.getSubTx());
 
-                System.out.println("【通过】Test Farm-Withdraw tx execute: 超额退出！");
+                System.out.println("【adopt】Test Farm-Withdraw tx execute: Excess exit！");
 
             }
         };
-        return new JunitCase("超额退出", handler, new Object[]{tx1, 30001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Excess exit", handler, new Object[]{tx1, 30001L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getCase1() throws IOException {
@@ -232,11 +232,11 @@ public class FarmWithdrawHandlerTest {
                 Assert.assertFalse(result.isSuccess());
                 assertNull(result.getSubTx());
 
-                System.out.println("【通过】Test Farm-Withdraw tx execute: 尚未解锁！");
+                System.out.println("【adopt】Test Farm-Withdraw tx execute: Not unlocked yet！");
 
             }
         };
-        return new JunitCase("尚未解锁", handler, new Object[]{tx1, 3001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Not unlocked yet", handler, new Object[]{tx1, 3001L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getNormalCase() throws IOException {
@@ -257,7 +257,7 @@ public class FarmWithdrawHandlerTest {
                 assertNotNull(result);
                 Assert.assertTrue(result.isSuccess());
                 assertNotNull(result.getSubTx());
-                //todo金额验证
+                //todoAmount verification
                 CoinData coinData = null;
                 try {
                     coinData = result.getSubTx().getCoinDataInstance();
@@ -285,11 +285,11 @@ public class FarmWithdrawHandlerTest {
 
                 assertEquals(bus.getSyrupBalanceNew(), bus.getSyrupBalanceOld().subtract(reward));
                 assertEquals(bus.getStakingBalanceNew(), bus.getStakingBalanceOld().subtract(BigInteger.ONE));
-                System.out.println("【通过】Test Farm-Withdraw tx execute: Normal process！");
+                System.out.println("【adopt】Test Farm-Withdraw tx execute: Normal process！");
 
             }
         };
-        return new JunitCase("第一次stake", handler, new Object[]{tx1, 10001L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("First timestake", handler, new Object[]{tx1, 10001L, tx1.getTime()}, null, false, null, callback1);
     }
 
     public FarmPoolPO tempFarm() {

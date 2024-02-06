@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-05 15:18
- * @Description: 功能描述
+ * @Description: Function Description
  */
 @Component
 public class CmdClientModule extends RpcModule {
@@ -83,7 +83,7 @@ public class CmdClientModule extends RpcModule {
     @Override
     public RpcModuleState onDependenciesReady() {
         System.out.println("nuls-wallet base module ready");
-        //增加地址工具类初始化
+        //Add address tool class initialization
         AddressTool.init(new AddressPrefixDatas());
         AssetsUtil.initRegisteredChainInfo(config.getChainId());
 

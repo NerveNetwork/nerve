@@ -46,7 +46,7 @@ public class ShareProcessor extends BasicRunnable {
         String msgHash = message.getMsgHash().toHex();
 //        //chain.getLogger().debug("Share message,msgHash={} recv from node={}", msgHash, nodeId);
         try {
-            //校验签名
+            //Verify signature
             if (!SignatureUtil.validateSignture(message.getIdentityList(), message.getSign())) {
                 chain.getLogger().error("msgHash={} recv from node={} validateSignture false", msgHash, nodeId);
                 return;
@@ -57,7 +57,7 @@ public class ShareProcessor extends BasicRunnable {
         }
         ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chain.getChainId());
         if (null == consensusKeys) {
-            //非共识节点
+            //Non consensus nodes
 //            //chain.getLogger().debug("msgHash={} is not consensus node,drop msg", msgHash);
             return;
         } else {
@@ -65,15 +65,15 @@ public class ShareProcessor extends BasicRunnable {
             if (null == consensusShare) {
                 return;
             }
-            //解出的包,需要判断对方是否共识节点
+            //Unsolved package,Need to determine if the other party has reached a consensus on the node
             ConsensusNet dbConsensusNet = consensusNetService.getConsensusNode(chain.getChainId(), AddressTool.getStringAddressByBytes(AddressTool.getAddress(message.getSign().getPublicKey(), chain.getChainId())));
             if (null == dbConsensusNet) {
-                //这边需要注意，此时如果共识节点列表里面还没有该节点，可能就会误判，所以必须保障 在收到消息时候，共识列表里已经存在该消息。
+                //It should be noted that if the consensus node list does not include that node at this time, it may be misjudged, so it is necessary to ensure that When receiving the message, it already exists in the consensus list.
                 chain.getLogger().error("nodeId = {} not in consensus Group", nodeId);
                 return;
             }
-//            chain.getLogger().info("更新共识网络信息：");
-            //进行解析 分享地址
+//            chain.getLogger().info("Update consensus network information：");
+            //Analyze Sharing address
             for (ConsensusNet consensusNet : consensusShare.getShareList()) {
                 if (ArraysTool.arrayEquals(consensusKeys.getPubKey(), consensusNet.getPubKey())) {
                     continue;

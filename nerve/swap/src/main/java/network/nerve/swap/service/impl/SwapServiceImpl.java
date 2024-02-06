@@ -110,26 +110,26 @@ public class SwapServiceImpl implements SwapService {
             preStateRoot = INITIAL_STATE_ROOT;
         }
         batchInfo.setPreStateRoot(preStateRoot);
-        // 初始化批量执行基本数据
+        // Initialize batch execution basic data
         chain.setBatchInfo(batchInfo);
-        // 准备临时余额
+        // Prepare temporary balance
         LedgerTempBalanceManager tempBalanceManager = LedgerTempBalanceManager.newInstance(chainId);
         batchInfo.setLedgerTempBalanceManager(tempBalanceManager);
-        // 准备当前区块头
+        // Prepare the current block header
         BlockHeader tempHeader = new BlockHeader();
         tempHeader.setHeight(blockHeight);
         tempHeader.setTime(blockTime);
         batchInfo.setCurrentBlockHeader(tempHeader);
-        // 准备临时交易对
+        // Prepare for temporary transactions
         SwapTempPairManager tempPairManager = SwapTempPairManager.newInstance(chainId);
         batchInfo.setSwapTempPairManager(tempPairManager);
-        // 准备Stable临时交易对
+        // prepareStableTemporary transaction pairs
         StableSwapTempPairManager stableSwapTempPairManager = StableSwapTempPairManager.newInstance(chainId);
         batchInfo.setStableSwapTempPairManager(stableSwapTempPairManager);
-        //准备临时Farm管理器
+        //Prepare for temporaryFarmManager
         FarmTempManager farmTempManager = new FarmTempManager();
         batchInfo.setFarmTempManager(farmTempManager);
-        //准备临时FarmUserInfo管理器
+        //Prepare for temporaryFarmUserInfoManager
         FarmUserInfoTempManager farmUserInfoTempManager = new FarmUserInfoTempManager();
         batchInfo.setFarmUserTempManager(farmUserInfoTempManager);
         return Result.getSuccess(null);
@@ -139,7 +139,7 @@ public class SwapServiceImpl implements SwapService {
     public Result invokeOneByOne(int chainId, long blockHeight, long blockTime, Transaction tx) {
         try {
             SwapResult swapResult = swapInvoker.invoke(chainId, tx, blockHeight, blockTime);
-            SwapContext.logger.info("[{}]调用结果: {}", blockHeight, swapResult.toString());
+            SwapContext.logger.info("[{}]Call result: {}", blockHeight, swapResult.toString());
             Map<String, Object> _result = new HashMap<>();
             _result.put("success", swapResult.isSuccess());
             if (null != swapResult.getSubTxStr()) {
@@ -155,7 +155,7 @@ public class SwapServiceImpl implements SwapService {
     @Override
     public Result end(int chainId, long blockHeight) {
         BatchInfo batchInfo = chainManager.getChain(chainId).getBatchInfo();
-        // 缓存高度必须一致
+        // Cache height must be consistent
         if (blockHeight != batchInfo.getCurrentBlockHeader().getHeight()) {
             return Result.getFailed(SwapErrorCode.BLOCK_HEIGHT_INCONSISTENCY);
         }
@@ -183,7 +183,7 @@ public class SwapServiceImpl implements SwapService {
             return Result.getFailed(SwapErrorCode.CHAIN_NOT_EXIST);
         }
         NulsLogger logger = chain.getLogger();
-        //账户验证
+        //Account verification
         String prikeyHex;
         try {
             prikeyHex = AccountCall.getAccountPrikey(chainId, address, password);
@@ -219,21 +219,21 @@ public class SwapServiceImpl implements SwapService {
 
     @Override
     public Result<String> swapCreatePair(int chainId, String address, String password, String tokenA, String tokenB) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
         }
         String prikeyHex = checkResult.getData();
         NulsLogger logger = chainManager.getChainMap().get(chainId).getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         NerveToken _tokenA = SwapUtils.parseTokenStr(tokenA);
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
         if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null) {
-            logger.warn("资产类型不正确");
+            logger.warn("Incorrect asset type");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
-        // 组装交易
+        // Assembly transaction
         Transaction tx = new Transaction();
         tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
         tx.setType(TxType.CREATE_SWAP_PAIR);
@@ -256,7 +256,7 @@ public class SwapServiceImpl implements SwapService {
                 .addTo(addressBytes, mainToken, BigInteger.ZERO, 0)
                 .getCoinData();
         tx.setCoinData(SwapUtils.nulsData2HexBytes(coinData));
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
@@ -264,7 +264,7 @@ public class SwapServiceImpl implements SwapService {
     public Result<String> swapAddLiquidity(int chainId, String address, String password, BigInteger amountA, BigInteger amountB,
                                            String tokenA, String tokenB, BigInteger amountAMin, BigInteger amountBMin,
                                            long deadline, String to) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -272,22 +272,22 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
         NerveToken _tokenA = SwapUtils.parseTokenStr(tokenA);
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
         if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null) {
-            logger.warn("资产类型不正确");
+            logger.warn("Incorrect asset type");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         byte[] pairAddress = SwapUtils.getPairAddress(chainId, _tokenA, _tokenB);
         if (!swapPairCache.isExist(AddressTool.getStringAddressByBytes(pairAddress))) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
-        // 组装交易
+        // Assembly transaction
         AddLiquidityData data = new AddLiquidityData();
         data.setTokenA(_tokenA);
         data.setTokenB(_tokenB);
@@ -318,7 +318,7 @@ public class SwapServiceImpl implements SwapService {
                 .setToAssetsId(_tokenB.getAssetId())
                 .setToAmount(amountB).endTo();
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
@@ -326,7 +326,7 @@ public class SwapServiceImpl implements SwapService {
     public Result<String> swapRemoveLiquidity(int chainId, String address, String password, BigInteger amountLP, String tokenLP,
                                               String tokenA, String tokenB, BigInteger amountAMin, BigInteger amountBMin,
                                               long deadline, String to) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -334,7 +334,7 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
@@ -342,15 +342,15 @@ public class SwapServiceImpl implements SwapService {
         NerveToken _tokenB = SwapUtils.parseTokenStr(tokenB);
         NerveToken _tokenLP = SwapUtils.parseTokenStr(tokenLP);
         if (ledgerAssetCache.getLedgerAsset(chainId, _tokenA) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenB) == null || ledgerAssetCache.getLedgerAsset(chainId, _tokenLP) == null) {
-            logger.warn("资产类型不正确");
+            logger.warn("Incorrect asset type");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         byte[] pairAddress = SwapUtils.getPairAddress(chainId, _tokenA, _tokenB);
         if (!swapPairCache.isExist(AddressTool.getStringAddressByBytes(pairAddress))) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
-        // 组装交易
+        // Assembly transaction
         RemoveLiquidityData data = new RemoveLiquidityData();
         data.setTokenA(_tokenA);
         data.setTokenB(_tokenB);
@@ -377,14 +377,14 @@ public class SwapServiceImpl implements SwapService {
                 .setToAssetsId(_tokenLP.getAssetId())
                 .setToAmount(amountLP).endTo();
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
     @Override
     public Result<String> swapTokenTrade(int chainId, String address, String password, BigInteger amountIn,
                                          BigInteger amountOutMin, String[] tokenPath, String feeTo, long deadline, String to) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -392,7 +392,7 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
@@ -406,17 +406,17 @@ public class SwapServiceImpl implements SwapService {
         }
         for (NerveToken token : _tokenPath) {
             if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
-                logger.warn("资产类型不正确");
+                logger.warn("Incorrect asset type");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
         }
         byte[] firstPairAddress = SwapUtils.getPairAddress(chainId, _tokenPath[0], _tokenPath[1]);
         if (!swapPairCache.isExist(AddressTool.getStringAddressByBytes(firstPairAddress))) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
 
-        // 组装交易
+        // Assembly transaction
         NerveToken tokenIn = _tokenPath[0];
         SwapTradeData data = new SwapTradeData();
         data.setAmountOutMin(amountOutMin);
@@ -442,20 +442,20 @@ public class SwapServiceImpl implements SwapService {
                 .setToAssetsId(tokenIn.getAssetId())
                 .setToAmount(amountIn).endTo();
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
     @Override
     public Result<String> stableSwapCreatePair(int chainId, String address, String password, String[] coins, String symbol) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
         }
         String prikeyHex = checkResult.getData();
         NulsLogger logger = chainManager.getChainMap().get(chainId).getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         int length = coins.length;
         NerveToken[] _coins = new NerveToken[length];
         for (int i = 0; i < length; i++) {
@@ -463,7 +463,7 @@ public class SwapServiceImpl implements SwapService {
         }
         for (NerveToken token : _coins) {
             if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
-                logger.warn("资产类型不正确");
+                logger.warn("Incorrect asset type");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
         }
@@ -471,7 +471,7 @@ public class SwapServiceImpl implements SwapService {
             logger.error("INVALID_SYMBOL!");
             return Result.getFailed(SwapErrorCode.INVALID_SYMBOL);
         }
-        // 组装交易
+        // Assembly transaction
         CreateStablePairData data = new CreateStablePairData();
         data.setCoins(_coins);
         data.setSymbol(symbol);
@@ -495,14 +495,14 @@ public class SwapServiceImpl implements SwapService {
                 .addTo(addressBytes, mainToken, BigInteger.ZERO, 0)
                 .getCoinData();
         tx.setCoinData(SwapUtils.nulsData2HexBytes(coinData));
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
     @Override
     public Result<String> stableSwapAddLiquidity(int chainId, String address, String password, BigInteger[] amounts, String[] tokens,
                                                  String pairAddress, long deadline, String to) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -510,7 +510,7 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
@@ -521,17 +521,17 @@ public class SwapServiceImpl implements SwapService {
         }
         for (NerveToken token : _tokens) {
             if (ledgerAssetCache.getLedgerAsset(chainId, token) == null) {
-                logger.warn("资产类型不正确");
+                logger.warn("Incorrect asset type");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
         }
 
         byte[] pairAddressBytes = AddressTool.getAddress(pairAddress);
         if (!stableSwapPairCache.isExist(pairAddress)) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
-        // 组装交易
+        // Assembly transaction
         StableAddLiquidityData data = new StableAddLiquidityData();
         data.setTo(AddressTool.getAddress(to));
         AssembleTransaction aTx = new AssembleTransaction(SwapUtils.nulsData2HexBytes(data));
@@ -554,14 +554,14 @@ public class SwapServiceImpl implements SwapService {
             return Result.getFailed(e.getErrorCode());
         }
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
     @Override
     public Result<String> stableSwapRemoveLiquidity(int chainId, String address, String password, BigInteger amountLP, String tokenLP,
                                                     Integer[] receiveOrderIndexs, String pairAddress, long deadline, String to) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -569,21 +569,21 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
         NerveToken _tokenLP = SwapUtils.parseTokenStr(tokenLP);
         if (ledgerAssetCache.getLedgerAsset(chainId, _tokenLP) == null) {
-            logger.warn("资产类型不正确");
+            logger.warn("Incorrect asset type");
             return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
         }
         byte[] pairAddressBytes = AddressTool.getAddress(pairAddress);
         if (!stableSwapPairCache.isExist(pairAddress)) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
-        // 组装交易
+        // Assembly transaction
         int length = receiveOrderIndexs.length;
         byte[] indexs = new byte[length];
         for (int i = 0; i < length; i++) {
@@ -611,7 +611,7 @@ public class SwapServiceImpl implements SwapService {
                 .setToAssetsId(_tokenLP.getAssetId())
                 .setToAmount(amountLP).endTo();
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 
@@ -619,7 +619,7 @@ public class SwapServiceImpl implements SwapService {
     public Result<String> stableSwapTokenTrade(int chainId, String address, String password, BigInteger[] amountsIn,
                                                String[] tokensIn, int tokenOutIndex, String feeTo,
                                                String pairAddress, long deadline, String to, String feeTokenStr, String feeAmountStr) {
-        // 检查账户
+        // Check account
         Result<String> checkResult = this.checkAccount(chainId, address, password);
         if (checkResult.isFailed()) {
             return checkResult;
@@ -627,7 +627,7 @@ public class SwapServiceImpl implements SwapService {
         String prikeyHex = checkResult.getData();
         Chain chain = chainManager.getChainMap().get(chainId);
         NulsLogger logger = chain.getLogger();
-        // 简单检查交易业务
+        // Simple inspection of transaction business
         if (chain.getLatestBasicBlock().getTime() > deadline) {
             return Result.getFailed(SwapErrorCode.EXPIRED);
         }
@@ -647,18 +647,18 @@ public class SwapServiceImpl implements SwapService {
         }
         for (NerveToken tokenIn : _tokensIn) {
             if (ledgerAssetCache.getLedgerAsset(chainId, tokenIn) == null) {
-                logger.warn("资产类型不正确");
+                logger.warn("Incorrect asset type");
                 return Result.getFailed(SwapErrorCode.LEDGER_ASSET_NOT_EXIST);
             }
         }
 
         byte[] pairAddressBytes = AddressTool.getAddress(pairAddress);
         if (!stableSwapPairCache.isExist(pairAddress)) {
-            logger.warn("交易对地址不存在");
+            logger.warn("Transaction pair address does not exist");
             return Result.getFailed(SwapErrorCode.PAIR_NOT_EXIST);
         }
 
-        // 组装交易
+        // Assembly transaction
         StableSwapTradeData data = new StableSwapTradeData();
         data.setTo(AddressTool.getAddress(to));
         data.setTokenOutIndex((byte) tokenOutIndex);
@@ -692,7 +692,7 @@ public class SwapServiceImpl implements SwapService {
             return Result.getFailed(e.getErrorCode());
         }
         Transaction tx = aTx.build();
-        // 广播交易
+        // Broadcasting transactions
         return this.newTx(chainId, prikeyHex, tx, logger);
     }
 

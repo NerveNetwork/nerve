@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 回调函数管理器
+ * Callback Function Manager
  *
  * @author: Mimi
  * @date: 2020-02-18
@@ -52,15 +52,15 @@ public class HeterogeneousCallBackManager {
     private CallBackBeanManager callBackBeanManager;
 
     /**
-     * 管理每个异构链组件的充值交易监听回调器
+     * Manage recharge transaction listeners and callbacks for each heterogeneous chain component
      */
     private Map<Integer, IDepositTxSubmitter> depositTxSubmitterMap = new ConcurrentHashMap<>();
     /**
-     * 管理每个异构链组件的异构链交易确认回调器
+     * Manage heterogeneous chain transaction confirmation callbacks for each heterogeneous chain component
      */
     private Map<Integer, ITxConfirmedProcessor> txConfirmedProcessorMap = new ConcurrentHashMap<>();
     /**
-     * 管理每个异构链组件的升级回调器
+     * Manage upgrade callbacks for each heterogeneous chain component
      */
     private Map<Integer, IHeterogeneousUpgrade> heterogeneousUpgradeMap = new ConcurrentHashMap<>();
 

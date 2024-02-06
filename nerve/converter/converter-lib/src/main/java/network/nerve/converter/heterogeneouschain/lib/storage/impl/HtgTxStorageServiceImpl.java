@@ -30,7 +30,7 @@ import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.utils.ConverterDBUtil;
 
 /**
- * 保存交易信息 - 充值、签名完成的提现、变更
+ * Save transaction information - Recharge、Withdrawal completed with signature、change
  * @author: Mimi
  * @date: 2020-03-12
  */

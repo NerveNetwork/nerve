@@ -13,11 +13,11 @@ import java.util.Arrays;
 
 public class NonceDataPo extends BaseNulsData {
     /**
-     * 该笔追加保证金金额
+     * The amount of this additional deposit
      * */
     private BigInteger deposit;
     /**
-     * 追加保证金交易交易hash后八位
+     * Additional margin tradinghashLast eight digits
      * */
     private byte[] nonce;
 

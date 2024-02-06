@@ -29,15 +29,15 @@ import network.nerve.quotation.model.bo.Chain;
 import java.util.List;
 
 /**
- * 节点当天已报过价的token, 防止重复报价
- * 每次执行最终报价计算的时候, 清理所有报价token
+ * Nodes that have already been priced on the same daytoken, Prevent duplicate quotations
+ * Every time the final quotation calculation is executed, Clean up all quotationstoken
  * @author: Loki
  * @date: 2020/6/17
  */
 public interface QuotationIntradayStorageService {
 
     /**
-     * 持久化保存已报价token
+     * Persistent save quotedtoken
      * @param chain
      * @param key
      * @return
@@ -51,8 +51,8 @@ public interface QuotationIntradayStorageService {
     List<String> getAll(Chain chain);
 
     /**
-     * 删除所有报过价的token
-     * 一般后一天是删前一天
+     * Delete all previously quoted pricestoken
+     * Generally, the day after deletion is the day before deletion
      * @param chain
      */
     boolean removeAll(Chain chain);

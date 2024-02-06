@@ -28,7 +28,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 
 /**
- * 异构链组件 version2 的调用参数
+ * Heterogeneous Chain Components version2 Call parameters for
  * @author: Loki
  * @date: 2020/9/21
  */

@@ -50,7 +50,7 @@ import java.util.Map;
 public class ConsensusCall extends BaseCall {
 
     /**
-     * 查询本节点是不是共识节点，如果是则返回，共识账户和密码
+     * Query whether this node is a consensus node. If so, return the consensus account and password
      * Query whether the node is a consensus node, if so, return, consensus account and password
      */
     public static SignAccountDTO getPackerInfo(Chain chain) {
@@ -75,7 +75,7 @@ public class ConsensusCall extends BaseCall {
     }
 
     /**
-     * 获取出块节点列表
+     * Get a list of block nodes
      *
      * @param chain
      * @return
@@ -86,10 +86,10 @@ public class ConsensusCall extends BaseCall {
     }
 
     /**
-     * 获取出块节点列表
+     * Get a list of block nodes
      *
      * @param chain
-     * @param height 根据高度获取共识列表,如果高度为0L, 则取当前最新共识列表
+     * @param height Obtain consensus list based on height,If the height is0L, Then take the current latest consensus list
      * @return
      * @throws NulsException
      */
@@ -108,13 +108,13 @@ public class ConsensusCall extends BaseCall {
                 JSONUtils.getInstance().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                 AgentBasic agentBasic = JSONUtils.map2pojo(mapObj, AgentBasic.class);
                 if (agentBasic.getSeedNode()) {
-                    // 如果是种子节点, 把节点地址和奖励地址都设为出块地址
+                    // If it is a seed node, Set both node address and reward address as block output addresses
                     agentBasic.setAgentAddress(agentBasic.getPackingAddress());
                     agentBasic.setRewardAddress(agentBasic.getPackingAddress());
                 }
                 list.add(agentBasic);
             }
-            //按照委托金额从大到小排序, 如果金额相同,则用节点地址字符串排序
+            //Sort by commission amount in descending order, If the amount is the same,Sort using node address string
             list.sort((o1, o2) -> {
                 int rs = o2.getDeposit().compareTo(o1.getDeposit());
                 if (rs != 0) {
@@ -160,9 +160,9 @@ public class ConsensusCall extends BaseCall {
         }
     }
     /**
-     * 发送虚拟银行节点地址到共识
+     * Send virtual bank node address to consensus
      * @param chain
-     * @param height 当前高度
+     * @param height Current height
      */
     public static void sendVirtualBank(Chain chain, long height) {
         List<String> virtualAgentList = new ArrayList<>();

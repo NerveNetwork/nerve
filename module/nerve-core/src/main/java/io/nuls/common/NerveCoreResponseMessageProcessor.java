@@ -9,7 +9,7 @@ import java.util.Map;
 
 
 /**
- * 消息处理器
+ * Message processor
  * Send message processor
  *
  * @author tag
@@ -37,13 +37,13 @@ public class NerveCoreResponseMessageProcessor {
     }
 
     /**
-     * 发送Request，不接收返回
+     * sendRequest, do not accept returns
      * Send Request and wait for Response
      *
-     * @param role    远程方法所属的角色，The role of remote method
-     * @param request 远程方法的命令，Command of the remote method
-     * @return 远程方法的返回结果，Response of the remote method
-     * @throws Exception 请求超时（1分钟），timeout (1 minute)
+     * @param role    The role to which the remote method belongs,The role of remote method
+     * @param request Command for remote methods,Command of the remote method
+     * @return The return result of the remote method,Response of the remote method
+     * @throws Exception request timeout（1minute）,timeout (1 minute)
      */
     public static String requestOnly(String role, Request request) throws Exception {
         /*Map<String, Object> requestMethods = request.getRequestMethods();

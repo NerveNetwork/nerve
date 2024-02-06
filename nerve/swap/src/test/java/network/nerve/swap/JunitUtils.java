@@ -15,7 +15,7 @@ public class JunitUtils {
     public static void execute(List<JunitCase> caseList, JunitExecuter executer) {
         for (JunitCase item : caseList) {
             try {
-                System.out.println(String.format("[%s] [开始执行]", item.getKey()));
+                System.out.println(String.format("[%s] [Start execution]", item.getKey()));
                 Object get = executer.execute(item);
                 if (item.getCallBack() != null && !item.getCallBack().equals(NerveCallback.NULL_CALLBACK)) {
                     item.getCallBack().callback(item, get);
@@ -29,7 +29,7 @@ public class JunitUtils {
                 } else if (null != get && item.getWant() == null) {
                     assertTrue(item.getKey() + " : " + item.getMessage() + " want:" + item.getWant() + ",but get:" + get, false);
                 } else if (get.equals(item)) {
-                    //什么也不做
+                    //Do nothing
                 } else if (!Arrays.deepEquals(new Object[]{get}, new Object[]{item.getWant()})) {
                     assertTrue(item.getKey() + " : " + item.getMessage() + " want:" + item.getWant() + ",but get:" + get, false);
                 }

@@ -41,46 +41,55 @@ public class QuConfig extends ConfigBean implements ModuleConfig {
 
     private String dataPath;
     private String language;
-    /** 主链链ID*/
+    /** Main chainID*/
     private int mainChainId;
-    /** 主链主资产ID*/
+    /** Main asset of the main chainID*/
     private int mainAssetId;
     private int effectiveQuotation;
     /**
-     * 去掉最高和最低 数据的数量
-     * 如果为1 则去掉1个最高和1个最低，共计2条价格数据
+     * Remove the highest and lowest values The quantity of data
+     * If it is1 Then remove it1Maximum and1Lowest, total2Price data
      * */
     private int removeMaxMinCount;
     private String quoteStartHm;
     private String quoteEndHm;
-    /** USDT DAI USDC PAX 协议升级配置的高度*/
+    /** USDT DAI USDC PAX The height of protocol upgrade configuration*/
     private long usdtDaiUsdcPaxKeyHeight;
-    /** BNB 协议升级配置高度 */
+    /** BNB Protocol upgrade configuration height */
     private long bnbKeyHeight;
-    /** HT OKB 协议升级配置高度 */
+    /** HT OKB Protocol upgrade configuration height */
     private long htOkbKeyHeight;
-    /** OKT 协议升级配置高度 */
+    /** OKT Protocol upgrade configuration height */
     private long oktKeyHeight;
-    /** ONE MATIC KCS 协议升级配置高度 */
+    /** ONE MATIC KCS Protocol upgrade configuration height */
     private long oneMaticKcsHeight;
-    /** TRX 协议升级配置高度 */
+    /** TRX Protocol upgrade configuration height */
     private long trxKeyHeight;
-    /** p16 协议升级配置高度 */
+    /** p16 Protocol upgrade configuration height */
     private long protocol16Height;
-    /** p21 协议升级配置高度 */
+    /** p21 Protocol upgrade configuration height */
     private long protocol21Height;
-    /** p22 协议升级配置高度 */
+    /** p22 Protocol upgrade configuration height */
     private long protocol22Height;
-    /** p24 协议升级配置高度 */
+    /** p24 Protocol upgrade configuration height */
     private long protocol24Height;
-    /** p26 协议升级配置高度 */
+    /** p26 Protocol upgrade configuration height */
     private long protocol26Height;
-    /** p27 协议升级配置高度 */
+    /** p27 Protocol upgrade configuration height */
     private long protocol27Height;
-    /** p29 协议升级配置高度 */
+    /** p29 Protocol upgrade configuration height */
     private long protocol29Height;
-    /** p30 协议升级配置高度 */
+    /** p30 Protocol upgrade configuration height */
     private long protocol30Height;
+    private long protocol31Height;
+
+    public long getProtocol31Height() {
+        return protocol31Height;
+    }
+
+    public void setProtocol31Height(long protocol31Height) {
+        this.protocol31Height = protocol31Height;
+    }
 
     public long getProtocol30Height() {
         return protocol30Height;

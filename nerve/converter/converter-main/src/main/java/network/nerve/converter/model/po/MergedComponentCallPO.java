@@ -29,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 记录调用异构链时合并的交易
+ * Record the merged transactions when calling heterogeneous chains
  * @author: Loki
  * @date: 2020/6/18
  */

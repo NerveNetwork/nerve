@@ -73,7 +73,7 @@ public class SmallBlockProcessor implements Runnable {
 //            logger.debug("The block has been confirmed locally,height:{},hash:{}", header.getHeight(), header.getHash());
             return;
         }
-        //阻止恶意节点提前出块,拒绝接收未来一定时间外的区块
+        //Prevent malicious nodes from prematurely exiting blocks,Refuse to receive blocks beyond a certain period of time in the future
         ConfigBean parameters = context.getParameters();
         int validBlockInterval = parameters.getValidBlockInterval();
         long currentTime = NulsDateUtils.getCurrentTimeMillis();
@@ -93,7 +93,7 @@ public class SmallBlockProcessor implements Runnable {
             System.out.println();
         }
 
-        //防止节点统计网络最新高度过程中收到新的小区块，造成消息丢失
+        //Prevent nodes from receiving new cell blocks during the process of calculating the latest height of the network, resulting in message loss
         if (context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
 //            logger.info("Node status is in synchronization,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             try {
@@ -118,7 +118,7 @@ public class SmallBlockProcessor implements Runnable {
 //            logger.info("The block has been confirmed locally,height:{},hash:{}", header.getHeight(), header.getHash());
             return;
         }
-        //如果当前区块正在处理则缓存当前消息
+        //If the current block is being processed, cache the current message
         if (!SmallBlockCacher.processBlockList.addIfAbsent(blockHash)) {
             MessageInfo messageInfo = new MessageInfo(chainId, nodeId, blockHash, header, smallBlock);
             List<MessageInfo> messageInfoList = SmallBlockCacher.pendMessageMap.computeIfAbsent(blockHash, k -> new ArrayList<>());
@@ -135,25 +135,25 @@ public class SmallBlockProcessor implements Runnable {
         NulsLogger logger = context.getLogger();
         BlockForwardEnum status = SmallBlockCacher.getStatus(chainId, blockHash);
 //        logger.debug("status:{}, context status:{}", status, context.getStatus());
-        //1.已收到完整区块,丢弃
+        //1.Received complete block,discard
         if (COMPLETE.equals(status) || ERROR.equals(status)) {
-            logger.debug("已收到完整区块,丢弃,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
+            logger.debug("Received complete block,discard,  recieve smallBlockMessage from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash());
             return;
         }
 
         logger.info("recieve smallBlock from node-" + nodeId + ", height:" + header.getHeight() + ", hash:" + header.getHash() + ",result:" + (voteResult == null ? null : voteResult.length));
-        //2.已收到部分区块,还缺失交易信息,发送HashListMessage到源节点
+        //2.Received partial blocks,Transaction information is still missing,sendHashListMessageTo source node
         if (INCOMPLETE.equals(status) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
-            logger.debug("收到smallBlock,但缺少部分交易");
+            logger.debug("receivesmallBlock,But some transactions are missing");
             CachedSmallBlock block = SmallBlockCacher.getCachedSmallBlock(chainId, blockHash);
             if (block == null) {
-                logger.info("未找到smallBlock");
+                logger.info("not foundsmallBlock");
                 SmallBlockCacher.processBlockList.remove(blockHash);
                 return;
             }
             List<NulsHash> missingTransactions = block.getMissingTransactions();
             if (missingTransactions == null) {
-                logger.info("未找到丢失交易");
+                logger.info("Lost transaction not found");
                 return;
             }
             HashListMessage request = new HashListMessage();
@@ -166,36 +166,36 @@ public class SmallBlockProcessor implements Runnable {
             task.setExcuteTime(blockConfig.getTxGroupTaskDelay());
             TxGroupRequestor.addTask(chainId, blockHash.toString(), task);
             handlePendMessage(blockHash);
-            logger.debug("发送回执索要缺失交易信息");
+            logger.debug("Send a receipt requesting missing transaction information");
             return;
         }
 
-        //3.未收到区块
+        //3.Block not received
         if ((EMPTY.equals(status) || CONSENSUS_COMPLETE.equals(status) || CONSENSUS_ERROR.equals(status)) && !context.getStatus().equals(StatusEnum.SYNCHRONIZING)) {
             if (!BlockUtil.headerVerify(chainId, header)) {
                 logger.info("recieve error SmallBlockMessage from " + nodeId);
                 SmallBlockCacher.setStatus(chainId, blockHash, ERROR);
                 return;
             }
-            //共识节点打包的交易包括两种交易,一种是在网络上已经广播的普通交易,一种是共识节点生成的特殊交易(如共识奖励、红黄牌),后面一种交易其他节点的未确认交易池中不可能有,所以都放在systemTxList中
-            //还有一种场景时收到smallBlock时,有一些普通交易还没有缓存在未确认交易池中,此时要再从源节点请求
-            //txMap用来组装区块
+            //The transactions packaged by consensus nodes include two types of transactions,One type is ordinary transactions that have already been broadcasted on the internet,One type is special transactions generated by consensus nodes(Like consensus rewards、bookings),The latter type of transaction cannot exist in the unconfirmed transaction pool of other nodes,So it's all placed insystemTxListin
+            //There is another scenario where you receivesmallBlockTime,Some regular transactions have not yet been cached in the unconfirmed transaction pool,At this point, we need to request from the source node again
+            //txMapUsed to assemble blocks
             Map<NulsHash, Transaction> txMap = new HashMap<>(header.getTxCount());
             List<Transaction> systemTxList = smallBlock.getSystemTxList();
             List<NulsHash> systemTxHashList = new ArrayList<>();
-            //先把系统交易放入txMap
+            //First, put the system transaction into thetxMap
             for (Transaction tx : systemTxList) {
                 txMap.put(tx.getHash(), tx);
                 systemTxHashList.add(tx.getHash());
             }
             ArrayList<NulsHash> txHashList = smallBlock.getTxHashList();
             List<NulsHash> missTxHashList = (List<NulsHash>) txHashList.clone();
-            //移除系统交易hash后请求交易管理模块,批量获取区块中交易
+            //Remove system transactionshashPost request transaction management module,Batch acquisition of transactions in blocks
             missTxHashList = CollectionUtils.removeAll(missTxHashList, systemTxHashList);
 
             List<Transaction> existTransactions = TransactionCall.getTransactions(chainId, missTxHashList, false);
             if (!existTransactions.isEmpty()) {
-                //把普通交易放入txMap
+                //Put regular transactions intotxMap
                 List<NulsHash> existTransactionHashs = new ArrayList<>();
                 existTransactions.forEach(e -> existTransactionHashs.add(e.getHash()));
                 for (Transaction existTransaction : existTransactions) {
@@ -204,10 +204,10 @@ public class SmallBlockProcessor implements Runnable {
                 missTxHashList = CollectionUtils.removeAll(missTxHashList, existTransactionHashs);
             }
 
-            //获取没有的交易
+            //Obtain transactions that are not available
             if (!missTxHashList.isEmpty()) {
                 logger.debug("send HashListMessage block height:" + header.getHeight() + ", total tx count:" + header.getTxCount() + " , get group tx of " + missTxHashList.size());
-                //这里的smallBlock的subTxList中包含一些非系统交易,用于跟TxGroup组合成完整区块
+                //HeresmallBlockofsubTxListIt contains some non system transactions,Used to communicate withTxGroupCombine into complete blocks
                 CachedSmallBlock cachedSmallBlock = new CachedSmallBlock(missTxHashList, smallBlock, txMap, nodeId, false);
                 SmallBlockCacher.cacheSmallBlock(chainId, cachedSmallBlock);
                 SmallBlockCacher.setStatus(chainId, blockHash, INCOMPLETE);

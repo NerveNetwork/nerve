@@ -34,17 +34,17 @@ import java.math.BigInteger;
 public interface IDepositTxSubmitter {
 
     /**
-     * @param txHash          交易hash
-     * @param blockHeight     交易确认高度
-     * @param from            转出地址
-     * @param to              转入地址
-     * @param value           转账金额
-     * @param txTime          交易时间
-     * @param decimals        资产小数位数
-     * @param ifContractAsset 是否为合约资产
-     * @param contractAddress 合约地址
-     * @param assetId         资产ID
-     * @param nerveAddress    Nerve充值地址
+     * @param txHash          transactionhash
+     * @param blockHeight     Transaction confirmation height
+     * @param from            Transfer address
+     * @param to              Transfer address
+     * @param value           Transfer amount
+     * @param txTime          Transaction time
+     * @param decimals        Decimal places of assets
+     * @param ifContractAsset Whether it is a contract asset
+     * @param contractAddress Contract address
+     * @param assetId         assetID
+     * @param nerveAddress    NerveRecharge address
      * @param extend
      */
     String txSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
@@ -59,17 +59,17 @@ public interface IDepositTxSubmitter {
                                     String nerveAddress, BigInteger mainAssetValue, String nerveTxHash, String subExtend) throws Exception;
 
     /**
-     * @param txHash          交易hash
-     * @param blockHeight     交易确认高度
-     * @param from            转出地址
-     * @param to              转入地址
-     * @param value           转账金额
-     * @param txTime          交易时间
-     * @param decimals        资产小数位数
-     * @param ifContractAsset 是否为合约资产
-     * @param contractAddress 合约地址
-     * @param assetId         资产ID
-     * @param nerveAddress    Nerve充值地址
+     * @param txHash          transactionhash
+     * @param blockHeight     Transaction confirmation height
+     * @param from            Transfer address
+     * @param to              Transfer address
+     * @param value           Transfer amount
+     * @param txTime          Transaction time
+     * @param decimals        Decimal places of assets
+     * @param ifContractAsset Whether it is a contract asset
+     * @param contractAddress Contract address
+     * @param assetId         assetID
+     * @param nerveAddress    NerveRecharge address
      */
     String pendingTxSubmit(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
                   Integer decimals, Boolean ifContractAsset, String contractAddress, Integer assetId, String nerveAddress) throws Exception;
@@ -81,8 +81,11 @@ public interface IDepositTxSubmitter {
                                              Integer erc20Decimals, String erc20ContractAddress, Integer erc20AssetId, String nerveAddress, BigInteger mainAssetValue, BigInteger mainAssetFeeAmount, int desChainId, String desToAddress, BigInteger tipping, String tippingAddress, String desExtend) throws Exception;
 
     /**
-     * 验证是否充值交易
-     * @param hTxHash 异构链交易hash
+     * Verify whether to recharge the transaction
+     * @param hTxHash Heterogeneous Chain Tradinghash
      */
-    Result validateDepositTx(String hTxHash) ;
+    Result validateDepositTx(String hTxHash);
+
+    String depositTxSubmitOfBtcSys(String txHash, Long blockHeight, String from, String to, BigInteger value, Long txTime,
+                                   BigInteger fee, String feeTo, String extend) throws Exception;
 }

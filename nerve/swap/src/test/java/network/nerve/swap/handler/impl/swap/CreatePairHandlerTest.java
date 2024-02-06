@@ -96,15 +96,15 @@ public class CreatePairHandlerTest {
         Chain.putCurrentThreadBlockType(0);
         BatchInfo batchInfo = new BatchInfo();
         chain.setBatchInfo(batchInfo);
-        // 准备临时余额
+        // Prepare temporary balance
         LedgerTempBalanceManager tempBalanceManager = LedgerTempBalanceManager.newInstance(chainId);
         batchInfo.setLedgerTempBalanceManager(tempBalanceManager);
-        // 准备当前区块头
+        // Prepare the current block header
         BlockHeader tempHeader = new BlockHeader();
         tempHeader.setHeight(blockHeight);
         tempHeader.setTime(System.currentTimeMillis() / 1000);
         batchInfo.setCurrentBlockHeader(tempHeader);
-        // 准备临时交易对
+        // Prepare for temporary transactions
         SwapTempPairManager tempPairManager = SwapTempPairManager.newInstance(chainId);
         batchInfo.setSwapTempPairManager(tempPairManager);
         chainManager.getChainMap().put(chainId, chain);
@@ -209,13 +209,13 @@ public class CreatePairHandlerTest {
                 Assert.assertTrue(result.isSuccess());
                 String pairAddress = SwapUtils.getStringPairAddress(chainId, token0, token1);
                 Assert.assertTrue(chain.getBatchInfo().getSwapTempPairManager().isExist(pairAddress));
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-CreatePair tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-CreatePair tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
 
             }
         };
-        return new JunitCase("正常创建Pair", createPairHandler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Normal creationPair", createPairHandler, new Object[]{tx}, null, false, null, callback);
     }
 
     private JunitCase getCase1() throws IOException {
@@ -227,12 +227,12 @@ public class CreatePairHandlerTest {
             public void callback(JunitCase junitCase, SwapResult result) {
                 assertNotNull(result);
                 Assert.assertFalse(result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
             }
         };
-        return new JunitCase("异常创建Pair，使用同一个token创建", createPairHandler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Exception creationPairUsing the sametokenestablish", createPairHandler, new Object[]{tx}, null, false, null, callback);
     }
 
     private JunitCase getCase2() throws IOException {
@@ -244,11 +244,11 @@ public class CreatePairHandlerTest {
             public void callback(JunitCase junitCase, SwapResult result) {
                 assertNotNull(result);
                 Assert.assertFalse(result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-CreatePair tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
             }
         };
-        return new JunitCase("异常创建Pair，重复创建Pair", createPairHandler, new Object[]{tx}, null, false, null, callback);
+        return new JunitCase("Exception creationPair, duplicate creationPair", createPairHandler, new Object[]{tx}, null, false, null, callback);
     }
 }

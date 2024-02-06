@@ -35,11 +35,11 @@ public class SwapTradeDTO {
 
     private byte[] userAddress;
     /**
-     * 用户交易时的第一个交易对
+     * The first transaction pair during user transactions
      */
     private byte[] firstPairAddress;
     /**
-     * 用户卖出的资产信息和金额
+     * Information and amount of assets sold by users
      */
     private NerveToken tokenIn;
     private BigInteger amountIn;

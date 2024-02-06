@@ -50,7 +50,7 @@ public class RoundCache {
                 return entry.getValue();
             }
         }
-//        找不到的情况，看看里面都存了啥
+//        If you can't find it, take a look at what's stored inside
         for (Map.Entry<Long, MeetingRound> entry : roundMap.entrySet()) {
             Log.info(entry.getKey()+"");
         }

@@ -174,7 +174,7 @@ public class EthUtilTest2 extends Base {
             seed += new BigInteger(nerveTxHash.substring(1, 2), 16).intValue() + 1;
         }
         int mod = seed % bankSize + 1;
-        // 按顺序等待固定时间后再发出ETH交易
+        // Wait for a fixed time in sequence before sending outETHtransaction
         int bankOrder = 1;
         if (bankOrder < mod) {
             bankOrder += bankSize - (mod - 1);

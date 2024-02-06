@@ -65,7 +65,7 @@ public class EditCoinTradingProcessor implements TransactionProcessor {
             tradingPo.setMinBaseAmount(c.getMinBaseAmount());
             tradingPo.setMinQuoteAmount(c.getMinQuoteAmount());
 
-            //再添加一条修改记录，供回滚使用
+            //Add another modification record for rollback use
             EditCoinTradingPo editCoinTradingPo = new EditCoinTradingPo();
             editCoinTradingPo.setTxHash(tx.getHash());
             editCoinTradingPo.setMinBaseAmount(c.getMinBaseAmount());
@@ -98,16 +98,16 @@ public class EditCoinTradingProcessor implements TransactionProcessor {
             TradingContainer container = dexManager.getTradingContainer(c.getTradingHash().toHex());
             CoinTradingPo tradingPo = container.getCoinTrading();
 
-            //查询历史修改记录
+            //Query historical modification records
             CoinTradingEditInfoPo editInfoPo = coinTradingStorageService.queryEditInfoPo(tradingPo.getHash());
-            //取出最后一条记录
+            //Retrieve the last record
             EditCoinTradingPo editCoinTradingPo = editInfoPo.getEditCoinTradingList().getLast();
             if (editCoinTradingPo.getTxHash().equals(tx.getHash())) {
-                //如果hash一致，删除这条记录
+                //IfhashConsistent, delete this record
                 editInfoPo.getEditCoinTradingList().removeLast();
                 coinTradingStorageService.saveEditInfo(tradingPo.getHash(), editInfoPo);
             }
-            //再次取出最后一条记录，还原CoinTradingPo
+            //Retrieve the last record again and restore itCoinTradingPo
             editCoinTradingPo = editInfoPo.getEditCoinTradingList().getLast();
             tradingPo.setMinQuoteAmount(editCoinTradingPo.getMinQuoteAmount());
             tradingPo.setMinBaseAmount(editCoinTradingPo.getMinBaseAmount());

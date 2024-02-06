@@ -7,7 +7,7 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import org.checkerframework.checker.units.qual.A;
 
 
-@ApiModel(name = "节点详情数据")
+@ApiModel(name = "Node detail data")
 public class AgentInfoDTO {
     private String agentHash;
 

@@ -9,217 +9,231 @@
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "NULS-USDT",
-          "desc": "NULS相对USDT价格"
+          "desc": "NULSrelativeUSDTprice"
         },
         {
           "key": "BTC_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BTC-USDT",
-          "desc": "BTC相对USDT价格"
+          "desc": "BTCrelativeUSDTprice"
         },
         {
           "key": "ETH_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ETH-USDT",
-          "desc": "ETH相对USDT价格"
+          "desc": "ETHrelativeUSDTprice"
         },
         {
           "key": "NERVE_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "NVT-USDT",
-          "desc": "NVT相对USDT价格"
+          "desc": "NVTrelativeUSDTprice"
         },
         {
           "key": "USDT_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "USDT-USDT",
-          "desc": "USDT价格"
+          "desc": "USDTprice"
         },
         {
           "key": "DAI_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "DAI-USDT",
-          "desc": "DAI相对USDT价格"
+          "desc": "DAIrelativeUSDTprice"
         },
         {
           "key": "USDC_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "USDC-USDT",
-          "desc": "USDC相对USDT价格"
+          "desc": "USDCrelativeUSDTprice"
         },
         {
           "key": "PAX_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "PAX-USDT",
-          "desc": "PAX相对USDT价格"
+          "desc": "PAXrelativeUSDTprice"
         },
         {
           "key": "BNB_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BNB-USDT",
-          "desc": "BNB相对USDT价格"
+          "desc": "BNBrelativeUSDTprice"
         },
         {
           "key": "HT_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "HT-USDT",
-          "desc": "HT相对USDT价格"
+          "desc": "HTrelativeUSDTprice"
         },
         {
           "key": "OKB_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "OKB-USDT",
-          "desc": "OKB相对USDT价格"
+          "desc": "OKBrelativeUSDTprice"
         },
         {
           "key": "OKT_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "OKT-USDT",
-          "desc": "OKT相对USDT价格"
+          "desc": "OKTrelativeUSDTprice"
         },
         {
           "key": "ONE_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ONE-USDT",
-          "desc": "ONE相对USDT价格"
+          "desc": "ONErelativeUSDTprice"
         },
         {
           "key": "MATIC_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "MATIC-USDT",
-          "desc": "MATIC相对USDT价格"
+          "desc": "MATICrelativeUSDTprice"
         },
         {
           "key": "KCS_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "KCS-USDT",
-          "desc": "KCS相对USDT价格"
+          "desc": "KCSrelativeUSDTprice"
         },
         {
           "key": "TRX_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "TRX-USDT",
-          "desc": "TRX相对USDT价格"
+          "desc": "TRXrelativeUSDTprice"
         },
         {
           "key": "CRO_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "CRO-USDT",
-          "desc": "CRO相对USDT价格"
+          "desc": "CROrelativeUSDTprice"
         },
         {
           "key": "AVAX_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "AVAX-USDT",
-          "desc": "AVAX相对USDT价格"
+          "desc": "AVAXrelativeUSDTprice"
         },
         {
           "key": "FTM_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "FTM-USDT",
-          "desc": "FTM相对USDT价格"
+          "desc": "FTMrelativeUSDTprice"
         },
         {
           "key": "METIS_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "METIS-USDT",
-          "desc": "METIS相对USDT价格"
+          "desc": "METISrelativeUSDTprice"
         },
         {
           "key": "IOTX_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "IOTX-USDT",
-          "desc": "IOTX相对USDT价格"
+          "desc": "IOTXrelativeUSDTprice"
         },
         {
           "key": "KLAY_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "KLAY-USDT",
-          "desc": "KLAY相对USDT价格"
+          "desc": "KLAYrelativeUSDTprice"
         },
         {
           "key": "BCH_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BCH-USDT",
-          "desc": "BCH相对USDT价格"
+          "desc": "BCHrelativeUSDTprice"
         },
         {
           "key": "KAVA_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "KAVA-USDT",
-          "desc": "KAVA相对USDT价格"
+          "desc": "KAVArelativeUSDTprice"
         },
         {
           "key": "ETHW_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ETHW-USDT",
-          "desc": "ETHW相对USDT价格"
+          "desc": "ETHWrelativeUSDTprice"
         },
         {
           "key": "REI_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "REI-USDT",
-          "desc": "REI相对USDT价格"
+          "desc": "REIrelativeUSDTprice"
         },
         {
           "key": "EOS_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "EOS-USDT",
-          "desc": "EOS相对USDT价格"
+          "desc": "EOSrelativeUSDTprice"
         },
         {
           "key": "CELO_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "CELO-USDT",
-          "desc": "CELO相对USDT价格"
+          "desc": "CELOrelativeUSDTprice"
         },
         {
           "key": "ETC_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ETC-USDT",
-          "desc": "ETC相对USDT价格"
+          "desc": "ETCrelativeUSDTprice"
         },
         {
           "key": "BRISE_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "BRISE-USDT",
-          "desc": "BRISE相对USDT价格"
+          "desc": "BRISErelativeUSDTprice"
         },
         {
           "key": "JNS_PRICE",
           "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "JNS-USDT",
-          "desc": "JNS相对USDT价格"
+          "desc": "JNS relative USDT price"
+        },
+        {
+          "key": "DOGE_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "DOGE-USDT",
+          "desc": "DOGE relative USDT price"
+        },
+        {
+          "key": "ZETA_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "ZETA-USDT",
+          "desc": "ZETA relative USDT price"
         }
       ]
     }

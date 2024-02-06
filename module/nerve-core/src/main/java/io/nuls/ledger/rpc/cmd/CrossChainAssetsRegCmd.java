@@ -45,7 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 跨链资产登记
+ * Cross chain asset registration
  *
  * @author: PierreLuo
  * @date: 2020-05-11
@@ -57,27 +57,27 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
     CrossChainAssetRegMngRepository crossChainAssetRegMngRepository;
 
     /**
-     * 跨链资产登记接口
+     * Cross chain asset registration interface
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CROSS_CHAIN_ASSET_REG, version = 1.0,
-            description = "跨链资产登记接口")
+            description = "Cross chain asset registration interface")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "当前运行链ID"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID"),
-            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产名称: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "资产初始值"),
-            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "资产最小分割位数"),
-            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产单位符号: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "新资产地址"),
-            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = short.class), parameterDes = "资产类型 3-平行链资产")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Current running chainID"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID"),
+            @Parameter(parameterName = "assetName", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset Name: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "initNumber", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Initial value of assets"),
+            @Parameter(parameterName = "decimalPlace", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-18]", parameterDes = "The minimum number of split digits for assets"),
+            @Parameter(parameterName = "assetSymbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset unit symbol: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "New asset address"),
+            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = short.class), parameterDes = "Asset type 3-Parallel chain assets")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+                    @Key(name = "value", valueType = boolean.class, description = "successtrue,failfalse")
             })
     )
     public Response crossChainAssetReg(Map params) {
@@ -89,10 +89,10 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
             params.put("chainId", assetChainId);
             LedgerAsset asset = new LedgerAsset();
             asset.map2pojo(params, Short.parseShort(params.get("assetType").toString()));
-            // 检查账本是否已登记此资产
+            // Check if this asset has been registered in the ledger
             if (asset.getAssetId() != 0) {
                 LedgerAsset checkAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, asset.getAssetId());
-                // 当存在时，保证资产类型不被覆盖
+                // Ensure that asset types are not covered when they exist
                 if (checkAsset != null) {
                     asset.setAssetType(checkAsset.getAssetType());
                 }
@@ -107,30 +107,30 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 跨链资产列表登记接口
+     * Cross chain asset list registration interface
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CROSS_CHAIN_ASSET_LIST_REG, version = 1.0,
-            description = "跨链资产列表登记接口")
+            description = "Cross chain asset list registration interface")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "当前运行链ID"),
-            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = short.class), parameterDes = "资产类型 3-平行链资产"),
-            @Parameter(parameterName = "crossChainAssetList", parameterDes = "跨链资产列表", requestType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
-                    @Key(name = "assetChainId", valueType = int.class, description = "资产链ID"),
-                    @Key(name = "assetId", valueType = int.class, description = "资产ID"),
-                    @Key(name = "assetName", valueType = String.class, description = "资产名称: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-                    @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始值"),
-                    @Key(name = "decimalPlace", valueType = int.class, description = "资产最小分割位数"),
-                    @Key(name = "assetSymbol", valueType = String.class, description = "资产单位符号: 大、小写字母、数字、下划线（下划线不能在两端）1~20字节"),
-                    @Key(name = "address", valueType = String.class, description = "新资产地址"),
-                    @Key(name = "usable", valueType = boolean.class, description = "资产是否可用")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Current running chainID"),
+            @Parameter(parameterName = "assetType", requestType = @TypeDescriptor(value = short.class), parameterDes = "Asset type 3-Parallel chain assets"),
+            @Parameter(parameterName = "crossChainAssetList", parameterDes = "Cross chain asset list", requestType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
+                    @Key(name = "assetChainId", valueType = int.class, description = "Asset ChainID"),
+                    @Key(name = "assetId", valueType = int.class, description = "assetID"),
+                    @Key(name = "assetName", valueType = String.class, description = "Asset Name: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+                    @Key(name = "initNumber", valueType = BigInteger.class, description = "Initial value of assets"),
+                    @Key(name = "decimalPlace", valueType = int.class, description = "The minimum number of split digits for assets"),
+                    @Key(name = "assetSymbol", valueType = String.class, description = "Asset unit symbol: large、Lowercase letters、number、Underline（The underline cannot be at both ends）1~20byte"),
+                    @Key(name = "address", valueType = String.class, description = "New asset address"),
+                    @Key(name = "usable", valueType = boolean.class, description = "Is the asset available")
             })),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+                    @Key(name = "value", valueType = boolean.class, description = "successtrue,failfalse")
             })
     )
     public Response crossChainAssetListReg(Map params) {
@@ -145,7 +145,7 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
             boolean usable;
             for(Map<String, Object> assetMap : list) {
                 int assetChainId = Integer.parseInt(assetMap.get("assetChainId").toString());
-                // 当链内资产被注册为跨链资产后，跨链模块会把此资产登记为跨链资产并通知账本，此时，账本应该忽略，资产不修改成跨链资产
+                // When an in chain asset is registered as a cross chain asset, the cross chain module will register the asset as a cross chain asset and notify the ledger. At this time, the ledger should be ignored and the asset should not be modified as a cross chain asset
                 if (assetType == 3 && chainId == assetChainId) {
                     continue;
                 }
@@ -154,10 +154,10 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
                     LedgerAsset asset = new LedgerAsset();
                     assetMap.put("chainId", assetMap.get("assetChainId"));
                     asset.map2pojo(assetMap, assetType);
-                    // 检查账本是否已登记此资产
+                    // Check if this asset has been registered in the ledger
                     if (asset.getAssetId() != 0) {
                         LedgerAsset checkAsset = crossChainAssetRegMngRepository.getCrossChainAsset(chainId, assetChainId, asset.getAssetId());
-                        // 当存在时，保证资产类型不被覆盖
+                        // Ensure that asset types are not covered when they exist
                         if (checkAsset != null) {
                             asset.setAssetType(checkAsset.getAssetType());
                         }
@@ -177,21 +177,21 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 跨链资产合约移除接口
+     * Cross chain asset contract removal interface
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_CROSS_CHAIN_ASSET_DELETE, version = 1.0,
-            description = "跨链资产合约移除接口")
+            description = "Cross chain asset contract removal interface")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "chainId"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "value", valueType = boolean.class, description = "成功true,失败false")
+                    @Key(name = "value", valueType = boolean.class, description = "successtrue,failfalse")
             })
     )
     public Response deleteCrossChainAsset(Map params) {
@@ -210,22 +210,22 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
     }
 
     @CmdAnnotation(cmd = CmdConstant.CMD_GET_CROSS_CHAIN_ASSET, version = 1.0,
-            description = "跨链资产查询")
+            description = "Cross chain asset query")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "链Id"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "chainId"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象",
+    @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-                    @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
-                    @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型"),
-                    @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
-                    @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
-                    @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
-                    @Key(name = "assetName", valueType = String.class, description = "资产名"),
-                    @Key(name = "assetSymbol", valueType = String.class, description = "资产符号")
+                    @Key(name = "assetChainId", valueType = int.class, description = "Asset Chainid"),
+                    @Key(name = "assetId", valueType = int.class, description = "assetid"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type"),
+                    @Key(name = "assetAddress", valueType = String.class, description = "Asset address"),
+                    @Key(name = "initNumber", valueType = BigInteger.class, description = "Asset initialization value"),
+                    @Key(name = "decimalPlace", valueType = int.class, description = "Decimal Division"),
+                    @Key(name = "assetName", valueType = String.class, description = "Asset Name"),
+                    @Key(name = "assetSymbol", valueType = String.class, description = "Asset symbols")
             })
     )
     public Response getCrossChainAsset(Map params) {
@@ -244,26 +244,26 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
     }
 
     /**
-     * 查看所有跨链登记资产信息
+     * View all cross chain registered asset information
      *
      * @param params
      * @return
      */
     @CmdAnnotation(cmd = CmdConstant.CMD_GET_ALL_CROSS_CHAIN_ASSET, version = 1.0,
-            description = "查看所有跨链登记资产信息")
+            description = "View all cross chain registered asset information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "运行链Id,取值区间[1-65535]")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterValidRange = "[1-65535]", parameterDes = "Run ChainId,Value range[1-65535]")
     })
-    @ResponseData(name = "返回值", description = "返回一个list对象",
+    @ResponseData(name = "Return value", description = "Return alistobject",
             responseType = @TypeDescriptor(value = List.class, collectionElement = Map.class, mapKeys = {
-                    @Key(name = "assetChainId", valueType = int.class, description = "资产链id"),
-                    @Key(name = "assetId", valueType = int.class, description = "资产id"),
-                    @Key(name = "assetType", valueType = int.class, description = "资产类型"),
-                    @Key(name = "assetAddress", valueType = String.class, description = "资产地址"),
-                    @Key(name = "initNumber", valueType = BigInteger.class, description = "资产初始化值"),
-                    @Key(name = "decimalPlace", valueType = int.class, description = "小数点分割位数"),
-                    @Key(name = "assetName", valueType = String.class, description = "资产名"),
-                    @Key(name = "assetSymbol", valueType = String.class, description = "资产符号")
+                    @Key(name = "assetChainId", valueType = int.class, description = "Asset Chainid"),
+                    @Key(name = "assetId", valueType = int.class, description = "assetid"),
+                    @Key(name = "assetType", valueType = int.class, description = "Asset type"),
+                    @Key(name = "assetAddress", valueType = String.class, description = "Asset address"),
+                    @Key(name = "initNumber", valueType = BigInteger.class, description = "Asset initialization value"),
+                    @Key(name = "decimalPlace", valueType = int.class, description = "Decimal Division"),
+                    @Key(name = "assetName", valueType = String.class, description = "Asset Name"),
+                    @Key(name = "assetSymbol", valueType = String.class, description = "Asset symbols")
             })
     )
     public Response getAllCrossChainAssets(Map params) {

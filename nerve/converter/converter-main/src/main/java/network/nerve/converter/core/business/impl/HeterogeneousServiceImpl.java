@@ -65,8 +65,8 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
     private TxStorageService txStorageService;
 
     /**
-     * 判断是否需要组装当前网络的主资产补贴异构链交易手续费
-     * 异构链是合约类型,并且提现资产不是异构链主资产,才收取当前网络主资产作为手续费补贴
+     * Determine whether it is necessary to assemble the main assets of the current network to subsidize heterogeneous chain transaction fees
+     * Heterogeneous chains are contract types,And the withdrawal asset is not a heterogeneous chain main asset,Only then will the current network's main assets be collected as a subsidy for handling fees
      * @param heterogeneousChainId
      * @param heterogeneousAssetId
      * @return
@@ -99,17 +99,17 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
     @Override
     public void checkRetryParse(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException {
         /**
-         * 1.调组件
-         * 2.发消息
+         * 1.Adjusting components
+         * 2.Send a message
          */
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryParse");
+            chain.getLogger().error("Current non virtual bank member nodes, Not processedcheckRetryParse");
             throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
         }
         IDepositTxSubmitter submitter = heterogeneousCallBackManager.createOrGetDepositTxSubmitter(chain.getChainId(), heterogeneousChainId);
         Result result = submitter.validateDepositTx(heterogeneousTxHash);
         if(result.isFailed()){
-            chain.getLogger().error("重新解析异构交易, validateDepositTx 验证失败, {}", result.getErrorCode().getCode());
+            chain.getLogger().error("Re analyze heterogeneous transactions, validateDepositTx Verification failed, {}", result.getErrorCode().getCode());
             return;
         }
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
@@ -130,10 +130,10 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
     @Override
     public void checkRetryHtgTx(Chain chain, int heterogeneousChainId, String heterogeneousTxHash) throws NulsException {
         /**
-         * 1.调组件
+         * 1.Adjusting components
          */
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryHtgTx");
+            chain.getLogger().error("Current non virtual bank member nodes, Not processedcheckRetryHtgTx");
             throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
         }
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
@@ -153,7 +153,7 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
     public void cancelHtgTx(Chain chain, int heterogeneousChainId, String address, String nonce, String priceGwei) throws NulsException {
 
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            chain.getLogger().error("当前非虚拟银行成员节点, 不处理cancelHtgTx");
+            chain.getLogger().error("Current non virtual bank member nodes, Not processedcancelHtgTx");
             throw new NulsException(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK);
         }
         if (heterogeneousChainId <= 0
@@ -167,11 +167,11 @@ public class HeterogeneousServiceImpl implements HeterogeneousService {
             IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
             if (address.equalsIgnoreCase(docking.getCurrentSignAddress())) {
                 String hash = docking.cancelHtgTx(nonce, priceGwei);
-                chain.getLogger().info("[cancelHtgTx 消息处理完成] 异构chainId: {}, 异构address:{}, 取消操作的hash:{}", heterogeneousChainId, address, hash);
+                chain.getLogger().info("[cancelHtgTx Message processing completed] isomerismchainId: {}, isomerismaddress:{}, Cancel operationhash:{}", heterogeneousChainId, address, hash);
             } else {
                 CancelHtgTxMessage message = new CancelHtgTxMessage(heterogeneousChainId, address, nonce, priceGwei);
                 NetWorkCall.broadcast(chain, message, ConverterCmdConstant.CANCEL_HTG_TX_MESSAGE);
-                chain.getLogger().info("[cancelHtgTx 消息转发完成] 异构chainId: {}, 异构address:{}", heterogeneousChainId, address);
+                chain.getLogger().info("[cancelHtgTx Message forwarding completed] isomerismchainId: {}, isomerismaddress:{}", heterogeneousChainId, address);
             }
         } catch (Exception e) {
             throw new RuntimeException(e);

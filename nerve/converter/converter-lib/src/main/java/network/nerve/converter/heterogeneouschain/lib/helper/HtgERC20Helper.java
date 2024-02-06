@@ -75,7 +75,7 @@ public class HtgERC20Helper implements BeanInitial {
     }
 
     public boolean hasERC20WithListeningAddress(TransactionReceipt txReceipt, HeterogeneousTransactionBaseInfo po, Predicate<String> isListening) {
-        // 协议v1.15
+        // protocolv1.15
         if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
             return this.hasERC20WithListeningAddressNew(txReceipt, po, isListening);
         } else {
@@ -94,12 +94,12 @@ public class HtgERC20Helper implements BeanInitial {
                 if (topics.size() == 0) {
                     continue;
                 }
-                // ERC20 topics 解析事件名
+                // ERC20 topics Parsing event names
                 if (topics.get(0).equals(HtgConstant.EVENT_HASH_ERC20_TRANSFER)) {
-                    // 为转账
+                    // For transfer
                     String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
                     toAddress = toAddress.toLowerCase();
-                    // 接收地址不是监听的多签地址
+                    // The receiving address is not a listening multi signature address
                     if (!isListening.test(toAddress)) {
                         return false;
                     }
@@ -110,7 +110,7 @@ public class HtgERC20Helper implements BeanInitial {
                         data = topics.get(3);
                     }
                     String[] v = data.split("x");
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = new BigInteger(v[1], 16);
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setTo(toAddress);
@@ -136,12 +136,12 @@ public class HtgERC20Helper implements BeanInitial {
                 if (topics.size() == 0) {
                     continue;
                 }
-                // ERC20 topics 解析事件名
+                // ERC20 topics Parsing event names
                 if (topics.get(0).equals(HtgConstant.EVENT_HASH_ERC20_TRANSFER)) {
-                    // 为转账
+                    // For transfer
                     String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
                     toAddress = toAddress.toLowerCase();
-                    // 接收地址不是监听的多签地址
+                    // The receiving address is not a listening multi signature address
                     if (!isListening.test(toAddress)) {
                         continue;
                     }
@@ -152,7 +152,7 @@ public class HtgERC20Helper implements BeanInitial {
                         data = topics.get(3);
                     }
                     String[] v = data.split("x");
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = new BigInteger(v[1], 16);
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setTo(toAddress);
@@ -180,7 +180,7 @@ public class HtgERC20Helper implements BeanInitial {
             if (objects.isEmpty() || objects.size() != 2)
                 return false;
             String toAddress = objects.get(0).toString();
-            // 接收地址不是监听的多签地址
+            // The receiving address is not a listening multi signature address
             if (!isListening.test(toAddress)) {
                 return false;
             }
@@ -191,7 +191,7 @@ public class HtgERC20Helper implements BeanInitial {
             if (objects.isEmpty() || objects.size() != 3)
                 return false;
             String toAddress = objects.get(1).toString();
-            // 接收地址不是监听的多签地址
+            // The receiving address is not a listening multi signature address
             if (!isListening.test(toAddress)) {
                 return false;
             }

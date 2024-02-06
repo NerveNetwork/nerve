@@ -31,13 +31,13 @@ package network.nerve.quotation.model.bo;
 public class TokenCfg {
     /** function key */
     private String key;
-    /** 价格收集器 */
+    /** Price collector */
     private String collector;
-    /** 计算器 */
+    /** calculator */
     private String calculator;
-    /** token交易对 */
+    /** tokenTransaction pairs */
     private String anchorToken;
-    /** 描述 */
+    /** describe */
     private String desc;
 
     public String getKey() {

@@ -73,7 +73,7 @@ public class TransactionBootstrap implements INerveCoreBootstrap {
 
     private void init() {
         try {
-            //初始化数据库配置文件
+            //Initialize database configuration file
             initModuleProtocolCfg();
             initTransactionContext();
             initProtocolUpdate();
@@ -106,7 +106,7 @@ public class TransactionBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 根据chainId 加载特殊的协议配置
+     * according tochainId Load special protocol configurations
      */
     private void initModuleProtocolCfg() {
         try {

@@ -66,8 +66,8 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 返回此模块的依赖模块
-     * 可写作 return new Module[]{new Module(ModuleE.LG.abbr, "1.0"),new Module(ModuleE.TX.abbr, "1.0")}
+     * Return the dependent modules of this module
+     * Writable return new Module[]{new Module(ModuleE.LG.abbr, "1.0"),new Module(ModuleE.TX.abbr, "1.0")}
      *
      * @return
      */
@@ -79,7 +79,7 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 返回当前模块的描述信息
+     * Return the description information of the current module
      *
      * @return
      */
@@ -90,14 +90,14 @@ public class NerveCoreBootstrap extends RpcModule {
 
 
     /**
-     * 初始化模块信息，比如初始化RockDB等，在此处初始化后，可在其他bean的afterPropertiesSet中使用
+     * Initialize module information, such as initializationRockDBWait, after initialization here, you can use other optionsbeanofafterPropertiesSetUsed in
      */
     @Override
     public void init() {
         try {
             super.init();
             initDB();
-            //初始化配置项
+            //Initialize configuration items
             initCfg();
             ModuleHelper.init(this);
         } catch (Exception e) {
@@ -108,7 +108,7 @@ public class NerveCoreBootstrap extends RpcModule {
 
     private void initDB() {
         try {
-            //数据文件存储地址
+            //Data file storage address
             RocksDBService.init(getTxDataRoot());
         } catch (Exception e) {
             LOG.error(e);
@@ -120,9 +120,9 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 已完成spring init注入，开始启动模块
+     * Completedspring initInject, start module startup
      *
-     * @return 如果启动完成返回true，模块将进入ready状态，若启动失败返回false，10秒后会再次调用此方法
+     * @return If the startup is completed, returntrueThe module will enterreadyStatus, if startup fails, returnfalse,10This method will be called again in seconds
      */
     @Override
     public boolean doStart() {
@@ -139,7 +139,7 @@ public class NerveCoreBootstrap extends RpcModule {
                         coreList.add((INerveCoreBootstrap) object);
                     }
                 }
-                // 按指定顺序执行异构链注册
+                // Perform heterogeneous chain registration in the specified order
                 coreList.sort(new Comparator<INerveCoreBootstrap>() {
                     @Override
                     public int compare(INerveCoreBootstrap o1, INerveCoreBootstrap o2) {
@@ -168,7 +168,7 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 所有外部依赖进入ready状态后会调用此方法，正常启动后返回Running状态
+     * All external dependencies enterreadyThis method will be called after the state is reached, and will return after normal startupRunningstate
      *
      * @return
      */
@@ -178,7 +178,7 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 某个外部依赖连接丢失后，会调用此方法，可控制模块状态，如果返回Ready,则表明模块退化到Ready状态，当依赖重新准备完毕后，将重新触发onDependenciesReady方法，若返回的状态是Running，将不会重新触发onDependenciesReady
+     * After a certain external dependency connection is lost, this method will be called to control the module status. If it returnsReady,This indicates that the module has degraded toReadyThe state will be triggered again when the dependency is fully preparedonDependenciesReadyMethod, if the returned state isRunning, will not be triggered againonDependenciesReady
      *
      * @param module
      * @return
@@ -198,12 +198,12 @@ public class NerveCoreBootstrap extends RpcModule {
             Provider.ProviderType providerType = Provider.ProviderType.RPC;
             ServiceManager.init(config.getChainId(), providerType);
             /**
-             * 地址工具初始化
+             * Address tool initialization
              */
             AddressTool.init(addressPrefixDatas);
             AddressTool.addPrefix(config.getChainId(), config.getAddressPrefix());
 
-            // 核心模块cmd集合
+            // Core modulescmdaggregate
             List<BaseCmd> cmdList = SpringLiteContext.getBeanList(BaseCmd.class);
             for (BaseCmd cmd : cmdList) {
                 Class<?> clazs = cmd.getClass();
@@ -227,7 +227,7 @@ public class NerveCoreBootstrap extends RpcModule {
                     ResponseMessageProcessor.INVOKE_BEAN_MAP.put(moduleAbbr + "_" + cmdName, new InvokeBean(cmd, method));
                 }
             }
-            // 配置合并模块前，每个模块下的交易
+            // Before configuring the merge module, the transactions under each module
             Object[][] txTypeModules = new Object[][] {
                     new Object[]{ModuleE.AC.abbr, new int[]{2, 3, 78, 79}},
                     new Object[]{ModuleE.BL.abbr, new int[]{}},
@@ -256,7 +256,7 @@ public class NerveCoreBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化系统编码
+     * Initialize system encoding
      */
     private static void initSys() throws Exception {
         try {

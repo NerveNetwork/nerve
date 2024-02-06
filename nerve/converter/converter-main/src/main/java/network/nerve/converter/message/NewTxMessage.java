@@ -34,7 +34,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 完整交易消息
+ * Complete transaction message
  * @author: Loki
  * @date: 2020-02-27
  */

@@ -51,7 +51,6 @@ import network.nerve.converter.storage.MergeComponentStorageService;
 import network.nerve.converter.storage.ProposalStorageService;
 import network.nerve.converter.utils.ConverterUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
-import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.util.*;
@@ -65,7 +64,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
 
     private Chain nerveChain;
     /**
-     * 异构链chainId
+     * Heterogeneous chainchainId
      */
     private int hChainId;
     private AssembleTxService assembleTxService;
@@ -75,7 +74,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     private MergeComponentStorageService mergeComponentStorageService;
     private CfmChangeBankStorageService cfmChangeBankStorageService;
     private ConverterCoreApi converterCoreApi;
-    // 重复收集计时器
+    // Repeated collection timer
     private Map<String, AtomicInteger> countHash = new HashMap<>();
 
     public TxConfirmedProcessorImpl(Chain nerveChain, int hChainId, CallBackBeanManager callBackBeanManager) {
@@ -95,21 +94,21 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
     }
 
     /**
-     * 管理员变更: 收集完所有异构链组件的管理员变更确认交易，再组装发送交易
-     * 提现: 直接组装发送交易
+     * Administrator Change: Collect all administrator change confirmation transactions for heterogeneous chain components, then assemble and send transactions
+     * Withdrawal: Directly assemble and send transactions
      *
-     * @param txType           交易类型 - WITHDRAW/CHANGE 提现/管理员变更
-     * @param nerveTxHash      本链交易hash
-     * @param txHash           异构链交易hash
-     * @param blockHeight      异构链交易确认高度
-     * @param txTime           异构链交易时间
-     * @param multiSignAddress 当前多签地址
-     * @param signers          交易签名地址列表
+     * @param txType           Transaction type - WITHDRAW/CHANGE Withdrawal/Administrator Change
+     * @param nerveTxHash      This chain transactionhash
+     * @param txHash           Heterogeneous Chain Tradinghash
+     * @param blockHeight      Heterogeneous chain transaction confirmation height
+     * @param txTime           Heterogeneous chain transaction time
+     * @param multiSignAddress Current multiple signed addresses
+     * @param signers          Transaction signature address list
      */
     @Override
     public void txConfirmed(HeterogeneousChainTxType txType, String nerveTxHash, String txHash, Long blockHeight, Long txTime, String multiSignAddress, List<HeterogeneousAddress> signers) throws Exception {
         NulsHash nerveHash = NulsHash.fromHex(nerveTxHash);
-        // 检查是否由提案发起的确认交易
+        // Check if the confirmation transaction was initiated by the proposal
         NulsHash nerveProposalHash = proposalStorageService.getExeBusiness(nerveChain, nerveTxHash);
         ProposalPO proposalPO = null;
         ProposalTypeEnum proposalType = null;
@@ -121,11 +120,11 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         switch (txType) {
             case WITHDRAW:
                 if (isProposal) {
-                    logger().info("提案执行确认[{}], proposalHash: {}, ETH txHash: {}", proposalType, nerveProposalHash.toHex(), txHash);
+                    logger().info("Proposal execution confirmation[{}], proposalHash: {}, ETH txHash: {}", proposalType, nerveProposalHash.toHex(), txHash);
                     this.createCommonConfirmProposalTx(proposalType, nerveProposalHash, null, txHash, proposalPO.getAddress(), signers, txTime);
                     break;
                 }
-                // 正常提现的确认交易
+                // Confirmed transactions for normal withdrawals
                 ConfirmWithdrawalTxData txData = new ConfirmWithdrawalTxData();
                 txData.setHeterogeneousChainId(hChainId);
                 txData.setHeterogeneousHeight(blockHeight);
@@ -135,7 +134,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 assembleTxService.createConfirmWithdrawalTx(nerveChain, txData, txTime);
                 break;
             case CHANGE:
-                // 查询合并数据库，检查变更交易是否合并
+                // Query and merge databases, check if change transactions are merged
                 List<String> nerveTxHashList = new ArrayList<>();
                 MergedComponentCallPO mergedTx = mergeComponentStorageService.findMergedTx(nerveChain, nerveTxHash);
                 if (mergedTx == null) {
@@ -146,7 +145,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 int mergeCount = nerveTxHashList.size();
                 Long realTxTime = txTime;
                 for (String realNerveTxHash : nerveTxHashList) {
-                    // 为空时，表示没有add和remove的直接确认交易，则确认交易的时间使用原始变更交易的时间
+                    // When empty, it means there is noaddandremoveIf the transaction is directly confirmed, the time of confirming the transaction will be the time of the original change transaction
                     if (txTime == null) {
                         Transaction realNerveTx = TransactionCall.getConfirmedTx(nerveChain, NulsHash.fromHex(realNerveTxHash));
                         realTxTime = realNerveTx.getTime();
@@ -169,7 +168,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 break;
             case UPGRADE:
                 if (isProposal) {
-                    logger().info("提案执行确认[多签合约升级], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
+                    logger().info("Proposal execution confirmation[Upgrade by signing multiple contracts], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
                     this.createUpgradeConfirmProposalTx(nerveProposalHash, txHash, proposalPO.getAddress(), multiSignAddress, signers, txTime);
                 }
                 break;
@@ -181,7 +180,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         if (!converterCoreApi.isSupportNewMechanismOfWithdrawalFee()) {
             return;
         }
-        // 提现待确认交易组装并发出
+        // Withdrawal pending confirmation of transaction assembly and shipment
         WithdrawalHeterogeneousSendTxData txData = new WithdrawalHeterogeneousSendTxData();
         txData.setNerveTxHash(nerveTxHash);
         txData.setHeterogeneousTxHash(heterogeneousTxHash);
@@ -192,14 +191,14 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
 
     private void checkProposal(String nerveTxHash, String txHash, Long txTime, List<HeterogeneousAddress> signers) throws NulsException {
         NulsHash nerveHash = NulsHash.fromHex(nerveTxHash);
-        // 检查是否由提案发起的确认交易
+        // Check if the confirmation transaction was initiated by the proposal
         NulsHash nerveProposalHash = proposalStorageService.getExeBusiness(nerveChain, nerveTxHash);
         ProposalPO proposalPO = null;
         if (nerveProposalHash != null) {
             proposalPO = proposalStorageService.find(nerveChain, nerveProposalHash);
         }
         if (proposalPO != null) {
-            logger().info("提案执行确认[撤销银行资格], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
+            logger().info("Proposal execution confirmation[Revocation of bank qualification], proposalHash: {}, ETH txHash: {}", nerveProposalHash.toHex(), txHash);
             this.createCommonConfirmProposalTx(ProposalTypeEnum.EXPELLED, nerveProposalHash, nerveHash, txHash, proposalPO.getAddress(), signers, txTime);
         }
     }
@@ -210,7 +209,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
             count = new AtomicInteger(0);
             countHash.put(nerveTxHash, count);
         }
-        logger().info("收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
+        logger().info("Collect heterogeneous chain change confirmation, NerveTxHash: {}", nerveTxHash);
         HeterogeneousConfirmedChangeVBPo vbPo = heterogeneousConfirmedChangeVBStorageService.findByTxHash(nerveTxHash);
         if (vbPo == null) {
             vbPo = new HeterogeneousConfirmedChangeVBPo();
@@ -219,9 +218,9 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         }
         Set<HeterogeneousConfirmedVirtualBank> vbSet = vbPo.getHgCollection();
         int hChainSize = heterogeneousDockingManager.getAllHeterogeneousDocking().size();
-        // 检查重复添加
+        // Check for duplicate additions
         if (!vbSet.add(bank)) {
-            // 检查是否已经确认
+            // Check if it has been confirmed
             ConfirmedChangeVirtualBankPO po = cfmChangeBankStorageService.find(nerveChain, nerveTxHash);
             if (po != null) {
                 Transaction confirmedTx = TransactionCall.getConfirmedTx(nerveChain, po.getConfirmedChangeVirtualBank());
@@ -230,29 +229,29 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
                 for (HeterogeneousConfirmedVirtualBank virtualBank : listConfirmed) {
                     heterogeneousDockingManager.getHeterogeneousDocking(virtualBank.getHeterogeneousChainId()).txConfirmedCompleted(virtualBank.getHeterogeneousTxHash(), nerveChain.getLatestBasicBlock().getHeight(), nerveTxHash);
                 }
-                // 清理计数器
+                // Cleaning Counters
                 countHash.remove(nerveTxHash);
                 return 0;
             }
-            logger().info("重复收集异构链变更确认, NerveTxHash: {}", nerveTxHash);
-            // 每重复收集5次，再检查是否收集完成
+            logger().info("Repeated collection of heterogeneous chain change confirmation, NerveTxHash: {}", nerveTxHash);
+            // Collect every repeat5Check again if the collection is complete
             if (count.incrementAndGet() % 5 != 0) {
-                logger().info("当前 count: {}", count.get());
+                logger().info("current count: {}", count.get());
                 return 2;
             }
         }
-        // 收集完成，组装广播交易
+        // Collection completed, assemble broadcast transaction
         if (vbSet.size() == hChainSize) {
-            logger().info("完成收集异构链变更确认, 创建确认交易, NerveTxHash: {}, 变更合并交易数量: {}", nerveTxHash, mergeCount);
+            logger().info("Complete the collection of heterogeneous chain change confirmations, Create Confirmation Transaction, NerveTxHash: {}, Change the number of merged transactions: {}", nerveTxHash, mergeCount);
             List<HeterogeneousConfirmedVirtualBank> hList = new ArrayList<>(vbSet);
             VirtualBankUtil.sortListByChainId(hList);
             assembleTxService.createConfirmedChangeVirtualBankTx(nerveChain, NulsHash.fromHex(nerveTxHash), hList, hList.get(0).getEffectiveTime());
             heterogeneousConfirmedChangeVBStorageService.save(vbPo);
-            // 清理计数器
+            // Cleaning Counters
             countHash.remove(nerveTxHash);
             return 1;
         } else {
-            logger().info("当前已收集的异构链变更确认交易数量: {}, 所有异构链数量: {}, 变更合并交易数量: {}", vbSet.size(), hChainSize, mergeCount);
+            logger().info("The current number of heterogeneous chain change confirmation transactions collected: {}, Number of all heterogeneous chains: {}, Change the number of merged transactions: {}", vbSet.size(), hChainSize, mergeCount);
             heterogeneousConfirmedChangeVBStorageService.save(vbPo);
         }
         return 0;
@@ -274,7 +273,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
-        // 发布提案确认交易
+        // Publish proposal to confirm transaction
         assembleTxService.createConfirmProposalTx(nerveChain, txData, heterogeneousTxTime);
     }
 
@@ -285,7 +284,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         businessData.setHeterogeneousTxHash(heterogeneousTxHash);
         businessData.setAddress(address);
         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
-        // 兼容非以太系地址 update by pierre at 2021/11/16
+        // Compatible with non Ethernet addresses update by pierre at 2021/11/16
         businessData.setOldAddress(docking.getAddressBytes(multiSignAddress));
         businessData.setListDistributionFee(signers);
         ConfirmProposalTxData txData = new ConfirmProposalTxData();
@@ -295,7 +294,7 @@ public class TxConfirmedProcessorImpl implements ITxConfirmedProcessor {
         } catch (IOException e) {
             throw new NulsException(ConverterErrorCode.SERIALIZE_ERROR);
         }
-        // 发布提案确认交易
+        // Publish proposal to confirm transaction
         assembleTxService.createConfirmProposalTx(nerveChain, txData, heterogeneousTxTime);
     }
 }

@@ -29,13 +29,13 @@ import network.nerve.quotation.model.bo.Chain;
 import java.math.BigDecimal;
 
 /**
- * 价格查询器
+ * Price Finder
  * @author: Loki
  * @date: 2019/12/10
  */
 public interface Querier {
     /**
-     * 获取token的价格
+     * obtaintokenThe price of
      * @param chain
      * @param anchorToken
      * @return

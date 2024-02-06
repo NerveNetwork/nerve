@@ -101,7 +101,7 @@ public class HtgUnconfirmedTxStorageServiceImpl implements HtgUnconfirmedTxStora
         }
         String htTxHash = po.getTxHash();
         if (htgContext.logger().isDebugEnabled()) {
-            htgContext.logger().debug("保存未确认交易[{}], 详情: {}", htTxHash, po.toString());
+            htgContext.logger().debug("Save unconfirmed transactions[{}], details: {}", htTxHash, po.toString());
         }
         boolean result = ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX() + htTxHash), po);
         if (result) {

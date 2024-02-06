@@ -3,7 +3,7 @@ package network.nerve.converter.heterogeneouschain.lib.model;
 import java.io.Serializable;
 
 /**
- * 同步区块的高度
+ * The height of synchronized blocks
  *
  * @author wangkun23
  */

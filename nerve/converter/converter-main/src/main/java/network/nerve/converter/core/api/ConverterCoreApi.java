@@ -31,6 +31,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.model.StringUtils;
+import io.nuls.core.rpc.info.Constants;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
@@ -40,6 +41,7 @@ import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
 import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.VirtualBankService;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.helper.HeterogeneousAssetHelper;
 import network.nerve.converter.helper.LedgerAssetRegisterHelper;
@@ -59,6 +61,7 @@ import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ComponentSignStorageService;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.utils.ConverterUtil;
+import network.nerve.converter.utils.HeterogeneousUtil;
 import org.web3j.utils.Numeric;
 
 import java.math.BigDecimal;
@@ -99,11 +102,13 @@ public class ConverterCoreApi implements IConverterCoreApi {
     private Set<String> skipTransactions = new HashSet<>();
     private Map<Integer, String> chainDBNameMap = new HashMap<>();
     private Map<Integer, Boolean> dbMergedChainMap = new HashMap<>();
+    private volatile BigDecimal fchToDogePrice = new BigDecimal("0.05");
     private volatile List<Runnable> htgConfirmTxHandlers = new ArrayList<>();
     private volatile List<Runnable> htgRpcAvailableHandlers = new ArrayList<>();
     private volatile List<Runnable> htgWaitingTxInvokeDataHandlers = new ArrayList<>();
 
     Set<Integer> skippedNetworks;
+    private Set<Integer> l1FeeChainSet = new HashSet<>();
 
     public ConverterCoreApi() {
         // 101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
@@ -117,6 +122,12 @@ public class ConverterCoreApi implements IConverterCoreApi {
         skippedNetworks.add(113);
         skippedNetworks.add(115);
         skippedNetworks.add(117);
+
+        l1FeeChainSet.add(115);
+        l1FeeChainSet.add(129);
+        l1FeeChainSet.add(130);
+        l1FeeChainSet.add(133);
+        l1FeeChainSet.add(136);
     }
 
     public NulsLogger logger() {
@@ -125,10 +136,17 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     public void setNerveChain(Chain nerveChain) {
         this.nerveChain = nerveChain;
-        // 跳过历史遗留的问题交易
+        // Skip historical legacy problem transactions
         if (nerveChain.getChainId() == 9) {
             skipTransactions.add("b0a3f4e0f7f28b6d55ced8f333e63f0844c25f061b8a843f8c49c6a0612ccd8d");
         }
+    }
+
+    public void setFchToDogePrice(BigDecimal fchToDogePrice) {
+        if (fchToDogePrice == null) {
+            return;
+        }
+        this.fchToDogePrice = fchToDogePrice;
     }
 
     @Override
@@ -141,7 +159,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         try {
             return virtualBankService.getCurrentDirector(nerveChain.getChainId()) != null;
         } catch (NulsException e) {
-            logger().error("查询节点状态失败", e);
+            logger().error("Failed to query node status", e);
             return false;
         }
     }
@@ -155,7 +173,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             }
             return false;
         } catch (NulsException e) {
-            logger().error("查询节点状态失败", e);
+            logger().error("Failed to query node status", e);
             return false;
         }
     }
@@ -169,7 +187,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             }
             return director.getOrder();
         } catch (NulsException e) {
-            logger().error("查询节点状态失败", e);
+            logger().error("Failed to query node status", e);
             return 0;
         }
     }
@@ -229,8 +247,8 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     private BigDecimal minBalance = new BigDecimal("0.04");
     /**
-     * 返回指定异构链下的当前虚拟银行列表和顺序
-     * 当异构链余额低于0.04时，顺序挪到末尾
+     * Return the current list and order of virtual banks under the specified heterogeneous chain
+     * When the balance of heterogeneous chains is lower than0.04Move the order to the end
      */
     @Override
     public Map<String, Integer> currentVirtualBanks(int hChainId) {
@@ -243,7 +261,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             if (address != null) {
                 int order = director.getOrder();
                 VirtualBankDirectorDTO cacheDto = cacheMap.get(director.getSignAddress());
-                // 当异构链余额低于0.04时，顺序挪到末尾
+                // When the balance of heterogeneous chains is lower than0.04Move the order to the end
                 if (cacheDto != null) {
                     List<HeterogeneousAddressDTO> cacheBalanceList = cacheDto.getHeterogeneousAddresses();
                     if (cacheBalanceList != null && !cacheBalanceList.isEmpty()) {
@@ -268,13 +286,60 @@ public class ConverterCoreApi implements IConverterCoreApi {
                 resultMap.put(address.getAddress(), order);
             }
         });
-        nerveChain.getLogger().debug("当前银行顺序: {}", resultMap);
+        nerveChain.getLogger().debug("Current Bank Order: {}", resultMap);
+        return resultMap;
+    }
+
+    /**
+     * Return the current virtual bank list and balance order under the specified heterogeneous chain（Reverse balance order）
+     */
+    @Override
+    public Map<String, Integer> currentVirtualBanksBalanceOrder(int hChainId) {
+        Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
+        Map<String, BigDecimal> balanceMap = new HashMap<>();
+        Map<String, Integer> resultMap = new HashMap<>();
+        Map<String, VirtualBankDirector> map = nerveChain.getMapVirtualBank();
+        map.entrySet().stream().forEach(e -> {
+            VirtualBankDirector director = e.getValue();
+            HeterogeneousAddress address = director.getHeterogeneousAddrMap().get(hChainId);
+            if (address != null) {
+                BigDecimal realBalance = BigDecimal.ZERO;
+                VirtualBankDirectorDTO cacheDto = cacheMap.get(director.getSignAddress());
+                // Obtain balance
+                if (cacheDto != null) {
+                    List<HeterogeneousAddressDTO> cacheBalanceList = cacheDto.getHeterogeneousAddresses();
+                    if (cacheBalanceList != null && !cacheBalanceList.isEmpty()) {
+                        HeterogeneousAddressDTO cacheAddressDTO = null;
+                        for (HeterogeneousAddressDTO addressDTO : cacheBalanceList) {
+                            if (addressDTO.getChainId() == address.getChainId()) {
+                                cacheAddressDTO = addressDTO;
+                                break;
+                            }
+                        }
+                        if (cacheAddressDTO != null) {
+                            String balance = cacheAddressDTO.getBalance();
+                            if (StringUtils.isNotBlank(balance)) {
+                                realBalance = new BigDecimal(balance);
+                            }
+                        }
+                    }
+                }
+                balanceMap.put(address.getAddress(), realBalance);
+            }
+        });
+        List<Map.Entry<String, BigDecimal>> list = new ArrayList(balanceMap.entrySet());
+        list.sort(ConverterUtil.BALANCE_SORT);
+        int i = 1;
+        for (Map.Entry<String, BigDecimal> entry : list) {
+            resultMap.put(entry.getKey(), i++);
+        }
+        nerveChain.getLogger().debug("Current Bank Order: {}", resultMap);
         return resultMap;
     }
 
 
     /**
-     * 重新索要拜占庭签名
+     * Requesting a new Byzantine signature
      */
     @Override
     public List<HeterogeneousSign> regainSignatures(int nerveChainId, String nerveTxHash, int hChainId) {
@@ -300,10 +365,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isBoundHeterogeneousAsset(int hChainId, int hAssetId) {
         /**
-          从新存储中获取资产是否为绑定异构链资产, 否则从账本获取资产类型做判断
-               大于4且小于9时，则是绑定资产（5~8是纯绑定类型资产）
-               当资产类型为9时，由于原生资产类型4是异构注册资产，从支持9类型资产前，4类型资产不存在绑定资产，则说明该异构资产不是绑定类型（若是绑定资产，则新存储中一定存储了它是绑定资产）
-               9类型资产，有一个网络是异构注册类型，其他网络是绑定类型
+          Is the asset obtained from the new storage a bound heterogeneous chain asset, Otherwise, obtain asset types from the ledger for judgment
+               greater than4And less than9When, it is to bind assets（5~8It is a pure bound type asset）
+               When the asset type is9Due to the type of native asset4It is a heterogeneous registered asset that supports9Before type assets,4If there is no bound asset for the type asset, it indicates that the heterogeneous asset is not of a bound type（If the asset is bound, the new storage must have stored it as a bound asset）
+               9Type assets, one network is of heterogeneous registration type, while the other networks are of binding type
          */
         try {
             Boolean isBound = ledgerAssetRegisterHelper.isBoundHeterogeneousAsset(hChainId, hAssetId);
@@ -344,18 +409,29 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public WithdrawalTotalFeeInfo getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException {
-        // 根据NERVE提现交易txHash返回总提供的手续费
+        // according toNERVEWithdrawal transactionstxHashReturn the total transaction fee provided
         return assembleTxService.calculateWithdrawalTotalFee(nerveChain, this.getNerveTx(nerveTxHash));
     }
 
     @Override
     public BigDecimal getUsdtPriceByAsset(AssetName assetName) {
         String key = ConverterContext.priceKeyMap.get(assetName.name());
+        if (assetName == AssetName.FCH) {
+            key = "DOGE_PRICE";
+        }
+        //TODO pierre test code
+        //if (assetName == AssetName.ETH) {
+        //    key = "ETH_PRICE";
+        //}
         if (key == null) {
             return BigDecimal.ZERO;
         }
-        // 获取指定资产的USDT价格
-        return QuotationCall.getPriceByOracleKey(nerveChain, key);
+        // Obtain the specified asset'sUSDTprice
+        BigDecimal price = QuotationCall.getPriceByOracleKey(nerveChain, key);
+        if (assetName == AssetName.FCH) {
+            price = price.multiply(fchToDogePrice);
+        }
+        return price;
     }
 
     @Override
@@ -371,7 +447,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean validNerveAddress(String address) {
         boolean valid = AddressTool.validAddress(nerveChain.getChainId(), address);
-        // v1.14.0 协议升级后，地址校验增加验证逻辑，换成字节数组后，重新生成base58地址后，再和用户提供的base58地址相比，避免地址前缀不同的问题
+        // v1.14.0 After the protocol upgrade, address verification adds verification logic and is replaced with a byte array, which is then regeneratedbase58After the address is provided, communicate with the userbase58Avoiding the problem of different address prefixes compared to addresses
         if (isProtocol14() && valid) {
             byte[] addressBytes = AddressTool.getAddress(address);
             String addressStr = AddressTool.getStringAddressByBytes(addressBytes);
@@ -431,6 +507,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_27_0;
     }
 
+    @Override
+    public boolean isProtocol31() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_31_0;
+    }
+
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
         AssetName[] values = AssetName.values();
@@ -441,7 +522,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         }
     }
     /**
-     * 获取异构链主资产(注册到NERVE网络上的资产信息)
+     * Obtain heterogeneous chain master assets(Register toNERVEAsset information on the internet)
      */
     public NerveAssetInfo getHtgMainAsset(int htgChainId) {
         NerveAssetInfo nerveAssetInfo = htgMainAssetMap.get(htgChainId);
@@ -467,9 +548,9 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     private boolean isHtgMainAsset(int nerveAssetChainId, int nerveAssetId) {
-        // 加载缓存
+        // Load cache
         this.loadHtgMainAsset();
-        // 检查是否为异构链主资产
+        // Check if it is a heterogeneous chain master asset
         AssetName assetName = htgMainAssetByNerveMap.get(new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
         if (assetName != null) {
             return true;
@@ -483,7 +564,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     }
 
     private AssetName getHtgMainAssetName(int nerveAssetChainId, int nerveAssetId) {
-        // 加载缓存
+        // Load cache
         this.loadHtgMainAsset();
         return htgMainAssetByNerveMap.get(new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
     }
@@ -549,7 +630,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public BigInteger checkDecimalsSubtractedToNerveForWithdrawal(int htgChainId, int htgAssetId, BigInteger value) {
-        // 跨链资产精度不同，换算精度
+        // Cross chain asset accuracy varies, conversion accuracy
         HeterogeneousAssetInfo heterogeneousAsset = this.getHeterogeneousAsset(htgChainId, htgAssetId);
         return checkDecimalsSubtractedToNerveForWithdrawal(heterogeneousAsset, value);
     }
@@ -574,7 +655,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
 
     @Override
     public BigInteger checkDecimalsSubtractedToNerveForDeposit(int htgChainId, int nerveAssetChainId, int nerveAssetId, BigInteger value) {
-        // 跨链资产精度不同，换算精度
+        // Cross chain asset accuracy varies, conversion accuracy
         HeterogeneousAssetInfo heterogeneousAsset = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, nerveAssetChainId, nerveAssetId);
         return checkDecimalsSubtractedToNerveForDeposit(heterogeneousAsset, value);
     }
@@ -626,6 +707,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
         return true;
     }
 
+    @Override
+    public void putWechatMsg(String msg) {
+        VirtualBankDirectorBalanceTask.putWechatMsg(msg);
+    }
+	
     @Override
     public boolean isLocalSign() {
         return ConverterContext.SIG_MODE == ConverterConstant.SIG_MODE_LOCAL;
@@ -723,5 +809,34 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public String mergedDBName() {
         return ConverterDBConstant.DB_HETEROGENEOUS_CHAIN;
+    }
+
+    @Override
+    public BigInteger getL1Fee(int htgChainId) {
+        if (!l1FeeChainSet.contains(htgChainId)) {
+            return BigInteger.ZERO;
+        }
+        try {
+            BigInteger ethGasPrice;
+            if (nerveChain.getChainId() == 9) {
+                ethGasPrice = heterogeneousDockingManager.getHeterogeneousDocking(101).currentGasPrice();
+            } else {
+                ethGasPrice = heterogeneousDockingManager.getHeterogeneousDocking(118).currentGasPrice();
+                //TODO pierre test
+                //ethGasPrice = new BigDecimal("47.48643118").movePointRight(9).toBigInteger();
+            }
+            return HeterogeneousUtil.getL1Fee(htgChainId, ethGasPrice);
+        } catch (NulsException e) {
+            return BigInteger.ZERO;
+        }
+    }
+
+    @Override
+    public boolean hasL1FeeOnChain(int htgChainId) {
+        return l1FeeChainSet.contains(htgChainId);
+    }
+
+    public boolean isNerveMainnet() {
+        return nerveChain.getChainId() == 9;
     }
 }

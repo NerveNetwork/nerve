@@ -5,7 +5,7 @@ package network.nerve.converter.heterogeneouschain.eth.utils;
  */
 public class RandomUtil {
     /**
-     * 生成一个长整形随机数
+     * Generate a long integer random number
      *
      * @return long
      */

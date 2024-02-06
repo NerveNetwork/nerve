@@ -74,24 +74,24 @@ public class VoteResultProcessor extends BasicRunnable {
             byte[] addressBytes = AddressTool.getAddress(signature.getPublicKey(), chain.getChainId());
             String address = AddressTool.getStringAddressByBytes(addressBytes);
             if (!round.getMemberAddressSet().contains(address)) {
-                log.info("==========地址不对={}========", address);
+                log.info("==========The address is incorrect={}========", address);
                 return;
             }
             boolean result = signature.verifySignature(resultMessage.getHash()).isSuccess();
             if (!result) {
-                log.info("==========签名不对=from:{}========", resultMessage.getNodeId());
+                log.info("==========The signature is incorrect=from:{}========", resultMessage.getNodeId());
                 return;
             }
             set.add(address);
         }
         double rate = DoubleUtils.div(set.size(), round.getMemberCount()) * 100;
         if (rate <= chain.getConfig().getByzantineRate()) {
-            log.info("==========签名数量不足=={}%=from:{}========", rate, resultMessage.getNodeId());
+            log.info("==========Insufficient number of signatures=={}%=from:{}========", rate, resultMessage.getNodeId());
             return;
         }
 
         if (!duplicateProcessor.insertAndCheck(resultMessage.getBlockHash())) {
-            //这里只处理一次就够了
+            //Just one processing here is enough
             return;
         }
 
@@ -99,12 +99,12 @@ public class VoteResultProcessor extends BasicRunnable {
 
 
         if (!chain.isConsonsusNode() || !chain.isNetworkStateOk() || !chain.isSynchronizedHeight()) {
-            log.info("通知区块模块，拜占庭验证通过：" + resultMessage.getHeight() + "-" + resultMessage.getBlockHash().toHex());
+            log.info("Notification block module, Byzantine verification passed：" + resultMessage.getHeight() + "-" + resultMessage.getBlockHash().toHex());
             CallMethodUtils.noticeByzantineResult(chain, resultMessage.getHeight(), false, resultMessage.getBlockHash(), null);
             return;
         }
 
-        //如果本地还没有收到
+        //If you haven't received it locally yet
         VoteStageResult result = new VoteStageResult();
         result.setResultMessage(resultMessage);
         result.setBlockHash(resultMessage.getBlockHash());

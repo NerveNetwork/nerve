@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * 处理收到的{@link ConsensusIdentitiesMsg},清除IP
+ * Process received{@link ConsensusIdentitiesMsg},clean upIP
  *
  * @author lanjinsheng
  * @version 1.0

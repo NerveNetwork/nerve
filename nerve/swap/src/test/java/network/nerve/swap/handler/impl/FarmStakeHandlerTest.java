@@ -175,10 +175,10 @@ public class FarmStakeHandlerTest {
                 assertTrue(bus.getAccSyrupPerShareNew().compareTo(BigInteger.ZERO) == 0);
 
 
-                System.out.println("[通过]Test Farm-Stake tx execute: 初次stake！");
+                System.out.println("[adopt]Test Farm-Stake tx execute: First timestake！");
             }
         };
-        return new JunitCase("第一次stake", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("First timestake", handler, new Object[]{tx1, 1L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getCase0() throws IOException {
@@ -219,10 +219,10 @@ public class FarmStakeHandlerTest {
                 assertTrue(bus.getUserRewardDebtOld().compareTo(BigInteger.ZERO) == 0);
 
                 assertTrue(bus.getAccSyrupPerShareNew().compareTo(BigInteger.TEN.multiply(SwapConstant.BI_1E12)) == 0);
-                System.out.println("[通过]Test Farm-Stake tx execute: 二次stake！");
+                System.out.println("[adopt]Test Farm-Stake tx execute: Secondarystake！");
             }
         };
-        return new JunitCase("第二次stake", handler, new Object[]{tx1, 101L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Second timestake", handler, new Object[]{tx1, 101L, tx1.getTime()}, null, false, null, callback1);
     }
 
     private JunitCase getCase1() throws IOException {
@@ -253,10 +253,10 @@ public class FarmStakeHandlerTest {
                 assertEquals(bus.getStakingBalanceOld(), bus.getStakingBalanceNew());
                 assertTrue(bus.getSyrupBalanceOld().subtract(bus.getSyrupBalanceNew()).compareTo(reward) == 0);
 
-                System.out.println("[通过]Test Farm-Stake tx execute: 收奖励！");
+                System.out.println("[adopt]Test Farm-Stake tx execute: Reward collection！");
             }
         };
-        return new JunitCase("收奖励", handler, new Object[]{tx1, 201L, tx1.getTime()}, null, false, null, callback1);
+        return new JunitCase("Reward collection", handler, new Object[]{tx1, 201L, tx1.getTime()}, null, false, null, callback1);
     }
 
     public FarmPoolPO tempFarm() {

@@ -36,33 +36,33 @@ public class DexService {
     @Autowired
     private DexManager dexManager;
     /**
-     * 每次打包时，因为不能直接修改盘口数据，所以创建一个临时缓存，
-     * 将本次打包需用到的盘口数据，缓存一部分到临时缓存里
+     * During each packaging process, a temporary cache is created because the disk data cannot be directly modified,
+     * Cache a portion of the disk data required for this packaging into a temporary cache
      */
     private DexManager tempDexManager = new DexManager();
-    //打包区块时，每次复制盘口内多少挂单，到临时盘口缓存，以及每次打包最多允许生成成交单的数量
+    //When packaging blocks, how many pending orders are copied from the opening each time, cached in the temporary opening, and the maximum number of transaction orders allowed to be generated per packaging
     private static final int dexPackingSize = 200;
     private List<Transaction> dealTxList = new ArrayList<>();
-    //存放每次打包的区块中，需要取消打包的交易
+    //Store transactions that need to be unpacked in each packaged block
     private List<Transaction> removeTxList = new ArrayList<>();
-    //存放每次打包区块时匹配成功的挂单交易
+    //Store successfully matched pending transactions for each packaged block
     private Map<String, TradingOrderPo> tempOrderPoMap = new HashMap<>();
-    //每次打包时，临时缓存需要取消委托挂单的orderHash
+    //During each packaging process, the temporary cache needs to cancel the delegation of pending ordersorderHash
     private Set<String> tempCancelOrderSet = new HashSet<>();
 
 
     private ReentrantLock lock = new ReentrantLock();
 
     /**
-     * 节点打包dex模块交易逻辑：
-     * 注： 由于一个区块打包时间有限，因此一个区块最多允许生成成交交易的上限为（tempCacheSize）
-     * 1. 每次打包时，将所有交易对的盘口数据复制一定数量（tempCacheSize）的委托单到临时缓存里（tempDexManager）
-     * 2. 循环所有临时缓存的交易对盘口，若有可以匹配的挂单，则生成成交交易
-     * 3. 若发现有新增的委托买(卖)单交易，需要判断新增挂单的盘口内是否有可以匹配成交的买(卖)单
-     * 打包区块撮合成交并非是最终的区块确认存储，不能直接去修改盘口内已有买(卖)单数据，因此打包时撮合的流程是：
-     * 1.针对本次新增买(卖)单，复制对应盘口内一定数量买盘和卖盘到临时缓存中
-     * 2.将本次打包的新增买(卖)单添加到临时缓存中对应的盘口中
-     * 3.循环取出临时缓存中各个交易对的买盘和卖盘数据，做撮合验证，撮合成功后生成成交交易，并更新临时缓存中买盘和卖盘的数据
+     * Node packagingdexModule transaction logic：
+     * notes： Due to the limited packaging time of a block, the maximum limit for generating transactional transactions in a block is（tempCacheSize）
+     * 1. Copy a certain amount of opening data for all transaction pairs during each packaging process（tempCacheSize）Transfer the delegation order to the temporary cache（tempDexManager）
+     * 2. Loop through all temporarily cached transaction pairs, and if there are matching pending orders, generate executed transactions
+     * 3. If any new entrusted purchases are found(sell)For single transactions, it is necessary to determine whether there are any purchases within the newly added order opening that can be matched for transactions(sell)single
+     * Package block matching transaction is not the final block confirmation storage, and cannot directly modify existing purchases in the inventory(sell)Single data, therefore the matching process during packaging is：
+     * 1.For this new purchase(sell)Copy a certain number of buying and selling orders within the corresponding inventory to a temporary cache
+     * 2.Add new purchases for this package(sell)Add to the corresponding disk slot in the temporary cache
+     * 3.Loop to retrieve the buy and sell data of each transaction pair in the temporary cache, perform matching verification, generate successful transactions after matching, and update the buy and sell data in the temporary cache
      *
      * @param txList
      * @return
@@ -76,28 +76,28 @@ public class DexService {
 
 //            long time0, time1, time2;
 //            time0 = System.currentTimeMillis();
-            //首先复制所有交易对到临时盘口中
+            //First, copy all transaction pairs into the temporary opening
             for (TradingContainer container : dexManager.getAllContainer().values()) {
                 TradingContainer copy = container.copy(dexPackingSize);
                 tempDexManager.addContainer(copy);
             }
 //            time1 = System.currentTimeMillis();
 //            if (time1 - time0 > 50) {
-//                LoggerUtil.dexLog.info("-------复制临时盘口数据，用时：{}, 区块高度：{}, isValidate:{}", (time1 - time0), blockHeight, isValidate);
+//                LoggerUtil.dexLog.info("-------Copying temporary disk data, taking time：{}, block height：{}, isValidate:{}", (time1 - time0), blockHeight, isValidate);
 //            }
 
             List<CancelDeal> cancelList = new ArrayList<>();
-            //每次打包前先判断当前所有临时盘口里是否还有可以匹配的订单，如果有则优先生成成交订单
+            //Before each packaging, check if there are any matching orders in the current temporary inventory. If there are, priority will be given to generating transaction orders
             for (TradingContainer container : tempDexManager.getAllContainer().values()) {
                 matchingOrder(container, blockTime);
             }
 //            time2 = System.currentTimeMillis();
 //            if (time2 - time1 > 100) {
-//                LoggerUtil.dexLog.info("-------处理之前区块未能打包完的成交交易，用时：{}, 区块高度：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
+//                LoggerUtil.dexLog.info("-------Processing transactions that were not fully packaged in the previous block, time taken：{}, block height：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
 //            }
-            //如果优先生成的成交交易已经超过打包上限，则不再继续打包剩余交易
+            //If the priority generated transaction has exceeded the packaging limit, the remaining transactions will not be further packaged
             if (dealTxList.size() >= dexPackingSize) {
-                LoggerUtil.dexLog.info("-------达到打包上限了,丢弃本次的所有交易,区块高度：{}, isValidate:{}， txSize:{}", blockHeight, isValidate, txList.size());
+                LoggerUtil.dexLog.info("-------We have reached the packaging limit,Discard all transactions for this transaction,block height：{}, isValidate:{}, txSize:{}", blockHeight, isValidate, txList.size());
                 removeTxList.addAll(txList);
                 return returnTxMap();
             }
@@ -118,7 +118,7 @@ public class DexService {
                 index = i;
 
                 if (tx.getType() == TxType.TRADING_ORDER_CANCEL) {
-                    //记录本次打包中撤销挂单的orderHash，撤销挂单的不再进行价格匹配成交
+                    //Record the cancellation of pending orders during this packaging processorderHashRevoking the order will no longer result in price matching transactions
                     orderCancel = new TradingOrderCancel();
                     orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
                     tempCancelOrderSet.add(HexUtil.encode(orderCancel.getOrderHash()));
@@ -135,7 +135,7 @@ public class DexService {
                     createCancelDeal(tx, cancelList, orderCancel, orderPo, coinFromMap, coinToMap);
 
                 } else if (tx.getType() == TxType.TRADING_ORDER) {
-                    //将挂单放入临时盘口，尝试撮合成交
+                    //Place the order in the temporary trading position and try to match the transaction
                     coinTo = tx.getCoinDataInstance().getTo().get(0);
                     order = new TradingOrder();
                     order.parse(new NulsByteBuffer(tx.getTxData()));
@@ -159,11 +159,11 @@ public class DexService {
             }
 //            time2 = System.currentTimeMillis();
 //            if (time2 - time1 > 100) {
-//                LoggerUtil.dexLog.info("-------匹配本次区块打包完的所有交易，用时：{}, 区块高度：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
+//                LoggerUtil.dexLog.info("-------Match all transactions that have been packaged in this block, time taken：{}, block height：{}, isValidate:{}", (time2 - time1), blockHeight, isValidate);
 //                LoggerUtil.dexLog.info("-------txList:{}, dealTxList:{}, cancelList:{}", txList.size(), dealTxList.size(), cancelList.size());
 //            }
 
-            //如果index小于txList.size()，说明因为成交交易达到上限，导致有一部分交易需要取消打包
+            //Ifindexless thantxList.size(), indicating that due to the transaction reaching the upper limit, some transactions need to be unpacked
             if (index != txList.size() - 1) {
                 for (int i = index + 1; i < txList.size(); i++) {
                     removeTxList.add(txList.get(i));
@@ -172,14 +172,14 @@ public class DexService {
 
 //            time2 = System.currentTimeMillis();
 //            if (time2 - time0 > 100) {
-//                LoggerUtil.dexLog.info("-------高度:{},耗时:{},isValidate:{}", blockHeight, (time2 - time0), isValidate);
+//                LoggerUtil.dexLog.info("-------height:{},time consuming:{},isValidate:{}", blockHeight, (time2 - time0), isValidate);
 //                LoggerUtil.dexLog.info("-------txList:{}, dealTxList:{}, cancelList:{},removeTxList:{}", txList.size(), dealTxList.size(), cancelList.size(), removeTxList.size());
 //            }
 
             return returnTxMap();
         } catch (IOException e) {
             LoggerUtil.dexLog.error("------Dex service doPacking error-----");
-            LoggerUtil.dexLog.info("----高度:{},isValidate:{}", blockHeight, isValidate);
+            LoggerUtil.dexLog.info("----height:{},isValidate:{}", blockHeight, isValidate);
             LoggerUtil.dexLog.error(e);
             throw new NulsException(DexErrorCode.FAILED);
         } finally {
@@ -231,7 +231,7 @@ public class DexService {
     }
 
     /**
-     * 创建取消订单成交记录
+     * Create cancellation order transaction records
      *
      * @param orderPo
      * @param coinFromMap
@@ -256,7 +256,7 @@ public class DexService {
         TradingContainer container = tempDexManager.getTradingContainer(orderPo.getTradingHash().toHex());
         CoinTradingPo tradingPo = container.getCoinTrading();
 
-        //添加撤销单from
+        //Add cancellation orderfrom
         String key = orderPo.getOrderHash().toHex();
         if (orderPo.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
             if (!coinFromMap.containsKey(key)) {
@@ -282,7 +282,7 @@ public class DexService {
             }
         }
 
-        //添加撤销单to
+        //Add cancellation orderto
         if (orderPo.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
             key = DexUtil.getCoinKey(AddressTool.getStringAddressByBytes(orderPo.getAddress()), tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId());
             CoinTo to = coinToMap.get(key);
@@ -305,7 +305,7 @@ public class DexService {
     }
 
     /**
-     * 循环临时缓存盘口内的买单和卖单，进行撮合成交
+     * Loop temporary cache of buy and sell orders within the opening for matching transactions
      */
     private void matchingOrder(TradingContainer container, long blockTime) throws IOException {
         TradingOrderPo buyOrder;
@@ -313,7 +313,7 @@ public class DexService {
 
         boolean b = true;
         while (b) {
-            //每次生成成交单数量，达到上限后，不再继续撮合
+            //Once the number of transaction orders generated reaches the upper limit, no further matching will be carried out
             if (dealTxList.size() >= dexPackingSize) {
                 return;
             }
@@ -321,20 +321,20 @@ public class DexService {
             buyOrder = getFirstBuyOrder(container.getBuyOrderList());
 
             if (buyOrder == null || sellOrder == null) {
-                //说明买盘或卖盘已没有挂单可以匹配
+                //Indicating that there are no pending orders to match the buying or selling orders
                 b = false;
             } else if (buyOrder.getPrice().compareTo(sellOrder.getPrice()) < 0) {
-                //如果买单小于卖单价格，则不撮合
+                //If the purchase price is less than the selling price, no matching will be made
                 b = false;
             } else {
-                //匹配成功的订单，生成成交交易
-                //如果是买单主动吃单，则用卖单价作为成交价，反之用买单价作为成交价
+                //Successfully matched orders generate transaction transactions
+                //If taking the initiative to buy, use the selling price as the transaction price, and vice versa, use the buying price as the transaction price
                 if (buyOrder.compareTo(sellOrder) > 0) {
                     createDealTx(container, buyOrder, sellOrder, DexConstant.BUY_TAKER, blockTime);
                 } else {
                     createDealTx(container, buyOrder, sellOrder, DexConstant.SELL_TAKER, blockTime);
                 }
-                //将匹配过的委托单存放在临时缓存里
+                //Store the matched delegation orders in a temporary cache
                 tempOrderPoMap.put(sellOrder.getOrderHash().toHex(), sellOrder);
                 tempOrderPoMap.put(buyOrder.getOrderHash().toHex(), buyOrder);
             }
@@ -342,14 +342,14 @@ public class DexService {
     }
 
     /**
-     * 撮合成交，生成成交交易
-     * 已卖单价格为最终成交价
+     * Match transactions, generate transaction transactions
+     * The price of the sold order is the final transaction price
      * <p>
-     * 根据买单和卖单以及双方各自的成交量，生成成交交易
-     * 成交交易实际上就是将买单和卖单先解锁，
-     * 再各自对应的币种，按照最终成交量，转到对方的账户上
-     * 剩余未成交的部分，则继续锁定
-     * 此外，各自还需支付手续费
+     * Generate transaction volume based on purchase and sale orders, as well as the respective transaction volumes of both parties
+     * The transaction is actually unlocking the buy and sell orders first,
+     * Transfer the corresponding currency to the other party's account based on the final transaction volume
+     * The remaining unconsumed portion will continue to be locked
+     * In addition, each party also needs to pay a handling fee
      * }
      *
      * @return
@@ -362,12 +362,12 @@ public class DexService {
         } else {
             price = buyOrder.getPrice();
         }
-        //根据成交数据，生成交易的coinData
+        //Generate transaction based on transaction datacoinData
         Map<String, Object> map = DexUtil.createDealTxCoinData(tradingPo, price, buyOrder, sellOrder);
         boolean isBuyOver = (boolean) map.get("isBuyOver");
         boolean isSellOver = (boolean) map.get("isSellOver");
 
-        //生成成交交易
+        //Generate transaction
         Transaction tx = new Transaction();
         tx.setType(TxType.TRADING_DEAL);
         tx.setTime(blockTime);
@@ -416,8 +416,8 @@ public class DexService {
     }
 
     /**
-     * 买盘是价格从高到底排序好的，每次因从价格最高的第一条开始取出进行撮合
-     * 若买单已被撤销，继续取出下一条进行撮合验证
+     * Buying is sorted by price from high to low, and each time a match is made by taking out the highest priced item starting from the first item
+     * If the purchase order has been cancelled, continue to retrieve the next item for matching verification
      *
      * @param buyOrderList
      * @return
@@ -438,8 +438,8 @@ public class DexService {
     }
 
     /**
-     * 卖盘是价格从低到高排序好的，每次因从卖单价格最低的一条开始取出进行撮合
-     * 若卖单已被撤销，继续取出下一条进行撮合验证
+     * Selling orders are sorted in descending order of price, and each time they are matched by starting from the lowest selling order price
+     * If the sales order has been revoked, continue to retrieve the next one for matching verification
      *
      * @param sellOrderList
      * @return

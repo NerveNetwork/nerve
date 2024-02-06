@@ -3,41 +3,41 @@ package network.nerve.converter.model.dto;
 import java.math.BigInteger;
 
 /**
- * 组装充值交易的参数
+ * Parameters for assembly recharge transactions
  * @author: Loki
  * @date: 2020-03-02
  */
 public class RechargeTxDTO {
 
     /**
-     * 异构链充值交易hash / 提案交易hash
+     * Heterogeneous chain recharge transactionshash / Proposal transactionhash
      */
     String originalTxHash;
     /**
-     * 异构链from地址
+     * Heterogeneous chainfromaddress
      */
     String heterogeneousFromAddress;
     /**
-     * 充值到账NERVE地址
+     * Recharge to accountNERVEaddress
      */
     String toAddress;
 
     /**
-     * 资产链id（异构链id）
+     * Asset Chainid（Heterogeneous chainid）
      */
     int heterogeneousChainId;
     /**
-     * 充值的资产Id
+     * Recharged assetsId
      */
     int heterogeneousAssetId;
     /**
-     * 充值的金额
+     * Recharged amount
      */
     BigInteger amount;
 
     long txtime;
 
-    // 同时充值token和main，main金额放入新增字段mainAmount中
+    // Simultaneously rechargetokenandmain,mainAmount placed in the new fieldmainAmountin
     boolean depositII;
     BigInteger mainAmount;
     String extend;

@@ -174,12 +174,12 @@ public class BatchTransferProcessor extends TransactionBaseProcessor implements 
         return "a";
 //        Result<String> result = transferService.transfer(builder.build(new TransferReq()));
 //        if(result.isFailed()){
-//            Log.error("转账失败,原因:{}",result.getMessage());
+//            Log.error("Transfer failed,reason:{}",result.getMessage());
 //            Log.error("{}",result);
-//            Log.error("失败地址列表:\n{}",buf.toString());
+//            Log.error("Failed Address List:\n{}",buf.toString());
 //            return null;
 //        }
-//        Log.info("转账成功:hash:{}\n{}",result.getData(),buf.toString());
+//        Log.info("Transfer successful:hash:{}\n{}",result.getData(),buf.toString());
 //        return result.getData();
     }
 

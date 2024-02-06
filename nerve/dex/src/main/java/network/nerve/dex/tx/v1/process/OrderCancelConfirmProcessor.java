@@ -72,15 +72,15 @@ public class OrderCancelConfirmProcessor implements TransactionProcessor {
                     TradingOrderPo orderPo = orderStorageService.query(cancelDeal.getOrderHash());
                     if (blockHeight > DexContext.cancelConfirmSkipHeight) {
                         if (orderPo != null) {
-                            //删除盘口对应的订单记录
+                            //Delete order records corresponding to inventory opening
                             dexManager.removeTradingOrder(orderPo);
-                            //持久化数据库
+                            //Persistent database
                             orderStorageService.stop(orderPo);
                         }
                     } else {
-                        //删除盘口对应的订单记录
+                        //Delete order records corresponding to inventory opening
                         dexManager.removeTradingOrder(orderPo);
-                        //持久化数据库
+                        //Persistent database
                         orderStorageService.stop(orderPo);
                     }
                 }
@@ -102,15 +102,15 @@ public class OrderCancelConfirmProcessor implements TransactionProcessor {
             TradingCancelTxData txData = new TradingCancelTxData();
             txData.parse(new NulsByteBuffer(tx.getTxData()));
 
-            //回滚的处理和commit的处理顺序完全相反
-            //1.先反向处理取消委托挂单
+            //Rollback processing andcommitThe processing order is completely opposite
+            //1.Reverse the process of canceling the entrusted order first
             CancelDeal cancelDeal;
             for (int i = txData.getCancelDealList().size() - 1; i >= 0; i--) {
                 cancelDeal = txData.getCancelDealList().get(i);
                 cancelDeal = orderCancelStorageService.query(cancelDeal.getOrderHash());
                 if (cancelDeal != null && cancelDeal.getStatus() == DexConstant.CANCEL_ORDER_SUCC) {
                     TradingOrderPo orderPo = orderStorageService.queryFromBack(cancelDeal.getOrderHash());
-                    //有可能是因为保存区块时，未完整保存需要做回滚，因此数据可能会查询不到
+                    //It is possible that when saving the block, incomplete saving requires a rollback, so the data may not be queried
                     if (orderPo != null) {
                         orderStorageService.rollbackStop(orderPo);
                     }

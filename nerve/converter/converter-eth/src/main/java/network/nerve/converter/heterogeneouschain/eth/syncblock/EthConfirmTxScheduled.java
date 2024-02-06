@@ -100,19 +100,19 @@ public class EthConfirmTxScheduled implements Runnable {
 
     public void run() {
         if (!EthContext.getConverterCoreApi().isRunning()) {
-            LoggerUtil.LOG.debug("忽略同步区块模式");
+            LoggerUtil.LOG.debug("Ignoring synchronous block mode");
             return;
         }
         if (!EthContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-            LoggerUtil.LOG.debug("非虚拟银行成员，跳过此任务");
+            LoggerUtil.LOG.debug("Non virtual bank member, skip this task");
             return;
         }
-        LoggerUtil.LOG.debug("[ETH交易确认任务] - 每隔20秒执行一次。");
+        LoggerUtil.LOG.debug("[ETHTransaction confirmation task] - every other20Execute once per second.");
         LinkedBlockingDeque<EthUnconfirmedTxPo> queue = EthContext.UNCONFIRMED_TX_QUEUE;
         EthUnconfirmedTxPo po = null;
         try {
             ethWalletApi.checkApi(EthContext.getConverterCoreApi().getVirtualBankOrder());
-            // 等待重启应用时，加载的持久化未确认交易
+            // Persistent unconfirmed transactions loaded while waiting for application restart
             EthContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH.await();
             long ethNewestHeight = ethWalletApi.getBlockHeight();
             int size = EthContext.UNCONFIRMED_TX_QUEUE.size();
@@ -120,7 +120,7 @@ public class EthConfirmTxScheduled implements Runnable {
                 po = EthContext.UNCONFIRMED_TX_QUEUE.poll();
                 if (po == null) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("移除空值PO");
+                        logger().debug("Remove null valuesPO");
                     }
                     continue;
                 }
@@ -133,23 +133,23 @@ public class EthConfirmTxScheduled implements Runnable {
                 }
 
                 if (po.getBlockHeight() == null) {
-                    // 区块高度为空，检查10次后，查询eth交易所在高度，若节点同步的eth高度大于了交易所在高度，则说明此交易已经被其他节点处理过，应移除此交易
+                    // Block height is empty, check10Next time, queryethThe exchange is at a height, if the nodes are synchronizedethIf the height is greater than the exchange's height, it indicates that the transaction has already been processed by other nodes and should be removed
                     boolean needRemovePo = checkBlockHeightTimes(po);
                     if(needRemovePo) {
-                        logger().info("区块高度为空，此交易已处理过，移除此交易，详情: {}", po.toString());
+                        logger().info("Block height is empty, this transaction has been processed. Remove this transaction, details: {}", po.toString());
                         this.clearDB(po.getTxHash());
                         continue;
                     }
-                    // [加速重发交易机制] 没有区块高度，表示一直处于未解析状态，则说明没有被ETH打包（检查是否被打包），检查是否为本地发出的交易，加速重发交易
+                    // [Accelerated resend trading mechanism] If there is no block height, it indicates that it has been in an unresolved state, indicating that it has not been resolvedETHpack（Check if it has been packaged）Check if it is a transaction sent locally and accelerate the resend of transactions
                     boolean timeOut = System.currentTimeMillis() - po.getCreateDate() > EthConstant.MINUTES_5;
                     if (timeOut) {
                         String ethTxHash = po.getTxHash();
                         boolean currentNodeSent = ethResendHelper.currentNodeSent(ethTxHash);
                         if (currentNodeSent) {
-                            // 当前节点发出的交易，检查是否已打包
+                            // Check if the transaction sent by the current node has been packaged
                             boolean packed = checkPacked(ethTxHash);
                             if (!packed) {
-                                // 交易未打包，提高 gasPrice 加速重发交易
+                                // Transaction not packaged, increase gasPrice Accelerate resend transactions
                                 EthSendTransactionPo txInfo = ethResendHelper.getSentTransactionInfo(ethTxHash);
                                 boolean speedSent = speedUpResendTransaction(po.getTxType(), po.getNerveTxHash(), poFromDB, txInfo);
                                 if (speedSent) {
@@ -160,25 +160,25 @@ public class EthConfirmTxScheduled implements Runnable {
                         }
                     }
                     if(logger().isDebugEnabled()) {
-                        logger().debug("区块高度为空，放回队列等待下次处理，详情: {}", po.toString());
+                        logger().debug("Block height is empty, put back in queue for next processing, details: {}", po.toString());
                     }
                     queue.offer(po);
                     continue;
                 }
 
-                // 交易触发重新验证后，等待`skipTimes`的轮次，再做验证
+                // Wait for transaction triggering revalidation`skipTimes`The round will be verified again
                 if (po.getSkipTimes() > 0) {
                     po.setSkipTimes(po.getSkipTimes() - 1);
                     queue.offer(po);
                     if(logger().isDebugEnabled()) {
-                        logger().debug("交易触发重新验证，剩余等待再次验证的轮次数量: {}", po.getSkipTimes());
+                        logger().debug("Transaction triggered revalidation, remaining number of rounds waiting for revalidation: {}", po.getSkipTimes());
                     }
                     continue;
                 }
-                // 未达到确认高度，放回队列中，下次继续检查
+                // Not reaching the confirmed height, put it back in the queue and continue checking next time
                 if (ethNewestHeight - po.getBlockHeight() < EthContext.getConfig().getTxBlockConfirmations()) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("交易[{}]确认高度等待: {}", po.getTxHash(), EthContext.getConfig().getTxBlockConfirmations() - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("transaction[{}]Confirm altitude waiting: {}", po.getTxHash(), EthContext.getConfig().getTxBlockConfirmations() - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -187,7 +187,7 @@ public class EthConfirmTxScheduled implements Runnable {
                     case DEPOSIT:
                         if (dealDeposit(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("充值交易重新放回队列, 详情: {}", poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("Recharge transactions are placed back in the queue, details: {}", poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -198,7 +198,7 @@ public class EthConfirmTxScheduled implements Runnable {
                     case UPGRADE:
                         if (dealBroadcastTx(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("广播交易重新放回队列, 详情: {}", poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("Broadcast transactions are put back into the queue, details: {}", poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -232,7 +232,7 @@ public class EthConfirmTxScheduled implements Runnable {
             return false;
         }
         BigInteger blockNumber = tx.getBlockNumber();
-        // 本地最新的区块
+        // Latest local blocks
         EthSimpleBlockHeader localMax = ethLocalBlockHelper.getLatestLocalBlockHeader();
         if(localMax == null) {
             return false;
@@ -251,34 +251,34 @@ public class EthConfirmTxScheduled implements Runnable {
             txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         }
         if (txPo == null) {
-            logger().warn("[充值任务异常] DB中未获取到PO，队列中PO: {}", po.toString());
+            logger().warn("[Recharge task exception] DBNot obtained inPOIn the queuePO: {}", po.toString());
             return !isReOfferQueue;
         }
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，从队列中移除
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBRemove from queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(ethTxHash);
                 isReOfferQueue = false;
-                logger().info("[{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), EthConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), EthConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
         }
         if (!po.isValidateTx()) {
-            //再次验证交易
+            //Verify transaction again
             boolean validateTx = validateDepositTxConfirmedInEthNet(ethTxHash, po.isIfContractAsset());
             if (!validateTx) {
-                // 验证失败，从DB和队列中移除交易
+                // Verification failed, fromDBRemove transactions from the queue
                 this.clearDB(ethTxHash);
                 return !isReOfferQueue;
             }
             po.setValidateTx(validateTx);
         }
         try {
-            // 回调充值交易
+            // Callback recharge transaction
             String nerveTxHash = ethCallBackManager.getDepositTxSubmitter().txSubmit(
                     ethTxHash,
                     po.getBlockHeight(),
@@ -293,7 +293,7 @@ public class EthConfirmTxScheduled implements Runnable {
                     po.getNerveAddress(), null);
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
-            // 当未确认交易数据产生变化时，更新DB数据
+            // Update when there is a change in unconfirmed transaction dataDBdata
             boolean nerveTxHashNotBlank = StringUtils.isNotBlank(nerveTxHash);
             if (nerveTxHashNotBlank) {
                 ethUnconfirmedTxStorageService.update(txPo, update -> update.setNerveTxHash(nerveTxHash));
@@ -302,11 +302,11 @@ public class EthConfirmTxScheduled implements Runnable {
                 }
             }
         } catch (Exception e) {
-            // 交易已存在，移除队列
+            // Transaction already exists, remove queue
             if (e instanceof NulsException &&
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("Nerve交易已存在，从队列中移除待确认的ETH交易[{}]", ethTxHash);
+                logger().info("NerveTransaction already exists, remove pending confirmation from queueETHtransaction[{}]", ethTxHash);
                 return !isReOfferQueue;
             }
             throw e;
@@ -322,20 +322,20 @@ public class EthConfirmTxScheduled implements Runnable {
             txPo = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
         }
         if (txPo == null) {
-            logger().warn("[提现任务异常] DB中未获取到PO，队列中PO: {}", po.toString());
+            logger().warn("[Withdrawal task exception] DBNot obtained inPOIn the queuePO: {}", po.toString());
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，不放回队列
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBDelete in, do not put back in queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(ethTxHash);
                 isReOfferQueue = false;
                 ethResendHelper.clear(nerveTxHash);
-                logger().info("[{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), EthConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", po.getTxType(), po.getTxHash(), EthConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
@@ -346,54 +346,54 @@ public class EthConfirmTxScheduled implements Runnable {
                 break;
             case FAILED:
             case DOING:
-                // 检查本地是否发起过此nerve提现交易，若没有，则发起。新加入的虚拟银行会出现这种情况，不过如果已经错过之前其他虚拟银行发起的doing的交易，则此方案无效
+                // Check if this has been initiated locallynerveWithdrawal transaction, if not available, initiate. This situation may occur with newly added virtual banks, but if you have missed the previous virtual bank initiativesdoingThe transaction is invalid, then this plan is invalid
                 checkCurrentNodeSendWithdraw(po.getTxType(), nerveTxHash);
-                // 失败或者正在多签的交易不用处理，从队列和DB中移除
-                logger().info("{} 正在多签的或者失败的交易不用处理，从队列和DB中移除[{}]", txPo.getStatus(), ethTxHash);
+                // Transactions that have failed or are in the process of being multi signed do not need to be processed, from the queue andDBRemove from middle
+                logger().info("{} Transactions that are being oversigned or have failed do not need to be processed, from the queue andDBRemove from middle[{}]", txPo.getStatus(), ethTxHash);
                 isReOfferQueue = false;
                 this.clearDB(ethTxHash);
                 break;
             case RESEND:
                 if(po.getResendTimes() > EthConstant.RESEND_TIME) {
-                    logger().warn("重发超过三十次，丢弃交易, 详情: {}", po.toString());
+                    logger().warn("Resend more than thirty times, discard transaction, details: {}", po.toString());
                     isReOfferQueue = false;
                     this.clearDB(ethTxHash);
                     break;
                 }
-                // 交易重发
+                // Transaction resend
                 boolean success0 = this.reSend(txPo);
                 if(success0) {
                     isReOfferQueue = false;
                     this.clearDB(ethTxHash);
                 } else {
-                    // 重发失败，等待一轮再次重发
+                    // Resend failed, wait for one round to resend again
                     po.setSkipTimes(1);
                     po.setResendTimes(po.getResendTimes() + 1);
                 }
                 break;
             case COMPLETED:
                 if (!po.isValidateTx()) {
-                    //再次验证交易
+                    //Verify transaction again
                     BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInEthNet(po);
                     switch (validate) {
                         case RE_VALIDATE:
-                            // 放回队列，再次验证
+                            // Put it back in the queue and verify again
                             return isReOfferQueue;
                         case RE_SEND:
                             if(po.getResendTimes() > EthConstant.RESEND_TIME) {
-                                logger().warn("重发超过三十次，丢弃交易, 详情: {}", po.toString());
+                                logger().warn("Resend more than thirty times, discard transaction, details: {}", po.toString());
                                 isReOfferQueue = false;
                                 this.clearDB(ethTxHash);
                                 break;
                             }
-                            // 交易重发
+                            // Transaction resend
                             boolean success1 = this.reSend(txPo);
                             if(success1) {
-                                // 从DB和队列中移除当前交易
+                                // fromDBRemove the current transaction from the queue
                                 isReOfferQueue = false;
                                 this.clearDB(ethTxHash);
                             } else {
-                                // 重发失败，等待一轮再次重发
+                                // Resend failed, wait for one round to resend again
                                 po.setSkipTimes(1);
                                 po.setResendTimes(po.getResendTimes() + 1);
                             }
@@ -406,34 +406,34 @@ public class EthConfirmTxScheduled implements Runnable {
                 }
                 try {
                     String realNerveTxHash = nerveTxHash;
-                    // 恢复机制
+                    // Recovery mechanism
                     if (txPo.getTxType() == HeterogeneousChainTxType.RECOVERY) {
                         realNerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_I.length());
                         if (txPo.getNerveTxHash().startsWith(EthConstant.ETH_RECOVERY_I)) {
-                            // 第一步恢复设置为已完成
+                            // The first step of restoring is to set it as completed
                             if (!EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
                                 ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                             }
-                            // 第一步恢复执行完成后，种子虚拟银行执行第二步
+                            // After the first step of recovery execution is completed, the seed virtual bank executes the second step
                             if (EthContext.getConverterCoreApi().isSeedVirtualBankByCurrentNode()) {
-                                logger().info("[{}]已完成恢复第一步的ETH交易[{}]调用恢复第二步", po.getTxType(), ethTxHash);
+                                logger().info("[{}]The first step of recovery has been completedETHtransaction[{}]Call the second step of recovery", po.getTxType(), ethTxHash);
                                 EthRecoveryDto recoveryDto = ethTxStorageService.findRecoveryByNerveTxKey(nerveTxHash);
                                 if (recoveryDto == null) {
-                                    logger().info("第二步恢复交易已提前发出");
+                                    logger().info("The second step of resuming transactions has been sent out in advance");
                                     ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                                     break;
                                 }
                                 String secondHash = ethRegister.getDockingImpl().forceRecovery(EthConstant.ETH_RECOVERY_II + realNerveTxHash, recoveryDto.getSeedManagers(), recoveryDto.getAllManagers());
                                 if (StringUtils.isNotBlank(secondHash)) {
-                                    logger().info("第二步恢复交易已发出，hash: {}", secondHash);
+                                    logger().info("The second step of restoring the transaction has been sent out,hash: {}", secondHash);
                                     ethRegister.getDockingImpl().txConfirmedCompleted(ethTxHash, getCurrentBlockHeightOnNerve(), nerveTxHash);
                                 }
                             }
                             break;
                         }
                     }
-                    logger().info("[{}]签名完成的ETH交易[{}]调用Nerve确认[{}]", po.getTxType(), ethTxHash, realNerveTxHash);
-                    // 签名完成的交易将触发回调Nerve Core
+                    logger().info("[{}]SignedETHtransaction[{}]callNerveconfirm[{}]", po.getTxType(), ethTxHash, realNerveTxHash);
+                    // The signed transaction will trigger a callbackNerve Core
                     ethCallBackManager.getTxConfirmedProcessor().txConfirmed(
                             po.getTxType(),
                             realNerveTxHash,
@@ -443,9 +443,9 @@ public class EthConfirmTxScheduled implements Runnable {
                             EthContext.MULTY_SIGN_ADDRESS,
                             txPo.getSigners());
                 } catch (NulsException e) {
-                    // 交易已存在，等待确认移除
+                    // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
-                        logger().info("Nerve交易[{}]已存在，从队列中移除待确认的ETH交易[{}]", txPo.getNerveTxHash(), ethTxHash);
+                        logger().info("Nervetransaction[{}]Exists, remove pending confirmation from queueETHtransaction[{}]", txPo.getNerveTxHash(), ethTxHash);
                         return !isReOfferQueue;
                     }
                     throw e;
@@ -459,24 +459,24 @@ public class EthConfirmTxScheduled implements Runnable {
         if (txInfo == null) {
             return false;
         }
-        logger().info("检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}", txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
-        // 向ETH网络请求验证
+        logger().info("Detected the need to accelerate resend transactions, type: {}, ethHash: {}, nerveTxHash: {}", txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
+        // towardsETHNetwork request verification
         boolean isCompleted = ethParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
-            // 发出一个转账给自己的交易覆盖此nonce
+            logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
+            // Send a transfer to oneself to cover this transactionnonce
             String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
             if (StringUtils.isNotBlank(overrideHash)) {
-                logger().info("转账覆盖交易: {}，被覆盖交易: {}", overrideHash, txInfo.getTxHash());
+                logger().info("Transfer coverage transaction: {}, covered transactions: {}", overrideHash, txInfo.getTxHash());
             } else {
-                logger().info("未成功发出覆盖交易");
+                logger().info("Unsuccessful issuance of overlay transaction");
             }
             return true;
         }
         if (logger().isDebugEnabled()) {
-            logger().debug("加速前: {}", txInfo.toString());
+            logger().debug("Before acceleration: {}", txInfo.toString());
         }
-        // 检查发出交易的地址和当前虚拟银行地址是否一致，否则，重新获取nonce发出交易
+        // Check if the address from which the transaction was sent matches the current virtual bank address. Otherwise, retrieve it againnonceSend transaction
         String from = txInfo.getFrom();
         String currentFrom = EthContext.ADMIN_ADDRESS;
         BigInteger nonce = txInfo.getNonce();
@@ -484,12 +484,12 @@ public class EthConfirmTxScheduled implements Runnable {
             nonce = ethWalletApi.getNonce(currentFrom);
         }
         txInfo.setNonce(nonce);
-        // 提高交易的price，获取当前ETH网络price，和旧的price取较大值，再+2，即 price = price + 2，最大当前price的1.1倍
+        // Improve transaction efficiencyprice, obtain the currentETHnetworkprice, and oldpriceTake the larger value, and then+2, i.e price = price + 2, maximum currentpriceof1.1times
         BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
         BigInteger maxCurrentGasPrice = new BigDecimal(currentGasPrice).multiply(EthConstant.NUMBER_1_DOT_1).toBigInteger();
         BigInteger oldGasPrice = txInfo.getGasPrice();
         if (maxCurrentGasPrice.compareTo(oldGasPrice) <= 0) {
-            logger().info("当前交易的gasPrice已达到加速最大值，不再继续加速，等待ETH网络打包交易");
+            logger().info("Current transactiongasPriceReached maximum acceleration value, no further acceleration, waitingETHNetwork packaged transactions");
             return false;
         }
         BigInteger newGasPrice = oldGasPrice.compareTo(currentGasPrice) > 0 ? oldGasPrice : currentGasPrice;
@@ -497,70 +497,70 @@ public class EthConfirmTxScheduled implements Runnable {
         newGasPrice = newGasPrice.compareTo(maxCurrentGasPrice) > 0 ? maxCurrentGasPrice : newGasPrice;
 
         txInfo.setGasPrice(newGasPrice);
-        // 获取账户信息
+        // Obtain account information
         HeterogeneousAccount account = ethRegister.getDockingImpl().getAccount(currentFrom);
         account.decrypt(EthContext.ADMIN_ADDRESS_PASSWORD);
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        // 验证业务数据
+        // Verify business data
         String contractAddress = txInfo.getTo();
         String encodedFunction = txInfo.getData();
         EthCall ethCall = ethWalletApi.validateContractCall(currentFrom, contractAddress, encodedFunction);
         if (ethCall.isReverted()) {
             if (ConverterUtil.isCompletedTransaction(ethCall.getRevertReason())) {
-                logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
-                // 发出一个转账给自己的交易覆盖此nonce
+                logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
+                // Send a transfer to oneself to cover this transactionnonce
                 String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
                 if (StringUtils.isNotBlank(overrideHash)) {
-                    logger().info("转账覆盖交易: {}，被覆盖交易: {}", overrideHash, txInfo.getTxHash());
+                    logger().info("Transfer coverage transaction: {}, covered transactions: {}", overrideHash, txInfo.getTxHash());
                 } else {
-                    logger().info("未成功发出覆盖交易");
+                    logger().info("Unsuccessful issuance of overlay transaction");
                 }
                 return true;
             }
-            logger().warn("[{}]加速重发交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            logger().warn("[{}]Accelerated resend transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
             return false;
         }
         EthSendTransactionPo newTxPo = ethWalletApi.callContractRaw(priKey, txInfo);
         String ethTxHash = newTxPo.getTxHash();
-        // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
+        // dockinglaunchethRecord transaction relationships during transactionsdbIn, and save the currently usednonceIn the relationship table, if there is any reasonpriceIf there is a need to resend the transaction without packaging it too low, the current one used will be taken outnonceResend transaction
         ethTxRelationStorageService.save(ethTxHash, nerveTxHash, newTxPo);
 
         EthUnconfirmedTxPo po = new EthUnconfirmedTxPo();
         BeanUtils.copyProperties(unconfirmedTxPo, po);
-        // 保存未确认交易
+        // Save unconfirmed transactions
         po.setTxHash(ethTxHash);
         po.setFrom(currentFrom);
         po.setTxType(txType);
         po.setCreateDate(System.currentTimeMillis());
         ethUnconfirmedTxStorageService.save(po);
         EthContext.UNCONFIRMED_TX_QUEUE.offer(po);
-        // 监听此交易的打包状态
+        // Monitor the packaging status of this transaction
         ethListener.addListeningTx(ethTxHash);
-        logger().info("加速重发ETH网络交易成功, 类型: {}, 详情: {}", txType, po.superString());
+        logger().info("Accelerated retransmissionETHOnline transaction successful, type: {}, details: {}", txType, po.superString());
         if (logger().isDebugEnabled()) {
-            logger().debug("加速后: {}", newTxPo.toString());
+            logger().debug("After acceleration: {}", newTxPo.toString());
         }
         return true;
     }
 
     private String sendOverrideTransferTx(String from, BigInteger gasPrice, BigInteger nonce) {
         try {
-            // 检查发出交易的地址和当前虚拟银行地址是否一致，否则，忽略
+            // Check if the address from which the transaction was sent matches the current virtual bank address, otherwise ignore it
             String currentFrom = EthContext.ADMIN_ADDRESS;
             if (!currentFrom.equals(from)) {
-                logger().info("发出转账覆盖交易的地址和当前虚拟银行地址不一致，忽略");
+                logger().info("The address where the transfer was sent to cover the transaction does not match the current virtual bank address, ignore");
                 return null;
             }
-            // 获取账户信息
+            // Obtain account information
             HeterogeneousAccount account = ethRegister.getDockingImpl().getAccount(currentFrom);
             account.decrypt(EthContext.ADMIN_ADDRESS_PASSWORD);
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-            // 获取网络gasprice
+            // Get Networkgasprice
             BigInteger currentGasPrice = ethWalletApi.getCurrentGasPrice();
             BigInteger newGasPrice = gasPrice.compareTo(currentGasPrice) > 0 ? gasPrice : currentGasPrice;
             newGasPrice = newGasPrice.add(EthConstant.GWEI_3);
             if (logger().isDebugEnabled()) {
-                logger().debug("组装的覆盖交易数据, from: {}, to: {}, value: {}, gasLimit: {}, gasPrice: {}, nonce: {}",
+                logger().debug("Assembly covered transaction data, from: {}, to: {}, value: {}, gasLimit: {}, gasPrice: {}, nonce: {}",
                         currentFrom,
                         currentFrom,
                         BigInteger.ZERO,
@@ -571,14 +571,14 @@ public class EthConfirmTxScheduled implements Runnable {
             String hash = ethWalletApi.sendETHWithNonce(currentFrom, priKey, currentFrom, BigDecimal.ZERO, EthConstant.ETH_GAS_LIMIT_OF_ETH, newGasPrice, nonce);
             return hash;
         } catch (Exception e) {
-            logger().warn("发生转账覆盖交易异常，忽略", e);
+            logger().warn("Transfer overlay transaction exception occurred, ignored", e);
             return null;
         }
 
     }
 
     /**
-     * 检查eth交易是否被打包
+     * inspectethHas the transaction been packaged
      */
     private boolean checkPacked(String ethTxHash) throws Exception {
         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
@@ -586,7 +586,7 @@ public class EthConfirmTxScheduled implements Runnable {
     }
 
     /**
-     * 检查本地是否发起过此nerve提现交易，若没有，则发起。新加入的虚拟银行会出现这种情况，不过如果已经错过之前其他虚拟银行发起的doing的交易，则此方案无效
+     * Check if this has been initiated locallynerveWithdrawal transaction, if not available, initiate. This situation may occur with newly added virtual banks, but if you have missed the previous virtual bank initiativesdoingThe transaction is invalid, then this plan is invalid
      */
     private void checkCurrentNodeSendWithdraw(HeterogeneousChainTxType txType, String nerveTxHash) {
         if (txType != HeterogeneousChainTxType.WITHDRAW) {
@@ -597,7 +597,7 @@ public class EthConfirmTxScheduled implements Runnable {
             if (!existNerveTxHash) {
                 HeterogeneousWithdrawTxInfo withdrawTxInfo = EthContext.getConverterCoreApi().getWithdrawTxInfo(nerveTxHash);
                 if (withdrawTxInfo != null && withdrawTxInfo.getHeterogeneousChainId() == EthContext.getConfig().getChainId()) {
-                    logger().info("检测到当前虚拟银行节点未发出此[提现]交易，验证无误后将发起[提现]交易, 提现数据: {}", withdrawTxInfo.toString());
+                    logger().info("Detected that the current virtual bank node has not sent this message[Withdrawal]Transaction will be initiated after verification of accuracy[Withdrawal]transaction, Withdrawal data: {}", withdrawTxInfo.toString());
                     EthDocking docking = (EthDocking) ethRegister.getDockingImpl();
                     docking.createOrSignWithdrawTx(
                             nerveTxHash,
@@ -607,26 +607,26 @@ public class EthConfirmTxScheduled implements Runnable {
                 }
             }
         } catch (Exception e) {
-            logger().warn(String.format("当前虚拟银行节点首次发交易失败, 类型: %s, nerveTxHash: %s", txType, nerveTxHash), e);
+            logger().warn(String.format("The first transaction failed for the current virtual bank node, type: %s, nerveTxHash: %s", txType, nerveTxHash), e);
         }
     }
 
     /**
-     * 验证充值交易
+     * Verify recharge transactions
      */
     private boolean validateDepositTxConfirmedInEthNet(String ethTxHash, boolean ifContractAsset) throws Exception {
         boolean validateTx = false;
         do {
             TransactionReceipt receipt = ethWalletApi.getTxReceipt(ethTxHash);
             if (receipt == null) {
-                logger().error("再次验证交易[{}]失败，获取不到receipt", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed, unable to obtainreceipt", ethTxHash);
                 break;
             }
             if (!receipt.isStatusOK()) {
-                logger().error("再次验证交易[{}]失败，receipt状态不正确", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed,receiptIncorrect status", ethTxHash);
                 break;
             } else if (ifContractAsset && (receipt.getLogs() == null || receipt.getLogs().size() == 0)) {
-                logger().error("再次验证交易[{}]失败，receipt.Log状态不正确", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed,receipt.LogIncorrect status", ethTxHash);
                 break;
             }
             validateTx = true;
@@ -635,18 +635,18 @@ public class EthConfirmTxScheduled implements Runnable {
     }
 
     /**
-     * 交易重发
+     * Transaction resend
      */
     private boolean reSend(EthUnconfirmedTxPo po) throws NulsException {
         boolean success;
         try {
-            logger().info("[{}]交易[{}]重发, 详情: {}", po.getTxType(), po.getTxHash(), po.toString());
+            logger().info("[{}]transaction[{}]retransmission, details: {}", po.getTxType(), po.getTxHash(), po.toString());
             EthDocking docking = (EthDocking) ethRegister.getDockingImpl();
             switch (po.getTxType()) {
                 case WITHDRAW:
                     String ethWithdrawHash = docking.createOrSignWithdrawTx(po.getNerveTxHash(), po.getTo(), po.getValue(), po.getAssetId(), false);
                     if(StringUtils.isBlank(ethWithdrawHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());
                     }
                     break;
@@ -654,14 +654,14 @@ public class EthConfirmTxScheduled implements Runnable {
                 case CHANGE:
                     String ethChangesHash = docking.createOrSignManagerChangesTx(po.getNerveTxHash(), po.getAddAddresses(), po.getRemoveAddresses(), po.getOrginTxCount());
                     if(StringUtils.isBlank(ethChangesHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());
                     }
                     break;
                 case UPGRADE:
                     String ethUpgradeHash = docking.createOrSignUpgradeTx(po.getNerveTxHash());
                     if(StringUtils.isBlank(ethUpgradeHash)) {
-                        logger().info("Nerve交易[{}]已完成，无需重发", po.getNerveTxHash());
+                        logger().info("Nervetransaction[{}]Completed, no need to resend", po.getNerveTxHash());
                         ethResendHelper.clear(po.getNerveTxHash());
                     }
                     break;
@@ -670,14 +670,14 @@ public class EthConfirmTxScheduled implements Runnable {
             }
             success = true;
         } catch (Exception e) {
-            logger().error("交易重发失败，等待再次重发交易", e);
+            logger().error("Transaction resend failed, waiting for resend transaction", e);
             success = false;
         }
         return success;
     }
 
     /**
-     * 验证发到ETH网络的交易是否确认，若有异常情况，则根据条件重发交易
+     * Verification sent toETHIs the online transaction confirmed? If there are any abnormal situations, resend the transaction according to the conditions
      */
     private BroadcastTxValidateStatus validateBroadcastTxConfirmedInEthNet(EthUnconfirmedTxPo po) throws Exception {
 
@@ -688,21 +688,21 @@ public class EthConfirmTxScheduled implements Runnable {
             if (receipt == null) {
                 boolean timeOut = System.currentTimeMillis() - po.getCreateDate() > EthConstant.MINUTES_20;
                 /*
-                不会出现重复提现的情况，由于这是调用合约提现函数，合约业务内保证只被提现一次
+                There will be no repeated withdrawals, as this is a call to the contract withdrawal function, the contract business guarantees that it will only be withdrawn once
                 if(po.getTxType() == WITHDRAW) {
-                    // 若已超时，则每15轮验证一次，否则，每3轮验证一次
+                    // If the timeout has expired, then every15Verify once per round, otherwise, every3One round of verification
                     int skipTimes = timeOut ? 15 : 3;
                     po.setSkipTimes(skipTimes);
                     status = BroadcastTxValidateStatus.RE_VALIDATE;
                     break;
                 }
                 */
-                logger().error("再次验证交易[{}]失败，获取不到receipt", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed, unable to obtainreceipt", ethTxHash);
                 if (timeOut) {
-                    // 交易二十分钟未确认，则重发交易
+                    // If the transaction is not confirmed within 20 minutes, resend the transaction
                     status = BroadcastTxValidateStatus.RE_SEND;
                 } else {
-                    // 未获取到交易收据，20分钟内，每3轮验证一次
+                    // Transaction receipt not obtained,20Within minutes, every3One round of verification
                     po.setSkipTimes(3);
                     status = BroadcastTxValidateStatus.RE_VALIDATE;
                 }
@@ -710,11 +710,11 @@ public class EthConfirmTxScheduled implements Runnable {
             }
             if (!receipt.isStatusOK()) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("再次验证交易[{}]失败，receipt状态不正确", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed,receiptIncorrect status", ethTxHash);
                 break;
             } else if (receipt.getLogs() == null || receipt.getLogs().size() == 0) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("再次验证交易[{}]失败，receipt.Log状态不正确", ethTxHash);
+                logger().error("Verify transaction again[{}]Failed,receipt.LogIncorrect status", ethTxHash);
                 break;
             }
             status = SUCCESS;

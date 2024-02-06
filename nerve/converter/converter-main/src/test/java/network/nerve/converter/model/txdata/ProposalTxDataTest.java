@@ -17,7 +17,7 @@ public class ProposalTxDataTest {
         proposalTxData = new ProposalTxData();
         proposalTxData.setType((byte)1);
         proposalTxData.setVoteRangeType((byte)0);
-        proposalTxData.setContent("230487thurefqu/'\\[/\\//h3fpi?？‘；】【。，史蒂夫违法3421！@#￥%……&*】’ueqhpfh");
+        proposalTxData.setContent("230487thurefqu/'\\[/\\//h3fpi?？‘；】【., Steve is illegal3421！@#￥%……&*】’ueqhpfh");
 
         proposalTxData.setAddress(AddressTool.getAddress("tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG"));
         proposalTxData.setHeterogeneousTxHash("0x1e2910a262b1008d0616a0beb24c1a491d78771baa54a33e66065e03b1f46bc1");

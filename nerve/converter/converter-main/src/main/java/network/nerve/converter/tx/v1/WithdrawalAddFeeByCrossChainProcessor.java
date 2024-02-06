@@ -58,7 +58,7 @@ import java.util.*;
 import static network.nerve.converter.constant.ConverterConstant.INIT_CAPACITY_8;
 
 /**
- * 跨链追加跨链手续费交易
+ * Cross chain additional cross chain handling fee transaction
  *
  * @author: PierreLuo
  * @date: 2022/4/13
@@ -97,14 +97,14 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
             String errorCode = null;
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
-            //区块内业务重复交易检查
+            //Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
             for (Transaction tx : txs) {
                 WithdrawalAddFeeByCrossChainTxData txData = ConverterUtil.getInstance(tx.getTxData(), WithdrawalAddFeeByCrossChainTxData.class);
                 HeterogeneousHash heterogeneousHash = txData.getHtgTxHash();
                 String originalTxHash = heterogeneousHash.getHeterogeneousHash();
                 if(!setDuplicate.add(originalTxHash.toLowerCase())){
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash in the block is repeated (Repeat business) txHash:{}, originalTxHash:{}",
@@ -112,14 +112,14 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
                     continue;
                 }
                 if(null != rechargeStorageService.find(chain, originalTxHash)){
-                    // 该原始交易已执行过充值
+                    // The original transaction has already been recharged
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                             tx.getHash().toHex(), originalTxHash);
                 }
 
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -170,19 +170,19 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
                 if (null == po.getMapAdditionalFee()) {
                     po.setMapAdditionalFee(new HashMap<>(INIT_CAPACITY_8));
                 }
-                // 更新提现手续费追加的变化
+                // Changes in updated withdrawal fee additions
                 chain.increaseWithdrawFeeChangeVersion(basicTxHash);
-                // 保存交易
+                // Save transaction
                 CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
                 BigInteger fee = coinData.getTo().get(0).getAmount();
                 po.getMapAdditionalFee().put(tx.getHash().toHex(), fee);
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);
-                // 节点正常运行状态下, 才执行异构链交易确认函数
+                // Under normal operation of the node, Only execute the heterogeneous chain transaction confirmation function
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                     docking.txConfirmedCompleted(heterogeneousHash, blockHeader.getHeight(), hash.toHex());
                 }
-                chain.getLogger().info("[commit] [跨链追加]提现交易手续费交易 hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), basicTxHash);
+                chain.getLogger().info("[commit] [Cross chain addition]Withdrawal transaction fee transaction hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), basicTxHash);
             }
             return true;
         } catch (Exception e) {
@@ -216,9 +216,9 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
                 if (po == null || null == po.getMapAdditionalFee() || po.getMapAdditionalFee().isEmpty()) {
                     continue;
                 }
-                // 回滚提现手续费追加的变化
+                // Changes in Rollback Withdrawal Fee Addition
                 chain.decreaseWithdrawFeeChangeVersion(withdrawalTxHash);
-                // 移除当前交易的kv
+                // Remove the current transactionkv
                 po.getMapAdditionalFee().remove(tx.getHash().toHex());
                 txStorageService.saveWithdrawalAdditionalFee(chain, po);
                 boolean rs = this.rechargeStorageService.delete(chain, heterogeneousHash);
@@ -228,7 +228,7 @@ public class WithdrawalAddFeeByCrossChainProcessor implements TransactionProcess
                 }
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                 docking.txConfirmedRollback(heterogeneousHash);
-                chain.getLogger().info("[rollback] [跨链追加]提现交易手续费交易 hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), withdrawalTxHash);
+                chain.getLogger().info("[rollback] [Cross chain addition]Withdrawal transaction fee transaction hash:{}, withdrawalTxHash:{}", tx.getHash().toHex(), withdrawalTxHash);
             }
             return true;
         } catch (Exception e) {

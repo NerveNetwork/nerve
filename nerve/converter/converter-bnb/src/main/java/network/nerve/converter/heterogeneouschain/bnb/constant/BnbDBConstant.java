@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.bnb.constant;
  */
 public interface BnbDBConstant {
     /**
-     * BNB信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * BNBInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_BNB = "cv_table_bnb";

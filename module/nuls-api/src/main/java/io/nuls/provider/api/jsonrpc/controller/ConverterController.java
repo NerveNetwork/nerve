@@ -30,13 +30,13 @@ public class ConverterController {
     ConverterTools converterTools;
 
     @RpcMethod("getEthAddress")
-    @ApiOperation(description = "根据共识节点打包地址查询相应的以太坊地址", order = 601)
+    @ApiOperation(description = "Query the corresponding Ethereum address based on the consensus node packaging address", order = 601)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "共识节点打包地址")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "packingAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Consensus node packaging address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousAddress", description = "异构链地址")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousAddress", description = "Heterogeneous Chain Address")
     })
     )
     public RpcResult getEthAddress(List<Object> params) {
@@ -64,11 +64,11 @@ public class ConverterController {
     }
 
     @RpcMethod("getVirtualBank")
-    @ApiOperation(description = "获取虚拟银行成员信息", order = 602)
+    @ApiOperation(description = "Obtain virtual bank member information", order = 602)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个List对象", responseType = @TypeDescriptor(value = List.class,
+    @ResponseData(name = "Return value", description = "Return aListobject", responseType = @TypeDescriptor(value = List.class,
             collectionElement = VirtualBankDirectorDTO.class)
     )
     public RpcResult getVirtualBankInfo(List<Object> params) {
@@ -85,11 +85,11 @@ public class ConverterController {
 
 
     @RpcMethod("getDisqualification")
-    @ApiOperation(description = "获取已撤销虚拟银行资格节点地址列表", order = 603)
+    @ApiOperation(description = "Obtain a list of revoked virtual bank qualification node addresses", order = 603)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个List对象", responseType = @TypeDescriptor(value = List.class,
+    @ResponseData(name = "Return value", description = "Return aListobject", responseType = @TypeDescriptor(value = List.class,
             collectionElement = String.class)
     )
     public RpcResult getDisqualification(List<Object> params) {
@@ -105,13 +105,13 @@ public class ConverterController {
     }
 
     @RpcMethod("retryWithdrawalMsg")
-    @ApiOperation(description = "重新将异构链提现交易放入task, 重发消息", order = 604)
+    @ApiOperation(description = "Repositioning heterogeneous chain withdrawal transactionstask, Resend message", order = 604)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "链内提现交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "On chain withdrawal transactionshash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public RpcResult retryWithdrawalMsg(List<Object> params) {
@@ -139,15 +139,15 @@ public class ConverterController {
     }
 
     @RpcMethod("getHeterogeneousMainAsset")
-    @ApiOperation(description = "返回异构链主资产在NERVE网络的资产信息", order = 605)
+    @ApiOperation(description = "Return heterogeneous chain master assets inNERVEAsset information of the network", order = 605)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "异构链ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "Heterogeneous chainID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "chainId", valueType = int.class, description = "资产链ID"),
-            @Key(name = "assetId", valueType = int.class, description = "资产ID"),
-            @Key(name = "symbol", description = "资产symbol"),
-            @Key(name = "decimals", valueType = int.class, description = "资产小数位数")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "chainId", valueType = int.class, description = "Asset ChainID"),
+            @Key(name = "assetId", valueType = int.class, description = "assetID"),
+            @Key(name = "symbol", description = "assetsymbol"),
+            @Key(name = "decimals", valueType = int.class, description = "Decimal places of assets")
     })
     )
     public RpcResult getHeterogeneousMainAsset(List<Object> params) {
@@ -162,12 +162,12 @@ public class ConverterController {
         return ResultUtil.getJsonRpcResult(result);
     }
     @RpcMethod("getProposalInfo")
-    @ApiOperation(description = "查询提案信息（序列化字符串）", order = 606)
+    @ApiOperation(description = "Query proposal information（Serializing strings）", order = 606)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Proposal transactionhash")
     })
-    @ResponseData(name = "返回值", description = "返回 network.nerve.converter.model.po.ProposalPO 对象的序列化字符串")
+    @ResponseData(name = "Return value", description = "return network.nerve.converter.model.po.ProposalPO Serialized string of object")
     public RpcResult getProposalInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -193,12 +193,12 @@ public class ConverterController {
     }
 
     @RpcMethod("getRechargeNerveHash")
-    @ApiOperation(description = "根据异构链跨链转入的交易hash查询NERVE的交易hash", order = 607)
+    @ApiOperation(description = "Transactions transferred across heterogeneous chainshashqueryNERVETransactionhash", order = 607)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链跨链转入的交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Cross chain transfer transactions of heterogeneous chainshash")
     })
-    @ResponseData(name = "返回值", description = "NERVE交易hash")
+    @ResponseData(name = "Return value", description = "NERVEtransactionhash")
     public RpcResult getRechargeNerveHash(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
         int chainId;
@@ -224,16 +224,16 @@ public class ConverterController {
     }
 
     @RpcMethod("findByWithdrawalTxHash")
-    @ApiOperation(description = "根据提现交易hash获取确认信息", order = 608)
+    @ApiOperation(description = "Based on withdrawal transactionshashObtain confirmation information", order = 608)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Withdrawal transactionshash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousChainId", description = "异构链ID"),
-            @Key(name = "heterogeneousHeight", description = "异构链交易区块高度"),
-            @Key(name = "heterogeneousTxHash", description = "异构链交易hash"),
-            @Key(name = "confirmWithdrawalTxHash", description = "NERVE确认交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", description = "Heterogeneous chainID"),
+            @Key(name = "heterogeneousHeight", description = "Heterogeneous chain transaction block height"),
+            @Key(name = "heterogeneousTxHash", description = "Heterogeneous Chain Tradinghash"),
+            @Key(name = "confirmWithdrawalTxHash", description = "NERVEConfirm transactionhash")
     }))
     public RpcResult findByWithdrawalTxHash(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
@@ -260,14 +260,14 @@ public class ConverterController {
     }
 
     @RpcMethod("getHeterogeneousRegisterNetwork")
-    @ApiOperation(description = "查询资产的异构链注册网络", order = 609)
+    @ApiOperation(description = "Heterogeneous chain registration network for querying assets", order = 609)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousChainId", valueType = int.class, description = "异构链ID"),
-            @Key(name = "contractAddress", valueType = String.class, description = "资产对应合约地址(若有)")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", valueType = int.class, description = "Heterogeneous chainID"),
+            @Key(name = "contractAddress", valueType = String.class, description = "Asset corresponding contract address(If there is any)")
     })
     )
     public RpcResult getHeterogeneousRegisterNetwork(List<Object> params) {
@@ -288,12 +288,12 @@ public class ConverterController {
     }
 
     @RpcMethod("getHeterogeneousAssetInfo")
-    @ApiOperation(description = "查询资产的异构链资产信息", order = 610)
+    @ApiOperation(description = "Query heterogeneous chain asset information of assets", order = 610)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class)
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class)
     )
     public RpcResult getHeterogeneousAssetInfo(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
@@ -313,12 +313,12 @@ public class ConverterController {
     }
 
     @RpcMethod("getHeterogeneousAssetInfoList")
-    @ApiOperation(description = "查询资产的异构链资产信息列表", order = 614)
+    @ApiOperation(description = "Query the heterogeneous chain asset information list of assets", order = 614)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产链ID"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "资产ID")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "Asset ChainID"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = Integer.class), parameterDes = "assetID")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = List.class)
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = List.class)
     )
     public RpcResult getHeterogeneousAssetInfoList(List<Object> params) {
         VerifyUtils.verifyParams(params, 2);
@@ -341,15 +341,15 @@ public class ConverterController {
     }
 
     @RpcMethod("retryVirtualBank")
-    @ApiOperation(description = "重新执行变更", order = 611)
+    @ApiOperation(description = "Re execute changes", order = 611)
     @Parameters({
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "变更交易hash"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "变更交易所在高度"),
-            @Parameter(parameterName = "prepare", requestType = @TypeDescriptor(value = int.class), parameterDes = "1 - 准备阶段，2 - 非准备，执行阶段")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Change transactionhash"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "Change exchange at height"),
+            @Parameter(parameterName = "prepare", requestType = @TypeDescriptor(value = int.class), parameterDes = "1 - Preparation phase,2 - Unprepared, execution phase")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public RpcResult retryVirtualBank(List<Object> params) {
@@ -393,14 +393,14 @@ public class ConverterController {
     }
 
     @RpcMethod("checkRetryHtgTx")
-    @ApiOperation(description = "重新解析异构链交易", order = 612)
+    @ApiOperation(description = "Re analyze heterogeneous chain transactions", order = 612)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous Chain Tradinghash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public RpcResult checkRetryHtgTx(List<Object> params) {
@@ -437,19 +437,19 @@ public class ConverterController {
     }
 
     @RpcMethod("registerheterogeneousasset")
-    @ApiOperation(description = "注册异构链资产", order = 613)
+    @ApiOperation(description = "Register heterogeneous chain assets", order = 613)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "资产小数位数"),
-            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产符号"),
-            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "资产对应合约地址"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注", canNull = true)
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "decimals", requestType = @TypeDescriptor(value = int.class), parameterDes = "Decimal places of assets"),
+            @Parameter(parameterName = "symbol", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset symbols"),
+            @Parameter(parameterName = "contractAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Asset corresponding contract address"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes", canNull = true)
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public RpcResult registerheterogeneousasset(List<Object> params) {
@@ -498,11 +498,11 @@ public class ConverterController {
     }
 
     @RpcMethod("gasLimitOfHeterogeneousChains")
-    @ApiOperation(description = "异构链需要的gasLimit", order = 614)
+    @ApiOperation(description = "What heterogeneous chains requiregasLimit", order = 614)
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class))
     public RpcResult gasLimitOfHeterogeneousChains(List<Object> params) {
         VerifyUtils.verifyParams(params, 1);
         int i = 0;
@@ -514,6 +514,36 @@ public class ConverterController {
         Map<String, Object> params1 = new HashMap<>();
         params1.put("chainId", chainId);
         Result<Map<String, Object>> result = converterTools.commonRequest("cv_gasLimitOfHeterogeneousChains", params1);
+        return ResultUtil.getJsonRpcResult(result);
+    }
+
+    @RpcMethod("filterWechatMsg")
+    @ApiOperation(description = "过滤微信通知", order = 615)
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hashes", requestType = @TypeDescriptor(value = String.class), parameterDes = "txHash,用逗号隔开"),
+            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterDes = "操作类型, 0-add, 1-remove, 2-query")
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class))
+    public RpcResult filterWechatMsg(List<Object> params) {
+        VerifyUtils.verifyParams(params, 2);
+        int i = 0;
+        int chainId = (int) params.get(i++);
+        String hashes = (String) params.get(i++);
+        Integer type = null;
+        if (params.size() > 2) {
+            type = (Integer) params.get(i++);
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.dataNotFound();
+        }
+        Map<String, Object> params1 = new HashMap<>();
+        params1.put("chainId", chainId);
+        params1.put("hashes", hashes);
+        if (type != null) {
+            params1.put("type", type);
+        }
+        Result<Map<String, Object>> result = converterTools.commonRequest("cv_filter_wechat_msg", params1);
         return ResultUtil.getJsonRpcResult(result);
     }
 }

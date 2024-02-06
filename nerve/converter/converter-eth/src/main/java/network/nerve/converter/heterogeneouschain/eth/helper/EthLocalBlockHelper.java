@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.eth.storage.EthBlockHeaderStor
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 本地ETH区块操作器
+ * localETHBlock Operator
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -57,7 +57,7 @@ public class EthLocalBlockHelper {
     }
 
     /**
-     * 保存本地最新区块
+     * Save the latest local block
      */
     public void saveLocalBlockHeader(EthSimpleBlockHeader blockHeader) throws Exception {
         localBlockHeaderMaps.put(BLOCK_HEADER_KEY, blockHeader);
@@ -65,7 +65,7 @@ public class EthLocalBlockHelper {
     }
 
     /**
-     * 查询本地数据库中最新区块
+     * Query the latest blocks in the local database
      */
     private EthSimpleBlockHeader findLatest() {
         EthSimpleBlockHeader blockHeader = ethBlockStorageService.findLatest();
@@ -73,7 +73,7 @@ public class EthLocalBlockHelper {
     }
 
     /**
-     * 根据高度查询区块
+     * Query blocks based on height
      */
     public EthSimpleBlockHeader findByHeight(long height) {
         return ethBlockStorageService.findByHeight(height);
@@ -85,7 +85,7 @@ public class EthLocalBlockHelper {
 
     public void deleteByHeightAndUpdateMemory(Long localBlockHeight) throws Exception {
         this.deleteByHeight(localBlockHeight);
-        // 缓存上一区块为本地最新区块
+        // Cache the previous block as the latest local block
         EthSimpleBlockHeader blockHeader = findByHeight(localBlockHeight - 1);
         if (blockHeader != null) {
             localBlockHeaderMaps.put(BLOCK_HEADER_KEY, blockHeader);

@@ -56,7 +56,7 @@ public class ChangeVirtualBankTxDataTest {
 
     public static void main(String[] args) throws Exception{
         String txStr = "29000401c25e00230100040001e3f0bca2174bc5b5951de002d5cb01c864c1136f0000ffffffffffffffff00692102cec353f77275953704f5c6f64b38f3f49a5b590783392c69b2718e4bf18588be46304402200f7f2c6790405332d47ffa40a45e77b98e49629e2825a7569a5141c60d3344c602201d4241b91298a8836eaed85202b1916d26a56255ec5cbefb9b820244fbf3da34";
-        Transaction tx = ConverterUtil.getInstance(txStr, Transaction.class);//最后一条
+        Transaction tx = ConverterUtil.getInstance(txStr, Transaction.class);//The last one
         System.out.println(tx.format(ChangeVirtualBankTxData.class));
     }
 }

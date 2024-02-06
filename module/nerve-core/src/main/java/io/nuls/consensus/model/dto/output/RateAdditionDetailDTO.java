@@ -4,23 +4,23 @@ import io.nuls.core.rpc.model.ApiModel;
 import io.nuls.core.rpc.model.ApiModelProperty;
 import io.nuls.consensus.utils.enumeration.DepositTimeType;
 
-@ApiModel(name = "委托类型对应的利率加成")
+@ApiModel(name = "Interest rate markup corresponding to commission type")
 public class RateAdditionDetailDTO {
-    @ApiModelProperty(description = "抵押类型0：活期，1：定期")
+    @ApiModelProperty(description = "Mortgage type0：Current,1：regular")
     private byte depositType;
-    @ApiModelProperty(description = "定期委托类型")
+    @ApiModelProperty(description = "Regular commission type")
     private byte timeType;
-    @ApiModelProperty(description = "委托类型描述")
+    @ApiModelProperty(description = "Delegate Type Description")
     private String describe;
-    @ApiModelProperty(description = "定期委托利率加成")
+    @ApiModelProperty(description = "Regular commission interest rate markup")
     private double rateAddition;
-    @ApiModelProperty(description = "总利率加成，rateAddition*basicRate")
+    @ApiModelProperty(description = "Total interest rate markup,rateAddition*basicRate")
     private double totalAddition;
 
     public RateAdditionDetailDTO(byte depositType, double basicRate, DepositTimeType depositTimeType){
         this.depositType = depositType;
         if(depositType == 0){
-            this.describe = "活期";
+            this.describe = "current";
             this.rateAddition = 1;
             this.totalAddition = basicRate;
         }else{

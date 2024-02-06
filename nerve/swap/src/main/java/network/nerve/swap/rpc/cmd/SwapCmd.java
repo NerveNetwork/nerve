@@ -39,6 +39,7 @@ import network.nerve.swap.model.vo.SwapPairVO;
 import network.nerve.swap.model.vo.TokenAmountVo;
 import network.nerve.swap.service.SwapService;
 import network.nerve.swap.storage.SwapExecuteResultStorageService;
+import network.nerve.swap.utils.BTCUtils;
 import network.nerve.swap.utils.SwapUtils;
 
 import java.math.BigInteger;
@@ -49,7 +50,7 @@ import static network.nerve.swap.constant.SwapCmdConstant.*;
 import static network.nerve.swap.utils.SwapUtils.wrapperFailed;
 
 /**
- * 异构链信息提供命令
+ * Heterogeneous chain information provision command
  *
  * @author: Mimi
  * @date: 2020-02-28
@@ -80,15 +81,15 @@ public class SwapCmd extends BaseCmd {
         return SwapContext.logger;
     }
 
-    @CmdAnnotation(cmd = BATCH_BEGIN, version = 1.0, description = "一个批次的开始通知，生成当前批次的信息/batch begin")
+    @CmdAnnotation(cmd = BATCH_BEGIN, version = 1.0, description = "Start notification for a batch, generating information for the current batch/batch begin")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "区块处理模式, 打包区块 - 0, 验证区块 - 1"),
-            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "当前打包的区块高度"),
-            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "前一个区块的stateRoot"),
-            @Parameter(parameterName = "blockTime", parameterType = "long", parameterDes = "当前打包的区块时间")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "Block processing mode, Packaging blocks - 0, Verify Block - 1"),
+            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "The height of the currently packaged blocks"),
+            @Parameter(parameterName = "preStateRoot", parameterType = "String", parameterDes = "The previous block'sstateRoot"),
+            @Parameter(parameterName = "blockTime", parameterType = "long", parameterDes = "The current packaged block time")
     })
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response batchBegin(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -97,7 +98,7 @@ public class SwapCmd extends BaseCmd {
             Long blockHeight = Long.parseLong(params.get("blockHeight").toString());
             Long blockTime = Long.parseLong(params.get("blockTime").toString());
             String preStateRoot = (String) params.get("preStateRoot");
-            logger().info("[{}]Swap模块[{}]开始, chainId: {}, blockTime: {}, preStateRoot: {}",
+            logger().info("[{}]Swapmodule[{}]start, chainId: {}, blockTime: {}, preStateRoot: {}",
                     blockHeight, BlockType.getType(blockType).name(), chainId, blockTime, preStateRoot);
             swapService.begin(chainId, blockHeight, blockTime, preStateRoot);
             return success();
@@ -107,17 +108,17 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = INVOKE, version = 1.0, description = "批次通知开始后，一笔一笔执行/invoke one by one")
+    @CmdAnnotation(cmd = INVOKE, version = 1.0, description = "After the batch notification starts, execute it one by one/invoke one by one")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "区块处理模式, 打包区块 - 0, 验证区块 - 1"),
-            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "当前打包的区块高度"),
-            @Parameter(parameterName = "blockTime", parameterType = "long", parameterDes = "当前打包的区块时间"),
-            @Parameter(parameterName = "tx", parameterType = "String", parameterDes = "交易序列化的HEX编码字符串")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "Block processing mode, Packaging blocks - 0, Verify Block - 1"),
+            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "The height of the currently packaged blocks"),
+            @Parameter(parameterName = "blockTime", parameterType = "long", parameterDes = "The current packaged block time"),
+            @Parameter(parameterName = "tx", parameterType = "String", parameterDes = "Serialized transactionHEXEncoding string")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象，包含两个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "success", valueType = Boolean.class, description = "执行是否成功"),
-            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "新生成的系统交易序列化字符串列表(目前只返回一个交易，成交交易 或者 失败返还交易)")
+    @ResponseData(name = "Return value", description = "Return aMapObject, containing twokey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "success", valueType = Boolean.class, description = "Whether the execution was successful"),
+            @Key(name = "txList", valueType = List.class, valueElement = String.class, description = "Newly generated system transaction serialization string list(Currently, only one transaction has been returned, resulting in a successful transaction perhaps Failed return transaction)")
     }))
     public Response invokeOneByOne(Map<String, Object> params) {
         try {
@@ -129,11 +130,11 @@ public class SwapCmd extends BaseCmd {
             String txData = (String) params.get("tx");
             Transaction tx = new Transaction();
             tx.parse(RPCUtil.decode(txData), 0);
-            logger().info("[{}]Swap模块[{}]处理, chainId: {}, blockTime: {}, txStr: {}",
+            logger().info("[{}]Swapmodule[{}]handle, chainId: {}, blockTime: {}, txStr: {}",
                     blockHeight, BlockType.getType(blockType).name(), chainId, blockTime, txData);
             Result result = swapService.invokeOneByOne(chainId, blockHeight, blockTime, tx);
             if (result.isFailed()) {
-                logger().error("处理失败: {}", result.toString());
+                logger().error("Processing failed: {}", result.toString());
                 return wrapperFailed(result);
             }
             if (result.getData() == null) {
@@ -149,14 +150,14 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = BATCH_END, version = 1.0, description = "通知当前批次结束并返回结果/batch end")
+    @CmdAnnotation(cmd = BATCH_END, version = 1.0, description = "Notify the end of the current batch and return the result/batch end")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "区块处理模式, 打包区块 - 0, 验证区块 - 1"),
-            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "当前打包的区块高度")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "blockType", parameterType = "int", parameterDes = "Block processing mode, Packaging blocks - 0, Verify Block - 1"),
+            @Parameter(parameterName = "blockHeight", parameterType = "long", parameterDes = "The height of the currently packaged blocks")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象，包含两个key", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "stateRoot", description = "当前stateRoot")
+    @ResponseData(name = "Return value", description = "Return aMapObject, containing twokey", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "stateRoot", description = "currentstateRoot")
     }))
     public Response batchEnd(Map<String, Object> params) {
         try {
@@ -173,7 +174,7 @@ public class SwapCmd extends BaseCmd {
             Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("stateRoot", dataMap.get("stateRoot"));
 
-            logger().info("[{}]Swap模块[{}]结束, chainId: {}, stateRoot: {}",
+            logger().info("[{}]Swapmodule[{}]finish, chainId: {}, stateRoot: {}",
                     blockHeight, BlockType.getType(blockType).name(), chainId, dataMap.get("stateRoot"));
             return success(resultMap);
         } catch (Exception e) {
@@ -182,15 +183,15 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_ADD_STABLE, version = 1.0, description = "检查在稳定币兑换池中添加的币种是否合法")
+    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_ADD_STABLE, version = 1.0, description = "Check if the currency added to the stablecoin exchange pool is legal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
-            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response checkLegalCoinForAddStable(Map<String, Object> params) {
         try {
@@ -209,15 +210,15 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_REMOVE_STABLE, version = 1.0, description = "检查在稳定币兑换池中移除的币种是否合法")
+    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_REMOVE_STABLE, version = 1.0, description = "Check if the currency removed from the stablecoin exchange pool is legal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
-            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response checkLegalCoinForRemoveStable(Map<String, Object> params) {
         try {
@@ -236,13 +237,40 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = IS_LEGAL_STABLE, version = 1.0, description = "检查稳定币交易对是否合法")
+    @CmdAnnotation(cmd = IS_LEGAL_COIN_FOR_STABLE, version = 1.0, description = "Check if the currency from the stablecoin exchange pool is legal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
+    }))
+    public Response checkLegalCoinForStable(Map<String, Object> params) {
+        try {
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            Integer assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            logger().debug("chainId: {}, stablePairAddress: {}, assetChainId: {}, assetId: {},", chainId, stablePairAddress, assetChainId, assetId);
+            boolean legalCoin = stableSwapHelper.isLegalCoinForStable(chainId, stablePairAddress, assetChainId, assetId);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = IS_LEGAL_STABLE, version = 1.0, description = "Check if the stablecoin exchange pool is legal")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response checkLegalStable(Map<String, Object> params) {
         try {
@@ -259,14 +287,14 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = IS_LEGAL_SWAP_FEE_RATE, version = 1.0, description = "检查交易对手续费定制是否合法")
+    @CmdAnnotation(cmd = IS_LEGAL_SWAP_FEE_RATE, version = 1.0, description = "Check if the transaction is legal for fee customization")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "手续费率")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "Handling fee rate")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response checkLegalSwapFeeRate(Map<String, Object> params) {
         try {
@@ -284,15 +312,15 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ADD_COIN_FOR_STABLE, version = 1.0, description = "在稳定币兑换池中添加币种")
+    @CmdAnnotation(cmd = ADD_COIN_FOR_STABLE, version = 1.0, description = "Add currency to the stablecoin exchange pool")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
-            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response addCoinForStable(Map<String, Object> params) {
         try {
@@ -310,16 +338,16 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = REMOVE_COIN_FOR_STABLE, version = 1.0, description = "在稳定币兑换池中移除币种")
+    @CmdAnnotation(cmd = REMOVE_COIN_FOR_STABLE, version = 1.0, description = "Remove currency from the stablecoin exchange pool")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "币种链ID"),
-            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "币种资产ID"),
-            @Parameter(parameterName = "status", parameterType = "String", parameterDes = "移除/恢复"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
+            @Parameter(parameterName = "status", parameterType = "String", parameterDes = "remove/recovery"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response removeCoinForStable(Map<String, Object> params) {
         try {
@@ -338,14 +366,45 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = UPDATE_SWAP_PAIR_FEE_RATE, version = 1.0, description = "SWAP定制手续费")
+    @CmdAnnotation(cmd = PAUSE_COIN_FOR_STABLE, version = 1.0, description = "Suspend currency trading in the Multi-Routing pool")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "手续费率"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "assetChainId", parameterType = "int", parameterDes = "Currency ChainID"),
+            @Parameter(parameterName = "assetId", parameterType = "int", parameterDes = "Currency assetsID"),
+            @Parameter(parameterName = "status", parameterType = "String", parameterDes = "remove/recovery"),
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
+    }))
+    public Response pauseCoinForStable(Map<String, Object> params) {
+        try {
+            if (!swapHelper.isSupportProtocol31()) {
+                throw new RuntimeException("error protocol");
+            }
+            Integer chainId = (Integer) params.get("chainId");
+            String stablePairAddress = (String) params.get("stablePairAddress");
+            Integer assetChainId = Integer.parseInt(params.get("assetChainId").toString());
+            Integer assetId = Integer.parseInt(params.get("assetId").toString());
+            String status = (String) params.get("status");
+            boolean legalCoin = stableSwapHelper.pauseCoinForStable(chainId, stablePairAddress, assetChainId, assetId, status);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", legalCoin);
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = UPDATE_SWAP_PAIR_FEE_RATE, version = 1.0, description = "SWAP Customized handling fee")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "swapPairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "feeRate", parameterType = "int", parameterDes = "Handling fee rate"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response updateSwapPairFeeRate(Map<String, Object> params) {
         try {
@@ -362,13 +421,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ADD_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "添加稳定币交易对-用于Swap交易")
+    @CmdAnnotation(cmd = ADD_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "Add stablecoin trading pairs-Used forSwaptransaction")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response addStableForSwapTrade(Map<String, Object> params) {
         try {
@@ -384,13 +443,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = REMOVE_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "移除稳定币交易对-用于Swap交易")
+    @CmdAnnotation(cmd = REMOVE_STABLE_FOR_SWAP_TRADE, version = 1.0, description = "Remove stablecoin trading pairs-Used forSwaptransaction")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "stablePairAddress", parameterType = "String", parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = Boolean.class, description = "执行是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
     }))
     public Response removeStableForSwapTrade(Map<String, Object> params) {
         try {
@@ -406,20 +465,20 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = BEST_TRADE_EXACT_IN, version = 1.0, description = "寻找最佳交易路径")
+    @CmdAnnotation(cmd = BEST_TRADE_EXACT_IN, version = 1.0, description = "Finding the best trading path")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenInStr", parameterType = "String", parameterDes = "卖出资产的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "卖出资产数量"),
-            @Parameter(parameterName = "tokenOutStr", parameterType = "String", parameterDes = "买进资产的类型，示例：1-1"),
-            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "交易最深路径"),
-            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "当前网络所有交易对列表"),
-            @Parameter(parameterName = "resultRule", parameterType = "String", parameterDes = "`bestPrice`, `impactPrice`. 按[最优价格]和[价格影响]因素来取结果，默认使用[价格影响]因素来取结果")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenInStr", parameterType = "String", parameterDes = "Types of assets sold, examples：1-1"),
+            @Parameter(parameterName = "tokenInAmount", requestType = @TypeDescriptor(value = String.class), parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenOutStr", parameterType = "String", parameterDes = "Types of purchased assets, examples：1-1"),
+            @Parameter(parameterName = "maxPairSize", requestType = @TypeDescriptor(value = int.class), parameterDes = "Deepest trading path"),
+            @Parameter(parameterName = "pairs", requestType = @TypeDescriptor(value = String[].class), parameterDes = "List of all transaction pairs in the current network"),
+            @Parameter(parameterName = "resultRule", parameterType = "String", parameterDes = "`bestPrice`, `impactPrice`. according to[Optimal price]and[Price impact]Using factors to obtain results, defaults to using[Price impact]Using factors to obtain results")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "tokenPath", valueType = List.class, description = "最佳交易路径"),
-            @Key(name = "tokenAmountIn", valueType = TokenAmountVo.class, description = "卖出资产"),
-            @Key(name = "tokenAmountOut", valueType = TokenAmountVo.class, description = "买进资产"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "tokenPath", valueType = List.class, description = "Best trading path"),
+            @Key(name = "tokenAmountIn", valueType = TokenAmountVo.class, description = "Selling assets"),
+            @Key(name = "tokenAmountOut", valueType = TokenAmountVo.class, description = "Buying assets"),
     }))
     public Response bestTradeExactIn(Map<String, Object> params) {
         try {
@@ -468,15 +527,15 @@ public class SwapCmd extends BaseCmd {
         return resultData;
     }
 
-    @CmdAnnotation(cmd = SWAP_CREATE_PAIR, version = 1.0, description = "创建Swap交易对")
+    @CmdAnnotation(cmd = SWAP_CREATE_PAIR, version = 1.0, description = "establishSwapTransaction pairs")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response swapCreatePair(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -495,21 +554,21 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_ADD_LIQUIDITY, version = 1.0, description = "添加Swap流动性")
+    @CmdAnnotation(cmd = SWAP_ADD_LIQUIDITY, version = 1.0, description = "AddSwapLiquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "添加的资产A的数量"),
-            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "添加的资产B的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1"),
-            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "资产A最小添加值"),
-            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "资产B最小添加值"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "Added assetsAQuantity of"),
+            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "Added assetsBQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1"),
+            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "assetAMinimum added value"),
+            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "assetBMinimum added value"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Liquidity share receiving address")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response swapAddLiquidity(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -535,21 +594,21 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_REMOVE_LIQUIDITY, version = 1.0, description = "移除Swap流动性")
+    @CmdAnnotation(cmd = SWAP_REMOVE_LIQUIDITY, version = 1.0, description = "removeSwapLiquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1"),
-            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "资产A最小移除值"),
-            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "资产B最小移除值"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "移除流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1"),
+            @Parameter(parameterName = "amountAMin", parameterType = "String", parameterDes = "assetAMinimum removal value"),
+            @Parameter(parameterName = "amountBMin", parameterType = "String", parameterDes = "assetBMinimum removal value"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Remove liquidity share receiving address")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response swapRemoveLiquidity(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -575,19 +634,19 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_TOKEN_TRADE, version = 1.0, description = "Swap币币交换")
+    @CmdAnnotation(cmd = SWAP_TOKEN_TRADE, version = 1.0, description = "SwapCurrency exchange")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "卖出的资产数量"),
-            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]"),
-            @Parameter(parameterName = "amountOutMin", parameterType = "String", parameterDes = "最小买进的资产数量"),
-            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费取出一部分给指定的接收地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]"),
+            @Parameter(parameterName = "amountOutMin", parameterType = "String", parameterDes = "Minimum number of assets to be purchased"),
+            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "Withdraw a portion of the transaction fee to the designated receiving address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response swapTokenTrade(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -612,15 +671,15 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_CREATE_PAIR, version = 1.0, description = "创建StableSwap交易对")
+    @CmdAnnotation(cmd = STABLE_SWAP_CREATE_PAIR, version = 1.0, description = "establishStableSwapTransaction pairs")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "coins", parameterType = "String[]", parameterDes = "资产类型列表，示例：[1-1, 1-2]"),
-            @Parameter(parameterName = "symbol", parameterType = "String", parameterDes = "LP名称(选填)")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "coins", parameterType = "String[]", parameterDes = "List of asset types, example：[1-1, 1-2]"),
+            @Parameter(parameterName = "symbol", parameterType = "String", parameterDes = "LPname(Optional filling)")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response stableSwapCreatePair(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -640,18 +699,18 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_ADD_LIQUIDITY, version = 1.0, description = "添加StableSwap流动性")
+    @CmdAnnotation(cmd = STABLE_SWAP_ADD_LIQUIDITY, version = 1.0, description = "AddStableSwapLiquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amounts", parameterType = "String[]", parameterDes = "添加的资产数量列表"),
-            @Parameter(parameterName = "tokens", parameterType = "String[]", parameterDes = "添加的资产类型列表，示例：[1-1, 1-2]"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amounts", parameterType = "String[]", parameterDes = "List of added asset quantities"),
+            @Parameter(parameterName = "tokens", parameterType = "String[]", parameterDes = "List of added asset types, example：[1-1, 1-2]"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Liquidity share receiving address")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response stableSwapAddLiquidity(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -680,19 +739,19 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_REMOVE_LIQUIDITY, version = 1.0, description = "移除StableSwap流动性")
+    @CmdAnnotation(cmd = STABLE_SWAP_REMOVE_LIQUIDITY, version = 1.0, description = "removeStableSwapLiquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
-            @Parameter(parameterName = "receiveOrderIndexs", parameterType = "int[]", parameterDes = "按币种索引顺序接收资产"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "移除流动性份额接收地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
+            @Parameter(parameterName = "receiveOrderIndexs", parameterType = "int[]", parameterDes = "Receive assets in currency index order"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Remove liquidity share receiving address")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response stableSwapRemoveLiquidity(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -717,22 +776,22 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_TOKEN_TRADE, version = 1.0, description = "StableSwap币币交易")
+    @CmdAnnotation(cmd = STABLE_SWAP_TOKEN_TRADE, version = 1.0, description = "StableSwapCoin trading")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "账户地址"),
-            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "账户密码"),
-            @Parameter(parameterName = "amountsIn", parameterType = "String[]", parameterDes = "卖出的资产数量列表"),
-            @Parameter(parameterName = "tokensIn", parameterType = "String[]", parameterDes = "卖出的资产类型列表"),
-            @Parameter(parameterName = "tokenOutIndex", parameterType = "int", parameterDes = "买进的资产索引"),
-            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "交易手续费接收地址"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址"),
-            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "过期时间"),
-            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "资产接收地址"),
-            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "手续费资产类型，示例：1-1"),
-            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "交易手续费")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+            @Parameter(parameterName = "password", parameterType = "String", parameterDes = "Account password"),
+            @Parameter(parameterName = "amountsIn", parameterType = "String[]", parameterDes = "List of sold assets"),
+            @Parameter(parameterName = "tokensIn", parameterType = "String[]", parameterDes = "List of asset types sold"),
+            @Parameter(parameterName = "tokenOutIndex", parameterType = "int", parameterDes = "Index of purchased assets"),
+            @Parameter(parameterName = "feeTo", parameterType = "String", parameterDes = "Transaction fee receiving address"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address"),
+            @Parameter(parameterName = "deadline", parameterType = "long", parameterDes = "Expiration time"),
+            @Parameter(parameterName = "to", parameterType = "String", parameterDes = "Asset receiving address"),
+            @Parameter(parameterName = "feeToken", parameterType = "String", parameterDes = "Handling fee asset type, example：1-1"),
+            @Parameter(parameterName = "feeAmount", parameterType = "String", parameterDes = "Transaction fees")
     })
-    @ResponseData(description = "交易hash")
+    @ResponseData(description = "transactionhash")
     public Response stableSwapTokenTrade(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -765,17 +824,17 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_ADD_LIQUIDITY, version = 1.0, description = "查询添加Swap流动性的最小资产数量")
+    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_ADD_LIQUIDITY, version = 1.0, description = "Query AddSwapThe minimum number of assets with liquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "添加的资产A的数量"),
-            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "添加的资产B的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountA", parameterType = "String", parameterDes = "Added assetsAQuantity of"),
+            @Parameter(parameterName = "amountB", parameterType = "String", parameterDes = "Added assetsBQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "amountAMin", valueType = String.class, description = "资产A最小添加值"),
-            @Key(name = "amountBMin", valueType = String.class, description = "资产B最小添加值")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "amountAMin", valueType = String.class, description = "assetAMinimum added value"),
+            @Key(name = "amountBMin", valueType = String.class, description = "assetBMinimum added value")
     }))
     public Response calMinAmountOnSwapAddLiquidity(Map<String, Object> params) {
         try {
@@ -799,16 +858,16 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY, version = 1.0, description = "查询移除Swap流动性的最小资产数量")
+    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_REMOVE_LIQUIDITY, version = 1.0, description = "Query removalSwapThe minimum number of assets with liquidity")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "移除的资产LP的数量"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountLP", parameterType = "String", parameterDes = "Removed assetsLPQuantity of"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "amountAMin", valueType = String.class, description = "资产A最小移除值"),
-            @Key(name = "amountBMin", valueType = String.class, description = "资产B最小移除值")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "amountAMin", valueType = String.class, description = "assetAMinimum removal value"),
+            @Key(name = "amountBMin", valueType = String.class, description = "assetBMinimum removal value")
     }))
     public Response calMinAmountOnSwapRemoveLiquidity(Map<String, Object> params) {
         try {
@@ -843,14 +902,14 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_TOKEN_TRADE, version = 1.0, description = "查询Swap币币交换最小买进token")
+    @CmdAnnotation(cmd = SWAP_MIN_AMOUNT_TOKEN_TRADE, version = 1.0, description = "querySwapMinimum buy in for coin exchangetoken")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "卖出的资产数量"),
-            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "币币交换资产路径，路径中最后一个资产，是用户要买进的资产，如卖A买B: [A, B] or [A, C, B]")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "amountIn", parameterType = "String", parameterDes = "Number of assets sold"),
+            @Parameter(parameterName = "tokenPath", parameterType = "String[]", parameterDes = "Currency exchange asset path, the last asset in the path is the asset that the user wants to buy, such as sellingAbuyB: [A, B] or [A, C, B]")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "amountOutMin", valueType = String.class, description = "最小买进的资产数量"),
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "amountOutMin", valueType = String.class, description = "Minimum number of assets to be purchased"),
     }))
     public Response calMinAmountOnSwapTokenTrade(Map<String, Object> params) {
         try {
@@ -873,13 +932,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_PAIR_INFO, version = 1.0, description = "查询Swap交易对信息")
+    @CmdAnnotation(cmd = SWAP_PAIR_INFO, version = 1.0, description = "querySwapTransaction pair information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "资产A的类型，示例：1-1"),
-            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "资产B的类型，示例：1-1")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenAStr", parameterType = "String", parameterDes = "assetAType of, example：1-1"),
+            @Parameter(parameterName = "tokenBStr", parameterType = "String", parameterDes = "assetBType of, example：1-1")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = SwapPairDTO.class))
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = SwapPairDTO.class))
     public Response getSwapPairInfo(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -901,13 +960,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_PAIR_INFO_BY_ADDRESS, version = 1.0, description = "根据交易对地址 查询Swap交易对信息")
+    @CmdAnnotation(cmd = SWAP_PAIR_INFO_BY_ADDRESS, version = 1.0, description = "Address based on transaction pairs querySwapTransaction pair information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = SwapPairDTO.class, description = "交易对信息")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = SwapPairDTO.class, description = "Transaction pair information")
     }))
     public Response getSwapPairInfoByPairAddress(Map<String, Object> params) {
         try {
@@ -926,13 +985,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_PAIR_INFO, version = 1.0, description = "查询Stable-Swap交易对信息")
+    @CmdAnnotation(cmd = STABLE_SWAP_PAIR_INFO, version = 1.0, description = "queryStable-SwapTransaction pair information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "交易对地址")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "pairAddress", parameterType = "String", parameterDes = "Transaction to address")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = StableSwapPairDTO.class, description = "交易对信息")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = StableSwapPairDTO.class, description = "Transaction pair information")
     }))
     public Response getStableSwapPairInfo(Map<String, Object> params) {
         try {
@@ -950,13 +1009,13 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_RESULT_INFO, version = 1.0, description = "查询交易执行结果")
+    @CmdAnnotation(cmd = SWAP_RESULT_INFO, version = 1.0, description = "Query transaction execution results")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "交易hash")
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", parameterType = "String", parameterDes = "transactionhash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = SwapResult.class, description = "交易执行结果")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = SwapResult.class, description = "Transaction execution results")
     }))
     public Response getSwapResultInfo(Map<String, Object> params) {
         try {
@@ -975,12 +1034,12 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_PAIR_BY_LP, version = 1.0, description = "根据LP资产查询交易对地址")
+    @CmdAnnotation(cmd = SWAP_PAIR_BY_LP, version = 1.0, description = "according toLPAsset inquiry transaction address")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
     })
-    @ResponseData(description = "交易对地址")
+    @ResponseData(description = "Transaction to address")
     public Response getPairAddressByTokenLP(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -996,12 +1055,12 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_PAIR_INFO_BY_LP, version = 1.0, description = "根据LP资产查询交易信息")
+    @CmdAnnotation(cmd = SWAP_PAIR_INFO_BY_LP, version = 1.0, description = "according toLPAsset inquiry transaction information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
-            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "资产LP的类型，示例：1-1"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
+            @Parameter(parameterName = "tokenLPStr", parameterType = "String", parameterDes = "assetLPType of, example：1-1"),
     })
-    @ResponseData(description = "交易对地址")
+    @ResponseData(description = "Transaction to address")
     public Response getPairInfoByTokenLP(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -1024,11 +1083,11 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_PAIRS_ALL, version = 1.0, description = "查询所有交易对地址")
+    @CmdAnnotation(cmd = SWAP_PAIRS_ALL, version = 1.0, description = "Query all transaction pairs addresses")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
     })
-    @ResponseData(description = "所有交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    @ResponseData(description = "All transactions against addresses", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
     public Response getAllSwapPairs(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -1039,11 +1098,11 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = STABLE_SWAP_PAIRS_ALL, version = 1.0, description = "查询所有稳定币交易对地址")
+    @CmdAnnotation(cmd = STABLE_SWAP_PAIRS_ALL, version = 1.0, description = "Query all stablecoin transaction pairs addresses")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", parameterType = "int", parameterDes = "chainid"),
     })
-    @ResponseData(description = "所有稳定币交易对地址", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
+    @ResponseData(description = "All stablecoin transactions against addresses", responseType = @TypeDescriptor(value = List.class, collectionElement = String.class))
     public Response getAllStableSwapPairs(Map<String, Object> params) {
         try {
             Integer chainId = (Integer) params.get("chainId");
@@ -1054,11 +1113,11 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_GET_STABLE_PAIR_LIST_FOR_SWAP_TRADE, version = 1.0, description = "查询可用于Swap交易的稳定币交易对")
+    @CmdAnnotation(cmd = SWAP_GET_STABLE_PAIR_LIST_FOR_SWAP_TRADE, version = 1.0, description = "Queries available forSwapStable currency trading for transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
+    @ResponseData(name = "Return value", description = "Return a collection", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
     public Response getStablePairListForSwapTrade(Map params) {
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
@@ -1070,11 +1129,11 @@ public class SwapCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = SWAP_GET_AVAILABLE_STABLE_PAIR_LIST, version = 1.0, description = "查询所有有效的稳定币交易对")
+    @CmdAnnotation(cmd = SWAP_GET_AVAILABLE_STABLE_PAIR_LIST, version = 1.0, description = "Query all valid stablecoin transaction pairs")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
     })
-    @ResponseData(name = "返回值", description = "返回一个集合", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
+    @ResponseData(name = "Return value", description = "Return a collection", responseType = @TypeDescriptor(value = List.class, collectionElement = StableCoinVo.class))
     public Response getAvailableStablePairList(Map params) {
         try {
             Integer chainId = Integer.parseInt(params.get("chainId").toString());
@@ -1091,6 +1150,28 @@ public class SwapCmd extends BaseCmd {
             }
             return success(resultList);
         } catch (Exception e) {
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = IS_LEGAL_BTC_ADDR, version = 1.0, description = "Check if BTC address is legal")
+    @Parameters(value = {
+            @Parameter(parameterName = "mainnet", parameterType = "boolean", parameterDes = "mainnet"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "BTC address")
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = Boolean.class, description = "Whether the execution was successful")
+    }))
+    public Response checkLegalBTCAddr(Map<String, Object> params) {
+        try {
+            boolean mainnet = (boolean) params.get("mainnet");
+            String address = (String) params.get("address");
+            logger().debug("mainnet: {}, btc address: {}", mainnet, address);
+            Map<String, Object> resultData = new HashMap<>();
+            resultData.put("value", BTCUtils.validateAddress(address, mainnet));
+            return success(resultData);
+        } catch (Exception e) {
+            logger().error(e);
             return failed(e.getMessage());
         }
     }

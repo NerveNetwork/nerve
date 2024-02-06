@@ -12,7 +12,7 @@ import io.nuls.consensus.v1.message.VoteMessage;
 
 
 /**
- * 投票消息处理器
+ * Voting Message Processor
  * Voting message processor
  *
  * @author tag
@@ -36,22 +36,22 @@ public class VoteHandler implements MessageProcessor {
             return;
         }
         if (!chain.isConsonsusNode() || !chain.isSynchronizedHeight() || !chain.isNetworkStateOk()) {
-//            chain.getLogger().info("丢弃，本地不是共识节点");
+//            chain.getLogger().info("Discard, local is not a consensus node");
             return;
         }
         VoteMessage message = VoteMessageObjManager.getInstance(chain,msg);
         if (message == null) {
-            chain.getLogger().info("丢弃，解析失败");
+            chain.getLogger().info("Discard, parsing failed");
             message.clear();
             return;
         }
         if (message.getHeight() <= chain.getBestHeader().getHeight()) {
-            //只处理下一个区块的投票
-//            chain.getLogger().info("收到的高度不对：{},本地高度:{}", message.getHeight(), chain.getBestHeader().getHeight());
+            //Only handle voting for the next block
+//            chain.getLogger().info("The received height is incorrect：{},Local height:{}", message.getHeight(), chain.getBestHeader().getHeight());
             message.clear();
             return;
         }
-//        chain.getLogger().info("收到投票：{}-{}-{}-{}-{},当前高度：{}，blockhash:{},from:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(),
+//        chain.getLogger().info("Received vote：{}-{}-{}-{}-{},Current height：{},blockhash:{},from:{}", message.getHeight(), message.getRoundIndex(), message.getPackingIndexOfRound(),
 //                message.getVoteRoundIndex(), message.getVoteStage(), chain.getBestHeader().getHeight(),
 //                message.getBlockHash().toHex(), message.getAddress(chain));
         message.setSendNode(nodeId);

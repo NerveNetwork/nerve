@@ -247,13 +247,13 @@ public class CeloWalletApiTest extends Base {
     }
 
     /**
-     * 转入erc20
+     * Transfer inerc20
      */
     @Test
     public void transferERC20() throws Exception {
         setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        // 初始化 账户
+        // initialization account
         setAccount_2617();
         // ERC20
         setErc20USDT();
@@ -262,7 +262,7 @@ public class CeloWalletApiTest extends Base {
         String tokenAmount = "50000000";
         String to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         EthSendTransaction token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
-        System.out.println(String.format("向[%s]转账%s个ERC20(USDT), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
+        System.out.println(String.format("towards[%s]Transfer%sindividualERC20(USDT), transactionhash: %s", to, tokenAmount, token.getTransactionHash()));
 
         setErc20USD18();
         tokenAddress = erc20Address;
@@ -270,26 +270,26 @@ public class CeloWalletApiTest extends Base {
         tokenAmount = "50000000";
         to = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
         token = htgWalletApi.transferERC20TokenForTestCase(from, to, new BigDecimal(tokenAmount).movePointRight(tokenDecimals).toBigInteger(), fromPriKey, tokenAddress);
-        System.out.println(String.format("向[%s]转账%s个ERC20(USD18), 交易hash: %s", to, tokenAmount, token.getTransactionHash()));
+        System.out.println(String.format("towards[%s]Transfer%sindividualERC20(USD18), transactionhash: %s", to, tokenAmount, token.getTransactionHash()));
     }
 
     /**
-     * 新方式充值eth
+     * New way of rechargingeth
      */
     @Test
     public void depositMainAssetByCrossOut() throws Exception {
         setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        // 初始化 账户
+        // initialization account
         setAccount_5996();
-        // MainAsset数量
+        // MainAssetquantity
         String sendAmount = "0.002";
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, HtgConstant.ZERO_ADDRESS);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, convertAmount, multySignContractAddress);
-        System.out.println(String.format("MainAsset充值[%s], hash: %s", sendAmount, hash));
+        System.out.println(String.format("MainAssetRecharge[%s], hash: %s", sendAmount, hash));
     }
 
     @Test
@@ -302,21 +302,21 @@ public class CeloWalletApiTest extends Base {
         System.out.println(erc20Balance);
     }
     /**
-     * 新方式充值erc20
+     * New way of rechargingerc20
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
         setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        // 初始化 账户
+        // initialization account
         setAccount_5996();
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "1234.123456789123456789";// 1.123456, 1234.123456789123456789
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         //setErc20NVT();
         //setErc20USDT();
         setErc20USD18();
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).multiply(BigDecimal.TEN.pow(erc20Decimals)).toBigInteger();
@@ -326,43 +326,43 @@ public class CeloWalletApiTest extends Base {
 
         BigInteger allowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
         if (allowanceAmount.compareTo(convertAmount) < 0) {
-            // erc20授权
+            // erc20authorization
             String approveAmount = "99999999";
             Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
-            System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+            System.out.println(String.format("erc20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
-                System.out.println("等待8秒查询[ERC20授权]交易打包结果");
+                System.out.println("wait for8Second query[ERC20authorization]Transaction packaging results");
                 TimeUnit.SECONDS.sleep(8);
             }
             TimeUnit.SECONDS.sleep(8);
             BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("等待8秒查询[ERC20授权]交易额度");
+                System.out.println("wait for8Second query[ERC20authorization]Transaction limit");
                 TimeUnit.SECONDS.sleep(8);
                 tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }
         }
-        System.out.println("[ERC20授权]额度已满足条件");
-        // crossOut erc20转账
+        System.out.println("[ERC20authorization]The limit has met the conditions");
+        // crossOut erc20Transfer
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, erc20Address);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT);
-        System.out.println(String.format("erc20充值[%s], 充值hash: %s", sendAmount, hash));
+        System.out.println(String.format("erc20Recharge[%s], Rechargehash: %s", sendAmount, hash));
     }
 
     @Test
     public void depositByCrossOutIITest() throws Exception {
         setLocalNewTest();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        // 初始化 账户
+        // initialization account
         setAccount_5996();
-        // 主资产费用
+        // Main asset expenses
         String mainValue = "0.0001";
-        // ERC20 转账数量
+        // ERC20 Transfer quantity
         String sendAmount = "2.15";
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         setErc20NVT();
-        // Nerve 接收地址
+        // Nerve Receiving address
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
 
         BigInteger convertAmount = new BigDecimal(sendAmount).movePointRight(erc20Decimals).toBigInteger();
@@ -370,7 +370,7 @@ public class CeloWalletApiTest extends Base {
         Function crossOutFunction = HtgUtil.getCrossOutIIFunction(to, convertAmount, erc20Address, null);
         String hash = this.sendTx(from, fromPriKey, crossOutFunction, HeterogeneousChainTxType.DEPOSIT, mainValueBi, multySignContractAddress);
 
-        System.out.println(String.format("CrossOutII[%s], 交易hash: %s", sendAmount, hash));
+        System.out.println(String.format("CrossOutII[%s], transactionhash: %s", sendAmount, hash));
     }
 
     @Test
@@ -406,21 +406,21 @@ public class CeloWalletApiTest extends Base {
 
     @Test
     public void registerERC20Minter() throws Exception {
-        // 正式网数据
+        // Official website data
         setMain();
-        // GasPrice准备
+        // GasPriceprepare
         long gasPriceGwei = 100L;
         BigInteger gasPrice = BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9));
-        // 超级账户，加载凭证，用私钥
+        // Super account, load credentials, use private key
         Credentials credentials = Credentials.create("");
-        // 多签合约地址
+        // Multiple contract addresses
         String contractAddress = "0x6758d4C4734Ac7811358395A8E0c3832BA6Ac624";
-        // 注册的ERC20Minter合约地址
+        // RegisteredERC20MinterContract address
         String erc20Minter = "0x7b6F71c8B123b38aa8099e0098bEC7fbc35B8a13";
 
         EthGetTransactionCount transactionCount = htgWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "registerMinterERC20",
                 List.of(new Address(erc20Minter)),
@@ -436,16 +436,16 @@ public class CeloWalletApiTest extends Base {
                 BigInteger.valueOf(50000L),
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = htgWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
         System.out.println(ethSendTransaction.getTransactionHash());
     }
 
     /**
-     * 还原合约管理员
+     * Restore Contract Administrator
      */
     @Test
     public void resetContractManager() throws Exception {
@@ -465,7 +465,7 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = list.size();
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     protected void setMainData() {
@@ -474,19 +474,19 @@ public class CeloWalletApiTest extends Base {
         // "0x0eb9e4427a0af1fa457230bef3481d028488363e"
         // "0xd6946039519bccc0b302f89493bec60f4f0b4610"
         list = new ArrayList<>();
-        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        list.add("");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        list.add("");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        list.add("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        list.add("");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        list.add("");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
         this.multySignContractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         init();
     }
     /**
-     * 添加 N 个管理员
+     * Add N Administrators
      */
     @Test
     public void managerAdd() throws Exception {
         setDev();
-        // GasPrice准备
+        // GasPriceprepare
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         String txKey = "aaa1000000000000000000000000000000000000000000000000000000000000";
         String[] adds = new String[]{
@@ -501,7 +501,7 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = 3;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     @Test
@@ -509,7 +509,7 @@ public class CeloWalletApiTest extends Base {
         setMainData();
         //setLocalTest();
         boolean queryBalance = false;
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(multySignContractAddress);
         System.out.println(String.format("size : %s", all.size()));
         for (String address : all) {
@@ -550,7 +550,7 @@ public class CeloWalletApiTest extends Base {
     }
 
     /**
-     * 添加10个管理员，4个签名
+     * Add10Administrators,4Signatures
      */
     @Test
     public void managerAdd10By4Managers() throws Exception {
@@ -577,13 +577,13 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = 3;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     protected void setUpgradeMain() {
         setMain();
         list = new ArrayList<>();
-        // 把CC的私钥放在首位
+        // holdCCPut the private key first
         list.add("");// 0xd6946039519bccc0b302f89493bec60f4f0b4610
         list.add("");// 0xd87f2ad3ef011817319fd25454fc186ca71b3b56
         list.add("");// 0x0eb9e4427a0af1fa457230bef3481d028488363e
@@ -594,12 +594,12 @@ public class CeloWalletApiTest extends Base {
     }
 
     /**
-     * 顶替一个管理员，10个签名
+     * Replace an administrator,10Signatures
      */
     @Test
     public void managerReplace1By10Managers() throws Exception {
         setLocalTest();
-        // GasPrice准备
+        // GasPriceprepare
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         String txKey = "2755b93611fa03de342f3fe73284ad02500c6cd3531bbb93a94965214576b3cb";
         String[] adds = new String[]{"0x5d6a533268a230f9dc35a3702f44ebcc1bcfa389"};
@@ -607,11 +607,11 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = 10;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     /**
-     * 顶替一个管理员，15个签名
+     * Replace an administrator,15Signatures
      */
     @Test
     public void managerReplace1By15Managers() throws Exception {
@@ -625,11 +625,11 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = 15;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     /**
-     * eth提现，15个签名
+     * ethWithdrawal,15Signatures
      */
     @Test
     public void ethWithdrawBy15Managers() throws Exception {
@@ -638,11 +638,11 @@ public class CeloWalletApiTest extends Base {
         String value = "0.01";
         int signCount = 15;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("MainAsset提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("MainAssetWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * eth提现，10个签名
+     * ethWithdrawal,10Signatures
      */
     @Test
     public void ethWithdrawBy10Managers() throws Exception {
@@ -653,28 +653,28 @@ public class CeloWalletApiTest extends Base {
         String value = "0.02";
         int signCount = 10;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("MainAsset提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("MainAssetWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * 根据已有的签名数据 发送交易 - 主资产提现
+     * Based on existing signature data Send transaction - Withdrawal of main assets
      */
     @Test
     public void sendMainAssetWithdrawBySignDataTest() throws Exception {
         setMainData();
         String txKey = "0508bac863080e6c7bdd61cfa8a9dec765b6ab0f105a8a71c2881f1e10c8d0a1";
-        // 接收者地址
+        // Recipient Address
         String toAddress = "0xf3575f7ee97033e5a0c6d0c0fa6ddeff67c88a6b";
-        // 数量
+        // quantity
         String value = "700";
         String signData = "41236bec48870456ca2cf66c284ddf23b7b16f6a7912bf901e00903d4219445d54842b8f22fe6213e67115a4de46fc4433ed3d6e7f54999b841e74cb05afc5de1b9781dec2d8bb7581889e0e79661c9e30ac5099981c73ce8f907350a9e98c25790ce94b124a1d2afb5b870f19d20da5cfa32570dbe6741a7da8516fe9589a07391b75b283ffe87c7a87fbc4998031800c98ea18e665eef5e5fb84cf27e919339cb94e9bc344cefda9dbe8f69308f8b87458c601580478becc56250a46c1da6cc3be1b90930a39dd6d93fafa74bab297cc5136bfceb6299fa9b786f1d762d13ecf8ec70eb7206177788c001f2d058e147403e22e953a1e019eda65f7f2a71fcf5c506a1b8a2c8ac9c6867912f5a7383a5ed4ea3e1912faa5b1f9ae9d5d741c202dd464a65f9dc6420d45858263e5ded02a31218a3ed74eb532fa5424f84cc06120f156981b2b1f96707ed996546401a33b76cb1d4d976577f3fceab8595ed90512f70357f16e991fccad0b83fca02d11dab46cfe1eafe7549115552ee9a90904ee07bf8af11b605e175d8817acb1eddf49fcc369b7c072a8f9a6ceb29cce01a9114b5cf7606072485232d665d25b0ba102ab4ad45a39e327a1d1727c33b5ed20b3c47c029a351c5466453f669dccad86daac11773630216fa762fea4b026167c77d932944cf02869fa7fc9e023ebd02cbf244b7854f134843ca5aa33c9b99eb4ff5b7c85e0559b1b810293730b5a6a63318ae131eb2df86233732ed3f24baee88e5b2e0c5e97b3445471bff9bcc7106c1a234bfb9785122c334b886cd8e1ef04520b1958e52577a91cbb85e520eb3b1f8f2fc417006e8602650549290cd452384e6e0e7eb03b41fc1163a9004ea3e4553c045336e0718f70e91616004c893dffcd40c7e84ca61edc211b";
 
         String hash = this.sendMainAssetWithdrawBySignData(txKey, toAddress, value, signData);
-        System.out.println(String.format("提现%s个，hash: %s", value, hash));
+        System.out.println(String.format("Withdrawal%sPieces,hash: %s", value, hash));
     }
 
     /**
-     * erc20提现，多个签名
+     * erc20Withdrawal, multiple signatures
      */
     @Test
     public void erc20WithdrawByManyManagers() throws Exception {
@@ -688,11 +688,11 @@ public class CeloWalletApiTest extends Base {
         int tokenDecimals = erc20Decimals;
         int signCount = 10;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * erc20提现，增发的ERC20
+     * erc20Withdrawal and issuance of additional sharesERC20
      */
     @Test
     public void erc20WithdrawWithERC20Minter() throws Exception {
@@ -703,11 +703,11 @@ public class CeloWalletApiTest extends Base {
         int tokenDecimals = 2;
         int signCount = 4;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * eth提现，异常测试
+     * ethWithdrawal, anomaly testing
      */
     @Test
     public void errorMainAssetWithdrawTest() throws Exception {
@@ -718,11 +718,11 @@ public class CeloWalletApiTest extends Base {
         list.addAll(5, list.subList(5, 10));
         //this.VERSION = 2;
         String hash = this.sendMainAssetWithdraw(txKey, toAddress, value, signCount);
-        System.out.println(String.format("MainAsset提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("MainAssetWithdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * erc20提现，异常测试
+     * erc20Withdrawal, anomaly testing
      */
     @Test
     public void errorErc20WithdrawTest() throws Exception {
@@ -733,11 +733,11 @@ public class CeloWalletApiTest extends Base {
         int tokenDecimals = 6;
         int signCount = 15;
         String hash = this.sendERC20Withdraw(txKey, toAddress, value, erc20, tokenDecimals, signCount);
-        System.out.println(String.format("ERC20提现%s个，%s个签名，hash: %s", value, signCount, hash));
+        System.out.println(String.format("ERC20Withdrawal%sPieces,%sSignatures,hash: %s", value, signCount, hash));
     }
 
     /**
-     * 管理员变更，异常测试
+     * Administrator change, abnormal testing
      */
     @Test
     public void errorChangeTest() throws Exception {
@@ -747,7 +747,7 @@ public class CeloWalletApiTest extends Base {
         int txCount = 1;
         int signCount = 15;
         String hash = this.sendChange(txKey, adds, txCount, removes, signCount);
-        System.out.println(String.format("管理员添加%s个，移除%s个，%s个签名，hash: %s", adds.length, removes.length, signCount, hash));
+        System.out.println(String.format("Administrator added%sRemove%sPieces,%sSignatures,hash: %s", adds.length, removes.length, signCount, hash));
     }
 
     @Test
@@ -765,7 +765,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(JSONUtils.obj2PrettyJson(typeList));
         String signs = HexUtil.encode((byte[]) typeList.get(5));
         System.out.println(signs);
-        System.out.println(String.format("签名个数: %s", signs.length() / 130));
+        System.out.println(String.format("Number of signatures: %s", signs.length() / 130));
 
     }
 
@@ -923,7 +923,7 @@ public class CeloWalletApiTest extends Base {
 
     @Test
     public void erc20DepositByCrossOutTest() throws Exception {
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0x6abc5a7f2f50e644bb0e75caae0a460d0f8793c19da7b272074784ebee5b8ab5";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         HtgParseTxHelper helper = new HtgParseTxHelper();
@@ -968,7 +968,7 @@ public class CeloWalletApiTest extends Base {
     @Test
     public void getTx() throws Exception {
         setMain();
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0x046aadd40444396751c0e78116800729fa85cafb6d68e390dbdb6e8004780da4";
         Transaction tx = htgWalletApi.getTransactionByHash(directTxHash);
         System.out.println(JSONUtils.obj2PrettyJson(tx));
@@ -1022,7 +1022,7 @@ public class CeloWalletApiTest extends Base {
 
     @Test
     public void approveTest() throws Exception {
-        // erc20授权
+        // erc20authorization
         //BigInteger approveAmount = new BigInteger("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",16);
         htgContext.setEthGasPrice(new BigDecimal("0.1").scaleByPowerOfTen(9).toBigInteger());
         setMain();
@@ -1033,7 +1033,7 @@ public class CeloWalletApiTest extends Base {
         BigInteger approveAmount = new BigInteger("1",16);
         Function approveFunction = this.getERC20ApproveFunction(to, approveAmount);
         String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20);
-        System.out.println(String.format("erc20授权充值[%s], 授权hash: %s", approveAmount, authHash));
+        System.out.println(String.format("erc20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
     }
 
     @Test
@@ -1053,15 +1053,15 @@ public class CeloWalletApiTest extends Base {
     public void approveZeroTest() throws Exception {
         setBeta();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
-        // 初始化 账户
+        // initialization account
         setAccount_EFa1();
-        // 初始化 ERC20 地址信息
+        // initialization ERC20 Address information
         setErc20USDT();
-        // erc20授权
+        // erc20authorization
         String approveAmount = "0";
         Function approveFunction = this.getERC20ApproveFunction(multySignContractAddress, new BigInteger(approveAmount).multiply(BigInteger.TEN.pow(erc20Decimals)));
         String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
-        System.out.println(String.format("erc20授权[%s], 授权hash: %s", approveAmount, authHash));
+        System.out.println(String.format("erc20authorization[%s], authorizationhash: %s", approveAmount, authHash));
     }
 
     private BigInteger erc20Decimals(String contract) {
@@ -1080,7 +1080,7 @@ public class CeloWalletApiTest extends Base {
 
 
     /**
-     * 转入eth
+     * Transfer ineth
      */
     @Test
     public void transferMainAsset() throws Exception {
@@ -1093,24 +1093,24 @@ public class CeloWalletApiTest extends Base {
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         BigInteger gasPrice = htgContext.getEthGasPrice();
         System.out.println(String.format("current price: %s", new BigDecimal(gasPrice).movePointLeft(9).stripTrailingZeros().toPlainString()));
-        // 初始化 账户
+        // initialization account
         setAccount_2617();
-        // MainAsset数量
+        // MainAssetquantity
         String sendAmount = "0.5";
         for (String to : tos) {
             String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), htgContext.GAS_LIMIT_OF_MAIN_ASSET(), gasPrice);
-            System.out.println(String.format("向[%s]转账%s个MainAsset, 交易hash: %s", to, sendAmount, txHash));
+            System.out.println(String.format("towards[%s]Transfer%sindividualMainAsset, transactionhash: %s", to, sendAmount, txHash));
         }
     }
 
     @Test
     public void registerMinterERC20EstimateGasTest() throws Exception {
-        // 多签合约地址
+        // Multiple contract addresses
         String contractAddress = "0xA8e8c840e92d10dF3514A00491f50B6277aF215f";
-        // 注册的ERC20Minter合约地址
+        // RegisteredERC20MinterContract address
         String erc20Minter = "0x9b8510ac9b1cf5ac146f81553e92c861920da05b";
 
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "registerMinterERC20",
                 List.of(new Address(erc20Minter)),
@@ -1133,7 +1133,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1142,14 +1142,14 @@ public class CeloWalletApiTest extends Base {
     @Test
     public void crossOutEstimateGasTest() throws Exception {
         setMain();
-        // 多签合约地址
+        // Multiple contract addresses
         String contractAddress = "0x54C4A99Ee277eFF14b378405b6600405790d5045";
         String from = "0x3b9A2911530a8FD6B3C7265E7d84117D70df845F";
         String to = "aaa";
         BigInteger convertAmount = new BigDecimal("0.05").movePointRight(18).toBigInteger();
         String token = "0xe491d740595fe59d894ca1f3c7bf9f1144366aaa";
 
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function crossOutFunction = HtgUtil.getCrossOutFunction(to, convertAmount, token);
 
         String encodedFunction = FunctionEncoder.encode(crossOutFunction);
@@ -1167,7 +1167,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1175,7 +1175,7 @@ public class CeloWalletApiTest extends Base {
 
     @Test
     public void estimateGasTest() throws Exception {
-        // 多签合约地址
+        // Multiple contract addresses
         String contractAddress = "0xfb3b78d16163124c5b4adefcc8fe9aac8546fd4b";
 
         String encodedFunction = "0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000205361666545524332303a206c6f772d6c6576656c2063616c6c206661696c6564";
@@ -1193,7 +1193,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1228,7 +1228,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -1264,7 +1264,7 @@ public class CeloWalletApiTest extends Base {
         System.out.println(String.format("encodedFunction: %s", encodedFunction));
         EthEstimateGas estimateGas = htgWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }

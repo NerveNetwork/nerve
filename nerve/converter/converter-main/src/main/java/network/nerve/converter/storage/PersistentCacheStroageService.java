@@ -33,7 +33,7 @@ import network.nerve.converter.model.bo.Chain;
 public interface PersistentCacheStroageService {
 
     /**
-     * 持久化 缓存的状态标识
+     * Persistence Status identification of cache
      * @param chain
      * @param key
      * @param value
@@ -42,7 +42,7 @@ public interface PersistentCacheStroageService {
     boolean saveCacheState(Chain chain, String key, int value);
 
     /**
-     * 获取持久化的状态标识
+     * Obtain persistent state identifiers
      * @param chain
      * @param key
      * @return

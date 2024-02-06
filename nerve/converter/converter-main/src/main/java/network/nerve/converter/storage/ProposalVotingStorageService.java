@@ -31,8 +31,8 @@ import network.nerve.converter.model.po.ProposalPO;
 import java.util.Map;
 
 /**
- * 只用于存储投票中的提案
- * 投票截止时对结果进行处理后移除
+ * Only used to store proposals in voting
+ * Remove after processing the results at the voting deadline
  * @author: Loki
  * @date: 2020/5/13
  */
@@ -41,7 +41,7 @@ public interface ProposalVotingStorageService {
     boolean save(Chain chain, ProposalPO po);
 
     /**
-     * 根据交易hash获取
+     * According to the transactionhashobtain
      * @param chain
      * @param hash
      * @return
@@ -49,7 +49,7 @@ public interface ProposalVotingStorageService {
     ProposalPO find(Chain chain, NulsHash hash);
 
     /**
-     * 根据交易hash删除
+     * According to the transactionhashdelete
      * @param chain
      * @param hash
      * @return

@@ -73,7 +73,7 @@ public class ChainManager {
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void initChain() throws Exception {
@@ -95,12 +95,12 @@ public class ChainManager {
             loadCollectorCfgJson(chain);
             loadIntradayQuotedToken(chain);
 
-            //初始化异构链信息
+            //Initialize heterogeneous chain information
         }
     }
 
     /**
-     * 加载当天已完成最终报价的交易对, 以防二次报价
+     * Load transaction pairs that have completed the final quotation on the same day, To prevent secondary quotation
      *
      * @param chain
      */
@@ -115,7 +115,7 @@ public class ChainManager {
                 QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.add(anchorToken);
             }
         }
-        // swap合约报价
+        // swapContract quotation
         for (QuotationContractCfg qa : chain.getContractQuote()) {
             String date = TimeUtil.nowUTCDate();
             String anchorToken = qa.getAnchorToken();
@@ -131,14 +131,14 @@ public class ChainManager {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        // 当天已执行报价的token(不一定完成了最终报价)
+        // Quotations executed on the same daytoken(Not necessarily completed the final quotation)
         List<String> allTokens = quotationIntradayStorageService.getAll(chain);
         QuotationContext.NODE_QUOTED_TX_TOKENS_CONFIRMED.addAll(allTokens);
     }
 
 
     /**
-     * 注册交易
+     * Registration transaction
      */
     public void registerTx() {
         try {
@@ -153,7 +153,7 @@ public class ChainManager {
     }
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void runChain() {
@@ -165,19 +165,19 @@ public class ChainManager {
     }
 
     /**
-     * 读取配置文件创建并初始化链
+     * Read configuration file to create and initialize chain
      * Read the configuration file to create and initialize the chain
      */
     private Map<Integer, ConfigBean> configChain() {
         try {
             /*
-            读取数据库链信息配置
+            Read database chain information configuration
             Read database chain information configuration
              */
             Map<Integer, ConfigBean> configMap = configService.getList();
 
             /*
-            如果系统是第一次运行，则本地数据库没有存储链信息，此时需要从配置文件读取主链配置信息
+            If the system is running for the first time and there is no storage chain information in the local database, it is necessary to read the main chain configuration information from the configuration file
             If the system is running for the first time, the local database does not have chain information,
             and the main chain configuration information needs to be read from the configuration file at this time.
             */
@@ -197,7 +197,7 @@ public class ChainManager {
     }
 
     /**
-     * 加载喂价配置
+     * Load pricing configuration
      *
      * @param chain
      * @throws Exception
@@ -225,7 +225,7 @@ public class ChainManager {
     }
 
     /**
-     * 加载合约(swap)喂价配置
+     * Load Contract(swap)Feeding configuration
      *
      * @param chain
      * @throws Exception
@@ -263,7 +263,7 @@ public class ChainManager {
     }
 
     /**
-     * 采集价格第三方api配置
+     * Third party price collectionapiallocation
      *
      * @param chain
      * @throws Exception
@@ -276,7 +276,7 @@ public class ChainManager {
     }
 
     /**
-     * 初始化链相关表
+     * Initialize Chain Related Tables
      * Initialization chain correlation table
      *
      * @param chain
@@ -311,7 +311,7 @@ public class ChainManager {
     }
 
     /**
-     * 开启价格收集以及统计的定时任务
+     * Start scheduled tasks for price collection and statistics
      *
      * @param chain
      * @return

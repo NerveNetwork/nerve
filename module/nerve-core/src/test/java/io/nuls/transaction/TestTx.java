@@ -62,7 +62,7 @@ public class TestTx {
 
     @Test
     public void allInOne() throws NulsException {
-        LOG.debug("0.##########导入创世块中的一个地址##########");
+        LOG.debug("0.##########Import an address from the Genesis block##########");
         importPriKey("00c805d2d6d5e06f57fdfb1aff56ef3c2dd15eee88f36fa7d45d368c352ec5ec0d", password);//23 5MR_2CWKhFuoGVraaxL5FYY3RsQLjLDN7jw
         BigInteger balance = LedgerCall.getBalance(chain, AddressTool.getAddress(address23), chainId, assetId);
         LOG.debug(address23 + "-----balance:{}", balance);
@@ -75,8 +75,8 @@ public class TestTx {
                 String agentHash = "";
                 String depositHash = "";
                 {
-                    LOG.debug("1.##########新建两个地址，一个作为节点地址，一个作为打包地址##########");
-                    //新建两个地址
+                    LOG.debug("1.##########Create two new addresses, one as the node address and one as the packaging address##########");
+                    //Create two new addresses
                     Map<String, Object> params = new HashMap<>();
                     params.put(Constants.VERSION_KEY_STR, version);
                     params.put(Constants.CHAIN_ID, chainId);
@@ -91,7 +91,7 @@ public class TestTx {
                     LOG.debug("packingAddress-{{}}", packingAddress);
                 }
                 {
-                    LOG.debug("2.##########从创世块地址转账给新创建的地址##########");
+                    LOG.debug("2.##########Transfer from Genesis block address to newly created address##########");
                     Map transferMap = new HashMap();
                     transferMap.put("chainId", chainId);
                     transferMap.put("remark", "transfer test");
@@ -133,7 +133,7 @@ public class TestTx {
 
                 Thread.sleep(15000);
                 {
-                    LOG.debug("3.##########给新创建的地址设置别名##########");
+                    LOG.debug("3.##########Set an alias for the newly created address##########");
                     BigInteger agentBalance = LedgerCall.getBalance(chain, AddressTool.getAddress(agentAddress), chainId, assetId);
                     LOG.debug(agentAddress + "-----balance:{}", agentBalance);
                     assertEquals(new BigInteger("25000100000000"), agentBalance);
@@ -169,8 +169,8 @@ public class TestTx {
                         LOG.debug("packingAddress alias-txHash:{}", txHash);
                     }
                     Thread.sleep(12000);
-                    LOG.debug("4.##########创建节点##########");
-                    //创建节点
+                    LOG.debug("4.##########Create nodes##########");
+                    //Create nodes
                     Map agentTxMap = this.createAgentTx(agentAddress, packingAddress);
                     Response response = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_createAgent", agentTxMap);
                     assertTrue(response.isSuccess());
@@ -181,7 +181,7 @@ public class TestTx {
 
                 Thread.sleep(12000);
                 {
-                    LOG.debug("5.##########进行委托##########");
+                    LOG.debug("5.##########Entrust##########");
                     Map<String, Object> dpParams = new HashMap<>();
                     dpParams.put(Constants.CHAIN_ID, chainId);
                     dpParams.put("address", agentAddress);
@@ -197,8 +197,8 @@ public class TestTx {
 
                 Thread.sleep(60000);
                 {
-                    LOG.debug("6.##########取消委托##########");
-                    //取消委托
+                    LOG.debug("6.##########Cancel delegation##########");
+                    //Cancel delegation
                     Map<String, Object> params = new HashMap<>();
                     params.put(Constants.CHAIN_ID, chainId);
                     params.put("address", agentAddress);
@@ -213,8 +213,8 @@ public class TestTx {
 
                 Thread.sleep(60000);
                 {
-                    LOG.debug("7.##########再次委托##########");
-                    //再次委托
+                    LOG.debug("7.##########Re commission##########");
+                    //Re commission
                     Map<String, Object> dpParams = new HashMap<>();
                     dpParams.put(Constants.CHAIN_ID, chainId);
                     dpParams.put("address", agentAddress);
@@ -230,8 +230,8 @@ public class TestTx {
 
                 Thread.sleep(60000);
                 {
-                    LOG.debug("8.##########删除节点##########");
-                    //停止节点
+                    LOG.debug("8.##########Delete node##########");
+                    //Stop node
                     Map<String, Object> txMap = new HashMap();
                     txMap.put("chainId", chainId);
                     txMap.put("address", agentAddress);
@@ -245,7 +245,7 @@ public class TestTx {
 
                 Thread.sleep(1000);
                 {
-                    LOG.debug("9.##########查询刚才创建的地址余额并返还给创世块地址##########");
+                    LOG.debug("9.##########Query the balance of the address just created and return it to the Genesis block address##########");
                     BigInteger agentBalance = LedgerCall.getBalance(chain, AddressTool.getAddress(agentAddress), chainId, assetId);
                     LOG.debug(agentAddress + "-----balance:{}", agentBalance);
                     BigInteger packingBalance = LedgerCall.getBalance(chain, AddressTool.getAddress(packingAddress), chainId, assetId);
@@ -303,7 +303,7 @@ public class TestTx {
         int count = 5;
         List<String> accountList;
         {
-            //新建100个地址
+            //New100Addresses
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, version);
             params.put(Constants.CHAIN_ID, chainId);
@@ -315,7 +315,7 @@ public class TestTx {
             assertEquals(count, accountList.size());
         }
         {
-            //给这100个地址转账
+            //Give this100Transfer to multiple addresses
             for (String account : accountList) {
                 Map transferMap = new HashMap();
                 transferMap.put("chainId", chainId);
@@ -349,7 +349,7 @@ public class TestTx {
         }
         Thread.sleep(15000);
         {
-            //100个地址之间互相转账
+            //100Transfer funds between addresses
             while (true) {
                 for (int i = 0; i < count; i++) {
                     String from = accountList.get(i % count);
@@ -439,14 +439,14 @@ public class TestTx {
 
     @Test
     public void importPriKeyTest() {
-        importPriKey("008da295e53ad4aab4a5b4c20c95bf0732a7ab10d61e4acc788f5a50eef2f51f58", password);//种子出块地址 5MR_2CVzGriCSBRf9KCFqPW4mq26uEK5Vig
+        importPriKey("008da295e53ad4aab4a5b4c20c95bf0732a7ab10d61e4acc788f5a50eef2f51f58", password);//Seed block address 5MR_2CVzGriCSBRf9KCFqPW4mq26uEK5Vig
     }
 
     @Test
     public void createAgentTx() throws Exception {
-        //组装创建节点交易
+        //Assemble and create node transactions
         Map agentTxMap = this.createAgentTx(address23, address24);
-        //调用接口
+        //Calling interfaces
         Response cmdResp2 = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_createAgent", agentTxMap);
         Map result = (HashMap) (((HashMap) cmdResp2.getResponseData()).get("cs_createAgent"));
         Assert.assertTrue(null != result);
@@ -456,11 +456,11 @@ public class TestTx {
 
 
     /**
-     * 委托节点
+     * Delegate node
      */
     @Test
     public void depositToAgent() throws Exception {
-        //组装委托节点交易
+        //Assembly commission node transaction
         String agentHash = "00201b42bc483d07e50a0f4904700c4f6d74610609b2aa371f4a4033c5479ba4208a";
         Map<String, Object> dpParams = new HashMap<>();
         dpParams.put(Constants.CHAIN_ID, chainId);
@@ -475,7 +475,7 @@ public class TestTx {
     }
 
     /**
-     * 取消委托
+     * Cancel delegation
      *
      * @throws Exception
      */
@@ -498,7 +498,7 @@ public class TestTx {
         txMap.put("chainId", chainId);
         txMap.put("address", address23);
         txMap.put("password", "nuls123456");
-        //调用接口
+        //Calling interfaces
         Response cmdResp2 = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.CS.abbr, "cs_stopAgent", txMap);
         Map result = (HashMap) (((HashMap) cmdResp2.getResponseData()).get("cs_stopAgent"));
         String txHash = (String) result.get("txHash");
@@ -506,7 +506,7 @@ public class TestTx {
     }
 
     /**
-     * 设置别名
+     * Set alias
      * @throws Exception
      */
     @Test
@@ -529,7 +529,7 @@ public class TestTx {
     }
 
     /**
-     * 查交易
+     * Check transactions
      */
     @Test
     public void getTxRecord() throws Exception{
@@ -547,16 +547,16 @@ public class TestTx {
     }
 
     /**
-     * 导入keystore
+     * Importkeystore
      */
     @Test
     public void importAccountByKeystoreFile(){
-        String address = importAccountByKeystoreFile("C:/Users/Administrator/Desktop/2.0测试配置和内容/种子节点地址/tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG.keystore");
+        String address = importAccountByKeystoreFile("C:/Users/Administrator/Desktop/2.0Test configuration and content/Seed node address/tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG.keystore");
         LOG.info("address:{}", address);
     }
 
     /**
-     *  删除账户
+     *  Delete account
      */
     @Test
     public void removeAccountTest() throws Exception {
@@ -566,7 +566,7 @@ public class TestTx {
 
     private void createTransfer() throws Exception {
         Map transferMap = this.createTransferTx();
-        //调用接口
+        //Calling interfaces
         Response cmdResp = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_transfer", transferMap);
         HashMap result = (HashMap) (((HashMap) cmdResp.getResponseData()).get("ac_transfer"));
         Assert.assertTrue(null != result);
@@ -625,7 +625,7 @@ public class TestTx {
 
     public void importPriKey(String priKey, String pwd){
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -728,7 +728,7 @@ public class TestTx {
 
 
     /**
-     * 创建普通转账交易
+     * Create a regular transfer transaction
      *
      * @return
      */
@@ -760,7 +760,7 @@ public class TestTx {
     }
 
     /**
-     * 创建节点
+     * Create nodes
      */
     public Map createAgentTx(String agentAddr, String packingAddr) {
         Map<String, Object> params = new HashMap<>();

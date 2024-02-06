@@ -38,7 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * 当前虚拟银行异构链地址对交易的签名消息
+ * The signature message of the current virtual bank's heterogeneous chain address pair transaction
  * @author: Loki
  * @date: 2020/8/31
  */
@@ -56,19 +56,19 @@ public class ComponentSignMessage extends BaseBusinessMessage {
         }
     };
     /**
-     * 该交易所在区块的虚拟银行成员总数
-     * (不算当前加入, 要算当前退出)
+     * The total number of virtual bank members in the block of this exchange
+     * (Not including current joining, To calculate the current exit)
      */
     private int virtualBankTotal;
 
     /**
-     * nerve 链内交易hash
+     * nerve On chain transactionshash
      */
     private NulsHash hash;
 
     /**
-     * 每个节点, 签多个异构链
-     * 每个异构链地址一个签名
+     * Each node, Sign multiple heterogeneous chains
+     * One signature per heterogeneous chain address
      */
     private List<HeterogeneousSign> listSign;
 

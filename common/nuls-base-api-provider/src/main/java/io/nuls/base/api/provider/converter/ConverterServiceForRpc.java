@@ -206,6 +206,15 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
     }
 
     @Override
+    public Result<String> stableCoinPause(StableCoinPauseReq req) {
+        Function<Map, Result> fun = res -> {
+            String data = (String) res.get("value");
+            return success(data);
+        };
+        return callRpc(ModuleE.CV.abbr, "cv_pause_coin_for_stable_swap", req, fun);
+    }
+
+    @Override
     public Result<Boolean> retryWithdrawal(RetryWithdrawalReq req) {
         Function<Map, Result> fun = res -> {
             Boolean data = (Boolean) res.get("value");
@@ -269,7 +278,7 @@ public class ConverterServiceForRpc extends BaseRpcService implements ConverterS
                     try {
                         dto.setHeterogeneousAddresses(MapUtils.mapsToObjects((List<Map<String, Object>>) map.get("heterogeneousAddresses"),HeterogeneousAddressDTO.class));
                     } catch (Exception e) {
-                        Log.error("数据转换错误",e);
+                        Log.error("Data conversion error",e);
                     }
                     return dto;
                 }).collect(Collectors.toList()));

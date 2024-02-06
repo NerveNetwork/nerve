@@ -104,10 +104,10 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
                 Integer hChainId = txData.getChainId();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
                 HeterogeneousAssetInfo mainAsset = docking.getMainAsset();
-                // 异构链主资产绑定
+                // Heterogeneous Chain Master Asset Binding
                 ledgerAssetRegisterHelper.htgMainAssetBind(txData.getNerveAssetChainId(), txData.getNerveAssetId(), hChainId, mainAsset.getAssetId(),
                         mainAsset.getSymbol(), mainAsset.getDecimals(), mainAsset.getSymbol(), mainAsset.getContractAddress());
-                chain.getLogger().info("[commit] 异构链主资产绑定, nerveAssetChainId: {}, nerveAssetId: {}, chainId: {}, assetId: {}, symbol: {}, decimals: {}", txData.getNerveAssetChainId(), txData.getNerveAssetId(), hChainId, mainAsset.getAssetId(), mainAsset.getSymbol(), mainAsset.getDecimals());
+                chain.getLogger().info("[commit] Heterogeneous Chain Master Asset Binding, nerveAssetChainId: {}, nerveAssetId: {}, chainId: {}, assetId: {}, symbol: {}, decimals: {}", txData.getNerveAssetChainId(), txData.getNerveAssetId(), hChainId, mainAsset.getAssetId(), mainAsset.getSymbol(), mainAsset.getDecimals());
             }
         } catch (Exception e) {
             chain.getLogger().error(e);
@@ -156,14 +156,14 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
             List<Transaction> failsList = new ArrayList<>();
 
             for (Transaction tx : txs) {
-                // 异构合约主资产注册
+                // Heterogeneous Contract Master Asset Registration
                 HeterogeneousMainAssetBindTxData txData = new HeterogeneousMainAssetBindTxData();
                 txData.parse(tx.getTxData(), 0);
-                // 签名验证(种子虚拟银行)
+                // Signature verification(Seed Virtual Bank)
                 ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
                 // only (nuls & EVM:enuls) (eth & EVM:goerliETH)
                 if (!HeterogeneousUtil.checkHeterogeneousMainAssetBind(chainId, txData.getChainId(), txData.getNerveAssetChainId(), txData.getNerveAssetId())) {
-                    logger.error("异构链主资产不支持绑定到nerve资产: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
+                    logger.error("Heterogeneous chain main assets do not support binding tonerveasset: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
                     ErrorCode error = ConverterErrorCode.NO_LONGER_SUPPORTED;
                     errorCode = error.getCode();
                     logger.error(error.getMsg());
@@ -173,7 +173,7 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
                 Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, txData.getNerveAssetChainId(), txData.getNerveAssetId());
                 boolean existNerveAsset = nerveAsset != null;
                 if (!existNerveAsset) {
-                    logger.error("Nerve资产不存在: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
+                    logger.error("NerveAsset does not exist: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
                     ErrorCode error = ConverterErrorCode.ASSET_ID_NOT_EXIST;
                     errorCode = error.getCode();
                     logger.error(error.getMsg());
@@ -184,9 +184,9 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getChainId());
                 HeterogeneousAssetInfo mainAsset = docking.getMainAsset();
                 NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(mainAsset.getChainId(), mainAsset.getAssetId());
-                // 新注册，主资产不能存在
+                // New registration, the main asset cannot exist
                 if(nerveAssetInfo != null && !nerveAssetInfo.isEmpty()) {
-                    logger.error("异构链主资产已存在");
+                    logger.error("Heterogeneous chain main asset already exists");
                     ErrorCode error = ConverterErrorCode.ASSET_EXIST;
                     errorCode = error.getCode();
                     logger.error(error.getMsg());
@@ -217,14 +217,14 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
             List<Transaction> failsList = new ArrayList<>();
 
             for (Transaction tx : txs) {
-                // 异构合约主资产注册
+                // Heterogeneous Contract Master Asset Registration
                 HeterogeneousMainAssetBindTxData txData = new HeterogeneousMainAssetBindTxData();
                 txData.parse(tx.getTxData(), 0);
-                // 签名验证(种子虚拟银行)
+                // Signature verification(Seed Virtual Bank)
                 ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
                 // only (nuls & EVM:enuls) (eth & EVM:goerliETH)
                 if (!HeterogeneousUtil.checkHeterogeneousMainAssetBind(chainId, txData.getChainId(), txData.getNerveAssetChainId(), txData.getNerveAssetId())) {
-                    logger.error("异构链主资产不支持绑定到nerve资产: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
+                    logger.error("Heterogeneous chain main assets do not support binding tonerveasset: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
                     ErrorCode error = ConverterErrorCode.NO_LONGER_SUPPORTED;
                     errorCode = error.getCode();
                     logger.error(error.getMsg());
@@ -234,7 +234,7 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
                 Map<String, Object> nerveAsset = LedgerCall.getNerveAsset(chainId, txData.getNerveAssetChainId(), txData.getNerveAssetId());
                 boolean existNerveAsset = nerveAsset != null;
                 if (!existNerveAsset) {
-                    logger.error("Nerve资产不存在: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
+                    logger.error("NerveAsset does not exist: {}-{}", txData.getNerveAssetChainId(), txData.getNerveAssetId());
                     ErrorCode error = ConverterErrorCode.ASSET_ID_NOT_EXIST;
                     errorCode = error.getCode();
                     logger.error(error.getMsg());
@@ -253,9 +253,9 @@ public class HeterogeneousMainAssetBindProcessor implements TransactionProcessor
                     IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(txData.getChainId());
                     HeterogeneousAssetInfo mainAsset = docking.getMainAsset();
                     NerveAssetInfo nerveAssetInfo = ledgerAssetRegisterHelper.getNerveAssetInfo(mainAsset.getChainId(), mainAsset.getAssetId());
-                    // 新注册，主资产不能存在
+                    // New registration, the main asset cannot exist
                     if(nerveAssetInfo != null && !nerveAssetInfo.isEmpty()) {
-                        logger.error("异构链主资产已存在");
+                        logger.error("Heterogeneous chain main asset already exists");
                         ErrorCode error = ConverterErrorCode.ASSET_EXIST;
                         errorCode = error.getCode();
                         logger.error(error.getMsg());

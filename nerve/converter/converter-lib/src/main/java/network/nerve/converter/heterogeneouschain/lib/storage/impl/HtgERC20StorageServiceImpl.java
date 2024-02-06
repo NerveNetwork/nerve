@@ -122,7 +122,7 @@ public class HtgERC20StorageServiceImpl implements HtgERC20StorageService {
             return 0;
         }
         if (isExistsByAssetId(po.getAssetId())) {
-            htgContext.logger().error("资产ID已存在[{}], 存在的资产详情: {}", po.getAssetId(), this.findByAssetId(po.getAssetId()));
+            htgContext.logger().error("assetIDExisting[{}], Details of existing assets: {}", po.getAssetId(), this.findByAssetId(po.getAssetId()));
             throw new NulsException(ConverterErrorCode.ASSET_ID_EXIST);
         }
         Map<byte[], byte[]> values = new HashMap<>(8);

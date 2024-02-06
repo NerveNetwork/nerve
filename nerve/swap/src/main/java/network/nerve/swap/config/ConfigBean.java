@@ -27,7 +27,7 @@ package network.nerve.swap.config;
 import java.io.Serializable;
 
 /**
- * 模块配置类
+ * Module configuration class
  * Module Configuration Class
  *
  * @author: Mimi
@@ -41,11 +41,11 @@ public class ConfigBean implements Serializable {
      */
     private int chainId;
     /**
-     * 资产ID  assets id
+     * assetID  assets id
      */
     private int assetId;
     /**
-     * 编码
+     * coding
      */
     private String encoding;
 

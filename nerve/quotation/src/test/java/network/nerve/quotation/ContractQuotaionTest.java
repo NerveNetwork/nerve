@@ -36,7 +36,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 
 /**
- * 合约报价测试
+ * Contract quotation testing
  *
  * @author: Loki
  * @date: 2020/12/3
@@ -66,12 +66,12 @@ public class ContractQuotaionTest {
 
     @Test
     public void netEth() throws Exception {
-        // 计算ETH网络下 UNI_V2 的价格
+        // calculateETHUnder the network UNI_V2 The price of
 //        System.out.println(ethWalletApi.getContractTokenDecimals(ETH_UNI_V2_CONTRACT));
 //        System.out.println(ethWalletApi.getContractTokenDecimals(ETH_NVT_TOKEN_CONTRACT));
 //        System.out.println(ethWalletApi.getContractTokenDecimals(ETH_WETH_TOKEN_CONTRACT));
 
-        // 池子里ETH的数量
+        // Chi Zi LiETHQuantity of
         BigInteger wethBalance = ethWalletApi.getERC20Balance(ETH_UNI_V2_CONTRACT, ETH_WETH_TOKEN_CONTRACT);
         System.out.println("wethBalance:" + wethBalance);
         int wethDecimals = ethWalletApi.getContractTokenDecimals(ETH_WETH_TOKEN_CONTRACT);
@@ -96,9 +96,9 @@ public class ContractQuotaionTest {
 
     @Test
     public void netBsc() throws Exception {
-        // 计算ETH网络下 CAKE_LP 的价格 cakeLp
+        // calculateETHUnder the network CAKE_LP The price of cakeLp
 
-        // 池子里ETH的数量
+        // Chi Zi LiETHQuantity of
         BigInteger wethBalance = bnbWalletApi.getERC20Balance(BSC_CAKE_LP_CONTRACT, BSC_WETH_TOKEN_CONTRACT);
         System.out.println("wethBalance:" + wethBalance);
         int wethDecimals = bnbWalletApi.getContractTokenDecimals(BSC_WETH_TOKEN_CONTRACT);

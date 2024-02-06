@@ -109,7 +109,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getStableRemoveLiquidityInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
             txData.parse(tx.getTxData(), 0);
 
@@ -117,7 +117,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             if (!stableSwapPairCache.isExist(pairAddress)) {
                 throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
             }
-            // 销毁的LP资产
+            // DestroyedLPasset
             BigInteger liquidity = dto.getLiquidity();
             byte[] indexs = txData.getIndexs();
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
@@ -125,28 +125,28 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             NerveToken tokenLP = pairPo.getTokenLP();
             NerveToken[] coins = pairPo.getCoins();
 
-            // 整合计算数据
+            // Integrate computing data
             StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
             //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTx(chain, bus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             stablePair.update(liquidity.negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeight, blockTime);
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -157,7 +157,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
             NerveToken tokenLP = stablePair.getPair().getTokenLP();
@@ -176,7 +176,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);
@@ -192,7 +192,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
         try {
             CoinData coinData = tx.getCoinDataInstance();
             dto = this.getStableRemoveLiquidityInfo(chainId, coinData);
-            // 提取业务参数
+            // Extract business parameters
             StableRemoveLiquidityData txData = new StableRemoveLiquidityData();
             txData.parse(tx.getTxData(), 0);
 
@@ -200,7 +200,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             if (!stableSwapPairCache.isExist(pairAddress)) {
                 throw new NulsException(SwapErrorCode.PAIR_NOT_EXIST);
             }
-            // 销毁的LP资产
+            // DestroyedLPasset
             BigInteger liquidity = dto.getLiquidity();
             byte[] indexs = txData.getIndexs();
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
@@ -208,28 +208,28 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             NerveToken tokenLP = pairPo.getTokenLP();
             NerveToken[] coins = pairPo.getCoins();
 
-            // 整合计算数据
+            // Integrate computing data
             StableRemoveLiquidityBus bus = SwapUtils.calStableRemoveLiquidityBusiness(swapHelper, chainId, iPairFactory, liquidity, indexs, dto.getPairAddress(), txData.getTo());
             //SwapContext.logger.info("[{}]handler remove bus: {}", blockHeight, bus.toString());
-            // 装填执行结果
+            // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
             result.setHash(tx.getHash().toHex());
             result.setTxTime(tx.getTime());
             result.setBlockHeight(blockHeight);
             result.setBusiness(HexUtil.encode(SwapDBUtil.getModelSerialize(bus)));
-            // 组装系统成交交易
+            // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx = this.makeSystemDealTx(chain, bus, coins, tokenLP, tx.getHash().toHex(), blockTime, tempBalanceManager);
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx, blockTime);
-            // 更新临时数据
+            // Update temporary data
             stablePair.update(liquidity.negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeight, blockTime);
         } catch (Exception e) {
             Log.error(e);
-            // 装填失败的执行结果
+            // Execution results of failed loading
             result.setTxType(txType());
             result.setSuccess(false);
             result.setHash(tx.getHash().toHex());
@@ -240,7 +240,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             if (dto == null) {
                 return result;
             }
-            // 组装系统退还交易
+            // Assembly system return transaction
             String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
             IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
             NerveToken tokenLP = stablePair.getPair().getTokenLP();
@@ -259,7 +259,7 @@ public class StableRemoveLiquidityHandler extends SwapHandlerConstraints {
             result.setSubTx(refundTx);
             String refundTxStr = SwapUtils.nulsData2Hex(refundTx);
             result.setSubTxStr(refundTxStr);
-            // 更新临时余额
+            // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, refundTx, blockTime);
         } finally {
             batchInfo.getSwapResultMap().put(tx.getHash().toHex(), result);

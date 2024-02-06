@@ -56,8 +56,8 @@ public class DexTxTest {
 //        importPriKey("d3413fcc17913623256b6451698ca1d50629a3c8a760ad86d03b6fcda2d3a1af", password); //TNVTdN9i7xo3PmLj376B17Qntng3DyVio4Bqd
 
 
-        importPriKey("588fa9fc9cb6164fe1b1da31818319b6a5992485e34e7a75f705387fd43c27de", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp   TNVTdN9i97WuLcebKwEYrdiZJJ4NWAvC7B77i
-//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe   TNVTdN9iBXUrnDjcUqnn9WFCb4KFJmsaox6vY
+        importPriKey("588fa9fc9cb6164fe1b1da31818319b6a5992485e34e7a75f705387fd43c27de", password);//Seed block address tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp   TNVTdN9i97WuLcebKwEYrdiZJJ4NWAvC7B77i
+//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//Seed block address tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe   TNVTdN9iBXUrnDjcUqnn9WFCb4KFJmsaox6vY
 //        importPriKey("76b7beaa98db863fb680def099af872978209ed9422b7acab8ab57ad95ab218b", password);//29 tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn            TNVTdN9iEEaQ68quQYtSu6XMUzd2rwUBtYb7k
 
 //        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG  TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
@@ -76,7 +76,7 @@ public class DexTxTest {
 
     public void importPriKey(String priKey, String pwd) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -94,7 +94,7 @@ public class DexTxTest {
     }
 
     /**
-     * 创建交易对
+     * Create transaction pairs
      */
     @Test
     public void sendCreateCoinTradingTx() {
@@ -116,7 +116,7 @@ public class DexTxTest {
             HashMap callResult = (HashMap) ((HashMap) response.getResponseData()).get("dx_createCoinTradingTx");
             String txHash = (String) callResult.get("txHash");
             Log.info("---tradingHash: " + txHash);
-            System.out.println("------划重点，记得拷贝hash到下一个测试里----");
+            System.out.println("------Key points, remember to copyhashGo to the next test----");
         } catch (NulsException e) {
             e.printStackTrace();
         } catch (Exception e) {

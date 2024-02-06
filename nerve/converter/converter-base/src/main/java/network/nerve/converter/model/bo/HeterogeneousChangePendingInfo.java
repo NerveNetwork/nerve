@@ -30,12 +30,12 @@ package network.nerve.converter.model.bo;
 public class HeterogeneousChangePendingInfo {
 
     /**
-     * 管理员变更的nerve交易hash
+     * Administrator changednervetransactionhash
      */
     private String nerveTxHash;
 
     /**
-     * 原始nerve交易合并数量
+     * originalnerveTransaction consolidation quantity
      */
     private int orginTxCount;
 

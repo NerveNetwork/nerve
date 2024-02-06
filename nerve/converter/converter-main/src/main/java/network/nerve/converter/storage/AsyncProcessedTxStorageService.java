@@ -28,8 +28,8 @@ import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.po.ComponentCalledPO;
 
 /**
- * 异构链组件/提案执行
- * 执行过的交易, 防止二次执行
+ * Heterogeneous Chain Components/Proposal execution
+ * Executed transactions, Prevent secondary execution
  * @author: Loki
  * @date: 2020/6/2
  */

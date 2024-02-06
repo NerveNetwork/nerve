@@ -33,19 +33,19 @@ import io.nuls.core.exception.NulsException;
 import java.io.IOException;
 
 /**
- * 对提案进行投票交易txdata
+ * Vote on proposals for tradingtxdata
  * @author: Loki
  * @date: 2020-02-18
  */
 public class VoteProposalTxData extends BaseNulsData {
 
     /**
-     * 提案交易hash
+     * Proposal transactionhash
      */
     private NulsHash proposalTxHash;
 
     /**
-     * 表决提案 0:against反对，1:favor赞成
+     * Voting on proposals 0:againstOppose,1:favorfavour
      */
     private byte choice;
 

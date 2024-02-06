@@ -30,7 +30,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * CoinBase交易处理器
+ * CoinBaseTransaction processor
  * @author tag
  * @date 2019/10/22
  */
@@ -112,7 +112,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
                     errorCode = ConsensusErrorCode.CONFLICT_ERROR.getCode();
                 }
 
-                //委托金额超出节点最大委托金额
+                //The entrusted amount exceeds the maximum entrusted amount of the node
                 NulsHash agentHash = txData.getAgentHash();
                 if(appendTotalAmountMap.containsKey(agentHash)){
                     BigInteger totalDeposit = appendTotalAmountMap.get(agentHash).add(txData.getAmount());
@@ -161,7 +161,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!commitResult) {
             for (Transaction commitTx : commitSuccessList) {
                 appendDepositRollback(commitTx, blockHeader, chain);
@@ -187,7 +187,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 appendDepositCommit(commitTx, blockHeader, chain);
@@ -206,13 +206,13 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
         ChangeAgentDepositPo po = new ChangeAgentDepositPo(data, tx.getTime(), tx.getHash(), height);
-        //保存追加记录
+        //Save additional records
         if(!agentDepositManager.saveAppendDeposit(chain, po)){
             chain.getLogger().error("Failed to save the additional margin record");
             return false;
         }
 
-        //修改节点保证金金额
+        //Modify node deposit amount
         Agent agent = agentManager.getAgentByHash(chain, po.getAgentHash());
         BigInteger oldDeposit = agent.getDeposit();
         BigInteger newDeposit = oldDeposit.add(po.getAmount());
@@ -223,7 +223,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
 
-        //保存追加保证金交易NONCE
+        //Save margin tradingNONCE
         if(!AgentDepositNonceManager.addNonceCommit(chain, po.getAgentHash(), tx.getHash(), po.getAmount())){
             agent.setDeposit(oldDeposit);
             agentManager.updateAgent(chain, agent);
@@ -244,7 +244,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
             return false;
         }
         ChangeAgentDepositPo po = new ChangeAgentDepositPo(data, tx.getTime(), tx.getHash(), height);
-        //修改节点保证金金额
+        //Modify node deposit amount
         Agent agent = agentManager.getAgentByHash(chain, po.getAgentHash());
         BigInteger newDeposit = agent.getDeposit();
         BigInteger oldDeposit = newDeposit.subtract(po.getAmount());
@@ -258,7 +258,7 @@ public class AppendAgentDepositProcessor implements TransactionProcessor {
             chain.getLogger().error("Agent deposit modification failed");
             return false;
         }
-        //删除追加记录
+        //Delete Append Record
         if(!agentDepositManager.removeAppendDeposit(chain, po.getTxHash())){
             agent.setDeposit(newDeposit);
             agentManager.updateAgent(chain, agent);

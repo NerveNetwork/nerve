@@ -47,7 +47,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put(Constants.CHAIN_ID, chainId);
             params.put("nodeId", nodeId);
             Response response = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addDirectConnect", params);
-            chain.getLogger().debug("连接一个节点：{}, result:{}", nodeId, response.isSuccess());
+            chain.getLogger().debug("Connect a node：{}, result:{}", nodeId, response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addDirectConnect");
                 return Boolean.valueOf(data.get("value").toString());
@@ -69,7 +69,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("groupFlag", groupFlag);
             params.put("ips", ips);
             Response response = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_addIps", params);
-            chain.getLogger().debug("增加节点ips.size：{}，result:{}", ips.size(), response.isSuccess());
+            chain.getLogger().debug("Add nodesips.size：{},result:{}", ips.size(), response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_addIps");
                 return Boolean.valueOf(data.get("value").toString());
@@ -91,7 +91,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("groupFlag", groupFlag);
             params.put("ips", ips);
             Response response = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, "nw_removeIps", params);
-            chain.getLogger().info("删除节点ips.size：{}，result:{}", ips.size(), response.isSuccess());
+            chain.getLogger().info("Delete nodeips.size：{},result:{}", ips.size(), response.isSuccess());
             if (response.isSuccess()) {
                 Map data = (Map) ((Map) response.getResponseData()).get("nw_removeIps");
                 return Boolean.valueOf(data.get("value").toString());
@@ -172,7 +172,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chain.getChainId());
             params.put("ips", ips);
-            chain.getLogger().info("共识节点列表：{}", ips.toString());
+            chain.getLogger().info("Consensus node list：{}", ips.toString());
             ConsensusNet consensusNet = new ConsensusNet();
             ConsensusKeys consensusKeys = consensusNetService.getSelfConsensusKeys(chain.getChainId());
             consensusNet.setPubKey(consensusKeys.getPubKey());
@@ -182,7 +182,7 @@ public class NetworkServiceImpl implements NetworkService {
             params.put("messageBody", HexUtil.encode(consensusIdentitiesMsg.serialize()));
             params.put("command", NetworkCmdConstant.POC_DIS_CONN_MESSAGE);
             boolean result = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.NW.abbr, NetworkCmdConstant.NW_BROADCAST_CONSENSUS_NET, params).isSuccess();
-            chain.getLogger().info("发送断联消息，ips.size：{}，result:{}", ips.size(), result);
+            chain.getLogger().info("Send a disconnection message,ips.size：{},result:{}", ips.size(), result);
             //chain.getLogger().debug("broadcast: " + NetworkCmdConstant.POC_DIS_CONN_MESSAGE + ", success:" + result);
             return result;
         } catch (Exception e) {
@@ -207,7 +207,7 @@ public class NetworkServiceImpl implements NetworkService {
             if (null == consensusKeys) {
                 return false;
             }
-            //添加自身信息
+            //Add self information
             String selfNodeId = getSelfNodeId(chainId);
             if (StringUtils.isNotBlank(selfNodeId)) {
                 ConsensusNet selfConsensusNet = new ConsensusNet(consensusKeys.getPubKey(), selfNodeId);
@@ -230,7 +230,7 @@ public class NetworkServiceImpl implements NetworkService {
     }
 
     /**
-     * 排除接收节点，将新增的共识节点分享给其他已经连接的节点
+     * Exclude receiving nodes and share the newly added consensus nodes with other connected nodes
      *
      * @param chainId
      * @param excludeNode
@@ -325,7 +325,7 @@ public class NetworkServiceImpl implements NetworkService {
             }
             String nodeId = getSelfNodeId(chain.getChainId());
             if (StringUtils.isBlank(nodeId)) {
-                chain.getLogger().info("本地ip地址端口获取失败");
+                chain.getLogger().info("localipAddress port acquisition failed");
                 return false;
             }
             List<ConsensusNet> consensusSeedPubKeyList = consensusNetService.getAllConsensusNetList(chain);
@@ -338,7 +338,7 @@ public class NetworkServiceImpl implements NetworkService {
                 consensusIdentitiesMsg.getConsensusIdentitiesSub().setBroadcast(true);
                 boolean broadMessage = false;
                 for (ConsensusNet consensusNet : consensusSeedPubKeyList) {
-                    //如果已经建立连接的节点不需要再加密广播
+                    //If the connected nodes do not need to encrypt the broadcast anymore
                     if (!consensusNet.isHadConnect() && !ArraysTool.arrayEquals(consensusNet.getPubKey(), consensusKeys.getPubKey()) &&
                             consensusNet.getPubKey().length > 0) {
                         broadMessage = true;

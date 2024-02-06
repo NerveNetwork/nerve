@@ -27,6 +27,7 @@ package network.nerve.converter.heterogeneouschain.eth.storage.impl;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthAccount;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthAccountStorageService;
 import network.nerve.converter.model.bo.HeterogeneousAccount;
@@ -47,27 +48,64 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 @Component
 public class EthAccountStorageServiceImpl implements EthAccountStorageService {
 
-    private final String baseArea = EthDBConstant.DB_ETH;
+    private String baseArea = EthDBConstant.DB_ETH;
     private final String KEY_PREFIX = "ACCOUNT-";
     private final byte[] ACCOUNT_ALL_KEY = stringToBytes("ACCOUNT-ALL");
+    private final String MERGE_KEY_PREFIX;
+    private final byte[] MERGE_ACCOUNT_ALL_KEY;
 
+    public EthAccountStorageServiceImpl() {
+        MERGE_KEY_PREFIX = 101 + "_" + KEY_PREFIX;
+        MERGE_ACCOUNT_ALL_KEY = stringToBytes(101 + "_ACCOUNT-ALL");
+    }
+private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = EthContext.getConverterCoreApi().isDbMerged(101);
+        if (merged) {
+            this.baseArea = EthContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private byte[] ACCOUNT_ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_ACCOUNT_ALL_KEY;
+        } else {
+            return ACCOUNT_ALL_KEY;
+        }
+    }
+
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
     @Override
     public int save(EthAccount po) throws Exception {
         if (po == null) {
             return 0;
         }
-        boolean result = ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX + po.getAddress()), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX() + po.getAddress()), po);
         if (result) {
-            StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+            StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
             if (accountSetPo == null) {
                 accountSetPo = new StringSetPo();
                 Set<String> set = new HashSet<>();
                 set.add(po.getAddress());
                 accountSetPo.setCollection(set);
-                result = ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+                result = ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
             } else {
                 accountSetPo.getCollection().add(po.getAddress());
-                result = ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+                result = ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
             }
         }
         return result ? 1 : 0;
@@ -75,22 +113,22 @@ public class EthAccountStorageServiceImpl implements EthAccountStorageService {
 
     @Override
     public EthAccount findByAddress(String address) {
-        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX + address), EthAccount.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX() + address), EthAccount.class);
     }
 
     @Override
     public void deleteByAddress(String address) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX + address));
-        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + address));
+        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
         if(accountSetPo != null) {
             accountSetPo.getCollection().remove(address);
-            ConverterDBUtil.putModel(baseArea, ACCOUNT_ALL_KEY, accountSetPo);
+            ConverterDBUtil.putModel(baseArea(), ACCOUNT_ALL_KEY(), accountSetPo);
         }
     }
 
     @Override
     public List<HeterogeneousAccount> findAll() {
-        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea, ACCOUNT_ALL_KEY, StringSetPo.class);
+        StringSetPo accountSetPo = ConverterDBUtil.getModel(baseArea(), ACCOUNT_ALL_KEY(), StringSetPo.class);
         if (accountSetPo == null) {
             return null;
         }

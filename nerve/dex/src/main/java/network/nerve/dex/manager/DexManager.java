@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Dex模块管理器
+ * DexModule Manager
  */
 @Component
 public class DexManager {
@@ -31,22 +31,22 @@ public class DexManager {
     private TradingOrderStorageService orderStorageService;
 
     /**
-     * 存放本链已注册的所有资产信息
-     * 和已注册跨链的其他链资产信息
+     * Store all registered asset information in this chain
+     * Information on registered cross chain assets and other chain assets
      */
     private Map<String, AssetInfo> assetInfoMap = new ConcurrentHashMap<>();
 
     /**
-     * 交易对容器缓存
-     * 缓存所有交易对信息，以及交易对的盘口信息
+     * Transaction pair container cache
+     * Cache all transaction pair information, as well as the position information of transaction pairs
      * key: coinTradingPo.hash
      */
     private Map<String, TradingContainer> tradingContainerMap = new ConcurrentHashMap<>();
 
     /**
-     * 存放所有交易对key，可通过币对id找到交易对的hash
-     * 再通过tradingContainerMap找到对应的TradingContainer
-     * key: 币对id
+     * Store all transaction pairskey, can be achieved through currency pairsidFind the right transactionhash
+     * Re passtradingContainerMapFind the correspondingTradingContainer
+     * key: Coin pairsid
      * value: coinTradingPo.hash
      */
     private Map<String, String> tradingKeyMap = new ConcurrentHashMap<>();
@@ -60,7 +60,7 @@ public class DexManager {
     }
 
     /**
-     * 通过币对hash，找到币对容器
+     * Through currency pairshash, find the coin pair container
      *
      * @param hash
      * @return
@@ -75,7 +75,7 @@ public class DexManager {
     }
 
     /**
-     * 添加一个盘口
+     * Add a disk slot
      *
      * @param container
      */
@@ -83,12 +83,12 @@ public class DexManager {
         CoinTradingPo tradingPo = container.getCoinTrading();
         String hash = container.getCoinTrading().getHash().toHex();
         tradingContainerMap.put(hash, container);
-        //缓存币对id
+        //Cache coin pairsid
         tradingKeyMap.put(DexUtil.getCoinTradingKey1(tradingPo), hash);
     }
 
     /**
-     * 添加一个币对信息，并创建盘口缓存容器
+     * Add a coin pair information and create a disk cache container
      *
      * @param tradingPo
      */
@@ -96,12 +96,12 @@ public class DexManager {
         TradingContainer container = new TradingContainer(tradingPo);
         String hash = container.getCoinTrading().getHash().toHex();
         tradingContainerMap.put(hash, container);
-        //缓存币对id
+        //Cache coin pairsid
         tradingKeyMap.put(DexUtil.getCoinTradingKey1(tradingPo), hash);
     }
 
     /**
-     * 删除币对缓存容器
+     * Delete coin pair cache container
      *
      * @param tradingPo
      */
@@ -119,7 +119,7 @@ public class DexManager {
     }
 
     /**
-     * 通过币对id找到交易对的hash
+     * Through currency pairsidFind the right transactionhash
      *
      * @param key
      * @return
@@ -129,7 +129,7 @@ public class DexManager {
 //    }
 
     /**
-     * 根据币对id或者币对hash查询币对是否存在
+     * Based on currency pairsidOr currency pairshashCheck if the currency pair exists
      *
      * @param key
      * @return
@@ -142,7 +142,7 @@ public class DexManager {
     }
 
     /**
-     * 添加挂单信息到对应的币对盘口
+     * Add order information to the corresponding currency pair opening
      *
      * @param orderPo
      */
@@ -155,7 +155,7 @@ public class DexManager {
     }
 
     /**
-     * 删除挂单
+     * Delete pending orders
      *
      * @param orderPo
      * @throws NulsException
@@ -169,15 +169,15 @@ public class DexManager {
     }
 
     /**
-     * 初始化Dex模块管理器
+     * initializationDexModule Manager
      */
     public void init() throws NulsException {
-        //查询所有交易对信息，创建对应盘口
+        //Query all transaction pair information and create corresponding positions
         List<CoinTradingPo> tradingList = tradingStorageService.queryAll();
         for (CoinTradingPo tradingPo : tradingList) {
             this.addCoinTrading(tradingPo);
         }
-        //查询所有挂单信息，缓存到盘口
+        //Query all order information and cache it to the disk port
         List<TradingOrderPo> orderList = orderStorageService.queryAll();
         Collections.sort(orderList);
         for (TradingOrderPo orderPo : orderList) {

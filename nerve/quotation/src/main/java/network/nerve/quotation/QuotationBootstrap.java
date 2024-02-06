@@ -66,11 +66,11 @@ public class QuotationBootstrap extends RpcModule {
     @Override
     public void init() {
         try {
-            //初始化地址工具
+            //Initialize Address Tool
             AddressTool.init(addressPrefixDatas);
-            //初始化系统参数
+            //Initialize system parameters
             initSys();
-            //初始化数据库配置文件
+            //Initialize database configuration file
             initDB();
             initModuleProtocolCfg();
             initQuotationConfig();
@@ -128,7 +128,7 @@ public class QuotationBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化系统编码
+     * Initialize system encoding
      */
     private void initSys() throws Exception {
         System.setProperty(QuotationConstant.SYS_FILE_ENCODING, UTF_8.name());
@@ -146,13 +146,13 @@ public class QuotationBootstrap extends RpcModule {
     }
 
     public void initDB() throws Exception {
-        //数据文件存储地址
+        //Data file storage address
         RocksDBService.init(quConfig.getDataRoot());
         RocksDBService.createTable(QuotationConstant.DB_MODULE_CONGIF);
     }
 
     /**
-     * 根据chainId 加载特殊的协议配置
+     * according tochainId Load special protocol configurations
      */
     private void initModuleProtocolCfg() {
         try {
@@ -186,13 +186,14 @@ public class QuotationBootstrap extends RpcModule {
             quConfig.setProtocol29Height(protocol29Height);
             long protocol30Height = Long.parseLong(map.get("protocol30Height").toString());
             quConfig.setProtocol30Height(protocol30Height);
+            quConfig.setProtocol31Height(Long.parseLong(map.get("protocol31Height").toString()));
 
         } catch (Exception e) {
             Log.error(e);
         }
     }
     /**
-     * 模块配置
+     * Module Configuration
      */
     private void initQuotationConfig() {
         String startStr = quConfig.getQuoteStartHm();
@@ -202,7 +203,7 @@ public class QuotationBootstrap extends RpcModule {
                 QuotationContext.quoteStartH = Integer.parseInt(startNumber[0]);
                 QuotationContext.quoteStartM = Integer.parseInt(startNumber[1]);
             } catch (NumberFormatException e) {
-                LoggerUtil.LOG.error("加载价格采集开始时间配置项异常",e);
+                LoggerUtil.LOG.error("Abnormal configuration item for loading price collection start time",e);
             }
         }
         String endStr = quConfig.getQuoteEndHm();
@@ -212,7 +213,7 @@ public class QuotationBootstrap extends RpcModule {
                 QuotationContext.quoteEndH = Integer.parseInt(endNumber[0]);
                 QuotationContext.quoteEndM = Integer.parseInt(endNumber[1]);
             } catch (NumberFormatException e) {
-                LoggerUtil.LOG.error("加载价格采集结束时间配置项异常",e);
+                LoggerUtil.LOG.error("Abnormal configuration item for loading price collection end time",e);
             }
         }
         QuotationContext.effectiveQuotation = quConfig.getEffectiveQuotation();
@@ -231,9 +232,10 @@ public class QuotationBootstrap extends RpcModule {
         QuotationContext.protocol27Height = quConfig.getProtocol27Height();
         QuotationContext.protocol29Height = quConfig.getProtocol29Height();
         QuotationContext.protocol30Height = quConfig.getProtocol30Height();
+        QuotationContext.protocol31Height = quConfig.getProtocol31Height();
 
-        LoggerUtil.LOG.info("获取报价开始时间: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
-        LoggerUtil.LOG.info("获取报价结束时间(统计最终报价开始时间): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);
+        LoggerUtil.LOG.info("Get quote start time: {}:{}", QuotationContext.quoteStartH, QuotationContext.quoteStartM);
+        LoggerUtil.LOG.info("Get quote end time(Starting time of final quotation statistics): {}:{}", QuotationContext.quoteEndH, QuotationContext.quoteEndM);
         LoggerUtil.LOG.info("effectiveQuotation : {}", QuotationContext.effectiveQuotation);
     }
 

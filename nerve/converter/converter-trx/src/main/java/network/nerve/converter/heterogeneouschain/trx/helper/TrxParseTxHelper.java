@@ -87,7 +87,7 @@ public class TrxParseTxHelper implements BeanInitial {
     public HeterogeneousTransactionInfo parseWithdrawTransaction(String txHash) throws Exception {
         Chain.Transaction tx = trxWalletApi.getTransactionByHash(txHash);
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         return this.parseWithdrawTransaction(tx);
@@ -95,13 +95,13 @@ public class TrxParseTxHelper implements BeanInitial {
 
     public HeterogeneousTransactionInfo parseWithdrawTransaction(Chain.Transaction tx) throws Exception {
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
         Chain.Transaction.Contract.ContractType type = contract.getType();
         if (Chain.Transaction.Contract.ContractType.TriggerSmartContract != type) {
-            logger().warn("不是提现交易");
+            logger().warn("Not a withdrawal transaction");
             return null;
         }
         Contract.TriggerSmartContract tg = Contract.TriggerSmartContract.parseFrom(contract.getParameter().getValue());
@@ -109,18 +109,18 @@ public class TrxParseTxHelper implements BeanInitial {
         String to = TrxUtil.ethAddress2trx(tg.getContractAddress().toByteArray());
         BigInteger value = BigInteger.valueOf(tg.getCallValue());
         String input = Numeric.toHexString(tg.getData().toByteArray());
-        // 计算txHash
+        // calculatetxHash
         String txHash = TrxUtil.calcTxHash(tx);
         TrxTransaction txInfo = new TrxTransaction(tx, txHash, from, to, value, input, type);
         return this.parseWithdrawTransaction(txInfo, null);
     }
 
     /**
-     * 解析提现交易数据
+     * Analyze withdrawal transaction data
      */
     public HeterogeneousTransactionInfo parseWithdrawTransaction(TrxTransaction trxTxInfo, Response.TransactionInfo txReceipt) throws Exception {
         if (trxTxInfo == null) {
-            logger().warn("解析交易的数据不存在或不完整");
+            logger().warn("The data for parsing transactions does not exist or is incomplete");
             return null;
         }
         String txHash = trxTxInfo.getHash();
@@ -128,11 +128,11 @@ public class TrxParseTxHelper implements BeanInitial {
 
         boolean isWithdraw;
         if (trxTxInfo.getInput().length() < 10) {
-            logger().warn("不是提现交易[0]");
+            logger().warn("Not a withdrawal transaction[0]");
             return null;
         }
         String methodNameHash = trxTxInfo.getInput().substring(0, 10);
-        // 提现交易的固定地址
+        // Fixed address for withdrawal transactions
         if (htgListener.isListeningAddress(trxTxInfo.getTo()) &&
                 TrxConstant.METHOD_HASH_CREATEORSIGNWITHDRAW.equals(methodNameHash)) {
             if (txReceipt == null) {
@@ -140,27 +140,27 @@ public class TrxParseTxHelper implements BeanInitial {
             }
             txInfo.setBlockHeight(txReceipt.getBlockNumber());
             txInfo.setTxTime(txReceipt.getBlockTimeStamp());
-            // 解析交易收据
+            // Analyze transaction receipts
             if (htgContext.getConverterCoreApi().isProtocol21()) {
-                // 协议v1.21
+                // protocolv1.21
                 isWithdraw = this.newParseWithdrawTxReceiptSinceProtocol21(trxTxInfo, txReceipt, txInfo);
             } else {
                 isWithdraw = this.newParseWithdrawTxReceipt(trxTxInfo, txReceipt, txInfo);
             }
 
             if (!isWithdraw) {
-                logger().warn("不是提现交易[1], hash: {}", txHash);
+                logger().warn("Not a withdrawal transaction[1], hash: {}", txHash);
                 return null;
             }
             if (txInfo.isIfContractAsset()) {
                 trxERC20Helper.loadERC20(txInfo.getContractAddress(), txInfo);
             }
         } else {
-            logger().warn("不是提现交易[2], hash: {}", txHash);
+            logger().warn("Not a withdrawal transaction[2], hash: {}", txHash);
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.WITHDRAW);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
@@ -168,7 +168,7 @@ public class TrxParseTxHelper implements BeanInitial {
     public HeterogeneousTransactionInfo parseDepositTransaction(String txHash) throws Exception {
         Chain.Transaction tx = trxWalletApi.getTransactionByHash(txHash);
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         return this.parseDepositTransaction(tx);
@@ -180,18 +180,18 @@ public class TrxParseTxHelper implements BeanInitial {
 
     public HeterogeneousTransactionInfo parseDepositTransaction(Chain.Transaction tx, Response.TransactionInfo txReceipt) throws Exception {
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         TrxTransaction trxTxInfo = TrxUtil.generateTxInfo(tx);
-        // 过滤 非TRX转账和调用合约交易
+        // filter wrongTRXTransfer and Call Contract Transactions
         if (trxTxInfo == null) {
-            logger().warn("不是充值交易");
+            logger().warn("Not a recharge transaction");
             return null;
         }
 
         HtgInput htInput = this.parseInput(trxTxInfo.getInput());
-        // 新的充值交易方式，调用多签合约的crossOut函数
+        // New recharge transaction method, calling for multi contract signingcrossOutfunction
         if (htInput.isDepositTx()) {
             HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
             po.setTxHash(trxTxInfo.getHash());
@@ -202,7 +202,7 @@ public class TrxParseTxHelper implements BeanInitial {
             po.setTxType(HeterogeneousChainTxType.DEPOSIT);
             return po;
         }
-        // 新的充值交易方式II，调用多签合约的crossOutII函数
+        // New recharge transaction methodsII, calling multiple signed contractscrossOutIIfunction
         if (htInput.isDepositIITx()) {
             HeterogeneousTransactionInfo po = new HeterogeneousTransactionInfo();
             po.setTxHash(trxTxInfo.getHash());
@@ -217,11 +217,11 @@ public class TrxParseTxHelper implements BeanInitial {
     }
 
     /**
-     * 解析充值交易数据
+     * Analyzing recharge transaction data
      */
     private HeterogeneousTransactionInfo parseDepositTransactionByTransferDirectly(TrxTransaction trxTxInfo, Response.TransactionInfo txReceipt) throws Exception {
         if (trxTxInfo == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         String txHash = trxTxInfo.getHash();
@@ -233,10 +233,10 @@ public class TrxParseTxHelper implements BeanInitial {
         txInfo.setBlockHeight(txReceipt.getBlockNumber());
         txInfo.setTxTime(txReceipt.getBlockTimeStamp());
         do {
-            // HT充值交易的固定接收地址,金额大于0, 没有input
+            // HTFixed receiving address for recharge transactions,Amount greater than0, absenceinput
             if (htgListener.isListeningAddress(trxTxInfo.getTo()) && trxTxInfo.getValue().compareTo(BigInteger.ZERO) > 0) {
                 if(Chain.Transaction.Contract.ContractType.TriggerSmartContract == trxTxInfo.getType() && !this.validationDeposit(trxTxInfo, txReceipt)) {
-                    logger().error("[{}]不是充值交易[0]", txHash);
+                    logger().error("[{}]Not a recharge transaction[0]", txHash);
                     return null;
                 }
                 isDeposit = true;
@@ -246,13 +246,15 @@ public class TrxParseTxHelper implements BeanInitial {
                 txInfo.setIfContractAsset(false);
                 break;
             }
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (trxERC20Helper.isERC20(trxTxInfo.getTo(), txInfo)) {
                 if (trxERC20Helper.hasERC20WithListeningAddress(txReceipt, txInfo, address -> htgListener.isListeningAddress(address))) {
-                    // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+                    // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
                     if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), txInfo.getAssetId())
                             && !isMinterERC20(txInfo.getContractAddress())) {
-                        logger().warn("[{}]不合法的{}网络的充值交易[6], ERC20[{}]已绑定NERVE资产，但合约内未注册", txHash, htgContext.getConfig().getSymbol(), txInfo.getContractAddress());
+                        String msg = String.format("[%s]不合法的%s网络的充值交易[6], ERC20[%s]已绑定NERVE资产，但合约内未注册", txHash, htgContext.getConfig().getSymbol(), txInfo.getContractAddress());
+                        htgContext.logger().warn(msg);
+                        htgContext.getConverterCoreApi().putWechatMsg(msg);
                         break;
                     }
                     isDeposit = true;
@@ -261,7 +263,7 @@ public class TrxParseTxHelper implements BeanInitial {
             }
         } while (false);
         if (!isDeposit) {
-            logger().error("[{}]不是充值交易[1]", txHash);
+            logger().error("[{}]Not a recharge transaction[1]", txHash);
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.DEPOSIT);
@@ -274,7 +276,7 @@ public class TrxParseTxHelper implements BeanInitial {
 
     private boolean validationDeposit(TrxTransaction tx, Response.TransactionInfo txReceipt) throws Exception {
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return false;
         }
         String txHash = tx.getHash();
@@ -312,11 +314,11 @@ public class TrxParseTxHelper implements BeanInitial {
     }
 
     /**
-     * 解析管理员变更交易数据
+     * Analyze administrator's change of transaction data
      */
     public HeterogeneousTransactionInfo parseManagerChangeTransaction(TrxTransaction trxTxInfo, Response.TransactionInfo txReceipt) throws Exception {
         if (trxTxInfo == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         HeterogeneousTransactionInfo txInfo = TrxUtil.newTransactionInfo(trxTxInfo, htgContext.NERVE_CHAINID());
@@ -340,21 +342,21 @@ public class TrxParseTxHelper implements BeanInitial {
             }
         }
         if (!isChange) {
-            logger().warn("不是变更交易");
+            logger().warn("Not a change transaction");
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.CHANGE);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
 
     /**
-     * 解析合约升级授权交易数据
+     * Analyzing Contract Upgrade Authorization Transaction Data
      */
     public HeterogeneousTransactionInfo parseUpgradeTransaction(TrxTransaction trxTxInfo, Response.TransactionInfo txReceipt) throws Exception {
         if (trxTxInfo == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return null;
         }
         HeterogeneousTransactionInfo txInfo = TrxUtil.newTransactionInfo(trxTxInfo, htgContext.NERVE_CHAINID());
@@ -369,11 +371,11 @@ public class TrxParseTxHelper implements BeanInitial {
             }
         }
         if (!isUpgrade) {
-            logger().warn("不是合约升级授权交易");
+            logger().warn("Not a contract upgrade authorization transaction");
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.UPGRADE);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
@@ -406,8 +408,8 @@ public class TrxParseTxHelper implements BeanInitial {
         Response.TransactionInfo.Log log = logs.get(logs.size() - 1);
         String eventHash = Numeric.toHexString(log.getTopics(0).toByteArray());
         String logData = Numeric.toHexString(log.getData().toByteArray());
-        // topics 解析事件名, 签名完成会触发的事件
-        // 解析事件数据，获得交易的成功事件数据列表
+        // topics Parsing event names, Event triggered upon signature completion
+        // Parse event data to obtain a list of successful transaction event data
         List<Object> eventResult = null;
         switch (eventHash) {
             case TrxConstant.EVENT_HASH_TRANSACTION_WITHDRAW_COMPLETED:
@@ -521,7 +523,7 @@ public class TrxParseTxHelper implements BeanInitial {
 
     private boolean newValidationDepositByCrossOut(TrxTransaction tx, Response.TransactionInfo txReceipt, HeterogeneousTransactionInfo po) throws Exception {
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return false;
         }
         String txHash = tx.getHash();
@@ -532,7 +534,7 @@ public class TrxParseTxHelper implements BeanInitial {
         po.setTxTime(txReceipt.getBlockTimeStamp());
         List<Response.TransactionInfo.Log> logs = txReceipt.getLogList();
         if (logs == null || logs.isEmpty()) {
-            logger().warn("交易[{}]事件为空", txHash);
+            logger().warn("transaction[{}]Event is empty", txHash);
             return false;
         }
         List<Object> crossOutInput = TrxUtil.parseInput(tx.getInput(), TrxConstant.INPUT_CROSS_OUT);
@@ -540,7 +542,7 @@ public class TrxParseTxHelper implements BeanInitial {
         BigInteger _amount = new BigInteger(crossOutInput.get(1).toString());
         String _erc20 = crossOutInput.get(2).toString();
         if (TrxConstant.ZERO_ADDRESS_TRX.equals(_erc20)) {
-            // 主资产充值交易
+            // Main asset recharge transaction
             for (Response.TransactionInfo.Log log : logs) {
                 ByteString topics = log.getTopics(0);
                 String eventHash = Numeric.toHexString(topics.toByteArray());
@@ -554,7 +556,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 String data = Numeric.toHexString(log.getData().toByteArray());
                 List<Object> depositEvent = TrxUtil.parseEvent(data, TrxConstant.EVENT_CROSS_OUT_FUNDS);
                 if (depositEvent == null && depositEvent.size() != 4) {
-                    logger().warn("交易[{}]CrossOut事件数据不合法[0]", txHash);
+                    logger().warn("transaction[{}]CrossOutIllegal event data[0]", txHash);
                     return false;
                 }
                 String from = depositEvent.get(0).toString();
@@ -574,12 +576,12 @@ public class TrxParseTxHelper implements BeanInitial {
                     return true;
                 }
             }
-            logger().warn("交易[{}]的主资产[{}]充值事件不匹配", txHash, htgContext.getConfig().getSymbol());
+            logger().warn("transaction[{}]The main asset of[{}]Recharge event mismatch", txHash, htgContext.getConfig().getSymbol());
             return false;
         } else {
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (!trxERC20Helper.isERC20(_erc20, po)) {
-                logger().warn("erc20[{}]未注册", _erc20);
+                logger().warn("erc20[{}]unregistered", _erc20);
                 return false;
             }
             boolean transferEvent = false;
@@ -598,23 +600,23 @@ public class TrxParseTxHelper implements BeanInitial {
                     TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
                     String fromAddress = trc20Event.getFrom();
                     String toAddress = trc20Event.getTo();
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = trc20Event.getValue();
-                    // 当toAddress是0x0时，则说明这是一个从当前多签合约销毁erc20的transfer事件
+                    // WhentoAddressyes0x0When, it indicates that this is a destruction from the current multi signed contracterc20oftransferevent
                     if (TrxConstant.ZERO_ADDRESS_TRX.equals(toAddress)) {
                         if (!fromAddress.equals(htgContext.MULTY_SIGN_ADDRESS())) {
-                            logger().warn("交易[{}]的销毁地址不匹配", txHash);
+                            logger().warn("transaction[{}]The destruction address of does not match", txHash);
                             burnEvent = false;
                             break;
                         }
                         if (amount.compareTo(_amount) != 0) {
-                            logger().warn("交易[{}]的ERC20销毁金额不匹配", txHash);
+                            logger().warn("transaction[{}]ofERC20Destruction amount mismatch", txHash);
                             burnEvent = false;
                             break;
                         }
                     } else {
-                        // 用户转移token到多签合约的事件
-                        // 必须是多签合约地址
+                        // User transfertokenThe event of signing multiple contracts
+                        // Must be a multiple contract address
                         if (!toAddress.equals(htgContext.MULTY_SIGN_ADDRESS())) {
                             continue;
                         }
@@ -628,7 +630,7 @@ public class TrxParseTxHelper implements BeanInitial {
                     }
                     List<Object> depositEvent = TrxUtil.parseEvent(Numeric.toHexString(log.getData().toByteArray()), TrxConstant.EVENT_CROSS_OUT_FUNDS);
                     if (depositEvent == null && depositEvent.size() != 4) {
-                        logger().warn("交易[{}]CrossOut事件数据不合法[1]", txHash);
+                        logger().warn("transaction[{}]CrossOutIllegal event data[1]", txHash);
                         return false;
                     }
                     String from = depositEvent.get(0).toString();
@@ -636,19 +638,19 @@ public class TrxParseTxHelper implements BeanInitial {
                     BigInteger amount = new BigInteger(depositEvent.get(2).toString());
                     String erc20 = depositEvent.get(3).toString();
                     if (!tx.getFrom().equals(from)) {
-                        logger().warn("交易[{}]CrossOut事件数据不合法[2]", txHash);
+                        logger().warn("transaction[{}]CrossOutIllegal event data[2]", txHash);
                         return false;
                     }
                     if (!_to.equals(to)) {
-                        logger().warn("交易[{}]CrossOut事件数据不合法[3]", txHash);
+                        logger().warn("transaction[{}]CrossOutIllegal event data[3]", txHash);
                         return false;
                     }
                     if (amount.compareTo(_amount) != 0) {
-                        logger().warn("交易[{}]CrossOut事件数据不合法[4]", txHash);
+                        logger().warn("transaction[{}]CrossOutIllegal event data[4]", txHash);
                         return false;
                     }
                     if (!_erc20.equals(erc20)) {
-                        logger().warn("交易[{}]CrossOut事件数据不合法[5]", txHash);
+                        logger().warn("transaction[{}]CrossOutIllegal event data[5]", txHash);
                         return false;
                     }
                     crossOutEvent = true;
@@ -656,12 +658,12 @@ public class TrxParseTxHelper implements BeanInitial {
             }
             if (transferEvent && burnEvent && crossOutEvent) {
                 if (calcAmount.compareTo(_amount) > 0) {
-                    logger().warn("交易[{}]的ERC20充值金额不匹配", txHash);
+                    logger().warn("transaction[{}]ofERC20Recharge amount mismatch", txHash);
                     return false;
                 }
                 actualAmount = calcAmount;
                 if (actualAmount.equals(BigInteger.ZERO)) {
-                    logger().warn("交易[{}]的ERC20充值金额为0", txHash);
+                    logger().warn("transaction[{}]ofERC20The recharge amount is0", txHash);
                     return false;
                 }
 
@@ -675,7 +677,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 }
                 return true;
             } else {
-                logger().warn("交易[{}]的ERC20充值事件不匹配, transferEvent: {}, burnEvent: {}, crossOutEvent: {}",
+                logger().warn("transaction[{}]ofERC20Recharge event mismatch, transferEvent: {}, burnEvent: {}, crossOutEvent: {}",
                         txHash, transferEvent, burnEvent, crossOutEvent);
                 return false;
             }
@@ -684,7 +686,7 @@ public class TrxParseTxHelper implements BeanInitial {
 
     public boolean validationDepositByCrossOutII(TrxTransaction tx, Response.TransactionInfo txReceipt, HeterogeneousTransactionInfo po) throws Exception {
         if (tx == null) {
-            logger().warn("交易不存在");
+            logger().warn("Transaction does not exist");
             return false;
         }
         String txHash = tx.getHash();
@@ -695,7 +697,7 @@ public class TrxParseTxHelper implements BeanInitial {
         po.setTxTime(txReceipt.getBlockTimeStamp());
         List<Response.TransactionInfo.Log> logs = txReceipt.getLogList();
         if (logs == null || logs.isEmpty()) {
-            logger().warn("交易[{}]事件为空", txHash);
+            logger().warn("transaction[{}]Event is empty", txHash);
             return false;
         }
         List<Object> crossOutInput = TrxUtil.parseInput(tx.getInput(), TrxConstant.INPUT_CROSS_OUT_II);
@@ -703,7 +705,7 @@ public class TrxParseTxHelper implements BeanInitial {
         BigInteger _amount = new BigInteger(crossOutInput.get(1).toString());
         String _erc20 = crossOutInput.get(2).toString();
         if (TrxConstant.ZERO_ADDRESS_TRX.equals(_erc20)) {
-            // 主资产充值交易
+            // Main asset recharge transaction
             for (Response.TransactionInfo.Log log : logs) {
                 ByteString topics = log.getTopics(0);
                 String eventHash = Numeric.toHexString(topics.toByteArray());
@@ -717,7 +719,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 String data = Numeric.toHexString(log.getData().toByteArray());
                 List<Object> depositEvent = TrxUtil.parseEvent(data, TrxConstant.EVENT_CROSS_OUT_II_FUNDS);
                 if (depositEvent == null && depositEvent.size() != 6) {
-                    logger().warn("交易[{}]CrossOutII事件数据不合法[0]", txHash);
+                    logger().warn("transaction[{}]CrossOutIIIllegal event data[0]", txHash);
                     return false;
                 }
                 String from = depositEvent.get(0).toString();
@@ -739,12 +741,12 @@ public class TrxParseTxHelper implements BeanInitial {
                     return true;
                 }
             }
-            logger().warn("交易[{}]的主资产[{}]充值II事件不匹配", txHash, htgContext.getConfig().getSymbol());
+            logger().warn("transaction[{}]The main asset of[{}]RechargeIIEvent mismatch", txHash, htgContext.getConfig().getSymbol());
             return false;
         } else {
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (!trxERC20Helper.isERC20(_erc20, po)) {
-                logger().warn("CrossOutII: erc20[{}]未注册", _erc20);
+                logger().warn("CrossOutII: erc20[{}]unregistered", _erc20);
                 return false;
             }
             boolean transferEvent = false;
@@ -762,23 +764,23 @@ public class TrxParseTxHelper implements BeanInitial {
                     TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
                     String fromAddress = trc20Event.getFrom();
                     String toAddress = trc20Event.getTo();
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = trc20Event.getValue();
-                    // 当toAddress是0x0时，则说明这是一个从当前多签合约销毁erc20的transfer事件
+                    // WhentoAddressyes0x0When, it indicates that this is a destruction from the current multi signed contracterc20oftransferevent
                     if (TrxConstant.ZERO_ADDRESS_TRX.equals(toAddress)) {
                         if (!fromAddress.equals(htgContext.MULTY_SIGN_ADDRESS())) {
-                            logger().warn("CrossOutII: 交易[{}]的销毁地址不匹配", txHash);
+                            logger().warn("CrossOutII: transaction[{}]The destruction address of does not match", txHash);
                             burnEvent = false;
                             break;
                         }
                         if (amount.compareTo(_amount) != 0) {
-                            logger().warn("CrossOutII: 交易[{}]的ERC20销毁金额不匹配", txHash);
+                            logger().warn("CrossOutII: transaction[{}]ofERC20Destruction amount mismatch", txHash);
                             burnEvent = false;
                             break;
                         }
                     } else {
-                        // 用户转移token到多签合约的事件
-                        // 必须是多签合约地址
+                        // User transfertokenThe event of signing multiple contracts
+                        // Must be a multiple contract address
                         if (!toAddress.equals(htgContext.MULTY_SIGN_ADDRESS())) {
                             continue;
                         }
@@ -792,7 +794,7 @@ public class TrxParseTxHelper implements BeanInitial {
                     }
                     List<Object> depositEvent = TrxUtil.parseEvent(Numeric.toHexString(log.getData().toByteArray()), TrxConstant.EVENT_CROSS_OUT_II_FUNDS);
                     if (depositEvent == null && depositEvent.size() != 6) {
-                        logger().warn("交易[{}]CrossOutII事件数据不合法[1]", txHash);
+                        logger().warn("transaction[{}]CrossOutIIIllegal event data[1]", txHash);
                         return false;
                     }
                     String from = depositEvent.get(0).toString();
@@ -802,23 +804,23 @@ public class TrxParseTxHelper implements BeanInitial {
                     BigInteger ethAmount = new BigInteger(depositEvent.get(4).toString());
                     String extend = Numeric.toHexString((byte[]) depositEvent.get(5));
                     if (!tx.getFrom().equals(from)) {
-                        logger().warn("交易[{}]CrossOutII事件数据不合法[2]", txHash);
+                        logger().warn("transaction[{}]CrossOutIIIllegal event data[2]", txHash);
                         return false;
                     }
                     if (!_to.equals(to)) {
-                        logger().warn("交易[{}]CrossOutII事件数据不合法[3]", txHash);
+                        logger().warn("transaction[{}]CrossOutIIIllegal event data[3]", txHash);
                         return false;
                     }
                     if (amount.compareTo(_amount) != 0) {
-                        logger().warn("交易[{}]CrossOutII事件数据不合法[4]", txHash);
+                        logger().warn("transaction[{}]CrossOutIIIllegal event data[4]", txHash);
                         return false;
                     }
                     if (!_erc20.equals(erc20)) {
-                        logger().warn("交易[{}]CrossOutII事件数据不合法[5]", txHash);
+                        logger().warn("transaction[{}]CrossOutIIIllegal event data[5]", txHash);
                         return false;
                     }
                     if (tx.getFrom().equals(from) && tx.getValue().compareTo(BigInteger.ZERO) > 0 && tx.getValue().compareTo(ethAmount) == 0) {
-                        // 记录主资产充值
+                        // Record main asset recharge
                         po.setDepositIIMainAsset(ethAmount, htgContext.getConfig().getDecimals(), htgContext.HTG_ASSET_ID());
                     }
                     po.setDepositIIExtend(extend);
@@ -827,11 +829,11 @@ public class TrxParseTxHelper implements BeanInitial {
             }
             if (transferEvent && burnEvent && crossOutEvent) {
                 if (erc20Amount.compareTo(_amount) > 0) {
-                    logger().warn("CrossOutII: 交易[{}]的ERC20充值金额不匹配", txHash);
+                    logger().warn("CrossOutII: transaction[{}]ofERC20Recharge amount mismatch", txHash);
                     return false;
                 }
                 if (erc20Amount.equals(BigInteger.ZERO)) {
-                    logger().warn("CrossOutII: 交易[{}]的ERC20充值金额为0", txHash);
+                    logger().warn("CrossOutII: transaction[{}]ofERC20The recharge amount is0", txHash);
                     return false;
                 }
 
@@ -845,7 +847,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 }
                 return true;
             } else {
-                logger().warn("交易[{}]的ERC20充值II事件不匹配, transferEvent: {}, burnEvent: {}, crossOutEvent: {}",
+                logger().warn("transaction[{}]ofERC20RechargeIIEvent mismatch, transferEvent: {}, burnEvent: {}, crossOutEvent: {}",
                         txHash, transferEvent, burnEvent, crossOutEvent);
                 return false;
             }
@@ -867,23 +869,23 @@ public class TrxParseTxHelper implements BeanInitial {
         if (logs != null && logs.size() > 0) {
             String eventHash;
             String contract;
-            // 转账金额
+            // Transfer amount
             BigInteger amount = BigInteger.ZERO;
             for (Response.TransactionInfo.Log log : logs) {
                 eventHash = Numeric.toHexString(log.getTopics(0).toByteArray());
                 contract = TrxUtil.ethAddress2trx(log.getAddress().toByteArray());
-                // 为ERC20提现
+                // byERC20Withdrawal
                 if (eventHash.equals(TrxConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
                     String fromAddress = trc20Event.getFrom();
                     String toAddress = trc20Event.getTo();
-                    // 转账金额
+                    // Transfer amount
                     BigInteger _amount = trc20Event.getValue();
                     if (isERC20 &&
                             contract.equals(erc20) &&
                             (fromAddress.equals(htgContext.MULTY_SIGN_ADDRESS()) || fromAddress.equals(TrxConstant.ZERO_ADDRESS_TRX))) {
                         if (!receive.equals(toAddress)) {
-                            logger().warn("提现交易[{}]的接收地址不匹配", txHash);
+                            logger().warn("Withdrawal transactions[{}]The receiving address of does not match", txHash);
                             return false;
                         }
                         correctErc20 = true;
@@ -892,13 +894,13 @@ public class TrxParseTxHelper implements BeanInitial {
                         }
                     }
                 }
-                // 为主资产提现
+                // Withdrawal of main assets
                 if (eventHash.equals(TrxConstant.EVENT_HASH_TRANSFERFUNDS)) {
                     if (isERC20 || !contract.equals(htgContext.MULTY_SIGN_ADDRESS())) {
                         if (isERC20) {
-                            logger().warn("提现交易[{}]的提现类型冲突[0]", txHash);
+                            logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[0]", txHash);
                         } else {
-                            logger().warn("提现交易[{}]的多签合约地址不匹配", txHash);
+                            logger().warn("Withdrawal transactions[{}]The address of the multiple signed contracts does not match", txHash);
                         }
                         return false;
                     }
@@ -907,10 +909,10 @@ public class TrxParseTxHelper implements BeanInitial {
                     List<Object> objects = TrxUtil.parseEvent(data, TrxConstant.EVENT_TRANSFER_FUNDS);
                     String toAddress = objects.get(0).toString();
                     if (!receive.equals(toAddress)) {
-                        logger().warn("提现交易[{}]的接收地址不匹配[主资产提现]", txHash);
+                        logger().warn("Withdrawal transactions[{}]The receiving address of does not match[Withdrawal of main assets]", txHash);
                         return false;
                     }
-                    // 转账金额
+                    // Transfer amount
                     BigInteger _amount = (BigInteger) objects.get(1);
                     if (_amount.compareTo(BigInteger.ZERO) > 0) {
                         amount = amount.add(_amount);
@@ -918,7 +920,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 }
             }
             if (correctErc20 && correctMainAsset) {
-                logger().warn("提现交易[{}]的提现类型冲突[1]", txHash);
+                logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[1]", txHash);
                 return false;
             }
             if (correctMainAsset) {
@@ -935,7 +937,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 return true;
             }
         }
-        logger().warn("提现交易[{}]解析数据缺失", txHash);
+        logger().warn("Withdrawal transactions[{}]Missing parsing data", txHash);
         return false;
     }
 
@@ -955,23 +957,23 @@ public class TrxParseTxHelper implements BeanInitial {
             boolean hasReceiveAddress = false;
             String eventHash;
             String contract;
-            // 转账金额
+            // Transfer amount
             BigInteger amount = BigInteger.ZERO;
             for (Response.TransactionInfo.Log log : logs) {
                 eventHash = Numeric.toHexString(log.getTopics(0).toByteArray());
                 contract = TrxUtil.ethAddress2trx(log.getAddress().toByteArray());
-                // 为ERC20提现
+                // byERC20Withdrawal
                 if (eventHash.equals(TrxConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     TRC20TransferEvent trc20Event = TrxUtil.parseTRC20Event(log);
                     String fromAddress = trc20Event.getFrom();
                     String toAddress = trc20Event.getTo();
-                    // 转账金额
+                    // Transfer amount
                     BigInteger _amount = trc20Event.getValue();
                     if (isERC20 &&
                             contract.equals(erc20) &&
                             (fromAddress.equals(htgContext.MULTY_SIGN_ADDRESS()) || fromAddress.equals(TrxConstant.ZERO_ADDRESS_TRX))) {
                         if (!receive.equals(toAddress)) {
-                            logger().warn("提现交易[{}]的接收地址不匹配", txHash);
+                            logger().warn("Withdrawal transactions[{}]The receiving address of does not match", txHash);
                             continue;
                         }
                         correctErc20 = true;
@@ -981,13 +983,13 @@ public class TrxParseTxHelper implements BeanInitial {
                         }
                     }
                 }
-                // 为主资产提现
+                // Withdrawal of main assets
                 if (eventHash.equals(TrxConstant.EVENT_HASH_TRANSFERFUNDS)) {
                     if (isERC20 || !contract.equals(htgContext.MULTY_SIGN_ADDRESS())) {
                         if (isERC20) {
-                            logger().warn("提现交易[{}]的提现类型冲突[0]", txHash);
+                            logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[0]", txHash);
                         } else {
-                            logger().warn("提现交易[{}]的多签合约地址不匹配", txHash);
+                            logger().warn("Withdrawal transactions[{}]The address of the multiple signed contracts does not match", txHash);
                         }
                         return false;
                     }
@@ -995,12 +997,12 @@ public class TrxParseTxHelper implements BeanInitial {
                     List<Object> objects = TrxUtil.parseEvent(data, TrxConstant.EVENT_TRANSFER_FUNDS);
                     String toAddress = objects.get(0).toString();
                     if (!receive.equals(toAddress)) {
-                        logger().warn("提现交易[{}]的接收地址不匹配[主资产提现]", txHash);
+                        logger().warn("Withdrawal transactions[{}]The receiving address of does not match[Withdrawal of main assets]", txHash);
                         return false;
                     }
                     correctMainAsset = true;
                     hasReceiveAddress = true;
-                    // 转账金额
+                    // Transfer amount
                     BigInteger _amount = (BigInteger) objects.get(1);
                     if (_amount.compareTo(BigInteger.ZERO) > 0) {
                         amount = amount.add(_amount);
@@ -1008,11 +1010,11 @@ public class TrxParseTxHelper implements BeanInitial {
                 }
             }
             if (!hasReceiveAddress) {
-                logger().warn("提现交易[{}]的接收地址不匹配", txHash);
+                logger().warn("Withdrawal transactions[{}]The receiving address of does not match", txHash);
                 return false;
             }
             if (correctErc20 && correctMainAsset) {
-                logger().warn("提现交易[{}]的提现类型冲突[1]", txHash);
+                logger().warn("Withdrawal transactions[{}]Conflict in withdrawal type[1]", txHash);
                 return false;
             }
             if (correctMainAsset) {
@@ -1029,7 +1031,7 @@ public class TrxParseTxHelper implements BeanInitial {
                 return true;
             }
         }
-        logger().warn("提现交易[{}]解析数据缺失", txHash);
+        logger().warn("Withdrawal transactions[{}]Missing parsing data", txHash);
         return false;
     }
 

@@ -34,14 +34,14 @@ public class NerveSwapUtil {
             aCount = new BigInteger(reserve1);
             bCount = new BigInteger(reserve0);
         }
-        //三种情况
+        //Three situations
         BigDecimal lpValue = new BigDecimal(lpTotalCount, cfg.getLpAssetDecimals());
         if (cfg.getaAssetChainId() == cfg.getBaseAssetChainId() && cfg.getaAssetId() == cfg.getBaseAssetId()) {
-            //a就是计价资产
+            //aIt's the valuation asset
             BigDecimal aValue = new BigDecimal(aCount, cfg.getaAssetDecimals()).multiply(BigDecimal.valueOf(2));
             return DoubleUtils.round(DoubleUtils.div(aValue, lpValue).doubleValue(), 2);
         } else if (cfg.getbAssetChainId() == cfg.getBaseAssetChainId() && cfg.getbAssetId() == cfg.getBaseAssetId()) {
-            //b就是计价资产
+            //bIt's the valuation asset
             BigDecimal bValue = new BigDecimal(bCount, cfg.getbAssetDecimals()).multiply(BigDecimal.valueOf(2));
             return DoubleUtils.round(DoubleUtils.div(bValue, lpValue).doubleValue(), 2);
         }
@@ -108,14 +108,14 @@ public class NerveSwapUtil {
 
         SwapLpPriceCfg cfg = new SwapLpPriceCfg(quContractCfg);
 
-        //三种情况
+        //Three situations
         BigDecimal lpValue = new BigDecimal(lpTotalCount, 18);
         if (cfg.getaAssetChainId() == cfg.getBaseAssetChainId() && cfg.getaAssetId() == cfg.getBaseAssetId()) {
-            //a就是计价资产
+            //aIt's the valuation asset
             BigDecimal aValue = new BigDecimal(aCount, cfg.getaAssetDecimals()).multiply(BigDecimal.valueOf(2));
             System.out.println(DoubleUtils.round(DoubleUtils.div(aValue, lpValue).doubleValue(), 2));
         } else if (cfg.getbAssetChainId() == cfg.getBaseAssetChainId() && cfg.getbAssetId() == cfg.getBaseAssetId()) {
-            //b就是计价资产
+            //bIt's the valuation asset
             BigDecimal bValue = new BigDecimal(bCount, cfg.getbAssetDecimals()).multiply(BigDecimal.valueOf(2));
             System.out.println(DoubleUtils.round(DoubleUtils.div(bValue, lpValue).doubleValue(), 2));
         }

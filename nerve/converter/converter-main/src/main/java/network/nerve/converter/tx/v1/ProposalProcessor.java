@@ -87,7 +87,7 @@ public class ProposalProcessor implements TransactionProcessor {
             result = new HashMap<>(ConverterConstant.INIT_CAPACITY_4);
             List<Transaction> failsList = new ArrayList<>();
             for (Transaction tx : txs) {
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -96,7 +96,7 @@ public class ProposalProcessor implements TransactionProcessor {
                     log.error(e.getErrorCode().getMsg());
                     continue;
                 }
-                // swap手续费定制，验证设置范围
+                // swapCustomization of handling fees, verification of setting scope
                 ProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ProposalTxData.class);
                 if (txData.getType() != ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE.value()) {
                     continue;
@@ -105,13 +105,13 @@ public class ProposalProcessor implements TransactionProcessor {
                 String swapPairAddress = AddressTool.getStringAddressByBytes(txData.getAddress());
                 if (!SwapCall.isLegalSwapFeeRate(chainId, swapPairAddress, feeRate)) {
                     failsList.add(tx);
-                    // 异构链地址不能为空
+                    // Heterogeneous chain address cannot be empty
                     errorCode = ConverterErrorCode.PROPOSAL_REJECTED.getCode();
                     log.error("[Validate SwapFeeRate] error, swapPairAddress: {}. feeRate: {}", swapPairAddress, feeRate);
                     continue;
                 }
             }
-            //不进行业务验证，在确认时保证处理业务冲突。通过高额的提案费用避免重复提案
+            //Do not conduct business validation and ensure the resolution of business conflicts during confirmation. Avoiding duplicate proposals through high proposal costs
             result.put("txList", failsList);
             result.put("errorCode", errorCode);
         } catch (Exception e) {
@@ -146,11 +146,11 @@ public class ProposalProcessor implements TransactionProcessor {
                 po.setHeterogeneousTxHash(txData.getHeterogeneousTxHash());
                 po.setVoteRangeType(txData.getVoteRangeType());
                 po.setContent(txData.getContent());
-                // 锁定投票截止的区块高度(当前高度 + 投票时长对应的区块数)
+                // Block height for locking voting deadline(Current height + Number of blocks corresponding to voting duration)
                 po.setVoteEndHeight(blockHeader.getHeight() + ConverterContext.PROPOSAL_VOTE_TIME_BLOCKS);
                 po.setStatus(ProposalVoteStatusEnum.VOTING.value());
                 boolean res = this.proposalStorageService.save(chain, po);
-                // 可投票的提案放入缓存map
+                // Votable proposals placed in cachemap
                 chain.getVotingProposalMap().put(po.getHash(), po);
                 boolean resVote = this.proposalVotingStorageService.save(chain, po);
                 boolean fail = !res || !resVote;
@@ -158,7 +158,7 @@ public class ProposalProcessor implements TransactionProcessor {
                     log.error("[commit] Save proposal failed. hash:{}, proposalType:{}", tx.getHash().toHex(), txData.getType());
                     throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR);
                 }
-                chain.getLogger().info("[commit] 提案交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit] Proposal transaction hash:{}", tx.getHash().toHex());
             }
         } catch (Exception e) {
             if (failRollback) {
@@ -192,7 +192,7 @@ public class ProposalProcessor implements TransactionProcessor {
                     chain.getLogger().error("[rollback] remove proposal failed. hash:{}, type:{}", tx.getHash().toHex(), tx.getType());
                     throw new NulsException(ConverterErrorCode.DB_DELETE_ERROR);
                 }
-                chain.getLogger().debug("[rollback] 提案交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().debug("[rollback] Proposal transaction hash:{}", tx.getHash().toHex());
             }
         } catch (Exception e) {
             if (failCommit) {

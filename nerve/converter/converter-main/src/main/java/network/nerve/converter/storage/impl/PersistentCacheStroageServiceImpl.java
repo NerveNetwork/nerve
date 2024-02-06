@@ -43,7 +43,7 @@ public class PersistentCacheStroageServiceImpl implements PersistentCacheStroage
     @Override
     public boolean saveCacheState(Chain chain, String key, int value) {
         try {
-            // 共用表名(为了减少表)
+            // Shared Table Name(In order to reduce the number of tables)
             return RocksDBService.put(ConverterDBConstant.DB_ASYNC_PROCESSED_PREFIX + chain.getChainId(), ConverterDBUtil.stringToBytes(key), ByteUtils.intToBytes(value));
         } catch (Exception e) {
             chain.getLogger().error(e);

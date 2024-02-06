@@ -49,7 +49,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 交易排序测试，主要用于孤儿交易的排序问题
+ * Transaction sorting test, mainly used for sorting orphan transactions
  *
  * @author: Charlie
  * @date: 2019/5/6
@@ -81,7 +81,7 @@ public class TxCompareTest {
         ResponseMessageProcessor.syncKernel("ws://" + HostInfo.getLocalIP() + ":7771");
         chain = new Chain();
         chain.setConfig(new ConfigBean(chainId, assetId));
-        //初始化上下文
+        //Initialize Context
 //        SpringLiteContext.init(TestConstant.CONTEXT_PATH);
 //        orphanSort = SpringLiteContext.getBean(OrphanSort.class);
     }
@@ -91,8 +91,8 @@ public class TxCompareTest {
         Set<Integer> set = new HashSet<>();
         while (true) {
             Random rand = new Random();
-            //随机数范取值围应为0到list最大索引之间
-            //根据公式rand.nextInt((list.size() - 1) - 0 + 1) + 0;
+            //The range of values for the random number norm should be0reachlistBetween maximum indexes
+            //According to the formularand.nextInt((list.size() - 1) - 0 + 1) + 0;
             int ran = rand.nextInt(count);
             if (set.add(ran)) {
                 list.add(ran);
@@ -104,7 +104,7 @@ public class TxCompareTest {
         return list;
     }
 
-    //将交易的顺序打乱，再排序，来验证排序是否正确
+    //Shuffle the order of transactions and then sort them to verify if the sorting is correct
     @Test
     public void test() throws Exception {
 //        importPriKey("9ce21dad67e0f0af2599b41b515a7f7018059418bab892a7b68f283d489abc4b", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG TNVTdN9iJVX42PxxzvhnkC7vFmTuoPnRAgtyA
@@ -121,12 +121,12 @@ public class TxCompareTest {
 //            List<Transaction> txs1 = createTxs2();
             txs.addAll(txs1);
 
-//            System.out.println("正确的顺序");
+//            System.out.println("Correct order");
 //            for (Transaction tx : txs) {
-//                System.out.println("正确的顺序: " + tx.getHash().toHex());
+//                System.out.println("Correct order: " + tx.getHash().toHex());
 //            }
 
-            /* 显示交易格式化完整信息
+            /* Display complete transaction formatting information
             for(Transaction tx : txs){
                 TxUtil.txInformationDebugPrint(tx);
             }*/
@@ -138,41 +138,41 @@ public class TxCompareTest {
             }
             System.out.println("Size:" + txList.size());
 
-            System.out.println("排序前");
+            System.out.println("Before sorting");
             for (TransactionNetPO tx : txList) {
-                System.out.println("排序前的顺序: " + tx.getTx().getHash().toHex());
+                System.out.println("Order before sorting: " + tx.getTx().getHash().toHex());
             }
             long start = System.currentTimeMillis();
-            //排序
+            //sort
             OrphanSort sort = new OrphanSort();
             sort.rank(txList);
             long end = System.currentTimeMillis() - start;
-            System.out.println("执行时间：" + end);
+            System.out.println("execution time：" + end);
             System.out.println(txList.size());
-            System.out.println("排序后");
+            System.out.println("After sorting");
             for (int i = 0; i < txList.size(); i++) {
                 TransactionNetPO tx = txList.get(i);
-                System.out.println("排序后的顺序: " + tx.getTx().getHash().toHex());
+                System.out.println("Sorted order: " + tx.getTx().getHash().toHex());
                 String hs = txs.get(i).getHash().toHex();
-                System.out.println("顺序正确: " + tx.getTx().getHash().toHex().equals(hs));
+                System.out.println("Correct sequence: " + tx.getTx().getHash().toHex().equals(hs));
             }
 
         }
     }
 
-    //组装一些 时间 账户 一致，nonce是连续的交易
+    //Assemble some time account Consistent,nonceIt's a continuous transaction
     private List<Transaction> createTxs(int count) throws Exception {
         Map map = CreateTx.createTransferTx(address21, address20, new BigInteger("100000"));
         long time = NulsDateUtils.getCurrentTimeSeconds();
         List<Transaction> list = new ArrayList<>();
         NulsHash hash = null;
-        System.out.println("正确的顺序");
+        System.out.println("Correct order");
         for (int i = 0; i < count; i++) {
             Transaction tx = CreateTx.assemblyTransaction((List<CoinDTO>) map.get("inputs"), (List<CoinDTO>) map.get("outputs"), (String) map.get("remark"), hash, time, null);
             list.add(tx);
             hash = tx.getHash();
             CoinData coinData = TxUtil.getCoinData(tx);
-            System.out.println("正确的顺序: " + tx.getHash().toHex() + ", nonce:" + HexUtil.encode(coinData.getFrom().get(0).getNonce()));
+            System.out.println("Correct order: " + tx.getHash().toHex() + ", nonce:" + HexUtil.encode(coinData.getFrom().get(0).getNonce()));
 //            System.out.println(HexUtil.encode(tx.serialize()));
         }
         return list;
@@ -211,7 +211,7 @@ public class TxCompareTest {
 
     public void importPriKey(String priKey, String pwd) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);

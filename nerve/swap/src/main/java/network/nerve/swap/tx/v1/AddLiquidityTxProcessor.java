@@ -135,7 +135,7 @@ public class AddLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[commit] Swap Add Liquidity, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -145,7 +145,7 @@ public class AddLiquidityTxProcessor implements TransactionProcessor {
                 IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(coinData.getTo().get(0).getAddress()));
                 AddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), AddLiquidityBus.class);
 
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 pair.update(bus.getLiquidity(), bus.getRealAddAmount0().add(bus.getReserve0()), bus.getRealAddAmount1().add(bus.getReserve1()), bus.getReserve0(), bus.getReserve1(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -175,7 +175,7 @@ public class AddLiquidityTxProcessor implements TransactionProcessor {
                 CoinData coinData = tx.getCoinDataInstance();
                 IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(coinData.getTo().get(0).getAddress()));
                 AddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), AddLiquidityBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 pair.rollback(bus.getLiquidity(), bus.getReserve0(), bus.getReserve1(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[rollback] Swap Add Liquidity, hash: {}", tx.getHash().toHex());

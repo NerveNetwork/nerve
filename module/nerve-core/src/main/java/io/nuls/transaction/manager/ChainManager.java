@@ -47,7 +47,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import static io.nuls.transaction.constant.TxConstant.TX_UNVERIFIED_QUEUE_SIZE;
 
 /**
- * 链管理类,负责各条链的初始化,运行,启动,参数维护等
+ * Chain management,Responsible for initializing each chain,working,start-up,Parameter maintenance, etc
  * Chain management class, responsible for the initialization, operation, start-up, parameter maintenance of each chain, etc.
  *
  * @author qinyifeng
@@ -63,7 +63,7 @@ public class ChainManager {
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void initChain() throws Exception {
@@ -83,7 +83,7 @@ public class ChainManager {
     }
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void runChain() throws Exception {
@@ -98,10 +98,10 @@ public class ChainManager {
 
 
     /**
-     * 停止一条链
+     * Stop a chain
      * Delete a chain
      *
-     * @param chainId 链ID/chain id
+     * @param chainId chainID/chain id
      */
     public void stopChain(int chainId) {
 
@@ -109,7 +109,7 @@ public class ChainManager {
 
 
     /**
-     * 初始化链相关表
+     * Initialize Chain Related Tables
      * Initialization chain correlation table
      *
      * @param chain
@@ -119,26 +119,26 @@ public class ChainManager {
         int chainId = chain.getConfig().getChainId();
         try {
             RocksDBService.init(txConfig.getDataPath() + File.separator + ModuleE.TX.name);
-            //未确认表
+            //Unconfirmed table
             if(RocksDBService.existTable(TxDBConstant.DB_TRANSACTION_UNCONFIRMED_PREFIX + chainId)){
                 RocksDBService.destroyTable(TxDBConstant.DB_TRANSACTION_UNCONFIRMED_PREFIX + chainId);
             }
 
             /*
-            创建已确认交易表
+            Create confirmed transaction table
             Create confirmed transaction table
             */
             RocksDBService.createTable(TxDBConstant.DB_TRANSACTION_CONFIRMED_PREFIX + chainId);
 
 
             /*
-            已验证未打包交易 未确认
+            Verified Unpackaged Transactions Unconfirmed
             Verified transaction
             */
             RocksDBService.createTable(TxDBConstant.DB_TRANSACTION_UNCONFIRMED_PREFIX + chainId);
 
             /*
-            锁定账户表
+            Lock account table
              */
             RocksDBService.createTable(TxDBConstant.DB_LOCKED_ADDRESS + chainId);
 
@@ -151,7 +151,7 @@ public class ChainManager {
     }
 
     /**
-     * 初始化链缓存数据
+     * Initialize chain cache data
      * Initialize chain caching entity
      *
      * @param chain chain info

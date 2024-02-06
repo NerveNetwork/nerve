@@ -12,12 +12,12 @@ import java.util.List;
 
 public class AgentDepositNoncePo extends BaseNulsData {
     /**
-     * 有效的追加保证金交易
+     * Effective margin trading
      * */
     private List<NonceDataPo> validNonceList;
 
     /**
-     * 无效的保证金交易
+     * Invalid margin trading
      * */
     private List<NonceDataPo> invalidNonceList;
 

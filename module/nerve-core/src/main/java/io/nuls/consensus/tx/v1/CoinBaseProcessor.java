@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CoinBase交易处理器
+ * CoinBaseTransaction processor
  * @author tag
  * @date 2019/6/1
  */

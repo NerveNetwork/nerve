@@ -53,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
- * 链管理类,负责各条链的初始化,运行,启动,参数维护等
+ * Chain management,Responsible for initializing each chain,working,start-up,Parameter maintenance, etc
  * Chain management class, responsible for the initialization, operation, start-up, parameter maintenance of each chain, etc.
  *
  * @author qinyifeng
@@ -78,7 +78,7 @@ public class ChainManager {
     private Map<Integer, Chain> chainMap = new ConcurrentHashMap<>();
 
     /**
-     * 初始化并启动链
+     * Initialize and start the chain
      * Initialize and start the chain
      */
     public void initChain() throws Exception {
@@ -154,17 +154,17 @@ public class ChainManager {
 
 
     /**
-     * 停止一条链
+     * Stop a chain
      * Delete a chain
      *
-     * @param chainId 链ID/chain id
+     * @param chainId chainID/chain id
      */
     public void stopChain(int chainId) {
 
     }
 
     /**
-     * 读取配置文件创建并初始化链
+     * Read configuration file to create and initialize chain
      * Read the configuration file to create and initialize the chain
      */
     private Map<Integer, ConfigBean> configChain() {
@@ -188,7 +188,7 @@ public class ChainManager {
     }
 
     public static void chainHandle(int chainId, int blockType) {
-        // 设置交易模块请求区块处理模式, 打包区块 - 0, 验证区块 - 1
+        // Set transaction module request block processing mode, Packaging blocks - 0, Verify Block - 1
         Chain.putCurrentThreadBlockType(blockType);
     }
 

@@ -33,7 +33,7 @@ import io.nuls.transaction.model.bo.TxRegister;
 import java.util.*;
 
 /**
- * 交易管理类，存储管理交易注册的基本信息
+ * Transaction management class, storing basic information for managing transaction registration
  *
  * @author: Charlie
  * @date: 2018/11/22
@@ -49,7 +49,7 @@ public class TxManager {
     }
 
     /**
-     * 获取交易的注册对象
+     * Obtain the registered object of the transaction
      *
      * @param type
      * @return
@@ -59,7 +59,7 @@ public class TxManager {
     }
 
     /**
-     * 获取所有注册过交易的模块code列表
+     * Obtain all registered transaction modulescodelist
      */
     public static Set<String> getAllRegisteredModuleCode(Chain chain){
         Set<String> set = new HashSet<>();
@@ -72,7 +72,7 @@ public class TxManager {
 
 
     /**
-     * 创建分组packProduce, 所有模块都会调用
+     * Create groupspackProduce, All modules will call
      *
      * @param chain
      * @return
@@ -87,7 +87,7 @@ public class TxManager {
     }
 
     /**
-     * 根据交易类型返回交易类型是否存在
+     * Return whether the transaction type exists based on the transaction type
      *
      * @param type
      * @return
@@ -97,7 +97,7 @@ public class TxManager {
     }
 
     /**
-     * 返回系统交易类型
+     * Return system transaction type
      */
     public static List<Integer> getSysTypes(Chain chain) {
         List<Integer> list = new ArrayList<>();
@@ -110,7 +110,7 @@ public class TxManager {
     }
 
     /**
-     * 判断交易是系统交易
+     * Determine if the transaction is a system transaction
      *
      * @param tx
      * @return
@@ -121,8 +121,8 @@ public class TxManager {
     }
 
     /**
-     * 判断是否是打包时产生的交易
-     * 例如 共识奖励 红黄牌 等
+     * Determine if it is a transaction generated during packaging
+     * for example Consensus rewards bookings etc.
      * @param chain
      * @param tx
      * @return
@@ -133,7 +133,7 @@ public class TxManager {
     }
 
     /**
-     * 是否是智能合约交易
+     * Is it a smart contract transaction
      * @param txType
      * @return
      */
@@ -145,7 +145,7 @@ public class TxManager {
     }
 
     /**
-     * 是否是智能合约非系统交易
+     * Is it a smart contract non system transaction
      * @param txType
      * @return
      */
@@ -168,7 +168,7 @@ public class TxManager {
     }
 
     /**
-     * 是否是智能合约系统交易
+     * Is it a smart contract system transaction
      * @param txType
      * @return
      */

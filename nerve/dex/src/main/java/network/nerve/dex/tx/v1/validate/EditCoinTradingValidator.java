@@ -28,7 +28,7 @@ public class EditCoinTradingValidator {
     private DexManager dexManager;
 
     public Map<String, Object> validateTxs(List<Transaction> txs) {
-        //存放验证不通过的交易
+        //Store transactions that fail verification
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
 
@@ -48,14 +48,14 @@ public class EditCoinTradingValidator {
                 }
                 tradingPo = container.getCoinTrading();
                 from = tx.getCoinDataInstance().getFrom().get(0);
-                //修改地址和创建地址要一致
+                //Modifying and creating addresses must be consistent
                 if (!Arrays.equals(from.getAddress(), tradingPo.getAddress())) {
                     throw new NulsException(DexErrorCode.DATA_ERROR, "create address error");
                 }
-                //查询币对信息的币种是否存在
+                //Does the currency used to query currency pair information exist
                 AssetInfo baseAsset = dexManager.getAssetInfo(AssetInfo.toKey(tradingPo.getBaseAssetChainId(), tradingPo.getBaseAssetId()));
                 AssetInfo quoteAsset = dexManager.getAssetInfo(AssetInfo.toKey(tradingPo.getQuoteAssetChainId(), tradingPo.getQuoteAssetId()));
-                //检查小数位数是否正确
+                //Check if the decimal places are correct
                 if (c.getScaleBaseDecimal() > baseAsset.getDecimal()) {
                     throw new NulsException(DexErrorCode.DATA_ERROR, "base coin minDecimal error");
                 }
@@ -66,7 +66,7 @@ public class EditCoinTradingValidator {
                 if (c.getMinBaseAmount().compareTo(BigInteger.ZERO) <= 0) {
                     throw new NulsException(DexErrorCode.DATA_ERROR, "min tradingAmount error");
                 }
-                //单笔最小交易数是否小于最小支持小数位数
+                //Is the minimum number of transactions per transaction less than the minimum supported decimal places
                 BigDecimal minDecimalValue = new BigDecimal(1);
                 minDecimalValue = minDecimalValue.movePointRight(baseAsset.getDecimal() - c.getScaleBaseDecimal());
                 BigDecimal minTradingAmount = new BigDecimal(c.getMinBaseAmount());

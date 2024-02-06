@@ -1,13 +1,11 @@
 package network.nerve.converter.config;
 
 import io.nuls.core.basic.InitializingBean;
-import io.nuls.core.basic.ModuleConfig;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.core.annotation.Configuration;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
 import io.nuls.core.rpc.model.ModuleE;
-import network.nerve.converter.model.bo.ConfigBean;
 
 @Component
 @Configuration(domain = ModuleE.Constant.ACCOUNT)
@@ -45,7 +43,7 @@ public class AccountConfig implements InitializingBean {
     }
 
     /**
-     * 在签名机的基础上验证账户的用户名密码，如果返回false需要拦截
+     * Verify the username and password of the account based on the signature machine, if returnedfalseNeed to intercept
      *
      * @param account
      * @param password

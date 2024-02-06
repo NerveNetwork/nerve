@@ -22,6 +22,7 @@ import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
 import network.nerve.converter.model.bo.HeterogeneousTransactionBaseInfo;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.utils.ConverterUtil;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
 import org.web3j.abi.EventEncoder;
@@ -227,6 +228,39 @@ public class ETHWalletApiTest extends Base {
             }
         }
     }
+    @Test
+    public void verifyBlockSign() {
+        // RLP.encodeList(new byte[][]{parentHash, unclesHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number, gasLimit, gasUsed, timestamp, extraData, mixHash, nonce});
+        BlockHeader header = new BlockHeader(
+                Numeric.hexStringToByteArray("0xb04aace895adcc89c8320e96886aa8fad9b36a0e35a08e8a012354c2b7a52faa"),
+                Numeric.hexStringToByteArray("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
+                Numeric.hexStringToByteArray("0x0000000000000000000000000000000000000000"),
+                Numeric.hexStringToByteArray("0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+                Numeric.hexStringToByteArray("0x1"),
+                0x1b4,
+                Numeric.hexStringToByteArray("0x495a80"),
+                0x0,
+                0x63d61a88,
+                Numeric.hexStringToByteArray("0xd983010a15846765746889676f312e31372e3132856c696e7578000000000000"),
+                Numeric.hexStringToByteArray("0x0000000000000000000000000000000000000000000000000000000000000000"),
+                Numeric.hexStringToByteArray("0x0000000000000000")
+        );
+        header.setStateRoot(Numeric.hexStringToByteArray("0xabec2c4e901472e76758281d8dcec6e00f4607347ca6fcab745c7707f9043bc6"));
+        header.setTransactionsRoot(Numeric.hexStringToByteArray("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
+        header.setReceiptsRoot(Numeric.hexStringToByteArray("0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"));
+        String hash = Numeric.toHexString(header.getHash());
+        System.out.println(String.format("hash: %s", hash));
+        String r = "0x51e361c3dce790393c29795a8ba88ff0bf6ed0b10d7a26bc519eb1f6a7b3112d";
+        String s = "0x6af243920a1fe766f11187d6b04bb60bcddb46c0a21d8005cc2c9feedc305aca";
+        long v = 0x01;
+        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity(r), Numeric.decodeQuantity(s));
+        byte[] hashBytes = Numeric.hexStringToByteArray(hash);
+        BigInteger recover = Sign.recoverFromSignature((int) v, signature, hashBytes);
+        if (recover != null) {
+            String address = "0x" + Keys.getAddress(recover);
+            System.out.println(String.format("order: %s, address: %s", v, address));
+        }
+    }
 
     private byte[] getRawTxHashBytes(Transaction tx) {
         String data = "";
@@ -251,7 +285,7 @@ public class ETHWalletApiTest extends Base {
     }
 
     /**
-     * 遍历每一个可能的v值，来得到正确的公钥
+     * Traverse every possible onevValue to obtain the correct public key
      */
     private void converPublicKey(Transaction tx) {
         ECDSASignature signature = new ECDSASignature(
@@ -268,10 +302,10 @@ public class ETHWalletApiTest extends Base {
             if (recover != null) {
                 exist = true;
                 String address = "0x" + Keys.getAddress(recover);
-                System.out.println(String.format("公钥: %s", Numeric.toHexStringWithPrefix(recover)));
+                System.out.println(String.format("Public key: %s", Numeric.toHexStringWithPrefix(recover)));
                 if (tx.getFrom().toLowerCase().equals(address.toLowerCase())) {
                     success = true;
-                    System.out.println("成功: " + i + ": " + address + String.format(", tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
+                    System.out.println("success: " + i + ": " + address + String.format(", tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
                     break;
                 } else {
                     errorList.add(address);
@@ -279,10 +313,10 @@ public class ETHWalletApiTest extends Base {
             }
         }
         if (!exist) {
-            System.err.println(String.format("异常: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("abnormal: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
         }
         if (!success) {
-            System.err.println(String.format("失败: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("fail: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndexRaw() != null ? tx.getTransactionIndex() : null, tx.getInput().length(), tx.getChainId()));
         }
     }
 
@@ -326,7 +360,7 @@ public class ETHWalletApiTest extends Base {
                 String address = "0x" + Keys.getAddress(recover);
                 if (tx.getFrom().toLowerCase().equals(address.toLowerCase())) {
                     success = true;
-                    System.out.println("成功: " + i + ": " + address + String.format("tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
+                    System.out.println("success: " + i + ": " + address + String.format("tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
                     break;
                 } else {
                     errorList.add(address);
@@ -334,10 +368,10 @@ public class ETHWalletApiTest extends Base {
             }
         }
         if (!exist) {
-            System.err.println(String.format("异常: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("abnormal: error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
         }
         if (!success) {
-            System.err.println(String.format("失败: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("fail: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), errorList, tx.getHash(), tx.getTransactionIndexRaw(), tx.getInput().length(), tx.getChainId()));
         }
     }
 
@@ -347,7 +381,7 @@ public class ETHWalletApiTest extends Base {
         System.out.println(Numeric.decodeQuantity("0x" + data).toString(16));
         //System.out.println(Hex.decode(HexUtil.decode(data)));
 //        System.out.println(HexUtil.encode(Hex.encode(HexUtil.decode(data))));
-        System.out.println(Numeric.toHexString(Hash.sha3(HexUtil.decode(data))));// 正确hash
+        System.out.println(Numeric.toHexString(Hash.sha3(HexUtil.decode(data))));// correcthash
         //System.out.println(HexUtil.encode(Hash.sha3(HexUtil.decode(data))));
         //System.out.println(HexUtil.encode(HashUtil.sha3(HexUtil.decode(data))));
         //System.out.println(HexUtil.encode(HashUtil.sha256(HexUtil.decode(data))));
@@ -368,7 +402,7 @@ public class ETHWalletApiTest extends Base {
             BigInteger recover = Sign.recoverFromSignature(i, signature, hashBytes);
             if (recover != null) {
                 String address = "0x" + Keys.getAddress(recover);
-                System.out.println(String.format("地址: %s, 公钥: %s", address, Numeric.toHexStringWithPrefix(recover)));
+                System.out.println(String.format("address: %s, Public key: %s", address, Numeric.toHexStringWithPrefix(recover)));
             }
         }
 
@@ -398,9 +432,9 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void getMainNetTxReceipt() throws Exception {
         setMain();
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0x2ec039c38d07910f457a634c2c2048c989930c54eebac4e3363993e5d77e3fd6";
-        // 合约内部调用erc20合约
+        // Contract internal callerc20contract
         String innerCallTxHash = "0xa8fa6cdf285a317318b2a93f9c9f5b5cfb33c98aa8a4db4147da6c78ed357263";
         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(directTxHash);
         System.out.println();
@@ -409,7 +443,7 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void getTestNetTxReceipt() throws Exception {
-        // 直接调用erc20合约
+        // Directly callingerc20contract
         String directTxHash = "0xc3d6e4c1e67fa0d47189cd32203a6b1fa9c4b79eeb7fb6de86cf807b018f02bc";
         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(directTxHash);
         System.out.println(txReceipt);
@@ -449,7 +483,7 @@ public class ETHWalletApiTest extends Base {
     }
 
     /*
-     添加`8`为管理员
+     Add`8`For administrators
      3: 0x6ba6da0b69a3593424c67e8b3f4b68aba62491c60af7214931336d5417eea3b7
      4: 0x033a35016431428a129009fd90b606facd53f86e7d42a821c8a7ec117cde8ad1
      5: 0x624323fe8b97e0b799e23c1ad10713040b7bc6d7a90883f078078d36d4427760
@@ -459,12 +493,12 @@ public class ETHWalletApiTest extends Base {
     public void callContractTest() throws Exception {
         setMain();
         BigInteger gasPrice = BigInteger.valueOf(100L).multiply(BigInteger.TEN.pow(9));
-        //加载凭证，用私钥
+        //Load credentials using private key
         Credentials credentials = Credentials.create("");
         String contractAddress = "0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5";
         EthGetTransactionCount transactionCount = ethWalletApi.getWeb3j().ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.PENDING).sendAsync().get();
         BigInteger nonce = transactionCount.getTransactionCount();
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "createOrSignManagerChange",
                 List.of(new Utf8String("recovery22e8781136a9b09f3d445a52e38998c68709572c0080cbc48022c111af5df34e6"),
@@ -485,21 +519,21 @@ public class ETHWalletApiTest extends Base {
                 BigInteger.valueOf(800000L),
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = ethWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
         System.out.println(ethSendTransaction.getTransactionHash());
     }
 
     /**
-     * view/constant函数返回值解析测试
+     * view/constantFunction return value parsing test
      */
     @Test
     public void viewContractTest() throws Exception {
         String contractAddress = "0xD7AF5cb5D3008D20d2F22F4612Fb5589E44699Ac";
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function allManagersFunction = new Function(
                 "allManagers",
                 List.of(),
@@ -556,7 +590,7 @@ public class ETHWalletApiTest extends Base {
     }
 
     /**
-     * 合约事件解析测试
+     * Contract Event Analysis Test
      */
     @Test
     public void eventTest() {
@@ -592,7 +626,7 @@ public class ETHWalletApiTest extends Base {
     }
 
     /**
-     * 合约事件`TransactionWithdrawCompleted`解析测试
+     * Contract events`TransactionWithdrawCompleted`Analysis testing
      */
     @Test
     public void eventTransactionWithdrawCompletedTest() throws Exception {
@@ -702,7 +736,7 @@ public class ETHWalletApiTest extends Base {
 
         EthEstimateGas estimateGas = ethWalletApi.getWeb3j().ethEstimateGas(tx).send();
         if(estimateGas.getResult() != null) {
-            System.out.println(String.format("gasLimit: %s, 详情: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
+            System.out.println(String.format("gasLimit: %s, details: %s", estimateGas.getResult(), JSONUtils.obj2PrettyJson(estimateGas)));
         } else {
             System.out.println(JSONUtils.obj2PrettyJson(estimateGas.getError()));
         }
@@ -742,7 +776,7 @@ public class ETHWalletApiTest extends Base {
             System.out.println(ethCall.getRevertReason());
             return;
         }
-        System.out.println("验证成功");
+        System.out.println("Verification successful");
     }
 
     @Test
@@ -784,7 +818,7 @@ public class ETHWalletApiTest extends Base {
         String to = from;
 
         BigInteger nonce = BigInteger.valueOf(89L);
-        // 看着 https://etherscan.io/gastracker 来设置
+        // Watching https://etherscan.io/gastracker To set up
         BigInteger gasPrice = BigInteger.valueOf(82L).multiply(BigInteger.TEN.pow(9));
         String hash = ethWalletApi.sendETHWithNonce(from, fromPriKey, to,
                 new BigDecimal("0"),
@@ -927,7 +961,7 @@ public class ETHWalletApiTest extends Base {
             BigInteger value = fromBalance.subtract(fee);
             BigDecimal ethValue = ETHWalletApi.convertWeiToEth(value);
             String txHash = ethWalletApi.sendETH(from, fromPriKey, to, ethValue, BigInteger.valueOf(21000L), EthContext.getEthGasPrice());
-            System.out.println(String.format("[%s]向[%s]转账%s个ETH, 手续费: %s, 交易hash: %s", from, to, ETHWalletApi.convertWeiToEth(value).toPlainString(), ETHWalletApi.convertWeiToEth(fee).toPlainString(), txHash));
+            System.out.println(String.format("[%s]towards[%s]Transfer%sindividualETH, Handling fees: %s, transactionhash: %s", from, to, ETHWalletApi.convertWeiToEth(value).toPlainString(), ETHWalletApi.convertWeiToEth(fee).toPlainString(), txHash));
         }
     }
 
@@ -941,7 +975,7 @@ public class ETHWalletApiTest extends Base {
         BigInteger gasPrice = BigInteger.valueOf(20L).multiply(BigInteger.TEN.pow(9));
         String from = "0x09534d4692F568BC6e9bef3b4D84d48f19E52501";
         String fromPriKey = "59f770e9c44075de07f67ba7a4947c65b7c3a0046b455997d1e0f854477222c8";
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(contractAddress);
         System.out.println(String.format("size : %s", all.size()));
         String sendAmount = "0.2";
@@ -950,7 +984,7 @@ public class ETHWalletApiTest extends Base {
             System.out.print(String.format("address %s : %s", address, balance.toPlainString()));
             if (!mainnet && balance.compareTo(new BigDecimal(sendAmount)) < 0) {
                 String txHash = ethWalletApi.sendETH(from, fromPriKey, address, new BigDecimal(sendAmount), BigInteger.valueOf(21000L), gasPrice);
-                System.out.print(String.format(", 向[%s]转账%s个ETH, 交易hash: %s", address, sendAmount, txHash));
+                System.out.print(String.format(", towards[%s]Transfer%sindividualETH, transactionhash: %s", address, sendAmount, txHash));
             }
             System.out.println();
         }
@@ -961,7 +995,7 @@ public class ETHWalletApiTest extends Base {
     @Test
     public void compareManagersBetweenNerveAndContract() throws Exception {
         //localdev();
-        // 测试网环境合约
+        // Test Network Environment Contract
         //testnetII();
         mainnetII();
 
@@ -975,19 +1009,19 @@ public class ETHWalletApiTest extends Base {
             String address = (String) ((Map) ((List) dataMap.get("heterogeneousAddresses")).get(0)).get("address");
             managerFromNerve.add(address);
         }
-        System.out.println(String.format("   nerve size: %s, 详情: %s", managerFromNerve.size(), managerFromNerve));
+        System.out.println(String.format("   nerve size: %s, details: %s", managerFromNerve.size(), managerFromNerve));
 
         Set<String> managerFromContract = this.allManagers(contractAddress);
         for(String addr : managerFromContract) {
             if (!managerFromNerve.contains(addr)) {
-                System.out.println(String.format("Nerve没有address: %s", addr));
+                System.out.println(String.format("Nerveabsenceaddress: %s", addr));
             }
         }
         System.out.println();
-        System.out.println(String.format("contract size: %s, 详情: %s", managerFromContract.size(), managerFromContract));
+        System.out.println(String.format("contract size: %s, details: %s", managerFromContract.size(), managerFromContract));
         for(String addr : managerFromNerve) {
             if (!managerFromContract.contains(addr)) {
-                System.out.println(String.format("合约没有address: %s", addr));
+                System.out.println(String.format("No contractaddress: %s", addr));
             }
         }
 
@@ -995,36 +1029,36 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void resetContract() throws Exception {
-        // 数据准备
+        // Data preparation
         EthContext.setEthGasPrice(BigInteger.valueOf(10L).multiply(BigInteger.TEN.pow(9)));
 
-        // 本地开发合约重置
+        // Local development contract reset
         //localdev();
         localdevII();
 
-        // 测试网合约重置
+        // Test network contract reset
         //testnet();
 
-        // 种子管理员地址
+        // Seed administrator address
         String[] seeds = new String[prikeyOfSeeds.length];
         int i = 0;
         for(String pri : prikeyOfSeeds) {
             seeds[i++] = Credentials.create(pri).getAddress().toLowerCase();
         }
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(contractAddress);
-        System.out.println(String.format("当前合约管理员列表: %s", Arrays.toString(all.toArray())));
-        // 应剔除的管理员
+        System.out.println(String.format("Current Contract Administrator List: %s", Arrays.toString(all.toArray())));
+        // Administrators to be excluded
         for(String seed : seeds) {
             all.remove(seed);
         }
         if (all.size() == 0) {
-            System.out.println("[结束]合约已重置管理员");
+            System.out.println("[finish]Contract reset administrator");
             return;
         }
         String key = "change-" + System.currentTimeMillis();
-        System.out.println(String.format("交易Key: %s", key));
-        System.out.println(String.format("剔除的管理员: %s", Arrays.toString(all.toArray())));
+        System.out.println(String.format("transactionKey: %s", key));
+        System.out.println(String.format("Excluded administrators: %s", Arrays.toString(all.toArray())));
         List<Address> addressList = all.stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Type> inputTypeList;
         if (newMode) {
@@ -1048,21 +1082,21 @@ public class ETHWalletApiTest extends Base {
         i = 0;
         for(String pri : prikeyOfSeeds) {
             String seed = seeds[i++];
-            System.out.println(String.format("种子管理员[%s]发送多签交易", seed));
+            System.out.println(String.format("Seed administrator[%s]Send multiple signature transactions", seed));
             EthSendTransactionPo po = ethWalletApi.callContract(seed, pri, contractAddress, BigInteger.valueOf(800000L), changeFunction);
-            System.out.println(String.format("  交易已发出, hash: %s", po.getTxHash()));
+            System.out.println(String.format("  Transaction has been sent out, hash: %s", po.getTxHash()));
             if(i == prikeyOfSeeds.length) {
-                System.out.println("[完成]多签交易已全部发送完成");
+                System.out.println("[complete]All multi signature transactions have been sent and completed");
                 break;
             }
-            System.out.println("等待8秒发送下一个多签交易");
+            System.out.println("wait for8Send the next multi signature transaction in seconds");
             TimeUnit.SECONDS.sleep(8);
         }
         while (true) {
-            System.out.println("等待10秒查询进度");
+            System.out.println("wait for10Second query progress");
             TimeUnit.SECONDS.sleep(10);
             if(this.allManagers(contractAddress).size() == seeds.length) {
-                System.out.println(String.format("[结束]合约已重置管理员"));
+                System.out.println(String.format("[finish]Contract reset administrator"));
                 break;
             }
         }
@@ -1071,7 +1105,7 @@ public class ETHWalletApiTest extends Base {
 
     @Test
     public void addManagerBySeeder() throws Exception {
-        // 数据准备
+        // Data preparation
         EthContext.setEthGasPrice(BigInteger.valueOf(30L).multiply(BigInteger.TEN.pow(9)));
         List<String> list = new ArrayList<>();
         //list.add("0x09534d4692F568BC6e9bef3b4D84d48f19E52501");
@@ -1082,33 +1116,33 @@ public class ETHWalletApiTest extends Base {
         //list.add("0xd29E172537A3FB133f790EBE57aCe8221CB8024F");
         list.add("0x54eAB3868B0090E6e1a1396E0e54F788a71B2b17");
 
-        // 本地开发合约重置
+        // Local development contract reset
         localdevII();
 
-        // 测试网合约重置
+        // Test network contract reset
         //testnet();
 
-        // 种子管理员地址
+        // Seed administrator address
         String[] seeds = new String[prikeyOfSeeds.length];
         int i = 0;
         for(String pri : prikeyOfSeeds) {
             seeds[i++] = Credentials.create(pri).getAddress().toLowerCase();
         }
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(contractAddress);
-        System.out.println(String.format("当前合约管理员列表: %s", Arrays.toString(all.toArray())));
-        // 检查是否存在非种子管理员
+        System.out.println(String.format("Current Contract Administrator List: %s", Arrays.toString(all.toArray())));
+        // Check for the presence of non seed administrators
         for(String seed : seeds) {
             all.remove(seed);
         }
         if (all.size() != 0) {
-            System.out.println(String.format("[错误]合约存在非种子管理员，请移除非种子管理员再执行, 列表: %s", Arrays.toString(all.toArray())));
+            System.out.println(String.format("[error]There are non seed administrators in the contract. Please remove the non seed administrators before executing, list: %s", Arrays.toString(all.toArray())));
             return;
         }
         String key = "add-" + System.currentTimeMillis();
         //String key = "433886adc2162b3069f12cfa9d837713f152b65221d197772cf5559fe898720e";
-        System.out.println(String.format("交易Key: %s", key));
-        System.out.println(String.format("添加的管理员: %s", Arrays.toString(list.toArray())));
+        System.out.println(String.format("transactionKey: %s", key));
+        System.out.println(String.format("Added administrator: %s", Arrays.toString(list.toArray())));
         List<Address> addressList = list.stream().map(a -> new Address(a)).collect(Collectors.toList());
         List<Type> inputTypeList;
         if (newMode) {
@@ -1132,21 +1166,21 @@ public class ETHWalletApiTest extends Base {
         i = 0;
         for(String pri : prikeyOfSeeds) {
             String seed = seeds[i++];
-            System.out.println(String.format("种子管理员[%s]发送多签交易", seed));
+            System.out.println(String.format("Seed administrator[%s]Send multiple signature transactions", seed));
             EthSendTransactionPo po = ethWalletApi.callContract(seed, pri, contractAddress, BigInteger.valueOf(800000L), changeFunction);
-            System.out.println(String.format("  交易已发出, hash: %s", po.getTxHash()));
+            System.out.println(String.format("  Transaction has been sent out, hash: %s", po.getTxHash()));
             if(i == prikeyOfSeeds.length) {
-                System.out.println("[完成]多签交易已全部发送完成");
+                System.out.println("[complete]All multi signature transactions have been sent and completed");
                 break;
             }
-            System.out.println("等待8秒发送下一个多签交易");
+            System.out.println("wait for8Send the next multi signature transaction in seconds");
             TimeUnit.SECONDS.sleep(8);
         }
         while (true) {
-            System.out.println("等待10秒查询进度");
+            System.out.println("wait for10Second query progress");
             TimeUnit.SECONDS.sleep(10);
             if(this.allManagers(contractAddress).size() == seeds.length + list.size()) {
-                System.out.println(String.format("[结束]合约已添加管理员"));
+                System.out.println(String.format("[finish]Contract added administrator"));
                 break;
             }
         }
@@ -1154,33 +1188,33 @@ public class ETHWalletApiTest extends Base {
     }
 
     /**
-     * 合约升级
+     * Contract upgrade
      */
     @Test
     public void upgradeContract() throws Exception {
-        // 数据准备
+        // Data preparation
         EthContext.setEthGasPrice(BigInteger.valueOf(30L).multiply(BigInteger.TEN.pow(9)));
         String oldContract = "";
 
-        // 种子管理员地址
+        // Seed administrator address
         String[] seeds = new String[prikeyOfSeeds.length];
         int i = 0;
         for(String pri : prikeyOfSeeds) {
             seeds[i++] = Credentials.create(pri).getAddress().toLowerCase();
         }
-        System.out.println("查询当前合约管理员列表，请等待……");
+        System.out.println("Please wait for the current list of contract administrators to be queried……");
         Set<String> all = this.allManagers(contractAddress);
-        System.out.println(String.format("当前合约管理员列表: %s", Arrays.toString(all.toArray())));
-        // 检查是否存在非种子管理员
+        System.out.println(String.format("Current Contract Administrator List: %s", Arrays.toString(all.toArray())));
+        // Check for the presence of non seed administrators
         for(String seed : seeds) {
             all.remove(seed);
         }
         if (all.size() != 0) {
-            System.out.println(String.format("[错误]合约存在非种子管理员，请移除非种子管理员再执行, 列表: %s", Arrays.toString(all.toArray())));
+            System.out.println(String.format("[error]There are non seed administrators in the contract. Please remove the non seed administrators before executing, list: %s", Arrays.toString(all.toArray())));
             return;
         }
         String key = "upgrade-" + System.currentTimeMillis();
-        System.out.println(String.format("交易Key: %s", key));
+        System.out.println(String.format("transactionKey: %s", key));
         List<Type> inputTypeList = List.of(new Utf8String(key));
         Function changeFunction = new Function(
                 "createOrSignUpgrade",
@@ -1189,21 +1223,21 @@ public class ETHWalletApiTest extends Base {
         i = 0;
         for(String pri : prikeyOfSeeds) {
             String seed = seeds[i++];
-            System.out.println(String.format("种子管理员[%s]发送多签交易", seed));
+            System.out.println(String.format("Seed administrator[%s]Send multiple signature transactions", seed));
             EthSendTransactionPo po = ethWalletApi.callContract(seed, pri, contractAddress, BigInteger.valueOf(800000L), changeFunction);
-            System.out.println(String.format("  交易已发出, hash: %s", po.getTxHash()));
+            System.out.println(String.format("  Transaction has been sent out, hash: %s", po.getTxHash()));
             if(i == prikeyOfSeeds.length) {
-                System.out.println("[完成]多签交易已全部发送完成");
+                System.out.println("[complete]All multi signature transactions have been sent and completed");
                 break;
             }
-            System.out.println("等待8秒发送下一个多签交易");
+            System.out.println("wait for8Send the next multi signature transaction in seconds");
             TimeUnit.SECONDS.sleep(8);
         }
         while (true) {
-            System.out.println("等待10秒查询进度");
+            System.out.println("wait for10Second query progress");
             TimeUnit.SECONDS.sleep(10);
             if(isUpgrade(oldContract)) {
-                System.out.println(String.format("旧合约已升级"));
+                System.out.println(String.format("Old contract has been upgraded"));
                 break;
             }
         }
@@ -1259,20 +1293,20 @@ public class ETHWalletApiTest extends Base {
     }
 
     /**
-     * 合约升级后的资产转移
+     * Asset transfer after contract upgrade
      */
     @Test
     public void transferAssetAfterUpgrade() throws Exception {
-        // 正式网环境数据
+        // Official network environment data
         setMainUpgradeData();
-        // GasPrice准备
+        // GasPriceprepare
         long gasPriceGwei = 100L;
         EthContext.setEthGasPrice(BigInteger.valueOf(gasPriceGwei).multiply(BigInteger.TEN.pow(9)));
-        // 超级账户
+        // Super account
         String superAdmin = "";
         String superAdminPrivatekey = "";
 
-        System.out.println("-=-=-=-=-=-[开始执行资产转移]=-=-=-=-=-=-=");
+        System.out.println("-=-=-=-=-=-[Start executing asset transfer]=-=-=-=-=-=-=");
         // upgradeContractS1 upgradeContractS2
         BigDecimal ethBalance = ethWalletApi.getBalance(oldContract);
         List<Type> input1 = List.of();
@@ -1281,19 +1315,19 @@ public class ETHWalletApiTest extends Base {
                 input1,
                 List.of(new TypeReference<Type>() {}));
         EthSendTransactionPo po1 = ethWalletApi.callContract(superAdmin, superAdminPrivatekey, oldContract, BigInteger.valueOf(800000L), upgradeFunction1);
-        System.out.println(String.format("[ETH资产]转移第一步hash: %s", po1.getTxHash()));
+        System.out.println(String.format("[ETHasset]Transfer the first stephash: %s", po1.getTxHash()));
         while (ethWalletApi.getTxReceipt(po1.getTxHash()) == null) {
-            System.out.println("等待8秒查询[ETH资产]转移第一步结果");
+            System.out.println("wait for8Second query[ETHasset]Transfer the results of the first step");
             TimeUnit.SECONDS.sleep(8);
         }
-        System.out.println(String.format("[ETH资产]转移第一步完成"));
+        System.out.println(String.format("[ETHasset]The first step of transfer is completed"));
         String txHash2 = ethWalletApi.sendETH(superAdmin, superAdminPrivatekey, newContract, ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger()), BigInteger.valueOf(800000L), EthContext.getEthGasPrice());
-        System.out.println(String.format("[ETH资产]转移第二步hash: %s", txHash2));
+        System.out.println(String.format("[ETHasset]Transfer Step 2hash: %s", txHash2));
         while (ethWalletApi.getTxReceipt(txHash2) == null) {
-            System.out.println("等待8秒查询[ETH资产]转移第二步结果");
+            System.out.println("wait for8Second query[ETHasset]Transfer the results of the second step");
             TimeUnit.SECONDS.sleep(8);
         }
-        System.out.println(String.format("[ETH资产]转移完成，转移数额: %s", ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger()).toPlainString()));
+        System.out.println(String.format("[ETHasset]Transfer completed, transfer amount: %s", ETHWalletApi.convertWeiToEth(ethBalance.toBigInteger()).toPlainString()));
 
         for(String[] erc20Info : erc20List) {
             String erc20Address = erc20Info[0];
@@ -1309,12 +1343,12 @@ public class ETHWalletApiTest extends Base {
                     input2,
                     List.of(new TypeReference<Type>() {}));
             EthSendTransactionPo po2 = ethWalletApi.callContract(superAdmin, superAdminPrivatekey, oldContract, BigInteger.valueOf(800000L), upgradeFunction2);
-            System.out.println(String.format("[%s资产]转移hash: %s", erc20Name, po2.getTxHash()));
+            System.out.println(String.format("[%sasset]transferhash: %s", erc20Name, po2.getTxHash()));
             while (ethWalletApi.getTxReceipt(po2.getTxHash()) == null) {
-                System.out.println(String.format("等待8秒查询[%s资产]转移结果", erc20Name));
+                System.out.println(String.format("wait for8Second query[%sasset]Transfer Results", erc20Name));
                 TimeUnit.SECONDS.sleep(8);
             }
-            System.out.println(String.format("[%s资产]转移完成", erc20Name));
+            System.out.println(String.format("[%sasset]Transfer completed", erc20Name));
         }
     }
 
@@ -1357,12 +1391,12 @@ public class ETHWalletApiTest extends Base {
         String to = "";
         BigInteger value = BigInteger.valueOf(100L).multiply(BigInteger.valueOf(10L).pow(18));
         String contractAddress = "";
-        //加载转账所需的凭证，用私钥
+        //Load the required credentials for the transfer using a private key
         Credentials credentials = Credentials.create(fromPriKey);
-        //获取nonce，交易笔数
+        //obtainnonceNumber of transactions
         BigInteger nonce = BigInteger.valueOf(10L);
 
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(to), new Uint256(value)),
@@ -1377,10 +1411,10 @@ public class ETHWalletApiTest extends Base {
                 BigInteger.valueOf(80000L),
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = ethWalletApi.getWeb3j().ethSendRawTransaction(hexValue).sendAsync().get();
 
         System.out.println(String.format("send to %s, value is 100, hash is %s", to, ethSendTransaction.getTransactionHash()));
@@ -1390,15 +1424,15 @@ public class ETHWalletApiTest extends Base {
         //String a = "82yJxe2VHLJhGxGk2rPeiuXUBB/fBNhZTcgMsSDk9oA=";
         //System.out.println(HexUtil.encode(Base64.getDecoder().decode(a)));
         //System.out.println(new BigDecimal("394480000000000000").movePointLeft(18).toPlainString());
-        // eth的usdt价格
-        ethUsdt = new BigDecimal("1690.14");
+        // ethofusdtprice
+        ethUsdt = new BigDecimal("39.29728669");
         // gas Gwei
-        price = "19";
-        System.out.println(String.format("\n以太坊当前Gas Price: %s Gwei, ETH 当前USDT价格: %s USDT.\n", price, ethUsdt));
+        price = "650";
+        System.out.println(String.format("\nEthereum currentGas Price: %s Gwei, ETH currentUSDTprice: %s USDT.\n", price, ethUsdt));
         //gasCost(280000);
-        gasCost(2310000);
-        gasCost(3000000);
-        gasCost(9000000);
+        //gasCost(2310000);
+        gasCost(300000);
+        //gasCost(9000000);
         //gasCost(400000);
         //gasCost(380000);
         //gasCost(350000);
@@ -1460,10 +1494,10 @@ public class ETHWalletApiTest extends Base {
 
 
     /**
-     * 弃用，原因如下
-     * 1. 当tx存在chainId时，转换会失败，原因是有chainId时，v变量大于了34
-     * 2. 没有chainId, tx有一个错误的v值，也会造成转换失败
-     * 3. 因此，使用Sign.recoverFromSignature，遍历每一个可能的v值，来得到正确的公钥
+     * Abandoned for the following reasons
+     * 1. WhentxexistencechainIdWhen, the conversion will fail due tochainIdWhen,vThe variable is greater than34
+     * 2. absencechainId, txThere is an errorvValue can also cause conversion failure
+     * 3. Therefore, usingSign.recoverFromSignatureTraverse every possible onevValue to obtain the correct public key
      */
     @Deprecated
     private void publicKey(Transaction tx) {
@@ -1481,12 +1515,12 @@ public class ETHWalletApiTest extends Base {
             //BigInteger pKey = converPublicKey(tx);
             String address = "0x" + Keys.getAddress(pKey);
             if (tx.getFrom().toLowerCase().equals(address.toLowerCase())) {
-                System.out.println("成功: " + v + ": " + address + String.format("tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+                System.out.println("success: " + v + ": " + address + String.format("tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
             } else {
-                System.err.println(String.format("失败: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), address, tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+                System.err.println(String.format("fail: tx from: %s, parse from: %s, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", tx.getFrom(), address, tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
             }
         } catch (Exception e) {
-            System.err.println(String.format("异常: %s error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", v, tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
+            System.err.println(String.format("abnormal: %s error, tx hash: %s, tx index: %s, tx data length: %s, tx chainId: %s", v, tx.getHash(), tx.getTransactionIndex(), tx.getInput().length(), tx.getChainId()));
         }
     }
 

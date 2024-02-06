@@ -47,7 +47,7 @@ public class HeartbeatServerHandler extends ChannelInboundHandlerAdapter {
         if (evt instanceof IdleStateEvent) {
             SocketChannel channel = (SocketChannel) ctx.channel();
             String nodeId = IpUtil.getNodeId(channel.remoteAddress());
-            LoggerUtil.COMMON_LOG.info("====userEventTriggered  IdleStateEvent==，node:{} ", nodeId);
+            LoggerUtil.COMMON_LOG.info("====userEventTriggered  IdleStateEvent==,node:{} ", nodeId);
 
             IdleStateEvent event = (IdleStateEvent) evt;
             String type = "";

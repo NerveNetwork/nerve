@@ -34,26 +34,26 @@ import java.util.Arrays;
  */
 public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseInfo{
     /**
-     * 交易类型: 充值、提现、变更
+     * Transaction type: Recharge、Withdrawal、change
      */
     private HeterogeneousChainTxType txType;
     /**
-     * 提现或管理员变更的nerve交易hash
+     * Withdrawals or administrator changesnervetransactionhash
      */
     private String nerveTxHash;
     /**
-     * 管理员变更的参数
+     * Parameters changed by administrator
      */
     private String[] addAddresses;
     private String[] removeAddresses;
     private int orginTxCount;
     private transient int depositErrorTimes;
 
-    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段`addAddresses` 作为`crossOutII`中充值主资产的字段
+    // Due to the fact that the persistent structure of this object cannot be changed arbitrarily（Once changed, it takes a lot of time to test）Here, unused fields in the recharge type are utilized`addAddresses` As a`crossOutII`Fields for recharging main assets
     public void setDepositIIMainAsset(BigInteger value, Integer decimals, Integer assetId) {
         this.setAddAddresses(new String[]{value.toString(), decimals.toString(), assetId.toString()});
     }
-    // 由于此对象持久化结构不能随意改变（一旦改变，需要花大量时间测试），此处利用充值类型中未使用的字段`removeAddresses` 作为`crossOutII`中的扩展字段
+    // Due to the fact that the persistent structure of this object cannot be changed arbitrarily（Once changed, it takes a lot of time to test）Here, unused fields in the recharge type are utilized`removeAddresses` As a`crossOutII`Extended fields in
     public void setDepositIIExtend(String extend) {
         this.setRemoveAddresses(new String[]{extend});
     }
@@ -62,7 +62,7 @@ public class HeterogeneousTransactionInfo extends HeterogeneousTransactionBaseIn
         return getTxType() == HeterogeneousChainTxType.DEPOSIT && getRemoveAddresses() != null && getRemoveAddresses().length > 0 ? getRemoveAddresses()[0] : null;
     }
 
-    // true代表同时充值了token和main asset
+    // trueRepresented simultaneous rechargetokenandmain asset
     public boolean isDepositIIMainAndToken() {
         return getTxType() == HeterogeneousChainTxType.DEPOSIT && getAddAddresses() != null && getAddAddresses().length == 3;
     }

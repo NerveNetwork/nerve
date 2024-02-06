@@ -114,7 +114,7 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
                 NerveToken tokenA = txData.getTokenA();
                 NerveToken tokenB = txData.getTokenB();
 
-                // 检查tokenA,B是否存在，pair地址是否合法
+                // inspecttokenA,BDoes it exist,pairIs the address legal
                 LedgerAssetDTO assetA = ledgerAssetCache.getLedgerAsset(chainId, tokenA);
                 LedgerAssetDTO assetB = ledgerAssetCache.getLedgerAsset(chainId, tokenB);
                 if (assetA == null || assetB == null) {
@@ -164,7 +164,7 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[commit] Swap Remove Liquidity, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -174,7 +174,7 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
                 IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(coinData.getTo().get(0).getAddress()));
                 RemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), RemoveLiquidityBus.class);
 
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 pair.update(bus.getLiquidity().negate(), bus.getReserve0().subtract(bus.getAmount0()), bus.getReserve1().subtract(bus.getAmount1()), bus.getReserve0(), bus.getReserve1(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -204,7 +204,7 @@ public class RemoveLiquidityTxProcessor implements TransactionProcessor {
                 CoinData coinData = tx.getCoinDataInstance();
                 IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(coinData.getTo().get(0).getAddress()));
                 RemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), RemoveLiquidityBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 pair.rollback(bus.getLiquidity().negate(), bus.getReserve0(), bus.getReserve1(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[rollback] Swap Remove Liquidity, hash: {}", tx.getHash().toHex());

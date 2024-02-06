@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 
 
 /**
- * TRX组件向Nerve核心注册
+ * TRXComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -108,21 +108,21 @@ public class TrxRegister implements IHeterogeneousChainRegister {
     @Override
     public String init(HeterogeneousCfg config, NulsLogger logger) throws Exception {
         if (!isInitial) {
-            // 存放日志实例
+            // Storing log instances
             trxContext.setLogger(logger);
             isInitial = true;
-            // 存放配置实例
+            // Storing configuration instances
             trxContext.setConfig(config);
-            // 初始化实例
+            // Initialize instance
             initBean();
-            // 初始化默认API
+            // Initialize defaultAPI
             initDefualtAPI();
-            // 解析TRX API URL
+            // analysisTRX API URL
             initTrxWalletRPC();
-            // 存放nerveChainId
+            // depositnerveChainId
             trxContext.NERVE_CHAINID = converterConfig.getChainId();
             //RocksDBService.createTable(TrxDBConstant.DB_TRX);
-            // 初始化地址过滤集合
+            // Initialize address filtering set
             initFilterAddresses();
         }
         return TrxDBConstant.DB_TRX;
@@ -195,29 +195,29 @@ public class TrxRegister implements IHeterogeneousChainRegister {
     public void registerCallBack(HeterogeneousChainRegisterInfo registerInfo) throws Exception {
         if (!this.newProcessActivated) {
             String multiSigAddress = registerInfo.getMultiSigAddress();
-            // 监听多签地址交易
+            // Listening for multi signature address transactions
             htgListener.addListeningAddress(multiSigAddress);
-            // 管理回调函数实例
+            // Manage callback function instances
             trxCallBackManager.setDepositTxSubmitter(registerInfo.getDepositTxSubmitter());
             trxCallBackManager.setTxConfirmedProcessor(registerInfo.getTxConfirmedProcessor());
             trxCallBackManager.setHeterogeneousUpgrade(registerInfo.getHeterogeneousUpgrade());
-            // 存放CORE查询API实例
+            // depositCOREqueryAPIexample
             trxContext.setConverterCoreApi(registerInfo.getConverterCoreApi());
             trxContext.getConverterCoreApi().addChainDBName(getChainId(), TrxDBConstant.DB_TRX);
-            // 更新多签地址
+            // Update multiple signed addresses
             trxContext.MULTY_SIGN_ADDRESS = multiSigAddress;
-            // 保存当前多签地址到多签地址历史列表中
+            // Save the current multi signature address to the multi signature address history list
             htgMultiSignAddressHistoryStorageService.save(multiSigAddress);
-            // 初始化待确认任务队列
+            // Initialize the pending confirmation task queue
             initUnconfirmedTxQueue();
-            // 初始化交易等待任务队列
+            // Initialize transaction waiting task queue
             initWaitingTxQueue();
-            // 启动新流程的工作任务池
+            // Start a new process's work task pool
             initScheduled();
-            // 设置新流程切换标志
+            // Set new process switching flag
             this.newProcessActivated = true;
         }
-        trxContext.logger.info("{} 注册完成.", trxContext.config.getSymbol());
+        trxContext.logger.info("{} Registration completed.", trxContext.config.getSymbol());
     }
 
     private void initDefualtAPI() throws Exception {
@@ -266,9 +266,9 @@ public class TrxRegister implements IHeterogeneousChainRegister {
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     trxContext.UNCONFIRMED_TX_QUEUE.offer(po);
-                    // 把待确认的交易加入到监听交易hash列表中
+                    // Add pending transactions to listening transactionshashIn the list
                     htgListener.addListeningTx(po.getTxHash());
                 }
             });
@@ -299,7 +299,7 @@ public class TrxRegister implements IHeterogeneousChainRegister {
         if (list != null && !list.isEmpty()) {
             list.stream().forEach(po -> {
                 if(po != null) {
-                    // 初始化缓存列表
+                    // Initialize cache list
                     trxContext.WAITING_TX_QUEUE.offer(po);
                 }
             });

@@ -47,11 +47,11 @@ public class ConsensusNetGroup {
     boolean available = false;
     private int chainId;
     /**
-     * KEY 用地址
+     * KEY Using address
      */
     private Map<String, ConsensusNet> group = new ConcurrentHashMap<>();
 
-    //在旧逻辑下，增加的外挂
+    //Under the old logic, added plugins
     private Map<String, String> addrNodeMap = new HashMap<>();
 
     private boolean allConnected = false;
@@ -81,8 +81,8 @@ public class ConsensusNetGroup {
     }
 
     /**
-     * 当前节点启动后连接上所有未连接的节点则表示该节点共识网络组网成功
-     * ，之后将不再广播自己的节点信息给其他新增的共识节点
+     * If the current node is connected to all unconnected nodes after startup, it indicates that the consensus network of the node has been successfully established
+     * Afterwards, it will no longer broadcast its own node information to other newly added consensus nodes
      */
     public boolean isAllConnected() {
         if (!allConnected) {
@@ -135,7 +135,7 @@ public class ConsensusNetGroup {
         List<ConsensusNet> list = new ArrayList<>();
         for (Map.Entry<String, ConsensusNet> entry : group.entrySet()) {
             if (null != entry.getValue().getNodeId() && !entry.getValue().isHadConnect()) {
-                //允许进行重连的节点
+                //Nodes allowed for reconnection
                 if (entry.getValue().getFailTimes() < ConsensusConstant.POC_CONNECT_MAX_FAIL_TIMES) {
                     list.add(entry.getValue());
                 }
@@ -192,7 +192,7 @@ public class ConsensusNetGroup {
         int percent = ConsensusConstant.POC_NETWORK_NODE_PERCENT;
 
         if (total > 0) {
-            //增加自身节点
+            //Add own nodes
             total = total + 1;
             hadConnect = hadConnect + 1;
             int connectPercent = (hadConnect * 100 / total);
@@ -201,7 +201,7 @@ public class ConsensusNetGroup {
                 needChangeToFalse = 0;
             }
         } else {
-            //单节点直接返回
+            //Single node direct return
             netAvailable = true;
             needChangeToFalse = 0;
         }
@@ -276,13 +276,13 @@ public class ConsensusNetGroup {
             if (null != entry.getValue().getNodeId()) {
                 try {
                     if (allDisconnect) {
-                        //全部连接不可用
-                        Log.info("set all nodes disconnect.全部连接不可用");
+                        //All connections unavailable
+                        Log.info("set all nodes disconnect.All connections unavailable");
                         entry.getValue().setHadConnect(false);
                     } else if (null == map.get(entry.getValue().getNodeId().split(":")[0])) {
-                        //部分连接不可用，判断次数超限直接干掉IP
+                        //Part of the connections are unavailable. If the number of attempts exceeds the limit, it will be directly terminatedIP
                         if (entry.getValue().getFailTimes() >= ConsensusConstant.POC_CONNECT_MAX_FAIL_TIMES) {
-//                            Log.info("set nodeId null.超过了连接失败次数");
+//                            Log.info("set nodeId null.Exceeded the number of connection failures");
                             entry.getValue().setNodeId(null);
                         } else {
                             entry.getValue().setFailTimes((entry.getValue().getFailTimes() + 1));

@@ -45,11 +45,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 调用共识模块接口的工具类
+ * Tool class for calling consensus module interface
  *
  * @author captain
  * @version 1.0
- * @date 18-11-9 上午10:43
+ * @date 18-11-9 morning10:43
  */
 @Component
 public class ConsensusCall {
@@ -57,7 +57,7 @@ public class ConsensusCall {
     private static BlockService service;
 
     /**
-     * 共识BZT验证
+     * ConsensusBZTvalidate
      *
      * @param chainId
      * @param block
@@ -94,10 +94,10 @@ public class ConsensusCall {
     }
 
     /**
-     * 通知共识模块进入工作状态或者进入等待状态
+     * Notify consensus module to enter working state or waiting state
      *
-     * @param chainId 链Id/chain id
-     * @param status  1-工作,0-等待
+     * @param chainId chainId/chain id
+     * @param status  1-work,0-wait for
      * @return
      */
     public static boolean notice(int chainId, int status) {
@@ -115,9 +115,9 @@ public class ConsensusCall {
     }
 
     /**
-     * 收到分叉区块时通知共识模块
+     * Notify consensus module when receiving fork blocks
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static boolean evidence(int chainId, BlockService blockService, BlockHeader forkHeader) {
@@ -138,7 +138,7 @@ public class ConsensusCall {
             return true;
         }
         List<String> packingAddressList = context.getPackingAddressList();
-        //May 19th 2019 EdwardChan 对于List中的字节数组不能使用contains来进行判断,因为equals方法不能用来判断字节数组中的内容是否相等
+        //May 19th 2019 EdwardChan aboutListByte arrays in cannot be usedcontainsTo make a judgment,becauseequalsMethod cannot be used to determine whether the contents of a byte array are equal
         //if (packingAddressList.contains(masterHeaderPackingAddress)) {
         //    return true;
         //}
@@ -163,9 +163,9 @@ public class ConsensusCall {
     }
 
     /**
-     * 收到分叉区块时通知共识模块
+     * Notify consensus module when receiving fork blocks
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static boolean evidence(int chainId, String firstHeader, String secondHeader) {
@@ -183,9 +183,9 @@ public class ConsensusCall {
 
 
     /**
-     * 回滚区块时通知共识模块
+     * Notify consensus module when rolling back blocks
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static boolean rollbackNotice(int chainId, long height) {
@@ -208,14 +208,14 @@ public class ConsensusCall {
     }
 
     /**
-     * 新增区块时通知共识模块
+     * Notify consensus module when adding blocks
      *
-     * @param chainId   链Id/chain id
+     * @param chainId   chainId/chain id
      * @param localInit
      * @return
      */
     public static boolean saveNotice(int chainId, BlockHeader blockHeader, boolean localInit, int download) {
-        //创世区块保存时不通知共识模块
+        //Do not notify the consensus module when saving Genesis blocks
         if (localInit) {
             return true;
         }

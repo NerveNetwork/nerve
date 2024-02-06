@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/niels/workspace/nerve-network/logs
+logPath=/Users/lihongzhang/workspace/nerve-network/logs
 logLevel=INFO
-dataPath=/Users/niels/workspace/nerve-network/data
+dataPath=/Users/lihongzhang/workspace/nerve-network/data
 #默认本链ID
 chainId=9
 #地址前缀

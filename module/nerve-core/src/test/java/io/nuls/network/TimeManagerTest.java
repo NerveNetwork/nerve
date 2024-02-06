@@ -20,7 +20,7 @@ public class TimeManagerTest implements Runnable {
     }
 
     /**
-     * 时间服务器地址
+     * Time server address
      */
     private List<String> timeSeverUrlList = new ArrayList<>();
     String urlStr = "africa.pool.ntp.org,antarctica.pool.ntp.org,asia.pool.ntp.org,europe.pool.ntp.org,north-america.pool.ntp.org,oceania.pool.ntp.org,south-america.pool.ntp.org,ntp.aliyun.com,time.windows.com,time.apple.com,time1.cloud.tencent.com,time.asia.apple.com,time.euro.apple.com,time.cloudflare.com,time.google.com";

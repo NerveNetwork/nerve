@@ -77,7 +77,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[{}][commit] Stable Swap Add Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -87,7 +87,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                 IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
                 StableAddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableAddLiquidityBus.class);
                 //logger.info("[{}]processor add bus: {}", blockHeader.getHeight(), bus.toString());
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 stablePair.update(bus.getLiquidity(), bus.getRealAmounts(), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -117,7 +117,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                 StableAddLiquidityDTO dto = stableAddLiquidityHandler.getStableAddLiquidityInfo(chainId, tx.getCoinDataInstance(), iPairFactory);
                 IStablePair stablePair = iPairFactory.getStablePair(dto.getPairAddress());
                 StableAddLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableAddLiquidityBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 stablePair.rollback(bus.getLiquidity(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[{}][rollback] Stable Swap Add Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
@@ -164,7 +164,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                 }
                 CoinData coinData = tx.getCoinDataInstance();
                 StableAddLiquidityDTO dto = stableAddLiquidityHandler.getStableAddLiquidityInfo(chainId, coinData, iPairFactory);
-                SwapUtils.calStableAddLiquididy(chainId, iPairFactory, dto.getPairAddress(), dto.getFrom(), dto.getAmounts(), txData.getTo());
+                SwapUtils.calStableAddLiquididy(swapHelper, chainId, iPairFactory, dto.getPairAddress(), dto.getFrom(), dto.getAmounts(), txData.getTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);
@@ -218,7 +218,7 @@ public class StableAddLiquidityTxProcessor implements TransactionProcessor {
                     errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
                     continue;
                 }
-                SwapUtils.calStableAddLiquididy(chainId, iPairFactory, dto.getPairAddress(), dto.getFrom(), dto.getAmounts(), txData.getTo());
+                SwapUtils.calStableAddLiquididy(swapHelper, chainId, iPairFactory, dto.getPairAddress(), dto.getFrom(), dto.getAmounts(), txData.getTo());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

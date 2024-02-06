@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 节点保证金变更
+ * Node margin change
  * Agent deposit change
  *
  * @author tag

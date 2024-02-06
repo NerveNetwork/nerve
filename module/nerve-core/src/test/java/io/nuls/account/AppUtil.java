@@ -43,7 +43,7 @@ public class AppUtil {
             }
             return privateKey;
         } catch (Exception e) {
-            throw new RuntimeException("密码错误");
+            throw new RuntimeException("Password error");
         }
     }
 
@@ -54,19 +54,19 @@ public class AppUtil {
             }
             return hexStr2Str(HexUtil.encode(priKey), "utf8");
         } catch (Exception e) {
-            throw new RuntimeException("密码错误");
+            throw new RuntimeException("Password error");
         }
     }
 
     /**
-     * 字符串转换为16进制字符串
+     * Convert string to16Hexadecimal Strings
      *
-     * @param charsetName 用于编码 String 的 Charset
+     * @param charsetName Used for encoding String of Charset
      */
     public static String Str2hexStr(String str, String charsetName) {
         byte[] bytes = new byte[0];
         String hexString = "0123456789abcdef";
-        // 使用给定的 charset 将此 String 编码到 byte 序列
+        // Using the given charset Add this String Encode to byte sequence
         if (!charsetName.equals("")) {
             try {
                 bytes = str.getBytes(charsetName);
@@ -74,11 +74,11 @@ public class AppUtil {
                 e.printStackTrace();
             }
         } else {
-            // 根据默认编码获取字节数组
+            // Obtain byte array based on default encoding
             bytes = str.getBytes();
         }
         StringBuilder sb = new StringBuilder(bytes.length * 2);
-        // 将字节数组中每个字节拆解成2位16进制整数
+        // Decompose each byte in the byte array into2position16Base integer
         for (int i = 0; i < bytes.length; i++) {
             sb.append(hexString.charAt((bytes[i] & 0xf0) >> 4));
             sb.append(hexString.charAt((bytes[i] & 0x0f)));
@@ -87,9 +87,9 @@ public class AppUtil {
     }
 
     /**
-     * 16进制字符串转换为字符串
+     * 16Convert base string to string
      *
-     * @param charsetName 用于编码 String 的 Charset
+     * @param charsetName Used for encoding String of Charset
      */
     public static String hexStr2Str(String hexStr, String charsetName) {
         hexStr = hexStr.toUpperCase(Locale.US);
@@ -103,21 +103,21 @@ public class AppUtil {
             n += str.indexOf(hexs[2 * i + 1]);
             bytes[i] = (byte) (n & 0xFF);
         }
-        String returnStr = "";// 返回的字符串
+        String returnStr = "";// The returned string
         if (charsetName == null) {
-            // 编译器默认解码指定的 byte 数组，构造一个新的 String,
-            // 比如我的集成开发工具即编码器android studio的默认编码格式为"utf-8"
+            // The compiler defaults to decoding the specified byte Array, construct a new one String,
+            // For example, my integrated development tool, encoderandroid studioThe default encoding format for is"utf-8"
             returnStr = new String(bytes);
         } else {
-            // 指定的 charset 解码指定的 byte 数组，构造一个新的 String
-            // utf-8中文字符占三个字节，GB18030兼容GBK兼容GB2312中文字符占两个字节，ISO8859-1是拉丁字符（ASCII字符）占一个字节
+            // Designated charset Decode specified byte Array, construct a new one String
+            // utf-8Chinese characters occupy three bytes,GB18030compatibleGBKcompatibleGB2312Chinese characters occupy two bytes,ISO8859-1It's a Latin character（ASCIIcharacter）Occupy one byte
             try {
                 returnStr = new String(bytes, charsetName);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
-        // charset还有utf-8,gbk随需求改变
+        // charsetalsoutf-8,gbkAs demand changes
         return returnStr;
     }
 

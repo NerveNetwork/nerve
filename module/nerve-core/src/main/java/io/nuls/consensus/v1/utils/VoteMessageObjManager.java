@@ -42,7 +42,7 @@ public class VoteMessageObjManager {
         try {
             QUEUE.offer(voteMessage);
         } catch (Throwable e) {
-            //不处理
+            //Not processed
         }
     }
 }

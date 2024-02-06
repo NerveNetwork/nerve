@@ -32,7 +32,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * NERVE网络中确认提现交易状态的交易 确认的业务数据
+ * NERVETransactions that confirm the status of withdrawal transactions in the network Confirmed business data
  * @author: Loki
  * @date: 2020-03-06
  */
@@ -40,27 +40,27 @@ public class ConfirmWithdrawalPO implements Serializable {
 
     private int heterogeneousChainId;
     /**
-     * 异构链中对应的提现交易确认高度
+     * Confirmation height of corresponding withdrawal transactions in heterogeneous chains
      */
     private long heterogeneousHeight;
 
     /**
-     * 异构链中对应的提现交易hash
+     * Corresponding withdrawal transactions in heterogeneous chainshash
      */
     private String heterogeneousTxHash;
 
     /**
-     * NERVE网络中对应的提现交易hash
+     * NERVECorresponding withdrawal transactions in the networkhash
      */
     private NulsHash withdrawalTxHash;
 
     /**
-     * NERVE网络中对应的确认提现交易状态的交易hash
+     * NERVETransactions with corresponding confirmed withdrawal transaction status in the networkhash
      */
     private NulsHash confirmWithdrawalTxHash;
 
     /**
-     * 需要分发提现手续费的节点异构链地址
+     * Node heterogeneous chain addresses that require distribution of withdrawal fees
      */
     private List<HeterogeneousAddress> listDistributionFee;
 

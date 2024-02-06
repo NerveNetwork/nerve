@@ -71,7 +71,7 @@ public class Protocol27Test {
                 htgWalletApi.setWeb3j(web3j);
                 htgWalletApi.setEthRpcAddress(cfg.getMainRpcAddress());
                 HtgContext htgContext = contextMap.get(htgChainId);
-                // 设置新的签名版本号
+                // Set a new signature version number
                 byte newVersion = 3;
                 htgContext.SET_VERSION(newVersion);
                 htgContext.setLogger(Log.BASIC_LOGGER);
@@ -88,7 +88,7 @@ public class Protocol27Test {
     }
 
     /**
-     * 读取每个链的新旧多签合约
+     * Read the new and old multi signed contracts for each chain
      */
     private Map<Integer, String[]> multyMap() {
         return multyMapMainnet();
@@ -96,7 +96,7 @@ public class Protocol27Test {
 
 
     /**
-     * 主网: 配置每个链的新旧多签合约
+     * Main network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyMapMainnet() {
         /*
@@ -105,9 +105,9 @@ public class Protocol27Test {
             119 ENULS, 120 KAVA, 121 ETHW, 122 REI, 123 ZK, 124 EOS, 125 ZKpolygon, 126 Linea,
             127 Celo, 128 ETC, 129 Base
          */
-        // 配置每个链的新旧多签合约
+        // Configure new and old multiple contracts for each chain
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(127, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
         map.put(128, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
         map.put(129, new String[]{"0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5", "0x3758aa66cad9f2606f1f501c9cb31b94b713a6d5"});
@@ -115,7 +115,7 @@ public class Protocol27Test {
     }
 
     /**
-     * 读取异构链基本信息
+     * Read basic information of heterogeneous chains
      */
     private Map<Integer, HeterogeneousCfg> cfgMap() {
         try {
@@ -130,15 +130,15 @@ public class Protocol27Test {
     }
 
     /**
-     注册跨链网络
-     主网:
+     Register for Cross Chain Network
+     Main network:
      registerheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 127
      registerheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 128
      registerheterogeneousmainasset NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA 129
      */
 
     /**
-     * 补齐管理员
+     * Complete administrator
      */
     @Test
     public void managerChangeSignData() throws Exception {
@@ -169,7 +169,7 @@ public class Protocol27Test {
             String multySignContractAddress = newMulty;
 
             String hash = this.sendChange(htgWalletApi, htgContext, seedList, multySignContractAddress, txKey, adds, txCount, removes, signCount);
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，hash: %s", htgChainId, adds.length, removes.length, hash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,hash: %s", htgChainId, adds.length, removes.length, hash));
         }
     }
 
@@ -203,7 +203,7 @@ public class Protocol27Test {
     }
 
     protected String sendTx(HtgWalletApi htgWalletApi, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
@@ -213,7 +213,7 @@ public class Protocol27Test {
             } else {
                 Log.error("Failed to estimate gas");
             }
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", 估算GasLimit失败");
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", estimateGasLimitfail");
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);

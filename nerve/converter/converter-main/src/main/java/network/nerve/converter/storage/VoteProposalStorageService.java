@@ -38,21 +38,21 @@ public interface VoteProposalStorageService {
     boolean save(Chain chain, VoteProposalPO po);
 
     /**
-     * 获取
+     * obtain
      *
      * @param chain
-     * @param proposalTxHash 提案交易的hash
-     * @param address        投票人地址
+     * @param proposalTxHash Proposal transactionhash
+     * @param address        Voter's address
      * @return
      */
     VoteProposalPO find(Chain chain, NulsHash proposalTxHash, byte[] address);
 
     /**
-     * 删除
+     * delete
      *
      * @param chain
-     * @param proposalTxHash 提案交易的hash
-     * @param address        投票人地址
+     * @param proposalTxHash Proposal transactionhash
+     * @param address        Voter's address
      * @return
      */
     boolean delete(Chain chain, NulsHash proposalTxHash, byte[] address);

@@ -6,19 +6,19 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 /**
  * @author Niels
  */
-@ApiModel(name = "Farm信息详情")
+@ApiModel(name = "FarmInformation details")
 public class FarmInfoDTO {
 
     @ApiModelProperty(description = "Farm-HASH")
     private String farmHash;
 
-    @ApiModelProperty(description = "当前质押资产总量")
+    @ApiModelProperty(description = "Current total amount of pledged assets")
     private double stakeBalance;
 
-    @ApiModelProperty(description = "当前剩余糖果资产总量")
+    @ApiModelProperty(description = "Current total remaining candy assets")
     private double syrupBalance;
 
-    @ApiModelProperty(description = "每块奖励糖果资产数量")
+    @ApiModelProperty(description = "Number of reward candy assets per piece")
     private double syrupPerBlock;
 
     public String getFarmHash() {

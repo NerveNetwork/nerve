@@ -36,23 +36,23 @@ import java.util.Arrays;
 public class StableRemoveLiquidityBus extends BaseBus {
 
     /**
-     * 赎回的资产
+     * Redemption of assets
      */
     private BigInteger[] amounts;
     /**
-     * 当前池子（赎回前）
+     * Current Pool（Before redemption）
      */
     private BigInteger[] balances;
     /**
-     * 销毁的LP资产
+     * DestroyedLPasset
      */
     private BigInteger liquidity;
     /**
-     * 交易对地址
+     * Transaction to address
      */
     private byte[] pairAddress;
     /**
-     * 资产接收地址
+     * Asset receiving address
      */
     private byte[] to;
 

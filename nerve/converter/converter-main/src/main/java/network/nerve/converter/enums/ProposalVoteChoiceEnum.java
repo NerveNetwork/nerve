@@ -28,13 +28,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 对提案的表决
+ * Voting on proposals
  * @author: Loki
  * @date: 2020-03-03
  */
 public enum ProposalVoteChoiceEnum {
 
-    //表决提案 0:against反对，1:favor赞成
+    //Voting on proposals 0:againstOppose,1:favorfavour
     AGAINST((byte) 0),
 
     FAVOR((byte) 1);

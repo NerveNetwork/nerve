@@ -37,7 +37,7 @@ import static network.nerve.converter.config.ConverterContext.LATEST_BLOCK_HEIGH
 import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARGE_CHAIN_HEIGHT;
 
 /**
- * 链内充值交易txdata
+ * On chain recharge transactionstxdata
  *
  * @author: Loki
  * @date: 2020-02-17
@@ -45,7 +45,7 @@ import static network.nerve.converter.config.ConverterContext.WITHDRAWAL_RECHARG
 public class RechargeTxData extends BaseNulsData {
 
     /**
-     * 异构链充值交易hash / 提案交易hash
+     * Heterogeneous chain recharge transactionshash / Proposal transactionhash
      */
     private String originalTxHash;
 

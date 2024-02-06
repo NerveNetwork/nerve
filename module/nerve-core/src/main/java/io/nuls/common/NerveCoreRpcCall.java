@@ -12,7 +12,7 @@ import java.util.Map;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
 /**
- * 调用其他模块跟交易相关的接口
+ * Calling other modules and transaction related interfaces
  */
 public class NerveCoreRpcCall {
 
@@ -22,7 +22,7 @@ public class NerveCoreRpcCall {
     }
 
     /**
-     * 调用其他模块接口
+     * Call other module interfaces
      * Call other module interfaces
      */
     public static Object requestAndResponse(String moduleCode, String cmd, Map params, Long timeout) throws NulsException {

@@ -33,20 +33,20 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 异构链提现已发布到异构链网络 txData
- * 系统交易
+ * Heterogeneous chain lifting has been released to heterogeneous chain networks txData
+ * System transactions
  * @author: Loki
  * @date: 2020/9/25
  */
 public class WithdrawalHeterogeneousSendTxData extends BaseNulsData {
 
     /**
-     * 提现交易
+     * Withdrawal transactions
      */
     private String nerveTxHash;
 
     /**
-     * 异构链提现交易
+     * Heterogeneous chain withdrawal transactions
      */
     private String heterogeneousTxHash;
 

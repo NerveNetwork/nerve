@@ -86,21 +86,21 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             }
             String from = tx.getFrom().toLowerCase();
             if (htgContext.FILTER_ACCOUNT_SET().contains(from)) {
-                htgContext.logger().warn("过滤From[{}]的交易[{}]", from, tx.getHash());
+                htgContext.logger().warn("filterFrom[{}]Transaction[{}]", from, tx.getHash());
                 return;
             }
-            // 广播的交易
+            // Broadcasting transactions
             if (htListener.isListeningTx(tx.getHash())) {
-                htgContext.logger().info("监听到本地广播到{}网络的交易[{}]", htgContext.getConfig().getSymbol(), tx.getHash());
+                htgContext.logger().info("Listening to local broadcasts{}Online transactions[{}]", htgContext.getConfig().getSymbol(), tx.getHash());
                 isBroadcastTx = true;
                 break;
             }
             tx.setFrom(from);
             tx.setTo(tx.getTo().toLowerCase());
-            // 使用input判断是否为提现or变更交易，input.substring(0, 10).equals("0xaaaaaaaa")，保存解析的完整交易数据
+            // applyinputDetermine whether it is a withdrawalorChange transaction,input.substring(0, 10).equals("0xaaaaaaaa")Save the complete transaction data for parsing
             if (htListener.isListeningAddress(tx.getTo())) {
                 HtgInput htInput = htgParseTxHelper.parseInput(tx.getInput());
-                // 新的充值交易方式，调用多签合约的crossOut函数
+                // New recharge transaction method, calling for multi contract signingcrossOutfunction
                 if (htInput.isDepositTx()) {
                     isDepositTx = this.parseNewDeposit(tx, po);
                     if (isDepositTx) {
@@ -108,7 +108,7 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     }
                     break;
                 }
-                // 新的充值交易方式，调用多签合约的crossOutII函数
+                // New recharge transaction method, calling for multi contract signingcrossOutIIfunction
                 if (htInput.isDepositIITx()) {
                     isDepositTx = this.parseNewDepositII(tx, po);
                     if (isDepositTx) {
@@ -116,22 +116,22 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                     }
                     break;
                 }
-                // 广播的交易
+                // Broadcasting transactions
                 if (htInput.isBroadcastTx()) {
                     isBroadcastTx = true;
                     txType = htInput.getTxType();
                     nerveTxHash = htInput.getNerveTxHash();
-                    htgContext.logger().info("监听到{}网络的[{}]交易[{}], nerveTxHash: {}", htgContext.getConfig().getSymbol(), txType, tx.getHash(), nerveTxHash);
+                    htgContext.logger().info("Listening to{}Network based[{}]transaction[{}], nerveTxHash: {}", htgContext.getConfig().getSymbol(), txType, tx.getHash(), nerveTxHash);
                     break;
                 }
             }
 
-            // MainAsset充值交易 条件: 固定接收地址, 金额大于0, 没有input
+            // MainAssetRecharge transaction condition: Fixed receiving address, Amount greater than0, absenceinput
             if (htListener.isListeningAddress(tx.getTo()) &&
                     tx.getValue().compareTo(BigInteger.ZERO) > 0 &&
                     tx.getInput().equals(HtgConstant.HEX_PREFIX)) {
                 if (!htgParseTxHelper.validationEthDeposit(tx)) {
-                    htgContext.logger().error("[{}]不是MainAsset充值交易[2]", htTxHash);
+                    htgContext.logger().error("[{}]No, it's notMainAssetRecharge transaction[2]", htTxHash);
                     break;
                 }
                 isDepositTx = true;
@@ -142,25 +142,28 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                 po.setDecimals(htgContext.getConfig().getDecimals());
                 po.setAssetId(htgContext.HTG_ASSET_ID());
                 po.setNerveAddress(HtgUtil.covertNerveAddressByEthTx(tx, htgContext.NERVE_CHAINID()));
-                htgContext.logger().info("监听到{}网络的MainAsset充值交易[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+                htgContext.logger().info("Listening to{}Network basedMainAssetRecharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                         htgContext.getConfig().getSymbol(), tx.getHash(),
                         from, po.getTo(), po.getValue(), po.getNerveAddress());
                 break;
             }
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (htgERC20Helper.isERC20(tx.getTo(), po) && htgERC20Helper.hasERC20WithListeningAddress(tx.getInput(), toAddress -> htListener.isListeningAddress(toAddress))) {
                 TransactionReceipt txReceipt = htWalletApi.getTxReceipt(htTxHash);
                 if (htgERC20Helper.hasERC20WithListeningAddress(txReceipt, po, toAddress -> htListener.isListeningAddress(toAddress))) {
-                    // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+                    // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
                     if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                             && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                        htgContext.logger().warn("[{}]不合法的{}网络的充值交易[5], ERC20[{}]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                        htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[5], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                        String msg = String.format("[%s]不合法的%s网络的充值交易[5], ERC20[%s]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                        htgContext.logger().warn(msg);
+                        htgContext.getConverterCoreApi().putWechatMsg(msg);
                         break;
                     }
                     isDepositTx = true;
                     txType = HeterogeneousChainTxType.DEPOSIT;
                     po.setNerveAddress(HtgUtil.covertNerveAddressByEthTx(tx, htgContext.NERVE_CHAINID()));
-                    htgContext.logger().info("监听到{}网络的ERC20充值交易[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+                    htgContext.logger().info("Listening to{}Network basedERC20Recharge transaction[1][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                             htgContext.getConfig().getSymbol(), tx.getHash(),
                             from, po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
                     break;
@@ -170,25 +173,28 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
         } while (false);
         if (isDepositTx) {
             if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
-                htgContext.logger().warn("[充值地址异常] 交易[{}], [0]充值地址: {}", htTxHash, po.getNerveAddress());
+                htgContext.logger().warn("[Abnormal recharge address] transaction[{}], [0]Recharge address: {}", htTxHash, po.getNerveAddress());
+                String msg = String.format("[充值地址异常] 交易[%s], [0]充值地址: %s", htTxHash, po.getNerveAddress());
+                htgContext.logger().warn(msg);
+                htgContext.getConverterCoreApi().putWechatMsg(msg);
                 return;
             }
-            // add by pierre at 2022/6/29 增加充值暂停机制
+            // add by pierre at 2022/6/29 Add recharge pause mechanism
             if (htgContext.getConverterCoreApi().isPauseInHeterogeneousAsset(htgContext.HTG_CHAIN_ID(), po.getAssetId())) {
-                htgContext.logger().warn("[充值暂停] 交易[{}]", htTxHash);
+                htgContext.logger().warn("[Recharge pause] transaction[{}]", htTxHash);
                 return;
             }
         }
-        // 检查是否被Nerve网络确认，产生原因是当前节点解析eth交易比其他节点慢，其他节点确认了此交易后，当前节点才解析到此交易
+        // Check if it has been affectedNerveNetwork confirmation, the cause is the current node parsingethThe transaction is slower than other nodes, and the current node only resolves this transaction after other nodes confirm it
         HtgUnconfirmedTxPo txPoFromDB = null;
         if (isBroadcastTx || isDepositTx) {
             txPoFromDB = htUnconfirmedTxStorageService.findByTxHash(htTxHash);
             if (txPoFromDB != null && txPoFromDB.isDelete()) {
-                htgContext.logger().info("{}交易[{}]已被[Nerve网络]确认，不再处理", htgContext.getConfig().getSymbol(), htTxHash);
+                htgContext.logger().info("{}transaction[{}]Has been[Nervenetwork]Confirm, no further processing", htgContext.getConfig().getSymbol(), htTxHash);
                 return;
             }
         }
-        // 如果是发出去的交易，例如提现和管理员变更，则补全交易信息
+        // If it is a transaction sent out, such as withdrawal and administrator changes, complete the transaction information
         if (isBroadcastTx) {
             if (txType == null) {
                 HtgInput htInput = htgParseTxHelper.parseInput(tx.getInput());
@@ -198,18 +204,18 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
             this.dealBroadcastTx(nerveTxHash, txType, tx, blockHeight, txTime, txPoFromDB);
             return;
         }
-        // 充值交易放入需要确认30个区块的待确认交易队列中
+        // Confirmation required for deposit of recharge transactions30In the pending confirmation transaction queue of blocks
         if (isDepositTx) {
             po.setTxType(txType);
             po.setTxHash(htTxHash);
             po.setBlockHeight(blockHeight);
             po.setFrom(tx.getFrom());
             po.setTxTime(txTime);
-            // 保存解析的充值交易
+            // Save analyzed recharge transactions
             htgStorageHelper.saveTxInfo(po);
             htUnconfirmedTxStorageService.save(po);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
-            // 向NERVE网络发出充值待确认交易
+            // towardsNERVEOnline recharge pending confirmation transaction
             htgPendingTxHelper.commitNervePendingDepositTx(po,
                     (extend, logger) -> {
                         return htgParseTxHelper.parseOneClickCrossChainData(extend, logger);
@@ -223,23 +229,29 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
 
     private boolean parseNewDeposit(Transaction tx, HtgUnconfirmedTxPo po) throws Exception {
         String htTxHash = tx.getHash();
-        // 调用多签合约的crossOut函数的充值方式
+        // Calling for multiple signed contractscrossOutThe recharge method of functions
         if (!htgParseTxHelper.validationEthDepositByCrossOut(tx, po)) {
-            htgContext.logger().error("[{}]不合法的{}网络的充值交易[3]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error("[{}]Illegal{}Online recharge transactions[3]", htTxHash, htgContext.getConfig().getSymbol());
+            String msg = String.format("[%s]不合法的%s网络的充值交易[3]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error(msg);
+            htgContext.getConverterCoreApi().putWechatMsg(msg);
             return false;
         }
         if (!po.isIfContractAsset()) {
-            htgContext.logger().info("监听到{}网络的MainAsset充值交易[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+            htgContext.logger().info("Listening to{}Network basedMainAssetRecharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
         } else {
-            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+            // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                htgContext.logger().warn("[{}]不合法的{}网络的充值交易[4], ERC20[{}]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                htgContext.logger().warn("[{}]Illegal{}Online recharge transactions[4], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                String msg = String.format("[%s]不合法的%s网络的充值交易[4], ERC20[%s]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                htgContext.logger().warn(msg);
+                htgContext.getConverterCoreApi().putWechatMsg(msg);
                 return false;
             }
-            htgContext.logger().info("监听到{}网络的ERC20充值交易[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+            htgContext.logger().info("Listening to{}Network basedERC20Recharge transaction[2][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
         }
@@ -248,27 +260,33 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
 
     private boolean parseNewDepositII(Transaction tx, HtgUnconfirmedTxPo po) throws Exception {
         String htTxHash = tx.getHash();
-        // 调用多签合约的crossOutII函数的充值方式
+        // Calling for multiple signed contractscrossOutIIThe recharge method of functions
         if (!htgParseTxHelper.validationEthDepositByCrossOutII(tx, null, po)) {
-            htgContext.logger().error("[{}]不合法的{}网络的充值II交易[0]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error("[{}]Illegal{}Network rechargeIItransaction[0]", htTxHash, htgContext.getConfig().getSymbol());
+            String msg = String.format("[%s]不合法的%s网络的充值II交易[0]", htTxHash, htgContext.getConfig().getSymbol());
+            htgContext.logger().error(msg);
+            htgContext.getConverterCoreApi().putWechatMsg(msg);
             return false;
         }
-        // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则充值异常
+        // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the recharge will be abnormal
         if (po.isIfContractAsset() && htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                 && !htgParseTxHelper.isMinterERC20(po.getContractAddress())) {
-            htgContext.logger().warn("[{}]不合法的{}网络的充值II交易[0], ERC20[{}]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+            htgContext.logger().warn("[{}]Illegal{}Network rechargeIItransaction[0], ERC20[{}]BoundNERVEAssets, but not registered in the contract", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+            String msg = String.format("[%s]不合法的%s网络的充值II交易[0], ERC20[%s]已绑定NERVE资产，但合约内未注册", htTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+            htgContext.logger().warn(msg);
+            htgContext.getConverterCoreApi().putWechatMsg(msg);
             return false;
         }
         if (po.isDepositIIMainAndToken()) {
-            htgContext.logger().info("监听到{}网络的ERC20/{}同时充值II交易[0][{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
+            htgContext.logger().info("Listening to{}Network basedERC20/{}Simultaneously rechargeIItransaction[0][{}], from: {}, to: {}, erc20Value: {}, nerveAddress: {}, contract: {}, decimals: {}, mainAssetValue: {}",
                     htgContext.getConfig().getSymbol(), htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals(), po.getDepositIIMainAssetValue());
         } else if (po.isIfContractAsset()) {
-            htgContext.logger().info("监听到{}网络的ERC20充值II交易[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+            htgContext.logger().info("Listening to{}Network basedERC20RechargeIItransaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
         } else {
-            htgContext.logger().info("监听到{}网络的MainAsset充值II交易[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+            htgContext.logger().info("Listening to{}Network basedMainAssetRechargeIItransaction[0][{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                     htgContext.getConfig().getSymbol(), tx.getHash(),
                     tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
         }
@@ -278,10 +296,15 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
 
     private void dealBroadcastTx(String nerveTxHash, HeterogeneousChainTxType txType, Transaction tx, long blockHeight, long txTime, HtgUnconfirmedTxPo txPoFromDB) throws Exception {
         String htTxHash = tx.getHash();
-        // 检查nerveTxHash是否合法
+        // inspectnerveTxHashIs it legal
         if (htgContext.getConverterCoreApi().getNerveTx(nerveTxHash) == null) {
             htListener.removeListeningTx(htTxHash);
-            htgContext.logger().warn("交易业务不合法[{}]，未找到NERVE交易，类型: {}, Key: {}", htTxHash, txType, nerveTxHash);
+            htgContext.logger().warn("Illegal transaction business[{}], not foundNERVETransaction, Type: {}, Key: {}", htTxHash, txType, nerveTxHash);
+            String warnMsg = String.format("[%s]网络交易业务不合法[%s]!!! 未找到NERVE交易，类型: %s, Key: %s，请重点检查此交易！",htgContext.getConfig().getSymbol(), htTxHash, txType, nerveTxHash);
+            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "1st");
+            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "2nd");
+            htgContext.getConverterCoreApi().putWechatMsg(warnMsg + "3rd");
+            htgContext.logger().warn(warnMsg);
             return;
         }
         HtgUnconfirmedTxPo txPo = txPoFromDB;
@@ -296,13 +319,13 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
         txPo.setBlockHeight(blockHeight);
         txPo.setTxTime(txTime);
         txPo.setFrom(tx.getFrom());
-        // 判断交易是否成功，更改状态，解析交易的事件
+        // Determine whether the transaction was successful, change the status, and analyze the event of the transaction
         TransactionReceipt txReceipt = htWalletApi.getTxReceipt(htTxHash);
         if (txReceipt == null || !txReceipt.isStatusOK()) {
             txPo.setStatus(MultiSignatureStatus.FAILED);
         } else {
             HeterogeneousTransactionInfo txInfo = null;
-            // 解析交易数据，补充基本信息
+            // Analyze transaction data and supplement basic information
             switch (txType) {
                 case WITHDRAW:
                     txInfo = htgParseTxHelper.parseWithdrawTransaction(tx, txReceipt);
@@ -322,28 +345,31 @@ public class HtgAnalysisTxHelper implements IHtgAnalysisTx, BeanInitial {
                 txInfo.setTxTime(txTime);
                 BeanUtils.copyProperties(txInfo, txPo);
             }
-            // 设置为签名完成的交易，当多签存在时
+            // Transactions set to complete with signatures, when multiple signatures exist
             if (txPo.getSigners() != null && !txPo.getSigners().isEmpty()) {
-                htgContext.logger().info("已完成签名的多签[{}]交易[{}], signers: {}", txType, htTxHash, Arrays.toString(txPo.getSigners().toArray()));
+                htgContext.logger().info("Multiple signatures completed[{}]transaction[{}], signers: {}", txType, htTxHash, Arrays.toString(txPo.getSigners().toArray()));
                 txPo.setStatus(MultiSignatureStatus.COMPLETED);
-                // 保存解析的已签名完成的交易
+                // Save parsed signed completed transactions
                 if (txInfo != null) {
                     htgStorageHelper.saveTxInfo(txInfo);
                 } else {
                     htgStorageHelper.saveTxInfo(txPo);
                 }
             } else {
-                htgContext.logger().error("[失败]没有解析到完成多签的事件[{}]交易[{}]", txType, htTxHash);
+                htgContext.logger().error("[fail]Failed to resolve the event of completing multiple signatures[{}]transaction[{}]", txType, htTxHash);
+                String msg = String.format("[失败]没有解析到完成多签的事件[%s]交易[%s]", txType, htTxHash);
+                htgContext.logger().error(msg);
+                htgContext.getConverterCoreApi().putWechatMsg(msg);
                 txPo.setStatus(MultiSignatureStatus.FAILED);
             }
 
         }
         htUnconfirmedTxStorageService.save(txPo);
         if (!isLocalSent) {
-            htgContext.logger().info("从{}网络解析到的交易[{}]，新添加入待确认队列", htgContext.getConfig().getSymbol(), htTxHash);
+            htgContext.logger().info("from{}Transactions analyzed by the network[{}], newly added to the pending confirmation queue", htgContext.getConfig().getSymbol(), htTxHash);
             htgContext.UNCONFIRMED_TX_QUEUE().offer(txPo);
         }
-        // 移除监听
+        // Remove listening
         htListener.removeListeningTx(htTxHash);
     }
 

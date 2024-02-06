@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * 交易工具类
+ * Trading tools
  * Transaction Tool Class
  *
  * @author tag
@@ -30,13 +30,13 @@ public class ConsensusNetUtil {
     private static boolean initRoundThreadStarted = false;
 
     /**
-     * 当前节点共识网络是否已初始化完成，如果未初始化完成，则需要缓存之前收到的连接信息
+     * Has the consensus network of the current node been initialized? If it has not been initialized, it is necessary to cache the previously received connection information
      * ConsensusIdentitiesMsg
      */
     public static boolean consensusNetStatus = false;
 
     /**
-     * 节点初始化完成之前接收到的网络链接消息
+     * Network link messages received before node initialization is completed
      * ConsensusIdentitiesMsg
      */
     public static final Set<ConsensusIdentityData> UNTREATED_MESSAGE_SET = new HashSet<>();
@@ -47,11 +47,11 @@ public class ConsensusNetUtil {
     }
 
     /**
-     * 初始化共识网络
+     * Initialize consensus network
      *
-     * @param chain           链信息
-     * @param packAddress     出块地址
-     * @param packAddressList 共识节点出块地址列表
+     * @param chain           Chain information
+     * @param packAddress     Block address
+     * @param packAddressList Consensus node block address list
      */
     public static void initConsensusNet(Chain chain, String packAddress, Set<String> packAddressList) {
         try {
@@ -67,22 +67,22 @@ public class ConsensusNetUtil {
     }
 
     /**
-     * 节点有共识节点变为非共识节点
+     * Nodes with consensus become non consensus nodes
      *
-     * @param chain 链信息
+     * @param chain Chain information
      */
     public static void disConnectConsensusNet(Chain chain) {
-        chain.getLogger().info("节点由共识节点变为非共识节点，断开共识网络");
+        chain.getLogger().info("Node changes from consensus node to non consensus node, disconnecting consensus network");
         netService.cleanConsensusNetwork(chain.getChainId());
     }
 
     /**
-     * 共识网络广播消息
+     * Consensus Network Broadcast Message
      *
-     * @param chainId      链ID
-     * @param cmd          调用命令
-     * @param message      消息
-     * @param excludeNodes 排除的节点
+     * @param chainId      chainID
+     * @param cmd          Calling commands
+     * @param message      news
+     * @param excludeNodes Excluded nodes
      */
     public static void broadcastInConsensus(int chainId, String cmd, String message, String excludeNodes) {
         netService.broadCastConsensusNetSync(chainId, cmd, message, excludeNodes);

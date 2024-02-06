@@ -39,12 +39,12 @@ import java.util.Map;
 public interface QuotationService {
 
     /**
-     * 报价, 将计算好的价格, 组装到交易广播到网络
+     * offer, Calculate the price accordingly, Assemble to transaction broadcast to network
      */
     Transaction quote(Chain chain, QuoteDTO quoteDTO) throws NulsException;
 
     /**
-     * 组装报价交易txdata
+     * Assembly quotation transactiontxdata
      * @param address
      * @param pricesMap
      * @return
@@ -53,12 +53,12 @@ public interface QuotationService {
     byte[] assemblyQuotationTxData(String address, Map<String, Double> pricesMap) throws NulsException;
 
     /**
-     * 组装报价交易
+     * Assembly quotation transaction
      */
     Transaction createQuotationTransaction(byte[] txData, String address, String password) throws NulsException;
 
     /**
-     * 组装最终报价
+     * Final quotation for assembly
      * @param prices
      * @return
      * @throws NulsException
@@ -66,7 +66,7 @@ public interface QuotationService {
     Transaction createFinalQuotationTransaction(Prices prices) throws NulsException;
 
     /**
-     * 组装最终报价
+     * Final quotation for assembly
      * @param pricesMap
      * @return
      * @throws NulsException

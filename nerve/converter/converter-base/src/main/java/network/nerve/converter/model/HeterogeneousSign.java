@@ -40,7 +40,7 @@ import java.io.IOException;
 public class HeterogeneousSign extends BaseNulsData {
 
     /**
-     * 异构链签名地址(包含异构链chainId)
+     * Heterogeneous chain signature address(Contains heterogeneous chainschainId)
      */
     private HeterogeneousAddress heterogeneousAddress;
 

@@ -26,7 +26,7 @@ package network.nerve.converter.heterogeneouschain.lib.storage;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 
 /**
- * 保存交易信息 - 充值、签名完成的提现、变更
+ * Save transaction information - Recharge、Withdrawal completed with signature、change
  * @author: Mimi
  * @date: 2020-02-18
  */

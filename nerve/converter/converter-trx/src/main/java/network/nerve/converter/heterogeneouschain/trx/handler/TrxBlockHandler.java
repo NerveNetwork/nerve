@@ -62,7 +62,7 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
             if (!htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) return;
             if (!htgContext.getConverterCoreApi().isRunning()) {
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]忽略同步区块模式", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
@@ -76,34 +76,34 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                     htgContext.logger().error(e);
                 }
                 if (LoggerUtil.LOG.isDebugEnabled()) {
-                    LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", htgContext.getConfig().getSymbol());
+                    LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", htgContext.getConfig().getSymbol());
                 }
                 return;
             }
             clearDB = false;
             if (LoggerUtil.LOG.isDebugEnabled()) {
-                LoggerUtil.LOG.debug("[{}区块解析任务] - 每隔{}秒执行一次。", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
+                LoggerUtil.LOG.debug("[{}Block parsing task] - every other{}Execute once per second.", htgContext.getConfig().getSymbol(), htgContext.getConfig().getBlockQueuePeriod());
             }
             try {
                 htgCommonHelper.clearHash();
             } catch (Exception e) {
-                htgContext.logger().error("清理充值交易hash再次验证的集合失败", e);
+                htgContext.logger().error("Clearing recharge transactionshashFailed to revalidate collection", e);
             }
             trxWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
             if (trxWalletApi.isReSyncBlock()) {
-                htgContext.logger().info("[{}]网络删除本地全部区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                htgContext.logger().info("[{}]Delete all local blocks from the network and wait for the next round of execution", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
                 trxWalletApi.setReSyncBlock(false);
                 return;
             }
-            // + 由于区块解析失败的生产问题，期间产生了一个虚拟银行变更，主网必须同步波场高度 34899400
+            // + Due to the production issue of block parsing failure, a virtual bank change occurred during this period, and the main network must synchronize the wave field height 34899400
             if (!managerChangeSync) {
                 long managerChangeHeight = 34899400L;
                 managerChangeSync = htgLocalBlockHelper.isSynced(managerChangeHeight);
                 if (htgContext.NERVE_CHAINID() == 9 && !managerChangeSync) {
                     Response.BlockExtention block = trxWalletApi.getBlockByHeight(managerChangeHeight);
                     if(block == null) {
-                        htgContext.logger().info("获取不到{}区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                        htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                         return;
                     }
                     htgLocalBlockHelper.deleteAllLocalBlockHeader();
@@ -115,15 +115,15 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
             }
             // -
 
-            // 当前HTG网络最新的区块
+            // currentHTGThe latest blocks in the network
             long blockHeightFromEth = trxWalletApi.getBlockHeight();
-            // 本地最新的区块
+            // Latest local blocks
             HtgSimpleBlockHeader localMax = htgLocalBlockHelper.getLatestLocalBlockHeader();
             if (localMax == null) {
-                // 当启动节点时，本地区块为空，将从HTG网络最新高度开始同步
+                // When starting a node, the local block is empty and will be removed from theHTGStarting synchronization at the latest height of the network
                 Response.BlockExtention block = trxWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    htgContext.logger().info("获取不到{}区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 trxBlockAnalysisHelper.analysisEthBlock(block, trxAnalysisTxHelper);
@@ -131,11 +131,11 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                 return;
             }
             Long localBlockHeight = localMax.getHeight();
-            // 当启动节点时，本地最新高度与HTG网络区块高度相差两个区块及以上时，则从HTG网络高度开始同步
+            // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
             if (firstSync && blockHeightFromEth - localBlockHeight >= 2) {
                 Response.BlockExtention block = trxWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    htgContext.logger().info("获取不到{}区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();
@@ -144,13 +144,13 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                 return;
             }
 
-            // 验证最新区块是否正确
+            // Verify if the latest block is correct
             int resultCode = checkNewestBlock(localMax);
             if (resultCode == 0) {
-                htgContext.logger().error("获取{}区块失败", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("obtain{}Block failure", htgContext.getConfig().getSymbol());
                 return;
             } else if (resultCode == 1) {
-                htgContext.logger().error("{}区块分叉", htgContext.getConfig().getSymbol());
+                htgContext.logger().error("{}Block fork", htgContext.getConfig().getSymbol());
                 htgLocalBlockHelper.deleteByHeightAndUpdateMemory(localBlockHeight);
                 return;
             }
@@ -159,12 +159,12 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
             for (int i = 1; i <= size; i++) {
                 localBlockHeight = localBlockHeight + 1;
                 /**
-                 * 同步并解析数据
+                 * Synchronize and parse data
                  */
                 try {
                     Response.BlockExtention block = trxWalletApi.getBlockByHeight(localBlockHeight);
                     if(block == null) {
-                        htgContext.logger().info("获取不到{}区块，等待下轮执行", htgContext.getConfig().getSymbol());
+                        htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                         break;
                     }
                     trxBlockAnalysisHelper.analysisEthBlock(block, trxAnalysisTxHelper);
@@ -174,7 +174,7 @@ public class TrxBlockHandler implements Runnable, BeanInitial {
                 }
             }
         } catch (Exception e) {
-            htgContext.logger().error(String.format("同步%s区块失败", htgContext.getConfig().getSymbol()), e);
+            htgContext.logger().error(String.format("synchronization%sBlock failure", htgContext.getConfig().getSymbol()), e);
         }
     }
 

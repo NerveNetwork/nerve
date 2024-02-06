@@ -57,11 +57,11 @@ public class CollectorProcessor implements Collector {
     @Override
     public BigDecimal enquiry(Chain chain, String anchorToken) {
         /**
-         * 根据token从各个查询器采集多个(交易所等)价格
-         * 根据不同第三方机构,对价格计算加权平均值
+         * according totokenCollect multiple queries from various queries(Exchanges, etc)price
+         * According to different third-party organizations,Calculate the weighted average of prices
          */
         long start;
-        chain.getLogger().info("开始获({})第三方报价, 当前时间戳:{}", anchorToken, start = System.currentTimeMillis());
+        chain.getLogger().info("Start obtaining({})Third party quotation, Current timestamp:{}", anchorToken, start = System.currentTimeMillis());
         class EnquiryResult {
             String name;
             BigDecimal price;
@@ -75,7 +75,7 @@ public class CollectorProcessor implements Collector {
         }
         List<Future<EnquiryResult>> futures = new ArrayList<>();
         try {
-            // 异步处理
+            // Asynchronous processing
             for (QuerierCfg cfg : chain.getCollectors()) {
                 Future<EnquiryResult> res = basicQuerierExecutor.submit(() -> {
                     Querier querier = getQuerier(cfg.getCollector());
@@ -86,17 +86,17 @@ public class CollectorProcessor implements Collector {
                 futures.add(res);
             }
 
-            // 去掉没有获取到报价的 元素
+            // Remove those that have not received a quotation element
             List<Future<EnquiryResult>> effectiveList = new ArrayList<>();
             for (Future<EnquiryResult> res : futures) {
                 if(null != res.get().price){
                     effectiveList.add(res);
                 }
             }
-            // 如果报价数足够 则去掉一个最高价 去掉一个最低价
+            // If the number of quotations is sufficient Then remove the highest price Remove a minimum price
             List<Future<EnquiryResult>> rsList = new ArrayList<>();
             if (effectiveList.size() > QuotationContext.enquiryRemoveMaxMinCount * 2) {
-                //排序
+                //sort
                 effectiveList.sort(new Comparator<Future<EnquiryResult>>() {
                     @Override
                     public int compare(Future<EnquiryResult> o1, Future<EnquiryResult> o2) {
@@ -108,7 +108,7 @@ public class CollectorProcessor implements Collector {
                         }
                     }
                 });
-                //去掉头尾各两个元素
+                //Remove two elements at the beginning and two at the end
                 for (int i = QuotationContext.enquiryRemoveMaxMinCount; i < effectiveList.size() - QuotationContext.enquiryRemoveMaxMinCount; i++) {
                     rsList.add(effectiveList.get(i));
                 }
@@ -139,14 +139,14 @@ public class CollectorProcessor implements Collector {
                 }
             }
             if (weightTotal.doubleValue() == 0) {
-                chain.getLogger().error("没有获取token任何第三方价格, anchorToken:{}", anchorToken);
+                chain.getLogger().error("Not obtainedtokenAny third-party pricing, anchorToken:{}", anchorToken);
                 return null;
             }
             BigDecimal price = interim.divide(weightTotal, QuotationConstant.SCALE, RoundingMode.HALF_DOWN);
-            chain.getLogger().debug("interim:{}, weightTotal:{}, price:{}, 总耗时:{}", interim, weightTotal, price, System.currentTimeMillis() - start);
+            chain.getLogger().debug("interim:{}, weightTotal:{}, price:{}, Total time consumption:{}", interim, weightTotal, price, System.currentTimeMillis() - start);
             return price;
         } catch (Throwable e) {
-            chain.getLogger().error("获取token第三方价格失败, anchorToken:{}", anchorToken);
+            chain.getLogger().error("obtaintokenThird party pricing failure, anchorToken:{}", anchorToken);
             chain.getLogger().error(e);
             return null;
         }
@@ -161,10 +161,10 @@ public class CollectorProcessor implements Collector {
     public BigDecimal enquiry(Chain chain, String anchorToken) {
         try {
             *//**
-     * 根据token从各个查询器采集多个(交易所等)价格
-     * 根据不同第三方机构,对价格计算加权平均值
+     * according totokenCollect multiple queries from various queries(Exchanges, etc)price
+     * According to different third-party organizations,Calculate the weighted average of prices
      *//*
-            chain.getLogger().info("开始获({})第三方报价", anchorToken);
+            chain.getLogger().info("Start obtaining({})Third party quotation", anchorToken);
             BigDecimal interim = new BigDecimal("0");
             BigDecimal weightTotal = new BigDecimal("0.0");
             for (QuerierCfg cfg : chain.getCollectors()) {
@@ -178,18 +178,18 @@ public class CollectorProcessor implements Collector {
                     interim = interim.add(price.multiply(weight));
                     weightTotal = weightTotal.add(weight);
                 } catch (Exception e) {
-                    chain.getLogger().error("获取价格异常, name:{}, anchorToken:{}", cfg.getName(), anchorToken);
+                    chain.getLogger().error("Abnormal price acquisition, name:{}, anchorToken:{}", cfg.getName(), anchorToken);
                     chain.getLogger().error(e);
                     continue;
                 }
             }
             if(weightTotal.doubleValue() == 0){
-                chain.getLogger().error("没有获取token任何第三方价格, anchorToken:{}", anchorToken);
+                chain.getLogger().error("Not obtainedtokenAny third-party pricing, anchorToken:{}", anchorToken);
                 return null;
             }
             return interim.divide(weightTotal, QuotationConstant.SCALE, RoundingMode.HALF_DOWN);
         } catch (Throwable e) {
-            chain.getLogger().error("获取token第三方价格失败, anchorToken:{}", anchorToken);
+            chain.getLogger().error("obtaintokenThird party pricing failure, anchorToken:{}", anchorToken);
             chain.getLogger().error(e);
             return null;
         }

@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * （业务连接节点集合）管理
+ * （Business Connection Node Collection）Administration
  * node group  manager
  *
  * @author lan
@@ -49,7 +49,7 @@ public class BusinessGroupManager {
     private static BusinessGroupManager businessGroupManager = new BusinessGroupManager();
 
     /**
-     * key:业务自定义key-chainId+"_"+模块名称+"_"+flag
+     * key:Business customizationkey-chainId+"_"+Module Name+"_"+flag
      * value:nodeId map
      */
     private Map<String, Map<String, String>> businessGroupMap = new ConcurrentHashMap<>();

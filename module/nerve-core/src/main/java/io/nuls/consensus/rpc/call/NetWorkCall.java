@@ -20,7 +20,7 @@ import java.util.Map;
 
 
 /**
- * 与网络模块交互类
+ * Interaction with network modules
  * Interaction class with network module
  *
  * @author tag
@@ -29,9 +29,9 @@ import java.util.Map;
 public class NetWorkCall {
 
     /**
-     * 给网络上节点广播消息
+     * Broadcast messages to nodes on the network
      *
-     * @param chainId 该消息由那条链处理/chain id
+     * @param chainId The message is processed by which chain/chain id
      * @param message
      * @return
      */
@@ -40,11 +40,11 @@ public class NetWorkCall {
     }
 
     /**
-     * 给网络上节点广播消息
+     * Broadcast messages to nodes on the network
      *
-     * @param chainId      链Id/chain id
+     * @param chainId      chainId/chain id
      * @param message
-     * @param excludeNodes 排除的节点
+     * @param excludeNodes Excluded nodes
      * @return
      */
     public static boolean broadcast(int chainId, BaseBusinessMessage message, String excludeNodes, String command, boolean isCross) {
@@ -69,9 +69,9 @@ public class NetWorkCall {
     }
 
     /**
-     * 给指定节点发送消息
+     * Send messages to specified nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @param message
      * @param nodeId
      * @return
@@ -93,9 +93,9 @@ public class NetWorkCall {
 
 
     /**
-     * 根据链ID获取可用节点
+     * According to the chainIDGet available nodes
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      * @return
      */
     public static List<Node> getAvailableNodes(int chainId) {

@@ -12,8 +12,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
- * 币对盘口管理容器
- * 存放币对的买单和卖单
+ * Coin to disk management container
+ * Purchase and sale orders for storing currency pairs
  */
 public class TradingContainer {
 
@@ -24,9 +24,9 @@ public class TradingContainer {
     private NavigableMap<BigInteger, Map<String, TradingOrderPo>> buyOrderList;
 
     public TradingContainer() {
-        //卖单按照价格正序排列
+        //Sell orders in positive order of price
         sellOrderList = new ConcurrentSkipListMap<>(Comparator.naturalOrder());
-        //买单按照价格倒序排列
+        //Purchase orders are arranged in reverse order of price
         buyOrderList = new ConcurrentSkipListMap<>(Comparator.reverseOrder());
     }
 
@@ -36,23 +36,23 @@ public class TradingContainer {
     }
 
     /**
-     * 添加委托挂单
-     * 根据买单和卖单分别缓存到对应盘口
-     * 添加挂单规则:
-     * 卖单：按照挂单价格倒序排列，相同价格按照时间顺序倒序排列
-     * 买单：按照挂单价格倒序排列，相同价格按照时间顺序正序排序
-     * 最终效果：
-     * 卖单
+     * Add delegated order placement
+     * Cache the corresponding inventory based on the purchase and sale orders separately
+     * Add order placement rules:
+     * vouchers of sale：Arrange in reverse order according to the listed price, and arrange the same prices in reverse chronological order
+     * Pay the bill：Sort in reverse order according to the listing price, and sort the same prices in positive chronological order
+     * Final effect：
+     * vouchers of sale
      * list[0] price: 100, time: 12:00:00
      * list[1] price: 100, time: 11:00:00
      * list[2] price: 99,  time: 11:00:00
      * list[3]price: 99,  time: 10:00:00
-     * 买单
+     * Pay the bill
      * list[0] price: 98,  time: 10:00:00
      * list[1] price: 98,  time: 11:00:00
      * list[2] price: 97,  time: 11:00:00
      * list[3] price: 97,  time: 12:00:00
-     * 这样排序后，打包区块时，就用买单的第一条数据和卖单的最后一条数据做价格匹配验证，生成成交交易
+     * After sorting in this way, when packaging blocks, the first data of the purchase order and the last data of the sell order are used for price matching verification, generating transaction transactions
      *
      * @param po
      */
@@ -78,7 +78,7 @@ public class TradingContainer {
     }
 
     /**
-     * 更新挂单
+     * Update order placement
      *
      * @param o1
      */
@@ -117,7 +117,7 @@ public class TradingContainer {
     }
 
     /**
-     * 将挂单从盘口内移除
+     * Remove the order from the inventory
      *
      * @param o1
      */
@@ -172,7 +172,7 @@ public class TradingContainer {
     public TradingContainer copy(int orderSize) {
         TradingContainer copy = new TradingContainer();
         copy.setCoinTrading(this.coinTrading.copy());
-        //复制盘口买单的前orderSize条
+        //Copy the front of the purchase order for the openingorderSizestrip
         int count = 0;
 
         for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : this.getBuyOrderList().entrySet()) {
@@ -184,7 +184,7 @@ public class TradingContainer {
                 if (count > orderSize) break;
             }
         }
-        //复制盘口卖单的前orderSize条
+        //Copy the front of the inventory sales orderorderSizestrip
         count = 0;
         for (Map.Entry<BigInteger, Map<String, TradingOrderPo>> entry : this.getSellOrderList().entrySet()) {
             if (count > orderSize) break;

@@ -27,33 +27,33 @@ package network.nerve.converter.model.dto;
 import java.math.BigInteger;
 
 /**
- * 追加提现手续费 参数
+ * Additional withdrawal handling fee parameter
  * @author: Loki
  * @date: 2020/9/27
  */
 public class WithdrawalAdditionalFeeTxDTO {
 
     /**
-     * 要追加手续费的nerve提现交易hash
+     * Additional handling fees are requirednerveWithdrawal transactionshash
      */
     private String txHash;
 
     /**
-     * 要追加的 资产的链ID(5/9,101,102,103....)
+     * To be added The chain of assetsID(5/9,101,102,103....)
      */
     private int feeChainId;
     /**
-     * 要追加的 资产手续费
+     * To be added Asset handling fees
      */
     private BigInteger amount;
 
     /**
-     * 交易备注
+     * Transaction notes
      */
     private String remark;
 
     /**
-     * 提现发起(签名)地址信息
+     * Withdrawal initiation(autograph)Address information
      */
     private SignAccountDTO signAccount;
 

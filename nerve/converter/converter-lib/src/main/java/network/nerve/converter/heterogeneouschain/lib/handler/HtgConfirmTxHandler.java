@@ -101,50 +101,50 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         try {
             String symbol = htgContext.getConfig().getSymbol();
             if (!htgContext.getConverterCoreApi().isRunning()) {
-                LoggerUtil.LOG.debug("[{}]忽略同步区块模式", symbol);
+                LoggerUtil.LOG.debug("[{}]Ignoring synchronous block mode", symbol);
                 return;
             }
             if (!htgContext.getConverterCoreApi().checkNetworkRunning(htgContext.HTG_CHAIN_ID())) {
-                htgContext.logger().info("测试网络[{}]运行暂停, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
+                htgContext.logger().info("Test network[{}]Run Pause, chainId: {}", htgContext.getConfig().getSymbol(), htgContext.HTG_CHAIN_ID());
                 return;
             }
             if (!htgContext.getConverterCoreApi().isVirtualBankByCurrentNode()) {
-                LoggerUtil.LOG.debug("[{}]非虚拟银行成员，跳过此任务", symbol);
+                LoggerUtil.LOG.debug("[{}]Non virtual bank member, skip this task", symbol);
                 return;
             }
             if (!htgContext.isAvailableRPC()) {
-                htgContext.logger().error("[{}]网络RPC不可用，暂停此任务", symbol);
+                htgContext.logger().error("[{}]networkRPCUnavailable, pause this task", symbol);
                 return;
             }
             try {
                 htgWalletApi.checkApi(htgContext.getConverterCoreApi().getVirtualBankOrder());
                 BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
                 if (currentGasPrice != null) {
-                    htgContext.logger().debug("当前{}网络的Price: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
+                    htgContext.logger().debug("current{}Network basedPrice: {} Gwei.", symbol, new BigDecimal(currentGasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
                     htgContext.setEthGasPrice(currentGasPrice);
                 }
             } catch (Exception e) {
-                htgContext.logger().error(String.format("同步%s当前Price失败", symbol), e);
+                htgContext.logger().error(String.format("synchronization%scurrentPricefail", symbol), e);
             }
-            LoggerUtil.LOG.debug("[{}交易确认任务] - 每隔{}秒执行一次。", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
-            // 等待重启应用时，加载的持久化未确认交易
+            LoggerUtil.LOG.debug("[{}Transaction confirmation task] - every other{}Execute once per second.", symbol, htgContext.getConfig().getConfirmTxQueuePeriod());
+            // Persistent unconfirmed transactions loaded while waiting for application restart
             htgContext.INIT_UNCONFIRMEDTX_QUEUE_LATCH().await();
             long ethNewestHeight = htgWalletApi.getBlockHeight();
             int size = htgContext.UNCONFIRMED_TX_QUEUE().size();
             for (int i = 0; i < size; i++) {
                 po = htgContext.UNCONFIRMED_TX_QUEUE().poll();
                 if (po == null) {
-                    logger().info("移除空值PO");
+                    logger().info("Remove null valuesPO");
                     continue;
                 }
-                // 清理无用的变更任务
+                // Clean up useless change tasks
                 if (po.getTxType() == HeterogeneousChainTxType.RECOVERY) {
                     clearUnusedChange();
                     break;
                 }
-                // 当充值确认任务异常超过重试次数后，丢弃这个任务
+                // When the recharge confirmation task is abnormal and exceeds the number of retries, discard the task
                 if (po.isDepositExceedErrorTime(RESEND_TIME)) {
-                    logger().error("[{}]充值确认任务异常超过重试次数，移除此交易，详情: {}", symbol, po.toString());
+                    logger().error("[{}]The recharge confirmation task has exceeded the number of retries. Please remove this transaction. Details: {}", symbol, po.toString());
                     this.clearDB(po.getTxHash());
                     continue;
                 }
@@ -157,23 +157,23 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     }
                 }
                 if (po.getBlockHeight() == null) {
-                    // 区块高度为空，检查10次后，查询eth交易所在高度，若节点同步的eth高度大于了交易所在高度，则说明此交易已经被其他节点处理过，应移除此交易
+                    // Block height is empty, check10Next time, queryethThe exchange is at a height, if the nodes are synchronizedethIf the height is greater than the exchange's height, it indicates that the transaction has already been processed by other nodes and should be removed
                     boolean needRemovePo = checkBlockHeightTimes(po);
                     if(needRemovePo) {
-                        logger().info("[{}]区块高度为空，此交易已处理过，移除此交易，详情: {}", symbol, po.toString());
+                        logger().info("[{}]Block height is empty, this transaction has been processed. Remove this transaction, details: {}", symbol, po.toString());
                         this.clearDB(po.getTxHash());
                         continue;
                     }
-                    // [加速重发交易机制] 没有区块高度，表示一直处于未解析状态，则说明没有被HT打包（检查是否被打包），检查是否为本地发出的交易，加速重发交易
+                    // [Accelerated resend trading mechanism] If there is no block height, it indicates that it has been in an unresolved state, indicating that it has not been resolvedHTpack（Check if it has been packaged）Check if it is a transaction sent locally and accelerate the resend of transactions
                     boolean timeOut = System.currentTimeMillis() - po.getCreateDate() > HtgConstant.MINUTES_3;
                     if (timeOut) {
                         String htgTxHash = po.getTxHash();
                         boolean currentNodeSent = htgResendHelper.currentNodeSent(htgTxHash);
                         if (currentNodeSent) {
-                            // 当前节点发出的交易，检查是否已打包
+                            // Check if the transaction sent by the current node has been packaged
                             boolean packed = checkPacked(htgTxHash);
                             if (!packed) {
-                                // 交易未打包，提高 gasPrice 加速重发交易
+                                // Transaction not packaged, increase gasPrice Accelerate resend transactions
                                 HtgSendTransactionPo txInfo = htgResendHelper.getSentTransactionInfo(htgTxHash);
                                 boolean speedSent = speedUpResendTransaction(po.getTxType(), po.getNerveTxHash(), poFromDB, txInfo);
                                 if (speedSent) {
@@ -184,29 +184,29 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                         }
                     }
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]区块高度为空，放回队列等待下次处理，详情: {}", symbol, po.toString());
+                        logger().debug("[{}]Block height is empty, put back in queue for next processing, details: {}", symbol, po.toString());
                     }
                     queue.offer(po);
                     continue;
                 }
 
-                // 交易触发重新验证后，等待`skipTimes`的轮次，再做验证
+                // Wait for transaction triggering revalidation`skipTimes`The round will be verified again
                 if (po.getSkipTimes() > 0) {
                     po.setSkipTimes(po.getSkipTimes() - 1);
                     queue.offer(po);
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]交易触发重新验证，剩余等待再次验证的轮次数量: {}", symbol, po.getSkipTimes());
+                        logger().debug("[{}]Transaction triggered revalidation, remaining number of rounds waiting for revalidation: {}", symbol, po.getSkipTimes());
                     }
                     continue;
                 }
-                // 未达到确认高度，放回队列中，下次继续检查
+                // Not reaching the confirmed height, put it back in the queue and continue checking next time
                 int confirmation = htgContext.getConfig().getTxBlockConfirmations();
                 if (po.getTxType() == HeterogeneousChainTxType.WITHDRAW) {
                     confirmation = htgContext.getConfig().getTxBlockConfirmationsOfWithdraw();
                 }
                 if (ethNewestHeight - po.getBlockHeight() < confirmation) {
                     if(logger().isDebugEnabled()) {
-                        logger().debug("[{}]交易[{}]确认高度等待: {}", symbol, po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
+                        logger().debug("[{}]transaction[{}]Confirm altitude waiting: {}", symbol, po.getTxHash(), confirmation - (ethNewestHeight - po.getBlockHeight()));
                     }
                     queue.offer(po);
                     continue;
@@ -215,7 +215,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     case DEPOSIT:
                         if (dealDeposit(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("[{}]充值交易重新放回队列, 详情: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("[{}]Recharge transactions are placed back in the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -225,7 +225,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                     case UPGRADE:
                         if (dealBroadcastTx(po, poFromDB)) {
                             if(logger().isDebugEnabled()) {
-                                logger().debug("[{}]广播交易重新放回队列, 详情: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
+                                logger().debug("[{}]Broadcast transactions are put back into the queue, details: {}", symbol, poFromDB != null ? poFromDB.toString() : po.toString());
                             }
                             queue.offer(po);
                         }
@@ -270,7 +270,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             return false;
         }
         BigInteger blockNumber = htgParseTxHelper.getTxHeight(logger(), tx);
-        // 本地最新的区块
+        // Latest local blocks
         HtgSimpleBlockHeader localMax = htgLocalBlockHelper.getLatestLocalBlockHeader();
         if(localMax == null) {
             return false;
@@ -286,7 +286,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         boolean isReOfferQueue = true;
         String htgTxHash = po.getTxHash();
         if (!htgContext.getConverterCoreApi().validNerveAddress(po.getNerveAddress())) {
-            logger().warn("[{}][充值地址异常] 交易[{}], 移除队列, [1]充值地址: {}", symbol, htgTxHash, po.getNerveAddress());
+            logger().warn("[{}][Abnormal recharge address] transaction[{}], Remove queue, [1]Recharge address: {}", symbol, htgTxHash, po.getNerveAddress());
             this.clearDB(htgTxHash);
             return !isReOfferQueue;
         }
@@ -295,27 +295,27 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
         }
         if (txPo == null) {
-            logger().warn("[{}][充值任务异常] DB中未获取到PO，队列中PO: {}", symbol, po.toString());
+            logger().warn("[{}][Recharge task exception] DBNot obtained inPOIn the queuePO: {}", symbol, po.toString());
             return !isReOfferQueue;
         }
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，从队列中移除
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBRemove from queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
-                logger().info("[{}][{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}][{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
         }
         if (!po.isValidateTx()) {
-            //再次验证交易
+            //Verify transaction again
             boolean validateTx = validateDepositTxConfirmedInEthNet(htgTxHash, po.isIfContractAsset());
             if (!validateTx) {
-                // 验证失败，从DB和队列中移除交易
+                // Verification failed, fromDBRemove transactions from the queue
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             }
@@ -326,7 +326,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             Long height = htgParseTxHelper.getTxHeight(logger(), htgTx).longValue();
             EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
             long txTime = header.getTimestamp().longValue();
-            // 回调充值交易
+            // Callback recharge transaction
             String nerveTxHash;
             do {
                 ConverterConfig converterConfig = htgContext.getConverterCoreApi().getConverterConfig();
@@ -334,23 +334,23 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 byte[] feeAddress = AddressTool.getAddressByPubKeyStr(converterConfig.getFeePubkey(), converterConfig.getChainId());
                 nerveTxHash = this.submitNerveAddFeeCrossChainTx(po, height, txTime, feeAddress);
                 if (StringUtils.isNotBlank(nerveTxHash)) {
-                    // 此交易是跨链追加手续费交易
+                    // This transaction is a cross chain additional handling fee transaction
                     break;
                 }
                 nerveTxHash = this.submitNerveOneClickCrossChainTx(po, height, txTime, withdrawalBlackhole);
                 if (StringUtils.isNotBlank(nerveTxHash)) {
-                    // 此交易是一键跨链交易
+                    // This transaction is a one click cross chain transaction
                     break;
                 }
-                // 充值的nerve接收地址不能是黑洞或者手续费补贴地址
+                // RechargeablenerveThe receiving address cannot be a black hole or a fee subsidy address
                 if (Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole) || Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
-                    logger().error("[{}][充值地址异常][黑洞或者手续费补贴地址]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
-                    // 验证失败，从DB和队列中移除交易
+                    logger().error("[{}][Abnormal recharge address][Black hole or subsidy address for handling fees]Deposit Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
+                    // Verification failed, fromDBRemove transactions from the queue
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (po.isDepositIIMainAndToken()) {
-                    // 同时充值两种资产的充值交易
+                    // Recharge transactions for two types of assets simultaneously
                     nerveTxHash = htgCallBackManager.getDepositTxSubmitter().depositIITxSubmit(
                             htgTxHash,
                             height,
@@ -381,7 +381,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
 
             po.setNerveTxHash(nerveTxHash);
             txPo.setNerveTxHash(nerveTxHash);
-            // 当未确认交易数据产生变化时，更新DB数据
+            // Update when there is a change in unconfirmed transaction dataDBdata
             boolean nerveTxHashNotBlank = StringUtils.isNotBlank(nerveTxHash);
             if (nerveTxHashNotBlank) {
                 String updateHash = nerveTxHash;
@@ -391,11 +391,11 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
             }
         } catch (Exception e) {
-            // 交易已存在，移除队列
+            // Transaction already exists, remove queue
             if (e instanceof NulsException &&
                     (TX_ALREADY_EXISTS_0.equals(((NulsException) e).getErrorCode())
                             || TX_ALREADY_EXISTS_2.equals(((NulsException) e).getErrorCode()))) {
-                logger().info("Nerve交易已存在，从队列中移除待确认的{}交易[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
+                logger().info("NerveTransaction already exists, remove pending confirmation from queue{}transaction[{}]", htgContext.getConfig().getSymbol(), htgTxHash);
                 return !isReOfferQueue;
             }
             po.increaseDepositErrorTime();
@@ -412,12 +412,12 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (data == null) {
             return null;
         }
-        // 跨链追加手续费的nerve接收地址只能是手续费补贴地址
+        // Cross chain additional handling feesnerveThe receiving address can only be a service fee subsidy address
         if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), feeAddress)) {
             logger().error("[{}]AddFeeCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
             return null;
         }
-        // 不能有token资产
+        // Cannot havetokenasset
         if (po.isIfContractAsset()) {
             logger().error("[{}]AddFeeCrossChain Asset error, token address: {}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getContractAddress(), po.getTxHash());
             return null;
@@ -435,7 +435,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         return nerveTxHash;
     }
 
-    // P21生效, 一键跨链交易
+    // P21take effect, One click cross chain transaction
     private String submitNerveOneClickCrossChainTx(HtgUnconfirmedTxPo po, Long height, Long txTime, byte[] withdrawalBlackhole) throws Exception {
         if (!htgContext.getConverterCoreApi().isProtocol21()) {
             return null;
@@ -444,7 +444,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (data == null) {
             return null;
         }
-        // 一键跨链的nerve接收地址只能是黑洞地址
+        // One click cross chainnerveThe receiving address can only be a black hole address
         if (!Arrays.equals(AddressTool.getAddress(po.getNerveAddress()), withdrawalBlackhole)) {
             logger().error("[{}]OneClickCrossChain Nerve address error:{}, heterogeneousHash:{}", htgContext.HTG_CHAIN_ID(), po.getNerveAddress(), po.getTxHash());
             return null;
@@ -497,20 +497,20 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             txPo = htgUnconfirmedTxStorageService.findByTxHash(htgTxHash);
         }
         if (txPo == null) {
-            logger().warn("[{}][{}任务异常] DB中未获取到PO，队列中PO: {}", symbol, po.getTxType(), po.toString());
+            logger().warn("[{}][{}Task exception] DBNot obtained inPOIn the queuePO: {}", symbol, po.getTxType(), po.toString());
             return !isReOfferQueue;
         }
         String nerveTxHash = po.getNerveTxHash();
-        // 当状态为移除，不再回调Nerve核心，放回队列中，等待达到移除高度后，从DB中删除，不放回队列
+        // When the status is removed, no more callbacks will be madeNerveCore, put it back in the queue, wait until the removal height is reached, and then remove it from the queueDBDelete in, do not put back in queue
         if (txPo.isDelete()) {
             long currentBlockHeightOnNerve = this.getCurrentBlockHeightOnNerve();
             if (currentBlockHeightOnNerve >= txPo.getDeletedHeight()) {
                 this.clearDB(htgTxHash);
                 isReOfferQueue = false;
                 htgResendHelper.clear(nerveTxHash);
-                logger().info("[{}][{}]交易[{}]已确认超过{}个高度, 移除队列, nerve高度: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
+                logger().info("[{}][{}]transaction[{}]Confirmed exceeding{}Height, Remove queue, nerveheight: {}, nerver hash: {}", symbol, po.getTxType(), po.getTxHash(), HtgConstant.ROLLBACK_NUMER, currentBlockHeightOnNerve, po.getNerveTxHash());
             }
-            // 补充po内存数据，po打印日志，方便查看数据
+            // supplementpoMemory data,poPrint logs for easy viewing of data
             po.setDelete(txPo.isDelete());
             po.setDeletedHeight(txPo.getDeletedHeight());
             return isReOfferQueue;
@@ -521,48 +521,48 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 break;
             case FAILED:
                 if (!htgResendHelper.canResend(nerveTxHash)) {
-                    logger().warn("[{}]Nerve交易[{}]重发超过{}次，丢弃交易", symbol, nerveTxHash, RESEND_TIME);
+                    logger().warn("[{}]Nervetransaction[{}]Resend over{}Second, discard transaction", symbol, nerveTxHash, RESEND_TIME);
                     htgResendHelper.clear(htgTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                logger().info("失败的{}交易[{}]，检查当前节点是否可发交易", symbol, htgTxHash);
-                // 检查自己的顺序是否可发交易
+                logger().info("Failed{}transaction[{}]Check if the current node can send transactions", symbol, htgTxHash);
+                // Check if your order is eligible for trading
                 HtgWaitingTxPo waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
-                // 检查三个轮次是否有waitingTxPo，否则移除此FAILED任务
+                // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
                 if (waitingTxPo == null && !po.checkFailedTimeOut()) {
                     return isReOfferQueue;
                 }
-                // 查询nerve交易对应的eth交易是否成功
+                // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("[{}]Nerve tx 在NERVE网络已确认, 成功移除队列, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}]Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (waitingTxPo == null) {
-                    logger().info("[{}]检查三个轮次没有waitingTxPo，移除此FAILED任务, htgTxHash: {}", symbol, htgTxHash);
+                    logger().info("[{}]Check three rounds without any issueswaitingTxPoRemove thisFAILEDtask, htgTxHash: {}", symbol, htgTxHash);
                     return !isReOfferQueue;
                 }
                 if (this.checkIfSendByOwn(waitingTxPo, txPo.getFrom())) {
                     this.clearDB(htgTxHash);
                     return !isReOfferQueue;
                 }
-                // 失败的交易，不由当前节点处理，从队列和DB中移除
-                logger().info("失败的{}交易[{}]，当前节点不是下一顺位，不由当前节点处理，移除队列", symbol, htgTxHash);
+                // Failed transactions, not handled by the current node, from the queue andDBRemove from middle
+                logger().info("Failed{}transaction[{}]The current node is not in the next order and will not be processed by the current node. Remove the queue", symbol, htgTxHash);
                 this.clearDB(htgTxHash);
                 return !isReOfferQueue;
             case COMPLETED:
                 if (!po.isValidateTx()) {
-                    //再次验证交易
+                    //Verify transaction again
                     BroadcastTxValidateStatus validate = validateBroadcastTxConfirmedInEthNet(po);
                     switch (validate) {
                         case RE_VALIDATE:
-                            // 放回队列，再次验证
+                            // Put it back in the queue and verify again
                             return isReOfferQueue;
                         case RE_SEND:
-                            // 若交易状态已完成，再次验证失败，则重发交易
+                            // If the transaction status is completed and verification fails again, resend the transaction
                             HtgWaitingTxPo _waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
-                            // 检查三个轮次是否有waitingTxPo，否则移除此FAILED任务
+                            // Check if there are any three roundswaitingTxPoOtherwise, remove thisFAILEDtask
                             if (_waitingTxPo == null && po.checkFailedTimeOut()) {
                                 return isReOfferQueue;
                             }
@@ -577,11 +577,11 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 }
                 try {
                     String realNerveTxHash = nerveTxHash;
-                    logger().info("[{}]签名完成的{}交易[{}]调用Nerve确认[{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
+                    logger().info("[{}]Signed{}transaction[{}]callNerveconfirm[{}]", po.getTxType(), symbol, htgTxHash, realNerveTxHash);
                     Transaction htgTx = htgWalletApi.getTransactionByHash(htgTxHash);
                     Long height = htgParseTxHelper.getTxHeight(logger(), htgTx).longValue();
                     EthBlock.Block header = htgWalletApi.getBlockHeaderByHeight(height);
-                    // 签名完成的交易将触发回调Nerve Core
+                    // The signed transaction will trigger a callbackNerve Core
                     htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
                             po.getTxType(),
                             realNerveTxHash,
@@ -591,9 +591,9 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                             htgContext.MULTY_SIGN_ADDRESS(),
                             txPo.getSigners());
                 } catch (NulsException e) {
-                    // 交易已存在，等待确认移除
+                    // Transaction already exists, waiting for confirmation to remove
                     if (TX_ALREADY_EXISTS_0.equals(e.getErrorCode()) || TX_ALREADY_EXISTS_1.equals(e.getErrorCode())) {
-                        logger().info("Nerve交易[{}]已存在，从队列中移除待确认的{}交易[{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
+                        logger().info("Nervetransaction[{}]Exists, remove pending confirmation from queue{}transaction[{}]", txPo.getNerveTxHash(), symbol, htgTxHash);
                         return !isReOfferQueue;
                     }
                     throw e;
@@ -604,7 +604,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 若eth交易失败，则检查当前节点是否为下一顺位发交易，是则重发交易
+     * ifethIf the transaction fails, check if the current node is the next sequential transaction. If it is, resend the transaction
      */
     private boolean checkIfSendByOwn(HtgWaitingTxPo waitingTxPo, String txFrom) throws Exception {
         String nerveTxHash = waitingTxPo.getNerveTxHash();
@@ -612,19 +612,19 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         Integer totalBank = virtualBanks.size();
         Integer sendOrderCurrentNode = waitingTxPo.getCurrentNodeSendOrder();//
         int sendOrderFailure = virtualBanks.get(txFrom);
-        // 检查失败的order是否为管理员顺位中最后一位，是则重置当前节点已发HT交易的记录，重置节点等待时间，从第一顺位开始重发交易
+        // Check failedorderIs it the last in the administrator's ranking? If so, reset the current node to have been sentHTRecord of transactions, reset node waiting time, and resend transactions starting from the first order
         if (sendOrderFailure == totalBank) {
             htgInvokeTxHelper.clearRecordOfCurrentNodeSentEthTx(nerveTxHash, waitingTxPo);
             if (sendOrderCurrentNode == 1) {
-                // 发起交易
+                // Initiate transaction
                 htgResendHelper.reSend(waitingTxPo);
                 return true;
             }
         }
         if (sendOrderFailure + 1 == sendOrderCurrentNode) {
-            // 当前节点是下一顺位发交易，检查是否已发出交易，否则发出交易
+            // The current node is the next sequential transaction. Check if the transaction has been sent out, otherwise the transaction will be sent out
             if (!htgInvokeTxHelper.currentNodeSentEthTx(nerveTxHash)) {
-                // 发起交易
+                // Initiate transaction
                 htgResendHelper.reSend(waitingTxPo);
                 return true;
             }
@@ -634,7 +634,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
 
     private boolean speedUpResendTransaction(HeterogeneousChainTxType txType, String nerveTxHash, HtgUnconfirmedTxPo unconfirmedTxPo, HtgSendTransactionPo txInfo) throws Exception {
         if (htgContext.getConverterCoreApi().isSupportProtocol15TrxCrossChain()) {
-            //协议15: 修改手续费机制，支持异构链主资产作为手续费
+            //protocol15: Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
             return speedUpResendTransactionProtocol15(txType, nerveTxHash, unconfirmedTxPo, txInfo);
         } else {
             return _speedUpResendTransaction(txType, nerveTxHash, unconfirmedTxPo, txInfo);
@@ -646,24 +646,24 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (txInfo == null) {
             return false;
         }
-        logger().info("[{}]检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}, gasPrice: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash, new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString());
-        // 向HT网络请求验证
+        logger().info("[{}]Detected the need to accelerate resend transactions, type: {}, ethHash: {}, nerveTxHash: {}, gasPrice: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash, new BigDecimal(htgContext.getEthGasPrice()).divide(BigDecimal.TEN.pow(9)).toPlainString());
+        // towardsHTNetwork request verification
         boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}][{}]交易[{}]已完成", symbol, txType, nerveTxHash);
-            // 发出一个转账给自己的交易覆盖此nonce
+            logger().info("[{}][{}]transaction[{}]Completed", symbol, txType, nerveTxHash);
+            // Send a transfer to oneself to cover this transactionnonce
             String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
             if (StringUtils.isNotBlank(overrideHash)) {
-                logger().info("[{}]转账覆盖交易: {}，被覆盖交易: {}", symbol, overrideHash, txInfo.getTxHash());
+                logger().info("[{}]Transfer coverage transaction: {}, covered transactions: {}", symbol, overrideHash, txInfo.getTxHash());
             } else {
-                logger().info("[{}]未成功发出覆盖交易", symbol);
+                logger().info("[{}]Unsuccessful issuance of overlay transaction", symbol);
             }
             return true;
         }
         if (logger().isDebugEnabled()) {
-            logger().debug("[{}]加速前: {}", symbol, txInfo.toString());
+            logger().debug("[{}]Before acceleration: {}", symbol, txInfo.toString());
         }
-        // 获取最新nonce发出交易
+        // Get the latestnonceSend transaction
         String currentFrom = htgContext.ADMIN_ADDRESS();
         BigInteger nonce = htgWalletApi.getLatestNonce(currentFrom);
         txInfo.setNonce(nonce);
@@ -673,16 +673,16 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         boolean isWithdrawTx = HeterogeneousChainTxType.WITHDRAW == txType;
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         if (isWithdrawTx && coreApi.isSupportNewMechanismOfWithdrawalFee()) {
-            // 计算GasPrice
+            // calculateGasPrice
             BigDecimal gasPrice = HtgUtil.calcGasPriceOfWithdraw(AssetName.NVT, coreApi.getUsdtPriceByAsset(AssetName.NVT), new BigDecimal(coreApi.getFeeOfWithdrawTransaction(nerveTxHash).getFee()), coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId(), htgContext.GAS_LIMIT_OF_WITHDRAW());
             if (gasPrice == null || gasPrice.toBigInteger().compareTo(oldGasPrice) < 0) {
-                logger().error("[{}][提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前已发出交易[{}]的GasPrice: {}", symbol, nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
+                logger().error("[{}][Withdrawal]transaction[{}]Insufficient handling fees, latest providedGasPrice: {}, Currently issued transaction[{}]ofGasPrice: {}", symbol, nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
                 return false;
             }
             gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
             newGasPrice = gasPrice.toBigInteger();
             if (newGasPrice.compareTo(htgContext.getEthGasPrice()) < 0) {
-                logger().error("[{}][提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前{}网络的GasPrice: {}", symbol, nerveTxHash, newGasPrice, htgContext.getConfig().getSymbol(), htgContext.getEthGasPrice());
+                logger().error("[{}][Withdrawal]transaction[{}]Insufficient handling fees, latest providedGasPrice: {}, current{}Network basedGasPrice: {}", symbol, nerveTxHash, newGasPrice, htgContext.getConfig().getSymbol(), htgContext.getEthGasPrice());
                 return false;
             }
         } else {
@@ -692,52 +692,52 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             return false;
         }
         txInfo.setGasPrice(newGasPrice);
-        // 获取账户信息
+        // Obtain account information
         HeterogeneousAccount account = htgContext.DOCKING().getAccount(currentFrom);
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        // 验证业务数据
+        // Verify business data
         String contractAddress = txInfo.getTo();
         String encodedFunction = txInfo.getData();
         EthCall ethCall = htgWalletApi.validateContractCall(currentFrom, contractAddress, encodedFunction);
         if (ethCall.isReverted()) {
             if (ConverterUtil.isCompletedTransaction(ethCall.getRevertReason())) {
-                logger().info("[{}][{}]交易[{}]已完成", symbol, txType, nerveTxHash);
-                // 发出一个转账给自己的交易覆盖此nonce
+                logger().info("[{}][{}]transaction[{}]Completed", symbol, txType, nerveTxHash);
+                // Send a transfer to oneself to cover this transactionnonce
                 String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
                 if (StringUtils.isNotBlank(overrideHash)) {
-                    logger().info("[{}]转账覆盖交易: {}，被覆盖交易: {}", symbol, overrideHash, txInfo.getTxHash());
+                    logger().info("[{}]Transfer coverage transaction: {}, covered transactions: {}", symbol, overrideHash, txInfo.getTxHash());
                 } else {
-                    logger().info("[{}]未成功发出覆盖交易", symbol);
+                    logger().info("[{}]Unsuccessful issuance of overlay transaction", symbol);
                 }
                 return true;
             }
-            logger().warn("[{}][{}]加速重发交易验证失败，原因: {}", symbol, txType, ethCall.getRevertReason());
+            logger().warn("[{}][{}]Accelerated resend transaction verification failed, reason: {}", symbol, txType, ethCall.getRevertReason());
             return false;
         }
         HtgSendTransactionPo newTxPo = htgWalletApi.callContractRaw(priKey, txInfo);
         String htgTxHash = newTxPo.getTxHash();
-        // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
+        // dockinglaunchethRecord transaction relationships during transactionsdbIn, and save the currently usednonceIn the relationship table, if there is any reasonpriceIf there is a need to resend the transaction without packaging it too low, the current one used will be taken outnonceResend transaction
         htgTxRelationStorageService.save(htgTxHash, nerveTxHash, newTxPo);
 
         HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
         BeanUtils.copyProperties(unconfirmedTxPo, po);
-        // 保存未确认交易
+        // Save unconfirmed transactions
         po.setTxHash(htgTxHash);
         po.setFrom(currentFrom);
         po.setTxType(txType);
         po.setCreateDate(System.currentTimeMillis());
         htgUnconfirmedTxStorageService.save(po);
         htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
-        // 监听此交易的打包状态
+        // Monitor the packaging status of this transaction
         htgListener.addListeningTx(htgTxHash);
         if (isWithdrawTx && StringUtils.isNotBlank(htgTxHash)) {
-            // 记录提现交易已向HT网络发出
+            // Record withdrawal transactions that have been transferred toHTNetwork transmission
             htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htgTxHash);
         }
-        logger().info("加速重发{}网络交易成功, 类型: {}, 详情: {}", symbol, txType, po.superString());
+        logger().info("Accelerated retransmission{}Online transaction successful, type: {}, details: {}", symbol, txType, po.superString());
         if (logger().isDebugEnabled()) {
-            logger().debug("[{}]加速后: {}", symbol, newTxPo.toString());
+            logger().debug("[{}]After acceleration: {}", symbol, newTxPo.toString());
         }
         return true;
     }
@@ -747,24 +747,24 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         if (txInfo == null) {
             return false;
         }
-        logger().info("[{}]检测到需要加速重发交易，类型: {}, ethHash: {}, nerveTxHash: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
-        // 向HT网络请求验证
+        logger().info("[{}]Detected the need to accelerate resend transactions, type: {}, ethHash: {}, nerveTxHash: {}", symbol, txType, unconfirmedTxPo.getTxHash(), nerveTxHash);
+        // towardsHTNetwork request verification
         boolean isCompleted = htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}][{}]交易[{}]已完成", symbol, txType, nerveTxHash);
-            // 发出一个转账给自己的交易覆盖此nonce
+            logger().info("[{}][{}]transaction[{}]Completed", symbol, txType, nerveTxHash);
+            // Send a transfer to oneself to cover this transactionnonce
             String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
             if (StringUtils.isNotBlank(overrideHash)) {
-                logger().info("[{}]转账覆盖交易: {}，被覆盖交易: {}", symbol, overrideHash, txInfo.getTxHash());
+                logger().info("[{}]Transfer coverage transaction: {}, covered transactions: {}", symbol, overrideHash, txInfo.getTxHash());
             } else {
-                logger().info("[{}]未成功发出覆盖交易", symbol);
+                logger().info("[{}]Unsuccessful issuance of overlay transaction", symbol);
             }
             return true;
         }
         if (logger().isDebugEnabled()) {
-            logger().debug("[{}]加速前: {}", symbol, txInfo.toString());
+            logger().debug("[{}]Before acceleration: {}", symbol, txInfo.toString());
         }
-        // 获取最新nonce发出交易
+        // Get the latestnonceSend transaction
         String currentFrom = htgContext.ADMIN_ADDRESS();
         BigInteger nonce = htgWalletApi.getLatestNonce(currentFrom);
         txInfo.setNonce(nonce);
@@ -774,13 +774,13 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         boolean isWithdrawTx = HeterogeneousChainTxType.WITHDRAW == txType;
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         if (isWithdrawTx) {
-            // 计算GasPrice
-            // 修改手续费机制，支持异构链主资产作为手续费
+            // calculateGasPrice
+            // Modify the handling fee mechanism to support heterogeneous chain main assets as handling fees
             WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
             BigDecimal feeAmount = new BigDecimal(feeInfo.getFee());
             BigDecimal gasPrice;
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
-            // 使用非提现网络的其他主资产作为手续费时
+            // When using other main assets of non withdrawal networks as transaction fees
             feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeAmount.toBigInteger()));
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
                 gasPrice = HtgUtil.calcGasPriceOfWithdraw(feeInfo.getHtgMainAssetName(), coreApi.getUsdtPriceByAsset(feeInfo.getHtgMainAssetName()), feeAmount, coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME()), unconfirmedTxPo.getAssetId(), htgContext.GAS_LIMIT_OF_WITHDRAW());
@@ -788,13 +788,13 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
                 gasPrice = HtgUtil.calcGasPriceOfWithdrawByMainAssetProtocol15(feeAmount, unconfirmedTxPo.getAssetId(), htgContext.GAS_LIMIT_OF_WITHDRAW());
             }
             if (gasPrice == null || gasPrice.toBigInteger().compareTo(oldGasPrice) < 0) {
-                logger().error("[{}][提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前已发出交易[{}]的GasPrice: {}", symbol, nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
+                logger().error("[{}][Withdrawal]transaction[{}]Insufficient handling fees, latest providedGasPrice: {}, Currently issued transaction[{}]ofGasPrice: {}", symbol, nerveTxHash, gasPrice == null ? null : gasPrice.toPlainString(), txInfo.getTxHash(), oldGasPrice);
                 return false;
             }
             gasPrice = HtgUtil.calcNiceGasPriceOfWithdraw(htgContext.ASSET_NAME(), new BigDecimal(htgContext.getEthGasPrice()), gasPrice);
             newGasPrice = gasPrice.toBigInteger();
             if (newGasPrice.compareTo(htgContext.getEthGasPrice()) < 0) {
-                logger().error("[提现]交易[{}]手续费不足，最新提供的GasPrice: {}, 当前{}网络的GasPrice: {}", nerveTxHash, newGasPrice, symbol, htgContext.getEthGasPrice());
+                logger().error("[Withdrawal]transaction[{}]Insufficient handling fees, latest providedGasPrice: {}, current{}Network basedGasPrice: {}", nerveTxHash, newGasPrice, symbol, htgContext.getEthGasPrice());
                 return false;
             }
         } else {
@@ -804,62 +804,62 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             return false;
         }
         txInfo.setGasPrice(newGasPrice);
-        // 获取账户信息
+        // Obtain account information
         HeterogeneousAccount account = htgContext.DOCKING().getAccount(currentFrom);
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-        // 验证业务数据
+        // Verify business data
         String contractAddress = txInfo.getTo();
         String encodedFunction = txInfo.getData();
         EthCall ethCall = htgWalletApi.validateContractCall(currentFrom, contractAddress, encodedFunction);
         if (ethCall.isReverted()) {
             if (ConverterUtil.isCompletedTransaction(ethCall.getRevertReason())) {
-                logger().info("[{}][{}]交易[{}]已完成", symbol, txType, nerveTxHash);
-                // 发出一个转账给自己的交易覆盖此nonce
+                logger().info("[{}][{}]transaction[{}]Completed", symbol, txType, nerveTxHash);
+                // Send a transfer to oneself to cover this transactionnonce
                 String overrideHash = sendOverrideTransferTx(txInfo.getFrom(), txInfo.getGasPrice(), txInfo.getNonce());
                 if (StringUtils.isNotBlank(overrideHash)) {
-                    logger().info("[{}]转账覆盖交易: {}，被覆盖交易: {}", symbol, overrideHash, txInfo.getTxHash());
+                    logger().info("[{}]Transfer coverage transaction: {}, covered transactions: {}", symbol, overrideHash, txInfo.getTxHash());
                 } else {
-                    logger().info("[{}]未成功发出覆盖交易", symbol);
+                    logger().info("[{}]Unsuccessful issuance of overlay transaction", symbol);
                 }
                 return true;
             }
-            logger().warn("[{}][{}]加速重发交易验证失败，原因: {}", symbol, txType, ethCall.getRevertReason());
+            logger().warn("[{}][{}]Accelerated resend transaction verification failed, reason: {}", symbol, txType, ethCall.getRevertReason());
             return false;
         }
         HtgSendTransactionPo newTxPo = htgWalletApi.callContractRaw(priKey, txInfo);
         String htgTxHash = newTxPo.getTxHash();
-        // docking发起eth交易时，把交易关系记录到db中，并保存当前使用的nonce到关系表中，若有因为price过低不打包交易而重发的需要，则取出当前使用的nonce重发交易
+        // dockinglaunchethRecord transaction relationships during transactionsdbIn, and save the currently usednonceIn the relationship table, if there is any reasonpriceIf there is a need to resend the transaction without packaging it too low, the current one used will be taken outnonceResend transaction
         htgTxRelationStorageService.save(htgTxHash, nerveTxHash, newTxPo);
 
         HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
         BeanUtils.copyProperties(unconfirmedTxPo, po);
-        // 保存未确认交易
+        // Save unconfirmed transactions
         po.setTxHash(htgTxHash);
         po.setFrom(currentFrom);
         po.setTxType(txType);
         po.setCreateDate(System.currentTimeMillis());
         htgUnconfirmedTxStorageService.save(po);
         htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
-        // 监听此交易的打包状态
+        // Monitor the packaging status of this transaction
         htgListener.addListeningTx(htgTxHash);
         if (isWithdrawTx && StringUtils.isNotBlank(htgTxHash)) {
-            // 记录提现交易已向HT网络发出
+            // Record withdrawal transactions that have been transferred toHTNetwork transmission
             htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htgTxHash);
         }
-        logger().info("加速重发{}网络交易成功, 类型: {}, 详情: {}", symbol, txType, po.superString());
+        logger().info("Accelerated retransmission{}Online transaction successful, type: {}, details: {}", symbol, txType, po.superString());
         if (logger().isDebugEnabled()) {
-            logger().debug("[{}]加速后: {}", symbol, newTxPo.toString());
+            logger().debug("[{}]After acceleration: {}", symbol, newTxPo.toString());
         }
         return true;
     }
 
     private BigInteger calSpeedUpGasPriceByOrdinaryWay(BigInteger oldGasPrice) throws Exception {
-        // 提高交易的price，获取当前HT网络price，和旧的price取较大值，再+2，即 price = price + 2，最大当前price的1.1倍
+        // Improve transaction efficiencyprice, obtain the currentHTnetworkprice, and oldpriceTake the larger value, and then+2, i.e price = price + 2, maximum currentpriceof1.1times
         BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
         BigInteger maxCurrentGasPrice = new BigDecimal(currentGasPrice).multiply(HtgConstant.NUMBER_1_DOT_1).toBigInteger();
         if (maxCurrentGasPrice.compareTo(oldGasPrice) <= 0) {
-            logger().info("当前交易的gasPrice已达到加速最大值，不再继续加速，等待{}网络打包交易", htgContext.getConfig().getSymbol());
+            logger().info("Current transactiongasPriceReached maximum acceleration value, no further acceleration, waiting{}Network packaged transactions", htgContext.getConfig().getSymbol());
             return null;
         }
         BigInteger newGasPrice = oldGasPrice.compareTo(currentGasPrice) > 0 ? oldGasPrice : currentGasPrice;
@@ -871,22 +871,22 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     private String sendOverrideTransferTx(String from, BigInteger gasPrice, BigInteger nonce) {
         try {
             String symbol = htgContext.getConfig().getSymbol();
-            // 检查发出交易的地址和当前虚拟银行地址是否一致，否则，忽略
+            // Check if the address from which the transaction was sent matches the current virtual bank address, otherwise ignore it
             String currentFrom = htgContext.ADMIN_ADDRESS();
             if (!currentFrom.equals(from)) {
-                logger().info("[{}]发出转账覆盖交易的地址和当前虚拟银行地址不一致，忽略", symbol);
+                logger().info("[{}]The address where the transfer was sent to cover the transaction does not match the current virtual bank address, ignore", symbol);
                 return null;
             }
-            // 获取账户信息
+            // Obtain account information
             HeterogeneousAccount account = htgContext.DOCKING().getAccount(currentFrom);
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-            // 获取网络gasprice
+            // Get Networkgasprice
             BigInteger currentGasPrice = htgWalletApi.getCurrentGasPrice();
             BigInteger newGasPrice = gasPrice.compareTo(currentGasPrice) > 0 ? gasPrice : currentGasPrice;
             newGasPrice = newGasPrice.add(HtgConstant.GWEI_3);
             if (logger().isDebugEnabled()) {
-                logger().debug("[{}]组装的覆盖交易数据, from: {}, to: {}, value: {}, gasLimit: {}, gasPrice: {}, nonce: {}",
+                logger().debug("[{}]Assembly covered transaction data, from: {}, to: {}, value: {}, gasLimit: {}, gasPrice: {}, nonce: {}",
                         symbol,
                         currentFrom,
                         currentFrom,
@@ -898,14 +898,14 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             String hash = htgWalletApi.sendMainAssetWithNonce(currentFrom, priKey, currentFrom, BigDecimal.ZERO, htgContext.GAS_LIMIT_OF_MAIN_ASSET(), newGasPrice, nonce);
             return hash;
         } catch (Exception e) {
-            logger().warn("发生转账覆盖交易异常，忽略", e);
+            logger().warn("Transfer overlay transaction exception occurred, ignored", e);
             return null;
         }
 
     }
 
     /**
-     * 检查eth交易是否被打包
+     * inspectethHas the transaction been packaged
      */
     private boolean checkPacked(String htgTxHash) throws Exception {
         TransactionReceipt txReceipt = htgWalletApi.getTxReceipt(htgTxHash);
@@ -913,7 +913,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 验证充值交易
+     * Verify recharge transactions
      */
     private boolean validateDepositTxConfirmedInEthNet(String htgTxHash, boolean ifContractAsset) throws Exception {
         String symbol = htgContext.getConfig().getSymbol();
@@ -921,14 +921,14 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
         do {
             TransactionReceipt receipt = htgWalletApi.getTxReceipt(htgTxHash);
             if (receipt == null) {
-                logger().error("[{}]再次验证交易[{}]失败，获取不到receipt", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed, unable to obtainreceipt", symbol, htgTxHash);
                 break;
             }
             if (!receipt.isStatusOK()) {
-                logger().error("[{}]再次验证交易[{}]失败，receipt状态不正确", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed,receiptIncorrect status", symbol, htgTxHash);
                 break;
             } else if (ifContractAsset && (receipt.getLogs() == null || receipt.getLogs().size() == 0)) {
-                logger().error("[{}]再次验证交易[{}]失败，receipt.Log状态不正确", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed,receipt.LogIncorrect status", symbol, htgTxHash);
                 break;
             }
             validateTx = true;
@@ -937,7 +937,7 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
     }
 
     /**
-     * 验证发到HT网络的交易是否确认，若有异常情况，则根据条件重发交易
+     * Verification sent toHTIs the online transaction confirmed? If there are any abnormal situations, resend the transaction according to the conditions
      */
     private BroadcastTxValidateStatus validateBroadcastTxConfirmedInEthNet(HtgUnconfirmedTxPo po) throws Exception {
         String symbol = htgContext.getConfig().getSymbol();
@@ -947,12 +947,12 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             TransactionReceipt receipt = htgWalletApi.getTxReceipt(htgTxHash);
             if (receipt == null) {
                 boolean timeOut = System.currentTimeMillis() - po.getCreateDate() > HtgConstant.MINUTES_20;
-                logger().error("[{}]再次验证交易[{}]失败，获取不到receipt", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed, unable to obtainreceipt", symbol, htgTxHash);
                 if (timeOut) {
-                    // 交易二十分钟未确认，则重发交易
+                    // If the transaction is not confirmed within 20 minutes, resend the transaction
                     status = BroadcastTxValidateStatus.RE_SEND;
                 } else {
-                    // 未获取到交易收据，20分钟内，每3轮验证一次
+                    // Transaction receipt not obtained,20Within minutes, every3One round of verification
                     po.setSkipTimes(3);
                     status = BroadcastTxValidateStatus.RE_VALIDATE;
                 }
@@ -960,11 +960,11 @@ public class HtgConfirmTxHandler implements Runnable, BeanInitial {
             }
             if (!receipt.isStatusOK()) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("[{}]再次验证交易[{}]失败，receipt状态不正确", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed,receiptIncorrect status", symbol, htgTxHash);
                 break;
             } else if (receipt.getLogs() == null || receipt.getLogs().size() == 0) {
                 status = BroadcastTxValidateStatus.RE_SEND;
-                logger().error("[{}]再次验证交易[{}]失败，receipt.Log状态不正确", symbol, htgTxHash);
+                logger().error("[{}]Verify transaction again[{}]Failed,receipt.LogIncorrect status", symbol, htgTxHash);
                 break;
             }
             status = BroadcastTxValidateStatus.SUCCESS;

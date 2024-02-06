@@ -30,34 +30,34 @@ package network.nerve.quotation.model.bo;
  */
 public class QuotationContractCfg {
     /**
-     * 区块链网络名称
+     * Blockchain Network Name
      */
     private String chain;
     /**
-     * 提供价格时的报价key
+     * Quotation when providing priceskey
      */
     private String key;
     /**
-     * 交易中的喂价token
+     * Feed price in transactionstoken
      */
     private String anchorToken;
     /**
-     * swap token合约地址
+     * swap tokenContract address
      */
     private String swapTokenContractAddress;
     /**
-     * 计算价格时基准token(以交易对其中一个token作为计算依据)
+     * Benchmark for calculating pricestoken(Trading against one of themtokenAs a basis for calculation)
      */
     private String baseTokenContractAddress;
     /**
-     * 计算价格的基准token的喂价key(用于获取基准token的单价)
+     * The benchmark for calculating pricestokenFeed ratekey(Used to obtain benchmarkstokenUnit price of)
      */
     private String baseAnchorToken;
 
-    /** 访问对应网络api的地址 */
+    /** Access the corresponding networkapiAddress of */
     private String rpcAddress;
 
-    /** 开始喂价生效高度*/
+    /** Effective height of starting feeding*/
     private long effectiveHeight;
 
     private String calculator;

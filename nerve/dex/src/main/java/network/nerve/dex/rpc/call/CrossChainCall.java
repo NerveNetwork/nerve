@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class CrossChainCall {
 
     /**
-     * 查询已注册资产信息
+     * Query registered asset information
      *
      * @return
      */

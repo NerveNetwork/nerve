@@ -29,7 +29,7 @@ import network.nerve.converter.model.bo.HeterogeneousHash;
 import java.math.BigInteger;
 
 /**
- * 跨链追加手续费
+ * Cross chain additional handling fees
  *
  * @author: PierreLuo
  * @date: 2022/4/14
@@ -37,26 +37,26 @@ import java.math.BigInteger;
 public class AddFeeCrossChainTxDTO {
 
     /**
-     * 异构链充值交易hash
+     * Heterogeneous chain recharge transactionshash
      */
     private HeterogeneousHash originalTxHash;
     /**
-     * 异构链交易所在区块高度
+     * Heterogeneous chain exchanges at block height
      */
     private long heterogeneousHeight;
     /**
-     * 异构链网络中 充值的from地址
+     * In heterogeneous chain networks Rechargeablefromaddress
      */
     private String heterogeneousFromAddress;
     /**
-     * nerve 网络中的到账地址
+     * nerve Delivery address in the network
      */
     private byte[] nerveToAddress;
-    // main资产
+    // mainasset
     private BigInteger mainAssetAmount;
     private int mainAssetChainId;
     private int mainAssetId;
-    private String nerveTxHash;// 提现交易hash
+    private String nerveTxHash;// Withdrawal transactionshash
     private String subExtend;
 
     public HeterogeneousHash getOriginalTxHash() {

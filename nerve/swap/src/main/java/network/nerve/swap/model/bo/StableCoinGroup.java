@@ -62,9 +62,9 @@ public class StableCoinGroup {
         this.swapConfig = swapConfig;
     }
 
-    public void add(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
+    public void add(String stablePairAddress, NerveToken[] coins, boolean[] removes, boolean[] pauses) {
         loadCache();
-        this._add(stablePairAddress, coins, removes);
+        this._add(stablePairAddress, coins, removes, pauses);
         this.addressList.add(stablePairAddress);
     }
 
@@ -103,7 +103,7 @@ public class StableCoinGroup {
         return address;
     }
 
-    public void updateStableCoin(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
+    public void updateStableCoin(String stablePairAddress, NerveToken[] coins, boolean[] removes, boolean[] pauses) {
         loadCache();
         Integer index = stableIndexMap.get(stablePairAddress);
         if (index == null)
@@ -112,12 +112,18 @@ public class StableCoinGroup {
         if (removes == null) {
             removes = new boolean[coins.length];
         }
+        if (pauses == null) {
+            pauses = new boolean[coins.length];
+        }
         Map<NerveToken, Boolean> stableCoinGroup = new HashMap<>();
+        Map<NerveToken, Boolean> pauseStableCoinGroup = new HashMap<>();
         for (int i = 0; i < coins.length; i++) {
             NerveToken coin = coins[i];
             stableCoinGroup.put(coin, removes[i]);
+            pauseStableCoinGroup.put(coin, pauses[i]);
         }
         stableCoin.setGroupCoin(stableCoinGroup);
+        stableCoin.setPauseGroupCoin(pauseStableCoinGroup);
     }
 
     public List<StableCoin> getGroupList() {
@@ -125,19 +131,24 @@ public class StableCoinGroup {
         return groupList;
     }
 
-    private void _add(String stablePairAddress, NerveToken[] coins, boolean[] removes) {
+    private void _add(String stablePairAddress, NerveToken[] coins, boolean[] removes, boolean[] pauses) {
         if (stableIndexMap.containsKey(stablePairAddress)) {
             return;
         }
         if (removes == null) {
             removes = new boolean[coins.length];
         }
+        if (pauses == null) {
+            pauses = new boolean[coins.length];
+        }
         Map<NerveToken, Boolean> stableCoinGroup = new HashMap<>();
+        Map<NerveToken, Boolean> pauseStableCoinGroup = new HashMap<>();
         for (int i = 0; i < coins.length; i++) {
             NerveToken coin = coins[i];
             stableCoinGroup.put(coin, removes[i]);
+            pauseStableCoinGroup.put(coin, pauses[i]);
         }
-        groupList.add(new StableCoin(stablePairAddress, stableCoinGroup));
+        groupList.add(new StableCoin(stablePairAddress, stableCoinGroup, pauseStableCoinGroup));
         stableIndexMap.put(stablePairAddress, stableIndex++);
     }
 
@@ -145,7 +156,7 @@ public class StableCoinGroup {
         if (cacheCompleted) {
             return;
         }
-        // 缓存: 管理稳定币交易对-用于Swap交易
+        // cache: Managing stablecoin transactions-Used forSwaptransaction
         try {
             if (addressList.size() > 0) {
                 boolean initialDBDone = swapStablePairStorageService.hadInitialDonePairForSwapTrade(swapConfig.getChainId());
@@ -158,7 +169,7 @@ public class StableCoinGroup {
                             cacheCompleted = false;
                             continue;
                         }
-                        this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves());
+                        this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves(), dto.getPo().getPauses());
                         swapStablePairStorageService.savePairForSwapTrade(stable);
                     }
                     if (cacheCompleted) {
@@ -184,7 +195,7 @@ public class StableCoinGroup {
             if (dto == null) {
                 continue;
             }
-            this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves());
+            this._add(stable, dto.getPo().getCoins(), dto.getPo().getRemoves(), dto.getPo().getPauses());
         }
     }
 }

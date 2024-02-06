@@ -4,7 +4,7 @@ import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rpc.cmd.BaseCmd;
 
 /**
- * 交易分发器
+ * Transaction distributor
  *
  * @author captain
  * @version 1.0

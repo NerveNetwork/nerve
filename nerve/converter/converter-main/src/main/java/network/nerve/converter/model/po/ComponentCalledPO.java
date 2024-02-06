@@ -37,8 +37,8 @@ public class ComponentCalledPO implements Serializable {
     private long height;
 
     /**
-     * true 一定是确认的
-     * false 不一定是非确认的()
+     * true It must be confirmed
+     * false Not necessarily unconfirmed()
      */
     private boolean commit;
 

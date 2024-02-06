@@ -26,12 +26,14 @@ package network.nerve.converter.heterogeneouschain.lib.context;
 
 import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.core.api.interfaces.IConverterCoreApi;
+import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.enums.AssetName;
 import network.nerve.converter.heterogeneouschain.lib.docking.HtgDocking;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgUnconfirmedTxPo;
 import network.nerve.converter.heterogeneouschain.lib.model.HtgWaitingTxPo;
 import network.nerve.converter.model.bo.HeterogeneousCfg;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
@@ -53,6 +55,7 @@ public abstract class HtgContext {
     protected static final BigInteger GAS_LIMIT_OF_ERC20 = BigInteger.valueOf(100000L);
     protected static final BigInteger HTG_ESTIMATE_GAS = BigInteger.valueOf(1000000L);
     protected static final BigInteger BASE_GAS_LIMIT = BigInteger.valueOf(50000L);
+    private BigInteger GAS_LIMIT_OF_WITHDRAW_V2;
 
     public abstract int HTG_CHAIN_ID();
     public abstract HeterogeneousCfg getConfig();
@@ -69,7 +72,7 @@ public abstract class HtgContext {
     public abstract void SET_ADMIN_ADDRESS(String s);
     public abstract void SET_ADMIN_ADDRESS_PASSWORD(String s);
     public abstract void SET_MULTY_SIGN_ADDRESS(String s);
-    public abstract void SET_DOCKING(HtgDocking docking);
+    public abstract void SET_DOCKING(IHeterogeneousChainDocking docking);
     public abstract int NERVE_CHAINID();
     public abstract int HTG_ASSET_ID();
     public abstract byte VERSION();
@@ -78,7 +81,7 @@ public abstract class HtgContext {
     public abstract CountDownLatch INIT_WAITING_TX_QUEUE_LATCH();
     public abstract CountDownLatch INIT_UNCONFIRMEDTX_QUEUE_LATCH();
     public abstract Set<String> FILTER_ACCOUNT_SET();
-    public abstract HtgDocking DOCKING();
+    public abstract IHeterogeneousChainDocking DOCKING();
     public abstract BigInteger getEthGasPrice();
     public abstract void setEthGasPrice(BigInteger b);
     public abstract AssetName ASSET_NAME();
@@ -90,7 +93,7 @@ public abstract class HtgContext {
 
     public abstract void setNERVE_CHAINID(int NERVE_CHAINID);
     /**
-     * 当前异构链是否支持合约的pending查询
+     * Does the current heterogeneous chain support contractspendingquery
      */
     public boolean supportPendingCall() {
         return true;
@@ -108,7 +111,7 @@ public abstract class HtgContext {
         }
         return ethGasPrice;
         /*
-        回滚异构网络打包价格稳定6次后再更新的机制，原因是造成前后端price不一致
+        Rolling back heterogeneous network packaging with stable prices6The mechanism of updating again after the second update is due to the cause of front-end and back-end issuespriceInconsistent
         if (HTG_GAS_PRICE == null || HTG_GAS_PRICE.compareTo(ethGasPrice) <= 0) {
             HTG_GAS_PRICE = ethGasPrice;
         } else {
@@ -123,22 +126,52 @@ public abstract class HtgContext {
         return getConfig().getChainIdOnHtgNetwork() * 2 + VERSION();
     }
 
-    public BigInteger GAS_LIMIT_OF_WITHDRAW() {
+    public BigInteger GET_GAS_LIMIT_OF_WITHDRAW() {
         return GAS_LIMIT_OF_WITHDRAW;
     }
-    public BigInteger GAS_LIMIT_OF_CHANGE() {
+
+    public BigInteger GET_GAS_LIMIT_OF_CHANGE() {
         return GAS_LIMIT_OF_CHANGE;
     }
-    public BigInteger GAS_LIMIT_OF_MAIN_ASSET() {
+
+    public BigInteger GET_GAS_LIMIT_OF_MAIN_ASSET() {
         return GAS_LIMIT_OF_MAIN_ASSET;
     }
-    public BigInteger GAS_LIMIT_OF_ERC20() {
+
+    public BigInteger GET_GAS_LIMIT_OF_ERC20() {
         return GAS_LIMIT_OF_ERC20;
     }
-    public BigInteger HTG_ESTIMATE_GAS() {
+
+    public BigInteger GET_HTG_ESTIMATE_GAS() {
         return HTG_ESTIMATE_GAS;
     }
-    public BigInteger BASE_GAS_LIMIT() {
+
+    public BigInteger GET_BASE_GAS_LIMIT() {
         return BASE_GAS_LIMIT;
+    }
+
+    public BigInteger GAS_LIMIT_OF_WITHDRAW() {
+        if (getConverterCoreApi().hasL1FeeOnChain(HTG_CHAIN_ID())) {
+            return GET_GAS_LIMIT_OF_WITHDRAW();
+        }
+        if (GAS_LIMIT_OF_WITHDRAW_V2 == null) {
+            GAS_LIMIT_OF_WITHDRAW_V2 = new BigDecimal(GET_GAS_LIMIT_OF_WITHDRAW()).multiply(new BigDecimal("1.2")).toBigInteger();
+        }
+        return GAS_LIMIT_OF_WITHDRAW_V2;
+    }
+    public BigInteger GAS_LIMIT_OF_CHANGE() {
+        return GET_GAS_LIMIT_OF_CHANGE();
+    }
+    public BigInteger GAS_LIMIT_OF_MAIN_ASSET() {
+        return GET_GAS_LIMIT_OF_MAIN_ASSET();
+    }
+    public BigInteger GAS_LIMIT_OF_ERC20() {
+        return GET_GAS_LIMIT_OF_ERC20();
+    }
+    public BigInteger HTG_ESTIMATE_GAS() {
+        return GET_HTG_ESTIMATE_GAS();
+    }
+    public BigInteger BASE_GAS_LIMIT() {
+        return GET_BASE_GAS_LIMIT();
     }
 }

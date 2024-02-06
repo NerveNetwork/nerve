@@ -63,7 +63,8 @@ public interface ConverterCmdConstant {
     String RESUME_IN_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_resume_in_heterogeneous_contract_token";
     String PAUSE_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_pause_out_heterogeneous_contract_token";
     String RESUME_OUT_HETEROGENEOUS_CONTRACT_TOKEN_TX = "cv_resume_out_heterogeneous_contract_token";
-    /** 提现 */
+    String PAUSE_COIN_FOR_STABLE_SWAP = "cv_pause_coin_for_stable_swap";
+    /** Withdrawal */
     String WITHDRAWAL = "cv_withdrawal";
     String WITHDRAWAL_ADDITIONAL_FEE = "cv_withdrawal_additional_fee";
     String VIRTUAL_BANK_INFO = "cv_virtualBankInfo";

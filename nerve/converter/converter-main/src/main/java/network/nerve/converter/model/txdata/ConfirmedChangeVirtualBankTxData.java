@@ -40,25 +40,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 确认虚拟银行变更交易
- * 业务数据
+ * Confirm virtual bank change transaction
+ * Business data
  * @author: Loki
  * @date: 2020-03-11
  */
 public class ConfirmedChangeVirtualBankTxData extends BaseNulsData {
 
     /**
-     * 虚拟银行变更交易hash
+     * Virtual Bank Change Transactionhash
      */
     private NulsHash changeVirtualBankTxHash;
 
     /**
-     * 变更后虚拟银行全体成员节点地址列表
+     * List of addresses for all members of the virtual bank after the change
      */
     private List<byte[]> listAgents;
 
     /**
-     * 异构链确认信息
+     * Heterogeneous chain confirmation information
      */
     private List<HeterogeneousConfirmedVirtualBank> listConfirmed;
 

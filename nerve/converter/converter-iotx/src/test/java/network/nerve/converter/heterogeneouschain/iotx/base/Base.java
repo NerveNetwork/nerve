@@ -107,22 +107,22 @@ public class Base {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 验证合约交易合法性
+        // Verify the legality of contract transactions
         EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
-            Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
 
         if (estimateGasObj.getError() != null) {
-            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败, {}", txType, estimateGasObj.getError().getMessage());
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
+            Log.error("[{}]Transaction verification failed, reason: estimateGasLimitfail, {}", txType, estimateGasObj.getError().getMessage());
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail");
             //estimateGas = BigInteger.valueOf(100000L);
         }
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
-        Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
+        Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
         BigInteger gasLimit = estimateGas;
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);
         String ethTxHash = htSendTransactionPo.getTxHash();

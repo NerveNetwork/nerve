@@ -173,11 +173,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         account.encrypt(password);
         try {
             htgAccountStorageService.save(account);
-            // 覆写这个地址作为虚拟银行管理员地址
+            // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
-            logger().info("向{}异构组件导入节点出块地址信息, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
+            logger().info("towards{}Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
             throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
@@ -200,11 +200,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         HtgAccount account = TrxUtil.createAccountByPubkey(pubKey);
         try {
             htgAccountStorageService.save(account);
-            // 覆写这个地址作为虚拟银行管理员地址
+            // Overwrite this address as the virtual bank administrator address
             htgContext.SET_ADMIN_ADDRESS(account.getAddress());
             htgContext.SET_ADMIN_ADDRESS_PUBLIC_KEY(account.getCompressedPublicKey());
             htgContext.SET_ADMIN_ADDRESS_PASSWORD(password);
-            logger().info("向{}异构组件导入节点出块地址信息, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
+            logger().info("towards{}Heterogeneous component import node block address information, address: [{}]", htgContext.getConfig().getSymbol(), account.getAddress());
             return account;
         } catch (Exception e) {
             throw new NulsException(ConverterErrorCode.DB_SAVE_ERROR, e);
@@ -256,16 +256,16 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public void updateMultySignAddress(String multySignAddress) throws Exception {
-        logger().info("{}更新多签合约地址, old: {}, new: {}", htgContext.getConfig().getSymbol(), htgContext.MULTY_SIGN_ADDRESS(), multySignAddress);
+        logger().info("{}Update multiple contract addresses, old: {}, new: {}", htgContext.getConfig().getSymbol(), htgContext.MULTY_SIGN_ADDRESS(), multySignAddress);
         //multySignAddress = multySignAddress.toLowerCase();
-        // 监听多签地址交易
+        // Listening for multi signature address transactions
         htgListener.removeListeningAddress(htgContext.MULTY_SIGN_ADDRESS());
         htgListener.addListeningAddress(multySignAddress);
-        // 更新多签地址
+        // Update multiple signed addresses
         htgContext.SET_MULTY_SIGN_ADDRESS(multySignAddress);
-        // 保存当前多签地址到多签地址历史列表中
+        // Save the current multi signature address to the multi signature address history list
         htgMultiSignAddressHistoryStorageService.save(multySignAddress);
-        // 合约升级后的流程切换操作
+        // Process switching operation after contract upgrade
         htgUpgradeContractSwitchHelper.switchProcessor(multySignAddress);
     }
 
@@ -274,7 +274,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         updateMultySignAddress(multySignAddress);
         htgContext.SET_VERSION(version);
         htgMultiSignAddressHistoryStorageService.saveVersion(version);
-        logger().info("更新签名版本号: {}", version);
+        logger().info("Update signature version number: {}", version);
     }
 
     @Override
@@ -382,12 +382,12 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public void txConfirmedCompleted(String htTxHash, Long blockHeight, String nerveTxHash) throws Exception {
-        logger().info("Nerve网络确认{}交易 Nerver hash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
+        logger().info("NerveNetwork confirmation{}transaction Nerver hash: {}", htgContext.getConfig().getSymbol(), nerveTxHash);
         if (StringUtils.isBlank(htTxHash)) {
             logger().warn("Empty htTxHash warning");
             return;
         }
-        // 更新db中po的状态，改为delete，在队列任务中确认`ROLLBACK_NUMER`个块之后再移除，便于状态回滚
+        // updatedbinpoChange the status of todeleteConfirm in the queue task`ROLLBACK_NUMER`Remove after each block to facilitate state rollback
         HtgUnconfirmedTxPo txPo = htgUnconfirmedTxStorageService.findByTxHash(htTxHash);
         if (txPo == null) {
             txPo = new HtgUnconfirmedTxPo();
@@ -395,23 +395,23 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         }
         txPo.setDelete(true);
         txPo.setDeletedHeight(blockHeight + HtgConstant.ROLLBACK_NUMER);
-        logger().info("Nerve网络对[{}]{}交易[{}]确认完成, nerve高度: {}, nerver hash: {}", txPo.getTxType(), htgContext.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
+        logger().info("NerveNetwork impact[{}]{}transaction[{}]Confirm completion, nerveheight: {}, nerver hash: {}", txPo.getTxType(), htgContext.getConfig().getSymbol(), txPo.getTxHash(), blockHeight, txPo.getNerveTxHash());
         boolean delete = txPo.isDelete();
         Long deletedHeight = txPo.getDeletedHeight();
         htgUnconfirmedTxStorageService.update(txPo, update -> {
             update.setDelete(delete);
             update.setDeletedHeight(deletedHeight);
         });
-        // 持久化状态已成功的nerveTx
+        // Persisted state successfullynerveTx
         if (StringUtils.isNotBlank(nerveTxHash)) {
-            logger().debug("持久化状态已成功的nerveTxHash: {}", nerveTxHash);
+            logger().debug("Persisted state successfullynerveTxHash: {}", nerveTxHash);
             htgInvokeTxHelper.saveSuccessfulNerve(nerveTxHash);
         }
     }
 
     @Override
     public HeterogeneousTransactionInfo getDepositTransaction(String txHash) throws Exception {
-        // 从DB中获取数据，若获取不到，再到HTG网络中获取
+        // fromDBObtain data from, if unable to obtain, then go toHTGObtained from the network
         HeterogeneousTransactionInfo txInfo = htgTxStorageService.findByTxHash(txHash);
         if (txInfo != null) {
             txInfo.setTxType(HeterogeneousChainTxType.DEPOSIT);
@@ -430,7 +430,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public HeterogeneousTransactionInfo getWithdrawTransaction(String txHash) throws Exception {
-        // 从DB中获取数据，若获取不到，再到HTG网络中获取
+        // fromDBObtain data from, if unable to obtain, then go toHTGObtained from the network
         HeterogeneousTransactionInfo txInfo = htgTxStorageService.findByTxHash(txHash);
         if (txInfo != null) {
             txInfo.setTxType(HeterogeneousChainTxType.WITHDRAW);
@@ -458,7 +458,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public HeterogeneousConfirmedInfo getConfirmedTxInfo(String txHash) throws Exception {
         HeterogeneousConfirmedInfo info = new HeterogeneousConfirmedInfo();
-        // 从DB中获取数据，若获取不到，再到HTG网络中获取
+        // fromDBObtain data from, if unable to obtain, then go toHTGObtained from the network
         HeterogeneousTransactionInfo txInfo = htgTxStorageService.findByTxHash(txHash);
         String from;
         Long txTime = null;
@@ -491,22 +491,22 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public HeterogeneousChangePendingInfo getChangeVirtualBankPendingInfo(String nerveTxHash) throws Exception {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "合约升级后不再支持的函数[3]");
+        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "Functions that are no longer supported after contract upgrade[3]");
     }
 
     @Override
     public String createOrSignWithdrawTx(String nerveTxHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "合约升级后不再支持的函数[0]");
+        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "Functions that are no longer supported after contract upgrade[0]");
     }
 
     @Override
     public String createOrSignManagerChangesTx(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "合约升级后不再支持的函数[1]");
+        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "Functions that are no longer supported after contract upgrade[1]");
     }
 
     @Override
     public String createOrSignUpgradeTx(String nerveTxHash) throws NulsException {
-        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "合约升级后不再支持的函数[2]");
+        throw new NulsException(ConverterErrorCode.NO_LONGER_SUPPORTED, "Functions that are no longer supported after contract upgrade[2]");
     }
 
     @Override
@@ -516,15 +516,15 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public boolean validateManagerChangesTxII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
-        logger().info("验证{}网络虚拟银行变更交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+        logger().info("validate{}Online virtual banking change transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
         try {
-            // 向HTG网络请求验证
+            // towardsHTGNetwork request verification
             boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
             if (isCompleted) {
-                logger().info("[{}]交易[{}]已完成", HeterogeneousChainTxType.CHANGE, nerveTxHash);
+                logger().info("[{}]transaction[{}]Completed", HeterogeneousChainTxType.CHANGE, nerveTxHash);
                 return true;
             }
-            // 业务验证
+            // Business validation
             if (addAddresses == null) {
                 addAddresses = new String[0];
             }
@@ -538,7 +538,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 //add = add.toLowerCase();
                 addAddresses[a] = add;
                 if (!addSet.add(add)) {
-                    logger().error("重复的待加入地址列表");
+                    logger().error("Duplicate list of addresses to be added");
                     return false;
                 }
                 addList.add(new Address(add));
@@ -550,26 +550,26 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 //remove = remove.toLowerCase();
                 removeAddresses[r] = remove;
                 if (!removeSet.add(remove)) {
-                    logger().error("重复的待退出地址列表");
+                    logger().error("Duplicate list of pending exits");
                     return false;
                 }
                 removeList.add(new Address(remove));
             }
-            // 若没有加入和退出，则直接发确认交易
+            // If you have not joined or exited, send a confirmation transaction directly
             if (addAddresses.length == 0 && removeAddresses.length == 0) {
                 return true;
             }
-            // 获取管理员账户
+            // Obtain administrator account
             String fromAddress = htgContext.ADMIN_ADDRESS();
             if (removeSet.contains(fromAddress)) {
-                logger().error("退出的管理员不能参与管理员变更交易");
+                logger().error("Logged out administrators cannot participate in administrator change transactions");
                 return false;
             }
             Function txFunction = TrxUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, orginTxCount, signatureData);
-            // 验证合约交易合法性
+            // Verify the legality of contract transactions
             TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
             if (estimateSun.isReverted()) {
-                logger().error("[{}]交易验证失败，原因: {}", HeterogeneousChainTxType.CHANGE, estimateSun.getRevertReason());
+                logger().error("[{}]Transaction verification failed, reason: {}", HeterogeneousChainTxType.CHANGE, estimateSun.getRevertReason());
                 return false;
             }
             return true;
@@ -581,21 +581,21 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public String createOrSignManagerChangesTxII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData) throws NulsException {
-        // 增加resend机制
+        // increaseresendmechanism
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
             return this.createOrSignManagerChangesTxII(nerveTxHash, addAddresses, removeAddresses, orginTxCount, signatureData, true);
         } catch (NulsException e) {
-            // 当出现交易签名不足导致的执行失败时，向CORE重新索要交易的拜占庭签名
+            // When execution fails due to insufficient transaction signatures, report toCORERequesting Byzantine signatures for the transaction again
             if (ConverterUtil.isInsufficientSignature(e)) {
                 HtgWaitingTxPo waitingTxPo = htgInvokeTxHelper.findEthWaitingTxPo(nerveTxHash);
                 if (waitingTxPo != null) {
                     try {
                         String reSendHtTxHash = htgResendHelper.reSend(waitingTxPo);
-                        logger().info("Nerve交易[{}]重发完成, reSendHtTxHash: {}", nerveTxHash, reSendHtTxHash);
+                        logger().info("Nervetransaction[{}]Resend completed, reSendHtTxHash: {}", nerveTxHash, reSendHtTxHash);
                         return reSendHtTxHash;
                     } catch (Exception ex) {
                         throw new NulsException(ex);
@@ -639,16 +639,16 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public Boolean reAnalysisDepositTx(String htTxHash) throws Exception {
         if (htgCommonHelper.constainHash(htTxHash)) {
-            logger().info("重复收集充值交易hash: {}，不再重复解析[0]", htTxHash);
+            logger().info("Repeated collection of recharge transactionshash: {}No more repeated parsing[0]", htTxHash);
             return true;
         }
         reAnalysisLock.lock();
         try {
             if (htgCommonHelper.constainHash(htTxHash)) {
-                logger().info("重复收集充值交易hash: {}，不再重复解析[1]", htTxHash);
+                logger().info("Repeated collection of recharge transactionshash: {}No more repeated parsing[1]", htTxHash);
                 return true;
             }
-            logger().info("重新解析充值交易: {}", htTxHash);
+            logger().info("Re analyze recharge transactions: {}", htTxHash);
             Chain.Transaction tx = trxWalletApi.getTransactionByHash(htTxHash);
             if (tx == null) {
                 return false;
@@ -657,18 +657,18 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             Chain.Transaction.Contract.ContractType type = contract.getType();
             if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type &&
                     tx.getRet(0).getContractRet() != Chain.Transaction.Result.contractResult.SUCCESS) {
-                logger().warn("交易不正常[0]: {}", htTxHash);
+                logger().warn("Abnormal transaction[0]: {}", htTxHash);
                 return false;
             }
 
             Response.TransactionInfo txReceipt = trxWalletApi.getTransactionReceipt(htTxHash);
             if (!TrxUtil.checkTransactionSuccess(txReceipt)) {
-                logger().warn("交易不正常[1]: {}", htTxHash);
+                logger().warn("Abnormal transaction[1]: {}", htTxHash);
                 return false;
             }
             HeterogeneousTransactionInfo txInfo = trxParseTxHelper.parseDepositTransaction(tx, txReceipt);
             if (txInfo == null) {
-                logger().warn("交易不正常[2]: {}", htTxHash);
+                logger().warn("Abnormal transaction[2]: {}", htTxHash);
                 return false;
             }
             Long blockHeight = txReceipt.getBlockNumber();
@@ -686,16 +686,16 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public Boolean reAnalysisTx(String htTxHash) throws Exception {
         if (htgCommonHelper.constainHash(htTxHash)) {
-            logger().info("重复收集交易hash: {}，不再重复解析[0]", htTxHash);
+            logger().info("Repeated collection of transactionshash: {}No more repeated parsing[0]", htTxHash);
             return true;
         }
         reAnalysisLock.lock();
         try {
             if (htgCommonHelper.constainHash(htTxHash)) {
-                logger().info("重复收集交易hash: {}，不再重复解析[1]", htTxHash);
+                logger().info("Repeated collection of transactionshash: {}No more repeated parsing[1]", htTxHash);
                 return true;
             }
-            logger().info("重新解析交易: {}", htTxHash);
+            logger().info("Re analyze transactions: {}", htTxHash);
             Chain.Transaction tx = trxWalletApi.getTransactionByHash(htTxHash);
             if (tx == null) {
                 return false;
@@ -704,13 +704,13 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             Chain.Transaction.Contract.ContractType type = contract.getType();
             if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type &&
                     tx.getRet(0).getContractRet() != Chain.Transaction.Result.contractResult.SUCCESS) {
-                logger().warn("交易不正常[0]: {}", htTxHash);
+                logger().warn("Abnormal transaction[0]: {}", htTxHash);
                 return false;
             }
 
             Response.TransactionInfo txReceipt = trxWalletApi.getTransactionReceipt(htTxHash);
             if (!TrxUtil.checkTransactionSuccess(txReceipt)) {
-                logger().warn("交易不正常[1]: {}", htTxHash);
+                logger().warn("Abnormal transaction[1]: {}", htTxHash);
                 return false;
             }
             Long blockHeight = txReceipt.getBlockNumber();
@@ -733,7 +733,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public String signWithdrawII(String txHash, String toAddress, BigInteger value, Integer assetId) throws NulsException {
-        // 获取管理员账户
+        // Obtain administrator account
         boolean isContractAsset = assetId > 1;
         String contractAddressERC20;
         if (isContractAsset) {
@@ -741,15 +741,15 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
-        // 若跨链资产精度不同，则换算精度
+        // If the accuracy of cross chain assets is different, then the conversion accuracy
         value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         if (htgContext.getConverterCoreApi().isLocalSign()) {
             TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
             String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-            logger().debug("提现签名数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-            logger().debug("提现签名vHash: {}, nerveTxHash: {}", vHash, txHash);
+            logger().debug("Withdrawal signature data: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+            logger().debug("Withdrawal signaturevHash: {}, nerveTxHash: {}", vHash, txHash);
             return TrxUtil.dataSign(vHash, priKey);
         } else {
             return htgContext.getConverterCoreApi().signWithdrawByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
@@ -760,21 +760,21 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public String signManagerChangesII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount) throws NulsException {
-        // 业务验证
+        // Business validation
         if (addAddresses == null) {
             addAddresses = new String[0];
         }
         if (removeAddresses == null) {
             removeAddresses = new String[0];
         }
-        // 交易准备
+        // Transaction preparation
         Set<String> addSet = new HashSet<>();
         for (int a = 0, addSize = addAddresses.length; a < addSize; a++) {
             String add = addAddresses[a];
             //add = add.toLowerCase();
             addAddresses[a] = add;
             if (!addSet.add(add)) {
-                logger().error("重复的待加入地址列表");
+                logger().error("Duplicate list of addresses to be added");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_2);
             }
         }
@@ -784,17 +784,17 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             //remove = remove.toLowerCase();
             removeAddresses[r] = remove;
             if (!removeSet.add(remove)) {
-                logger().error("重复的待退出地址列表");
+                logger().error("Duplicate list of pending exits");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_4);
             }
         }
         if (htgContext.getConverterCoreApi().isLocalSign()) {
-            // 获取管理员账户
+            // Obtain administrator account
             TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
             String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddresses, orginTxCount, removeAddresses, htgContext.VERSION());
-            logger().debug("变更交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            logger().debug("Change the signature of the transactionvHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
             return TrxUtil.dataSign(vHash, priKey);
         } else {
             return htgContext.getConverterCoreApi().signChangeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
@@ -805,12 +805,12 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     @Override
     public String signUpgradeII(String nerveTxHash, String upgradeContract) throws NulsException {
         if (htgContext.getConverterCoreApi().isLocalSign()) {
-            // 获取管理员账户
+            // Obtain administrator account
             TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
             account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
             String vHash = TrxUtil.encoderUpgrade(htgContext, nerveTxHash, upgradeContract, htgContext.VERSION());
-            logger().debug("升级交易的签名vHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
+            logger().debug("Upgrade the signature of the transactionvHash: {}, nerveTxHash: {}", vHash, nerveTxHash);
             return TrxUtil.dataSign(vHash, priKey);
         } else {
             return htgContext.getConverterCoreApi().signUpgradeByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(),
@@ -827,11 +827,11 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         } else {
             contractAddressERC20 = HtgConstant.ZERO_ADDRESS;
         }
-        // 若跨链资产精度不同，则换算精度
+        // If the accuracy of cross chain assets is different, then the conversion accuracy
         value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
         String vHash = TrxUtil.encoderWithdraw(htgContext, txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("[验证签名] 提现数据: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
-        logger().debug("[验证签名] 提现vHash: {}", vHash);
+        logger().debug("[Verify signature] Withdrawal data: {}, {}, {}, {}, {}, {}", txHash, toAddress, value, isContractAsset, contractAddressERC20, htgContext.VERSION());
+        logger().debug("[Verify signature] WithdrawalvHash: {}", vHash);
         return TrxUtil.verifySign(signAddress, vHash, signed);
     }
 
@@ -843,7 +843,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         if (removeAddresses == null) {
             removeAddresses = new String[0];
         }
-        // 交易准备
+        // Transaction preparation
         for (int a = 0, addSize = addAddresses.length; a < addSize; a++) {
             String add = addAddresses[a];
             //add = add.toLowerCase();
@@ -860,24 +860,24 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     @Override
     public Boolean verifySignUpgradeII(String signAddress, String txHash, String upgradeContract, String signed) throws NulsException {
-        // 把地址转换成小写
+        // Convert the address to lowercase
         //upgradeContract = upgradeContract.toLowerCase();
         String vHash = TrxUtil.encoderUpgrade(htgContext, txHash, upgradeContract, htgContext.VERSION());
         return TrxUtil.verifySign(signAddress, vHash, signed);
     }
 
     @Override
-    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId) {
-        return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId);
+    public boolean isEnoughNvtFeeOfWithdraw(BigDecimal nvtAmount, int hAssetId, String remark) {
+        return this.isEnoughFeeOfWithdrawByOtherMainAsset(AssetName.NVT, nvtAmount, hAssetId, remark);
     }
 
     @Override
-    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId) {
-        // 可使用其他异构网络的主资产作为手续费, 比如提现到TRX，支付BNB作为手续费
+        // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toTRX, PaymentBNBAs a handling fee
+    public boolean isEnoughFeeOfWithdrawByMainAssetProtocol15(AssetName assetName, BigDecimal amount, int hAssetId, String remark) {
         if (assetName == htgContext.ASSET_NAME()) {
-            return this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(amount, hAssetId) != null;
+            return this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(amount, hAssetId, remark) != null;
         } else {
-            return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId);
+            return this.isEnoughFeeOfWithdrawByOtherMainAsset(assetName, amount, hAssetId, remark);
         }
     }
 
@@ -910,7 +910,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         if (version > 0) {
             htgContext.SET_VERSION(version);
         }
-        logger().info("[{}]网络当前签名版本号: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
+        logger().info("[{}]Current signature version number on the network: {}", htgContext.getConfig().getSymbol(), htgContext.VERSION());
     }
 
     @Override
@@ -939,9 +939,14 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         return htgContext.isAvailableRPC();
     }
 
+    @Override
+    public BigInteger currentGasPrice() {
+        return htgContext.getEthGasPrice();
+    }
+
     public String createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         if (htgContext.getConverterCoreApi().isProtocol22()) {
-            // 协议22: 支持不同精度的跨链资产
+            // protocol22: Support cross chain assets with different accuracies
             return createOrSignWithdrawTxIIProtocol22(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
         } else {
             return _createOrSignWithdrawTxII(nerveTxHash, toAddress, value, assetId, signatureData, checkOrder);
@@ -951,27 +956,27 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     private String _createOrSignWithdrawTxII(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("准备发送提现的{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
-            // 交易准备
+            logger().info("Preparing to send withdrawal{}Transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             TrxAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
-            // 保存交易调用参数，设置等待结束时间
+            // Save transaction call parameters and set waiting time to end
             htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, toAddress, value, assetId, signatureData, account.getOrder(), waitingPo);
             if (account.isEmpty()) {
                 return EMPTY_STRING;
             }
-            // 当要检查顺序时，非首位不发交易
+            // When checking the order, do not send transactions that are not in the first place
             if (checkOrder && !checkFirstOrder(account.getOrder())) {
-                logger().info("非首位不发交易, order: {}", account.getOrder());
+                logger().info("Non primary non transaction, order: {}", account.getOrder());
                 return EMPTY_STRING;
             }
-            // 获取管理员账户
+            // Obtain administrator account
             String fromAddress = account.getAddress();
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-            // 业务验证
+            // Business validation
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setNerveTxHash(nerveTxHash);
             boolean isContractAsset = assetId > 1;
@@ -984,10 +989,10 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 po.setDecimals(htgContext.getConfig().getDecimals());
                 po.setAssetId(htgContext.HTG_ASSET_ID());
             }
-            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则提现异常
+            // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (htgContext.getConverterCoreApi().isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                logger().warn("[{}]不合法的{}网络的提现交易, ERC20[{}]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                logger().warn("[{}]Illegal{}Online withdrawal transactions, ERC20[{}]BoundNERVEAssets, but not registered in the contract", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             po.setTo(toAddress);
@@ -998,26 +1003,26 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             }
             Function createOrSignWithdrawFunction = TrxUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
 
-            // 检查手续费
+            // Inspection fees
             IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
             WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
             BigDecimal feeAmount = new BigDecimal(feeInfo.getFee());
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
             BigDecimal need;
-            // // 使用非提现网络的其他主资产作为手续费时
+            // // When using other main assets of non withdrawal networks as transaction fees
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId(), nerveTxHash);
             } else {
-                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId(), nerveTxHash);
             }
             if (need == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
             }
 
-            // 验证合约后发出交易
+            // Send out transactions after verifying the contract
             String htTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW);
             if (StringUtils.isNotBlank(htTxHash)) {
-                // 记录提现交易已向HTG网络发出
+                // Record withdrawal transactions that have been transferred toHTGNetwork transmission
                 htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htTxHash);
             }
             return htTxHash;
@@ -1033,27 +1038,27 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     private String createOrSignWithdrawTxIIProtocol22(String nerveTxHash, String toAddress, BigInteger value, Integer assetId, String signatureData, boolean checkOrder) throws NulsException {
         try {
             if (!htgContext.isAvailableRPC()) {
-                logger().error("[{}]网络RPC不可用，暂停此任务", htgContext.getConfig().getSymbol());
+                logger().error("[{}]networkRPCUnavailable, pause this task", htgContext.getConfig().getSymbol());
                 throw new NulsException(ConverterErrorCode.HTG_RPC_UNAVAILABLE);
             }
-            logger().info("准备发送提现的{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
-            // 交易准备
+            logger().info("Preparing to send withdrawal{}Transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+            // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
-            TrxAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
-            // 保存交易调用参数，设置等待结束时间
+            TrxAccount account = this.createTxStartForWithdraw(nerveTxHash, HeterogeneousChainTxType.WITHDRAW, waitingPo);
+            // Save transaction call parameters and set waiting time to end
             htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, toAddress, value, assetId, signatureData, account.getOrder(), waitingPo);
             if (account.isEmpty()) {
                 return EMPTY_STRING;
             }
-            // 当要检查顺序时，非首位不发交易
+            // When checking the order, do not send transactions that are not in the first place
             if (checkOrder && !checkFirstOrder(account.getOrder())) {
-                logger().info("非首位不发交易, order: {}", account.getOrder());
+                logger().info("Non primary non transaction, order: {}", account.getOrder());
                 return EMPTY_STRING;
             }
-            // 获取管理员账户
+            // Obtain administrator account
             String fromAddress = account.getAddress();
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
-            // 业务验证
+            // Business validation
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setNerveTxHash(nerveTxHash);
             boolean isContractAsset = assetId > 1;
@@ -1067,10 +1072,12 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 po.setAssetId(htgContext.HTG_ASSET_ID());
             }
             IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
-            // 检查是否是NERVE资产绑定的ERC20，是则检查多签合约内是否已经注册此定制的ERC20，否则提现异常
+            // Check if it isNERVEAsset boundERC20If yes, check if the customized item has already been registered in the multi signed contractERC20Otherwise, the withdrawal will be abnormal
             if (coreApi.isBoundHeterogeneousAsset(htgContext.getConfig().getChainId(), po.getAssetId())
                     && !trxParseTxHelper.isMinterERC20(po.getContractAddress())) {
-                logger().warn("[{}]不合法的{}网络的提现交易, ERC20[{}]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                String msg = String.format("[%s]不合法的%s网络的提现交易, ERC20[%s]已绑定NERVE资产，但合约内未注册", nerveTxHash, htgContext.getConfig().getSymbol(), po.getContractAddress());
+                htgContext.logger().warn(msg);
+                htgContext.getConverterCoreApi().putWechatMsg(msg);
                 throw new NulsException(ConverterErrorCode.NOT_BIND_ASSET);
             }
             po.setTo(toAddress);
@@ -1079,29 +1086,29 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             if (isContractAsset) {
                 po.setContractAddress(contractAddressERC20);
             }
-            // 跨链资产精度不同，换算精度
+            // Cross chain asset accuracy varies, conversion accuracy
             value = htgContext.getConverterCoreApi().checkDecimalsSubtractedToNerveForWithdrawal(htgContext.HTG_CHAIN_ID(), assetId, value);
             Function createOrSignWithdrawFunction = TrxUtil.getCreateOrSignWithdrawFunction(nerveTxHash, toAddress, value, isContractAsset, contractAddressERC20, signatureData);
 
-            // 检查手续费
+            // Inspection fees
             WithdrawalTotalFeeInfo feeInfo = coreApi.getFeeOfWithdrawTransaction(nerveTxHash);
             if (feeInfo.isNvtAsset()) feeInfo.setHtgMainAssetName(AssetName.NVT);
             BigDecimal feeAmount = new BigDecimal(coreApi.checkDecimalsSubtractedToNerveForWithdrawal(feeInfo.getHtgMainAssetName().chainId(), 1, feeInfo.getFee()));
             BigDecimal need;
-            // // 使用非提现网络的其他主资产作为手续费时
+            // // When using other main assets of non withdrawal networks as transaction fees
             if (feeInfo.getHtgMainAssetName() != htgContext.ASSET_NAME()) {
-                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId());
+                need = this.calcOtherMainAssetOfWithdrawByOtherMainAsset(feeInfo.getHtgMainAssetName(), feeAmount, po.getAssetId(), nerveTxHash);
             } else {
-                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId());
+                need = this.calcOtherMainAssetOfWithdrawByMainAssetProtocol15(feeAmount, po.getAssetId(), nerveTxHash);
             }
             if (need == null) {
                 throw new NulsException(ConverterErrorCode.INSUFFICIENT_FEE_OF_WITHDRAW);
             }
 
-            // 验证合约后发出交易
+            // Send out transactions after verifying the contract
             String htTxHash = this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignWithdrawFunction, HeterogeneousChainTxType.WITHDRAW);
             if (StringUtils.isNotBlank(htTxHash)) {
-                // 记录提现交易已向HTG网络发出
+                // Record withdrawal transactions that have been transferred toHTGNetwork transmission
                 htgPendingTxHelper.commitNervePendingWithdrawTx(nerveTxHash, htTxHash);
             }
             return htTxHash;
@@ -1115,32 +1122,32 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     public String createOrSignManagerChangesTxII(String nerveTxHash, String[] addAddresses, String[] removeAddresses, int orginTxCount, String signatureData, boolean checkOrder) throws NulsException {
-        logger().info("准备发送虚拟银行变更{}交易，nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
+        logger().info("Preparing to send virtual bank changes{}Transactions,nerveTxHash: {}, signatureData: {}", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData);
         try {
-            // 业务验证
+            // Business validation
             if (addAddresses == null) {
                 addAddresses = new String[0];
             }
             if (removeAddresses == null) {
                 removeAddresses = new String[0];
             }
-            // 准备数据
+            // Prepare data
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setNerveTxHash(nerveTxHash);
             po.setAddAddresses(addAddresses);
             po.setRemoveAddresses(removeAddresses);
             po.setOrginTxCount(orginTxCount);
-            // 交易准备
+            // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             TrxAccount account = this.createTxStartForChange(nerveTxHash, addAddresses, removeAddresses, waitingPo);
-            // 保存交易调用参数，设置等待结束时间
+            // Save transaction call parameters and set waiting time to end
             htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, addAddresses, removeAddresses, orginTxCount, signatureData, account.getOrder(), waitingPo);
             if (account.isEmpty()) {
                 return EMPTY_STRING;
             }
-            // 当要检查顺序时，非首位不发交易
+            // When checking the order, do not send transactions that are not in the first place
             if (checkOrder && !checkFirstOrder(account.getOrder())) {
-                logger().info("非首位不发交易, order: {}", account.getOrder());
+                logger().info("Non primary non transaction, order: {}", account.getOrder());
                 return EMPTY_STRING;
             }
             Set<String> addSet = new HashSet<>();
@@ -1150,7 +1157,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 //add = add.toLowerCase();
                 addAddresses[a] = add;
                 if (!addSet.add(add)) {
-                    logger().error("重复的待加入地址列表");
+                    logger().error("Duplicate list of addresses to be added");
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_2);
                 }
                 addList.add(new Address(add));
@@ -1162,14 +1169,14 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 //remove = remove.toLowerCase();
                 removeAddresses[r] = remove;
                 if (!removeSet.add(remove)) {
-                    logger().error("重复的待退出地址列表");
+                    logger().error("Duplicate list of pending exits");
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_4);
                 }
                 removeList.add(new Address(remove));
             }
-            // 若没有加入和退出，则直接发确认交易
+            // If you have not joined or exited, send a confirmation transaction directly
             if (addAddresses.length == 0 && removeAddresses.length == 0) {
-                logger().info("虚拟银行变更没有加入和退出，直接发确认交易, nerveTxHash: {}", nerveTxHash);
+                logger().info("Virtual banking changes have not been added or exited, and confirmation transactions have been sent directly, nerveTxHash: {}", nerveTxHash);
                 try {
                     htgCallBackManager.getTxConfirmedProcessor().txConfirmed(
                             HeterogeneousChainTxType.CHANGE,
@@ -1188,15 +1195,15 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                 }
                 return EMPTY_STRING;
             }
-            // 获取管理员账户
+            // Obtain administrator account
             String fromAddress = account.getAddress();
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
             if (removeSet.contains(fromAddress)) {
-                logger().error("退出的管理员不能参与管理员变更交易");
+                logger().error("Logged out administrators cannot participate in administrator change transactions");
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_MANAGER_CHANGE_ERROR_6);
             }
             Function createOrSignManagerChangeFunction = TrxUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, orginTxCount, signatureData);
-            // 验证合约后发出交易
+            // Send out transactions after verifying the contract
             return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, createOrSignManagerChangeFunction, HeterogeneousChainTxType.CHANGE);
         } catch (Exception e) {
             logger().error(String.format("adds: %s, removes: %s", addAddresses != null ? Arrays.toString(addAddresses) : "[]", removeAddresses != null ? Arrays.toString(removeAddresses) : "[]"), e);
@@ -1208,29 +1215,29 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
     }
 
     public String createOrSignUpgradeTxII(String nerveTxHash, String upgradeContract, String signatureData, boolean checkOrder) throws NulsException {
-        logger().info("准备发送虚拟银行合约升级授权交易，nerveTxHash: {}, upgradeContract: {}, signatureData: {}", nerveTxHash, upgradeContract, signatureData);
+        logger().info("Preparing to send virtual banking contract upgrade authorization transactions,nerveTxHash: {}, upgradeContract: {}, signatureData: {}", nerveTxHash, upgradeContract, signatureData);
         try {
-            // 交易准备
+            // Transaction preparation
             HtgWaitingTxPo waitingPo = new HtgWaitingTxPo();
             TrxAccount account = this.createTxStart(nerveTxHash, HeterogeneousChainTxType.UPGRADE, waitingPo);
-            // 保存交易调用参数，设置等待结束时间
+            // Save transaction call parameters and set waiting time to end
             htgInvokeTxHelper.saveWaittingInvokeQueue(nerveTxHash, upgradeContract, signatureData, account.getOrder(), waitingPo);
             if (account.isEmpty()) {
                 return EMPTY_STRING;
             }
-            // 当要检查顺序时，非首位不发交易
+            // When checking the order, do not send transactions that are not in the first place
             if (checkOrder && !checkFirstOrder(account.getOrder())) {
-                logger().info("非首位不发交易, order: {}", account.getOrder());
+                logger().info("Non primary non transaction, order: {}", account.getOrder());
                 return EMPTY_STRING;
             }
-            // 获取管理员账户
+            // Obtain administrator account
             String fromAddress = account.getAddress();
             String priKey = Numeric.toHexStringNoPrefix(account.getPriKey());
             HtgUnconfirmedTxPo po = new HtgUnconfirmedTxPo();
             po.setNerveTxHash(nerveTxHash);
 
             Function function = TrxUtil.getCreateOrSignUpgradeFunction(nerveTxHash, upgradeContract, signatureData);
-            // 验证合约后发出交易
+            // Send out transactions after verifying the contract
             return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, function, HeterogeneousChainTxType.UPGRADE);
         } catch (Exception e) {
             logger().error(e);
@@ -1271,7 +1278,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             order = 0x0f;
         }
         txStart.setOrder(order);
-        logger().info("变更交易的当前节点执行顺序: {}, addAddresses: {}, removeAddresses: {}, currentVirtualBanks: {}", order, Arrays.toString(addAddresses), Arrays.toString(removeAddresses), currentVirtualBanks);
+        logger().info("Change the current node execution order of the transaction: {}, addAddresses: {}, removeAddresses: {}, currentVirtualBanks: {}", order, Arrays.toString(addAddresses), Arrays.toString(removeAddresses), currentVirtualBanks);
         return txStart;
     }
 
@@ -1279,7 +1286,7 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanks(htgContext.getConfig().getChainId());
         po.setCurrentVirtualBanks(currentVirtualBanks);
         String realNerveTxHash = nerveTxHash;
-        // 根据nerve交易hash前两位算出顺序种子
+        // according tonervetransactionhashCalculate the sequential seed for the first two digits
         int seed = new BigInteger(realNerveTxHash.substring(0, 1), 16).intValue() + 1;
         int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
         if (bankSize > 16) {
@@ -1295,26 +1302,26 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             }
             e.setValue(bankOrder);
         });
-        logger().debug("加工中, 当前银行顺序: {}", currentVirtualBanks);
+        logger().debug("Processing, Current Bank Order: {}", currentVirtualBanks);
         List<Map.Entry<String, Integer>> list = new ArrayList(currentVirtualBanks.entrySet());
         list.sort(ConverterUtil.CHANGE_SORT);
         int i = 1;
         for (Map.Entry<String, Integer> entry : list) {
             currentVirtualBanks.put(entry.getKey(), i++);
         }
-        logger().debug("加工后, 当前银行顺序: {}", currentVirtualBanks);
-        // 按顺序等待固定时间后再发出HTG交易
+        logger().debug("After processing, Current Bank Order: {}", currentVirtualBanks);
+        // Wait for a fixed time in sequence before sending outHTGtransaction
         int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
         if (logger().isDebugEnabled()) {
-            logger().debug("顺序计算参数 bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}", bankSize, seed, mod, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+            logger().debug("Sequential calculation parameters bankSize: {}, seed: {}, mod: {}, orginBankOrder: {}, bankOrder: {}", bankSize, seed, mod, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
         }
-        // 向HTG网络请求验证
+        // towardsHTGNetwork request verification
         boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
         if (isCompleted) {
-            logger().info("[{}]交易[{}]已完成", txType, nerveTxHash);
+            logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
             return TrxAccount.newEmptyAccount(bankOrder);
         }
-        // 获取管理员账户
+        // Obtain administrator account
         TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
         account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
         account.setOrder(bankOrder);
@@ -1323,15 +1330,38 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
         return account;
     }
 
+    private TrxAccount createTxStartForWithdraw(String nerveTxHash, HeterogeneousChainTxType txType, HtgWaitingTxPo po) throws Exception {
+        Map<String, Integer> currentVirtualBanks = htgContext.getConverterCoreApi().currentVirtualBanksBalanceOrder(htgContext.getConfig().getChainId());
+        po.setCurrentVirtualBanks(currentVirtualBanks);
+        int bankSize = htgContext.getConverterCoreApi().getVirtualBankSize();
+        // Wait for a fixed time in sequence before sending outHTGtransaction
+        int bankOrder = currentVirtualBanks.get(htgContext.ADMIN_ADDRESS());
+        if (logger().isDebugEnabled()) {
+            logger().debug("Sequential calculation parameters bankSize: {}, orginBankOrder: {}, bankOrder: {}", bankSize, htgContext.getConverterCoreApi().getVirtualBankOrder(), bankOrder);
+        }
+        // towardsHTGNetwork request verification
+        boolean isCompleted = trxParseTxHelper.isCompletedTransaction(nerveTxHash);
+        if (isCompleted) {
+            logger().info("[{}]transaction[{}]Completed", txType, nerveTxHash);
+            return TrxAccount.newEmptyAccount(bankOrder);
+        }
+        // Obtain administrator account
+        TrxAccount account = (TrxAccount) this.getAccount(htgContext.ADMIN_ADDRESS());
+        account.decrypt(htgContext.ADMIN_ADDRESS_PASSWORD());
+        account.setOrder(bankOrder);
+        account.setBankSize(bankSize);
+        return account;
+    }
+
 
     private String createTxComplete(String nerveTxHash, HtgUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
-        // 估算feeLimit
+        // estimatefeeLimit
         TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
         if (estimateSun.isReverted()) {
-            logger().error("[{}]交易验证失败，原因: {}", txType, estimateSun.getRevertReason());
+            logger().error("[{}]Transaction verification failed, reason: {}", txType, estimateSun.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
         }
-        // feeLimit选择
+        // feeLimitchoice
         BigInteger feeLimit;
         if (txType == HeterogeneousChainTxType.WITHDRAW) {
             feeLimit = htgContext.GAS_LIMIT_OF_WITHDRAW();
@@ -1339,45 +1369,45 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
             feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
         }
         if (estimateSun.getSunUsed() > 0) {
-            // 放大到3倍
+            // Zoom in to3times
             feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_3).toBigInteger();
         }
         TrxSendTransactionPo trxSendTransactionPo = trxWalletApi.callContract(fromAddress, priKey, htgContext.MULTY_SIGN_ADDRESS(), feeLimit, txFunction, BigInteger.ZERO);
         String htTxHash = trxSendTransactionPo.getTxHash();
-        // docking发起htg交易时，把交易关系记录到db中
+        // dockinglaunchhtgRecord transaction relationships during transactionsdbin
         htgTxRelationStorageService.save(htTxHash, nerveTxHash, trxSendTransactionPo.toHtgPo());
-        // 当前节点已发出htg交易
+        // The current node has been sent outhtgtransaction
         htgInvokeTxHelper.saveSentEthTx(nerveTxHash);
 
-        // 保存未确认交易
+        // Save unconfirmed transactions
         po.setTxHash(htTxHash);
         po.setFrom(fromAddress);
         po.setTxType(txType);
         htgUnconfirmedTxStorageService.save(po);
         htgContext.UNCONFIRMED_TX_QUEUE().offer(po);
-        // 监听此交易的打包状态
+        // Monitor the packaging status of this transaction
         htgListener.addListeningTx(htTxHash);
-        logger().info("Nerve网络向{}网络发出[{}]交易, nerveTxHash: {}, 详情: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
+        logger().info("NerveNetwork oriented{}Network transmission[{}]transaction, nerveTxHash: {}, details: {}", htgContext.getConfig().getSymbol(), txType, nerveTxHash, po.toString());
         return htTxHash;
     }
 
-    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
-        return this.calcOtherMainAssetOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId) != null;
+    private boolean isEnoughFeeOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
+        return this.calcOtherMainAssetOfWithdrawByOtherMainAsset(otherMainAssetName, otherMainAssetAmount, hAssetId, remark) != null;
     }
 
-    private BigDecimal calcOtherMainAssetOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId) {
+    private BigDecimal calcOtherMainAssetOfWithdrawByOtherMainAsset(AssetName otherMainAssetName, BigDecimal otherMainAssetAmount, int hAssetId, String remark) {
         String otherSymbol = otherMainAssetName.toString();
         int otherDecimals = otherMainAssetName.decimals();
         IConverterCoreApi coreApi = htgContext.getConverterCoreApi();
         BigDecimal otherMainAssetUSD = coreApi.getUsdtPriceByAsset(otherMainAssetName);
         BigDecimal htgUSD = coreApi.getUsdtPriceByAsset(htgContext.ASSET_NAME());
         if(null == otherMainAssetUSD || null == htgUSD){
-            logger().error("[{}][withdraw] 提现手续费计算,没有获取到完整的报价. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
+            logger().error("[{}][withdraw] Withdrawal fee calculation,Unable to obtain complete quotation. {}_USD:{}, {}_USD:{}", htgContext.getConfig().getSymbol(), otherSymbol, otherMainAssetUSD, htgContext.getConfig().getSymbol(), htgUSD);
             throw new NulsRuntimeException(ConverterErrorCode.DATA_NOT_FOUND);
         }
         BigDecimal needOtherMainAssetAmount = TrxUtil.calcOtherMainAssetOfWithdraw(htgContext, otherMainAssetName, otherMainAssetUSD, htgUSD);
         if (otherMainAssetAmount.compareTo(needOtherMainAssetAmount) >= 0) {
-            logger().info("[{}]手续费足够，当前网络需要的{}: {}, 实际支出的{}: {}",
+            logger().info("[{}]The handling fee is sufficient for the current network needs{}: {}, Actual expenditure{}: {}",
                     htgContext.getConfig().getSymbol(),
                     otherSymbol,
                     needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
@@ -1385,27 +1415,33 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
                     otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString());
             return needOtherMainAssetAmount;
         }
-        logger().warn("[{}]手续费不足，当前网络需要的{}: {}, 实际支出的{}: {}, 需要追加的{}: {}",
+        String warnMsg = String.format("[%s]手续费不足，remark: %s, 当前网络需要的%s: %s, 实际支出的%s: %s, 需要追加的%s: %s",
                 htgContext.getConfig().getSymbol(),
+                remark,
                 otherSymbol,
                 needOtherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
                 otherSymbol,
                 otherMainAssetAmount.movePointLeft(otherDecimals).toPlainString(),
                 otherSymbol,
                 needOtherMainAssetAmount.subtract(otherMainAssetAmount).movePointLeft(otherDecimals).toPlainString());
+        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
+        logger().warn(warnMsg);
         return null;
     }
 
-    private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId) {
+    private BigDecimal calcOtherMainAssetOfWithdrawByMainAssetProtocol15(BigDecimal amount, int hAssetId, String remark) {
         BigDecimal amountCalc = TrxUtil.calcTrxOfWithdrawProtocol15(htgContext);
         if (amount.compareTo(amountCalc) >= 0) {
             return amountCalc;
         }
-        logger().warn("[{}]手续费不足，当前网络需要的TRX: {}, 实际支出的TRX: {}, 需要追加的TRX: {}",
+        String warnMsg = String.format("[%s]手续费不足，remark: %s, 当前网络需要的TRX: %s, 实际支出的TRX: %s, 需要追加的TRX: %s",
                 htgContext.getConfig().getSymbol(),
+                remark,
                 amountCalc.movePointLeft(6).toPlainString(),
                 amount.movePointLeft(6).toPlainString(),
                 amountCalc.subtract(amount).movePointLeft(6).toPlainString());
+        htgContext.getConverterCoreApi().putWechatMsg(warnMsg);
+        logger().warn(warnMsg);
         return null;
     }
 

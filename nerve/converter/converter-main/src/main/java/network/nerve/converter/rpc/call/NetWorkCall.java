@@ -45,7 +45,7 @@ import java.util.Map;
 public class NetWorkCall extends BaseCall {
 
     /**
-     * 给指定节点发送消息
+     * Send messages to specified nodes
      *
      * @param chain
      * @param message
@@ -73,13 +73,13 @@ public class NetWorkCall extends BaseCall {
     }
 
     /**
-     * 给网络上节点广播消息
-     * 1.转发交易hash
-     * 2.广播完整交易
+     * Broadcast messages to nodes on the network
+     * 1.Forwarding transactionshash
+     * 2.Broadcast complete transactions
      *
      * @param chain
      * @param message
-     * @param excludeNodes 排除的节点
+     * @param excludeNodes Excluded nodes
      * @return
      */
     public static boolean broadcast(Chain chain, BaseBusinessMessage message, String excludeNodes, String cmd) {

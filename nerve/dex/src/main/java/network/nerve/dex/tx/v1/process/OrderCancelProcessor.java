@@ -15,7 +15,7 @@ import network.nerve.dex.util.LoggerUtil;
 import java.util.*;
 
 /**
- * 取消委托挂单处理器
+ * Cancel delegated order processing
  */
 @Component("OrderCancelProcessorV1")
 public class OrderCancelProcessor implements TransactionProcessor {
@@ -50,7 +50,7 @@ public class OrderCancelProcessor implements TransactionProcessor {
     }
 
     /**
-     * 提交取消委托挂单交易
+     * Submit cancellation of entrusted order transaction
      *
      * @param tx
      */
@@ -61,7 +61,7 @@ public class OrderCancelProcessor implements TransactionProcessor {
 //
 //            TradingOrderPo orderPo = orderStorageService.query(orderCancel.getOrderHash());
 //            orderStorageService.stop(orderPo);
-//            //删除盘口对应的订单记录
+//            //Delete order records corresponding to inventory opening
 //            dexManager.removeTradingOrder(orderPo);
 //        } catch (NulsException e) {
 //            LoggerUtil.dexLog.error("Failure to TradingOrderCancel commit, hash:" + tx.getHash().toHex());
@@ -79,7 +79,7 @@ public class OrderCancelProcessor implements TransactionProcessor {
 //            TradingOrderCancel orderCancel = new TradingOrderCancel();
 //            orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
 //            TradingOrderPo orderPo = orderStorageService.queryFromBack(orderCancel.getOrderHash());
-//            //有可能是因为保存区块时，未完整保存需要做回滚，因此数据可能会查询不到
+//            //It is possible that when saving the block, incomplete saving requires a rollback, so the data may not be queried
 //            if (orderPo != null) {
 //                orderStorageService.rollbackStop(orderPo);
 //            }
@@ -95,7 +95,7 @@ public class OrderCancelProcessor implements TransactionProcessor {
     }
 
     /**
-     * 挂单委托交易放在第1位处理
+     * Place the entrusted transaction on the order placement page1Bit processing
      *
      * @return
      */

@@ -18,7 +18,7 @@ import java.util.Map;
 public class LedgerCall {
 
     /**
-     * 查询本链所有已注册资产（非合约资产）
+     * Query all registered assets in this chain（Non contractual assets）
      *
      * @param chainId
      * @return

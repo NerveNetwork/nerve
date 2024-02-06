@@ -12,12 +12,12 @@ import java.util.*;
  */
 public class ConsensusCache {
     /**
-     * 缓存验证通过的最新区块
+     * The latest block that has passed cache verification
      */
     private BestBlocksVotingContainer bestBlocksVotingContainer = new BestBlocksVotingContainer();
 
     /**
-     * 存放刚收到的tou
+     * Store newly received itemstou
      * VoteMessageQueue
      */
     private VoteMessageQueue voteMessageQueue = new VoteMessageQueue();
@@ -27,25 +27,25 @@ public class ConsensusCache {
     private ShareMessageQueue shareMessageQueue = new ShareMessageQueue();
 
     /**
-     * 第一阶段的结果
+     * The results of the first stage
      */
     private VoteResultStageOneQueue stageOneQueue = new VoteResultStageOneQueue();
 
     /**
-     * 第二阶段的结果
+     * The results of the second stage
      */
     private VoteResultStageTwoQueue stageTwoQueue = new VoteResultStageTwoQueue();
 
     private VoteResultQueue voteResultQueue = new VoteResultQueue();
 
     /**
-     * 缓存最近5个区块的第二轮确认的投票结果
+     * Cache Recently5The voting results for the second round of confirmation of blocks
      */
     private List<NulsHash> signResultList = new ArrayList<NulsHash>();
     private Map<NulsHash, VoteResultMessage> signResultMap = new HashMap<>();
 
     /**
-     * 通知出块线程进行打包
+     * Notify the outbound thread to proceed with packaging
      */
     private PackingQueue packingQueue = new PackingQueue();
 
@@ -66,7 +66,7 @@ public class ConsensusCache {
     }
 
     /**
-     * 消息去重
+     * Message deduplication
      */
     private HashSetDuplicateProcessor<String> msgDuplicateProcessor = new HashSetDuplicateProcessor<>(2048);
 

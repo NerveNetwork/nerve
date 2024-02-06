@@ -5,7 +5,7 @@ import io.nuls.consensus.model.po.ChangeAgentDepositPo;
 import java.util.Comparator;
 
 /**
- * 追加/退出节点保证金数据比较器
+ * Add/Exit node margin data comparator
  * Node Contrast Tool Class
  *
  * @author tag

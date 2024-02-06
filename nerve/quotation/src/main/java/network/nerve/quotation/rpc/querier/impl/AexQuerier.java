@@ -52,16 +52,16 @@ public class AexQuerier implements Querier {
             }
             Long code = Long.parseLong(res.get("code").toString());
             if (code != 20000L) {
-                chain.getLogger().error("AEX 调用{}接口, 获取价格失败, anchorToken:{}, code:{}, msg:{}", baseurl, anchorToken, code, res.get("msg").toString());
+                chain.getLogger().error("AEX call{}interface, Failed to obtain price, anchorToken:{}, code:{}, msg:{}", baseurl, anchorToken, code, res.get("msg").toString());
                 return null;
             }
             Map<String, Object> data = (Map<String, Object>) res.get("data");
             Map<String, Object> ticker = (Map<String, Object>) data.get("ticker");
-            chain.getLogger().info("AEX 获取到交易对[{}]价格:{}", anchorToken, ticker.get("last"));
+            chain.getLogger().info("AEX Obtaining transaction pairs[{}]price:{}", anchorToken, ticker.get("last"));
             return new BigDecimal(ticker.get("last").toString());
 
         } catch (Throwable e) {
-            chain.getLogger().error("AEX, 调用接口 {}, anchorToken:{} 获取价格失败", baseurl, anchorToken);
+            chain.getLogger().error("AEX, Calling interfaces {}, anchorToken:{} Failed to obtain price", baseurl, anchorToken);
             return null;
         }
     }

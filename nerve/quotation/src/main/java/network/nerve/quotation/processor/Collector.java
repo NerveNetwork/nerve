@@ -29,16 +29,16 @@ import network.nerve.quotation.model.bo.Chain;
 import java.math.BigDecimal;
 
 /**
- * 价格收集器接口
+ * Price collector interface
  * @author: Loki
  * @date: 2019/12/5
  */
 public interface Collector {
     /**
-     * 根据token从各个查询器采集多个(交易所等)价格
-     * 根据不同第三方机构,对价格计算加权平均值
+     * according totokenCollect multiple queries from various queries(Exchanges, etc)price
+     * According to different third-party organizations,Calculate the weighted average of prices
      * @param chain
-     * @return 执行成功
+     * @return Execution successful
      */
     BigDecimal enquiry(Chain chain, String anchorToken);
 }

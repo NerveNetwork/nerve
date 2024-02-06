@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @Author: zhoulijun
  * @Time: 2020/9/21 16:25
- * @Description: 功能描述
+ * @Description: Function Description
  */
 public class RegisteredCrossChainTest {
 

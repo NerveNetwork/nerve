@@ -8,27 +8,27 @@ import io.nuls.core.rpc.model.ApiModel;
 import io.nuls.core.rpc.model.ApiModelProperty;
 
 /**
- * 节点基础信息类
+ * Node basic information class
  * Node basic information class
  *
  * @author tag
  * 2018/11/20
  */
-@ApiModel(name = "节点基础信息")
+@ApiModel(name = "Node basic information")
 public class AgentBasicDTO {
-    @ApiModelProperty(description = "节点地址")
+    @ApiModelProperty(description = "Node address")
     private String agentAddress;
-    @ApiModelProperty(description = "节点出块地址")
+    @ApiModelProperty(description = "Node block address")
     private String packingAddress;
-    @ApiModelProperty(description = "抵押金额")
+    @ApiModelProperty(description = "Mortgage amount")
     private String deposit;
-    @ApiModelProperty(description = "是否为种子节点")
+    @ApiModelProperty(description = "Is it a seed node")
     private boolean isSeedNode;
-    @ApiModelProperty(description = "公钥")
+    @ApiModelProperty(description = "Public key")
     private String pubKey;
-    @ApiModelProperty(description = "节点HASH")
+    @ApiModelProperty(description = "nodeHASH")
     private String agentHash;
-    @ApiModelProperty(description = "奖励地址")
+    @ApiModelProperty(description = "Reward Address")
     private String rewardAddress;
 
 

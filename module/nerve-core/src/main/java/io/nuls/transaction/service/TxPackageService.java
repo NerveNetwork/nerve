@@ -30,15 +30,15 @@ import io.nuls.transaction.model.bo.TxPackage;
 import java.util.List;
 
 /**
- * 处理节点打包区块时的交易
+ * Processing transactions when nodes package blocks
  * @author: Charlie
  * @date: 2019/11/18
  */
 public interface TxPackageService {
 
     /**
-     * 打包交易
-     * 适用于不包含智能合约交易的区块链
+     * package deal
+     * Suitable for blockchain transactions without smart contracts
      * @param chain
      * @param endtimestamp
      * @param maxTxDataSize
@@ -47,7 +47,7 @@ public interface TxPackageService {
     TxPackage packageBasic (Chain chain, long endtimestamp, long maxTxDataSize, long blockTime, String preStateRoot);
 
     /**
-     * 验证区块交易
+     * Verify block transactions
      * @param chain
      * @param txStrList
      * @param blockHeaderStr

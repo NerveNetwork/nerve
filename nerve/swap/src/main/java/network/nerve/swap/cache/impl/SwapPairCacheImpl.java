@@ -31,7 +31,7 @@ public class SwapPairCacheImpl implements SwapPairCache {
     @Autowired
     private ChainManager chainManager;
 
-    //不同的链地址不会相同，所以不再区分链
+    //Different chain addresses will not be the same, so chains will no longer be distinguished
     private Map<String, SwapPairDTO> CACHE_MAP = new HashMap<>();
     private Map<String, String> LP_CACHE_MAP = new HashMap<>();
 

@@ -26,7 +26,7 @@
 package network.nerve.swap.constant;
 
 /**
- * 交易数据存储常量
+ * Transaction data storage constant
  * Transaction entity storage constants
  *
  * @author: Loki
@@ -34,7 +34,7 @@ package network.nerve.swap.constant;
 public interface SwapDBConstant {
 
     /**
-     * 交易存储表名 前缀
+     * Transaction storage table name prefix
      */
     String DB_SWAP = "sw_table_";
 

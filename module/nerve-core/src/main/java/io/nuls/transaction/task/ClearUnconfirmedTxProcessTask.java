@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 import static io.nuls.transaction.constant.TxContext.UNCONFIRMED_TX_EXPIRE_SEC;
 
 /**
- * 未确认交易清理机制
+ * Unconfirmed transaction clearance mechanism
  */
 public class ClearUnconfirmedTxProcessTask implements Runnable {
 
@@ -84,7 +84,7 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
     }
 
     /**
-     * 过滤指定时间内过期的交易
+     * Filter transactions that expire within a specified time frame
      *
      * @param txKeyList
      * @return expireTxList
@@ -106,19 +106,19 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
     }
 
     public int processExpireTxs(List<byte[]> queryList){
-        //获取未确认的交易
+        //Obtain unconfirmed transactions
         List<TransactionUnconfirmedPO> list = unconfirmedTxStorageService.getTransactionUnconfirmedPOList(chain.getChainId(), queryList);
 
-        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次待处理的未确认交易数:{}", list.size());
-        //计算出超时的未确认交易
+        chain.getLogger().info("[UnconfirmedTxProcessTask] The number of unconfirmed transactions to be processed this time:{}", list.size());
+        //Calculate unconfirmed transactions that have exceeded the time limit
         List<Transaction> expireTxList = getExpireTxList(list);
         int count = 0;
         Transaction tx;
         for (int i = 0; i < expireTxList.size(); i++) {
             tx = expireTxList.get(i);
-            //如果该未确认交易不在待打包池中，则认为是过期脏数据，需要清理
+            //If the unconfirmed transaction is not in the pending package pool, it is considered expired dirty data and needs to be cleaned up
             if (!packablePool.exist(chain, tx)) {
-                chain.getLogger().info("[UnconfirmedTxProcessTask] --- 本次需要清理的交易hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[UnconfirmedTxProcessTask] --- The transactions that need to be cleared this timehash:{}", tx.getHash().toHex());
                 processTx(chain, tx);
                 count++;
             }
@@ -127,7 +127,7 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
     }
 
     /**
-     * 过滤指定时间内过期的交易
+     * Filter transactions that expire within a specified time frame
      *
      * @param txPOList
      * @return expireTxList
@@ -135,10 +135,10 @@ public class ClearUnconfirmedTxProcessTask implements Runnable {
     private List<Transaction> getExpireTxList(List<TransactionUnconfirmedPO> txPOList) {
         List<Transaction> expireTxList = new ArrayList<>();
         long currentTimeSeconds = NulsDateUtils.getCurrentTimeSeconds();
-        //过滤指定时间内过期的交易
+        //Filter transactions that expire within a specified time frame
         List<TransactionUnconfirmedPO> expireTxPOList = txPOList.stream().filter(txPo -> currentTimeSeconds - UNCONFIRMED_TX_EXPIRE_SEC > txPo.getCreateTime()).collect(Collectors.toList());
         expireTxPOList.forEach(txPo -> expireTxList.add(txPo.getTx()));
-        chain.getLogger().info("[UnconfirmedTxProcessTask] 本次处理后超过过期时间{}秒的交易数:{}", UNCONFIRMED_TX_EXPIRE_SEC, expireTxList.size());
+        chain.getLogger().info("[UnconfirmedTxProcessTask] Expiration time exceeded after this processing{}Seconds of transactions:{}", UNCONFIRMED_TX_EXPIRE_SEC, expireTxList.size());
         return expireTxList;
     }
 

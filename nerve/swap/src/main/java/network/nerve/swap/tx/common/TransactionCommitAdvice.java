@@ -63,7 +63,7 @@ public class TransactionCommitAdvice implements CommonAdvice {
     @Override
     public boolean handle(int chainId, List<Transaction> txList, BlockHeader blockHeader, int syncStatus, Map<String, Boolean> resultMap, List<TransactionProcessor> processors) {
         if (SwapContext.PROTOCOL_1_17_0 > blockHeader.getHeight()) {
-            // 协议17之前 使用旧流程处理交易commit
+            // protocol17before Using old processes to process transactionscommit
             return false;
         }
         Map<Integer, TransactionProcessor> processorMap = processors.stream().collect(Collectors.toMap(TransactionProcessor::getType, Function.identity()));
@@ -90,7 +90,7 @@ public class TransactionCommitAdvice implements CommonAdvice {
 
     @Override
     public void end(int chainId, List<Transaction> txList, BlockHeader blockHeader) {
-        // 移除临时余额, 临时区块头等当前批次执行数据
+        // Remove temporary balance, Temporary block header and other current batch execution data
         Chain chain = chainManager.getChain(chainId);
         chain.setBatchInfo(null);
     }

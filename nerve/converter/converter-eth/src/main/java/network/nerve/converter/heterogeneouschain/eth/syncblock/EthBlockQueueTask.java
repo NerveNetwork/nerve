@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * 多线程下载区块的任务（不再使用）
+ * The task of downloading blocks through multiple threads（No longer in use）
  *
  * @author: Mimi
  * @date: 2019-08-09
@@ -44,7 +44,7 @@ public class EthBlockQueueTask implements Runnable {
     }
 
     /**
-     * 检测区块的高度变化 查询区块数据
+     * Detecting height changes in blocks Query block data
      */
     @Override
     public void run() {
@@ -54,17 +54,17 @@ public class EthBlockQueueTask implements Runnable {
                 EthSimpleBlockHeader localMax = ethLocalBlockHelper.getLatestLocalBlockHeader();
                 Long localBlockHeight;
                 if (localMax == null) {
-                    logger.info("本地区块为空，将从默认起始高度[{}]开始下载ETH区块", defaultStartHeight);
+                    logger.info("The local block is empty and will start from the default starting height[{}]Start downloadingETHblock", defaultStartHeight);
                     localBlockHeight = defaultStartHeight;
                 } else {
                     localBlockHeight = localMax.getHeight();
                 }
-                // 默认起始同步高度
-                // 当本地最新高度小于配置的默认高度时，则从默认高度开始同步
+                // Default starting synchronization height
+                // When the latest local height is less than the configured default height, synchronization starts from the default height
                 if(localBlockHeight < defaultStartHeight) {
                     localBlockHeight = defaultStartHeight;
                 }
-                logger.info("本地区块 height: {}", localBlockHeight);
+                logger.info("Local blocks height: {}", localBlockHeight);
                 long height = ethWalletApi.getBlockHeight();
                 Long between = height - localBlockHeight;
                 logger.info("between {}", between);
@@ -86,7 +86,7 @@ public class EthBlockQueueTask implements Runnable {
                 }
                 for (int i = 1; i <= between; i = i + threadCount) {
                     long tempTempHeight = tempHeight;
-                    // 计算当前批次要下载的区块数量（最后一个批次数量可能小于threadCount）
+                    // Calculate the number of blocks to be downloaded for the current batch（The last batch quantity may be less thanthreadCount）
                     int size;
                     if ((between - i) < threadCount) {
                         size = (int) (between - i + 1);
@@ -95,7 +95,7 @@ public class EthBlockQueueTask implements Runnable {
                     }
                     int queueSize;
                     while ((queueSize = ETH_BLOCK_QUEUE.size()) > 1000) {
-                        logger.info("下载区块未处理队列大于1000，等待10秒再下载，当前队列大小: {}", queueSize);
+                        logger.info("Download block unprocessed queue greater than1000, waiting10Download in seconds, current queue size: {}", queueSize);
                         TimeUnit.SECONDS.sleep(10);
                     }
                     CountDownLatch countDownLatch = new CountDownLatch(size);
@@ -104,10 +104,10 @@ public class EthBlockQueueTask implements Runnable {
                         threadPool.submit(new GetBlock(ethWalletApi, tempHeight, countDownLatch));
                     }
                     countDownLatch.await();
-                    // 判断是否全部成功下载区块
+                    // Determine if all blocks have been successfully downloaded
                     if (list.size() != size) {
-                        logger.warn("该批次未完整下载区块, 区间: [{} - {}]", tempTempHeight, tempTempHeight + size);
-                        // 没有全部成功，还原批次变量，重新下载这个批次的区块
+                        logger.warn("This batch did not fully download the blocks, interval: [{} - {}]", tempTempHeight, tempTempHeight + size);
+                        // Not all successful, restore batch variables and download blocks for this batch again
                         i = i - threadCount;
                         tempHeight = tempTempHeight;
                         list.clear();
@@ -153,9 +153,9 @@ public class EthBlockQueueTask implements Runnable {
                 //logger.info("thread {} get block {}", Thread.currentThread().getName(), height);
                 EthBlock.Block block = ethWalletApi.getBlockByHeight(height);
                 EthBlockQueueTask.this.add(block);
-                logger.info("成功下载eth区块，高度: {}", height);
+                logger.info("Successfully downloadedethBlock, height: {}", height);
             } catch (Exception e) {
-                logger.error("下载eth区块失败", e);
+                logger.error("downloadethBlock failure", e);
             } finally {
                 countDownLatch.countDown();
             }

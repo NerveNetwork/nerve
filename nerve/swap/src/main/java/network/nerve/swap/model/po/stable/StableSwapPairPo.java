@@ -14,6 +14,15 @@ public class StableSwapPairPo {
     private NerveToken[] coins;
     private int[] decimalsOfCoins;
     private boolean[] removes;
+    private boolean[] pauses;
+
+    public boolean[] getPauses() {
+        return pauses;
+    }
+
+    public void setPauses(boolean[] pauses) {
+        this.pauses = pauses;
+    }
 
     public StableSwapPairPo(byte[] address) {
         this.address = address;
@@ -66,6 +75,7 @@ public class StableSwapPairPo {
         po.setCoins(coins);
         po.setDecimalsOfCoins(decimalsOfCoins);
         po.setRemoves(removes);
+        po.setPauses(pauses);
         return po;
     }
 
@@ -86,6 +96,8 @@ public class StableSwapPairPo {
             .append(Arrays.toString(decimalsOfCoins));
         sb.append(",\"removes\":")
             .append(removes == null ? Arrays.toString(new boolean[coins.length]) : Arrays.toString(removes));
+        sb.append(",\"pauses\":")
+            .append(pauses == null ? Arrays.toString(new boolean[coins.length]) : Arrays.toString(pauses));
         sb.append("}");
         return sb.toString();
     }

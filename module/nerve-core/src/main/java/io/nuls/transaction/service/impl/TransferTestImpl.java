@@ -56,7 +56,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * 大批量交易测试类 用于cmd命令行
+ * Mass trading testing class Used forcmdcommand line
  *
  * @author: Charlie
  * @date: 2019/6/29
@@ -76,7 +76,7 @@ public class TransferTestImpl {
     static String address29 = "tNULSeBaMqywZjfSrKNQKBfuQtVxAHBQ8rB2Zn";
 
     /**
-     * 空地址
+     * Empty address
      * tNULSeBaMm8Kp5u7WU5xnCJqLe8fRFD49aZQdK
      * tNULSeBaMigwBrvikwVwbhAgAxip8cTScwcaT8
      */
@@ -93,8 +93,8 @@ public class TransferTestImpl {
     TxService txService;
 
     public void importPriKeyTest() {
-//        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//种子出块地址 tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
-//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//种子出块地址 tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
+//        importPriKey("b54db432bba7e13a6c4a28f65b925b18e63bcb79143f7b894fa735d5d3d09db5", password);//Seed block address tNULSeBaMkrt4z9FYEkkR9D6choPVvQr94oYZp
+//        importPriKey("188b255c5a6d58d1eed6f57272a22420447c3d922d5765ebb547bc6624787d9f", password);//Seed block address tNULSeBaMoGr2RkLZPfJeS5dFzZeNj1oXmaYNe
         importPriKey("5396d5015edb6c8e6a4f9ac281d82b57a222fe712f5281a1e256929df78a46f0", password);//20 tNULSeBaMvEtDfvZuukDf2mVyfGo3DdiN8KLRG
         importPriKey("e626c1e1541471d4f6e074762c811e3a5896be14bffabff059e2c54703252160", password);//21 tNULSeBaMnrs6JKrCy6TQdzYJZkMZJDng7QAsD
         importPriKey("8686352e34eade8b2e5104a0931011cc5a67e72fb1d2679d430e944480260dc4", password);//22 tNULSeBaMrbMRiFAUeeAt6swb4xVBNyi81YL24
@@ -108,16 +108,16 @@ public class TransferTestImpl {
     }
 
     /**
-     * 多个地址转账
+     * Multiple address transfer
      */
     public void mAddressTransfer(String addressMoney) throws Exception {
         int count = 10000;
-        Log.info("创建转账账户...");
+        Log.info("Create a transfer account...");
         List<String> list = createAddress(count);
-        //给新生成账户转账
+        //Transfer funds to the newly generated account
         NulsHash hash = null;
 
-        Log.info("交易账户余额初始化...");
+        Log.info("Transaction account balance initialization...");
         for (int i = 0; i < count; i++) {
             String address = list.get(i);
             Map transferMap = this.createTransferTx(addressMoney, address, new BigInteger("8000000000"));
@@ -130,17 +130,17 @@ public class TransferTestImpl {
             hash = tx.getHash();
             HashMap result = (HashMap) TransactionCall.requestAndResponse(ModuleE.TX.abbr, "tx_newTx", params);
         }
-        //睡30秒
+        //sleep30second
         Thread.sleep(30000L);
-        Log.info("创建接收账户...");
+        Log.info("Create receiving account...");
         List<String> listTo = createAddress(count);
 
-        //新生成账户各执行一笔转账
+        //Execute one transfer for each newly generated account
         Log.debug("{}", System.currentTimeMillis());
         int countTx = 0;
         Map<String, NulsHash> preHashMap = new HashMap<>();
         for (int x = 0; x < 50; x++) {
-            Log.info("start Transfer {} 笔,  * 第 {} 次", count, x + 1);
+            Log.info("start Transfer {} pen,  * Section {} second", count, x + 1);
             long startTime = System.currentTimeMillis();
             for (int i = 0; i < count; i++) {
                 String address = list.get(i);
@@ -163,7 +163,7 @@ public class TransferTestImpl {
             Log.info("tx count:{} - execution time:{} milliseconds,  about≈:{}seconds", count, executionTime, executionTime / 1000);
             Log.info("");
         }
-        Log.info("全部完成時間：{}, - total count:{}",
+        Log.info("Full completion time：{}, - total count:{}",
                 DateUtils.timeStamp2DateStr(NulsDateUtils.getCurrentTimeMillis()), countTx);
     }
 
@@ -173,18 +173,18 @@ public class TransferTestImpl {
         if (null == amount) {
             amount = "500000000";
         }
-        Log.info("创建转账账户...");
+        Log.info("Create a transfer account...");
         List<String> list1 = doAccountsCreateAndGiveMoney(count, new BigInteger(amount), addressMoney1);
         List<String> list2 = doAccountsCreateAndGiveMoney(count, new BigInteger(amount), addressMoney2);
-        //睡30秒
+        //sleep30second
         Thread.sleep(30000L);
-        //新生成账户各执行一笔转账
+        //Execute one transfer for each newly generated account
         long countTx = 0;
         Map<String, NulsHash> preHashMap = new HashMap<>();
         long x = 0;
         while (true) {
             x++;
-            Log.info("start Transfer {} 笔,  * 第 {} 次", countTx, x);
+            Log.info("start Transfer {} pen,  * Section {} second", countTx, x);
             long startTime = System.currentTimeMillis();
             countTx = countTx + doTrans(preHashMap, list1, list2, count);
             countTx = countTx + doTrans(preHashMap, list2, list1, count);
@@ -198,10 +198,10 @@ public class TransferTestImpl {
         while (true) {
             Thread.sleep(10L);
             Map transferMap = this.createTransferTx(address, address, new BigInteger("1000000"));
-            //调用接口
+            //Calling interfaces
             Response cmdResp = NerveCoreResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_transfer", transferMap);
             if (!cmdResp.isSuccess()) {
-                chain.getLogger().error("失败 errorcode:{}", cmdResp.getResponseErrorCode());
+                chain.getLogger().error("fail errorcode:{}", cmdResp.getResponseErrorCode());
                 throw new NulsException(TxErrorCode.RPC_REQUEST_FAILD);
             }
             HashMap result = (HashMap) (((HashMap) cmdResp.getResponseData()).get("ac_transfer"));
@@ -217,7 +217,7 @@ public class TransferTestImpl {
 
     public void importPriKey(String priKey, String pwd) {
         try {
-            //账户已存在则覆盖 If the account exists, it covers.
+            //Overwrite if account already exists If the account exists, it covers.
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -237,9 +237,9 @@ public class TransferTestImpl {
     private List<String> doAccountsCreateAndGiveMoney(int addrCount, BigInteger amount, String richAddr) throws Exception {
         List<String> list = createAddress(addrCount);
         chain = chainManager.getChain(4);
-        //给新生成账户转账
+        //Transfer funds to the newly generated account
         NulsHash hash = null;
-        Log.info("交易账户余额初始化...");
+        Log.info("Transaction account balance initialization...");
         for (int i = 0; i < addrCount; i++) {
             try {
                 String address = list.get(i);
@@ -258,7 +258,7 @@ public class TransferTestImpl {
                 continue;
             }
         }
-        //睡30秒
+        //sleep30second
         Thread.sleep(60000L);
         return list;
     }
@@ -285,10 +285,10 @@ public class TransferTestImpl {
             } catch (NulsException e) {
                 Log.error(e);
                 if (e.getErrorCode().getCode().equalsIgnoreCase(TxErrorCode.PAUSE_NEWTX.getCode())) {
-                    //交易状态不对，睡2s再执行
+                    //Transaction status is incorrect, sleep2sRe execute
                     Thread.sleep(2000L);
                 } else if (e.getErrorCode().getCode().equalsIgnoreCase(TxErrorCode.ORPHAN_TX.getCode())) {
-                    //孤儿交易，从数据库重新获取nonce
+                    //Orphan transaction, retrieve from database againnonce
                     preHashMap.remove(address);
                 }
                 continue;
@@ -342,7 +342,7 @@ public class TransferTestImpl {
 
 
     /**
-     * 创建普通转账交易
+     * Create a regular transfer transaction
      *
      * @return
      */
@@ -407,19 +407,19 @@ public class TransferTestImpl {
     }
 
     /**
-     * 组装交易
+     * Assembly transaction
      */
     private Transaction assemblyTransaction2(int chainId, List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash hash) throws NulsException {
         Transaction tx = new Transaction(2);
         tx.setTime(NulsDateUtils.getCurrentTimeMillis() / 1000);
         tx.setRemark(StringUtils.bytes(remark));
         try {
-            //组装CoinData中的coinFrom、coinTo数据
+            //assembleCoinDataMiddlecoinFrom、coinTodata
             assemblyCoinData2(tx, chainId, fromList, toList, hash);
-            //计算交易数据摘要哈希
+            //Calculate transaction data summary hash
             byte[] bytes = tx.serializeForHash();
             tx.setHash(NulsHash.calcHash(bytes));
-            //创建ECKey用于签名
+            //establishECKeyUsed for signature
 //            List<ECKey> signEcKeys = new ArrayList<>();
             TransactionSignature transactionSignature = new TransactionSignature();
             List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
@@ -440,7 +440,7 @@ public class TransferTestImpl {
 
                 p2PHKSignatures.add(signature);
             }
-            //交易签名
+            //Transaction signature
             transactionSignature.setP2PHKSignatures(p2PHKSignatures);
             tx.setTransactionSignature(transactionSignature.serialize());
             return tx;
@@ -451,19 +451,19 @@ public class TransferTestImpl {
     }
 
     /**
-     * 组装交易
+     * Assembly transaction
      */
     private Transaction assemblyTransaction(int chainId, List<CoinDTO> fromList, List<CoinDTO> toList, String remark, NulsHash hash) throws NulsException {
         Transaction tx = new Transaction(2);
         tx.setTime(NulsDateUtils.getCurrentTimeMillis() / 1000);
         tx.setRemark(StringUtils.bytes(remark));
         try {
-            //组装CoinData中的coinFrom、coinTo数据
+            //assembleCoinDataMiddlecoinFrom、coinTodata
             assemblyCoinData(tx, chainId, fromList, toList, hash);
-            //计算交易数据摘要哈希
+            //Calculate transaction data summary hash
             byte[] bytes = tx.serializeForHash();
             tx.setHash(NulsHash.calcHash(bytes));
-            //创建ECKey用于签名
+            //establishECKeyUsed for signature
 //            List<ECKey> signEcKeys = new ArrayList<>();
             TransactionSignature transactionSignature = new TransactionSignature();
             List<P2PHKSignature> p2PHKSignatures = new ArrayList<>();
@@ -484,7 +484,7 @@ public class TransferTestImpl {
 
                 p2PHKSignatures.add(signature);
             }
-            //交易签名
+            //Transaction signature
             transactionSignature.setP2PHKSignatures(p2PHKSignatures);
             tx.setTransactionSignature(transactionSignature.serialize());
             return tx;
@@ -496,16 +496,16 @@ public class TransferTestImpl {
 
     private Transaction assemblyCoinData2(Transaction tx, int chainId, List<CoinDTO> fromList, List<CoinDTO> toList, NulsHash hash) throws NulsException {
         try {
-            //组装coinFrom、coinTo数据
+            //assemblecoinFrom、coinTodata
             List<CoinFrom> coinFromList = assemblyCoinFrom(chainId, fromList, hash);
             List<CoinTo> coinToList = assemblyCoinTo2(chainId, toList);
-            //来源地址或转出地址为空
+            //The source address or transfer address is empty
             if (coinFromList.size() == 0 || coinToList.size() == 0) {
                 return null;
             }
-            //交易总大小=交易数据大小+签名数据大小
+            //Total transaction size=Transaction data size+Signature data size
             int txSize = tx.size() + getSignatureSize(coinFromList);
-            //组装coinData数据
+            //assemblecoinDatadata
             CoinData coinData = getCoinData(chainId, coinFromList, coinToList, txSize);
             tx.setCoinData(coinData.serialize());
         } catch (Exception e) {
@@ -515,16 +515,16 @@ public class TransferTestImpl {
 
     private Transaction assemblyCoinData(Transaction tx, int chainId, List<CoinDTO> fromList, List<CoinDTO> toList, NulsHash hash) throws NulsException {
         try {
-            //组装coinFrom、coinTo数据
+            //assemblecoinFrom、coinTodata
             List<CoinFrom> coinFromList = assemblyCoinFrom(chainId, fromList, hash);
             List<CoinTo> coinToList = assemblyCoinTo(chainId, toList);
-            //来源地址或转出地址为空
+            //The source address or transfer address is empty
             if (coinFromList.size() == 0 || coinToList.size() == 0) {
                 return null;
             }
-            //交易总大小=交易数据大小+签名数据大小
+            //Total transaction size=Transaction data size+Signature data size
             int txSize = tx.size() + getSignatureSize(coinFromList);
-            //组装coinData数据
+            //assemblecoinDatadata
             CoinData coinData = getCoinData(chainId, coinFromList, coinToList, txSize);
             tx.setCoinData(coinData.serialize());
         } catch (Exception e) {
@@ -533,9 +533,9 @@ public class TransferTestImpl {
     }
 
     /**
-     * 组装coinTo数据
+     * assemblecoinTodata
      * assembly coinTo data
-     * 条件：to中所有地址必须是同一条链的地址
+     * condition：toAll addresses in the must be addresses on the same chain
      *
      * @param listTo Initiator set coinTo
      * @return List<CoinTo>
@@ -546,14 +546,14 @@ public class TransferTestImpl {
         for (CoinDTO coinDto : listTo) {
             String address = coinDto.getAddress();
             byte[] addressByte = AddressTool.getAddress(address);
-            //转账交易转出地址必须是本链地址
+            //The transfer transaction transfer address must be a local chain address
             if (!AddressTool.validAddress(chainId, address)) {
                 Log.debug("failed");
             }
-            //检查该链是否有该资产
+            //Check if the chain has the asset
             int assetsChainId = coinDto.getAssetsChainId();
             int assetId = coinDto.getAssetsId();
-            //检查金额是否小于0
+            //Check if the amount is less than0
             BigInteger amount = coinDto.getAmount();
             if (BigIntegerUtils.isLessThan(amount, BigInteger.ZERO)) {
                 Log.debug("failed");
@@ -574,14 +574,14 @@ public class TransferTestImpl {
         for (CoinDTO coinDto : listTo) {
             String address = coinDto.getAddress();
             byte[] addressByte = AddressTool.getAddress(address);
-            //转账交易转出地址必须是本链地址
+            //The transfer transaction transfer address must be a local chain address
             if (!AddressTool.validAddress(chainId, address)) {
                 Log.debug("failed");
             }
-            //检查该链是否有该资产
+            //Check if the chain has the asset
             int assetsChainId = coinDto.getAssetsChainId();
             int assetId = coinDto.getAssetsId();
-            //检查金额是否小于0
+            //Check if the amount is less than0
             BigInteger amount = coinDto.getAmount();
             if (BigIntegerUtils.isLessThan(amount, BigInteger.ZERO)) {
                 Log.debug("failed");
@@ -606,8 +606,8 @@ public class TransferTestImpl {
     }
 
     /**
-     * 通过coinfrom计算签名数据的size
-     * 如果coinfrom有重复地址则只计算一次；如果有多签地址，只计算m个地址的size
+     * adoptcoinfromCalculate signature datasize
+     * IfcoinfromCalculate only once if there are duplicate addresses；If there are multiple addresses, only calculatemAddressessize
      *
      * @param coinFroms
      * @return
@@ -624,7 +624,7 @@ public class TransferTestImpl {
     }
 
     /**
-     * 组装coinFrom数据
+     * assemblecoinFromdata
      * assembly coinFrom data
      *
      * @param listFrom Initiator set coinFrom
@@ -636,13 +636,13 @@ public class TransferTestImpl {
         for (CoinDTO coinDto : listFrom) {
             String address = coinDto.getAddress();
             byte[] addressByte = AddressTool.getAddress(address);
-            //检查该链是否有该资产
+            //Check if the chain has the asset
             int assetChainId = coinDto.getAssetsChainId();
             int assetId = coinDto.getAssetsId();
 
-            //检查对应资产余额是否足够
+            //Check if the corresponding asset balance is sufficient
             BigInteger amount = coinDto.getAmount();
-            //查询账本获取nonce值
+            //Query ledger to obtainnoncevalue
             byte[] nonce = getNonceByPreHash(createChain(), address, hash);
             CoinFrom coinFrom = new CoinFrom(addressByte, assetChainId, assetId, amount, nonce, (byte) 0);
             coinFroms.add(coinFrom);

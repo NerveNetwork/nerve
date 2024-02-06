@@ -1,14 +1,14 @@
 package io.nuls.consensus.constant;
 
 /**
- * 命令名称
+ * Command Name
  *
  * @author tag
  * 2019/10/16
  */
 public interface CommandConstant {
     /**
-     * 向外提供的RPC接口名称
+     * Provided externallyRPCInterface Name
      * RPC interface name provided to the outside
      */
     String CMD_CREATE_AGENT = "cs_createAgent";
@@ -64,7 +64,7 @@ public interface CommandConstant {
     String CMD_GET_REWARD_UNIT = "cs_getRewardUnit";
 
     /**
-     * 调用其他模块的RPC接口名称
+     * Calling other modulesRPCInterface Name
      * RPC interface name to call other modules
      */
     String CALL_AC_GET_UNENCRYPTED_ADDRESS_LIST = "ac_getUnencryptedAddressList";
@@ -102,7 +102,7 @@ public interface CommandConstant {
 
 
     /**
-     * 网络消息处理方法名称
+     * Network message processing method name
      * Network message processing method name
      */
     String MESSAGE_VOTE = "vote";

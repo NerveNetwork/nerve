@@ -89,17 +89,17 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     @Autowired
     NetworkService networkService;
     /**
-     * 共识网络信息
-     * key:链ID
-     * value:链对应的共识网络组节点信息
+     * Consensus Network Information
+     * key:chainID
+     * value:Consensus network group node information corresponding to the chain
      */
     static Map<Integer, ConsensusNetGroup> GROUPS_MAP = new ConcurrentHashMap<>();
 
     static Map<Integer, Boolean> NETTHREAD_MAP = new ConcurrentHashMap<>();
     /**
-     * 自身公私钥信息
-     * key：链ID
-     * value：链指定的本节点信息
+     * Personal public and private key information
+     * key：chainID
+     * value：Chain specified local node information
      */
     static Map<Integer, ConsensusKeys> CONSENSUSKEYS_MAP = new ConcurrentHashMap<>();
 
@@ -121,7 +121,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     public boolean reCalConsensusNet(Chain chain, List<String> ips) {
         ConsensusNetGroup group = GROUPS_MAP.get(chain.getChainId());
         if (null != group) {
-            //发送消息获取到的网络信息进行状态更新处理
+            //Update the status of the network information obtained by sending messages
             LATEST_CONSENSUS_IPS_MAP.clear();
             for (String ip : ips) {
                 LATEST_CONSENSUS_IPS_MAP.put(ip, 1);
@@ -188,7 +188,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
             chain.getLogger().error("=======================createConsensusNetwork error. self Pub or priv is null");
             return false;
         }
-        chain.getLogger().info("开始组建共识网络");
+        chain.getLogger().info("Start building consensus network");
         ConsensusNetGroup group = GROUPS_MAP.computeIfAbsent(chainId, val -> new ConsensusNetGroup(chainId));
 
 
@@ -225,7 +225,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
         }
         GROUPS_MAP.put(chainId, group);
         CONSENSUSKEYS_MAP.put(chainId, consensusKeys);
-        //广播身份消息
+        //Broadcast identity messages
         try {
             if (StringUtils.isNotBlank(selfConsensusNet.getNodeId())) {
                 consensusIdentitiesMsg.signDatas(chain,consensusKeys.getAddress());
@@ -281,7 +281,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
                     }
                 }
                 for (String removeAddr : removeList) {
-                    //移除共识
+                    //Remove consensus
                     String nodeId = consensusNetGroup.removeConsensus(removeAddr);
                     chain.getLogger().info("remove node={} from consensus net", nodeId);
                     if (null != nodeId) {
@@ -299,12 +299,12 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     @Override
     public void cleanConsensusNetwork(int chainId) {
         Chain chain = chainManager.getChainMap().get(chainId);
-        chain.getLogger().info("清理共识网络连接");
-        //发送移除消息
+        chain.getLogger().info("Clean up consensus network connections");
+        //Send removal message
         if (!GROUPS_MAP.isEmpty()) {
             networkService.sendDisConnectMessage(chain, GROUPS_MAP.get(chainId).getConsensusNetIps());
         }
-        //移除自身信息
+        //Remove self information
         GROUPS_MAP.remove(chainId);
         CONSENSUSKEYS_MAP.remove(chainId);
         NETTHREAD_MAP.put(chainId, false);
@@ -364,8 +364,8 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
         if (null == consensusNet1) {
             return false;
         }
-        //通知网络层
-        //清除对应公钥的共识IP
+        //Notification Network Layer
+        //Clear consensus on corresponding public keysIP
         if (StringUtils.isBlank(consensusNet1.getNodeId())) {
             return false;
         }
@@ -378,7 +378,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     }
 
     /**
-     * 广播共识消息返回已发送连接列表
+     * Broadcast consensus message returns a list of sent connections
      *
      * @param chainId
      * @param cmd
@@ -414,7 +414,7 @@ public class ConsensusNetServiceImpl implements ConsensusNetService {
     }
 
     /**
-     * 异步广播共识消息
+     * Asynchronous broadcast consensus message
      *
      * @param chainId
      * @param cmd

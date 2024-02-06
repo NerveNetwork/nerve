@@ -31,12 +31,12 @@ package network.nerve.converter.enums;
 public enum ByzantineStateEnum {
 
     /**
-     * 未确认状态
+     * Unconfirmed status
      * not packaged
      */
     UNTREATED((byte)0),
     /**
-     * 已确认状态
+     * Confirmed status
      * packaged and saved
      */
     PASSED((byte)1);

@@ -33,7 +33,7 @@ import network.nerve.converter.heterogeneouschain.okt.context.OktContext;
 
 
 /**
- * OKT组件向Nerve核心注册
+ * OKTComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

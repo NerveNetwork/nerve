@@ -41,28 +41,28 @@ import java.util.List;
 public class HeterogeneousConfirmedVirtualBank extends BaseNulsData {
     private String nerveTxHash;
     /**
-     * 异构链id
+     * Heterogeneous chainid
      */
     private int heterogeneousChainId;
 
     /**
-     * 异构链多签地址/或合约地址 由异构链决定
+     * Heterogeneous chain with multiple signed addresses/Or Contract Address Determined by heterogeneous chains
      */
     private String heterogeneousAddress;
 
     /**
-     * 异构链交易hash
+     * Heterogeneous Chain Tradinghash
      */
     private String heterogeneousTxHash;
 
     /**
-     * 生效时间
-     * 秒级时间戳
+     * entry-into-force time
+     * Second level timestamp
      */
     private long effectiveTime;
 
     /**
-     * 调用异构链的签名地址列表
+     * Calling the signature address list of heterogeneous chains
      */
     private List<HeterogeneousAddress> signedHeterogeneousAddress;
 

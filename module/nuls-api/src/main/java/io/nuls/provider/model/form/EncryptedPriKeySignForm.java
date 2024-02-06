@@ -3,16 +3,16 @@ package io.nuls.provider.model.form;
 import io.nuls.core.rpc.model.ApiModel;
 import io.nuls.core.rpc.model.ApiModelProperty;
 
-@ApiModel(description = "单账户签名表单")
+@ApiModel(description = "Single account signature form")
 public class EncryptedPriKeySignForm {
 
-    @ApiModelProperty(description = "交易序列化Hex字符串")
+    @ApiModelProperty(description = "Transaction serializationHexcharacter string")
     private String txHex;
-    @ApiModelProperty(description = "账户地址")
+    @ApiModelProperty(description = "Account address")
     private String address;
-    @ApiModelProperty(description = "账户密文私钥")
+    @ApiModelProperty(description = "Account ciphertext private key")
     private String encryptedPriKey;
-    @ApiModelProperty(description = "账户密码")
+    @ApiModelProperty(description = "Account password")
     private String password;
 
     public String getEncryptedPriKey() {

@@ -33,7 +33,7 @@ import io.nuls.core.parse.SerializeUtils;
 import java.io.IOException;
 
 /**
- * 喂价最终上链业务数据存储结构
+ * The data storage structure for the final price up chain business
  * @author: Loki
  * @date: 2020-02-19
  */
@@ -42,7 +42,7 @@ public class ConfirmFinalQuotationPO extends BaseNulsData {
     private String anchorToken;
 
     /**
-     * 确认区块时间的日期字符串
+     * Confirm the date string for block time
      */
     private String date;
 

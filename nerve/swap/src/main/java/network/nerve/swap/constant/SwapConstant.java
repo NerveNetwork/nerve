@@ -23,7 +23,7 @@ public interface SwapConstant {
 
     String RPC_VERSION = "1.0";
 
-    /** nonce值初始值 */
+    /** nonceInitial value */
     byte[] DEFAULT_NONCE = HexUtil.decode("0000000000000000");
 
     byte[] ZERO_BYTES = new byte[]{0};

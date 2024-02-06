@@ -73,7 +73,7 @@ public class ConfirmRefundProposal implements IConfirmProposal, InitializingBean
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if(null == proposalPO){
-            chain.getLogger().error("[ConfirmRefundProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmRefundProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
 
@@ -83,7 +83,7 @@ public class ConfirmRefundProposal implements IConfirmProposal, InitializingBean
                 HeterogeneousTxTypeEnum.WITHDRAWAL,
                 heterogeneousDockingManager);
         if(null == txInfo){
-            chain.getLogger().error("[ConfirmRefundProposal] 未查询到异构链交易 heterogeneousTxHash:{}", businessData.getHeterogeneousTxHash());
+            chain.getLogger().error("[ConfirmRefundProposal] No heterogeneous chain transactions found heterogeneousTxHash:{}", businessData.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
     }

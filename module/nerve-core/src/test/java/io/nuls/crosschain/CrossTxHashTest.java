@@ -72,22 +72,22 @@ public class CrossTxHashTest {
         List<Map> froms = (List<Map>) resultMap.get("from");
         List<Map> tos = (List<Map>) resultMap.get("to");
         if (tos.size() > 1) {
-            throw new RuntimeException("不支持的交易! 原因:CoinTo有多个.");
+            throw new RuntimeException("Unsupported transactions! reason:CoinToThere are multiple.");
         }
         Transaction tx = new Transaction();
-        // 组装NULS网络跨链交易的基本信息
+        // assembleNULSBasic information of cross chain transactions on the internet
         tx.setType(10);
         tx.setTime(timestamp);
         if (StringUtils.isNotBlank(remark)) {
             tx.setRemark(remark.getBytes(StandardCharsets.UTF_8));
         }
-        // 组装NULS网络跨链交易的txData
+        // assembleNULSCross chain transactions on the internettxData
         CrossTransferData txData = new CrossTransferData();
         txData.setSourceType(10);
         txData.setSourceHash(HexUtil.decode(hash));
         byte[] txDataBytes = txData.serialize();
         tx.setTxData(txDataBytes);
-        // 组装NULS网络跨链交易的CoinData
+        // assembleNULSCross chain transactions on the internetCoinData
         CoinData coinData = new CoinData();
         boolean isTransferNVT = false;
         BigInteger transferAmount = BigInteger.ZERO;
@@ -112,7 +112,7 @@ public class CrossTxHashTest {
             int assetsChainId = Integer.parseInt(from.get("assetsChainId").toString());
             int assetsId = Integer.parseInt(from.get("assetsId").toString());
             BigInteger amount = new BigInteger(from.get("amount").toString());
-            // 排除 NERVE链的NVT手续费
+            // eliminate NERVEChain basedNVTHandling fees
             if (assetsChainId == nerveChainId && assetsId == 1) {
                 if (!isTransferNVT) {
                     continue;
@@ -133,7 +133,7 @@ public class CrossTxHashTest {
             coinData.getFrom().add(_from);
         }
         tx.setCoinData(coinData.serialize());
-        System.out.println(String.format("NULS网络的交易hash: %s", tx.getHash().toString()));
+        System.out.println(String.format("NULSOnline transactionshash: %s", tx.getHash().toString()));
 
     }
 
@@ -145,7 +145,7 @@ public class CrossTxHashTest {
         paramMap.put("id", "1234");
         String response = HttpClientUtil.post(requestURL, paramMap);
         if (StringUtils.isBlank(response)) {
-            System.err.println("未能得到返回数据");
+            System.err.println("Failed to obtain return data");
             return null;
         }
         Map<String, Object> map = JSONUtils.json2map(response);

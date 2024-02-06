@@ -70,21 +70,21 @@ public class ConfirmTransferProposal implements IConfirmProposal, InitializingBe
     @Override
     public void validate(Chain chain, Transaction tx, ConfirmProposalTxData txData) throws NulsException {
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
-        // 获取提案信息
+        // Obtain proposal information
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if(null == proposalPO){
-            chain.getLogger().error("[ConfirmTransferProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmTransferProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
-        // 根据填hash 获取已确认充值交易的hash
+        // According to the fillinghash Obtain confirmed recharge transactionshash
         NulsHash rechargeTxHash = rechargeStorageService.find(chain, proposalPO.getHash().toHex());
         if(null == rechargeTxHash){
-            chain.getLogger().error("[ConfirmTransferProposal] 该提案已执的充值交易不存在  proposalHash:{}, ",
+            chain.getLogger().error("[ConfirmTransferProposal] The proposed recharge transaction that has already been executed does not exist  proposalHash:{}, ",
                     businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_EXECUTIVE_FAILED);
         }
         if(!rechargeTxHash.equals(businessData.getProposalExeHash())){
-            chain.getLogger().error("[ConfirmTransferProposal] 确认充值交易中充值交易hash,与已确认数据不一致, 该提案已执行过充值.  ProposalExeHash:{}, DB-RechargeTxHash:{} ",
+            chain.getLogger().error("[ConfirmTransferProposal] Confirm recharge transactions during recharge transactionshash,Inconsistent with confirmed data, The proposal has already been recharged.  ProposalExeHash:{}, DB-RechargeTxHash:{} ",
                     businessData.getProposalExeHash().toHex(), rechargeTxHash.toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_EXECUTIVE_FAILED);
         }

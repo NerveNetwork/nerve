@@ -71,7 +71,7 @@ import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstan
 
 public class Protocol16Test {
 
-    // 设置环境
+    // Set up environment
     static boolean MAIN = true;
 
     @BeforeClass
@@ -98,7 +98,7 @@ public class Protocol16Test {
             for (int i = 101; i <= 112; i++) {
                 int htgChainId = i;
                 if (htgChainId == 108) {
-                    // 波场单独处理
+                    // Separate processing of wave field
                     continue;
                 }
                 HeterogeneousCfg cfg = cfgMap.get(htgChainId);
@@ -114,7 +114,7 @@ public class Protocol16Test {
                 field.set(htgWalletApi, htgContext);
                 htgWalletApiMap.put(htgChainId, htgWalletApi);
             }
-            // 初始化波场api
+            // Initialize wave fieldapi
             int trxId = 108;
             trxWalletApi = new TrxWalletApi();
             if (MAIN) {
@@ -142,7 +142,7 @@ public class Protocol16Test {
     }
 
     /**
-     * 读取每个链的新旧多签合约
+     * Read the new and old multi signed contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMap() {
         if (MAIN) {
@@ -153,11 +153,11 @@ public class Protocol16Test {
     }
 
     /**
-     * 测试网: 配置每个链的新旧多签合约
+     * Test Network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMapTestnet() {
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(101, new String[]{"0x7D759A3330ceC9B766Aa4c889715535eeD3c0484", "0x5e1cba794aD91FCd272fDaF2cd91b6110b601ED2"});
         map.put(102, new String[]{"0xf7915d4de86b856F3e51b894134816680bf09EEE", "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2"});
         map.put(103, new String[]{"0xb339211438Dcbf3D00d7999ad009637472FC72b3", "0x19d90D3C8eb0C0B3E3093B054031fF1cA81704B8"});
@@ -174,7 +174,7 @@ public class Protocol16Test {
     }
 
     /**
-     * 主网: 配置每个链的新旧多签合约
+     * Main network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMapMainnet() {
         /*
@@ -189,9 +189,9 @@ public class Protocol16Test {
             101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM
          */
-        // 配置每个链的新旧多签合约
+        // Configure new and old multiple contracts for each chain
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(101, new String[]{"0x6758d4c4734ac7811358395a8e0c3832ba6ac624", "0xc707e0854da2d72c90a7453f8dc224dd937d7e82"});
         map.put(102, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"});
         map.put(103, new String[]{"0x23023c99dcede393d6d18ca7fb08541b3364fa90", "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f"});
@@ -208,7 +208,7 @@ public class Protocol16Test {
     }
 
     /**
-     * 读取异构链基本信息
+     * Read basic information of heterogeneous chains
      */
     private Map<Integer, HeterogeneousCfg> cfgMap() {
         try {
@@ -252,7 +252,7 @@ public class Protocol16Test {
     }
 
     /**
-     * 第一步，读取每个异构链的token信息
+     * The first step is to read the data of each heterogeneous chaintokeninformation
      */
     @Test
     public void nerveAssetJsonFileFromPublicServiceTest() throws IOException {
@@ -277,11 +277,11 @@ public class Protocol16Test {
                 Integer htgChainId = (Integer) htgInfo.get("heterogeneousChainId");
                 String contractAddress = (String) htgInfo.get("contractAddress");
                 if (!isToken) {
-                    System.out.println(String.format("忽略非token - id: %s, htg: %s, contract: %s", id, htgChainId, contractAddress));
+                    System.out.println(String.format("Ignoring nontoken - id: %s, htg: %s, contract: %s", id, htgChainId, contractAddress));
                     continue;
                 }
                 if (registerChainId.intValue() > 100 && htgChainId.intValue() == registerChainId.intValue()) {
-                    // 非绑定资产
+                    // Unbound assets
                     bind = false;
                 }
                 addAsset(id, htgChainId, contractAddress, bind, result);
@@ -300,13 +300,13 @@ public class Protocol16Test {
     }
 
     /**
-     * 第二步, 遍历所有异构链，除了trx和新增4条链，波场单独处理
+     * Step 2, Traverse all heterogeneous chains, except fortrxAnd add4Chain, wave field separately processed
      */
     @Test
     public void upgradeTest() throws Exception {
-        // 是否检查绑定类型资产的权限已转移，检查erc20Minter是否注册到新多签
+        // Is it necessary to check if the permissions for binding type assets have been transferred? Checkerc20MinterWhether to register with Xinduo Sign
         boolean check = true;
-        // 多签合约创建者私钥
+        // Multiple contract creator private key
         String prikey = "???";
         upgradeS1(prikey, check);
         upgradeS2(prikey, check);
@@ -314,32 +314,32 @@ public class Protocol16Test {
     }
 
     /**
-     * 第三步, 波场处理
+     * Step 3, Wave field processing
      */
     @Test
     public void upgradeForTronTest() throws Exception {
-        // 是否检查绑定类型资产的权限已转移
+        // Check if the permissions for binding type assets have been transferred
         boolean check = true;
-        // 多签合约创建者私钥
+        // Multiple contract creator private key
         String prikey = "???";
         upgradeS1ForTron(prikey, check);
         upgradeS2ForTron(prikey, check);
     }
 
     /**
-     * 第四步，补齐其他12个虚拟银行，波场单独处理(手动处理)
+     * Step 4, make up for the rest12A virtual bank with separate wave field processing(Manual processing)
      */
     @Test
     public void managerAdd() throws Exception {
         List<String> seedList = new ArrayList<>();
-        seedList.add("???");// 公钥: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
-        seedList.add("???");// 公钥: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
-        seedList.add("???");// 公钥: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
+        seedList.add("???");// Public key: 0308ad97a2bf08277be771fc5450b6a0fa26fbc6c1e57c402715b9135d5388594b  NERVEepb69uqMbNRufoPz6QGerCMtDG4ybizAA
+        seedList.add("???");// Public key: 02db1a62c168ac3e34d30c6e6beaef0918d39d448fe2a85aed24982e7368e2414d  NERVEepb649o7fSmXPBCM4F6cAJsfPQoQSbnBB
+        seedList.add("???");// Public key: 02ae22c8f0f43081d82fcca1eae4488992cdb0caa9c902ba7cbfa0eacc1c6312f0  NERVEepb6Cu6CC2uYpS2pAgmaReHjgPwtNGbCC
 
         for (int i = 101; i <= 112; i++) {
             int htgChainId = i;
             if (htgChainId == 108) {
-                // 波场单独处理
+                // Separate processing of wave field
                 continue;
             }
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
@@ -368,25 +368,25 @@ public class Protocol16Test {
             String[] removes = new String[]{};
             byte oldVersion = htgContext.VERSION();
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             int txCount = 1;
             int signCount = seedList.size();
             String hash = this.sendChange(htgWalletApi, htgContext, seedList, multySignContractAddress, txKey, adds, txCount, removes, signCount);
-            // 执行结束后，还原签名版本号
+            // After execution, restore the signed version number
             htgContext.SET_VERSION(oldVersion);
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，%s个签名，hash: %s", htgChainId, adds.length, removes.length, signCount, hash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,%sSignatures,hash: %s", htgChainId, adds.length, removes.length, signCount, hash));
         }
     }
 
     /**
-     * 第五步，替换工具合约中的minter地址为新多签地址（动态部署erc20Minter合约的工具），异构链101~107
+     * Step 5, replace the tools in the contractminterThe address is a newly signed address（Dynamic deploymenterc20MinterThe tools of contracts）Heterogeneous chain101~107
      */
     @Test
     public void setupMinterOnCreateERC20MinterTest() {
-        // 替换工具合约中的minter地址为新多签地址，异构链101~107
+        // Replace the tools in the contractminterThe address is a new multi signature address, heterogeneous chain101~107
         String prikey = "???";
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
             HeterogeneousCfg cfg = cfgMap.get(htgChainId);
@@ -396,13 +396,13 @@ public class Protocol16Test {
             String newMulty = multyUpgrades[1];
 
             try {
-                // 检查权限是否已转移
+                // Check if permissions have been transferred
                 Function getCurrentMinter = new Function("minter", List.of(), Arrays.asList(new TypeReference<Address>() {}));
                 List<Type> types = htgWalletApi.callViewFunction(contractForCreateERC20Minter, getCurrentMinter);
                 String minter = (String) types.get(0).getValue();
                 if (minter.equalsIgnoreCase(newMulty)) {
-                    // 权限已转移
-                    System.out.println(String.format("权限已转移[setupMinter], HtgChainId: %s, newMultyContract: %s", htgChainId, newMulty));
+                    // Permissions have been transferred
+                    System.out.println(String.format("Permissions have been transferred[setupMinter], HtgChainId: %s, newMultyContract: %s", htgChainId, newMulty));
                     continue;
                 }
 
@@ -411,7 +411,7 @@ public class Protocol16Test {
                 String from = credentials.getAddress();
                 EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, contractForCreateERC20Minter, setupMinter);
                 if (ethEstimateGas.getError() != null) {
-                    System.err.println(String.format("验证失败[setupMinter] - HtgChainId: %s, newMultyContract: %s, Failed to transfer, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
+                    System.err.println(String.format("Verification failed[setupMinter] - HtgChainId: %s, newMultyContract: %s, Failed to transfer, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
                     continue;
                 }
                 BigInteger nonce = htgWalletApi.getNonce(from);
@@ -421,20 +421,20 @@ public class Protocol16Test {
                 RawTransaction rawTransaction = RawTransaction.createTransaction(
                         nonce,
                         gasPrice, gasLimit, contractForCreateERC20Minter, BigInteger.ZERO, data);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                 String hexValue = Numeric.toHexString(signMessage);
-                //发送交易
+                //Send transaction
                 EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                 if (send.hasError()) {
-                    System.err.println(String.format("广播失败[setupMinter] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                    System.err.println(String.format("Broadcast failed[setupMinter] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                             htgChainId, newMulty,
                             send.getError().getMessage(),
                             send.getError().getCode(),
                             send.getError().getData()
                     ));
                 } else {
-                    System.out.println(String.format("广播成功[setupMinter] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
+                    System.out.println(String.format("Broadcast successful[setupMinter] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
                 }
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception e) {
@@ -444,13 +444,13 @@ public class Protocol16Test {
     }
 
     /**
-     * 开通同时充值主资产和token资产的功能，异构链101~112
+     * Activate simultaneous recharge of main assets andtokenThe function of assets, heterogeneous chains101~112
      */
     @Test
     public void openCrossOutIITest() {
-        // 开通同时充值主资产和token资产的功能，异构链101~112
+        // Activate simultaneous recharge of main assets andtokenThe function of assets, heterogeneous chains101~112
         String prikey = "???";
-        // 遍历所有异构链，除了trx
+        // Traverse all heterogeneous chains, except fortrx
         for (int i = 101; i <= 112; i++) {
             if (i == 108) {
                 continue;
@@ -463,13 +463,13 @@ public class Protocol16Test {
             String newMulty = multyUpgrades[1];
 
             try {
-                // 检查权限是否已开通
+                // Check if permissions have been enabled
                 Function openCrossOutII = new Function("openCrossOutII", List.of(), Arrays.asList(new TypeReference<Bool>() {}));
                 List<Type> types = htgWalletApi.callViewFunction(newMulty, openCrossOutII);
                 Boolean open = (Boolean) types.get(0).getValue();
                 if (open) {
-                    // 权限已开通
-                    System.out.println(String.format("权限已开通[openCrossOutII], HtgChainId: %s, newMultyContract: %s", htgChainId, newMulty));
+                    // Permission has been activated
+                    System.out.println(String.format("Permission has been activated[openCrossOutII], HtgChainId: %s, newMultyContract: %s", htgChainId, newMulty));
                     continue;
                 }
 
@@ -478,7 +478,7 @@ public class Protocol16Test {
                 String from = credentials.getAddress();
                 EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, newMulty, setCrossOutII);
                 if (ethEstimateGas.getError() != null) {
-                    System.err.println(String.format("验证失败[setCrossOutII] - HtgChainId: %s, newMultyContract: %s, Failed to open, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
+                    System.err.println(String.format("Verification failed[setCrossOutII] - HtgChainId: %s, newMultyContract: %s, Failed to open, error: %s", htgChainId, newMulty, ethEstimateGas.getError().getMessage()));
                     continue;
                 }
                 BigInteger nonce = htgWalletApi.getNonce(from);
@@ -488,20 +488,20 @@ public class Protocol16Test {
                 RawTransaction rawTransaction = RawTransaction.createTransaction(
                         nonce,
                         gasPrice, gasLimit, newMulty, BigInteger.ZERO, data);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                 String hexValue = Numeric.toHexString(signMessage);
-                //发送交易
+                //Send transaction
                 EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                 if (send.hasError()) {
-                    System.err.println(String.format("广播失败[setCrossOutII] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                    System.err.println(String.format("Broadcast failed[setCrossOutII] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                             htgChainId, newMulty,
                             send.getError().getMessage(),
                             send.getError().getCode(),
                             send.getError().getData()
                     ));
                 } else {
-                    System.out.println(String.format("广播成功[setCrossOutII] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
+                    System.out.println(String.format("Broadcast successful[setCrossOutII] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, newMulty, send.getTransactionHash()));
                 }
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception e) {
@@ -527,7 +527,7 @@ public class Protocol16Test {
     }
 
     protected String sendTx(HtgWalletApi htgWalletApi, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
@@ -537,7 +537,7 @@ public class Protocol16Test {
             } else {
                 Log.error("Failed to estimate gas");
             }
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", 估算GasLimit失败");
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", estimateGasLimitfail");
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);
@@ -645,12 +645,12 @@ public class Protocol16Test {
         String[] multyUpgrades = multyUpgradeMap.get(htgChainId);
         String oldMulty = multyUpgrades[0];
         try {
-            // 检查主资产转移
+            // Check the transfer of main assets
             if (check) {
                 BigDecimal balance = trxWalletApi.getBalance(oldMulty);
                 if (balance.compareTo(BigDecimal.ZERO) == 0) {
-                    // 主资产已转移
-                    System.out.println(String.format("主资产已转移, HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
+                    // The main asset has been transferred
+                    System.out.println(String.format("The main asset has been transferred, HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
                     return;
                 }
             }
@@ -659,7 +659,7 @@ public class Protocol16Test {
             String from = new KeyPair(prikey).toBase58CheckAddress();
             TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(from, oldMulty, upgradeContractS1);
             if (estimateSun.isReverted()) {
-                System.err.println(String.format("验证失败 - HtgChainId: %s, multyContract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, estimateSun.getRevertReason()));
+                System.err.println(String.format("Verification failed - HtgChainId: %s, multyContract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, estimateSun.getRevertReason()));
                 return;
             }
             BigInteger feeLimit = TRX_100;
@@ -669,9 +669,9 @@ public class Protocol16Test {
             TrxSendTransactionPo send = trxWalletApi.callContract(from, prikey, oldMulty, feeLimit, upgradeContractS1);
 
             if (send == null) {
-                System.err.println(String.format("广播失败 - HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
+                System.err.println(String.format("Broadcast failed - HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
             } else {
-                System.out.println(String.format("广播成功 - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, oldMulty, send.getTxHash()));
+                System.out.println(String.format("Broadcast successful - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, oldMulty, send.getTxHash()));
             }
             TimeUnit.MILLISECONDS.sleep(500);
         } catch (Exception e) {
@@ -695,23 +695,23 @@ public class Protocol16Test {
                 Boolean bind = (Boolean) asset.get("bind");
                 if (check) {
                     if (bind) {
-                        // 绑定类型检查权限是否已转移
+                        // Binding type check if permissions have been transferred
                         org.tron.trident.abi.datatypes.Function getCurrentMinter = new org.tron.trident.abi.datatypes.Function("current_minter", List.of(), Arrays.asList(new org.tron.trident.abi.TypeReference<org.tron.trident.abi.datatypes.Address>() {}));
                         List<org.tron.trident.abi.datatypes.Type> types = trxWalletApi.callViewFunction(contract, getCurrentMinter);
                         String minter = (String) types.get(0).getValue();
                         if (minter.equalsIgnoreCase(newMulty)) {
-                            // 权限已转移
-                            System.out.println(String.format("权限已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                            // Permissions have been transferred
+                            System.out.println(String.format("Permissions have been transferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                             continue;
                         }
                     }
                 }
                 if (!bind) {
-                    // 非绑定类型强行检查资产数量是否已转移
+                    // Unbound type forcibly checks whether the number of assets has been transferred
                     BigInteger erc20Balance = trxWalletApi.getERC20Balance(oldMulty, contract);
                     if (erc20Balance.compareTo(BigInteger.ZERO) == 0) {
-                        // 资产已转移
-                        System.out.println(String.format("资产Token已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                        // Assets have been transferred
+                        System.out.println(String.format("assetTokenTransferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                         continue;
                     }
                 }
@@ -719,7 +719,7 @@ public class Protocol16Test {
                 String from = new KeyPair(prikey).toBase58CheckAddress();
                 TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(from, oldMulty, upgradeContractS2);
                 if (estimateSun.isReverted()) {
-                    System.err.println(String.format("验证失败 - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, estimateSun.getRevertReason()));
+                    System.err.println(String.format("Verification failed - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, estimateSun.getRevertReason()));
                     continue;
                 }
                 BigInteger feeLimit = TRX_100;
@@ -729,9 +729,9 @@ public class Protocol16Test {
                 TrxSendTransactionPo send = trxWalletApi.callContract(from, prikey, oldMulty, feeLimit, upgradeContractS2);
 
                 if (send == null) {
-                    System.err.println(String.format("广播失败 - HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                    System.err.println(String.format("Broadcast failed - HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                 } else {
-                    System.out.println(String.format("广播成功 - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTxHash()));
+                    System.out.println(String.format("Broadcast successful - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTxHash()));
                 }
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception e) {
@@ -743,15 +743,15 @@ public class Protocol16Test {
     protected void upgradeS1(String prikey, boolean check) throws Exception {
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            // 只处理 eth
+            // Only handle eth
             if (htgChainId != 101) {
                 continue;
             }
-            /*// 只处理heco
+            /*// Only handleheco
             if (htgChainId != 103) {
                 continue;
             }*/
-            /*// eth 和 heco单独处理
+            /*// eth and hecoindividualization
             if (htgChainId == 101 || htgChainId == 103) {
                 continue;
             }*/
@@ -761,12 +761,12 @@ public class Protocol16Test {
             String[] multyUpgrades = multyUpgradeMap.get(htgChainId);
             String oldMulty = multyUpgrades[0];
             try {
-                // 检查主资产转移
+                // Check the transfer of main assets
                 if (check) {
                     BigDecimal balance = htgWalletApi.getBalance(oldMulty);
                     if (balance.compareTo(BigDecimal.ZERO) == 0) {
-                        // 主资产已转移
-                        System.out.println(String.format("主资产已转移, HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
+                        // The main asset has been transferred
+                        System.out.println(String.format("The main asset has been transferred, HtgChainId: %s, multyContract: %s", htgChainId, oldMulty));
                         continue;
                     }
                 }
@@ -776,7 +776,7 @@ public class Protocol16Test {
                 String from = credentials.getAddress();
                 EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, oldMulty, upgradeContractS1);
                 if (ethEstimateGas.getError() != null) {
-                    System.err.println(String.format("验证失败[主资产转移] - HtgChainId: %s, multyContract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, ethEstimateGas.getError().getMessage()));
+                    System.err.println(String.format("Verification failed[Transfer of main assets] - HtgChainId: %s, multyContract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, ethEstimateGas.getError().getMessage()));
                     continue;
                 }
                 BigInteger nonce = htgWalletApi.getNonce(from);
@@ -786,42 +786,42 @@ public class Protocol16Test {
                 RawTransaction rawTransaction = RawTransaction.createTransaction(
                         nonce,
                         gasPrice, gasLimit, oldMulty, BigInteger.ZERO, data);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                 String hexValue = Numeric.toHexString(signMessage);
-                //发送交易
+                //Send transaction
                 EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                 if (send.hasError()) {
-                    System.err.println(String.format("广播失败[主资产转移] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                    System.err.println(String.format("Broadcast failed[Transfer of main assets] - HtgChainId: %s, multyContract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                             htgChainId, oldMulty, send.getError().getMessage(), send.getError().getCode(), send.getError().getData()));
                 } else {
-                    System.out.println(String.format("广播成功[主资产转移] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, oldMulty, send.getTransactionHash()));
+                    System.out.println(String.format("Broadcast successful[Transfer of main assets] - HtgChainId: %s, multyContract: %s, hash: %s", htgChainId, oldMulty, send.getTransactionHash()));
                 }
                 TimeUnit.MILLISECONDS.sleep(500);
             } catch (Exception e) {
-                System.err.println(String.format("Failed to [主资产转移], HtgChainId: %s, multyContract: %s, error: %s", htgChainId, oldMulty, e.getMessage()));
+                System.err.println(String.format("Failed to [Transfer of main assets], HtgChainId: %s, multyContract: %s, error: %s", htgChainId, oldMulty, e.getMessage()));
                 e.printStackTrace();
             }
         }
     }
 
     protected void upgradeS2(String prikey, boolean check) throws Exception {
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            /*// 只处理 eth
+            /*// Only handle eth
             if (htgChainId != 101) {
                 continue;
             }*/
-            /*// 只处理heco
+            /*// Only handleheco
             if (htgChainId != 103) {
                 continue;
             }*/
-            // 只处理oec和polygon
+            // Only handleoecandpolygon
             if (htgChainId != 104 && htgChainId != 106) {
                 continue;
             }
-            /*// eth 和 heco单独处理
+            /*// eth and hecoindividualization
             if (htgChainId == 101 || htgChainId == 103) {
                 continue;
             }*/
@@ -841,23 +841,23 @@ public class Protocol16Test {
                     Boolean bind = (Boolean) asset.get("bind");
                     if (check) {
                         if (bind) {
-                            // 绑定类型的token检查权限是否已转移
+                            // Binding typetokenCheck if permissions have been transferred
                             Function getCurrentMinter = new Function("current_minter", List.of(), Arrays.asList(new TypeReference<Address>() {}));
                             List<Type> types = htgWalletApi.callViewFunction(contract, getCurrentMinter);
                             String minter = (String) types.get(0).getValue();
                             if (minter.equalsIgnoreCase(newMulty)) {
-                                // 权限已转移
-                                System.out.println(String.format("Token权限已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                                // Permissions have been transferred
+                                System.out.println(String.format("TokenPermissions have been transferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                                 continue;
                             }
                         }
                     }
                     if (!bind) {
-                        // 非绑定类型强行检查资产数量是否已转移
+                        // Unbound type forcibly checks whether the number of assets has been transferred
                         BigInteger erc20Balance = htgWalletApi.getERC20Balance(oldMulty, contract);
                         if (erc20Balance.compareTo(BigInteger.ZERO) == 0) {
-                            // 资产已转移
-                            System.out.println(String.format("资产Token已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                            // Assets have been transferred
+                            System.out.println(String.format("assetTokenTransferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                             continue;
                         }
                     }
@@ -866,7 +866,7 @@ public class Protocol16Test {
                     String from = credentials.getAddress();
                     EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, oldMulty, upgradeContractS2);
                     if (ethEstimateGas.getError() != null) {
-                        System.err.println(String.format("验证失败[Token资产转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, ethEstimateGas.getError().getMessage()));
+                        System.err.println(String.format("Verification failed[TokenAsset transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, ethEstimateGas.getError().getMessage()));
                         continue;
                     }
                     BigInteger nonce = htgWalletApi.getNonce(from);
@@ -876,24 +876,24 @@ public class Protocol16Test {
                     RawTransaction rawTransaction = RawTransaction.createTransaction(
                             nonce,
                             gasPrice, gasLimit, oldMulty, BigInteger.ZERO, data);
-                    //签名Transaction，这里要对交易做签名
+                    //autographTransactionHere, we need to sign the transaction
                     byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                     String hexValue = Numeric.toHexString(signMessage);
-                    //发送交易
+                    //Send transaction
                     EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                     if (send.hasError()) {
-                        System.err.println(String.format("广播失败[Token资产转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                        System.err.println(String.format("Broadcast failed[TokenAsset transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                                 htgChainId, oldMulty, contract,
                                 send.getError().getMessage(),
                                 send.getError().getCode(),
                                 send.getError().getData()
                         ));
                     } else {
-                        System.out.println(String.format("广播成功[Token资产转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTransactionHash()));
+                        System.out.println(String.format("Broadcast successful[TokenAsset transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTransactionHash()));
                     }
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (Exception e) {
-                    System.err.println(String.format("Failed to [Token资产转移], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
+                    System.err.println(String.format("Failed to [TokenAsset transfer], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -901,10 +901,10 @@ public class Protocol16Test {
     }
 
     protected void upgradeS2ForBind(String prikey) throws Exception {
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            // 只处理oec和polygon
+            // Only handleoecandpolygon
             if (htgChainId != 104 && htgChainId != 106) {
                 continue;
             }
@@ -925,13 +925,13 @@ public class Protocol16Test {
                     if (!bind) {
                         continue;
                     }
-                    // 绑定类型的token检查权限是否已转移
+                    // Binding typetokenCheck if permissions have been transferred
                     Function getCurrentMinter = new Function("current_minter", List.of(), Arrays.asList(new TypeReference<Address>() {}));
                     List<Type> types = htgWalletApi.callViewFunction(contract, getCurrentMinter);
                     String minter = (String) types.get(0).getValue();
                     if (minter.equalsIgnoreCase(newMulty)) {
-                        // 权限已转移
-                        System.out.println(String.format("Token权限已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                        // Permissions have been transferred
+                        System.out.println(String.format("TokenPermissions have been transferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                         continue;
                     }
                     Function upgradeContractS2 = new Function("upgradeContractS2", Arrays.asList(new Address(contract)), List.of());
@@ -939,7 +939,7 @@ public class Protocol16Test {
                     String from = credentials.getAddress();
                     EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, oldMulty, upgradeContractS2);
                     if (ethEstimateGas.getError() != null) {
-                        System.err.println(String.format("验证失败[Token权限转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, ethEstimateGas.getError().getMessage()));
+                        System.err.println(String.format("Verification failed[TokenPermission transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to transfer, error: %s", htgChainId, oldMulty, contract, ethEstimateGas.getError().getMessage()));
                         continue;
                     }
                     BigInteger nonce = htgWalletApi.getNonce(from);
@@ -949,24 +949,24 @@ public class Protocol16Test {
                     RawTransaction rawTransaction = RawTransaction.createTransaction(
                             nonce,
                             gasPrice, gasLimit, oldMulty, BigInteger.ZERO, data);
-                    //签名Transaction，这里要对交易做签名
+                    //autographTransactionHere, we need to sign the transaction
                     byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                     String hexValue = Numeric.toHexString(signMessage);
-                    //发送交易
+                    //Send transaction
                     EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                     if (send.hasError()) {
-                        System.err.println(String.format("广播失败[Token权限转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                        System.err.println(String.format("Broadcast failed[TokenPermission transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                                 htgChainId, oldMulty, contract,
                                 send.getError().getMessage(),
                                 send.getError().getCode(),
                                 send.getError().getData()
                         ));
                     } else {
-                        System.out.println(String.format("广播成功[Token权限转移] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTransactionHash()));
+                        System.out.println(String.format("Broadcast successful[TokenPermission transfer] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, oldMulty, contract, send.getTransactionHash()));
                     }
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (Exception e) {
-                    System.err.println(String.format("Failed to [Token权限转移], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
+                    System.err.println(String.format("Failed to [TokenPermission transfer], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -974,22 +974,22 @@ public class Protocol16Test {
     }
 
     protected void registerMinterERC20(String prikey, boolean check) throws Exception {
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            /*// 只处理 eth
+            /*// Only handle eth
             if (htgChainId != 101) {
                 continue;
             }*/
-            /*// 只处理heco
+            /*// Only handleheco
             if (htgChainId != 103) {
                 continue;
             }*/
-            // 只处理 oec和polygon
+            // Only handle oecandpolygon
             if (htgChainId != 104 && htgChainId != 106) {
                 continue;
             }
-            /*// eth 和 heco单独处理
+            /*// eth and hecoindividualization
             if (htgChainId == 101 || htgChainId == 103) {
                 continue;
             }*/
@@ -1010,13 +1010,13 @@ public class Protocol16Test {
                         continue;
                     }
                     if (check) {
-                        // 绑定类型检查权限是否已注册到新多签
+                        // Check if the binding type permission has been registered to the new multi signature
                         Function getCurrentMinter = new Function("isMinterERC20", Arrays.asList(new Address(contract)), Arrays.asList(new TypeReference<Bool>() {}));
                         List<Type> types = htgWalletApi.callViewFunction(newMulty, getCurrentMinter);
                         Boolean minter = (Boolean) types.get(0).getValue();
                         if (minter) {
-                            // 已注册到新多签
-                            System.out.println(String.format("已注册到新多签, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, newMulty, contract));
+                            // Registered to Xinduo Sign
+                            System.out.println(String.format("Registered to Xinduo Sign, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, newMulty, contract));
                             continue;
                         }
                     }
@@ -1025,7 +1025,7 @@ public class Protocol16Test {
                     String from = credentials.getAddress();
                     EthEstimateGas ethEstimateGas = htgWalletApi.ethEstimateGas(from, newMulty, registerMinterERC20);
                     if (ethEstimateGas.getError() != null) {
-                        System.err.println(String.format("验证失败[注册到新多签] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to register, error: %s", htgChainId, newMulty, contract, ethEstimateGas.getError().getMessage()));
+                        System.err.println(String.format("Verification failed[Register to Xinduo Sign] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, Failed to register, error: %s", htgChainId, newMulty, contract, ethEstimateGas.getError().getMessage()));
                         continue;
                     }
                     BigInteger nonce = htgWalletApi.getNonce(from);
@@ -1035,24 +1035,24 @@ public class Protocol16Test {
                     RawTransaction rawTransaction = RawTransaction.createTransaction(
                             nonce,
                             gasPrice, gasLimit, newMulty, BigInteger.ZERO, data);
-                    //签名Transaction，这里要对交易做签名
+                    //autographTransactionHere, we need to sign the transaction
                     byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, networkChainId, credentials);
                     String hexValue = Numeric.toHexString(signMessage);
-                    //发送交易
+                    //Send transaction
                     EthSendTransaction send = htgWalletApi.ethSendRawTransaction(hexValue);
                     if (send.hasError()) {
-                        System.err.println(String.format("广播失败[注册到新多签] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
+                        System.err.println(String.format("Broadcast failed[Register to Xinduo Sign] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, errorMsg: %s, errorCode: %s, errorData: %s",
                                 htgChainId, newMulty, contract,
                                 send.getError().getMessage(),
                                 send.getError().getCode(),
                                 send.getError().getData()
                         ));
                     } else {
-                        System.out.println(String.format("广播成功[注册到新多签] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, newMulty, contract, send.getTransactionHash()));
+                        System.out.println(String.format("Broadcast successful[Register to Xinduo Sign] - HtgChainId: %s, multyContract: %s, erc20Contract: %s, hash: %s", htgChainId, newMulty, contract, send.getTransactionHash()));
                     }
                     TimeUnit.MILLISECONDS.sleep(500);
                 } catch (Exception e) {
-                    System.err.println(String.format("Failed to register[注册到新多签], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, newMulty, asset.get("contract"), e.getMessage()));
+                    System.err.println(String.format("Failed to register[Register to Xinduo Sign], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, newMulty, asset.get("contract"), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -1078,9 +1078,9 @@ public class Protocol16Test {
 
     @Test
     public void upgradeForBindTest() throws Exception {
-        // 是否检查绑定类型资产的权限已转移，检查erc20Minter是否注册到新多签
+        // Is it necessary to check if the permissions for binding type assets have been transferred? Checkerc20MinterWhether to register with Xinduo Sign
         boolean check = true;
-        // 多签合约创建者私钥
+        // Multiple contract creator private key
         String prikey = "???";
         upgradeS2ForBind(prikey);
         registerMinterERC20(prikey, check);
@@ -1088,10 +1088,10 @@ public class Protocol16Test {
 
     @Test
     public void checkBindMinterToken() throws Exception {
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            // 只处理 oec和polygon
+            // Only handle oecandpolygon
             if (htgChainId != 104 && htgChainId != 106) {
                 continue;
             }
@@ -1110,20 +1110,20 @@ public class Protocol16Test {
                     String contract = (String) asset.get("contract");
                     Boolean bind = (Boolean) asset.get("bind");
                     if (bind) {
-                        // 绑定类型的token检查权限是否已转移
+                        // Binding typetokenCheck if permissions have been transferred
                         Function getCurrentMinter = new Function("current_minter", List.of(), Arrays.asList(new TypeReference<Address>() {}));
                         List<Type> types = htgWalletApi.callViewFunction(contract, getCurrentMinter);
                         String minter = (String) types.get(0).getValue();
                         if (minter.equalsIgnoreCase(newMulty)) {
-                            // 权限已转移
-                            //System.out.println(String.format("Token权限已转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                            // Permissions have been transferred
+                            //System.out.println(String.format("TokenPermissions have been transferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                             continue;
                         } else {
-                            System.err.println(String.format("Token权限未转移, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
+                            System.err.println(String.format("TokenPermission not transferred, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, oldMulty, contract));
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println(String.format("Failed to [Token资产转移], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
+                    System.err.println(String.format("Failed to [TokenAsset transfer], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, oldMulty, asset.get("contract"), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -1132,10 +1132,10 @@ public class Protocol16Test {
 
     @Test
     public void checkRegisterMinter() throws Exception {
-        // 遍历所有异构链，除了trx和新增4条链
+        // Traverse all heterogeneous chains, except fortrxAnd add4Chain
         for (int i = 101; i <= 107; i++) {
             Integer htgChainId = i;
-            // 只处理 oec和polygon
+            // Only handle oecandpolygon
             if (htgChainId != 104 && htgChainId != 106) {
                 continue;
             }
@@ -1155,15 +1155,15 @@ public class Protocol16Test {
                     if (!bind) {
                         continue;
                     }
-                    // 绑定类型检查权限是否已注册到新多签
+                    // Check if the binding type permission has been registered to the new multi signature
                     Function getCurrentMinter = new Function("isMinterERC20", Arrays.asList(new Address(contract)), Arrays.asList(new TypeReference<Bool>() {}));
                     List<Type> types = htgWalletApi.callViewFunction(newMulty, getCurrentMinter);
                     Boolean minter = (Boolean) types.get(0).getValue();
                     if (!minter) {
-                        System.err.println(String.format("未注册到新多签, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, newMulty, contract));
+                        System.err.println(String.format("Not registered to Xinduo Sign, HtgChainId: %s, multyContract: %s, erc20Contract: %s", htgChainId, newMulty, contract));
                     }
                 } catch (Exception e) {
-                    System.err.println(String.format("Failed to register[注册到新多签], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, newMulty, asset.get("contract"), e.getMessage()));
+                    System.err.println(String.format("Failed to register[Register to Xinduo Sign], HtgChainId: %s, multyContract: %s, erc20Contract: %s, error: %s", htgChainId, newMulty, asset.get("contract"), e.getMessage()));
                     e.printStackTrace();
                 }
             }
@@ -1205,16 +1205,16 @@ public class Protocol16Test {
         for (int i = 0; i < 12; i++) {
             int htgChainId = base + i;
             if (htgChainId == 108) {
-                // 波场单独处理
+                // Separate processing of wave field
                 continue;
             }
             HtgContext htgContext = contextMap.get(htgChainId);
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             try {
                 String vHash = HtgUtil.encoderChange(htgContext, nerveTxHash, addAddresses, 1, removeAddresses, htgContext.VERSION());
-                //System.out.println(String.format("变更交易的签名vHash: %s, nerveTxHash: %s", vHash, nerveTxHash));
+                //System.out.println(String.format("Change the signature of the transactionvHash: %s, nerveTxHash: %s", vHash, nerveTxHash));
                 String dataSign = HtgUtil.dataSign(vHash, priKeyOfBB);
                 System.out.println(String.format("list.add(new Object[]{%s, \"%s%s\"});", htgChainId, list.get(i)[1], dataSign));
             } catch (Exception e) {
@@ -1223,10 +1223,10 @@ public class Protocol16Test {
             }
         }
 
-        // 波场
+        // Wave field
         HtgContext htgContext = contextMap.get(108);
         byte newVersion = 3;
-        // 设置新的签名版本号
+        // Set a new signature version number
         htgContext.SET_VERSION(newVersion);
         try {
             String vHash = TrxUtil.encoderChange(htgContext, nerveTxHash, addAddressesForTrx, 1, removeAddressesForTrx, htgContext.VERSION());
@@ -1241,7 +1241,7 @@ public class Protocol16Test {
 
     @Test
     public void signValidationTest() {
-        // 管理员账户
+        // Administrator account
         String fromAddress = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56";
         String fromAddressForTrx = "TVhwJEU8vZ1xxV87Uja17tdZ7y6EpXTTYh";
         String nerveTxHash = "4e7864181e774271a799c2ae99ee6bfd17547edeaa5b370daf7991d45cc8d41e";
@@ -1254,19 +1254,19 @@ public class Protocol16Test {
         for (int i = 0; i < 12; i++) {
             int htgChainId = base + i;
             if (htgChainId == 108) {
-                // 波场单独处理
+                // Separate processing of wave field
                 continue;
             }
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
             HtgContext htgContext = contextMap.get(htgChainId);
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             String[] multyUpgrades = multyUpgradeMap.get(htgChainId);
             String newMulty = multyUpgrades[1];
 
             String signatureData = list.get(i)[1].toString();
-            System.out.println(String.format("验证%s网络虚拟银行变更交易，nerveTxHash: %s, signatureData: %s", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData));
+            System.out.println(String.format("validate%sOnline virtual banking change transactions,nerveTxHash: %s, signatureData: %s", htgContext.getConfig().getSymbol(), nerveTxHash, signatureData));
             try {
                 Set<String> addSet = new HashSet<>();
                 List<Address> addList = new ArrayList<>();
@@ -1275,7 +1275,7 @@ public class Protocol16Test {
                     add = add.toLowerCase();
                     addAddresses[a] = add;
                     if (!addSet.add(add)) {
-                        System.err.println("重复的待加入地址列表");
+                        System.err.println("Duplicate list of addresses to be added");
                         return;
                     }
                     addList.add(new Address(add));
@@ -1287,19 +1287,19 @@ public class Protocol16Test {
                     remove = remove.toLowerCase();
                     removeAddresses[r] = remove;
                     if (!removeSet.add(remove)) {
-                        System.err.println("重复的待退出地址列表");
+                        System.err.println("Duplicate list of pending exits");
                         return;
                     }
                     removeList.add(new Address(remove));
                 }
                 Function txFunction = HtgUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, 1, signatureData);
-                // 验证合约交易合法性
+                // Verify the legality of contract transactions
                 EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, newMulty, txFunction);
                 if (ethCall.isReverted()) {
-                    System.err.println(String.format("[%s]交易验证失败，原因: %s", htgChainId, ethCall.getRevertReason()));
+                    System.err.println(String.format("[%s]Transaction verification failed, reason: %s", htgChainId, ethCall.getRevertReason()));
                     return;
                 }
-                System.out.println(String.format("htgChainId: %s 交易验证成功!", htgChainId));
+                System.out.println(String.format("htgChainId: %s Transaction verification successful!", htgChainId));
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -1307,26 +1307,26 @@ public class Protocol16Test {
             }
         }
 
-        // 波场
+        // Wave field
         try {
             HtgContext htgContext = contextMap.get(108);
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             String[] multyUpgrades = multyUpgradeMap.get(108);
             String newMulty = multyUpgrades[1];
             List<org.tron.trident.abi.datatypes.Address> addList = Arrays.stream(addAddressesForTrx).map(a -> new org.tron.trident.abi.datatypes.Address(a)).collect(Collectors.toList());
             List<org.tron.trident.abi.datatypes.Address> removeList = Arrays.stream(removeAddressesForTrx).map(a -> new org.tron.trident.abi.datatypes.Address(a)).collect(Collectors.toList());
             org.tron.trident.abi.datatypes.Function txFunction = TrxUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, 1, list.get(7)[1].toString());
-            // 验证合约交易合法性
+            // Verify the legality of contract transactions
             TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddressForTrx, newMulty, txFunction);
             if (estimateSun.isReverted()) {
-                System.err.println(String.format("[%s]交易验证失败，原因: %s", 108, estimateSun.getRevertReason()));
+                System.err.println(String.format("[%s]Transaction verification failed, reason: %s", 108, estimateSun.getRevertReason()));
             }
-            System.out.println(String.format("htgChainId: 108 交易验证成功!"));
+            System.out.println(String.format("htgChainId: 108 Transaction verification successful!"));
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println(String.format("[%s]交易验证失败，原因: %s", 108, e.getMessage()));
+            System.err.println(String.format("[%s]Transaction verification failed, reason: %s", 108, e.getMessage()));
         }
 
     }
@@ -1334,7 +1334,7 @@ public class Protocol16Test {
     @Test
     public void managerFix() throws Exception {
         String priKeyOfAA = "???";
-        // 管理员账户
+        // Administrator account
         String fromAddress = "0xd87f2ad3ef011817319fd25454fc186ca71b3b56";
         String fromAddressForTrx = "TVhwJEU8vZ1xxV87Uja17tdZ7y6EpXTTYh";
         String nerveTxHash = "4e7864181e774271a799c2ae99ee6bfd17547edeaa5b370daf7991d45cc8d41e";
@@ -1348,7 +1348,7 @@ public class Protocol16Test {
         for (int i = 0; i < 12; i++) {
             int htgChainId = base + i;
             if (htgChainId == 108) {
-                // 波场单独处理
+                // Separate processing of wave field
                 continue;
             }
             HtgWalletApi htgWalletApi = htgWalletApiMap.get(htgChainId);
@@ -1358,45 +1358,45 @@ public class Protocol16Test {
             String multySignContractAddress = newMulty;
             htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             List<Address> addList = Arrays.asList(addAddresses).stream().map(a -> new Address(a)).collect(Collectors.toList());
             List<Address> removeList = Arrays.asList(removeAddresses).stream().map(r -> new Address(r)).collect(Collectors.toList());
             Function function = HtgUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, 1, list.get(i)[1].toString());
             String address = Credentials.create(priKeyOfAA).getAddress();
             String hash = this.sendTx(htgWalletApi, multySignContractAddress, address, priKeyOfAA, function, HeterogeneousChainTxType.CHANGE);
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，hash: %s", htgChainId, addAddresses.length, removeAddresses.length, hash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,hash: %s", htgChainId, addAddresses.length, removeAddresses.length, hash));
         }
 
-        // 波场
+        // Wave field
         try {
             HtgContext htgContext = contextMap.get(108);
             byte newVersion = 3;
-            // 设置新的签名版本号
+            // Set a new signature version number
             htgContext.SET_VERSION(newVersion);
             String[] multyUpgrades = multyUpgradeMap.get(108);
             String newMulty = multyUpgrades[1];
             List<org.tron.trident.abi.datatypes.Address> addList = Arrays.stream(addAddressesForTrx).map(a -> new org.tron.trident.abi.datatypes.Address(a)).collect(Collectors.toList());
             List<org.tron.trident.abi.datatypes.Address> removeList = Arrays.stream(removeAddressesForTrx).map(a -> new org.tron.trident.abi.datatypes.Address(a)).collect(Collectors.toList());
             org.tron.trident.abi.datatypes.Function txFunction = TrxUtil.getCreateOrSignManagerChangeFunction(nerveTxHash, addList, removeList, 1, list.get(7)[1].toString());
-            // 估算feeLimit
+            // estimatefeeLimit
             TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddressForTrx, newMulty, txFunction);
             if (estimateSun.isReverted()) {
-                System.err.println(String.format("[%s]交易验证失败，原因: %s", 108, estimateSun.getRevertReason()));
+                System.err.println(String.format("[%s]Transaction verification failed, reason: %s", 108, estimateSun.getRevertReason()));
                 return;
             }
-            // feeLimit选择
+            // feeLimitchoice
             BigInteger feeLimit = htgContext.GAS_LIMIT_OF_CHANGE();
             if (estimateSun.getSunUsed() > 0) {
-                // 放大到1.3倍
+                // Zoom in to1.3times
                 feeLimit = BigDecimal.valueOf(estimateSun.getSunUsed()).multiply(TrxConstant.NUMBER_1_DOT_3).toBigInteger();
             }
             TrxSendTransactionPo trxSendTransactionPo = trxWalletApi.callContract(fromAddressForTrx, priKeyOfAA, newMulty, feeLimit, txFunction, BigInteger.ZERO);
             String htTxHash = trxSendTransactionPo.getTxHash();
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，hash: %s", 108, addAddressesForTrx.length, removeAddressesForTrx.length, htTxHash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,hash: %s", 108, addAddressesForTrx.length, removeAddressesForTrx.length, htTxHash));
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println(String.format("[%s]交易验证失败，原因: %s", 108, e.getMessage()));
+            System.err.println(String.format("[%s]Transaction verification failed, reason: %s", 108, e.getMessage()));
         }
     }
 

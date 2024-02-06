@@ -29,11 +29,11 @@ import io.nuls.core.model.StringUtils;
 import java.io.*;
 
 /**
- * 系统停止时，先停止区块保存服务，确保不要产生事务性问题
+ * When the system stops, stop the block save service first to ensure that there are no transactional issues
  *
  * @author captain
  * @version 1.0
- * @date 18-11-14 下午3:54
+ * @date 18-11-14 afternoon3:54
  */
 public class StopingMonitor extends BaseMonitor {
 
@@ -82,17 +82,17 @@ public class StopingMonitor extends BaseMonitor {
             return;
         }
         try {
-            commonLog.debug("读取到停止信号文件:{}", STOP_FILE);
+            commonLog.debug("Read stop signal file:{}", STOP_FILE);
             String val = read();
-            commonLog.info("读取到停止信号:{}", val);
+            commonLog.info("Read stop signal:{}", val);
             if (val == null) {
                 return;
             }
             if (ACTIVE.equals(val)) {
-                commonLog.info("开始进行停止节点准备工作");
+                commonLog.info("Start preparing to stop the node");
                 context.stopBlock();
                 context.waitStopBlock();
-                commonLog.info("停止节点准备工作完成");
+                commonLog.info("Stop node preparation work completed");
                 write(DONE);
             }
         } catch (Exception e) {

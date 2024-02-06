@@ -59,7 +59,7 @@ import static network.nerve.converter.heterogeneouschain.trx.constant.TrxConstan
 
 public class RetryVirtualBankTest {
 
-    // 设置环境
+    // Set up environment
     static boolean MAIN = true;
 
     @BeforeClass
@@ -87,7 +87,7 @@ public class RetryVirtualBankTest {
             for (int i = 101; i <= 112; i++) {
                 int htgChainId = i;
                 if (htgChainId == 108) {
-                    // 波场单独处理
+                    // Separate processing of wave field
                     continue;
                 }
                 HeterogeneousCfg cfg = cfgMap.get(htgChainId);
@@ -96,7 +96,7 @@ public class RetryVirtualBankTest {
                 htgWalletApi.setWeb3j(web3j);
                 htgWalletApi.setEthRpcAddress(cfg.getMainRpcAddress());
                 HtgContext htgContext = contextMap.get(htgChainId);
-                // 设置新的签名版本号
+                // Set a new signature version number
                 byte newVersion = 3;
                 htgContext.SET_VERSION(newVersion);
                 htgContext.setLogger(Log.BASIC_LOGGER);
@@ -106,7 +106,7 @@ public class RetryVirtualBankTest {
                 field.set(htgWalletApi, htgContext);
                 htgWalletApiMap.put(htgChainId, htgWalletApi);
             }
-            // 初始化波场api
+            // Initialize wave fieldapi
             int trxId = 108;
             trxWalletApi = new TrxWalletApi();
             if (MAIN) {
@@ -120,7 +120,7 @@ public class RetryVirtualBankTest {
             }
             HtgContext trxContext = contextMap.get(trxId);
             HeterogeneousCfg trxCfg = cfgMap.get(trxId);
-            // 设置新的签名版本号
+            // Set a new signature version number
             byte newVersion = 3;
             trxContext.SET_VERSION(newVersion);
             trxContext.setLogger(Log.BASIC_LOGGER);
@@ -136,7 +136,7 @@ public class RetryVirtualBankTest {
     }
 
     /**
-     * 读取每个链的新旧多签合约
+     * Read the new and old multi signed contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMap() {
         if (MAIN) {
@@ -147,11 +147,11 @@ public class RetryVirtualBankTest {
     }
 
     /**
-     * 测试网: 配置每个链的新旧多签合约
+     * Test Network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMapTestnet() {
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(101, new String[]{"0x7D759A3330ceC9B766Aa4c889715535eeD3c0484", "0x5e1cba794aD91FCd272fDaF2cd91b6110b601ED2"});
         map.put(102, new String[]{"0xf7915d4de86b856F3e51b894134816680bf09EEE", "0xf85f03C3fAAC61ACF7B187513aeF10041029A1b2"});
         map.put(103, new String[]{"0xb339211438Dcbf3D00d7999ad009637472FC72b3", "0x19d90D3C8eb0C0B3E3093B054031fF1cA81704B8"});
@@ -168,7 +168,7 @@ public class RetryVirtualBankTest {
     }
 
     /**
-     * 主网: 配置每个链的新旧多签合约
+     * Main network: Configure new and old multiple contracts for each chain
      */
     private Map<Integer, String[]> multyUpgradeMapMainnet() {
         /*
@@ -183,9 +183,9 @@ public class RetryVirtualBankTest {
             101 eth, 102 bsc, 103 heco, 104 oec, 105 Harmony(ONE), 106 Polygon(MATIC), 107 kcc(KCS),
             108 TRX, 109 CRO, 110 AVAX, 111 AETH, 112 FTM
          */
-        // 配置每个链的新旧多签合约
+        // Configure new and old multiple contracts for each chain
         Map<Integer, String[]> map = new HashMap<>();
-        // 前旧后新
+        // Old before new after new
         map.put(101, new String[]{"0x6758d4c4734ac7811358395a8e0c3832ba6ac624", "0xc707e0854da2d72c90a7453f8dc224dd937d7e82"});
         map.put(102, new String[]{"0x3758AA66caD9F2606F1F501c9CB31b94b713A6d5", "0x75ab1d50bedbd32b6113941fcf5359787a4bbef4"});
         map.put(103, new String[]{"0x23023c99dcede393d6d18ca7fb08541b3364fa90", "0x2ead2e7a3bd88c6a90b3d464bc6938ba56f1407f"});
@@ -202,7 +202,7 @@ public class RetryVirtualBankTest {
     }
 
     /**
-     * 读取异构链基本信息
+     * Read basic information of heterogeneous chains
      */
     private Map<Integer, HeterogeneousCfg> cfgMap() {
         try {
@@ -222,7 +222,7 @@ public class RetryVirtualBankTest {
 
 
     /**
-     * 签名交易
+     * Signature transaction
      */
     @Test
     public void managerChangeSignData() throws Exception {
@@ -246,18 +246,18 @@ public class RetryVirtualBankTest {
             String signData = this.changeSignData(htgContext, seedList, txKey, adds, txCount, removes);
             signMap.put(htgChainId + "", signData);
         }
-        // 处理波场
+        // Processing wave fields
         HtgContext htgContext = contextMap.get(108);
         String signDataForTron = this.changeSignDataForTron(htgContext, seedList, txKey, adds, txCount, removes);
         signMap.put("108", signDataForTron);
 
-        System.out.println("签名数据: ");
+        System.out.println("Signature data: ");
         System.out.println(JSONUtils.obj2json(signMap));
         System.out.println("--------------\n");
     }
 
     /**
-     * 补发交易
+     * Reissue transaction
      */
     @Test
     public void managerChangeSendTx() throws Exception {
@@ -280,11 +280,11 @@ public class RetryVirtualBankTest {
             htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
             String signKey = htgChainId + "";
             String hash = this.sendChangeWithSignData(priKeyOfSeedAA, htgWalletApi, signDataMap0.get(signKey).toString() + signDataMap1.get(signKey).toString(), multySignContractAddress, txKey, adds, txCount, removes);
-            System.out.println(String.format("htgId: %s, 管理员添加%s个，移除%s个，hash: %s", htgChainId, adds.length, removes.length, hash));
+            System.out.println(String.format("htgId: %s, Administrator added%sRemove%sPieces,hash: %s", htgChainId, adds.length, removes.length, hash));
         }
         String signKey = "108";
         String hash = this.sendChangeWithSignDataForTron(priKeyOfSeedAA, signDataMap0.get(signKey).toString() + signDataMap1.get(signKey).toString(), "TXeFBRKUW2x8ZYKPD13RuZDTd9qHbaPGEN", txKey, adds, txCount, removes);
-        System.out.println(String.format("htgId: 108, 管理员添加%s个，移除%s个，hash: %s", adds.length, removes.length, hash));
+        System.out.println(String.format("htgId: 108, Administrator added%sRemove%sPieces,hash: %s", adds.length, removes.length, hash));
     }
 
     protected String changeSignData(HtgContext htgContext, List<String> seedList, String txKey, String[] adds, int count, String[] removes) throws Exception {
@@ -327,7 +327,7 @@ public class RetryVirtualBankTest {
     }
 
     protected String sendTx(HtgWalletApi htgWalletApi, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
@@ -337,7 +337,7 @@ public class RetryVirtualBankTest {
             } else {
                 Log.error("Failed to estimate gas");
             }
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", 估算GasLimit失败");
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, txType.toString() + ", estimateGasLimitfail");
         }
         BigInteger gasLimit = estimateGas.add(BigInteger.valueOf(50000L));
         HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);
@@ -395,17 +395,17 @@ public class RetryVirtualBankTest {
     }
 
     protected String sendTxForTron(String fromAddress, String priKey, org.tron.trident.abi.datatypes.Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 估算feeLimit
+        // estimatefeeLimit
         TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddress, contract, txFunction, value);
         if (estimateSun.isReverted()) {
-            System.err.println(String.format("[%s]交易验证失败，原因: %s", txType, estimateSun.getRevertReason()));
+            System.err.println(String.format("[%s]Transaction verification failed, reason: %s", txType, estimateSun.getRevertReason()));
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
         }
         BigInteger feeLimit = TRX_100;
         if (estimateSun.getSunUsed() > 0) {
             feeLimit = BigInteger.valueOf(estimateSun.getSunUsed());
         }
-        System.out.println(String.format("交易类型: %s, 估算的feeLimit: %s", txType, TrxUtil.convertSunToTrx(feeLimit).toPlainString()));
+        System.out.println(String.format("Transaction type: %s, EstimatedfeeLimit: %s", txType, TrxUtil.convertSunToTrx(feeLimit).toPlainString()));
         value = value == null ? BigInteger.ZERO : value;
         String encodedHex = FunctionEncoder.encode(txFunction);
         Contract.TriggerSmartContract trigger =

@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 交易处理器
+ * Transaction processor
  * Created by ljs on 2018/12/29.
  * @author lanjinsheng
  */

@@ -6,39 +6,39 @@ import java.util.Map;
 
 public interface AwardSettleRecordService {
     /**
-     * 保存指定链的共识奖励结算记录
+     * Save consensus reward settlement records for the specified chain
      * Save configuration information for the specified chain
      *
-     * @param recordPo          共识奖励结算记录类/Consensus award settlement records
-     * @param chainID           链ID/chain id
-     * @return                  保存是否成功/Is preservation successful?
-     * @exception Exception     保存中途异常
+     * @param recordPo          Consensus reward settlement record class/Consensus award settlement records
+     * @param chainID           chainID/chain id
+     * @return                  Whether the save was successful/Is preservation successful?
+     * @exception Exception     Save midway exception
      * */
     boolean save(AwardSettleRecordPo recordPo, int chainID)throws Exception;
 
     /**
-     * 查询某条链的配置信息
+     * Query the configuration information of a certain chain
      * Query the configuration information of a chain
      *
-     * @param chainID 链ID/chain id
-     * @return 配置信息类/config bean
+     * @param chainID chainID/chain id
+     * @return Configuration Information Class/config bean
      * */
     AwardSettleRecordPo get(int chainID);
 
     /**
-     * 删除某条链的配置信息
+     * Delete configuration information for a certain chain
      * Delete configuration information for a chain
      *
-     * @param chainID 链ID/chain id
-     * @return 删除是否成功/Delete success
+     * @param chainID chainID/chain id
+     * @return Whether the deletion was successful/Delete success
      * */
     boolean delete(int chainID);
 
     /**
-     * 获取当前节点所有的链信息
+     * Obtain all chain information of the current node
      * Get all the chain information of the current node
      *
-     * @return 节点信息列表/Node information list
+     * @return Node Information List/Node information list
      * */
     Map<Integer, AwardSettleRecordPo> getList();
 }

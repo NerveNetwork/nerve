@@ -18,7 +18,7 @@ import java.util.Map;
 import static io.nuls.transaction.utils.LoggerUtil.LOG;
 
 /**
- * 调用其他模块跟交易相关的接口
+ * Calling other modules and transaction related interfaces
  *
  * @author: qinyifeng
  * @date: 2018/12/05
@@ -31,7 +31,7 @@ public class TransactionCall {
     }
 
     /**
-     * 调用其他模块接口
+     * Call other module interfaces
      * Call other module interfaces
      */
     public static Object requestAndResponse(String moduleCode, String cmd, Map params, Long timeout) throws NulsException {
@@ -64,17 +64,17 @@ public class TransactionCall {
 
 
     /**
-     * 调用交易的 rollback
+     * Call transaction rollback
      *
-     * @param chain       链信息
-     * @param cmd         回滚接口命令
-     * @param moduleCode  模块code
-     * @param txList      待回滚交易列表
-     * @param blockHeader 区块头信息
+     * @param chain       Chain information
+     * @param cmd         Rollback interface command
+     * @param moduleCode  modulecode
+     * @param txList      List of transactions to be rolled back
+     * @param blockHeader Block header information
      * @return
      */
     public static boolean txRollback(Chain chain, String cmd, String moduleCode, List<String> txList, String blockHeader) {
-        //调用单个交易验证器
+        //Calling a single transaction validator
         Map<String, Object> params = new HashMap(TxConstant.INIT_CAPACITY_8);
         params.put(Constants.CHAIN_ID, chain.getChainId());
         params.put("txList", txList);
@@ -83,18 +83,18 @@ public class TransactionCall {
     }
 
     /**
-     * 调用交易的 commit
+     * Call transaction commit
      *
-     * @param chain       链信息
-     * @param cmd         提交接口命令
-     * @param moduleCode  模块code
-     * @param txList      待提交交易列表
-     * @param blockHeader 区块头信息
-     * @param syncStatus  0:同步 1:正常运行
+     * @param chain       Chain information
+     * @param cmd         Submit interface commands
+     * @param moduleCode  modulecode
+     * @param txList      List of pending transactions to be submitted
+     * @param blockHeader Block header information
+     * @param syncStatus  0:synchronization 1:normal operation
      * @return
      */
     public static boolean txCommit(Chain chain, String cmd, String moduleCode, List<String> txList, String blockHeader, Integer syncStatus) {
-        //调用单个交易验证器
+        //Calling a single transaction validator
         Map<String, Object> params = new HashMap(TxConstant.INIT_CAPACITY_8);
         params.put(Constants.CHAIN_ID, chain.getChainId());
         params.put("txList", txList);
@@ -104,13 +104,13 @@ public class TransactionCall {
     }
 
     /**
-     * 打包交易处理器
+     * Package transaction processor
      *
-     * @param chain      链信息
-     * @param cmd        提交接口命令
-     * @param moduleCode 模块code
-     * @param txList     待提交交易列表
-     * @param process    0:表示打包, 1:表示验证
+     * @param chain      Chain information
+     * @param cmd        Submit interface commands
+     * @param moduleCode modulecode
+     * @param txList     List of pending transactions to be submitted
+     * @param process    0:Indicates packaging, 1:Represent verification
      * @return
      */
     public static Map<String, List<String>> packProduce(Chain chain, String cmd, String moduleCode, List<String> txList, long height, long blockTime, int process) throws NulsException {
@@ -125,11 +125,11 @@ public class TransactionCall {
     }
 
     /**
-     * 调用交易的 commit 或者 rollback
+     * Call transaction commit perhaps rollback
      *
-     * @param chain      链信息
-     * @param cmd        接口命令
-     * @param moduleCode 模块code
+     * @param chain      Chain information
+     * @param cmd        Interface commands
+     * @param moduleCode modulecode
      * @return
      */
     public static boolean txProcess(Chain chain, String cmd, String moduleCode, Map<String, Object> params) {
@@ -149,10 +149,10 @@ public class TransactionCall {
     }
 
     /**
-     * 模块交易统一验证器
+     * Module Transaction Unified Verifier
      * Single module transaction integrate validator
      *
-     * @return 返回未通过验证的交易hash, 如果出现异常那么交易全部返回(不通过) / return unverified transaction hash
+     * @return Return unverified transactionshash, If there is an exception, all transactions will be returned(Not passed) / return unverified transaction hash
      */
     public static Map<String, Object> txModuleValidator(Chain chain, String moduleCode, String tx) throws NulsException {
         List<String> txList = new ArrayList<>();
@@ -161,23 +161,23 @@ public class TransactionCall {
     }
 
     /**
-     * 模块交易统一验证器
+     * Module Transaction Unified Verifier
      * Single module transaction integrate validator
      *
-     * @return 返回未通过验证的交易hash, 如果出现异常那么交易全部返回(不通过) / return unverified transaction hash
+     * @return Return unverified transactionshash, If there is an exception, all transactions will be returned(Not passed) / return unverified transaction hash
      */
     public static List<String> txModuleValidator(Chain chain, String moduleCode, List<String> txList) throws NulsException {
         return txModuleValidator(chain, moduleCode, txList, null);
     }
 
     /**
-     * 模块交易统一验证器
+     * Module Transaction Unified Verifier
      * Single module transaction integrate validator
      *
-     * @return 返回未通过验证的交易hash, 如果出现异常那么交易全部返回(不通过) / return unverified transaction hash
+     * @return Return unverified transactionshash, If there is an exception, all transactions will be returned(Not passed) / return unverified transaction hash
      */
     public static List<String> txModuleValidator(Chain chain, String moduleCode, List<String> txList, String blockHeaderStr) throws NulsException {
-        //调用交易模块统一验证器
+        //Call the transaction module's unified validator
         Map<String, Object> result = callTxModuleValidator(chain, moduleCode, txList, blockHeaderStr);
         return (List<String>) result.get("list");
     }

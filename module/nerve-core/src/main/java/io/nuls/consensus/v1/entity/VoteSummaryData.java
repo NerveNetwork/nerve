@@ -54,7 +54,7 @@ public class VoteSummaryData extends BasicObject {
         }
         double result = DoubleUtils.div(count, round.getMemberCount());
 //        if (vote.getVoteStage() == 2) {
-            log.debug("收到投票({})：{}-{}-{}-{}-{}={}=========={}%", vote.getVoteStage(), this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+            log.debug("Received vote({})：{}-{}-{}-{}-{}={}=========={}%", vote.getVoteStage(), this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
                     vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
 //        }
 
@@ -71,14 +71,14 @@ public class VoteSummaryData extends BasicObject {
             data.setVoteRoundIndex(vote.getVoteRoundIndex());
             if (stage1First && vote.getVoteStage() == ConsensusConstant.VOTE_STAGE_ONE) {
                 stage1First = false;
-//                log.info("提交第一阶段投票结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+//                log.info("Submit the voting results for the first stage：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
 //                        vote.getVoteStage(), vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
 
                 chain.getConsensusCache().getStageOneQueue().offer(data);
 
             } else if (stage2First && vote.getVoteStage() == ConsensusConstant.VOTE_STAGE_TWO) {
                 stage2First = false;
-                log.debug("提交2阶段结果：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
+                log.debug("Submit2Stage results：{}-{}-{}-{}-{}-{}={}=========={}%", this.height, this.roundIndex, this.packingIndexOfRound, this.voteRoundIndex,
                         vote.getVoteStage(), vote.getBlockHash().toHex(), vote.getAddress(chain), result * 100);
                 data.setResultMessage(new VoteResultMessage(chain, new ArrayList<>(stageTwoMap.values())));
                 chain.getConsensusCache().getStageTwoQueue().offer(data);

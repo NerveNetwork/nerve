@@ -35,17 +35,17 @@ import java.math.BigInteger;
 public class RemoveLiquidityBus extends BaseBus {
 
     /**
-     * 赎回的资产
+     * Redemption of assets
      */
     private BigInteger amount0;
     private BigInteger amount1;
     /**
-     * 当前池子（赎回前）
+     * Current Pool（Before redemption）
      */
     private BigInteger reserve0;
     private BigInteger reserve1;
     /**
-     * 销毁的LP资产
+     * DestroyedLPasset
      */
     private BigInteger liquidity;
     private transient IPair pair;

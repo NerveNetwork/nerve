@@ -34,7 +34,7 @@ public class StableRemoveLiquidityDTO {
     private byte[] userAddress;
     private byte[] pairAddress;
     /**
-     * 销毁的LP资产
+     * DestroyedLPasset
      */
     private BigInteger liquidity;
 

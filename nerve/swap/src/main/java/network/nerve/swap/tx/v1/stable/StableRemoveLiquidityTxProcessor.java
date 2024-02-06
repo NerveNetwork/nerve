@@ -76,7 +76,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[{}][commit] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
@@ -88,7 +88,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
                 //logger.info("[{}]remove bus: {}", blockHeader.getHeight(), bus.toString());
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 stablePair.update(bus.getLiquidity().negate(), SwapUtils.convertNegate(bus.getAmounts()), bus.getBalances(), blockHeader.getHeight(), blockHeader.getTime());
             }
         } catch (Exception e) {
@@ -120,7 +120,7 @@ public class StableRemoveLiquidityTxProcessor implements TransactionProcessor {
                 String pairAddress = AddressTool.getStringAddressByBytes(dto.getPairAddress());
                 IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
                 StableRemoveLiquidityBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), StableRemoveLiquidityBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 stablePair.rollback(bus.getLiquidity().negate(), bus.getBalances(), bus.getPreBlockHeight(), bus.getPreBlockTime());
                 swapExecuteResultStorageService.delete(chainId, tx.getHash());
                 logger.info("[{}][rollback] Stable Swap Remove Liquidity, hash: {}", blockHeader.getHeight(), tx.getHash().toHex());

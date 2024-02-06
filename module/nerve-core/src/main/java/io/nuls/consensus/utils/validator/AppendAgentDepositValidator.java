@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 追加保证金交易验证器
+ * Additional margin trading validator
  *
  * @author tag
  */
@@ -29,7 +29,7 @@ public class AppendAgentDepositValidator extends BaseValidator {
     private AgentManager agentManager;
 
     public Result validate(Chain chain, Transaction tx, BlockHeader blockHeader) throws NulsException, IOException {
-        //txData验证
+        //txDatavalidate
         if (tx.getTxData() == null) {
             chain.getLogger().error("CreateAgent -- TxData is null");
             return Result.getFailed(ConsensusErrorCode.TX_DATA_VALIDATION_ERROR);
@@ -37,16 +37,16 @@ public class AppendAgentDepositValidator extends BaseValidator {
         ChangeAgentDepositData txData = new ChangeAgentDepositData();
         txData.parse(tx.getTxData(), 0);
 
-        //验证交易发起者是否为节点创建者，只有节点创建者才能追加保证金
+        //Verify if the transaction initiator is the node creator, only the node creator can add margin
         Result rs = agentManager.creatorValid(chain, txData.getAgentHash(), txData.getAddress());
         if (rs.isFailed()) {
             return rs;
         }
 
-        //保证金验证
+        //Margin verification
         AgentPo po = (AgentPo) rs.getData();
         BigInteger amount = txData.getAmount();
-        //追加委托金额大于等于最小追加金额
+        //Additional commission amount greater than or equal to the minimum additional amount
         BigInteger minAppendAmount = chain.getConfig().getAppendAgentDepositMin();
         if (chain.getBestHeader().getHeight() > chain.getConfig().getV130Height()) {
             minAppendAmount = chain.getConfig().getMinAppendAndExitAmount();
@@ -55,19 +55,19 @@ public class AppendAgentDepositValidator extends BaseValidator {
             chain.getLogger().error("The amount of additional margin is less than the minimum value");
             return Result.getFailed(ConsensusErrorCode.APPEND_DEPOSIT_OUT_OF_RANGE);
         }
-        //追加金额小于节点最大保证金金额
+        //The additional amount is less than the maximum margin amount of the node
         if (amount.compareTo(chain.getConfig().getDepositMax()) >= 0) {
             chain.getLogger().error("The amount of additional margin is less than the minimum value");
             return Result.getFailed(ConsensusErrorCode.APPEND_DEPOSIT_OUT_OF_RANGE);
         }
         BigInteger newDeposit = po.getDeposit().add(amount);
-        //追加金额加上节点当前保证金小于等于节点最大保证金金额
+        //The additional amount plus the current margin of the node is less than or equal to the maximum margin of the node
         if (newDeposit.compareTo(chain.getConfig().getDepositMax()) > 0) {
             chain.getLogger().error("The amount of additional margin is less than the minimum value");
             return Result.getFailed(ConsensusErrorCode.DEPOSIT_OUT_OF_RANGE);
         }
 
-        //coinData验证
+        //coinDatavalidate
         CoinData coinData = new CoinData();
         coinData.parse(tx.getCoinData(), 0);
         rs = appendDepositCoinDataValid(chain, amount, coinData, txData.getAddress());
@@ -75,7 +75,7 @@ public class AppendAgentDepositValidator extends BaseValidator {
             return rs;
         }
 
-        //验证手续费是否足够
+        //Verify if the handling fee is sufficient
         rs = validFee(chain, coinData, tx);
         if (rs.isFailed()) {
             return rs;

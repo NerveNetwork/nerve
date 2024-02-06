@@ -52,7 +52,7 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 返回此模块的依赖模块
+     * Return the dependent modules of this module
      *
      * @return
      */
@@ -64,7 +64,7 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 返回当前模块的描述信息
+     * Return the description information of the current module
      *
      * @return
      */
@@ -74,7 +74,7 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化模块信息,比如初始化RockDB等,在此处初始化后,可在其他bean的afterPropertiesSet中使用
+     * Initialize module information,For example, initializationRockDBetc.,After initialization here,Can be found in otherbeanofafterPropertiesSetUsed in
      */
     @Override
     public void init() {
@@ -97,7 +97,7 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 初始化系统编码
+     * Initialize system encoding
      * Initialization System Coding
      */
     private void initSys() throws Exception {
@@ -109,11 +109,11 @@ public class DexBootstrap extends RpcModule {
 
 
     /**
-     * 初始化数据库
+     * Initialize database
      * Initialization database
      */
     private void initDb() {
-        //读取配置文件,数据存储根目录,初始化打开该目录下所有表连接并放入缓存
+        //Read configuration file,Root directory of data storage,Initialize and open all table connections in this directory and place them in cache
         RocksDBService.init(dexConfig.getDataFolder());
         DexUtil.createTable(DexDBConstant.DB_NAME_COIN_TRADING);
         DexUtil.createTable(DexDBConstant.DB_NAME_TRADING_ORDER);
@@ -142,9 +142,9 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 已完成spring init注入,开始启动模块
+     * Completedspring initinjection,Start module startup
      *
-     * @return 如果启动完成返回true, 模块将进入ready状态, 若启动失败返回false, 10秒后会再次调用此方法
+     * @return If the startup is completed, returntrue, The module will enterreadystate, If startup fails, returnfalse, 10This method will be called again in seconds
      */
     @Override
     public boolean doStart() {
@@ -156,13 +156,13 @@ public class DexBootstrap extends RpcModule {
     }
 
     /**
-     * 所有外部依赖进入ready状态后会调用此方法,正常启动后返回Running状态
+     * All external dependencies enterreadyThis method will be called after the state is reached,Return after normal startupRunningstate
      *
      * @return
      */
     @Override
     public RpcModuleState onDependenciesReady() {
-        //启动时间服务
+        //Start time service
         NulsDateUtils.getInstance().start();
 
         scheduleManager.start();
@@ -179,17 +179,17 @@ public class DexBootstrap extends RpcModule {
     @Override
     public void onDependenciesReady(Module module) {
         if (module.getName().equals(ModuleE.NC.abbr)) {
-            //向交易模块注册DEX模块交易
+            //Register with the trading moduleDEXModule transactions
             LoggerUtil.dexLog.info("dexlog info ====== >");
             RegisterHelper.registerTx(dexConfig.getChainId(), ProtocolGroupManager.getCurrentProtocol(dexConfig.getChainId()));
-            //注册账户模块相关交易
+            //Registration account module related transactions
             RegisterHelper.registerProtocol(dexConfig.getChainId());
         }
     }
 
 
     /**
-     * 某个外部依赖连接丢失后,会调用此方法,可控制模块状态,如果返回Ready,则表明模块退化到Ready状态,当依赖重新准备完毕后,将重新触发onDependenciesReady方法,若返回的状态是Running,将不会重新触发onDependenciesReady
+     * After the loss of an external dependency connection,Will call this method,Controllable module status,If returningReady,This indicates that the module has degraded toReadystate,After the dependency is re prepared,Will be triggered againonDependenciesReadymethod,If the returned status isRunning,Will not trigger againonDependenciesReady
      *
      * @param dependenciesModule
      * @return

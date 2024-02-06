@@ -31,7 +31,7 @@ import java.math.BigDecimal;
  */
 public class RouteOfPriceImpactVO {
     private RouteVO routeDTO;
-    private BigDecimal impact;// 价格影响
+    private BigDecimal impact;// Price impact
 
     public RouteOfPriceImpactVO(RouteVO routeDTO, BigDecimal impact) {
         this.routeDTO = routeDTO;

@@ -12,7 +12,7 @@ import io.nuls.core.core.annotation.Component;
 import java.util.Map;
 
 /**
- * 提供给区块模块调用的接口
+ * Provide interfaces for block module calls
  * @author tag
  * @date 2019/4/25
  */
@@ -22,12 +22,12 @@ public class CcmBlockCmd extends BaseCmd {
     @Autowired
     private BlockService service;
     /**
-     * 区块模块高度变化通知跨链模块
+     * Block module height change notification cross chain module
      * */
-    @CmdAnnotation(cmd = "newBlockHeight", version = 1.0, description = "链区块高度变更/receive new block height")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "height", parameterType = "long", parameterDes = "链ID")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @CmdAnnotation(cmd = "newBlockHeight", version = 1.0, description = "Chain block height change/receive new block height")
+    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID")
+    @Parameter(parameterName = "height", parameterType = "long", parameterDes = "chainID")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response newBlockHeight(Map<String,Object> params){
         Result result = service.newBlockHeight(params);
         if(result.isFailed()){
@@ -37,13 +37,13 @@ public class CcmBlockCmd extends BaseCmd {
     }
 
     /**
-     * 节点同步状态变更
+     * Node synchronization status change
      * Node synchronization state change
      * */
     @CmdAnnotation(cmd = "syncStatusUpdate", version = 1.0, description = "Node synchronization state change")
-    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链ID")
-    @Parameter(parameterName = "status", parameterType = "int", parameterDes = "状态0：同步中，1：同步完成")
-    @ResponseData(description = "无特定返回值，没有错误即成功")
+    @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID")
+    @Parameter(parameterName = "status", parameterType = "int", parameterDes = "state0：In synchronization,1：Sync completed")
+    @ResponseData(description = "No specific return value, successful without errors")
     public Response syncStatusUpdate(Map<String,Object> params){
         Result result = service.newBlockHeight(params);
         if(result.isFailed()){

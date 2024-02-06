@@ -66,7 +66,7 @@ public class CheckRetryParseHandler implements MessageProcessor {
             return;
         }
         if (!VirtualBankUtil.isCurrentDirector(chain)) {
-            LoggerUtil.LOG.debug("当前非虚拟银行成员节点, 不处理消息:{}", ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
+            LoggerUtil.LOG.debug("Current non virtual bank member nodes, Do not process messages:{}", ConverterCmdConstant.NEW_HASH_SIGN_MESSAGE);
             return;
         }
         CheckRetryParseMessage checkRetryParseMessage = RPCUtil.getInstanceRpcStr(message, CheckRetryParseMessage.class);

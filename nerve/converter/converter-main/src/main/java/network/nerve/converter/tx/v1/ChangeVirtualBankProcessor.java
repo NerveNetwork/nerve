@@ -98,21 +98,21 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
 
     /**
-     * 新增节点
-     * 1.是否是共识节点
-     * 2.是否保证金排行在前10
-     * 3.不是当前虚拟银行成员
+     * Add nodes
+     * 1.Is it a consensus node
+     * 2.Is the margin ranking among the top10
+     * 3.Not the current virtual bank member
      * <p>
-     * 退出节点
-     * 1.不是共识节点, 并且是当前虚拟银行成员
-     * 2.是共识节点
-     * 2-1.判断保证金排不在普通共识节点前10
-     * 2-2.是当前虚拟银行成员
+     * Exit node
+     * 1.Not a consensus node, And it is currently a member of the virtual bank
+     * 2.It is a consensus node
+     * 2-1.Judging whether the margin is placed before the common consensus node10
+     * 2-2.Is the current virtual bank member
      *
-     * @param chainId     链Id
-     * @param txs         类型为{@link #getType()}的所有交易集合
-     * @param txMap       不同交易类型与其对应交易列表键值对
-     * @param blockHeader 区块头
+     * @param chainId     chainId
+     * @param txs         Type is{@link #getType()}All transaction sets for
+     * @param txMap       Different transaction types and their corresponding transaction list key value pairs
+     * @param blockHeader Block head
      * @return
      */
     @Override
@@ -134,37 +134,37 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             } else {
                 listAgent = ConsensusCall.getAgentList(chain);
             }
-            // 当前最新有资格成为虚拟银行的(非种子)节点
+            // The latest qualified individuals to become virtual banks(Non seed)node
             List<AgentBasic> listNewestVirtualBank = virtualBankService.calcNewestVirtualBank(chain, listAgent);
-            // 区块内业务重复交易检查
+            // Check for duplicate transactions within the block business
             Set<String> setDuplicate = new HashSet<>();
-            // 地址重复检查, 同一个区块的所有变更交易的in和out里面不能出现相同的地址
+            // Address duplicate check, All change transactions within the same blockinandoutThe same address cannot appear inside
             Set<String> addressDuplicate = new HashSet<>();
             outer:
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
                 if (coinData != null && coinData.length > 0) {
-                    // coindata存在数据(coinData应该没有数据)
+                    // coindataExisting data(coinDataThere should be no data available)
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.COINDATA_CANNOT_EXIST.getCode();
                     log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
-                // 判断区块内重复
+                // Determine duplicate within the block
                 String txDataHex = HexUtil.encode(tx.getTxData());
                 if (setDuplicate.contains(txDataHex)) {
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                     log.error(ConverterErrorCode.TX_DUPLICATION.getMsg());
                     continue;
                 }
                 ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
-                // 地址重复检查
+                // Address duplicate check
                 if (null != txData.getInAgents()) {
                     for (byte[] addressBytes : txData.getInAgents()) {
                         if (addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))) {
-                            // 区块内业务重复交易
+                            // Repeated transactions within the block
                             failsList.add(tx);
                             errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                             log.error("[ChangeVirtualBank] txData has duplication address. hash:{}", tx.getHash().toHex());
@@ -175,7 +175,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 if (null != txData.getOutAgents()) {
                     for (byte[] addressBytes : txData.getOutAgents()) {
                         if (addressDuplicate.contains(AddressTool.getStringAddressByBytes(addressBytes))) {
-                            // 区块内业务重复交易
+                            // Repeated transactions within the block
                             failsList.add(tx);
                             errorCode = ConverterErrorCode.TX_DUPLICATION.getCode();
                             log.error("[ChangeVirtualBank] txData has duplication address. hash:{}", tx.getHash().toHex());
@@ -185,33 +185,33 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 }
 
 
-                // 验证退出虚拟银行业务
+                // Verify exiting virtual banking business
                 List<byte[]> listOutAgents = txData.getOutAgents();
                 int listOutAgentsSize = 0;
                 if (null != listOutAgents && !listOutAgents.isEmpty()) {
                     listOutAgentsSize = listOutAgents.size();
                     for (byte[] addressBytes : listOutAgents) {
                         String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
-                        // 判断不是虚拟银行成员
+                        // Judging that it is not a member of a virtual bank
                         if (!chain.isVirtualBankByAgentAddr(agentAddress)) {
                             failsList.add(tx);
-                            // 当前不是虚拟银行节点, 不存在退出的情况
+                            // Currently not a virtual bank node, There is no exit situation
                             errorCode = ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.AGENT_IS_NOT_VIRTUAL_BANK.getMsg());
-                            chain.getLogger().error("该节点本身不是虚拟银行成员, 不存在退出的情况, agentAddress:{}", agentAddress);
+                            chain.getLogger().error("The node itself is not a member of a virtual bank, There is no exit situation, agentAddress:{}", agentAddress);
                             continue outer;
                         }
-                        // 判断不是种子节点
+                        // Determine if it is not a seed node
                         VirtualBankDirector director = chain.getDirectorByAgent(agentAddress);
                         if (director.getSeedNode()) {
                             failsList.add(tx);
-                            // 种子节点不能退出虚拟银行
+                            // Seed node cannot exit virtual bank
                             errorCode = ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getCode();
-                            chain.getLogger().error("种子节点不能退出虚拟银行, agentAddress:{}", agentAddress);
+                            chain.getLogger().error("Seed node cannot exit virtual bank, agentAddress:{}", agentAddress);
                             continue outer;
                         }
                         if (StringUtils.isNotBlank(disqualificationStorageService.find(chain, addressBytes))) {
-                            // 撤销银行资格列表里面存在该地址, 验证通过直接撤销.
+                            // The address exists in the revocation bank qualification list, Verified through direct revocation.
                             continue;
                         }
                         if (!isQuitVirtualBank(chain, listAgent, listNewestVirtualBank, agentAddress)) {
@@ -219,7 +219,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                             long h = null == blockHeader ? -1 : blockHeader.getHeight();
                             log.error(h + " - orginalListAgent: " + JSONUtils.obj2json(listAgent) + ", listNewestVirtualBank: " + JSONUtils.obj2json(listNewestVirtualBank));
                             log.error(h + "- MapVirtualBank: " + JSONUtils.obj2json(chain.getMapVirtualBank()));
-                            // 不满足退出虚拟银行节点条件
+                            // Not meeting the conditions for exiting the virtual bank node
                             errorCode = ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.CAN_NOT_QUIT_VIRTUAL_BANK.getMsg());
                             continue outer;
@@ -227,24 +227,24 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     }
                 }
 
-                // 验证加入虚拟银行节点业务
+                // Verify joining virtual banking node business
                 List<byte[]> listInAgents = txData.getInAgents();
                 if (null != listInAgents && !listInAgents.isEmpty()) {
-                    //  判断加入后是否导致虚拟银行成员超出
+                    //  Determine if joining causes virtual bank members to exceed the limit
                     int countVirtualBank = chain.getVirtualBankCountWithoutSeedNode();
                     if (countVirtualBank - listOutAgentsSize + listInAgents.size() > ConverterContext.VIRTUAL_BANK_AGENT_COUNT_WITHOUT_SEED) {
                         failsList.add(tx);
-                        // 当前已是造成虚拟银行非种子节点数量超出最大值
+                        // The current situation has caused the number of non seed nodes in the virtual bank to exceed the maximum value
                         errorCode = ConverterErrorCode.VIRTUAL_BANK_OVER_MAXIMUM.getCode();
                         log.error(ConverterErrorCode.VIRTUAL_BANK_OVER_MAXIMUM.getMsg());
                         continue outer;
                     }
                     for (byte[] addressBytes : listInAgents) {
                         String agentAddress = AddressTool.getStringAddressByBytes(addressBytes);
-                        //判断是虚拟银行成员
+                        //Judging as a virtual bank member
                         if (chain.isVirtualBankByAgentAddr(agentAddress)) {
                             failsList.add(tx);
-                            // 当前已是虚拟银行节点, 不存在加入的情况
+                            // Currently a virtual bank node, There is no situation of joining
                             errorCode = ConverterErrorCode.AGENT_IS_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.AGENT_IS_VIRTUAL_BANK.getMsg());
                             continue outer;
@@ -255,7 +255,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                             long h = null == blockHeader ? -1 : blockHeader.getHeight();
                             log.error(h + " - orginalListAgent: " + JSONUtils.obj2json(listAgent) + ", listNewestVirtualBank: " + JSONUtils.obj2json(listNewestVirtualBank));
                             log.error(h + "- MapVirtualBank: " + JSONUtils.obj2json(chain.getMapVirtualBank()));
-                            // 未达到进入虚拟银行的条件
+                            // Not meeting the conditions to enter virtual banking
                             errorCode = ConverterErrorCode.CAN_NOT_JOIN_VIRTUAL_BANK.getCode();
                             log.error(ConverterErrorCode.CAN_NOT_JOIN_VIRTUAL_BANK.getMsg());
                             continue outer;
@@ -263,7 +263,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     }
                 }
 
-                // 验签名
+                // Verification signature
                 try {
                     ConverterSignValidUtil.validateVirtualBankSign(chain, tx);
                 } catch (NulsException e) {
@@ -272,7 +272,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     log.error(e.getErrorCode().getMsg());
                     continue outer;
                 }
-                // 将所有地址 放入重复检查集合
+                // Include all addresses Place duplicate check set
                 if (null != txData.getInAgents()) {
                     for (byte[] addressBytes : txData.getInAgents()) {
                         addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
@@ -283,7 +283,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         addressDuplicate.add(AddressTool.getStringAddressByBytes(addressBytes));
                     }
                 }
-                // 将txData hex 放入重复检查集合
+                // taketxData hex Place duplicate check set
                 setDuplicate.add(txDataHex);
             }
             result.put("txList", failsList);
@@ -297,7 +297,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     }
 
     /**
-     * 判断节点是否应该进入虚拟银行
+     * Determine whether the node should enter the virtual bank
      *
      * @param listAgent
      * @param agentAddress
@@ -306,21 +306,21 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     private boolean isJoinVirtualBank(Chain chain, List<AgentBasic> listAgent, List<AgentBasic> listNewestVirtualBank, String agentAddress) {
         for (int i = 0; i < listAgent.size(); i++) {
             AgentBasic agentBasic = listAgent.get(i);
-            //判断是否是非种子的出块共识节点
+            //Determine if it is a non seed block consensus node
             if (!agentBasic.getSeedNode()
                     && agentBasic.getAgentAddress().equals(agentAddress)) {
                 if (StringUtils.isBlank(agentBasic.getPubKey())) {
-                    chain.getLogger().error("节点公钥为空, 无出块记录不能加入虚拟银行， agentAddress:{}", agentAddress);
+                    chain.getLogger().error("Node public key is empty, Cannot join virtual bank without block output record, agentAddress:{}", agentAddress);
                     return false;
                 }
                 byte[] pubKeyAddrByte = AddressTool.getAddressByPubKeyStr(agentBasic.getPubKey(), chain.getChainId());
                 String pubKeyAddr = AddressTool.getStringAddressByBytes(pubKeyAddrByte);
                 if (!pubKeyAddr.equals(agentBasic.getPackingAddress())) {
-                    //公钥生成的地址与出块地址不一致，表示无效
-                    chain.getLogger().error("节点公钥错误，与出块地址不匹配，不能加入虚拟银行， agentAddress:{}", agentAddress);
+                    //The address generated by the public key does not match the outgoing address, indicating that it is invalid
+                    chain.getLogger().error("Node public key error, does not match block address, cannot join virtual bank, agentAddress:{}", agentAddress);
                     return false;
                 }
-                //判断排位在虚拟银行规定的排位内
+                //Determine if the ranking is within the designated ranking of the virtual bank
             }
         }
 
@@ -330,16 +330,16 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 return true;
             }
         }
-        chain.getLogger().error("[ChangeVirtualBankProcessor-validate-isJoinVirtualBank] 当前没有有虚拟银行资格, 不能加入虚拟银行. agentAddress:{}", agentAddress);
+        chain.getLogger().error("[ChangeVirtualBankProcessor-validate-isJoinVirtualBank] Currently not eligible for virtual banking, Cannot join virtual bank. agentAddress:{}", agentAddress);
         return false;
     }
 
     /**
-     * 退出银行的节点
-     * 1.不是共识节点, 并且是当前虚拟银行成员
-     * 2.是共识节点
-     * 2-1.判断保证金排不在普通共识节点前10
-     * 2-2.是当前虚拟银行成员
+     * Node for exiting the bank
+     * 1.Not a consensus node, And it is currently a member of the virtual bank
+     * 2.It is a consensus node
+     * 2-1.Judging whether the margin is placed before the common consensus node10
+     * 2-2.Is the current virtual bank member
      *
      * @param listAgent
      * @param agentAddress
@@ -348,16 +348,16 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     private boolean isQuitVirtualBank(Chain chain, List<AgentBasic> listAgent, List<AgentBasic> listNewestVirtualBank, String agentAddress) {
         for (int i = 0; i < listAgent.size(); i++) {
             AgentBasic agentBasic = listAgent.get(i);
-            //判断是出块共识节点
+            //Determine whether it is a block consensus node
             if (agentBasic.getAgentAddress().equals(agentAddress)) {
-                // 公钥为空说明没出块, 应该退出虚拟银行
+                // If the public key is empty, it means that no block has been generated, Should exit virtual banking
                 if (StringUtils.isBlank(agentBasic.getPubKey())) {
                     return true;
                 }
                 byte[] pubKeyAddrByte = AddressTool.getAddressByPubKeyStr(agentBasic.getPubKey(), chain.getChainId());
                 String pubKeyAddr = AddressTool.getStringAddressByBytes(pubKeyAddrByte);
                 if (!pubKeyAddr.equals(agentBasic.getPackingAddress())) {
-                    //公钥生成的地址与出块地址不一致，表示无效 应该退出
+                    //The address generated by the public key does not match the outgoing address, indicating that it is invalid Should exit
                     return true;
                 }
             }
@@ -365,12 +365,12 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
         for (int i = 0; i < listNewestVirtualBank.size(); i++) {
             AgentBasic agentBasic = listNewestVirtualBank.get(i);
             if (agentAddress.equals(agentBasic.getAgentAddress())) {
-                chain.getLogger().error("当前仍有虚拟银行资格,不能退出虚拟银行, 保证金:{}, 排行:{}", agentBasic.getDeposit(), ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT + i + 1);
+                chain.getLogger().error("Currently still eligible for virtual banking,Cannot exit virtual bank, Margin:{}, Ranking:{}", agentBasic.getDeposit(), ConverterContext.INITIAL_VIRTUAL_BANK_SEED_COUNT + i + 1);
                 return false;
             }
         }
 
-        // 应该退出
+        // Should exit
         return true;
     }
 
@@ -386,7 +386,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
 
     /**
-     * 加入虚拟银行节点
+     * Join virtual banking node
      *
      * @param chain
      * @param listInAgents
@@ -396,7 +396,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     private List<VirtualBankDirector> processSaveVirtualBank(Chain chain, List<byte[]> listInAgents, List<AgentBasic> listCurrentAgent) throws NulsException {
         List<VirtualBankDirector> listInDirector = new ArrayList<>();
         if (null == listInAgents || listInAgents.isEmpty()) {
-            chain.getLogger().info("[commit] 没有节点加入虚拟银行");
+            chain.getLogger().info("[commit] No nodes joined the virtual bank");
             return listInDirector;
         }
         for (byte[] addressBytes : listInAgents) {
@@ -414,17 +414,17 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             virtualBankDirector.setSignAddrPubKey(agentInfo.getPubKey());
             virtualBankDirector.setSeedNode(false);
             virtualBankDirector.setHeterogeneousAddrMap(new HashMap<>(ConverterConstant.INIT_CAPACITY_8));
-            chain.getLogger().info("[commit] 节点加入虚拟银行, packing:{}, agent:{}", packingAddr, agentAddress);
+            chain.getLogger().info("[commit] Node Joins Virtual Bank, packing:{}, agent:{}", packingAddr, agentAddress);
             listInDirector.add(virtualBankDirector);
         }
-        // add by Mimi at 2020-05-06 加入虚拟银行时更新[virtualBankDirector]在DB存储以及内存中的顺序
+        // add by Mimi at 2020-05-06 Update when joining virtual banking[virtualBankDirector]stayDBStorage and order in memory
         VirtualBankUtil.virtualBankAdd(chain, chain.getMapVirtualBank(), listInDirector, virtualBankStorageService);
         // end code by Mimi
         return listInDirector;
     }
 
     /**
-     * 移除虚拟银行节点
+     * Remove virtual bank node
      *
      * @param chain
      * @param listAgents
@@ -433,7 +433,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
     private List<VirtualBankDirector> processRemoveVirtualBank(Chain chain, List<byte[]> listAgents) throws NulsException {
         List<VirtualBankDirector> listOutDirector = new ArrayList<>();
         if (null == listAgents || listAgents.isEmpty()) {
-            chain.getLogger().info("[commit] 没有节点退出虚拟银行");
+            chain.getLogger().info("[commit] No node exits virtual bank");
             return listOutDirector;
         }
         for (byte[] addressBytes : listAgents) {
@@ -442,13 +442,13 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             listOutDirector.add(director);
             String directorSignAddress = director.getSignAddress();
             try {
-                chain.getLogger().debug("[退出银行节点信息]:{}", JSONUtils.obj2PrettyJson(director));
+                chain.getLogger().debug("[Exit Bank Node Information]:{}", JSONUtils.obj2PrettyJson(director));
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
-            chain.getLogger().info("[commit] 节点退出虚拟银行, packing:{}, agent:{}", directorSignAddress, agentAddress);
+            chain.getLogger().info("[commit] Node exits virtual bank, packing:{}, agent:{}", directorSignAddress, agentAddress);
         }
-        // add by Mimi at 2020-05-06 移除时更新顺序
+        // add by Mimi at 2020-05-06 Update order when removing
         VirtualBankUtil.virtualBankRemove(chain, chain.getMapVirtualBank(), listOutDirector, virtualBankStorageService);
         // end code by Mimi
         return listOutDirector;
@@ -456,7 +456,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
 
     /**
-     * 检查所有虚拟银行成员创建多签/合约地址, 补充创建地址等信息
+     * Check all virtual bank members to create multiple signatures/Contract address, Supplement information such as creating an address
      **/
     private void createNewHeterogeneousAddress(Chain chain, List<IHeterogeneousChainDocking> hInterfaces) {
         Collection<VirtualBankDirector> allDirectors = chain.getMapVirtualBank().values();
@@ -465,15 +465,15 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 boolean save = false;
                 for (IHeterogeneousChainDocking hInterface : hInterfaces) {
                     if (director.getHeterogeneousAddrMap().containsKey(hInterface.getChainId())) {
-                        // 存在异构地址就不创建
+                        // Do not create heterogeneous addresses if they exist
                         continue;
                     }
-                    // 为新成员创建异构链多签地址
+                    // Create heterogeneous chain multi sign addresses for new members
                     String heterogeneousAddress = hInterface.generateAddressByCompressedPublicKey(director.getSignAddrPubKey());
                     director.getHeterogeneousAddrMap().put(hInterface.getChainId(),
                             new HeterogeneousAddress(hInterface.getChainId(), heterogeneousAddress));
                     save = true;
-                    chain.getLogger().info("[为新加入节点创建异构链地址] 节点地址:{}, 异构id:{}, 异构地址:{}",
+                    chain.getLogger().info("[Create heterogeneous chain addresses for newly added nodes] Node address:{}, isomerismid:{}, Heterogeneous addresses:{}",
                             director.getAgentAddress(), hInterface.getChainId(), director.getHeterogeneousAddrMap().get(hInterface.getChainId()));
                 }
                 if (save) {
@@ -501,7 +501,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
             SignAccountDTO signAccountDTO = ConsensusCall.getPackerInfo(chain);
 
             for (Transaction tx : txs) {
-                //维护虚拟银行
+                //Maintain virtual banking
                 ChangeVirtualBankTxData txData = ConverterUtil.getInstance(tx.getTxData(), ChangeVirtualBankTxData.class);
                 List<byte[]> listOutAgents = txData.getOutAgents();
                 List<VirtualBankDirector> listOutDirector =
@@ -512,39 +512,39 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
 
                 boolean currentJoin = false;
                 boolean currentQuit = false;
-                // 当前节点是虚拟银行成员标识
+                // The current node is a virtual bank member identifier
                 boolean currentDirector = VirtualBankUtil.isCurrentDirector(chain);
                 VirtualBankDirector currentQuitDirector = null;
                 if (currentDirector) {
-                    // 如果标识当前节点是虚拟银行, 则判断当前节点是否是退出虚拟银行节点
+                    // If the current node is identified as a virtual bank, Then determine whether the current node is an exit virtual bank node
                     for (VirtualBankDirector director : listOutDirector) {
                         if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
-                            // 当前节点退出成虚拟银行成员
+                            // Current node exits as a virtual bank member
                             currentDirector = false;
                             currentQuit = true;
                             currentQuitDirector = director;
                             chain.getCurrentIsDirector().set(false);
-                            chain.getLogger().info("[虚拟银行] 当前节点退出虚拟银行,标识变更为: false");
+                            chain.getLogger().info("[Virtual banking] Current node exits virtual bank,Identification changed to: false");
                             break;
                         }
                     }
                 } else {
                     if (null != signAccountDTO) {
-                        // 如果当前节点不是虚拟银行, 是共识节点, 则判断当前节点是否是新加入的虚拟银行节点
+                        // If the current node is not a virtual bank, It is a consensus node, Then determine whether the current node is a newly added virtual bank node
                         for (VirtualBankDirector director : listInDirector) {
                             if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
-                                // 当前节点加入成虚拟银行成员
+                                // Current node joined as a virtual bank member
                                 chain.getCurrentIsDirector().set(true);
                                 currentJoin = true;
                                 currentDirector = true;
-                                // 异构链组件注册当前节点签名地址
+                                // Heterogeneous chain component registration of current node signature address
                                 virtualBankService.initLocalSignPriKeyToHeterogeneous(chain, signAccountDTO);
                                 /**
-                                 * 当前是新加入的虚拟银行成员, 默认把异构链调用标志设为true, 在确认变更交易的时候会自动复原.
-                                 * 防止本节点, 发出后续异构交易导致合约与链内数据不一致
+                                 * Currently a newly joined virtual bank member, By default, set the heterogeneous chain call flag totrue, Automatically restore when confirming change transactions.
+                                 * Prevent this node, Subsequent heterogeneous transactions result in inconsistency between contracts and in chain data
                                  */
                                 heterogeneousService.saveExeHeterogeneousChangeBankStatus(chain, true);
-                                chain.getLogger().info("[虚拟银行] 当前节点加入虚拟银行,标识变更为: true");
+                                chain.getLogger().info("[Virtual banking] Current node joining virtual bank,Identification changed to: true");
                                 break;
                             }
                         }
@@ -554,17 +554,17 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                 if (null == hInterfaces || hInterfaces.isEmpty()) {
                     throw new NulsException(ConverterErrorCode.HETEROGENEOUS_COMPONENT_NOT_EXIST);
                 }
-                // 添加异构链地址信息
+                // Add heterogeneous chain address information
                 createNewHeterogeneousAddress(chain, hInterfaces);
 
-                // 记录当前交易 异构链拜占庭总数 (不算当前加入, 要算当前退出)
+                // Record current transaction Total Byzantine Heterogeneous Chains (Not including current joining, To calculate the current exit)
                 int inTotal = null == txData.getInAgents() ? 0 : txData.getInAgents().size();
                 int outTotal = null == txData.getOutAgents() ? 0 : txData.getOutAgents().size();
                 int currenVirtualBankTotal = chain.getMapVirtualBank().size() - inTotal + outTotal;
                 if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_1) {
-                    // 同步模式不需要执行虚拟银行多签/合约成员变更, 只有当前是管理员并且不是当前交易加入的
+                    // Synchronous mode does not require virtual bank multi signature execution/Change of Contract Members, Only those who are currently administrators and not joined by the current transaction
                     if (SyncStatusEnum.getEnum(syncStatus).equals(SyncStatusEnum.RUNNING) && currentDirector && !currentJoin) {
-                        // 放入异构链处理机制
+                        // Insert heterogeneous chain processing mechanism
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setListInDirector(listInDirector);
@@ -578,9 +578,9 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                         chain.getPendingTxQueue().offer(pendingPO);
                     }
                 } else if (chain.getCurrentHeterogeneousVersion() == HETEROGENEOUS_VERSION_2) {
-                    // 同步模式不需要执行虚拟银行多签/合约成员变更, 当前是管理员(可以是当前加入的) 或者当前退出的
+                    // Synchronous mode does not require virtual bank multi signature execution/Change of Contract Members, Currently an administrator(Can be the currently joined) Or currently exiting
                     if (SyncStatusEnum.getEnum(syncStatus).equals(SyncStatusEnum.RUNNING) && (currentDirector || currentQuit)) {
-                        // 放入异构链处理机制
+                        // Insert heterogeneous chain processing mechanism
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setListInDirector(listInDirector);
@@ -597,7 +597,7 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     }
                 }
                 ConsensusCall.sendVirtualBank(chain, height);
-                chain.getLogger().info("[commit]虚拟银行变更交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[commit]Virtual Bank Change Transaction hash:{}", tx.getHash().toHex());
             }
             return true;
 
@@ -629,41 +629,41 @@ public class ChangeVirtualBankProcessor implements TransactionProcessor {
                     requestHeight = 0L;
                 }
                 List<AgentBasic> listAgent = ConsensusCall.getAgentList(chain, requestHeight);
-                //维护虚拟银行
+                //Maintain virtual banking
                 List<byte[]> listOutAgents = txData.getOutAgents();
-                //把退出的虚拟银行的节点加回去
+                //Add back the nodes of the exited virtual bank
                 List<VirtualBankDirector> listInDirector = processSaveVirtualBank(chain, listOutAgents, listAgent);
-                //把加入的虚拟银行移除
+                //Remove the added virtual bank
                 List<byte[]> listInAgents = txData.getInAgents();
                 List<VirtualBankDirector> listOutDirector = processRemoveVirtualBank(chain, listInAgents);
 
-                // 当前节点是虚拟银行成员
+                // The current node is a virtual bank member
                 if (VirtualBankUtil.isCurrentDirector(chain)) {
-                    // 如果当前节点是虚拟银行, 移除的节点中包含当前节点, 则设为退出状态
+                    // If the current node is a virtual bank, The removed node contains the current node, Set it to exit status
                     for (VirtualBankDirector director : listOutDirector) {
                         if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
-                            // 当前节点退出成虚拟银行成员
+                            // Current node exits as a virtual bank member
                             chain.getCurrentIsDirector().set(false);
                             chain.setInitLocalSignPriKeyToHeterogeneous(false);
-                            chain.getLogger().info("[虚拟银行] 当前节点退出虚拟银行,标识变更为: false");
+                            chain.getLogger().info("[Virtual banking] Current node exits virtual bank,Identification changed to: false");
                             break;
                         }
                     }
                 } else {
                     if (null != signAccountDTO) {
-                        // 如果当前节点不是虚拟银行, 加入的节点中包含当前节点, 则设为加入状态
+                        // If the current node is not a virtual bank, The added nodes include the current node, Set it to join status
                         for (VirtualBankDirector director : listInDirector) {
                             if (director.getSignAddress().equals(signAccountDTO.getAddress())) {
-                                // 当前节点加入成虚拟银行成员
+                                // Current node joined as a virtual bank member
                                 chain.getCurrentIsDirector().set(true);
-                                chain.getLogger().info("[虚拟银行] 当前节点计入虚拟银行,标识变更为: true");
+                                chain.getLogger().info("[Virtual banking] Current node credited to virtual bank,Identification changed to: true");
                                 break;
                             }
                         }
                     }
                 }
                 ConsensusCall.sendVirtualBank(chain, blockHeader.getHeight());
-                chain.getLogger().info("[rollback]虚拟银行变更交易 hash:{}", tx.getHash().toHex());
+                chain.getLogger().info("[rollback]Virtual Bank Change Transaction hash:{}", tx.getHash().toHex());
             }
             return true;
         } catch (NulsException e) {

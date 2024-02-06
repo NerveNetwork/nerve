@@ -26,7 +26,7 @@ import java.math.RoundingMode;
 import java.util.*;
 
 /**
- * 创建币对的交易验证器
+ * Create a transaction validator for coin pairs
  */
 @Component
 public class CoinTradingValidator {
@@ -39,9 +39,9 @@ public class CoinTradingValidator {
     private DexConfig dexConfig;
 
     /**
-     * 本次打包区块的中所有创建币对交易的合法性验证
-     * 将验证不通过的交易返回
-     * 相同币对定义：
+     * Verification of the legality of all created coin pair transactions in this block packaging process
+     * Return transactions that fail verification
+     * Definition of Same Currency Pairs：
      * case 1:  o1(btc/nuls)  o2(btc/nuls)
      * case 2:  o1(btc/nuls)  o2(nuls/btc)
      *
@@ -49,9 +49,9 @@ public class CoinTradingValidator {
      * @return
      */
     public Map<String, Object> validateTxs(List<Transaction> txs) {
-        //存放验证通过的交易的币对数据
+        //Store currency pair data for verified transactions
         List<CoinTrading> coinTradingList = new ArrayList<>();
-        //存放验证不通过的交易
+        //Store transactions that fail verification
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
         Transaction tx;
@@ -62,9 +62,9 @@ public class CoinTradingValidator {
             c1 = new CoinTrading();
             try {
                 c1.parse(new NulsByteBuffer(tx.getTxData()));
-                //首先检测币对信息的合法性
+                //Firstly, check the legality of the coin pair information
                 validate(tx.getCoinDataInstance().getFrom().get(0), tx.getCoinDataInstance().getTo().get(0), c1);
-                //再检测是否已经存储了相同币对
+                //Re check if the same coin pair has already been stored
                 if (dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getBaseAssetChainId(), c1.getBaseAssetId(), c1.getQuoteAssetChainId(), c1.getQuoteAssetId()))
 //                        ||
 //                        dexManager.containsCoinTrading(DexUtil.toCoinTradingKey(c1.getQuoteAssetChainId(), c1.getQuoteAssetId(), c1.getBaseA
@@ -72,11 +72,11 @@ public class CoinTradingValidator {
             ) {
                     throw new NulsException(DexErrorCode.COIN_TRADING_EXIST);
                 }
-                //最后检测本次打包是否有相同币对
+                //Finally, check if there are identical coin pairs in this packaging
                 for (CoinTrading c2 : coinTradingList) {
                     validate(c1, c2);
                 }
-                //将验证通过的交易对放入集合中
+                //Put verified transaction pairs into the set
                 coinTradingList.add(c1);
             } catch (NulsException e) {
                 LoggerUtil.dexLog.error(e);
@@ -92,22 +92,22 @@ public class CoinTradingValidator {
     }
 
     /**
-     * 交易对的基础信息验证
+     * Basic information verification of transaction pairs
      *
      * @param c
      * @return
      */
     private void validate(CoinFrom from, CoinTo to, CoinTrading c) throws NulsException {
-        //币对的基础币种和交易币种不能是同一币种
+        //The base currency and transaction currency of a currency pair cannot be the same currency
         if (c.getBaseAssetChainId() == c.getQuoteAssetChainId() &&
                 c.getBaseAssetId() == c.getQuoteAssetId()) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "base coin can not equals quote coin");
         }
-        //验证创建地址是否一致
+        //Verify if the creation address is consistent
         if (c.getAddress() == null || !Arrays.equals(from.getAddress(), c.getAddress())) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "create address error");
         }
-        //验证创建币对交易，缴纳的销毁币是否足够
+        //Verify the creation of coin pair transactions and whether the paid destruction coins are sufficient
         if (!Arrays.equals(to.getAddress(), DexContext.sysFeeAddress)) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "destroy coin not enough");
         }
@@ -116,13 +116,13 @@ public class CoinTradingValidator {
             throw new NulsException(DexErrorCode.DATA_ERROR, "destroy coin not enough");
         }
         getAllAssets(dexConfig.getChainId());
-        //查询币对信息的币种是否存在
+        //Does the currency used to query currency pair information exist
         AssetInfo baseAsset = dexManager.getAssetInfo(AssetInfo.toKey(c.getBaseAssetChainId(), c.getBaseAssetId()));
         AssetInfo quoteAsset = dexManager.getAssetInfo(AssetInfo.toKey(c.getQuoteAssetChainId(), c.getQuoteAssetId()));
         if (baseAsset == null || quoteAsset == null) {
             throw new NulsException(DexErrorCode.DATA_NOT_FOUND, "coin info can not find");
         }
-        //检查小数位数是否正确
+        //Check if the decimal places are correct
         if (c.getScaleBaseDecimal() > baseAsset.getDecimal()) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "base coin minDecimal error");
         }
@@ -137,8 +137,8 @@ public class CoinTradingValidator {
             throw new NulsException(DexErrorCode.DATA_ERROR, "quote coin min tradingAmount error");
         }
 
-        //单笔最小交易数是否小于最小支持小数位数
-        //验证交易币
+        //Is the minimum number of transactions per transaction less than the minimum supported decimal places
+        //Verify transaction currency
         BigDecimal minDecimalValue = new BigDecimal(1);
         minDecimalValue = minDecimalValue.movePointRight(baseAsset.getDecimal() - c.getScaleBaseDecimal());
         BigDecimal minTradingAmount = new BigDecimal(c.getMinBaseAmount());
@@ -146,7 +146,7 @@ public class CoinTradingValidator {
         if (minTradingAmount.compareTo(minDecimalValue) < 0 || divideValue.doubleValue() > divideValue.longValue()) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "the minTradingAmount is not supported by the coin");
         }
-        //验证计价币
+        //Verify pricing currency
         minDecimalValue = new BigDecimal(1);
         minDecimalValue = minDecimalValue.movePointRight(quoteAsset.getDecimal() - c.getScaleQuoteDecimal());
         minTradingAmount = new BigDecimal(c.getMinQuoteAmount());
@@ -156,7 +156,7 @@ public class CoinTradingValidator {
     }
 
     /**
-     * 相同币对定义：
+     * Definition of Same Currency Pairs：
      * case 1:  c1(btc/nuls)  c2(btc/nuls)
      * case 2:  c1(btc/nuls)  c2(nuls/btc)
      *

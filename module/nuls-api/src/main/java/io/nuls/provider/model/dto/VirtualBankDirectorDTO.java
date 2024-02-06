@@ -9,30 +9,30 @@ import java.util.List;
 public class VirtualBankDirectorDTO {
 
     /**
-     * 签名地址（节点打包地址）
+     * Signature address（Node packaging address）
      */
     private String signAddress;
     /**
-     * 节点地址
+     * Node address
      */
     private String agentAddress;
     /**
-     * 奖励地址
+     * Reward Address
      */
     private String rewardAddress;
 
     /**
-     * 是否是种子节点
+     * Is it a seed node
      */
     private boolean seedNode;
 
     /**
-     * 异构链地址集合
+     * Heterogeneous chain address set
      */
     List<HeterogeneousAddressDTO> heterogeneousAddresses;
 
     /**
-     * 节点加入虚拟银行时的顺序
+     * Order of nodes joining virtual banks
      */
     private int order;
 

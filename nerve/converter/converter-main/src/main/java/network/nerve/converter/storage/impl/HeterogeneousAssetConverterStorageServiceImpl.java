@@ -102,7 +102,7 @@ public class HeterogeneousAssetConverterStorageServiceImpl implements Heterogene
         int htgChainId = info.getChainId();
         ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_NERVE_MORE + htgChainId + CONTACT_LINE + nerveAssetChainId + CONTACT_LINE + nerveAssetId), info);
         ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_HTG_MORE + htgChainId + CONTACT_LINE + info.getAssetId()), new NerveAssetInfo(nerveAssetChainId, nerveAssetId));
-        // 保存nerve资产的多异构链关系
+        // preservenerveThe multi heterogeneous chain relationship of assets
         byte[] moreKey = stringToBytes(KEY_PREFIX_NERVE_HTG_KEY_SET + nerveAssetChainId + CONTACT_LINE + nerveAssetId);
         IntegerSetPo setPo = ConverterDBUtil.getModel(baseArea, moreKey, IntegerSetPo.class);
         if(setPo == null) {

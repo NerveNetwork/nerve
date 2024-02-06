@@ -128,7 +128,7 @@ public class SwapTokenHandlerTest {
     }
 
     protected JunitCase getCase0() throws Exception {
-        String caseDesc = "正常-首次币币交易";
+        String caseDesc = "normal-First coin transaction";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -144,12 +144,12 @@ public class SwapTokenHandlerTest {
         NerveToken[] path = {tokenIn, token1};
         BigInteger[] amountsOut = SwapUtils.getAmountsOut(chainId, iPairFactory, amountIn, path);
         BigInteger amountOutMin = amountsOut[amountsOut.length - 1];
-        // 第二种方式计算amountOut
+        // The second method of calculationamountOut
         IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairAddress));
         BigInteger[] reserves = pair.getReserves();
         BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1], BI_3);
-        Assert.assertEquals("两种方式计算amountOut", amountOutMin, amountOut);
-        System.out.println(String.format("\t计算出的最低可买进: %s", amountOutMin));
+        Assert.assertEquals("Two calculation methodsamountOut", amountOutMin, amountOut);
+        System.out.println(String.format("\tThe calculated minimum purchasable amount: %s", amountOutMin));
         byte[] feeTo = null;
 
         Transaction tx = TxAssembleUtil.asmbSwapTrade(chainId, from,
@@ -157,7 +157,7 @@ public class SwapTokenHandlerTest {
                 amountOutMin, path, feeTo,
                 deadline, to, tempBalanceManager);
         tempBalanceManager.refreshTempBalance(chainId, tx, header.getTime());
-        System.out.println(String.format("\t用户交易: \n%s", tx.format()));
+        System.out.println(String.format("\tUser transactions: \n%s", tx.format()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) throws Exception {
@@ -169,27 +169,27 @@ public class SwapTokenHandlerTest {
                     BigInteger unLiquidityAwardFee = amountIn.divide(BI_1000);
                     IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairBus.getPairAddress()));
                     SwapPairDTO dto = BeanUtilTest.getBean(pair, "swapPairDTO", SwapPairDTO.class);
-                    Assert.assertEquals("交易前的池子资产A", BigInteger.valueOf(250_00000008L), pairBus.getReserve0());
-                    Assert.assertEquals("交易前的池子资产B", BigInteger.valueOf(125_000001L), pairBus.getReserve1());
-                    Assert.assertEquals("交易后的池子资产A", BigInteger.valueOf(250_00000008L).add(pairBus.getAmountIn()).subtract(pairBus.getUnLiquidityAwardFee()), pairBus.getBalance0());
-                    Assert.assertEquals("交易后的池子资产B", BigInteger.valueOf(125_000001L).subtract(pairBus.getAmountOut()), pairBus.getBalance1());
-                    Assert.assertEquals("用户买进的资产B", amountOutMin, pairBus.getAmountOut());
-                    Assert.assertEquals("`非`流动性提供者可奖励的交易手续费", unLiquidityAwardFee, pairBus.getUnLiquidityAwardFee());
-                    System.out.println(String.format("\t执行后池子数据: %s", dto.toString()));
+                    Assert.assertEquals("Pool assets before transactionA", BigInteger.valueOf(250_00000008L), pairBus.getReserve0());
+                    Assert.assertEquals("Pool assets before transactionB", BigInteger.valueOf(125_000001L), pairBus.getReserve1());
+                    Assert.assertEquals("Pool assets after transactionA", BigInteger.valueOf(250_00000008L).add(pairBus.getAmountIn()).subtract(pairBus.getUnLiquidityAwardFee()), pairBus.getBalance0());
+                    Assert.assertEquals("Pool assets after transactionB", BigInteger.valueOf(125_000001L).subtract(pairBus.getAmountOut()), pairBus.getBalance1());
+                    Assert.assertEquals("Assets purchased by usersB", amountOutMin, pairBus.getAmountOut());
+                    Assert.assertEquals("`wrong`Transaction fees that liquidity providers can reward", unLiquidityAwardFee, pairBus.getUnLiquidityAwardFee());
+                    System.out.println(String.format("\tPost execution pool data: %s", dto.toString()));
                 }
 
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
 
-                System.out.println(String.format("\t系统交易: \n%s", result.getSubTx().format()));
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-TokenTrade tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
+                System.out.println(String.format("\tSystem transactions: \n%s", result.getSubTx().format()));
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-TokenTrade tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
             }
         };
         return new JunitCase(caseDesc, handler, new Object[]{tx}, null, false, null, callback);
     }
 
     protected JunitCase getCase1() throws Exception {
-        String caseDesc = "异常-币币交易超时";
+        String caseDesc = "abnormal-Currency transaction timeout";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -197,7 +197,7 @@ public class SwapTokenHandlerTest {
         LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
 
         long deadline = System.currentTimeMillis() / 1000 + 3;
-        // 造成超时
+        // Causing timeout
         TimeUnit.SECONDS.sleep(5);
 
         header.setTime(System.currentTimeMillis() / 1000);
@@ -210,12 +210,12 @@ public class SwapTokenHandlerTest {
         NerveToken[] path = {tokenIn, token1};
         BigInteger[] amountsOut = SwapUtils.getAmountsOut(chainId, iPairFactory, amountIn, path);
         BigInteger amountOutMin = amountsOut[amountsOut.length - 1];
-        // 第二种方式计算amountOut
+        // The second method of calculationamountOut
         IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairAddress));
         BigInteger[] reserves = pair.getReserves();
         BigInteger amountOut = SwapUtils.getAmountOut(amountIn, reserves[0], reserves[1], BI_3);
-        Assert.assertEquals("两种方式计算amountOut", amountOutMin, amountOut);
-        System.out.println(String.format("\t计算出的最低可买进: %s", amountOutMin));
+        Assert.assertEquals("Two calculation methodsamountOut", amountOutMin, amountOut);
+        System.out.println(String.format("\tThe calculated minimum purchasable amount: %s", amountOutMin));
         byte[] feeTo = null;
 
         Transaction tx = TxAssembleUtil.asmbSwapTrade(chainId, from,
@@ -223,16 +223,16 @@ public class SwapTokenHandlerTest {
                 amountOutMin, path, feeTo,
                 deadline, to, tempBalanceManager);
         tempBalanceManager.refreshTempBalance(chainId, tx, header.getTime());
-        System.out.println(String.format("\t用户交易: \n%s", tx.format()));
+        System.out.println(String.format("\tUser transactions: \n%s", tx.format()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) throws Exception {
                 assertNotNull(result);
-                Assert.assertFalse("期望执行失败", result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("\t系统交易: \n%s", result.getSubTx().format()));
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-TokenTrade tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
+                Assert.assertFalse("Expected execution failure", result.isSuccess());
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("\tSystem transactions: \n%s", result.getSubTx().format()));
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-TokenTrade tx execute! hash: %s", junitCase.getKey(), tx.getHash().toHex()));
             }
         };
         return new JunitCase(caseDesc, handler, new Object[]{tx}, null, false, null, callback);

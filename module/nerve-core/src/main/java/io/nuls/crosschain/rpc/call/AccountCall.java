@@ -16,7 +16,7 @@ import static io.nuls.crosschain.constant.NulsCrossChainConstant.INIT_CAPACITY_8
 import static io.nuls.crosschain.constant.NulsCrossChainConstant.RPC_VERSION;
 
 /**
- * 与账户模块交互类
+ * Interaction with account module
  * Interaction class with account module
  *
  * @author tag
@@ -25,11 +25,11 @@ import static io.nuls.crosschain.constant.NulsCrossChainConstant.RPC_VERSION;
 public class AccountCall {
 
     /**
-     * 通过账户模块对数据进行签名
+     * Sign data through the account module
      *
      * @param address
      * @param password
-     * @param data     待签名的数据
+     * @param data     Data to be signed
      * @return P2PHKSignature
      * @throws NulsException
      */
@@ -52,9 +52,9 @@ public class AccountCall {
     }
 
     /**
-     * 将链地址前缀发送给账户模块
+     * Send the chain address prefix to the account module
      *
-     * @param prefixList 链前缀列表
+     * @param prefixList Chain prefix list
      * @throws NulsException
      */
     public static void addAddressPrefix(List<Map<String, Object>> prefixList) throws NulsException {

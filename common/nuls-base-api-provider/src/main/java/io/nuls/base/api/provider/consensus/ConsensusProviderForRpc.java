@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-11 11:59
- * @Description: 共识
+ * @Description: Consensus
  */
 @Provider(Provider.ProviderType.RPC)
 public class ConsensusProviderForRpc extends BaseRpcService implements ConsensusProvider {

@@ -107,7 +107,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 FarmBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), FarmBus.class);
-                //更新Farm
+                //updateFarm
                 FarmPoolPO farm = farmCache.get(bus.getFarmHash());
                 farm.setLastRewardBlock(bus.getLastRewardBlockNew());
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareNew());
@@ -116,7 +116,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                 farm.setStopHeight(bus.getStopHeightNew());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
-                //更新User
+                //updateUser
                 FarmUserInfoPO user = this.userInfoStorageService.load(chainId, bus.getFarmHash(), bus.getUserAddress());
                 if (null == user) {
                     user = new FarmUserInfoPO();
@@ -150,7 +150,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 FarmBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), FarmBus.class);
-                //更新Farm
+                //updateFarm
                 FarmPoolPO farm = farmCache.get(bus.getFarmHash());
                 farm.setLastRewardBlock(bus.getLastRewardBlockOld());
                 farm.setAccSyrupPerShare(bus.getAccSyrupPerShareOld());
@@ -159,7 +159,7 @@ public class FarmWithdrawTxProcessor implements TransactionProcessor {
                 farm.setStopHeight(bus.getStopHeightOld());
                 farmCache.put(bus.getFarmHash(), farm);
                 farmStorageService.save(chainId, farm);
-                //更新User
+                //updateUser
                 do {
                     FarmUserInfoPO user = this.userInfoStorageService.load(chainId, bus.getFarmHash(), bus.getUserAddress());
                     if (null == user) {

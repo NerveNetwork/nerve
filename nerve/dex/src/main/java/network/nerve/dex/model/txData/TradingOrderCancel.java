@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class TradingOrderCancel extends BaseNulsData {
 
-    //订单交易hash
+    //Order transactionhash
     private byte[] orderHash;
 
     @Override

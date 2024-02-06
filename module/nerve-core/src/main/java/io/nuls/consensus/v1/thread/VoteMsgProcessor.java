@@ -14,7 +14,7 @@ import io.nuls.consensus.v1.VoteController;
 import java.util.Arrays;
 
 /**
- * 通过这里的处理，释放voteHandler的线程占用
+ * Through the processing here, releasevoteHandlerThread occupancy of
  *
  * @author Eva
  */
@@ -37,19 +37,19 @@ public class VoteMsgProcessor extends BasicRunnable {
                 log.error(e);
             }
         }
-        chain.getLogger().warn("投票停止处理!!!!");
+        chain.getLogger().warn("Voting Stop Processing!!!!");
     }
 
     private void doit() throws Exception {
         VoteMessage vote = chain.getConsensusCache().getVoteMessageQueue().take();
         if (!chain.isConsonsusNode()) {
-            chain.getLogger().info("丢弃，本地不是共识节点");
+            chain.getLogger().info("Discard, local is not a consensus node");
             vote.clear();
             return;
         }
         if (vote.getSign() == null) {
-            chain.getLogger().info("丢弃，没有签名");
-            //签名为空
+            chain.getLogger().info("Discard, no signature");
+            //Signature is empty
             vote.clear();
             return;
         }
@@ -57,7 +57,7 @@ public class VoteMsgProcessor extends BasicRunnable {
             vote.clear();
             return;
         }
-        //本地投票
+        //Local voting
         if (vote.getSendNode() == null) {
             this.controller.addVote(vote);
             chain.getConsensusCache().getMsgDuplicateProcessor().insertAndCheck(vote.getMessageKey());
@@ -70,8 +70,8 @@ public class VoteMsgProcessor extends BasicRunnable {
         vote.setAddress(AddressTool.getStringAddressByBytes(addressBytes));
 
         if (!chain.getConsensusCache().getMsgDuplicateProcessor().insertAndCheck(vote.getMessageKey())) {
-            //重复投票
-//                log.info("投票重复，丢弃：" + vote.getHeight() + "-{}-{}-{}:{},from:{}", vote.getRoundIndex(),
+            //Repeated voting
+//                log.info("Voting duplicate, discard：" + vote.getHeight() + "-{}-{}-{}:{},from:{}", vote.getRoundIndex(),
 //                        vote.getPackingIndexOfRound(), vote.getVoteRoundIndex(), vote.getBlockHash().toHex(), vote.getAddress(chain));
             vote.clear();
             return;
@@ -95,8 +95,8 @@ public class VoteMsgProcessor extends BasicRunnable {
                 }
             }
             if (!result) {
-                //不接受非节点的投票
-                log.info("投票签名地址不是节点，丢弃：" + vote.getHeight() + "={},from:{}", vote.getBlockHash().toHex(), vote.getAddress(chain));
+                //Do not accept voting from non nodes
+                log.info("Voting signature address is not a node, discard：" + vote.getHeight() + "={},from:{}", vote.getBlockHash().toHex(), vote.getAddress(chain));
                 vote.clear();
                 return;
             }
@@ -104,22 +104,22 @@ public class VoteMsgProcessor extends BasicRunnable {
 
         boolean result = signature.verifySignature(vote.getHash()).isSuccess();
         if (!result) {
-            //签名不正确
-            log.info("签名不正确，丢弃：" + vote.getHeight() + "={},from:{},val={}", vote.getBlockHash().toHex(), vote.getAddress(chain), signature.getSignData().toString());
+            //Incorrect signature
+            log.info("Incorrect signature, discard：" + vote.getHeight() + "={},from:{},val={}", vote.getBlockHash().toHex(), vote.getAddress(chain), signature.getSignData().toString());
             vote.clear();
             return;
         }
-        //处理投票
+        //Process voting
         this.controller.addVote(vote);
 
         if (vote.getRoundStartTime() + chain.getConfig().getPackingInterval() * vote.getPackingIndexOfRound() < NulsDateUtils.getCurrentTimeSeconds() - 120) {
-            chain.getLogger().info("===========不再转发消息,当前队列：{}", chain.getConsensusCache().getVoteMessageQueue().size());
+            chain.getLogger().info("===========Do not forward messages anymore,Current queue：{}", chain.getConsensusCache().getVoteMessageQueue().size());
             vote.clear();
             return;
         }
 
-        //广播收到的投票信息--异步
-//            chain.getLogger().info("===========向其他节点传递投票消息");
+        //Broadcast received voting information--asynchronous
+//            chain.getLogger().info("===========Passing voting messages to other nodes");
         ConsensusNetUtil.broadcastInConsensusHalf(chain.getChainId(), CommandConstant.MESSAGE_VOTE, vote.getRawData(), vote.getSendNode());
         vote.clear();
     }

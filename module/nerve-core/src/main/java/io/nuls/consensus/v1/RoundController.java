@@ -38,17 +38,17 @@ public class RoundController extends BasicObject {
     }
 
     /**
-     * 轮次缓存数据
+     * Round caching data
      */
     public RoundCache roundCache = new RoundCache();
 
     private AgentManager agentManager;
 
     /**
-     * 根据本地时间计算
+     * Calculated based on local time
      */
     public MeetingRound initRound() {
-        log.debug("初始化轮次：");
+        log.debug("Initialize round：");
         RoundInitData initData = calcNowInitData();
         MeetingRound round = calcRound(initData, true);
         this.switchRound(round, false);
@@ -56,7 +56,7 @@ public class RoundController extends BasicObject {
     }
 
     /**
-     * 根据本地时间计算
+     * Calculated based on local time
      */
     public void nextRound(MeetingRound currentRound) {
         log.info("run here");
@@ -80,14 +80,14 @@ public class RoundController extends BasicObject {
     }
 
     public void switchRound(MeetingRound round, boolean confirmed) {
-//        log.info("切换轮次，轮次的确认状态：" + confirmed);
+//        log.info("Switching rounds, confirmation status of rounds：" + confirmed);
         round.setConfirmed(confirmed);
         roundCache.switchRound(round);
 //        log.info(round.toString());
     }
 
     /**
-     * 根据当前区块，计算一个理想化的初始轮次
+     * Calculate an idealized initial round based on the current block
      *
      * @param currentRound
      * @return
@@ -121,7 +121,7 @@ public class RoundController extends BasicObject {
 
         long calcRoundIndex = bestRoundData.getRoundIndex();
 
-        //先判断这一轮是不是已经完了
+        //Let's first determine if this round is already over
         if (bestRoundData.getPackingIndexOfRound() == bestRoundData.getConsensusMemberCount() ||
                 bestRoundEndTime < NulsDateUtils.getCurrentTimeSeconds()) {
             calcRoundIndex = bestRoundData.getRoundIndex() + 1;
@@ -135,7 +135,7 @@ public class RoundController extends BasicObject {
         data.setAgentList(agentList);
         data.setStartHeader(startHeader);
         data.setRoundIndex(calcRoundIndex);
-        //如果就是计算，最新区块的轮次，那就好办了
+        //If it's just calculation, the latest block's round, then it's easy to handle
         if (calcRoundIndex == bestRoundData.getRoundIndex()) {
             data.setStartTime(bestRoundData.getRoundStartTime());
             data.setDelayedSeconds(bestHeader.getTime() - bestRoundData.getRoundStartTime() - chain.getConfig().getPackingInterval() * bestRoundData.getPackingIndexOfRound());
@@ -144,18 +144,18 @@ public class RoundController extends BasicObject {
 
         long interval = NulsDateUtils.getCurrentTimeSeconds() - bestRoundEndTime;
         long wholeRoundTime = agentList.size() * chain.getConfig().getPackingInterval();
-        //最新轮的下一轮
+        //The next round of the latest round
         if (interval < wholeRoundTime) {
             data.setStartTime(bestRoundEndTime);
             data.setDelayedSeconds(0L);
             return data;
         }
-        //中间空了长时间，没有出块的情况
+        //There was a long gap in the middle without any blocks being produced
         long addIndex = interval / wholeRoundTime;
         data.setRoundIndex(data.getRoundIndex() + addIndex);
         data.setStartTime(bestRoundEndTime + addIndex * wholeRoundTime);
         data.setDelayedSeconds(0L);
-//        log.info("计算轮次起始时间，早于当前：" + (NulsDateUtils.getCurrentTimeMillis() - data.getStartTime() * 1000) + "ms");
+//        log.info("Calculate the start time of the round, which is earlier than the current one：" + (NulsDateUtils.getCurrentTimeMillis() - data.getStartTime() * 1000) + "ms");
         return data;
     }
 
@@ -173,7 +173,7 @@ public class RoundController extends BasicObject {
     }
 
     private MeetingRound calcRound(long roundIndex, long roundStartTime, boolean cache) {
-//        log.info("======重新计算=轮次====================");
+//        log.info("======Recalculate=Round====================");
         RoundInitData initData = new RoundInitData();
         initData.setRoundIndex(roundIndex);
         initData.setStartTime(roundStartTime);
@@ -217,7 +217,7 @@ public class RoundController extends BasicObject {
             }
         }
         round.init(memberList);
-        //必要的预计算设值
+        //Necessary pre calculated values
         round.setMemberAddressSet(memberAddressSet);
         List<byte[]> localAddressList = CallMethodUtils.getEncryptedAddressList(chain);
 
@@ -243,17 +243,17 @@ public class RoundController extends BasicObject {
         if (null == consensusNetService) {
             consensusNetService = SpringLiteContext.getBean(ConsensusNetService.class);
         }
-        //通知共识网络最新共识节点出块地址列表
+        //Notify consensus network of the latest consensus node block address list
         consensusNetService.updateConsensusList(chain.getChainId(), round.getMemberAddressSet());
     }
 
     /**
-     * 计算节点的信誉值
+     * Calculate the reputation value of nodes
      * Calculating the Node's Credit Value
      *
      * @param chain       chain info
-     * @param member      打包成员对象/packing info
-     * @param blockHeader 区块头/block header
+     * @param member      Packaging member objects/packing info
+     * @param blockHeader Block head/block header
      * @return double
      */
     private double calcCreditVal(Chain chain, MeetingMember member, BlockHeader blockHeader) throws NulsException {
@@ -263,7 +263,7 @@ public class RoundController extends BasicObject {
             roundStart = 0;
         }
         /*
-        信誉值计算是通过限定轮次内节点出块数与黄牌数计算出的
+        The calculation of reputation value is based on the number of blocks and yellow cards produced by nodes within a limited number of rounds
         Credit value is calculated by limiting the number of blocks and yellow cards of nodes in rounds.
         */
         long blockCount = getBlockCountByAddress(chain, member.getAgent().getPackingAddress(), roundStart, roundData.getRoundIndex() - 1);
@@ -275,13 +275,13 @@ public class RoundController extends BasicObject {
     }
 
     /**
-     * 获取地址出块数量
+     * Obtain address block quantity
      * Get the number of address blocks
      *
      * @param chain          chain info
-     * @param packingAddress 出块地址
-     * @param roundStart     起始轮次
-     * @param roundEnd       结束轮次
+     * @param packingAddress Block address
+     * @param roundStart     Starting round
+     * @param roundEnd       End round
      */
     private long getBlockCountByAddress(Chain chain, byte[] packingAddress, long roundStart, long roundEnd) {
         long count = 0;
@@ -304,14 +304,14 @@ public class RoundController extends BasicObject {
 
 
     /**
-     * 获取指定地址获得的红黄牌惩罚数量
+     * Obtain the number of red and yellow card penalties obtained from the specified address
      * Get the number of red and yellow card penalties for the specified address
      *
      * @param chain      chain info
-     * @param address    地址/address
-     * @param roundStart 起始轮次/round start index
-     * @param roundEnd   结束轮次/round end index
-     * @param code       红黄牌标识/Red and yellow logo
+     * @param address    address/address
+     * @param roundStart Starting round/round start index
+     * @param roundEnd   End round/round end index
+     * @param code       Red and yellow card identification/Red and yellow logo
      * @return long
      */
     private long getPunishCountByAddress(Chain chain, byte[] address, long roundStart, long roundEnd, int code) throws NulsException {
@@ -337,7 +337,7 @@ public class RoundController extends BasicObject {
             }
         }
         /**
-         * 每一轮的惩罚都有可能包含上一轮次的惩罚记录，即计算从a到a+99轮的惩罚记录时，a轮的惩罚中可能是惩罚某个地址在a-1轮未出块，导致100轮最多可能有101个惩罚记录，在这里处理下
+         * Each round of punishment may include the punishment record from the previous round, i.e. calculating fromareacha+99When recording the punishment for a round,aIn the punishment of the round, it may be that a certain address is penalizeda-1The wheel did not come out of the block, resulting in100The maximum possible number of wheels101Punishment records, process them here
          */
         if (count > PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain)) {
             return PocbftConstant.getRANGE_OF_CAPACITY_COEFFICIENT(chain);
@@ -405,7 +405,7 @@ public class RoundController extends BasicObject {
             if (startRoundIndex == 0L) {
                 startRoundIndex = currentRoundIndex;
             }
-            //如果前一轮第一个出块人，没出块，就选择再前一轮最后一个区块
+            //If the first block maker in the previous round did not produce any blocks, then choose the last block in the previous round
             if (currentRoundIndex < startRoundIndex) {
                 firstBlockHeader = blockHeaderList.get(i + 1);
                 BlockExtendsData roundData = firstBlockHeader.getExtendsData();

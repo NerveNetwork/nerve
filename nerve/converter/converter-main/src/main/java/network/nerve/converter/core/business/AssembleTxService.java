@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 组装交易
+ * Assembly transaction
  *
  * @author: Loki
  * @date: 2020-02-28
@@ -46,13 +46,13 @@ import java.util.Map;
 public interface AssembleTxService {
 
     /**
-     * 虚拟银行节点变更交易
+     * Virtual Bank Node Change Transaction
      *
-     * @param chain        链信息
-     * @param inAgentList  加入的节点信息
-     * @param outAgentList 移除的节点信息
-     * @param outHeight    停止节点交易确认高度
-     * @param txTime       交易时间
+     * @param chain        Chain information
+     * @param inAgentList  Joined node information
+     * @param outAgentList Removed node information
+     * @param outHeight    Stop node transaction confirmation height
+     * @param txTime       Transaction time
      * @return
      * @throws NulsException
      */
@@ -63,7 +63,7 @@ public interface AssembleTxService {
                                           long txTime) throws NulsException;
 
     /**
-     *  只创建交易, 不发送到交易模块
+     *  Create transactions only, Do not send to the transaction module
      * @param chain
      * @param inAgentList
      * @param outAgentList
@@ -79,12 +79,12 @@ public interface AssembleTxService {
                                           long txTime) throws NulsException;
 
     /**
-     * 确认 虚拟银行节点变更交易
+     * confirm Virtual Bank Node Change Transaction
      *
-     * @param chain                   链信息
-     * @param changeVirtualBankTxHash 虚拟银行节点变更交易hash
-     * @param listConfirmed           异构链变更确认信息
-     * @param txTime                  交易时间
+     * @param chain                   Chain information
+     * @param changeVirtualBankTxHash Virtual Bank Node Change Transactionhash
+     * @param listConfirmed           Heterogeneous chain change confirmation information
+     * @param txTime                  Transaction time
      * @return
      * @throws NulsException
      */
@@ -99,8 +99,8 @@ public interface AssembleTxService {
                                                               long txTime) throws NulsException;
 
     /**
-     * 初始化异构链交易
-     * PS:当节点区块处于正在同步模式时,不触发该笔交易的创建
+     * Initialize heterogeneous chain transactions
+     * PS:When the node block is in synchronization mode,Do not trigger the creation of this transaction
      *
      * @param chain
      * @param heterogeneousChainId
@@ -114,10 +114,10 @@ public interface AssembleTxService {
                                                 long txTime) throws NulsException;
 
     /**
-     * 充值交易
+     * Recharge transaction
      *
-     * @param chain         链信息
-     * @param rechargeTxDTO 充值数据
+     * @param chain         Chain information
+     * @param rechargeTxDTO Recharge data
      * @return
      * @throws NulsException
      */
@@ -126,7 +126,7 @@ public interface AssembleTxService {
     Transaction createRechargeTxWithoutSign(Chain chain, RechargeTxDTO rechargeTxDTO) throws NulsException;
 
     /**
-     * 异构链充值待确认交易
+     * Heterogeneous chain recharge pending confirmation transaction
      * @param chain
      * @param rechargeUnconfirmedTxData
      * @return
@@ -145,17 +145,17 @@ public interface AssembleTxService {
     Transaction createAddFeeCrossChainTxWithoutSign(Chain chain, AddFeeCrossChainTxDTO dto, long heterogeneousTxTime) throws NulsException;
 
     /**
-     * 提现交易
+     * Withdrawal transactions
      *
-     * @param chain           链信息
-     * @param withdrawalTxDTO 提现数据
+     * @param chain           Chain information
+     * @param withdrawalTxDTO Withdrawal data
      * @return
      * @throws NulsException
      */
     Transaction createWithdrawalTx(Chain chain, WithdrawalTxDTO withdrawalTxDTO) throws NulsException;
 
     /**
-     * 追加提现手续费交易
+     * Additional withdrawal fee transaction
      * @param chain
      * @param withdrawalAdditionalFeeTxDTO
      * @return
@@ -174,11 +174,11 @@ public interface AssembleTxService {
     Transaction withdrawalHeterogeneousSendTx(Chain chain, WithdrawalHeterogeneousSendTxData txData, long heterogeneousTxTime) throws NulsException;
 
     /**
-     * 确认提现交易
+     * Confirm withdrawal transactions
      *
-     * @param chain                   链信息
-     * @param confirmWithdrawalTxData 交易信息
-     * @param txTime                  交易时间
+     * @param chain                   Chain information
+     * @param confirmWithdrawalTxData Transaction information
+     * @param txTime                  Transaction time
      * @return
      * @throws NulsException
      */
@@ -192,7 +192,7 @@ public interface AssembleTxService {
 
 
     /**
-     * 外部直接发起(已组装好的)提案交易
+     * Directly initiated externally(Assembled)Proposal transaction
      * @param chain
      * @param tx
      * @return
@@ -201,25 +201,25 @@ public interface AssembleTxService {
     Transaction processProposalTx(Chain chain, Transaction tx) throws NulsException;
 
     /**
-     * 发起提案交易
-     * 默认以虚拟银行节点的身份签名, 不是虚拟银行节点将无法签名该交易
+     * Initiate proposal transactions
+     * Sign as a virtual bank node by default, Not a virtual bank node will not be able to sign the transaction
      *
-     * @param chain         链信息
-     * @param proposalTxDTO 提案信息
+     * @param chain         Chain information
+     * @param proposalTxDTO Proposal Information
      * @return
      * @throws NulsException
      */
     Transaction createProposalTx(Chain chain, ProposalTxDTO proposalTxDTO) throws NulsException;
 
     /**
-     * 提案投票交易
-     * 用传入账户密码信息签名
+     * Proposal voting transaction
+     * Sign with incoming account password information
      *
-     * @param chain          链信息
-     * @param proposalTxHash 提案交易hash
-     * @param choice         表决
-     * @param remark         备注
-     * @param signAccount    签名账户信息
+     * @param chain          Chain information
+     * @param proposalTxHash Proposal transactionhash
+     * @param choice         vote
+     * @param remark         Remarks
+     * @param signAccount    Signature account information
      * @return
      * @throws NulsException
      */
@@ -230,7 +230,7 @@ public interface AssembleTxService {
                                      SignAccountDTO signAccount) throws NulsException;
 
     /**
-     * 确认提案执行成功交易
+     * Confirm successful transaction of proposal execution
      * @param chain
      * @param confirmProposalTxData
      * @return
@@ -241,10 +241,10 @@ public interface AssembleTxService {
     Transaction createConfirmProposalTxWithoutSign(Chain chain, ConfirmProposalTxData confirmProposalTxData, long txTime) throws NulsException;
 
     /**
-     * 组装并发布 补贴手续费交易
+     * Assemble and publish Subsidy handling fee transaction
      *
      * @param chain
-     * @param basisTxHash 如果是提案 补贴手续费, 那该交易为[确认提案交易]
+     * @param basisTxHash If it is a proposal Subsidy handling fee, So the transaction is[Confirm proposal transaction]
      * @param listRewardAddress
      * @param txTime
      * @return
@@ -257,7 +257,7 @@ public interface AssembleTxService {
                                         boolean isProposal) throws NulsException;
 
     /**
-     * 组装并发布等待注册异构链合约资产交易
+     * Assemble and publish waiting for registration of heterogeneous chain contract asset transactions
      *
      * @param chain
      * @param from
@@ -278,7 +278,7 @@ public interface AssembleTxService {
                                                              String symbol,
                                                              String contractAddress, String remark) throws NulsException;
     /**
-     * 组装并发布注册异构链主资产交易
+     * Assemble and publish registration of heterogeneous chain master asset transactions
      *
      * @param chain
      * @param from
@@ -294,7 +294,7 @@ public interface AssembleTxService {
                                                              int heterogeneousChainId, String remark) throws NulsException;
 
     /**
-     * 组装并发布注册异构链主资产绑定NERVE资产交易
+     * Assemble and publish registration of heterogeneous chain master asset bindingNERVEAsset trading
      *
      * @param chain
      * @param from
@@ -312,7 +312,7 @@ public interface AssembleTxService {
                                                              int heterogeneousChainId, int nerveAssetChainId, int nerveAssetId, String remark) throws NulsException;
 
     /**
-     * 组装并发布完成注册异构链合约资产交易
+     * Assemble and publish completed registration of heterogeneous chain contract asset transactions
      *
      * @param chain
      * @return
@@ -322,9 +322,9 @@ public interface AssembleTxService {
     Transaction createHeterogeneousContractAssetRegCompleteTx(Chain chain, Transaction pendingTx) throws NulsException;
 
     /**
-     * 根据奖励地址计算出组装cointo数据
-     * 由于奖励地址列表通过异构签名地址得到,如果出现多个虚拟银行奖励地址相同,
-     * 那么奖励地址列表就会有重复的奖励地址, 因此要合并该地址得到的多笔奖励金额.
+     * Calculate assembly based on reward addresscointodata
+     * Due to the fact that the reward address list is obtained through heterogeneous signature addresses,If multiple virtual banks have the same reward address,
+     * So the reward address list will have duplicate reward addresses, Therefore, we need to merge the multiple reward amounts obtained from this address.
      * @param listRewardAddress
      * @param amount
      */
@@ -332,7 +332,7 @@ public interface AssembleTxService {
 
 
     /**
-     * 创建重置虚拟银行异构链(合约)交易
+     * Create and reset virtual banking heterogeneous chains(contract)transaction
      * @param chain
      * @param heterogeneousChainId
      * @param signAccount
@@ -342,7 +342,7 @@ public interface AssembleTxService {
     Transaction createResetVirtualBankTx(Chain chain, int heterogeneousChainId, SignAccountDTO signAccount) throws NulsException;
 
     /**
-     * 创建确认重置虚拟银行异构链(合约)交易
+     * Create Confirmation Reset Virtual Bank Heterogeneous Chain(contract)transaction
      * @param chain
      * @param txData
      * @return
@@ -351,10 +351,10 @@ public interface AssembleTxService {
     Transaction createConfirmResetVirtualBankTx(Chain chain, ConfirmResetVirtualBankTxData txData, long txTime) throws NulsException;
 
     /**
-     * 计算应补贴的手续费的总额
+     * Calculate the total amount of handling fees that should be subsidized
      * @param chain
      * @param height
-     * @param basisTxHash 原始交易hash
+     * @param basisTxHash Original transactionhash
      * @param isProposal
      * @return
      */
@@ -363,8 +363,8 @@ public interface AssembleTxService {
     WithdrawalTotalFeeInfo calculateFee(Chain chain, Transaction basisTxHash, boolean isProposal) throws NulsException;
 
     /**
-     * 获取原路退回提案交易支付的异构链手续费总额(不包含链内交易打包手续费)
-     * 提案交易中的固定手续费 + 对该交易追加的手续费(如果有)
+     * Obtain the total amount of heterogeneous chain transaction fees for the original return proposal transaction payment(Excluding in chain transaction packaging fees)
+     * Fixed transaction fees in proposal transactions + Additional handling fees for this transaction(If there is any)
      * @param chain
      * @param hash
      * @return
@@ -372,12 +372,15 @@ public interface AssembleTxService {
      BigInteger calculateRefundTotalFee(Chain chain, String hash);
 
     /**
-     * 获取提现交易支付的异构链手续费总额(不包含链内交易打包手续费)
-     * 提现交易中的手续费 + 对该交易追加的手续费(如果有)
+     * Obtain the total amount of heterogeneous chain transaction fees for withdrawal transaction payments(Excluding in chain transaction packaging fees)
+     * Handling fees in withdrawal transactions + Additional handling fees for this transaction(If there is any)
      * @param chain
      * @param withdrawalTx
      * @return
      * @throws NulsException
      */
     WithdrawalTotalFeeInfo calculateWithdrawalTotalFee(Chain chain, Transaction withdrawalTx) throws NulsException;
+
+    Transaction createRechargeTxOfBtcSys(Chain nerveChain, RechargeTxOfBtcSysDTO dto) throws NulsException;
+    Transaction createRechargeTxOfBtcSysWithoutSign(Chain nerveChain, RechargeTxOfBtcSysDTO dto) throws NulsException;
 }

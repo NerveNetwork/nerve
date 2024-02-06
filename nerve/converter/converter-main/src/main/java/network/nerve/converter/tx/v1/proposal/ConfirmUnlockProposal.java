@@ -68,12 +68,12 @@ public class ConfirmUnlockProposal implements IConfirmProposal, InitializingBean
         ProposalExeBusinessData businessData = ConverterUtil.getInstance(txData.getBusinessData(), ProposalExeBusinessData.class);
         ProposalPO proposalPO = proposalStorageService.find(chain, businessData.getProposalTxHash());
         if (null == proposalPO) {
-            chain.getLogger().error("[ConfirmUnlockProposal] 提案不存在 proposalHash:{}", businessData.getProposalTxHash().toHex());
+            chain.getLogger().error("[ConfirmUnlockProposal] Proposal does not exist proposalHash:{}", businessData.getProposalTxHash().toHex());
             throw new NulsException(ConverterErrorCode.PROPOSAL_NOT_EXIST);
         }
         String address = AddressTool.getStringAddressByBytes(businessData.getAddress());
         if (TransactionCall.isLocked(chain, address)) {
-            chain.getLogger().error("[ConfirmUnlockProposal] 提案执行失败 账户仍然处于被冻结中 proposalHash:{}, address:{}",
+            chain.getLogger().error("[ConfirmUnlockProposal] Proposal execution failed The account is still frozen proposalHash:{}, address:{}",
                     businessData.getProposalTxHash().toHex(), address);
             throw new NulsException(ConverterErrorCode.PROPOSAL_EXECUTIVE_FAILED);
         }

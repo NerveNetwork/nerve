@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 资产工具类
+ * Asset instruments
  * @author lanjinsheng
  * @description
  * @date 2019/11/07
@@ -103,7 +103,7 @@ public class AssetsUtil {
                 ASSET_MAP_FOR_SYMBOL.put(d.getSymbol(),d);
             });
         } catch (NulsException e) {
-            Log.error("初始化资产信息失败,{}",e.getErrorCode(),e);
+            Log.error("Failed to initialize asset information,{}",e.getErrorCode(),e);
             System.exit(0);
         }
     }

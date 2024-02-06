@@ -42,13 +42,13 @@ public class RoundUtils {
 
 
     /**
-     * 查询两轮次之间新增的共识节点和注销的共识节点
+     * Query newly added consensus nodes and logged out consensus nodes between two rounds
      * New consensus nodes and unregistered consensus nodes between queries
      *
      * @param chain              chain
-     * @param lastExtendsData    上一轮的轮次信息
-     * @param currentExtendsData 本轮轮次信息
-     * @return 两轮次之间节点变化信息
+     * @param lastExtendsData    Previous round information
+     * @param currentExtendsData Current round information
+     * @return Node change information between two rounds
      */
     public static Map<String, List<String>> getAgentChangeInfo(Chain chain, BlockExtendsData lastExtendsData, BlockExtendsData currentExtendsData) {
         Map<String, List<String>> resultMap = new HashMap<>(2);
@@ -78,19 +78,19 @@ public class RoundUtils {
             chain.getLogger().error(e);
             return null;
         }
-        chain.getLogger().debug("获取轮次间共识节点变更信息，lastRound:{},currentRound:{},registerList:{},cancelList{}", lastRoundIndex, currentRound.getIndex(), registerAgentList, cancelAgentList);
+        chain.getLogger().debug("Obtain consensus node change information between rounds,lastRound:{},currentRound:{},registerList:{},cancelList{}", lastRoundIndex, currentRound.getIndex(), registerAgentList, cancelAgentList);
         resultMap.put("registerAgentList", registerAgentList);
         resultMap.put("cancelAgentList", cancelAgentList);
         return resultMap;
     }
 
     /**
-     * 获取两轮次之间新增或减少的节点列表
+     * Obtain a list of newly added or decreased nodes between two rounds
      *
-     * @param lastRound    上一轮
-     * @param currentRound 本轮
-     * @param isRegister   获取增加节点列表（true）或获取减少的节点列表（false）
-     * @return 节点变化列表
+     * @param lastRound    Previous round
+     * @param currentRound This round
+     * @param isRegister   Obtain the list of added nodes（true）Or obtain a list of reduced nodes（false）
+     * @return Node Change List
      */
     private static List<String> getAgentChangeList(MeetingRound lastRound, MeetingRound currentRound, boolean isRegister) {
         List<String> lastRoundAgentList = new ArrayList<>();

@@ -27,15 +27,13 @@ package io.nuls.base.api.provider.converter;
 import io.nuls.base.api.provider.Result;
 import io.nuls.base.api.provider.converter.facade.*;
 
-import java.util.List;
-
 /**
  * @author: Charlie
  * @date: 2020/4/28
  */
 public interface ConverterService {
     /**
-     *  异构链资产提现
+     *  Withdrawal of heterogeneous chain assets
      *  withdrawal
      * @param req
      * @return
@@ -43,35 +41,35 @@ public interface ConverterService {
     Result<String> withdrawal(WithdrawalReq req);
 
     /**
-     * 升级合约提案
+     * Upgrade contract proposal
      * @param req
      * @return
      */
     Result<String> UpgradeContract(UpgradeContractReq req);
 
     /**
-     * 提案投票
+     * Proposal voting
      * @param req
      * @return
      */
     Result<String> vote(VoteReq req);
 
     /**
-     * 重置虚拟银行异构链
+     * Reset Virtual Bank Heterogeneous Chain
      * @param req
      * @return
      */
     Result<String> resetBank(ResetBankReq req);
 
     /**
-     * 检查并重发异构链充值交易
+     * Check and resend heterogeneous chain recharge transactions
      * @param req
      * @return
      */
     Result<Boolean> checkRetryParse(CheckRetryParseReq req);
 
     /**
-     * 取消虚拟银行发送到异构链网络的交易
+     * Cancel transactions sent by virtual banks to heterogeneous chain networks
      * @param req
      * @return
      */
@@ -94,13 +92,14 @@ public interface ConverterService {
     Result<String> resumeIn(UnbindReq req);
     Result<String> pauseOut(UnbindReq req);
     Result<String> resumeOut(UnbindReq req);
+    Result<String> stableCoinPause(StableCoinPauseReq req);
 
     Result<Boolean> retryWithdrawal(RetryWithdrawalReq req);
 
     Result<Boolean> validateRegisterHeterogeneousAsset(RegisterHeterogeneousAssetReq req);
 
     /**
-     * 获取异构链资产的异构链信息
+     * Obtain heterogeneous chain information of heterogeneous chain assets
      * @param req
      * @return
      */
@@ -109,14 +108,14 @@ public interface ConverterService {
     public Result<HeterogeneousAssetInfo> getHeterogeneousAssetInfoList(GetHeterogeneousAssetInfoReq req);
 
     /**
-     * 获取虚拟银行信息
+     * Obtain virtual banking information
      * @param req
      * @return
      */
     Result<VirtualBankDirectorDTO> getVirtualBankInfo(GetVirtualBankInfoReq req);
 
     /**
-     * 通过打包地址获取节点的异构链地址
+     * Obtaining heterogeneous chain addresses of nodes through packaging addresses
      * @param req
      * @return
      */

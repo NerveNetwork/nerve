@@ -77,22 +77,22 @@ public class EthParseTxHelper {
         return isCompleted;
     }
     /**
-     * 解析提现交易数据
+     * Analyze withdrawal transaction data
      */
     public HeterogeneousTransactionInfo parseWithdrawTransaction(Transaction tx, TransactionReceipt txReceipt) throws Exception {
         if (tx == null) {
-            EthContext.logger().warn("解析交易的数据不存在或不完整");
+            EthContext.logger().warn("The data for parsing transactions does not exist or is incomplete");
             return null;
         }
         String txHash = tx.getHash();
         HeterogeneousTransactionInfo txInfo = EthUtil.newTransactionInfo(tx);
         boolean isWithdraw;
         if (tx.getInput().length() < 10) {
-            EthContext.logger().warn("不是提现交易[0]");
+            EthContext.logger().warn("Not a withdrawal transaction[0]");
             return null;
         }
         String methodNameHash = tx.getInput().substring(0, 10);
-        // 提现交易的固定地址
+        // Fixed address for withdrawal transactions
         if (ethListener.isListeningAddress(tx.getTo()) &&
                 EthConstant.METHOD_HASH_CREATEORSIGNWITHDRAW.equals(methodNameHash)) {
             if (txReceipt == null) {
@@ -100,18 +100,18 @@ public class EthParseTxHelper {
             }
             isWithdraw = this.parseWithdrawTxReceipt(txReceipt, txInfo);
             if (!isWithdraw) {
-                EthContext.logger().warn("不是最终提现交易[1], hash: {}", txHash);
+                EthContext.logger().warn("Not a final withdrawal transaction[1], hash: {}", txHash);
                 return null;
             }
             if (txInfo.isIfContractAsset()) {
                 ethERC20Helper.loadERC20(txInfo.getContractAddress(), txInfo);
             }
         } else {
-            EthContext.logger().warn("不是最终提现交易[2], hash: {}", txHash);
+            EthContext.logger().warn("Not a final withdrawal transaction[2], hash: {}", txHash);
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.WITHDRAW);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
@@ -123,11 +123,11 @@ public class EthParseTxHelper {
     public HeterogeneousTransactionInfo parseWithdrawTransaction(String txHash) throws Exception {
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return null;
         }
         if (tx.getTo() == null) {
-            EthContext.logger().warn("不是提现交易");
+            EthContext.logger().warn("Not a withdrawal transaction");
             return null;
         }
         tx.setFrom(tx.getFrom().toLowerCase());
@@ -136,11 +136,11 @@ public class EthParseTxHelper {
     }
 
     /**
-     * 解析充值交易数据
+     * Analyzing recharge transaction data
      */
     public HeterogeneousTransactionInfo parseDepositTransaction(Transaction tx, TransactionReceipt txReceipt) throws Exception {
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return null;
         }
         String txHash = tx.getHash();
@@ -150,12 +150,12 @@ public class EthParseTxHelper {
             txReceipt = ethWalletApi.getTxReceipt(txHash);
         }
         do {
-            // ETH充值交易的固定接收地址,金额大于0, 没有input
+            // ETHFixed receiving address for recharge transactions,Amount greater than0, absenceinput
             if (ethListener.isListeningAddress(tx.getTo()) &&
                     tx.getValue().compareTo(BigInteger.ZERO) > 0 &&
                     tx.getInput().equals(EthConstant.HEX_PREFIX)) {
                 if(!this.validationEthDeposit(tx, txReceipt)) {
-                    EthContext.logger().error("[{}]不是充值交易[0]", txHash);
+                    EthContext.logger().error("[{}]Not a recharge transaction[0]", txHash);
                     return null;
                 }
                 isDeposit = true;
@@ -165,7 +165,7 @@ public class EthParseTxHelper {
                 txInfo.setIfContractAsset(false);
                 break;
             }
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (ethERC20Helper.isERC20(tx.getTo(), txInfo)) {
                 if (ethERC20Helper.hasERC20WithListeningAddress(txReceipt, txInfo, address -> ethListener.isListeningAddress(address))) {
                     isDeposit = true;
@@ -174,7 +174,7 @@ public class EthParseTxHelper {
             }
         } while (false);
         if (!isDeposit) {
-            EthContext.logger().error("[{}]不是充值交易[1]", txHash);
+            EthContext.logger().error("[{}]Not a recharge transaction[1]", txHash);
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.DEPOSIT);
@@ -188,11 +188,11 @@ public class EthParseTxHelper {
     public HeterogeneousTransactionInfo parseDepositTransaction(String txHash) throws Exception {
         Transaction tx = ethWalletApi.getTransactionByHash(txHash);
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return null;
         }
         if (tx.getTo() == null) {
-            EthContext.logger().warn("不是充值交易");
+            EthContext.logger().warn("Not a recharge transaction");
             return null;
         }
         tx.setFrom(tx.getFrom().toLowerCase());
@@ -206,7 +206,7 @@ public class EthParseTxHelper {
 
     private boolean validationEthDeposit(Transaction tx, TransactionReceipt txReceipt) throws Exception {
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return false;
         }
         String txHash = tx.getHash();
@@ -241,11 +241,11 @@ public class EthParseTxHelper {
     }
 
     /**
-     * 解析管理员变更交易数据
+     * Analyze administrator's change of transaction data
      */
     public HeterogeneousTransactionInfo parseManagerChangeTransaction(Transaction tx, TransactionReceipt txReceipt) {
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return null;
         }
         HeterogeneousTransactionInfo txInfo = EthUtil.newTransactionInfo(tx);
@@ -272,21 +272,21 @@ public class EthParseTxHelper {
         }
 
         if (!isChange) {
-            EthContext.logger().warn("不是变更交易");
+            EthContext.logger().warn("Not a change transaction");
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.CHANGE);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
 
     /**
-     * 解析合约升级授权交易数据
+     * Analyzing Contract Upgrade Authorization Transaction Data
      */
     public HeterogeneousTransactionInfo parseUpgradeTransaction(Transaction tx, TransactionReceipt txReceipt) {
         if (tx == null) {
-            EthContext.logger().warn("交易不存在");
+            EthContext.logger().warn("Transaction does not exist");
             return null;
         }
         HeterogeneousTransactionInfo txInfo = EthUtil.newTransactionInfo(tx);
@@ -299,11 +299,11 @@ public class EthParseTxHelper {
             }
         }
         if (!isUpgrade) {
-            EthContext.logger().warn("不是合约升级授权交易");
+            EthContext.logger().warn("Not a contract upgrade authorization transaction");
             return null;
         }
         txInfo.setTxType(HeterogeneousChainTxType.UPGRADE);
-        // 解析多签列表
+        // Parsing multi signature lists
         this.loadSigners(txReceipt, txInfo);
         return txInfo;
     }
@@ -339,8 +339,8 @@ public class EthParseTxHelper {
             return null;
         }
         String eventHash = topics.get(0);
-        // topics 解析事件名, 签名完成会触发的事件
-        // 解析事件数据，获得交易的签名列表
+        // topics Parsing event names, Event triggered upon signature completion
+        // Parse event data to obtain a signature list for transactions
         List<Object> eventResult = null;
         switch (eventHash) {
             case EthConstant.EVENT_HASH_TRANSACTION_WITHDRAW_COMPLETED:
@@ -367,7 +367,7 @@ public class EthParseTxHelper {
                 if (topics.size() == 0) {
                     continue;
                 }
-                // 为ERC20提现
+                // byERC20Withdrawal
                 if (topics.get(0).equals(EthConstant.EVENT_HASH_ERC20_TRANSFER)) {
                     String toAddress = EthConstant.HEX_PREFIX + topics.get(2).substring(26, topics.get(1).length()).toString();
                     String data;
@@ -377,7 +377,7 @@ public class EthParseTxHelper {
                         data = topics.get(3);
                     }
                     String[] v = data.split("x");
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = new BigInteger(v[1], 16);
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setIfContractAsset(true);
@@ -388,12 +388,12 @@ public class EthParseTxHelper {
                     }
                     return false;
                 }
-                // 为ETH提现
+                // byETHWithdrawal
                 if (topics.get(0).equals(EthConstant.EVENT_HASH_TRANSFERFUNDS)) {
                     String data = log.getData();
                     String to = EthConstant.HEX_PREFIX + data.substring(26, 66);
                     String amountStr = data.substring(66, 130);
-                    // 转账金额
+                    // Transfer amount
                     BigInteger amount = new BigInteger(amountStr, 16);
                     if (amount.compareTo(BigInteger.ZERO) > 0) {
                         po.setTo(to.toLowerCase());

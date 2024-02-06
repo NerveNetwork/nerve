@@ -40,16 +40,16 @@ import java.util.Map;
 public class BatchInfo {
 
     /**
-     * 临时余额
+     * Temporary balance
      */
     private LedgerTempBalanceManager ledgerTempBalanceManager;
 
     /**
-     * 交易对临时缓存
+     * Transaction pair temporary cache
      */
     private SwapTempPairManager swapTempPairManager;
     /**
-     * 稳定币交易对临时缓存
+     * Stablecoin trading pair temporary cache
      */
     private StableSwapTempPairManager stableSwapTempPairManager;
 
@@ -57,16 +57,16 @@ public class BatchInfo {
     private FarmUserInfoTempManager farmUserTempManager;
 
     /**
-     * 当前正在打包的区块头
+     * The block header currently being packaged
      */
     private BlockHeader currentBlockHeader;
 
     /**
-     * 前一个区块的stateRoot
+     * The previous block'sstateRoot
      */
     private String preStateRoot;
     /**
-     * 交易执行结果
+     * Transaction execution results
      */
     private Map<String, SwapResult> swapResultMap = new HashMap<>();
 

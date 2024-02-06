@@ -13,7 +13,7 @@ import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import java.util.*;
 
 /**
- * 帮助模块实现自动注册交易、注册消息的工具类
+ * Help the module achieve automatic registration of transactions、Tool class for registering messages
  *
  * @author captain
  * @version 1.0
@@ -25,14 +25,14 @@ public class RegisterHelper {
     private static TransactionDispatcher transactionDispatcher;
 
     /**
-     * 向交易模块注册交易
+     * Register transactions with the trading module
      * Register transactions with the transaction module
      */
     public static boolean registerTx(int chainId, Protocol protocol, String moduleCode) {
         try {
             List<TxRegisterDetail> txRegisterDetailList = new ArrayList<>();
             Set<TxDefine> allowTxs = protocol.getAllowTx();
-            // 是否存在需要在打包时处理内部生成的交易
+            // Is there a need to process internally generated transactions during packaging
             boolean moduleHasPackProduceTx = false;
             for (TxDefine config : allowTxs) {
                 TxRegisterDetail detail = new TxRegisterDetail();
@@ -51,7 +51,7 @@ public class RegisterHelper {
             if (txRegisterDetailList.isEmpty()) {
                 return true;
             }
-            //向交易管理模块注册交易
+            //Register transactions with the transaction management module
             Map<String, Object> params = new HashMap<>();
             params.put(Constants.VERSION_KEY_STR, "1.0");
             params.put(Constants.CHAIN_ID, chainId);
@@ -66,12 +66,12 @@ public class RegisterHelper {
 
             /**
              * add by Charlie 2020-04-03
-             * 存在需要在打包时处理内部生成的交易
-             * 需要加载对应的处理器, 该处理器是模块级别, 同时处理该模块多种类型交易
-             * 处理器接口的实现以模块名来加载bean
+             * There is a need to process internally generated transactions during packaging
+             * Corresponding processor needs to be loaded, This processor is at the module level, Simultaneously processing multiple types of transactions in this module
+             * The implementation of processor interfaces is loaded with module namesbean
              */
             if(moduleHasPackProduceTx) {
-                // 注册打包处理器接口
+                // Register packaging processor interface
                 if (transactionDispatcher == null) {
                     transactionDispatcher = SpringLiteContext.getBean(TransactionDispatcher.class);
                 }
@@ -85,7 +85,7 @@ public class RegisterHelper {
     }
 
     /**
-     * 向交易模块注册交易
+     * Register transactions with the trading module
      * Register transactions with the transaction module
      */
     public static boolean registerTx(int chainId, Protocol protocol) {
@@ -93,7 +93,7 @@ public class RegisterHelper {
     }
 
     /**
-     * 向网络模块注册消息
+     * Register messages with the network module
      *
      * @return
      */
@@ -115,7 +115,7 @@ public class RegisterHelper {
     }
 
     /**
-     * 向网络模块注册消息
+     * Register messages with the network module
      *
      * @return
      */
@@ -124,7 +124,7 @@ public class RegisterHelper {
     }
 
     /**
-     * 向协议升级模块注册多版本协议配置
+     * Register multi version protocol configuration with protocol upgrade module
      * Register transactions with the transaction module
      */
     public static boolean registerProtocol(int chainId) {

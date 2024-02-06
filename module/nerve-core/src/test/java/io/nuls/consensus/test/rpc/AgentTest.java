@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 节点相关操作测试
+ * Node related operation testing
  * Node-related operation testing
  *
  * @author tag
@@ -45,7 +45,7 @@ public class AgentTest {
 
     @Test
     /**
-     * 创建节点
+     * Create nodes
      * */
     public void createAgent()throws Exception{
         Map<String,Object> params = new HashMap<>();
@@ -62,7 +62,7 @@ public class AgentTest {
 
     @Test
     /**
-     * 停止节点
+     * Stop node
      * */
     public void stopAgent()throws Exception{
         Map<String,Object>params = new HashMap<>();
@@ -75,7 +75,7 @@ public class AgentTest {
 
 
     /**
-     * 追加保证金
+     * Additional margin
      * */
     @Test
     public void appendAgentDeposit()throws Exception{
@@ -91,7 +91,7 @@ public class AgentTest {
     }
 
     /**
-     * 退出保证金
+     * Withdrawal of margin
      * */
     @Test
     public void reduceAgentDeposit()throws Exception{
@@ -108,7 +108,7 @@ public class AgentTest {
 
     @Test
     /**
-     * 获取节点列表
+     * Get node list
      * */
     public void getAgentList()throws Exception{
         Map<String,Object>params = new HashMap<>();

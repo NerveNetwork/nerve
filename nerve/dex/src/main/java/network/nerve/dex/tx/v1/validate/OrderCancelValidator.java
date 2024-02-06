@@ -28,10 +28,10 @@ public class OrderCancelValidator {
     public Map<String, Object> validateTxs(List<Transaction> txs) {
 //        long time1, time2;
 //        time1 = System.currentTimeMillis();
-        //存放验证不通过的交易
+        //Store transactions that fail verification
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
-//        //记录挂单的hash做冲突检测
+//        //Record of pending ordershashPerform conflict detection
 //        Set<String> orderHashSet = new HashSet<>();
         Transaction tx;
         TradingOrderCancel orderCancel;
@@ -42,7 +42,7 @@ public class OrderCancelValidator {
             try {
                 orderCancel = new TradingOrderCancel();
                 orderCancel.parse(new NulsByteBuffer(tx.getTxData()));
-                //查询需要取消的订单是否存在
+                //Check if there are any orders that need to be cancelled
                 orderPo = orderStorageService.query(orderCancel.getOrderHash());
 //                if(orderPo == null) {
 //                    orderPo = orderStorageService.queryFromBack(orderCancel.getOrderHash());
@@ -57,7 +57,7 @@ public class OrderCancelValidator {
                     if (tx.getCoinDataInstance().getFrom().size() != 1) {
                         throw new NulsException(DexErrorCode.DATA_ERROR, "coinFrom error");
                     }
-                    //验证取消委托和挂单委托是否是同一人发起交易
+                    //Verify whether canceling the commission and placing the order commission are initiated by the same person
                     coinFrom = tx.getCoinDataInstance().getFrom().get(0);
                     if (!Arrays.equals(coinFrom.getAddress(), orderPo.getAddress())) {
                         throw new NulsException(DexErrorCode.DATA_ERROR, "coinFrom error");
@@ -72,7 +72,7 @@ public class OrderCancelValidator {
 //                    LoggerUtil.dexLog.info("----OrderCancelValidator----, txCount:{}, use:{} ", blockHeader.getHeight(), txs.size(), (time2 - time1));
 //                }
 
-//                //冲突检测，查看是否有相同的订单
+//                //Conflict detection to check if there are identical orders
 //                String orderHash = HexUtil.encode(orderCancel.getOrderHash());
 //                if (orderHashSet.contains(orderHash)) {
 //                    LoggerUtil.dexLog.error("-------The order has been cancelled---, height:" + tx.getBlockHeight() + "txHash:" + tx.getHash().toHex() + ", cancelOrderHash:" + orderHash);

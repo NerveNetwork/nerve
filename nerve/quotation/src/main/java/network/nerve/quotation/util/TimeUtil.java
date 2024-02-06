@@ -31,7 +31,7 @@ public class TimeUtil {
     }
 
     /**
-     * 计算当前时间戳的UTC 零点 时间戳
+     * Calculate the current timestampUTC zero time stamp
      * @param timeMillis
      * @return
      */
@@ -46,13 +46,13 @@ public class TimeUtil {
     }
 
     /**
-     * 当前时间是否在当天的指定时段区间内(不包含区间边界)
-     * 指定时段必须有开始的时分, 如果没有指定结束时分,则默认指定为当天的24点之前
-     * @param starHour 时段开始 时
-     * @param starMinute 时段开始 分
-     * @param endHour 时段结束 时
-     * @param endMinute 时段结束 分
-     * @param zone 以指定时区来计算, 默认为UTC
+     * Is the current time within the specified time period of the day(Excluding interval boundaries)
+     * The specified time period must have a starting time, If no end time is specified,Then it is specified by default as the current day's24Before clicking
+     * @param starHour Time period starts Time
+     * @param starMinute Time period starts branch
+     * @param endHour End of time period Time
+     * @param endMinute End of time period branch
+     * @param zone Calculate based on specified time zone, Default toUTC
      * @return
      */
     public static boolean isNowDateTimeInRange(int starHour, int starMinute, Integer endHour, Integer endMinute, ZoneOffset zone){
@@ -63,7 +63,7 @@ public class TimeUtil {
         LocalDateTime endDateTime = null;
         boolean endRs = null == endHour || null == endMinute;
         if(endRs) {
-            //如果没有区间结束时间,区间结束时间设置为当天的24点之前
+            //If there is no interval end time,Set the end time of the interval to the day's24Before clicking
             LocalTime endTime = LocalTime.of(0, 0);
             endDateTime = LocalDateTime.of(localDate.plusDays(1), endTime);
         }else{

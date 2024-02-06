@@ -60,7 +60,7 @@ public class CommonUtil {
     }
 
     /**
-     * RPCUtil 反序列化
+     * RPCUtil Deserialization
      *
      * @param data
      * @param clazz
@@ -73,7 +73,7 @@ public class CommonUtil {
     }
 
     /**
-     * HEX反序列化
+     * HEXDeserialization
      *
      * @param hex
      * @param clazz
@@ -99,7 +99,7 @@ public class CommonUtil {
     }
 
     /**
-     * 组装DB key 例yyyyMMdd-NULSUSDT
+     * assembleDB key exampleyyyyMMdd-NULSUSDT
      * @param prefix
      * @param suffix
      * @return

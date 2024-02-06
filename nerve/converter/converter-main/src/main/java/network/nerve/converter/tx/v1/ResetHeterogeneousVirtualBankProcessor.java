@@ -93,7 +93,7 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
                     heterogeneousDockingManager.getHeterogeneousDocking(heterogeneousChainId);
                 } catch (NulsException e) {
                     chain.getLogger().error(e);
-                    // 区块内业务重复交易
+                    // Repeated transactions within the block
                     failsList.add(tx);
                     errorCode = ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getCode();
                     log.error(ConverterErrorCode.HETEROGENEOUS_CHAINID_ERROR.getMsg());
@@ -105,7 +105,7 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
                     log.error(ConverterErrorCode.COINDATA_CANNOT_EXIST.getMsg());
                     continue;
                 }
-                // 签名验证(种子虚拟银行)
+                // Signature verification(Seed Virtual Bank)
                 try {
                     ConverterSignValidUtil.validateSeedNodeSign(chain, tx);
                 } catch (NulsException e) {
@@ -130,14 +130,14 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
         if (txs.isEmpty()) {
             return true;
         }
-        // 当区块出块正常运行状态时（非区块同步模式），才执行
+        // When the block is in normal operation state（Non block synchronization mode）Only then will it be executed
         if (syncStatus == SyncStatusEnum.RUNNING.value()) {
             Chain chain = chainManager.getChain(chainId);
             try {
                 boolean isCurrentDirector = VirtualBankUtil.isCurrentDirector(chain);
                 if (isCurrentDirector) {
                     for (Transaction tx : txs) {
-                        //放入类似队列处理机制 准备通知异构链组件执行提现
+                        //Placing a queue like processing mechanism Prepare to notify heterogeneous chain components to execute withdrawals
                         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
                         pendingPO.setTx(tx);
                         pendingPO.setBlockHeader(blockHeader);
@@ -146,10 +146,10 @@ public class ResetHeterogeneousVirtualBankProcessor implements TransactionProces
                         pendingPO.setCurrenVirtualBankTotal(chain.getMapVirtualBank().size());
                         txSubsequentProcessStorageService.save(chain, pendingPO);
                         chain.getPendingTxQueue().offerFirst(pendingPO);
-                        chain.getLogger().info("[commit] 重置虚拟银行异构链(合约) hash:{}", tx.getHash().toHex());
+                        chain.getLogger().info("[commit] Reset Virtual Bank Heterogeneous Chain(contract) hash:{}", tx.getHash().toHex());
                     }
                     heterogeneousService.saveResetVirtualBankStatus(chain, true);
-                    chain.getLogger().info("[commit] 开启重置虚拟银行异构链标识 ResetVirtualBank:{}", true);
+                    chain.getLogger().info("[commit] Enable resetting virtual bank heterogeneous chain identification ResetVirtualBank:{}", true);
                 }
             } catch (Exception e) {
                 chain.getLogger().error(e);

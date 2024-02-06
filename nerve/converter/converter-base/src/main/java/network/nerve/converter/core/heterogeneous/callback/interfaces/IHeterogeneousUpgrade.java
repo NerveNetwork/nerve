@@ -26,7 +26,7 @@ package network.nerve.converter.core.heterogeneous.callback.interfaces;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 
 /**
- * 合约升级后，异构链组件调用CORE，切换docking实例
+ * After contract upgrade, heterogeneous chain components callCORE, switchdockingexample
  * @author: Mimi
  * @date: 2020-08-31
  */
@@ -34,7 +34,7 @@ public interface IHeterogeneousUpgrade {
 
 
     /**
-     * 切换升级后的docking实例
+     * Switch upgradeddockingexample
      */
     void switchDocking(IHeterogeneousChainDocking newDocking) ;
 }

@@ -9,7 +9,7 @@ import io.nuls.core.exception.NulsException;
 import java.io.IOException;
 
 /**
- * 向广播节点获取完整投票结果信息
+ * Obtain complete voting result information from broadcast nodes
  * Get complete voting result information from broadcast node
  *
  * @author tag

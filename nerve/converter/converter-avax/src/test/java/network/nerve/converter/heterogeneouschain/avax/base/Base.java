@@ -107,26 +107,40 @@ public class Base {
     }
 
     protected String sendTx(String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger value, String contract) throws Exception {
-        // 验证合约交易合法性
-        EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
+        // Verify the legality of contract transactions
+        /*EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, contract, txFunction, value);
         if (ethCall.isReverted()) {
-            Log.error("[{}]交易验证失败，原因: {}", txType, ethCall.getRevertReason());
+            Log.error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
         }
-        // 估算GasLimit
+        // estimateGasLimit
         EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, contract, txFunction, value);
         BigInteger estimateGas = estimateGasObj.getAmountUsed();
 
-        Log.info("交易类型: {}, 估算的GasLimit: {}", txType, estimateGas);
+        Log.info("Transaction type: {}, EstimatedGasLimit: {}", txType, estimateGas);
         if (estimateGas.compareTo(BigInteger.ZERO) == 0) {
-            Log.error("[{}]交易验证失败，原因: 估算GasLimit失败", txType);
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "估算GasLimit失败");
+            Log.error("[{}]Transaction verification failed, reason: estimateGasLimitfail", txType);
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail");
             //estimateGas = BigInteger.valueOf(100000L);
         }
-        BigInteger gasLimit = estimateGas;
-        HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, null, null);
+        BigInteger gasLimit = estimateGas;*/
+        BigInteger gasLimit = BigInteger.valueOf(300000);
+        BigInteger gasPrice = BigDecimal.valueOf(800).movePointRight(9).toBigInteger();
+        BigInteger nonce = BigInteger.valueOf(43);
+        HtgSendTransactionPo htSendTransactionPo = htgWalletApi.callContract(fromAddress, priKey, contract, gasLimit, txFunction, value, gasPrice, nonce);
         String ethTxHash = htSendTransactionPo.getTxHash();
         return ethTxHash;
+    }
+    protected String sendERC20WithdrawBySignData(String txKey, String toAddress, String value, String erc20, int tokenDecimals, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).multiply(BigDecimal.TEN.pow(tokenDecimals)).toBigInteger();
+        Function function =  HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, true, erc20, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
+    }
+
+    protected String sendMainAssetWithdrawBySignData(String txKey, String toAddress, String value, String signData) throws Exception {
+        BigInteger bValue = new BigDecimal(value).movePointRight(18).toBigInteger();
+        Function function = HtgUtil.getCreateOrSignWithdrawFunction(txKey, toAddress, bValue, false, HtgConstant.ZERO_ADDRESS, signData);
+        return this.sendTx(address, priKey, function, HeterogeneousChainTxType.WITHDRAW);
     }
 
     protected String sendMainAssetWithdraw(String txKey, String toAddress, String value, int signCount) throws Exception {

@@ -20,7 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * 投票信息
+ * Voting information
  * Vote message
  *
  * @author tag
@@ -28,48 +28,48 @@ import java.io.IOException;
  */
 public class VoteMessage extends BaseBusinessMessage {
     /**
-     * 投票的区块高度
+     * Block height for voting
      */
     private long height;
 
     /**
-     * 区块所在轮次
+     * The round in which the block is located
      */
     private long roundIndex;
 
     /**
-     * 区块出块下标
+     * Block output index
      */
     private int packingIndexOfRound;
 
     /**
-     * 共识轮次开始时间
+     * Consensus round start time
      */
     private long roundStartTime;
 
     /**
-     * 第几轮投票,一个区块确认可能会尽力多轮投票，如果第一轮所有共识节点未达成一致会进入第二轮投票
+     * Which round of voting,A block confirmation may attempt multiple rounds of voting, and if all consensus nodes do not reach a consensus in the first round, it will enter the second round of voting
      */
     private long voteRoundIndex = 1;
 
     /**
-     * 第几阶段投票，每轮投票分两个阶段，第一阶段是对区块签名投票，第二阶段是对第一阶段结果投票
+     * What stage of voting is there? Each round of voting is divided into two stages. The first stage is voting on block signatures, and the second stage is voting on the results of the first stage
      */
     private byte voteStage = 1;
 
     /**
-     * 区块hash
+     * blockhash
      */
     private NulsHash blockHash;
 
     /**
-     * 区块签名
+     * Block signature
      */
     private byte[] sign;
 
 
     /**
-     * 非序列化字段
+     * Non serialized fields
      */
     private String address;
     private NulsHash voteHash;

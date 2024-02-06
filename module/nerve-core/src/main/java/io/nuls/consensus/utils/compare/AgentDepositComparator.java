@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 /**
- * 节点委托金额对比工具类
+ * Node commission amount comparison tool class
  * Node delegated amount comparison tool class
  *
  * @author tag
@@ -15,7 +15,7 @@ import java.util.Comparator;
 public class AgentDepositComparator implements Comparator<Agent> {
     @Override
     public int compare(Agent o1, Agent o2) {
-        //保证金从大到小排序
+        //Ranking of margin from highest to lowest
         int result = o2.getDeposit().compareTo(o1.getDeposit());
         if(result != 0){
             return result;

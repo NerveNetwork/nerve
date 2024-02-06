@@ -22,13 +22,13 @@ public class AgentDepositNonceManager {
     private static AgentDepositNonceService agentDepositNonceService;
 
     /**
-     * 创建节点初始化节点NONCE数据
-     * @param agent   节点信息
-     * @param chain   链信息
-     * @param agentHash  交易HASH
+     * Create node initialization nodeNONCEdata
+     * @param agent   Node information
+     * @param chain   Chain information
+     * @param agentHash  transactionHASH
      * */
     public static boolean init(Agent agent, Chain chain, NulsHash agentHash){
-        //初始化账户节点保证金NONCE数据
+        //Initialize account node marginNONCEdata
         NonceDataPo dataPo = new NonceDataPo(agent.getDeposit(), CallMethodUtils.getNonce(agentHash.getBytes()));
         if(!agentDepositNonceService.save(agentHash, new AgentDepositNoncePo(dataPo), chain.getChainId())){
             chain.getLogger().error("Agent deposit nonce data save error");
@@ -38,9 +38,9 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 创建节点回滚删除节点NONCE数据
-     * @param chain      链信息
-     * @param agentHash  交易HASH
+     * Create node rollback delete nodeNONCEdata
+     * @param chain      Chain information
+     * @param agentHash  transactionHASH
      * */
     public static boolean delete(Chain chain, NulsHash agentHash){
         if(!agentDepositNonceService.delete(agentHash, chain.getChainId())){
@@ -51,11 +51,11 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 追加保证金NONCE提交
-     * @param chain       链信息
-     * @param agentHash   节点HASH
-     * @param txHash      交易Hash
-     * @param deposit     保证金金额
+     * Additional marginNONCESubmit
+     * @param chain       Chain information
+     * @param agentHash   nodeHASH
+     * @param txHash      transactionHash
+     * @param deposit     Deposit amount
      * */
     public static boolean addNonceCommit(Chain chain, NulsHash agentHash, NulsHash txHash, BigInteger deposit){
         AgentDepositNoncePo noncePo = agentDepositNonceService.get(agentHash, chain.getChainId());
@@ -65,10 +65,10 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 追加保证金NONCE回滚
-     * @param chain       链信息
-     * @param agentHash   节点HASH
-     * @param txHash      交易Hash
+     * Additional marginNONCERollBACK
+     * @param chain       Chain information
+     * @param agentHash   nodeHASH
+     * @param txHash      transactionHash
      * */
     public static boolean addNonceRollBack(Chain chain, NulsHash agentHash, NulsHash txHash){
         AgentDepositNoncePo noncePo = agentDepositNonceService.get(agentHash, chain.getChainId());
@@ -85,11 +85,11 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 获取退出保证金/停止节点/红牌交易组装的NONCE数据列表
-     * @param chain       链信息
-     * @param agentHash   节点HASH
-     * @param deposit     保证金金额
-     * @param quitAll     是否退出所有
+     * Obtain exit deposit/Stop node/Assembled for red card tradingNONCEData List
+     * @param chain       Chain information
+     * @param agentHash   nodeHASH
+     * @param deposit     Deposit amount
+     * @param quitAll     Do you want to exit all
      * */
     public static List<NonceDataPo> getNonceDataList(Chain chain, BigInteger deposit, NulsHash agentHash, boolean quitAll){
         AgentDepositNoncePo noncePo = agentDepositNonceService.get(agentHash, chain.getChainId());
@@ -113,10 +113,10 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * CoinData  NONCE验证
-     * @param chain      链信息
+     * CoinData  NONCEvalidate
+     * @param chain      Chain information
      * @param coinData   coin data
-     * @param agentHash  节点HASH
+     * @param agentHash  nodeHASH
      * */
     public static boolean coinDataNonceVerify(Chain chain, CoinData coinData, NulsHash agentHash){
         AgentDepositNoncePo noncePo = agentDepositNonceService.get(agentHash, chain.getChainId());
@@ -138,11 +138,11 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 退出保证金/停止节点/红牌解锁交易提交
-     * @param chain      链信息
-     * @param agentHash  节点HASH
-     * @param tx         交易信息
-     * @param quitAll    是否退出所有
+     * Withdrawal of margin/Stop node/Red card unlocking transaction submission
+     * @param chain      Chain information
+     * @param agentHash  nodeHASH
+     * @param tx         Transaction information
+     * @param quitAll    Do you want to exit all
      * */
     public static boolean unLockTxCommit(Chain chain, NulsHash agentHash, Transaction tx, boolean quitAll){
         try {
@@ -167,7 +167,7 @@ public class AgentDepositNonceManager {
                         }
                     }
                 }
-                //如果有新的锁定nonce产生，则保存新nonce
+                //If there is a new locknonceIf generated, save the new onenonce
                 if(coinData.getTo().size() > 1){
                     for(CoinTo to : coinData.getTo()){
                         if(to.getLockTime() == ConsensusConstant.CONSENSUS_LOCK_TIME){
@@ -186,17 +186,17 @@ public class AgentDepositNonceManager {
     }
 
     /**
-     * 退出保证金/停止节点/红牌解锁交易回滚
-     * @param chain      链信息
-     * @param agentHash  节点HASH
-     * @param tx         交易信息
-     * @param quitAll    是否退出所有
+     * Withdrawal of margin/Stop node/Red card unlocking transaction rollback
+     * @param chain      Chain information
+     * @param agentHash  nodeHASH
+     * @param tx         Transaction information
+     * @param quitAll    Do you want to exit all
      * */
     public static boolean unLockTxRollback(Chain chain, NulsHash agentHash, Transaction tx, boolean quitAll){
         try {
             AgentDepositNoncePo noncePo = agentDepositNonceService.get(agentHash, chain.getChainId());
             CoinData coinData = tx.getCoinDataInstance();
-            //如果为退还保证金交易且在退还组装中有新的锁定nonce产生，则先回滚新产生的nonce
+            //If it is a margin refund transaction and there is a new lock in the returned assemblynonceIf it is generated, roll back the newly generated one firstnonce
             if(!quitAll && coinData.getTo().size() > 1){
                 byte[] newNonce = CallMethodUtils.getNonce(tx.getHash().getBytes());
                 Iterator<NonceDataPo> iterator = noncePo.getValidNonceList().iterator();
@@ -208,7 +208,7 @@ public class AgentDepositNonceManager {
                     }
                 }
             }
-            //回滚由有效转为失效的nonce数据
+            //Rollback from valid to invalidnoncedata
             Iterator<NonceDataPo> iterator = noncePo.getInvalidNonceList().iterator();
             boolean isMatch;
             while (iterator.hasNext()){

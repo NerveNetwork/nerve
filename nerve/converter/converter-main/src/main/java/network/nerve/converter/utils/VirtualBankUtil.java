@@ -24,14 +24,12 @@
 
 package network.nerve.converter.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.base.signture.TransactionSignature;
 import io.nuls.core.core.ioc.SpringLiteContext;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.logback.NulsLogger;
-import io.nuls.core.parse.JSONUtils;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.core.api.ConverterCoreApi;
@@ -49,7 +47,6 @@ import network.nerve.converter.storage.VirtualBankAllHistoryStorageService;
 import network.nerve.converter.storage.VirtualBankStorageService;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -63,7 +60,7 @@ import java.util.stream.Collectors;
 public class VirtualBankUtil {
 
     /**
-     * 根据异构链chainId 获取当前节点(虚拟银行) 对应的异构链地址
+     * Based on heterogeneous chainschainId Get the current node(Virtual banking) Corresponding heterogeneous chain address
      *
      * @param chain
      * @param heterogeneousChainId
@@ -89,8 +86,8 @@ public class VirtualBankUtil {
 
 
     /**
-     * 判断当前节点是否是虚拟银行节点
-     * 是:返回签名(出块)地址信息, 不是:返回null
+     * Determine whether the current node is a virtual bank node
+     * yes:Return signature(Chunking)Address information, No, it's not:returnnull
      *
      * @param chain
      * @return
@@ -104,7 +101,7 @@ public class VirtualBankUtil {
     }
 
     /**
-     * 判断当前节点是否是虚拟银行节点
+     * Determine whether the current node is a virtual bank node
      *
      * @param chain
      * @return
@@ -116,7 +113,7 @@ public class VirtualBankUtil {
 
 
     /**
-     * 根据虚拟银行成员数, 获取当前签名拜占庭数量
+     * Based on the number of virtual bank members, Obtain the current number of Byzantine signatures
      */
     public static int getByzantineCount(Chain chain) {
         return getByzantineCount(chain, null);
@@ -129,16 +126,16 @@ public class VirtualBankUtil {
         if (ByzantineRateCount % ConverterConstant.MAGIC_NUM_100 > 0) {
             minPassCount++;
         }
-        LoggerUtil.LOG.debug("当前共识节点数量为：{}, 拜占庭最少数量为:{}", directorCount, minPassCount);
+        LoggerUtil.LOG.debug("The current number of consensus nodes is：{}, The minimum number of Byzantiums is:{}", directorCount, minPassCount);
         return minPassCount;
     }
 
     /**
-     * 从签名列表中去除不匹配的签名, 并返回不匹配的签名列表
+     * Remove mismatched signatures from the signature list, And return a list of mismatched signatures
      *
      * @param chain
      * @param transactionSignature
-     * @param addressSet           虚拟银行成员签名的列表
+     * @param addressSet           List of virtual bank member signatures
      * @return
      */
     public static List<P2PHKSignature> getMisMatchSigns(Chain chain, TransactionSignature transactionSignature, Set<String> addressSet) {
@@ -163,11 +160,11 @@ public class VirtualBankUtil {
     }
 
     /**
-     * 获取签名数(去重复,并且只统计虚拟银行成员的签名)
+     * Obtain the number of signatures(To repeat,And only count the signatures of virtual bank members)
      *
      * @param chain
      * @param transactionSignature
-     * @param addressSet           虚拟银行成员签名的列表
+     * @param addressSet           List of virtual bank member signatures
      * @return
      */
     public static int getSignCountWithoutMisMatchSigns(Chain chain, TransactionSignature transactionSignature, Set<String> addressSet) {
@@ -252,7 +249,7 @@ public class VirtualBankUtil {
     public static void virtualBankDirectorBalance(List<VirtualBankDirectorDTO> list, Chain chain, HeterogeneousDockingManager heterogeneousDockingManager, int logPrint, ConverterCoreApi converterCoreApi) throws Exception {
         ExecutorService threadPool = null;
         try {
-            // 并行查询余额
+            // Parallel query of balance
             threadPool = Executors.newFixedThreadPool(5);
             int fixedCount = 5;
             int listSize = list.size();
@@ -261,16 +258,16 @@ public class VirtualBankUtil {
             for (int s = 0; s < listSize; s++) {
                 directorDTO = list.get(s);
                 if (s % fixedCount == 0) {
-                    // 剩余的dto数量不小于fixedCount
+                    // RemainingdtoQuantity not less thanfixedCount
                     if (listSize - s >= fixedCount) {
                         countDownLatch = new CountDownLatch(fixedCount);
                     } else {
-                        // 剩余的dto数量不足fixedCount
+                        // RemainingdtoInsufficient quantityfixedCount
                         countDownLatch = new CountDownLatch(listSize - s);
                     }
                 }
                 threadPool.submit(new GetBalance(chain, heterogeneousDockingManager, directorDTO, countDownLatch, logPrint, converterCoreApi));
-                // 达到CountDown的最大任务数时，等待执行完成
+                // achieveCountDownWhen the maximum number of tasks is reached, wait for execution to complete
                 if ((s + 1) % fixedCount == 0 || (s + 1) == listSize) {
                     countDownLatch.await();
                 }
@@ -314,17 +311,21 @@ public class VirtualBankUtil {
                         addr.setBalance("0");
                     } else {
                         IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
-                        BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
-                        addr.setBalance(balance.toPlainString());
-                        if (this.logPrint % 10 == 0) {
-                            logger.info("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
-                        } else {
-                            logger.debug("[{}]成功查询[{}]余额: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                        try {
+                            BigDecimal balance = docking.getBalance(addr.getAddress()).stripTrailingZeros();
+                            addr.setBalance(balance.toPlainString());
+                            if (this.logPrint % 10 == 0) {
+                                logger.info("[{}]Successfully queried[{}]balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                            } else {
+                                logger.debug("[{}]Successfully queried[{}]balance: {}", addr.getAddress(), docking.getChainSymbol(), addr.getBalance());
+                            }
+                        } catch (Exception e) {
+                            logger.error(String.format("[%s]query[%s]Abnormal balance", addr.getAddress(), docking.getChainSymbol()), e);
                         }
                     }
                 }
             } catch (Exception e) {
-                logger.error("查询异构链账户余额异常", e);
+                logger.error("Abnormal balance in querying heterogeneous chain accounts", e);
             } finally {
                 countDownLatch.countDown();
             }

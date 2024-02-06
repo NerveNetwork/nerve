@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 
 /**
- * 存放交易对的修改记录
+ * Store modification records for transaction pairs
  */
 public class CoinTradingEditInfoPo extends BaseNulsData {
 

@@ -112,14 +112,14 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     public void init(String rpcAddress) throws NulsException {
         initialize();
-        // 默认初始化的API会被新的API服务覆盖，当节点成为虚拟银行时，会初始化新的API服务
+        // Default initializedAPIWill be replaced by new onesAPIService coverage, when a node becomes a virtual bank, a new one will be initializedAPIservice
         if (web3j != null && htgContext.getConfig().getCommonRpcAddress().equals(this.rpcAddress) && !rpcAddress.equals(this.rpcAddress)) {
             resetWeb3j();
         }
         if (web3j == null) {
             web3j = newInstanceWeb3j(rpcAddress);
             this.rpcAddress = rpcAddress;
-            getLog().info("初始化 {} API URL: {}", symbol(), rpcAddress);
+            getLog().info("initialization {} API URL: {}", symbol(), rpcAddress);
         }
     }
 
@@ -127,7 +127,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         checkLock.lock();
         try {
             do {
-                // 强制从第三方系统更新rpc
+                // Force updates from third-party systems rpc
                 Map<Long, Map> rpcCheckMap = htgContext.getConverterCoreApi().HTG_RPC_CHECK_MAP();
                 Map<String, Object> resultMap = rpcCheckMap.get(htgContext.getConfig().getChainIdOnHtgNetwork());
                 if (resultMap == null) {
@@ -141,15 +141,15 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 }
                 if (this.rpcVersion == -1) {
                     this.rpcVersion = _version.intValue();
-                    getLog().info("初始化 {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    getLog().info("initialization {} rpc check from third party, version: {}", symbol(), rpcVersion);
                     break;
                 }
                 if (this.rpcVersion == _version.intValue()){
-                    //getLog().info("版本相同 {} rpc check from third party, version: {}", symbol(), rpcVersion);
+                    //getLog().info("Same version {} rpc check from third party, version: {}", symbol(), rpcVersion);
                     break;
                 }
                 if (_version.intValue() > this.rpcVersion){
-                    // 发现version改变，切换rpc
+                    // findversionChange, switchrpc
                     Integer _index = (Integer) resultMap.get("index");
                     if (_index == null) {
                         getLog().warn("Empty index! {} rpc check from third party, version: {}", symbol(), rpcVersion);
@@ -160,7 +160,9 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                         getLog().warn("Empty apiUrl! {} rpc check from third party, version: {}", symbol(), rpcVersion);
                         break;
                     }
-                    getLog().info("检查到需更改RPC服务 {} rpc check from third party, version: {}, url: {}", symbol(), _version.intValue(), apiUrl);
+                    String msg = String.format("[%s]网络检查到需强制更改RPC服务, rpc check from third party, version: %s, url: %s, old api: %s", symbol(), _version.intValue(), apiUrl, this.rpcAddress);
+                    htgContext.getConverterCoreApi().putWechatMsg(msg);
+                    getLog().info(msg);
                     TX_CACHE.invalidateAll();
                     TX_RECEIPT_CACHE.invalidateAll();
                     this.changeApi(apiUrl);
@@ -172,27 +174,27 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             } while (false);
 
             if (this.urlFromThirdPartyForce) {
-                getLog().info("[{}]强制应急API(ThirdParty)使用期间内，不再根据bank order切换API", symbol());
+                getLog().info("[{}]Mandatory emergency responseAPI(ThirdParty)During the use period, no longer based onbank orderswitchAPI", symbol());
                 return;
             }
 
             long now = System.currentTimeMillis();
-            // 如果使用的是应急API，应急API使用时间内，不检查API切换
+            // If using emergencyAPIEmergency responseAPIDuring use, do not checkAPIswitch
             if (now < clearTimeOfRequestExceededMap) {
                 if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
                     if (getLog().isDebugEnabled()) {
-                        getLog().debug("应急API使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                        getLog().debug("emergencyAPIDuring use, do not checkAPIswitch, Expiration time: {}, remaining waiting time: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                     }
                     return;
                 }
                 if (urlFromThirdParty) {
                     if (getLog().isDebugEnabled()) {
-                        getLog().debug("应急API(ThirdParty)使用时间内，不检查API切换, 到期时间: {}，剩余等待时间: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
+                        getLog().debug("emergencyAPI(ThirdParty)During use, do not checkAPIswitch, Expiration time: {}, remaining waiting time: {}", clearTimeOfRequestExceededMap, clearTimeOfRequestExceededMap - now);
                     }
                     return;
                 }
             } else if (clearTimeOfRequestExceededMap != 0){
-                getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                 requestExceededMap.clear();
                 clearTimeOfRequestExceededMap = 0L;
                 urlFromThirdParty = false;
@@ -200,7 +202,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
             String rpc = this.calRpcBySwitchStatus(order, switchStatus);
             if (!rpc.equals(this.rpcAddress)) {
-                getLog().info("检测到顺序变化，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                getLog().info("Detected a change in sequence,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                 changeApi(rpc);
             }
         } catch (Exception e) {
@@ -239,7 +241,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         reSignLock.lock();
         try {
             if (this.rpcAddress == null) {
-                getLog().info("进入重签");
+                getLog().info("Enter re signing");
                 changeApi(htgContext.getConfig().getMainRpcAddress());
             }
         } catch (NulsException e) {
@@ -269,31 +271,31 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         checkLock.lock();
         try {
             if (urlFromThirdParty || urlFromThirdPartyForce) {
-                getLog().info("应急API(ThirdParty)使用时间内，不检查API切换");
+                getLog().info("emergencyAPI(ThirdParty)During use, do not checkAPIswitch");
                 return;
             }
-            getLog().info("{} API 准备切换，当前API: {}", symbol(), oldRpc);
-            // 不相等，说明已经被切换
+            getLog().info("{} API Ready to switch, currentlyAPI: {}", symbol(), oldRpc);
+            // Unequal, indicating that it has been switched
             if (!oldRpc.equals(this.rpcAddress)) {
-                getLog().info("{} API 已切换至: {}", symbol(), this.rpcAddress);
+                getLog().info("{} API Switched to: {}", symbol(), this.rpcAddress);
                 return;
             }
             int expectSwitchStatus = (switchStatus + 1) % 2;
             int order = htgContext.getConverterCoreApi().getVirtualBankOrder();
             String rpc = this.calRpcBySwitchStatus(order, expectSwitchStatus);
-            // 检查配置的API是否超额
+            // Check the configurationAPIIs it excessive
             if (unavailableRpc(oldRpc) && unavailableRpc(rpc)) {
                 String mainRpcAddress = htgContext.getConfig().getMainRpcAddress();
-                getLog().info("{} API 不可用: {} - {}, 准备切换至应急API: {}, ", symbol(), oldRpc, rpc, mainRpcAddress);
+                getLog().info("{} API Not available: {} - {}, Prepare to switch to emergency modeAPI: {}, ", symbol(), oldRpc, rpc, mainRpcAddress);
                 changeApi(mainRpcAddress);
                 if (mainRpcAddress.equals(this.rpcAddress)) {
                     clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
                 }
                 return;
             }
-            // 正常切换API
+            // Normal switchingAPI
             changeApi(rpc);
-            // 相等，说明切换成功
+            // Equal, indicating successful switching
             if (rpc.equals(this.rpcAddress)) {
                 switchStatus = expectSwitchStatus;
             }
@@ -335,7 +337,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     protected void checkIfResetWeb3j(int times) throws NulsException {
         int mod = times % 6;
         if (mod == 5 && web3j != null && rpcAddress != null) {
-            getLog().info("重启API服务");
+            getLog().info("restartAPIservice");
             resetWeb3j();
             web3j = newInstanceWeb3j(rpcAddress);
         }
@@ -357,7 +359,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     /**
      * Method:getBlockByHeight
-     * Description: 根据高度获取区块
+     * Description: Obtain blocks based on height
      * Author: xinjl
      * Date: 2018/4/16 15:23
      */
@@ -366,37 +368,37 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             EthBlock send = web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), true).send();
             Response.Error error = send.getError();
             if (error != null) {
-                getLog().error("区块查询异常，errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
+                getLog().error("Block query exception,errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
             }
             return send.getBlock();
         });
         if (block == null) {
-            getLog().error("获取区块为空, 高度: {}, rpc: {}", height, this.rpcAddress);
+            getLog().error("Get block empty, height: {}, rpc: {}", height, this.rpcAddress);
         }
         return block;
     }
 
     /**
-     * 根据高度获取区块头
+     * Obtain block heads based on height
      */
     public EthBlock.Block getBlockHeaderByHeight(Long height) throws Exception {
         EthBlock.Block header = this.timeOutWrapperFunction("getBlockHeaderByHeight", height, args -> {
             EthBlock send = web3j.ethGetBlockByNumber(new DefaultBlockParameterNumber(args), false).send();
             Response.Error error = send.getError();
             if (error != null) {
-                getLog().error("区块头查询异常，errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
+                getLog().error("Block header query exception,errorMsg: {}, errorData: {}-{}", error.getMessage(), error.getCode(), error.getData());
             }
             return send.getBlock();
         });
         if (header == null) {
-            getLog().error("获取区块头为空, 高度: {}, rpc: {}", height, this.rpcAddress);
+            getLog().error("Get block header empty, height: {}, rpc: {}", height, this.rpcAddress);
         }
         return header;
     }
 
     /**
      * Method:getHtBalance
-     * Description: 获取ht余额
+     * Description: obtainhtbalance
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -413,7 +415,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 获取交易详情
+     * Get transaction details
      */
     public org.web3j.protocol.core.methods.response.Transaction getTransactionByHash(String txHash) throws Exception {
         try {
@@ -442,7 +444,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     /**
      * Method:send
-     * Description: 发送交易
+     * Description: Send transaction
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -458,26 +460,26 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     /**
      * Method:sendMainAsset
-     * Description: 发送HT
+     * Description: sendHT
      * Author: xinjl
      * Date: 2018/4/16 14:55
      */
     public String sendMainAssetForTestCase(String fromAddress, String privateKey, String toAddress, BigDecimal value, BigInteger gasLimit, BigInteger gasPrice) throws Exception {
         BigDecimal htBalance = getBalance(fromAddress);
         if (htBalance == null) {
-            getLog().error("获取当前地址{}余额失败!", symbol());
+            getLog().error("Get the current address{}Balance failed!", symbol());
             return "501";
         }
-        //getLog().info(fromAddress + "===账户金额" + convertWeiToEth(ethBalance.toBigInteger()));
+        //getLog().info(fromAddress + "===Account amount" + convertWeiToEth(ethBalance.toBigInteger()));
         BigInteger bigIntegerValue = convertMainAssetToWei(value);
         if (htBalance.toBigInteger().compareTo(bigIntegerValue.add(gasLimit.multiply(gasPrice))) < 0) {
-            //余额小于转账金额与手续费之和
-            getLog().error("账户金额小于转账金额与手续费之和!");
+            //The balance is less than the sum of the transfer amount and handling fee
+            getLog().error("The account amount is less than the sum of the transfer amount and handling fee!");
             return "502";
         }
         BigInteger nonce = getNonce(fromAddress);
         if (nonce == null) {
-            getLog().error("获取当前地址nonce失败!");
+            getLog().error("Get the current addressnoncefail!");
             return "503";
         }
         //getLog().info("nonce======>" + nonce);
@@ -487,11 +489,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             getLog().error(e.getMessage(), e);
         }
         RawTransaction etherTransaction = RawTransaction.createEtherTransaction(nonce, gasPrice, gasLimit, toAddress, bigIntegerValue);
-        //交易签名
+        //Transaction signature
         Credentials credentials = Credentials.create(privateKey);
         byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
         String hexValue = Numeric.toHexString(signedMessage);
-        //发送广播
+        //Send broadcast
         EthSendTransaction send = send(hexValue);
         if (send == null || send.getResult() == null) {
             getLog().error(JSONUtils.obj2json(send));
@@ -520,7 +522,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 hexValue = htgContext.getConverterCoreApi().signRawTransactionByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(), _fromAddress, _nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue, null);
             } else {
                 RawTransaction etherTransaction = RawTransaction.createEtherTransaction(_nonce, _gasPrice, _gasLimit, _toAddress, bigIntegerValue);
-                //交易签名
+                //Transaction signature
                 Credentials credentials = Credentials.create(_privateKey);
                 byte[] signedMessage = TransactionEncoder.signMessage(etherTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
                 hexValue = Numeric.toHexString(signedMessage);
@@ -540,7 +542,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 获取nonce，Pending模式 适用于连续转账
+     * obtainnonce,Pendingmode Suitable for continuous transfers
      *
      * @param from
      * @return
@@ -556,7 +558,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 获取nonce，Latest模式
+     * obtainnonce,Latestmode
      *
      * @param from
      * @return
@@ -573,7 +575,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
 
     /**
-     * 获取eth网络当前gasPrice
+     * obtainethNetwork currentgasPrice
      */
     public BigInteger getCurrentGasPrice() throws Exception {
         BigInteger nonce = this.timeOutWrapperFunction("getCurrentGasPrice", null, args -> {
@@ -587,7 +589,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * ERC-20Token交易
+     * ERC-20Tokentransaction
      *
      * @param from
      * @param to
@@ -601,12 +603,12 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                                                             BigInteger value,
                                                             String privateKey,
                                                             String contractAddress) throws Exception {
-        //加载转账所需的凭证，用私钥
+        //Load the required credentials for the transfer using a private key
         Credentials credentials = Credentials.create(privateKey);
-        //获取nonce，交易笔数
+        //obtainnonceNumber of transactions
         BigInteger nonce = getNonce(from);
 
-        //创建RawTransaction交易对象
+        //establishRawTransactionTrading partner
         Function function = new Function(
                 "transfer",
                 Arrays.asList(new Address(to), new Uint256(value)),
@@ -621,10 +623,10 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 htgContext.GAS_LIMIT_OF_ERC20(),
                 contractAddress, encodedFunction
         );
-        //签名Transaction，这里要对交易做签名
+        //autographTransactionHere, we need to sign the transaction
         byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
         String hexValue = Numeric.toHexString(signMessage);
-        //发送交易
+        //Send transaction
         EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
         return ethSendTransaction;
     }
@@ -677,7 +679,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
     }
 
     /**
-     * 调用合约的view/constant函数
+     * Invoke contractview/constantfunction
      */
     public List<Type> callViewFunction(String contractAddress, Function function) throws Exception {
         return this.callViewFunction(contractAddress, function, false);
@@ -729,11 +731,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 hexValue = htgContext.getConverterCoreApi().signRawTransactionByMachine(htgContext.getConfig().getChainIdOnHtgNetwork(), htgContext.ADMIN_ADDRESS_PUBLIC_KEY(), from, nonce, gasPrice, gasLimit, contractAddress, value, encodedFunction);
             } else {
                 Credentials credentials = Credentials.create(_privateKey);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
                 hexValue = Numeric.toHexString(signMessage);
             }
-            //发送交易
+            //Send transaction
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
                 throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, String.format("%s request error", symbol()));
@@ -775,12 +777,12 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                         _from, _nonce, _gasPrice, _gasLimit, _contractAddress, _value, _encodedFunction);
             } else {
                 Credentials credentials = Credentials.create(_privateKey);
-                //签名Transaction，这里要对交易做签名
+                //autographTransactionHere, we need to sign the transaction
                 byte[] signMessage = TransactionEncoder.signMessage(rawTransaction, htgContext.getConfig().getChainIdOnHtgNetwork(), credentials);
                 hexValue = Numeric.toHexString(signMessage);
             }
 
-            //发送交易
+            //Send transaction
             EthSendTransaction send = web3j.ethSendRawTransaction(hexValue).sendAsync().get();
             if (send == null) {
                 throw new NulsException(ConverterErrorCode.RPC_REQUEST_FAILD, String.format("%s request error", symbol()));
@@ -885,8 +887,10 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
             String message = e.getMessage();
             boolean isTimeOut = ConverterUtil.isTimeOutError(message);
             if (isTimeOut) {
-                getLog().error("{}: {} function [{}] time out", e.getClass().getName(), symbol(), functionName);
+                String errorMsg = String.format("异常[%s]: [%s]网络 function [%s] time out, 当前Api: %s", e.getClass().getName(), symbol(), functionName, this.rpcAddress);
+                getLog().error(errorMsg);
                 if (timeOutExceed || times > 10) {
+                    htgContext.getConverterCoreApi().putWechatMsg(String.format("请求超时大于10次, 异常[%s]: [%s]网络 time out, 当前Api: %s", e.getClass().getName(), symbol(), this.rpcAddress));
                     timeOutExceed = true;
                     Integer count = requestExceededMap.computeIfAbsent(this.rpcAddress, r -> 0);
                     requestExceededMap.put(this.rpcAddress, count + 1);
@@ -900,7 +904,11 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 }
                 return timeOutWrapperFunctionReal(functionName, fucntion, times + 1, arg);
             }
-            getLog().warn("API连接异常. ERROR: {}", message);
+            String errorMsg = String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), message, this.rpcAddress);
+            if (message.contains("exceed") || message.contains("limit")) {
+                htgContext.getConverterCoreApi().putWechatMsg(String.format("API连接异常[%s]: [%s]网络 ERROR: %s, 当前Api: %s", e.getClass().getName(), symbol(), "request exceeded or limit", this.rpcAddress));
+            }
+            getLog().warn(errorMsg);
             String availableRpc = this.getAvailableRpcFromThirdParty(htgContext.getConfig().getChainIdOnHtgNetwork());
             if (StringUtils.isNotBlank(availableRpc) && !availableRpc.equals(this.rpcAddress)) {
                 clearTimeOfRequestExceededMap = System.currentTimeMillis() + HtgConstant.HOURS_3;
@@ -909,16 +917,16 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 changeApi(availableRpc);
                 throw e;
             }
-            // 当API连接异常时，重置API连接，使用备用API 异常: ClientConnectionException
+            // WhenAPIReset when there is an abnormal connectionAPIConnection, using backupAPI abnormal: ClientConnectionException
             if (e instanceof ClientConnectionException) {
-                getLog().warn("API连接异常时，重置API连接，使用备用API.");
+                getLog().warn("APIReset when there is an abnormal connectionAPIConnection, using backupAPI.");
                 if (ConverterUtil.isRequestExpired(e.getMessage()) && htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重新签名应急API: {}", this.rpcAddress);
+                    getLog().info("Re sign EmergencyAPI: {}", this.rpcAddress);
                     reSignMainAPI();
                     throw e;
                 }
                 if (ConverterUtil.isRequestDenied(e.getMessage()) && htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                    getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.rpcAddress);
@@ -929,17 +937,17 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
                 switchStandbyAPI(this.rpcAddress);
                 throw e;
             }
-            // 若遭遇网络连接异常
+            // If encountering abnormal network connection
             if (e instanceof ConnectException || e instanceof UnknownHostException) {
-                // 应急API重置，切换到普通API
+                // emergencyAPIReset, switch to normalAPI
                 if (htgContext.getConfig().getMainRpcAddress().equals(this.rpcAddress)) {
-                    getLog().info("重置应急API，{} API 准备切换，当前API: {}", symbol(), this.rpcAddress);
+                    getLog().info("Reset EmergencyAPI,{} API Ready to switch, currentlyAPI: {}", symbol(), this.rpcAddress);
                     requestExceededMap.clear();
                     clearTimeOfRequestExceededMap = 0L;
                     switchStandbyAPI(this.rpcAddress);
                     throw e;
                 }
-                // 普通API记录异常次数
+                // ordinaryAPIRecord the number of exceptions
                 Integer count = requestExceededMap.getOrDefault(this.rpcAddress, 0);
                 requestExceededMap.put(this.rpcAddress, count + 1);
                 switchStandbyAPI(this.rpcAddress);
@@ -955,7 +963,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     /**
      * Method:getTransactionReceipt
-     * Description: 获取合约交易信息
+     * Description: Obtain contract transaction information
      * Author: xinjl
      * Date: 2018/4/16 15:22
      */
@@ -968,7 +976,7 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
         if (logs != null && logs.size() > 0) {
             List<String> topics = logs.get(0).getTopics();
             if (topics.get(0).substring(0, 10).equals("0xa9059cbb") || input.substring(0, 10).equals("0xa9059cbb")) {
-                //为转账
+                //For transfer
                 String fromAddress = "0x" + topics.get(1).substring(26, topics.get(1).length()).toString();
                 String toAddress = "0x" + topics.get(2).substring(26, topics.get(1).length()).toString();
                 String data;
@@ -1025,10 +1033,10 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
 
     /**
-     * 获取ERC-20 token指定地址余额
+     * obtainERC-20 tokenDesignated address balance
      *
-     * @param address         查询地址
-     * @param contractAddress 合约地址
+     * @param address         Search address
+     * @param contractAddress Contract address
      * @return
      * @throws ExecutionException
      * @throws InterruptedException
@@ -1087,6 +1095,10 @@ public class HtgWalletApi implements WalletApi, BeanInitial {
 
     public void setReSyncBlock(boolean reSyncBlock) {
         this.reSyncBlock = reSyncBlock;
+    }
+
+    public String getCurrentRpcAddress() {
+        return rpcAddress;
     }
 
     static class TxKey {

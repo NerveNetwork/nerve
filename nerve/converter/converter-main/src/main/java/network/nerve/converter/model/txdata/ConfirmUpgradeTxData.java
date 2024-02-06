@@ -38,29 +38,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 确认合约升级交易txdata
+ * Confirm contract upgrade transactiontxdata
  */
 public class ConfirmUpgradeTxData extends BaseNulsData {
 
     private int heterogeneousChainId;
     /**
-     * 异构链中对应的升级交易hash
+     * Corresponding upgrade transactions in heterogeneous chainshash
      */
     private String heterogeneousTxHash;
     /**
-     * 升级前异构链多签地址
+     * Multiple signed addresses on heterogeneous chains before upgrading
      */
     private byte[] oldAddress;
     /**
-     * 升级后的异构链多签地址
+     * Upgraded heterogeneous chain with multiple signed addresses
      */
     private byte[] address;
     /**
-     * Nerve网络中对应的提案交易hash
+     * NerveCorresponding proposal transactions in the networkhash
      */
     private NulsHash nerveTxHash;
     /**
-     * 需要分发提现手续费的节点异构链地址
+     * Node heterogeneous chain addresses that require distribution of withdrawal fees
      */
     private List<HeterogeneousAddress> listDistributionFee;
 

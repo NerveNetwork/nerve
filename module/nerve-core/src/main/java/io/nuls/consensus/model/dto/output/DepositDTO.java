@@ -33,33 +33,33 @@ import io.nuls.core.rpc.model.ApiModelProperty;
 import io.nuls.core.model.BigIntegerUtils;
 
 /**
- * 共识信息类
+ * Consensus Information
  * Consensus information class
  *
  * @author tag
  * 2018/11/20
  */
-@ApiModel(name = "委托信息")
+@ApiModel(name = "Entrustment information")
 public class DepositDTO {
-    @ApiModelProperty(description = "委托金额")
+    @ApiModelProperty(description = "Entrusted amount")
     private String deposit;
-    @ApiModelProperty(description = "节点HASH")
+    @ApiModelProperty(description = "nodeHASH")
     private String address;
-    @ApiModelProperty(description = "委托时间")
+    @ApiModelProperty(description = "Entrustment time")
     private Long time;
-    @ApiModelProperty(description = "委托交易HASH")
+    @ApiModelProperty(description = "Entrusted transactionHASH")
     private String txHash;
-    @ApiModelProperty(description = "委托交易被打包高度")
+    @ApiModelProperty(description = "The packaging height of entrusted transactions")
     private Long blockHeight;
-    @ApiModelProperty(description = "退出委托高度")
+    @ApiModelProperty(description = "Exit commission height")
     private Long delHeight;
-    @ApiModelProperty(description = "资产链ID")
+    @ApiModelProperty(description = "Asset ChainID")
     private int assetChainId;
-    @ApiModelProperty(description = "资产ID")
+    @ApiModelProperty(description = "assetID")
     private int assetId;
-    @ApiModelProperty(description = "委托类型")
+    @ApiModelProperty(description = "Entrustment type")
     private byte depositType;
-    @ApiModelProperty(description = "委托时长")
+    @ApiModelProperty(description = "Entrustment duration")
     private byte timeType;
 
     public DepositDTO(Deposit deposit) {

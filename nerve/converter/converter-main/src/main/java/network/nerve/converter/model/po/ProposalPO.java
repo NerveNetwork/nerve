@@ -28,15 +28,15 @@ public class ProposalPO extends BaseNulsData {
 
     private String content;
     /**
-     * 异构链chainId
+     * Heterogeneous chainchainId
      */
     private int heterogeneousChainId;
     /**
-     * 异构链原始交易hash
+     * Heterogeneous chain original transactionhash
      */
     private String heterogeneousTxHash;
     /**
-     * 异构链合约地址 变更合约提案使用
+     * Heterogeneous Chain Contract Address Proposal for Change of Contract Use
      */
     private String heterogeneousMultySignAddress;
 
@@ -45,33 +45,33 @@ public class ProposalPO extends BaseNulsData {
     private byte[] nerveHash;
 
     /**
-     * 投票范围类型
+     * Voting scope type
      */
     private byte voteRangeType;
 
     /**
-     * 投票截止的区块高度
+     * Block height for voting deadline
      */
     private long voteEndHeight;
     /**
-     * 当提案状态不是可投票状态，则不允许投票
+     * When the proposal status is not voting, voting is not allowed
      */
     private byte status;
 
     /**
-     * Number of againsts，1-5的类型时存储该字段
+     * Number of againsts,1-5Store this field when the type of
      */
     private int againstNumber;
     /**
-     * 反对者地址列表，1-5的类型时存储该字段
+     * Opponent Address List,1-5Store this field when the type of
      */
     private List<String> againstList;
     /**
-     * Number of favors，1-5的类型时存储该字段
+     * Number of favors,1-5Store this field when the type of
      */
     private int favorNumber;
     /**
-     * 同意者地址列表，1-5的类型时存储该字段
+     * Agreer Address List,1-5Store this field when the type of
      */
     private List<String> favorList;
 
@@ -296,7 +296,7 @@ public class ProposalPO extends BaseNulsData {
     }
 
     /**
-     * commit时处理投票数据
+     * commitWhen processing voting data
      *
      * @param votePO
      * @return
@@ -318,27 +318,27 @@ public class ProposalPO extends BaseNulsData {
             return;
         }
         if (this.type == ProposalTypeEnum.OTHER.value()) {
-            // 如果是其他类型的投票只统计票数
+            // If it is other types of voting, only the number of votes will be counted
             return;
         }
 
-        //虚拟银行节点签名数需要达到的拜占庭数
+        //The number of Byzantine signatures required for virtual bank nodes
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
         if (this.favorNumber >= byzantineCount) {
-            //通过 判断同意者都是银行节点，并且超过66%则通过
+            //adopt Judging that the approvers are all bank nodes and exceed66%Then through
             this.status = ProposalVoteStatusEnum.ADOPTED.value();
-            chain.getLogger().info("[voteCommit]提案通过投票. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
+            chain.getLogger().info("[voteCommit]Proposal passed by vote. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
 
         } else if (this.againstNumber > chain.getMapVirtualBank().size() - byzantineCount) {
-            //  判断反对者都是银行节点，并且超过33%则永不通过, 设为不可投票
+            //  Judging that the opponents are all bank nodes and exceed33%Never pass, Set as non voting
             this.status = ProposalVoteStatusEnum.REJECTED.value();
-            chain.getLogger().info("[voteCommit]提案投票未通过. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
+            chain.getLogger().info("[voteCommit]Proposal vote not passed. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
         }
 
     }
 
     /**
-     * 回滚时处理投票数据
+     * Processing voting data during rollback
      * @param chain
      * @param choice
      * @param address
@@ -356,21 +356,21 @@ public class ProposalPO extends BaseNulsData {
             return;
         }
         if (this.type == ProposalTypeEnum.OTHER.value()) {
-            // 如果是其他类型的投票只统计票数
+            // If it is other types of voting, only the number of votes will be counted
             return;
         }
         this.status = ProposalVoteStatusEnum.VOTING.value();
-        //虚拟银行节点签名数需要达到的拜占庭数
+        //The number of Byzantine signatures required for virtual bank nodes
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
         if (this.favorNumber >= byzantineCount) {
-            //通过 判断同意者都是银行节点，并且超过66%则通过
+            //adopt Judging that the approvers are all bank nodes and exceed66%Then through
             this.status = ProposalVoteStatusEnum.ADOPTED.value();
-            chain.getLogger().info("[voteRollback]提案通过投票. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
+            chain.getLogger().info("[voteRollback]Proposal passed by vote. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
 
         } else if (this.againstNumber > chain.getMapVirtualBank().size() - byzantineCount) {
-            //  判断反对者都是银行节点，并且超过33%则永不通过, 设为不可投票
+            //  Judging that the opponents are all bank nodes and exceed33%Never pass, Set as non voting
             this.status = ProposalVoteStatusEnum.REJECTED.value();
-            chain.getLogger().info("[voteRollback]提案投票未通过. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
+            chain.getLogger().info("[voteRollback]Proposal vote not passed. favorNumber:{}, byzantineCount:{}", favorNumber, byzantineCount);
         }
     }
 

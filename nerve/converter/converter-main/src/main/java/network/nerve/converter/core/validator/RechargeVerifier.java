@@ -31,6 +31,7 @@ import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.model.StringUtils;
+import network.nerve.converter.btc.model.BtcTxInfo;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.api.ConverterCoreApi;
@@ -59,8 +60,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 充值交易业务验证器
- * (创建交易后)
+ * Recharge transaction business validator
+ * (After creating the transaction)
  *
  * @author: Loki
  * @date: 2020/4/15
@@ -103,12 +104,12 @@ public class RechargeVerifier {
         CoinTo coinTo = listCoinTo.get(0);
         RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
         if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), txData.getOriginalTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
         }
-        // 通过链内资产id 获取异构链信息
+        // Through in chain assetsid Obtain heterogeneous chain information
         HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
 
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
@@ -119,7 +120,7 @@ public class RechargeVerifier {
         if (null != info) {
             heterogeneousRechargeValid(info, coinTo, heterogeneousAssetInfo);
         } else {
-            // 查提案 (OriginalTxHash 不是异构链交易hash, 或可能是一个提案hash)
+            // Check proposals (OriginalTxHash Not a heterogeneous chain transactionhash, Or it could be a proposalhash)
             ProposalPO proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
             if (null == proposalPO) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
@@ -140,7 +141,7 @@ public class RechargeVerifier {
         }
         RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
         if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), txData.getOriginalTxHash());
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -153,14 +154,14 @@ public class RechargeVerifier {
 
         if (null != info) {
             if (info.isDepositIIMainAndToken()) {
-                // 校验同时充值token和main
+                // Verify simultaneous rechargetokenandmain
                 CoinTo tokenAmountTo, mainAmountTo;
                 HeterogeneousAssetInfo tokenInfo, mainInfo;
                 CoinTo coin0 = listCoinTo.get(0);
                 HeterogeneousAssetInfo info0 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coin0.getAssetsChainId(), coin0.getAssetsId());
                 CoinTo coin1 = listCoinTo.get(1);
                 HeterogeneousAssetInfo info1 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coin1.getAssetsChainId(), coin1.getAssetsId());
-                // 不能两个资产都是主资产, assetId:1 为主资产
+                // Both assets cannot be primary assets, assetId:1 Main assets
                 if (info0.getAssetId() == 1 && info1.getAssetId() == 1) {
                     throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
                 }
@@ -179,17 +180,17 @@ public class RechargeVerifier {
                 }
                 this.heterogeneousRechargeValidForCrossOutII(info, tokenAmountTo, tokenInfo, mainAmountTo, mainInfo);
             } else {
-                // 校验只充值token 或者 只充值 main
+                // Verify only rechargetoken perhaps Recharge only main
                 if (listCoinTo.size() > 1) {
                     throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
                 }
-                // 通过链内资产id 获取异构链信息
+                // Through in chain assetsid Obtain heterogeneous chain information
                 CoinTo coinTo = listCoinTo.get(0);
                 HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(txData.getHeterogeneousChainId(), coinTo.getAssetsChainId(), coinTo.getAssetsId());
                 heterogeneousRechargeValid(info, coinTo, heterogeneousAssetInfo);
             }
         } else {
-            // 查提案 (OriginalTxHash 不是异构链交易hash, 或可能是一个提案hash)
+            // Check proposals (OriginalTxHash Not a heterogeneous chain transactionhash, Or it could be a proposalhash)
             ProposalPO proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
             if (null == proposalPO) {
                 throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
@@ -199,8 +200,62 @@ public class RechargeVerifier {
 
     }
 
+    public void validateTxOfBtcSys(Chain chain, Transaction tx) throws NulsException {
+        // Recharge verification
+        CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
+        if (null != coinData.getFrom() && !coinData.getFrom().isEmpty()) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_NOT_INCLUDE_COINFROM);
+        }
+        List<CoinTo> listCoinTo = coinData.getTo();
+        if (null == listCoinTo || listCoinTo.size() > 3) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+        }
+        RechargeTxData txData = ConverterUtil.getInstance(tx.getTxData(), RechargeTxData.class);
+        if(null != rechargeStorageService.find(chain, txData.getOriginalTxHash())){
+            // The original transaction has already been recharged
+            chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
+                    tx.getHash().toHex(), txData.getOriginalTxHash());
+            throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
+        }
+        HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
+                txData.getHeterogeneousChainId(),
+                txData.getOriginalTxHash(),
+                HeterogeneousTxTypeEnum.DEPOSIT,
+                this.heterogeneousDockingManager);
+
+        if (null != info) {
+            BtcTxInfo txInfo = (BtcTxInfo) info;
+            if (StringUtils.isNotBlank(txInfo.getNerveFeeTo())) {
+                if (listCoinTo.size() != 2) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+                CoinTo coin0 = listCoinTo.get(0);
+                CoinTo coin1 = listCoinTo.get(1);
+                if (txInfo.getValue().add(txInfo.getFee()).compareTo(coin0.getAmount().add(coin1.getAmount())) != 0) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                }
+            } else {
+                if (listCoinTo.size() > 1) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+                }
+                CoinTo coinTo = listCoinTo.get(0);
+                if (txInfo.getValue().add(txInfo.getFee()).compareTo(coinTo.getAmount()) != 0) {
+                    throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
+                }
+            }
+        } else {
+            // Check proposals (OriginalTxHash Not a heterogeneous chain transactionhash, Or it could be a proposalhash)
+            ProposalPO proposalPO = proposalStorageService.find(chain, NulsHash.fromHex(txData.getOriginalTxHash()));
+            if (null == proposalPO) {
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
+            }
+            proposalRechargeValidOfBtcSys(chain, proposalPO, listCoinTo);
+        }
+
+    }
+
     /**
-     * 验证异构链充值交易
+     * Verify heterogeneous chain recharge transactions
      *
      * @param info
      * @param coinTo
@@ -208,7 +263,7 @@ public class RechargeVerifier {
      */
     private void heterogeneousRechargeValid(HeterogeneousTransactionInfo info, CoinTo coinTo, HeterogeneousAssetInfo heterogeneousAssetInfo) throws NulsException {
         if (info.getAssetId() != heterogeneousAssetInfo.getAssetId()) {
-            // 充值资产错误
+            // Recharge asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger infoValue = info.getValue();
@@ -216,7 +271,7 @@ public class RechargeVerifier {
             infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(heterogeneousAssetInfo, info.getValue());
         }
         if (infoValue.compareTo(coinTo.getAmount()) != 0) {
-            // 充值金额错误
+            // Recharge amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(coinTo.getAddress()))) {
@@ -225,21 +280,21 @@ public class RechargeVerifier {
     }
 
     /**
-     * 验证异构链充值交易 - CrossOutII
+     * Verify heterogeneous chain recharge transactions - CrossOutII
      *
      * @throws NulsException
      */
     private void heterogeneousRechargeValidForCrossOutII(HeterogeneousTransactionInfo info, CoinTo tokenAmountTo, HeterogeneousAssetInfo tokenInfo, CoinTo mainAmountTo, HeterogeneousAssetInfo mainInfo) throws NulsException {
         if (info.getAssetId() != tokenInfo.getAssetId()) {
-            // 充值token资产错误
+            // RechargetokenAsset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         if (info.getValue().compareTo(tokenAmountTo.getAmount()) != 0) {
-            // 充值token金额错误
+            // RechargetokenAmount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
-            // 充值主资产错误
+            // Recharge main asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger depositIIMainAssetValue = info.getDepositIIMainAssetValue();
@@ -247,7 +302,7 @@ public class RechargeVerifier {
             depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
         }
         if (depositIIMainAssetValue.compareTo(mainAmountTo.getAmount()) != 0) {
-            // 充值主金额错误
+            // Recharge main amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(tokenAmountTo.getAddress()))) {
@@ -260,7 +315,7 @@ public class RechargeVerifier {
 
     private void heterogeneousRechargeValidForOneClickCrossChain(Chain chain, HeterogeneousTransactionInfo info, CoinTo tokenAmountTo, HeterogeneousAssetInfo tokenInfo, CoinTo mainAmountTo, HeterogeneousAssetInfo mainInfo, CoinTo coinTipping) throws NulsException {
         if (info.getAssetId() != tokenInfo.getAssetId()) {
-            // 充值token资产错误
+            // RechargetokenAsset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger tipping = BigInteger.ZERO;
@@ -268,12 +323,12 @@ public class RechargeVerifier {
             tipping = coinTipping.getAmount();
         }
         if (info.getValue().compareTo(tokenAmountTo.getAmount().add(tipping)) != 0) {
-            // 充值token金额错误
+            // RechargetokenAmount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
 
         if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
-            // 充值主资产错误
+            // Recharge main asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         BigInteger depositIIMainAssetValue = info.getDepositIIMainAssetValue();
@@ -281,7 +336,7 @@ public class RechargeVerifier {
             depositIIMainAssetValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(mainInfo, depositIIMainAssetValue);
         }
         if (depositIIMainAssetValue.compareTo(mainAmountTo.getAmount()) != 0) {
-            // 充值主金额错误
+            // Recharge main amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(tokenAmountTo.getAddress()))) {
@@ -290,7 +345,7 @@ public class RechargeVerifier {
     }
 
     /**
-     * 验证提案转到其他地址
+     * Verify proposal transfer to another address
      *
      * @param chain
      * @param proposalPO
@@ -299,59 +354,96 @@ public class RechargeVerifier {
      */
     private void proposalRechargeValid(Chain chain, ProposalPO proposalPO, CoinTo coinTo, HeterogeneousAssetInfo heterogeneousAssetInfo) throws NulsException {
         if (ProposalTypeEnum.TRANSFER.value() != proposalPO.getType()) {
-            // 提案类型错误
+            // Proposal type error
             chain.getLogger().error("Proposal type is not transfer");
             throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
         }
-        // 虚拟银行节点签名数需要达到的拜占庭数
+        // The number of Byzantine signatures required for virtual bank nodes
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
         if (proposalPO.getFavorNumber() < byzantineCount) {
-            // 提案没有投票通过
+            // The proposal was not voted through
             chain.getLogger().error("Proposal type was rejected");
             throw new NulsException(ConverterErrorCode.PROPOSAL_REJECTED);
         }
 
-        // 获取提案中的异构链充值交易
+        // Obtain heterogeneous chain recharge transactions in the proposal
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 proposalPO.getHeterogeneousChainId(),
                 proposalPO.getHeterogeneousTxHash(),
                 HeterogeneousTxTypeEnum.DEPOSIT,
                 this.heterogeneousDockingManager);
         if (null == info) {
-            chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+            chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
 
         if (info.getAssetId() != heterogeneousAssetInfo.getAssetId()) {
-            // 充值资产错误
+            // Recharge asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         if (info.getValue().compareTo(coinTo.getAmount()) != 0) {
-            // 充值金额错误
+            // Recharge amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!Arrays.equals(proposalPO.getAddress(), coinTo.getAddress())) {
-            // 充值交易到账地址不是提案中的到账地址
-            chain.getLogger().error("充值交易到账地址不是提案中的到账地址");
+            // The payment address for the recharge transaction is not the proposed payment address
+            chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
             throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
+        }
+    }
+
+    private void proposalRechargeValidOfBtcSys(Chain chain, ProposalPO proposalPO, List<CoinTo> listCoinTo) throws NulsException {
+        if (ProposalTypeEnum.TRANSFER.value() != proposalPO.getType()) {
+            // Proposal type error
+            chain.getLogger().error("Proposal type is not transfer");
+            throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
+        }
+        // The number of Byzantine signatures required for virtual bank nodes
+        int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
+        if (proposalPO.getFavorNumber() < byzantineCount) {
+            // The proposal was not voted through
+            chain.getLogger().error("Proposal type was rejected");
+            throw new NulsException(ConverterErrorCode.PROPOSAL_REJECTED);
+        }
+
+        // Obtain heterogeneous chain recharge transactions in the proposal
+        int htgChainId = proposalPO.getHeterogeneousChainId();
+        IHeterogeneousChainDocking docking = this.heterogeneousDockingManager.getHeterogeneousDocking(htgChainId);
+        HeterogeneousTransactionInfo info;
+        try {
+            info = docking.getUnverifiedDepositTransaction(proposalPO.getHeterogeneousTxHash());
+        } catch (Exception e) {
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_INVOK_ERROR);
+        }
+        if (null == info) {
+            chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
+        }
+        BtcTxInfo txInfo = (BtcTxInfo) info;
+        if (listCoinTo.size() > 1) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_HAVE_EXACTLY_ONE_COINTO);
+        }
+        CoinTo coinTo = listCoinTo.get(0);
+        if (txInfo.getValue().add(txInfo.getFee()).compareTo(coinTo.getAmount()) != 0) {
+            throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
     }
 
     private void proposalRechargeValidProtocol16(Chain chain, ProposalPO proposalPO, List<CoinTo> listCoinTo) throws NulsException {
         if (ProposalTypeEnum.TRANSFER.value() != proposalPO.getType()) {
-            // 提案类型错误
+            // Proposal type error
             chain.getLogger().error("Proposal type is not transfer");
             throw new NulsException(ConverterErrorCode.PROPOSAL_TYPE_ERROR);
         }
-        // 虚拟银行节点签名数需要达到的拜占庭数
+        // The number of Byzantine signatures required for virtual bank nodes
         int byzantineCount = VirtualBankUtil.getByzantineCount(chain);
         if (proposalPO.getFavorNumber() < byzantineCount) {
-            // 提案没有投票通过
+            // The proposal was not voted through
             chain.getLogger().error("Proposal type was rejected");
             throw new NulsException(ConverterErrorCode.PROPOSAL_REJECTED);
         }
 
-        // 获取提案中的异构链充值交易
+        // Obtain heterogeneous chain recharge transactions in the proposal
         int htgChainId = proposalPO.getHeterogeneousChainId();
         HeterogeneousTransactionInfo info = HeterogeneousUtil.getTxInfo(chain,
                 htgChainId,
@@ -359,21 +451,21 @@ public class RechargeVerifier {
                 HeterogeneousTxTypeEnum.DEPOSIT,
                 this.heterogeneousDockingManager);
         if (null == info) {
-            chain.getLogger().error("未查询到异构链交易 heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
+            chain.getLogger().error("No heterogeneous chain transactions found heterogeneousTxHash:{}", proposalPO.getHeterogeneousTxHash());
             throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TX_NOT_EXIST);
         }
         if (info.isDepositIIMainAndToken()) {
             if (listCoinTo.size() != 2) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
-            // 校验同时充值token和main
+            // Verify simultaneous rechargetokenandmain
             CoinTo tokenAmountTo, mainAmountTo;
             HeterogeneousAssetInfo tokenInfo, mainInfo;
             CoinTo coin0 = listCoinTo.get(0);
             HeterogeneousAssetInfo info0 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coin0.getAssetsChainId(), coin0.getAssetsId());
             CoinTo coin1 = listCoinTo.get(1);
             HeterogeneousAssetInfo info1 = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coin1.getAssetsChainId(), coin1.getAssetsId());
-            // 必须为token和main资产
+            // Must betokenandmainasset
             if (info0.getAssetId() == 1 && info1.getAssetId() == 1) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
@@ -392,50 +484,50 @@ public class RechargeVerifier {
             }
 
             if (info.getAssetId() != tokenInfo.getAssetId()) {
-                // 充值token资产错误
+                // RechargetokenAsset error
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             if (info.getValue().compareTo(tokenAmountTo.getAmount()) != 0) {
-                // 充值token金额错误
+                // RechargetokenAmount error
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
             }
             if (info.getDepositIIMainAssetAssetId() != mainInfo.getAssetId()) {
-                // 充值主资产错误
+                // Recharge main asset error
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             if (info.getDepositIIMainAssetValue().compareTo(mainAmountTo.getAmount()) != 0) {
-                // 充值主金额错误
+                // Recharge main amount error
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
             }
             if (!Arrays.equals(proposalPO.getAddress(), tokenAmountTo.getAddress())) {
-                chain.getLogger().error("充值交易到账地址不是提案中的到账地址");
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
                 throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
             }
             if (!Arrays.equals(proposalPO.getAddress(), mainAmountTo.getAddress())) {
-                chain.getLogger().error("充值交易到账地址不是提案中的到账地址");
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
                 throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
             }
         } else {
             CoinTo coinTo = listCoinTo.get(0);
             HeterogeneousAssetInfo heterogeneousAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinTo.getAssetsChainId(), coinTo.getAssetsId());
             if (info.getAssetId() != heterogeneousAssetInfo.getAssetId()) {
-                // 充值资产错误
+                // Recharge asset error
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             if (info.getValue().compareTo(coinTo.getAmount()) != 0) {
-                // 充值金额错误
+                // Recharge amount error
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
             }
             if (!Arrays.equals(proposalPO.getAddress(), coinTo.getAddress())) {
-                // 充值交易到账地址不是提案中的到账地址
-                chain.getLogger().error("充值交易到账地址不是提案中的到账地址");
+                // The payment address for the recharge transaction is not the proposed payment address
+                chain.getLogger().error("The payment address for the recharge transaction is not the proposed payment address");
                 throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
             }
         }
     }
 
     public void validateOneClickCrossChain(Chain chain, Transaction tx) throws NulsException {
-        // 验证一键跨链交易, 验证提现金额, 手续费金额, tipping数据, 目标链信息
+        // Verify one click cross chain transactions, Verify withdrawal amount, Handling fee amount, tippingdata, Target chain information
         CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
         if (null != coinData.getFrom() && !coinData.getFrom().isEmpty()) {
             throw new NulsException(ConverterErrorCode.RECHARGE_NOT_INCLUDE_COINFROM);
@@ -450,7 +542,7 @@ public class RechargeVerifier {
         int htgChainId = heterogeneousHash.getHeterogeneousChainId();
 
         if(null != rechargeStorageService.find(chain, originalTxHash)){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     tx.getHash().toHex(), originalTxHash);
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -467,7 +559,7 @@ public class RechargeVerifier {
         String extend = info.getDepositIIExtend();
         HeterogeneousOneClickCrossChainData data = docking.parseOneClickCrossChainData(extend);
         if (data == null) {
-            chain.getLogger().error("[{}][一键跨链]交易验证失败, originalTxHash: {}, extend: {}", htgChainId, extend);
+            chain.getLogger().error("[{}][One click cross chain]Transaction verification failed, originalTxHash: {}, extend: {}", htgChainId, extend);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TX_ERROR);
         }
         BigInteger tipping = data.getTipping();
@@ -494,7 +586,7 @@ public class RechargeVerifier {
             }
         }
         if (coinWithdrawal == null || coinFee == null || (hasTipping && coinTipping == null)) {
-            chain.getLogger().error("[{}][一键跨链]交易验证失败, CoinData缺失, originalTxHash: {}", htgChainId, originalTxHash);
+            chain.getLogger().error("[{}][One click cross chain]Transaction verification failed, CoinDatadeletion, originalTxHash: {}", htgChainId, originalTxHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TX_ERROR);
         }
         String desToAddress = data.getDesToAddress();
@@ -503,7 +595,7 @@ public class RechargeVerifier {
         if (txData.getDesChainId() != data.getDesChainId() ||
                 !txData.getDesToAddress().equals(desToAddress) ||
                 coinFee.getAmount().compareTo(data.getFeeAmount()) != 0) {
-            chain.getLogger().error("[{}][一键跨链]交易验证失败, 目标链信息错误, feeAmount: {}, desId: {}, desAddress: {}, originalTxHash: {}", htgChainId, coinFee.getAmount(), txData.getDesChainId(), txData.getDesToAddress(), originalTxHash);
+            chain.getLogger().error("[{}][One click cross chain]Transaction verification failed, Target chain information error, feeAmount: {}, desId: {}, desAddress: {}, originalTxHash: {}", htgChainId, coinFee.getAmount(), txData.getDesChainId(), txData.getDesToAddress(), originalTxHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TX_ERROR);
         }
         BigInteger tippingFromCoin = BigInteger.ZERO;
@@ -513,45 +605,45 @@ public class RechargeVerifier {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
         }
-        // Nerve一键跨链交易，必有一个资产是主资产，作为跨到目标链的手续费
+        // NerveOne click cross chain transaction requires one asset to be the main asset, which serves as the transaction fee for crossing to the target chain
         boolean hasToken = info.isIfContractAsset();
         if (hasToken) {
-            // 源链交易一定充值了token
+            // The source chain transaction must have been rechargedtoken
             HeterogeneousAssetInfo infoWithdrawal = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinWithdrawal.getAssetsChainId(), coinWithdrawal.getAssetsId());
             HeterogeneousAssetInfo infoFee = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinFee.getAssetsChainId(), coinFee.getAssetsId());
-            // 跨链资产一定是token资产, 手续费资产一定是主资产, assetId:1 为主资产
+            // Cross chain assets must betokenasset, The handling fee asset must be the main asset, assetId:1 Main assets
             if (infoWithdrawal.getAssetId() == 1 || infoFee.getAssetId() != 1) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             if (info.isDepositIIMainAndToken()) {
-                // 校验同时充值token和main
+                // Verify simultaneous rechargetokenandmain
                 this.heterogeneousRechargeValidForOneClickCrossChain(chain, info, coinWithdrawal, infoWithdrawal, coinFee, infoFee, coinTipping);
             } else {
-                // 只充值了token
+                // Only rechargedtoken
                 if (info.getAssetId() != infoWithdrawal.getAssetId()) {
-                    // 充值资产错误
+                    // Recharge asset error
                     throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
                 }
                 if (info.getValue().compareTo(coinWithdrawal.getAmount().add(tippingFromCoin)) != 0) {
-                    // 充值金额错误
+                    // Recharge amount error
                     throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
                 }
                 if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(coinWithdrawal.getAddress()))) {
                     throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
                 }
                 if (coinFee.getAmount().compareTo(BigInteger.ZERO) != 0) {
-                    // 手续费金额错误
+                    // Incorrect handling fee amount
                     throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_FEE_ERROR);
                 }
             }
         } else {
-            // 源链只充值了主资产
+            // The source chain only recharged the main asset
             if (coinWithdrawal.getAssetsChainId() != coinFee.getAssetsChainId() || coinWithdrawal.getAssetsId() != coinFee.getAssetsId()) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             HeterogeneousAssetInfo infoMain = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinFee.getAssetsChainId(), coinFee.getAssetsId());
             if (info.getAssetId() != infoMain.getAssetId()) {
-                // 充值资产错误
+                // Recharge asset error
                 throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
             }
             BigInteger infoValue = info.getValue();
@@ -559,22 +651,22 @@ public class RechargeVerifier {
                 infoValue = converterCoreApi.checkDecimalsSubtractedToNerveForDeposit(infoMain, infoValue);
             }
             if (infoValue.compareTo(coinWithdrawal.getAmount().add(coinFee.getAmount()).add(tippingFromCoin)) != 0) {
-                // 充值金额错误
+                // Recharge amount error
                 throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
             }
             if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(coinWithdrawal.getAddress()))) {
                 throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
             }
         }
-        // 检查目标链数据
+        // Check target chain data
         IHeterogeneousChainDocking desDocking = heterogeneousDockingManager.getHeterogeneousDocking(desChainId);
-        // 检查充值资产是否能跨链到目标链
+        // Check if the recharged assets can cross the chain to the target chain
         HeterogeneousAssetInfo desChainAssetInfo = heterogeneousAssetHelper.getHeterogeneousAssetInfo(desChainId, coinWithdrawal.getAssetsChainId(), coinWithdrawal.getAssetsId());
         if (desChainAssetInfo == null) {
             chain.getLogger().error("[{}]OneClickCrossChain des error, desChainId:{}, desToAddress:{}, originalTxHash: {}", htgChainId, desChainId, desToAddress, originalTxHash);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_DES_ERROR);
         }
-        // 检查目标链地址是否合法
+        // Check if the target chain address is legal
         boolean validateAddress = desDocking.validateAddress(desToAddress);
         if (!validateAddress) {
             chain.getLogger().error("[{}]OneClickCrossChain desToAddress error, desChainId:{}, desToAddress:{}, originalTxHash: {}", htgChainId, desChainId, desToAddress, originalTxHash);
@@ -583,7 +675,7 @@ public class RechargeVerifier {
     }
 
     public void validateAddFeeCrossChain(Chain chain, Transaction tx) throws NulsException {
-        // 跨链追加手续费的业务校验
+        // Business verification of cross chain additional transaction fees
         String hash = tx.getHash().toHex();
         CoinData coinData = ConverterUtil.getInstance(tx.getCoinData(), CoinData.class);
         if (null != coinData.getFrom() && !coinData.getFrom().isEmpty()) {
@@ -599,7 +691,7 @@ public class RechargeVerifier {
         int htgChainId = heterogeneousHash.getHeterogeneousChainId();
 
         if(null != rechargeStorageService.find(chain, originalTxHash)){
-            // 该原始交易已执行过充值
+            // The original transaction has already been recharged
             chain.getLogger().error("The originalTxHash already confirmed (Repeat business) txHash:{}, originalTxHash:{}",
                     hash, originalTxHash);
             throw new NulsException(ConverterErrorCode.TX_DUPLICATION);
@@ -616,13 +708,13 @@ public class RechargeVerifier {
         String extend = info.getDepositIIExtend();
         HeterogeneousAddFeeCrossChainData data = docking.parseAddFeeCrossChainData(extend);
         if (data == null) {
-            chain.getLogger().error("[{}][跨链追加手续费]交易验证失败, originalTxHash: {}, extend: {}", htgChainId, extend);
+            chain.getLogger().error("[{}][Cross chain additional handling fees]Transaction verification failed, originalTxHash: {}, extend: {}", htgChainId, extend);
             throw new NulsException(ConverterErrorCode.ONE_CLICK_CROSS_CHAIN_TX_ERROR);
         }
         byte[] withdrawalFeeAddress = AddressTool.getAddress(ConverterContext.FEE_PUBKEY, chain.getChainId());
         CoinTo coinTo = listCoinTo.get(0);
         if (!Arrays.equals(withdrawalFeeAddress, coinTo.getAddress())) {
-            chain.getLogger().error("[{}][跨链追加手续费]交易验证失败, 手续费收集地址与追加交易to地址不匹配, toAddress:{}, withdrawalFeeAddress:{} ",
+            chain.getLogger().error("[{}][Cross chain additional handling fees]Transaction verification failed, Collection address for handling fees and additional transactionstoAddress mismatch, toAddress:{}, withdrawalFeeAddress:{} ",
                     htgChainId,
                     AddressTool.getStringAddressByBytes(coinTo.getAddress()),
                     AddressTool.getStringAddressByBytes(withdrawalFeeAddress));
@@ -633,44 +725,44 @@ public class RechargeVerifier {
         }
         HeterogeneousAssetInfo infoMain = heterogeneousAssetHelper.getHeterogeneousAssetInfo(htgChainId, coinTo.getAssetsChainId(), coinTo.getAssetsId());
         if (info.getAssetId() != infoMain.getAssetId()) {
-            // 充值资产错误
+            // Recharge asset error
             throw new NulsException(ConverterErrorCode.RECHARGE_ASSETID_ERROR);
         }
         if (info.getValue().compareTo(coinTo.getAmount()) != 0) {
-            // 充值金额错误
+            // Recharge amount error
             throw new NulsException(ConverterErrorCode.RECHARGE_AMOUNT_ERROR);
         }
         if (!info.getNerveAddress().equals(AddressTool.getStringAddressByBytes(coinTo.getAddress()))) {
             throw new NulsException(ConverterErrorCode.RECHARGE_ARRIVE_ADDRESS_ERROR);
         }
-        // 验证提现交易
+        // Verify withdrawal transactions
         String basicTxHash = txData.getNerveTxHash();
         if (StringUtils.isBlank(basicTxHash)) {
-            chain.getLogger().error("要追加手续费的原始提现交易hash不存在! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
-            // 提现交易hash
+            chain.getLogger().error("Original withdrawal transaction with additional transaction feeshashNot present! " + ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST.getMsg());
+            // Withdrawal transactionshash
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         Transaction basicTx = TransactionCall.getConfirmedTx(chain, basicTxHash);
         if (null == basicTx) {
-            chain.getLogger().error("原始交易不存在 , hash:{}", basicTxHash);
+            chain.getLogger().error("The original transaction does not exist , hash:{}", basicTxHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         if (basicTx.getType() != TxType.WITHDRAWAL && basicTx.getType() != TxType.ONE_CLICK_CROSS_CHAIN) {
-            // 不是提现交易
-            chain.getLogger().error("txdata对应的交易不是提现交易/一键跨链 , hash:{}", basicTxHash);
+            // Not a withdrawal transaction
+            chain.getLogger().error("txdataThe corresponding transaction is not a withdrawal transaction/One click cross chain , hash:{}", basicTxHash);
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_TX_NOT_EXIST);
         }
         int feeAssetChainId = chain.getConfig().getChainId();
         int feeAssetId = chain.getConfig().getAssetId();
         if (basicTx.getType() == TxType.WITHDRAWAL || basicTx.getType() == TxType.ONE_CLICK_CROSS_CHAIN) {
-            // 判断该提现交易是否已经有对应的确认提现交易
+            // Determine if there is already a corresponding confirmed withdrawal transaction for the withdrawal transaction
             ConfirmWithdrawalPO po = confirmWithdrawalStorageService.findByWithdrawalTxHash(chain, basicTx.getHash());
             if (null != po) {
-                // 说明该提现交易 已经发出过确认提现交易, 不能再追加手续费
-                chain.getLogger().error("该提现交易已经完成,不能再追加异构链提现手续费, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
+                // Explain the withdrawal transaction Confirmed withdrawal transaction has already been sent out, No additional handling fees allowed
+                chain.getLogger().error("The withdrawal transaction has been completed,No additional fees for heterogeneous chain withdrawals allowed, withdrawalTxhash:{}, hash:{}", basicTxHash, hash);
                 throw new NulsException(ConverterErrorCode.WITHDRAWAL_CONFIRMED);
             }
-            // 提现交易的手续费资产ID
+            // Handling fee assets for withdrawal transactionsID
             CoinData basicCoinData = ConverterUtil.getInstance(basicTx.getCoinData(), CoinData.class);
             Coin feeCoin = null;
             for (CoinTo basicCoinTo : basicCoinData.getTo()) {
@@ -683,9 +775,9 @@ public class RechargeVerifier {
             feeAssetId = feeCoin.getAssetsId();
         }
 
-        // 检查追加的手续费资产，必须与提现交易的手续费资产一致
+        // Check that the additional handling fee assets must be consistent with the handling fee assets of the withdrawal transaction
         if (coinTo.getAssetsChainId() != feeAssetChainId || coinTo.getAssetsId() != feeAssetId) {
-            chain.getLogger().error("追加交易资产必须与提现交易的手续费资产一致, AssetsChainId:{}, AssetsId:{}",
+            chain.getLogger().error("Additional transaction assets must be consistent with the transaction fee assets for withdrawal transactions, AssetsChainId:{}, AssetsId:{}",
                     coinTo.getAssetsChainId(), coinTo.getAssetsId());
             throw new NulsException(ConverterErrorCode.WITHDRAWAL_ADDITIONAL_FEE_COIN_ERROR);
         }

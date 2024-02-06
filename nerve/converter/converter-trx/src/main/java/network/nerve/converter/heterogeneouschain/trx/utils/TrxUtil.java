@@ -99,12 +99,12 @@ public class TrxUtil {
         if (StringUtils.isBlank(from)) {
             Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
             Chain.Transaction.Contract.ContractType type = contract.getType();
-            // 转账
+            // Transfer
             if (Chain.Transaction.Contract.ContractType.TransferContract == type) {
                 Contract.TransferContract tc = Contract.TransferContract.parseFrom(contract.getParameter().getValue());
                 from = TrxUtil.trxAddress2eth(Numeric.toHexString(tc.getOwnerAddress().toByteArray()));
             } else if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type) {
-                // 调用合约
+                // Call Contract
                 Contract.TriggerSmartContract tg = Contract.TriggerSmartContract.parseFrom(contract.getParameter().getValue());
                 from = TrxUtil.trxAddress2eth(Numeric.toHexString(tg.getOwnerAddress().toByteArray()));
             }
@@ -395,7 +395,7 @@ public class TrxUtil {
         sb.append(leftPadding(value.toString(16), "0", 64));
         sb.append(isContractAsset ? "01" : "00");
         sb.append(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(erc20)));
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -415,7 +415,7 @@ public class TrxUtil {
         for (String remove : removes) {
             sb.append(leftPadding(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(remove)), "0", 64));
         }
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -429,7 +429,7 @@ public class TrxUtil {
         StringBuilder sb = new StringBuilder();
         sb.append(Numeric.toHexString(txKey.getBytes(StandardCharsets.UTF_8)));
         sb.append(Numeric.cleanHexPrefix(TrxUtil.trxAddress2eth(upgradeContract)));
-        // hash加盐 update by pierre at 2021/11/18
+        // hashAdding salt update by pierre at 2021/11/18
         if (version <= 2) {
             sb.append(String.format("%02x", version & 255));
         } else {
@@ -482,7 +482,7 @@ public class TrxUtil {
     public static BigDecimal calcOtherMainAssetOfWithdraw(HtgContext htgContext, AssetName otherMainAssetName, BigDecimal otherMainAssetUSD, BigDecimal htgUSD) {
         BigDecimal feeLimit = new BigDecimal(htgContext.GAS_LIMIT_OF_WITHDRAW());
         BigDecimal otherMainAssetAmount = feeLimit.multiply(htgUSD).movePointRight(otherMainAssetName.decimals()).movePointLeft(6).divide(otherMainAssetUSD, 0, RoundingMode.DOWN);
-        // 当NVT作为手续费时，向上取整
+        // WhenNVTRound up as a handling fee
         if (otherMainAssetName == AssetName.NVT) {
             otherMainAssetAmount = otherMainAssetAmount.divide(BigDecimal.TEN.pow(8), 0, RoundingMode.UP).movePointRight(8);
         }
@@ -600,28 +600,28 @@ public class TrxUtil {
         }
         Chain.Transaction.Contract contract = tx.getRawData().getContract(0);
         Chain.Transaction.Contract.ContractType type = contract.getType();
-        // 过滤 非TRX转账和调用合约交易
+        // filter wrongTRXTransfer and Call Contract Transactions
         if (Chain.Transaction.Contract.ContractType.TransferContract != type &&
                 Chain.Transaction.Contract.ContractType.TriggerSmartContract != type) {
             return null;
         }
         String from = EMPTY_STRING, to = EMPTY_STRING, input = EMPTY_STRING;
         BigInteger value = BigInteger.ZERO;
-        // 转账
+        // Transfer
         if (Chain.Transaction.Contract.ContractType.TransferContract == type) {
             Contract.TransferContract tc = Contract.TransferContract.parseFrom(contract.getParameter().getValue());
             from = TrxUtil.ethAddress2trx(tc.getOwnerAddress().toByteArray());
             to = TrxUtil.ethAddress2trx(tc.getToAddress().toByteArray());
             value = BigInteger.valueOf(tc.getAmount());
         } else if (Chain.Transaction.Contract.ContractType.TriggerSmartContract == type) {
-            // 调用合约
+            // Call Contract
             Contract.TriggerSmartContract tg = Contract.TriggerSmartContract.parseFrom(contract.getParameter().getValue());
             from = TrxUtil.ethAddress2trx(tg.getOwnerAddress().toByteArray());
             to = TrxUtil.ethAddress2trx(tg.getContractAddress().toByteArray());
             value = BigInteger.valueOf(tg.getCallValue());
             input = Numeric.toHexString(tg.getData().toByteArray());
         }
-        // 计算txHash
+        // calculatetxHash
         String trxTxHash = TrxUtil.calcTxHash(tx);
         TrxTransaction trxTxInfo = new TrxTransaction(tx, trxTxHash, from, to, value, input, type);
         return trxTxInfo;
@@ -659,7 +659,7 @@ public class TrxUtil {
         }
         long energyUsage = receipt.getReceiptOrBuilder().getEnergyUsage();
         if (energyUsage == 0) {
-            // 没有能量消耗，视为普通转账交易
+            // No energy consumption, considered as a regular transfer transaction
             return true;
         }
         if (receipt.getReceipt().getResult() != Chain.Transaction.Result.contractResult.SUCCESS) {

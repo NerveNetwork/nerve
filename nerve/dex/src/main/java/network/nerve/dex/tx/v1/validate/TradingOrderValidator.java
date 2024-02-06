@@ -25,8 +25,8 @@ import java.math.RoundingMode;
 import java.util.*;
 
 /**
- * 用户挂单委托验证器
- * 1.验证币对是否存在
+ * User order authorization validator
+ * 1.Verify the existence of currency pairs
  */
 @Component
 public class TradingOrderValidator {
@@ -41,7 +41,7 @@ public class TradingOrderValidator {
     public Map<String, Object> validateTxs(List<Transaction> txs) {
 //        long time1, time2;
 //        time1 = System.currentTimeMillis();
-        //存放验证不通过的交易
+        //Store transactions that fail verification
         List<Transaction> invalidTxList = new ArrayList<>();
         ErrorCode errorCode = null;
         TradingOrder order;
@@ -71,17 +71,17 @@ public class TradingOrderValidator {
     }
 
     /**
-     * 判断分红地址是否正确
-     * 判断分红比例是否正确(1000 - 10000)
-     * 判断订单的币对交易是否存在
-     * 验证coinFrom里的资产是否等于挂单委托单资产
-     * 判断最小交易额
+     * Determine if the dividend address is correct
+     * Determine if the dividend ratio is correct(1000 - 10000)
+     * Determine whether the currency pair transaction of the order exists
+     * validatecoinFromIs the asset in the order equal to the asset on the order placement order
+     * Determine the minimum transaction amount
      *
      * @param order
      * @return
      */
     private void validate(TradingOrder order, CoinData coinData, long blockHeight) throws NulsException {
-        //验证交易数据合法性
+        //Verify the legality of transaction data
         if (order.getType() != DexConstant.TRADING_ORDER_BUY_TYPE && order.getType() != DexConstant.TRADING_ORDER_SELL_TYPE) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "tradingOrder type error");
         }
@@ -103,7 +103,7 @@ public class TradingOrderValidator {
         if (order.getFeeScale() > 98) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "feeScale error");
         }
-        //判断from里的地址是否和委托地址一致
+        //judgefromIs the address inside consistent with the entrusted address
         for (CoinFrom from : coinData.getFrom()) {
             if (!Arrays.equals(from.getAddress(), order.getAddress())) {
                 throw new NulsException(DexErrorCode.ACCOUNT_VALID_ERROR);
@@ -111,19 +111,19 @@ public class TradingOrderValidator {
         }
 
         CoinTo coinTo = coinData.getTo().get(0);
-        //验证交易to格式
+        //Verify transactionstoformat
         if (coinTo.getLockTime() != DexConstant.DEX_LOCK_TIME) {
             throw new NulsException(DexErrorCode.DATA_ERROR, "coinTo error");
         }
 
-        //判断订单的币对交易是否存在
+        //Determine whether the currency pair transaction of the order exists
         String hashHex = HexUtil.encode(order.getTradingHash());
         TradingContainer container = dexManager.getTradingContainer(hashHex);
         if (container == null) {
             throw new NulsException(DexErrorCode.DATA_NOT_FOUND, "coinTrading not exist");
         }
 
-        //判断coinTo里的资产是否和order订单的数量匹配
+        //judgecoinToAre the assets in it related toorderMatching the quantity of orders
         CoinTradingPo coinTrading = container.getCoinTrading();
         if (blockHeight > DexContext.priceSkipHeight) {
             BigDecimal one = BigDecimal.ONE;
@@ -137,8 +137,8 @@ public class TradingOrderValidator {
             }
         }
 
-        //验证最小交易额
-        //价格 * 最小交易量 = 实际交易额
+        //Verify minimum transaction amount
+        //price * Minimum trading volume = Actual transaction amount
         BigDecimal price = new BigDecimal(order.getPrice()).movePointLeft(coinTrading.getQuoteDecimal());
         BigDecimal amount = new BigDecimal(order.getAmount()).movePointLeft(coinTrading.getBaseDecimal());
         if (blockHeight > DexContext.priceSkipHeight) {
@@ -150,20 +150,20 @@ public class TradingOrderValidator {
         }
 
         if (order.getType() == DexConstant.TRADING_ORDER_BUY_TYPE) {
-            //验证coinFrom里的资产是否等于挂单委托单资产
+            //validatecoinFromIs the asset in the order equal to the asset on the order placement order
             if (coinTo.getAssetsChainId() != coinTrading.getQuoteAssetChainId() ||
                     coinTo.getAssetsId() != coinTrading.getQuoteAssetId()) {
                 throw new NulsException(DexErrorCode.ORDER_COIN_NOT_EQUAL);
             }
-            //验证最小交易量
+            //Verify minimum transaction volume
             if (blockHeight > DexContext.skipHeight) {
                 if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
                     throw new NulsException(DexErrorCode.BELOW_TRADING_MIN_SIZE);
                 }
             }
 
-            //计算可兑换交易币种数量
-            //计价货币数量 / 价格 = 实际可兑换交易币种数量
+            //Calculate the number of convertible transaction currencies
+            //Quantity of Valuation Currency / price = Actual number of convertible transaction currencies
             amount = new BigDecimal(coinTo.getAmount()).movePointLeft(coinTrading.getQuoteDecimal());
             amount = amount.divide(price, coinTrading.getBaseDecimal(), RoundingMode.DOWN);
             amount = amount.movePointRight(coinTrading.getBaseDecimal());
@@ -179,7 +179,7 @@ public class TradingOrderValidator {
                     coinTo.getAssetsId() != coinTrading.getBaseAssetId()) {
                 throw new NulsException(DexErrorCode.ORDER_COIN_NOT_EQUAL);
             }
-            //验证最小交易量
+            //Verify minimum transaction volume
             if (order.getAmount().compareTo(coinTrading.getMinBaseAmount()) < 0) {
                 LoggerUtil.dexLog.error("-------TradingOrder validate error!");
                 LoggerUtil.dexLog.error("-------TradingHash:" + coinTrading.getHash().toHex());

@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * @Author: zhoulijun
  * @Time: 2019-03-11 13:44
- * @Description: 功能描述
+ * @Description: Function Description
  */
 @Provider(Provider.ProviderType.RPC)
 public class LedgerProviderForRpc extends BaseRpcService implements LedgerProvider {

@@ -26,22 +26,62 @@ package network.nerve.converter.heterogeneouschain.eth.storage.impl;
 import io.nuls.core.core.annotation.Component;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthRecoveryDto;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthTxStorageService;
 import network.nerve.converter.model.bo.HeterogeneousTransactionInfo;
 import network.nerve.converter.utils.ConverterDBUtil;
 
 /**
- * 保存交易信息 - 充值、签名完成的提现、变更
+ * Save transaction information - Recharge、Withdrawal completed with signature、change
  * @author: Mimi
  * @date: 2020-03-12
  */
 @Component
 public class EthTxStorageServiceImpl implements EthTxStorageService {
 
-    private final String baseArea = EthDBConstant.DB_ETH;
+    private String baseArea = EthDBConstant.DB_ETH;
     private final String KEY_PREFIX = "BROADCAST-";
     private final String RECOVERY_KEY_PREFIX = "RECOVERY-";
+    private final String MERGE_KEY_PREFIX;
+    private final String MERGE_RECOVERY_KEY_PREFIX;
+
+    public EthTxStorageServiceImpl() {
+        int htgChainId = 101;
+        this.MERGE_KEY_PREFIX = htgChainId + "_BROADCAST-";
+        this.MERGE_RECOVERY_KEY_PREFIX = htgChainId + "_RECOVERY-";
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = EthContext.getConverterCoreApi().isDbMerged(101);
+        if (merged) {
+            this.baseArea = EthContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private String RECOVERY_KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_RECOVERY_KEY_PREFIX;
+        } else {
+            return RECOVERY_KEY_PREFIX;
+        }
+    }
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
 
     @Override
     public int save(HeterogeneousTransactionInfo po) throws Exception {
@@ -49,18 +89,18 @@ public class EthTxStorageServiceImpl implements EthTxStorageService {
             return 0;
         }
         String txHash = po.getTxHash();
-        boolean result = ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash), po);
+        boolean result = ConverterDBUtil.putModel(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash), po);
         return result ? 1 : 0;
     }
 
     @Override
     public HeterogeneousTransactionInfo findByTxHash(String txHash) {
-        return ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash), HeterogeneousTransactionInfo.class);
+        return ConverterDBUtil.getModel(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash), HeterogeneousTransactionInfo.class);
     }
 
     @Override
     public void deleteByTxHash(String txHash) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + txHash));
+        RocksDBService.delete(baseArea(), ConverterDBUtil.stringToBytes(KEY_PREFIX() + txHash));
     }
 
     @Override
@@ -68,12 +108,12 @@ public class EthTxStorageServiceImpl implements EthTxStorageService {
         if (recovery == null) {
             return 0;
         }
-        ConverterDBUtil.putModel(baseArea, ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX + nerveTxKey), recovery);
+        ConverterDBUtil.putModel(baseArea(), ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX() + nerveTxKey), recovery);
         return 1;
     }
 
     @Override
     public EthRecoveryDto findRecoveryByNerveTxKey(String nerveTxKey) {
-        return ConverterDBUtil.getModel(baseArea, ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX + nerveTxKey), EthRecoveryDto.class);
+        return ConverterDBUtil.getModel(baseArea(), ConverterDBUtil.stringToBytes(RECOVERY_KEY_PREFIX() + nerveTxKey), EthRecoveryDto.class);
     }
 }

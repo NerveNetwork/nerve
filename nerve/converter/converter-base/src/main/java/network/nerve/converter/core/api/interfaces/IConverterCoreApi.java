@@ -43,62 +43,63 @@ import java.util.Map;
  */
 public interface IConverterCoreApi {
     /**
-     * 获取Nerve网络当前区块高度
+     * obtainNerveThe current block height of the network
      */
     long getCurrentBlockHeightOnNerve();
 
     /**
-     * 当前节点是否为虚拟银行
+     * Is the current node a virtual bank
      */
     boolean isVirtualBankByCurrentNode();
 
     /**
-     * 当前节点是否为种子虚拟银行
+     * Is the current node a seed virtual bank
      */
     boolean isSeedVirtualBankByCurrentNode();
 
     /**
-     * 获取当前节点加入虚拟银行时的顺序
+     * Obtain the order in which the current node joins the virtual bank
      */
     int getVirtualBankOrder();
 
     /**
-     * 获取当前虚拟银行成员的数量
+     * Obtain the current number of virtual bank members
      */
     int getVirtualBankSize();
 
     /**
-     * 获取Nerve交易
+     * obtainNervetransaction
      */
     Transaction getNerveTx(String hash);
 
     /**
-     * 当前节点是否在运行状态
+     * Is the current node in a running state
      */
     boolean isRunning();
 
     /**
-     * 获取异构链提现数据
+     * Obtain heterogeneous chain withdrawal data
      */
     HeterogeneousWithdrawTxInfo getWithdrawTxInfo(String nerveTxHash) throws NulsException;
 
     /**
-     * 获取指定异构链的虚拟银行列表
+     * Obtain a list of virtual banks for a specified heterogeneous chain
      */
     Map<String, Integer>  currentVirtualBanks(int hChainId);
+    Map<String, Integer>  currentVirtualBanksBalanceOrder(int hChainId);
 
     /**
-     * 重新获取拜占庭签名
+     * Retrieve Byzantine signatures again
      */
     List<HeterogeneousSign> regainSignatures(int nerveChainId, String nerveTxHash, int hChainId);
 
     /**
-     * 异构链资产是否为绑定已存在的NERVE资产
+     * Whether heterogeneous chain assets are bound to existing onesNERVEasset
      */
     boolean isBoundHeterogeneousAsset(int hChainId, int hAssetId);
 
     /**
-     * 提现交易异构链是否确认(通过获取提现确认交易业务数据来判断)
+     * Is the withdrawal transaction heterogeneous chain confirmed(Determine by obtaining withdrawal confirmation transaction data)
      * @param nerveChainId
      * @param hash
      * @return
@@ -106,79 +107,83 @@ public interface IConverterCoreApi {
     boolean isWithdrawalComfired(String nerveTxHash);
 
     /**
-     * 获取提现交易提供的NVT手续费，包含用户追加的手续费
+     * Obtain withdrawal transactions provided byNVTHandling fees, including additional handling fees for users
      */
     WithdrawalTotalFeeInfo getFeeOfWithdrawTransaction(String nerveTxHash) throws NulsException;
 
     /**
-     * 获取指定资产的USDT价格
+     * Obtain the specified asset'sUSDTprice
      */
     BigDecimal getUsdtPriceByAsset(AssetName assetName);
 
     /**
-     * 是否支持新的提现手续费机制
+     * Does it support a new withdrawal fee mechanism
      */
     boolean isSupportNewMechanismOfWithdrawalFee();
     /**
-     * 是否支持转账即销毁部分的ERC20
+     * Does it support transfer and partial destructionERC20
      */
     boolean isSupportProtocol12ERC20OfTransferBurn();
 
     /**
-     * 验证是否为nerve地址
+     * Verify if it isnerveaddress
      */
     boolean validNerveAddress(String address);
 
     /**
-     * 是否支持充值ERC20的新验证方式I
+     * Does it support rechargingERC20New verification method forI
      */
     boolean isSupportProtocol13NewValidationOfERC20();
 
     /**
-     * 是否支持协议14 v1.14.0
+     * Does it support protocols14 v1.14.0
      */
     boolean isProtocol14();
 
     /**
-     * 是否支持波场跨链 v1.15.0
+     * Does it support wave field cross chain v1.15.0
      */
     boolean isSupportProtocol15TrxCrossChain();
 
     /**
-     * 是否支持协议16 v1.16.0
+     * Does it support protocols16 v1.16.0
      */
     boolean isProtocol16();
 
     /**
-     * 是否支持协议21 v1.21.0
+     * Does it support protocols21 v1.21.0
      */
     boolean isProtocol21();
 
     /**
-     * 是否支持协议22 v1.22.0
+     * Does it support protocols22 v1.22.0
      */
     boolean isProtocol22();
 
     /**
-     * 是否支持协议23 v1.23.0
+     * Does it support protocols23 v1.23.0
      */
     boolean isProtocol23();
     /**
-     * 是否支持协议24 v1.24.0
+     * Does it support protocols24 v1.24.0
      */
     boolean isProtocol24();
     /**
-     * 是否支持协议26 v1.26.0
+     * Does it support protocols26 v1.26.0
      */
     boolean isProtocol26();
     /**
-     * 是否支持协议27 v1.27.0
+     * Does it support protocols27 v1.27.0
      */
     boolean isProtocol27();
+    /**
+     * Does it support protocols31 v1.31.0
+     */
+    boolean isProtocol31();
 
 
     /**
-     * 添加任务
+     * Add task
      */
     void addHtgConfirmTxHandler(Runnable runnable);
     void addHtgRpcAvailableHandler(Runnable runnable);
@@ -203,7 +208,7 @@ public interface IConverterCoreApi {
     boolean checkNetworkRunning(int hChainId);
 
     boolean isLocalSign();
-
+    void putWechatMsg(String msg);
     String signWithdrawByMachine(long nativeId, String signerPubkey, String txKey, String toAddress, BigInteger value, Boolean isContractAsset, String erc20, byte version) throws NulsException;
     String signChangeByMachine(long nativeId, String signerPubkey, String txKey, String[] adds, int count, String[] removes, byte version) throws NulsException;
     String signUpgradeByMachine(long nativeId, String signerPubkey, String txKey, String upgradeContract, byte version) throws NulsException;
@@ -215,4 +220,10 @@ public interface IConverterCoreApi {
     void setDbMergedStatus(int hChainid);
     boolean isDbMerged(int hChainid);
     String mergedDBName();
+    BigInteger getL1Fee(int htgChainId);
+    boolean hasL1FeeOnChain(int htgChainId);
+
+    boolean isNerveMainnet();
+
+    void setFchToDogePrice(BigDecimal fchToDogePrice);
 }

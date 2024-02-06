@@ -112,7 +112,7 @@ public class SwapTokenTradeRouteTest {
             PairTest remove = pairs.remove(subIndex);
             bestRouteTest.add(new RouteTest(List.of(remove), 0));
         }
-        // pair去重，检查交易对中是否有多个相同组下的普通token和稳定币token
+        // pairRemove duplicates and check if there are multiple ordinary transactions in the same group in the transaction pairtokenAnd stablecoinstoken
         pairs = deduplicationGroupPair(pairs);
         List<RouteTest> routeTests = calPathsV2(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
         //List<RouteTest> routeTests = calPathsOrigin(pairs, in, out, new LinkedHashSet<>(), bestRouteTest, in, 0, 5);
@@ -139,7 +139,7 @@ public class SwapTokenTradeRouteTest {
                 List list = map.computeIfAbsent("G-token-C-" + pair.token0, k -> new ArrayList());
                 list.add(pair);
             } else {
-                // 普通pair
+                // ordinarypair
                 resultPair.add(pair);
             }
         }
@@ -150,7 +150,7 @@ public class SwapTokenTradeRouteTest {
                 if (list.size() == 1) {
                     resultPair.add(list.get(0));
                 } else {
-                    // 筛选机制，留下一个，留下稳定币token在Pair池中数量最多的
+                    // Screening mechanism, leave one, leave stablecoinstokenstayPairThe most numerous in the pool
                     resultPair.add(list.get(0));
                 }
             }
@@ -164,12 +164,12 @@ public class SwapTokenTradeRouteTest {
         for (int i = 0; i < length; i++) {
             PairTest pair = pairs.get(i);
             //System.out.println(String.format("depth: %s, i: %s, pair: %s", depth, i, pair.toString()));
-            //if (pair.token0 != in && pair.token1 != in) continue;// 被替换为以下代码段
+            //if (pair.token0 != in && pair.token1 != in) continue;// Replace with the following code snippet
             // add for link +
             PairTest pairTest = null;
             char currentIn = in;
             if (pair.token0 != in && pair.token1 != in) {
-                // 加入同类token验证
+                // Join the same categorytokenvalidate
                 if (group(pair.token0, in)) {
                     pairTest = new PairTest(sortTokens(pair.token0, in));
                     currentIn = pair.token0;
@@ -194,7 +194,7 @@ public class SwapTokenTradeRouteTest {
             }
             //System.out.println(String.format("depth: %s, i: %s[b]", depth, i));
 
-            //System.out.println(String.format("depth: %s, 选中的Pair: %s, 选中的tokenOut: %s", depth, pair.toString(), tokenOut));
+            //System.out.println(String.format("depth: %s, SelectedPair: %s, SelectedtokenOut: %s", depth, pair.toString(), tokenOut));
             if (tokenOut == out) {
                 if (pairTest != null) currentPath.add(pairTest);// add for link
                 currentPath.add(pair);
@@ -204,7 +204,7 @@ public class SwapTokenTradeRouteTest {
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 if (pairTest != null) cloneLinkedHashSet.add(pairTest);// add for link
                 cloneLinkedHashSet.add(pair);
-                //System.out.println(String.format("depth: %s, 移除的Pair: %s", depth, pair.toString()));
+                //System.out.println(String.format("depth: %s, RemovedPair: %s", depth, pair.toString()));
                 //System.out.println();
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));
@@ -227,7 +227,7 @@ public class SwapTokenTradeRouteTest {
             if (containsCurrency(currentPath, tokenOut)) continue;
             //System.out.println(String.format("depth: %s, i: %s", depth, i));
 
-            //System.out.println(String.format("depth: %s, 选中的Pair: %s, 选中的tokenOut: %s", depth, pair.toString(), tokenOut));
+            //System.out.println(String.format("depth: %s, SelectedPair: %s, SelectedtokenOut: %s", depth, pair.toString(), tokenOut));
             if (tokenOut == out) {
                 currentPath.add(pair);
                 bestRouteTest.add(new RouteTest(currentPath.stream().collect(Collectors.toList()), depth));
@@ -235,7 +235,7 @@ public class SwapTokenTradeRouteTest {
             } else if (depth < (maxPairSize - 1) && pairs.size() > 1){
                 LinkedHashSet cloneLinkedHashSet = cloneLinkedHashSet(currentPath);
                 cloneLinkedHashSet.add(pair);
-                //System.out.println(String.format("depth: %s, 移除的Pair: %s", depth, pair.toString()));
+                //System.out.println(String.format("depth: %s, RemovedPair: %s", depth, pair.toString()));
                 //System.out.println();
                 List<PairTest> subList = subList(pairs, 0, i);
                 subList.addAll(subList(pairs, i + 1, length));

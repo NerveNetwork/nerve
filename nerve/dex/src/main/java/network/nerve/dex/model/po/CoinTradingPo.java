@@ -13,31 +13,31 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * 交易对实体对象
+ * Transactions on physical objects
  */
 public class CoinTradingPo extends BaseNulsData {
-    //交易地址创建人
+    //Transaction address creator
     private byte[] address;
-    //交易hash
+    //transactionhash
     private transient NulsHash hash;
-    //交易币种的chainId
+    //Transaction currencychainId
     private int baseAssetChainId;
-    //交易币种的assetId
+    //Transaction currencyassetId
     private int baseAssetId;
-    //交易币种默认小数位数
+    //Default decimal places for transaction currency
     private byte baseDecimal;
-    //交易币种允许最小交易小数位
+    //Transaction currency allows for minimum transaction decimal places
     private byte scaleBaseDecimal;
 
-    //计价币种的chainId
+    //Pricing currencychainId
     private int quoteAssetChainId;
-    //计价币种的assetId
+    //Pricing currencyassetId
     private int quoteAssetId;
-    //计价币种小位数
+    //Pricing currency decimal places
     private byte quoteDecimal;
-    //计价币种允许最小交易小数位
+    //Pricing currency allows for minimum transaction decimal places
     private byte scaleQuoteDecimal;
-    //最小交易量
+    //Minimum trading volume
     private BigInteger minBaseAmount;
 
     private BigInteger minQuoteAmount;

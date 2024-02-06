@@ -23,9 +23,9 @@ public class TransferTestProcessor extends TransactionBaseProcessor implements C
     public String getHelp() {
         CommandBuilder builder = new CommandBuilder();
 //        builder.newLine(getCommandDescription())
-//                .newLine("\t<method> \t\t用哪个方法发送交易 1:发送固定50W笔 2:两万账户互发- Required")
-//                .newLine("\t<address1> \t有钱地址1 - Required")
-//                .newLine("\t[address2] \t\t有钱地址2 两万账户互发时必填 - Required");
+//                .newLine("\t<method> \t\tWhich method is used to send the transaction 1:Send fixed50Wpen 2:Exchange of 20000 accounts- Required")
+//                .newLine("\t<address1> \tRich address1 - Required")
+//                .newLine("\t[address2] \t\tRich address2 Required when exchanging 20000 accounts - Required");
         return builder.toString();
     }
 

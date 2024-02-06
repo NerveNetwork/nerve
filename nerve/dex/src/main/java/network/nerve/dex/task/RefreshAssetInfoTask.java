@@ -9,9 +9,9 @@ import network.nerve.dex.util.LoggerUtil;
 import java.util.List;
 
 /**
- * 每分钟一次，定时刷新资产列表
- * 1.刷新本链资产列表
- * 2.刷新已注册跨链资产列表
+ * Every minute, refresh the asset list regularly
+ * 1.Refresh the asset list of this chain
+ * 2.Refresh registered cross chain asset list
  */
 public class RefreshAssetInfoTask implements Runnable {
 
@@ -26,7 +26,7 @@ public class RefreshAssetInfoTask implements Runnable {
 
     @Override
     public void run() {
-        //查询本链已注册资产信息
+        //Query registered asset information on this chain
         try {
             Result<List<AssetInfo>> result = LedgerCall.getAllAssets(chainId);
             if (result.isSuccess()) {
@@ -35,17 +35,17 @@ public class RefreshAssetInfoTask implements Runnable {
                     dexManager.addAssetInfo(assetInfo);
                 }
             }
-//            //查询已注册跨链资产信息
+//            //Query registered cross chain asset information
 //            Result<Set<AssetInfo>> result = CrossChainCall.getAssetInfoList(chainId);
 //            if (result.isSuccess()) {
 //                Set<AssetInfo> assetInfoList = result.getData();
-//                //只有查询到已注册跨链资产，才能正常启动本模块
+//                //Only when registered cross chain assets are found can this module be launched normally
 //                if (assetInfoList.size() == 0) {
-//                    LoggerUtil.dexLog.info("---------无法获取已注册资产信息----------");
+//                    LoggerUtil.dexLog.info("---------Unable to obtain registered asset information----------");
 //                    return;
 //                }
 //                for (AssetInfo assetInfo : assetInfoList) {
-//                    //过滤掉本链的资产信息
+//                    //Filter out the asset information of this chain
 //                    dexManager.addAssetInfo(assetInfo);
 //                }
 //            }

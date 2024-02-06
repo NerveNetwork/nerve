@@ -33,7 +33,7 @@ import io.nuls.core.exception.NulsException;
 import java.io.IOException;
 
 /**
- * 索取完整交易的消息
+ * Request for complete transaction information
  * @author: Loki
  * @date: 2020-02-27
  */

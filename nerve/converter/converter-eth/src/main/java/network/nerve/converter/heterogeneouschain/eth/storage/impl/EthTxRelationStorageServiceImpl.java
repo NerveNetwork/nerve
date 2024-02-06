@@ -28,6 +28,7 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.model.EthSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthTxRelationStorageService;
 import network.nerve.converter.utils.ConverterDBUtil;
@@ -42,15 +43,64 @@ import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 @Component
 public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageService {
 
-    private final String baseArea = EthDBConstant.DB_ETH;
+    private String baseArea = EthDBConstant.DB_ETH;
     private final String KEY_PREFIX_NERVE = "TXRELATION-N-";
     private final String KEY_PREFIX_ETH = "TXRELATION-E-";
     private final String KEY_PREFIX_ETH_PO = "TXRELATION-P-";
+    private final String MERGE_KEY_PREFIX_NERVE;
+    private final String MERGE_KEY_PREFIX_ETH;
+    private final String MERGE_KEY_PREFIX_ETH_PO;
+
+    public EthTxRelationStorageServiceImpl() {
+        int htgChainId = 101;
+        this.MERGE_KEY_PREFIX_NERVE = htgChainId + "_TXRELATION-N-";
+        this.MERGE_KEY_PREFIX_ETH = htgChainId + "_TXRELATION-E-";
+        this.MERGE_KEY_PREFIX_ETH_PO = htgChainId + "_TXRELATION-P-";
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = EthContext.getConverterCoreApi().isDbMerged(101);
+        if (merged) {
+            this.baseArea = EthContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX_NERVE() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_NERVE;
+        } else {
+            return KEY_PREFIX_NERVE;
+        }
+    }
+    private String KEY_PREFIX_ETH() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_ETH;
+        } else {
+            return KEY_PREFIX_ETH;
+        }
+    }
+    private String KEY_PREFIX_ETH_PO() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX_ETH_PO;
+        } else {
+            return KEY_PREFIX_ETH_PO;
+        }
+    }
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
 
     @Override
     public int save(String ethTxHash, String nerveTxHash, EthSendTransactionPo ethTxPo) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash), stringToBytes(nerveTxHash));
-        ConverterDBUtil.putModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash), ethTxPo);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_ETH() + ethTxHash), stringToBytes(nerveTxHash));
+        ConverterDBUtil.putModel(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + ethTxHash), ethTxPo);
         return 1;
     }
 
@@ -59,7 +109,7 @@ public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageServ
         if (StringUtils.isBlank(ethTxHash)) {
             return null;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_ETH() + ethTxHash));
         if (bytes == null) {
             return null;
         }
@@ -68,18 +118,18 @@ public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageServ
 
     @Override
     public EthSendTransactionPo findEthSendTxPo(String ethTxHash) {
-        return ConverterDBUtil.getModel(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash), EthSendTransactionPo.class);
+        return ConverterDBUtil.getModel(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + ethTxHash), EthSendTransactionPo.class);
     }
 
     @Override
     public void deleteByTxHash(String ethTxHash) throws Exception {
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH + ethTxHash));
-        RocksDBService.delete(baseArea, stringToBytes(KEY_PREFIX_ETH_PO + ethTxHash));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_ETH() + ethTxHash));
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX_ETH_PO() + ethTxHash));
     }
 
     @Override
     public int saveNerveTxHash(String nerveTxHash) throws Exception {
-        RocksDBService.put(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash), EthConstant.EMPTY_BYTE);
+        RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX_NERVE() + nerveTxHash), EthConstant.EMPTY_BYTE);
         return 0;
     }
 
@@ -88,7 +138,7 @@ public class EthTxRelationStorageServiceImpl implements EthTxRelationStorageServ
         if (StringUtils.isBlank(nerveTxHash)) {
             return false;
         }
-        byte[] bytes = RocksDBService.get(baseArea, stringToBytes(KEY_PREFIX_NERVE + nerveTxHash));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX_NERVE() + nerveTxHash));
         if (bytes == null) {
             return false;
         }

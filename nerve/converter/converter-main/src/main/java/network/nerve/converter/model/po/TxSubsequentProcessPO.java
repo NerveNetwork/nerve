@@ -34,75 +34,75 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 等待后续处理的确认交易
- * 可能是 调用组件[提现交易、银行变更交易（创建异构链地址，创建(修改)多签地址、）], 或生成新的交易
+ * Confirmed transactions awaiting further processing
+ * Maybe it's Calling components[Withdrawal transactions、Bank change transaction（Create heterogeneous chain addresses, create(modify)Multiple signed addresses、）], Or generate new transactions
  * @author: Loki
  * @date: 2020-03-09
  */
 public class TxSubsequentProcessPO implements Serializable {
 
     /**
-     * 待处理交易
+     * Pending transactions
      */
     private Transaction tx;
 
     /**
-     * 加入虚拟银行成员列表 (需要创建异构地址)
+     * Join virtual bank member list (Need to create heterogeneous addresses)
      */
     private List<VirtualBankDirector> listInDirector = new ArrayList<>();
 
     /**
-     * 退出虚拟银行成员列表
+     * Exit virtual bank member list
      */
     private List<VirtualBankDirector> listOutDirector = new ArrayList<>();
 
     /**
-     * 处理时先验证交易是否确认的验证次数（达到阈值交易没确认则丢弃）
+     * Verify the number of times the transaction has been confirmed during processing（Discard transactions that have reached the threshold but have not been confirmed）
      */
     private int isConfirmedVerifyCount;
 
     /**
-     * 交易所在区块头
+     * The exchange is located in the block head
      */
     private BlockHeader blockHeader;
 
     /**
-     * 节点区块同步模式
+     * Node block synchronization mode
      */
     private SyncStatusEnum syncStatusEnum;
 
     /**
-     * 当前节点是不是虚拟银行成员
+     * Is the current node a virtual bank member
      */
     private boolean currentDirector;
 
     /**
-     * 当前节点是不是在本交易中加入的虚拟银行
+     * Is the current node a virtual bank added to this transaction
      */
     private boolean currentJoin;
 
     /**
-     * 当前节点是不是在本交易中退出的虚拟银行
+     * Is the current node a virtual bank that has exited in this transaction
      */
     private boolean currentQuit;
 
     /**
-     * 如果当前管理员在该交易退出的虚拟银行, 需要暂存数据(签名时使用)
+     * If the current administrator exits the virtual bank for this transaction, Need to temporarily store data(Use when signing)
      */
     private VirtualBankDirector currentQuitDirector;
 
     /**
-     * 当前区块的虚拟银行成员总数
-     * (不算当前加入, 要算当前退出)
+     * The total number of virtual bank members in the current block
+     * (Not including current joining, To calculate the current exit)
      */
     private int currenVirtualBankTotal;
 
     /**
-     * 重试机制(消息重发)
+     * Retry mechanism(message replay)
      */
     private boolean retry;
-    private transient boolean retryVirtualBankInit;// 变更重试数据初始化
-    private transient int prepare;// 1 - 准备阶段，2 - 非准备，执行阶段
+    private transient boolean retryVirtualBankInit;// Change retry data initialization
+    private transient int prepare;// 1 - Preparation phase,2 - Unprepared, execution phase
     private transient int withdrawErrorTimes;
     private transient int withdrawErrorTotalTimes;
     private transient int feeChangeVersion;
@@ -129,7 +129,7 @@ public class TxSubsequentProcessPO implements Serializable {
     }
 
     public boolean isWithdrawExceedErrorTime(int currentFeeChangeVersion, int limit) {
-        // 当用户提供的手续费发生变化，从暂停提现中恢复提现流程
+        // When the transaction fee provided by the user changes, resume the withdrawal process from the suspended withdrawal
         if (currentFeeChangeVersion != feeChangeVersion) {
             feeChangeVersion = currentFeeChangeVersion;
             this.clearWithdrawErrorTime();

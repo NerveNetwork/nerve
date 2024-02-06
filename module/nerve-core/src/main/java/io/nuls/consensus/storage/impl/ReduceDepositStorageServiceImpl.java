@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 退出保证金实现类
+ * Exit margin implementation class
  * Exit margin implementation class
  *
  * @author tag

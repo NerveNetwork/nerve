@@ -43,6 +43,7 @@ import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.Chain;
 import network.nerve.converter.model.bo.HeterogeneousAssetInfo;
 import network.nerve.converter.model.txdata.HeterogeneousContractAssetRegCompleteTxData;
+import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.storage.TxSubsequentProcessStorageService;
 import network.nerve.converter.utils.ConverterSignValidUtil;
 
@@ -94,22 +95,23 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
             Set<String> unregisterSet = new HashSet<>();
             Set<String> pauseSet = new HashSet<>();
             Set<String> resumeSet = new HashSet<>();
+            Set<String> stableSwapCoinSet = new HashSet<>();
             for (Transaction tx : txs) {
                 byte[] coinData = tx.getCoinData();
                 if(coinData != null && coinData.length > 0){
-                    // coindata存在数据(coinData应该没有数据)
+                    // coindataExisting data(coinDataThere should be no data available)
                     throw new NulsException(ConverterErrorCode.COINDATA_CANNOT_EXIST);
                 }
                 HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
                 txData.parse(tx.getTxData(), 0);
                 String contractAddress = addressToLowerCase(txData.getContractAddress());
                 errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(),
-                        contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, false);
+                        contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, stableSwapCoinSet, false);
                 if (StringUtils.isNotBlank(errorCode)) {
                     failsList.add(tx);
                     continue;
                 }
-                // 签名拜占庭验证
+                // Signature Byzantine Verification
                 try {
                     ConverterSignValidUtil.validateByzantineSign(chain, tx);
                 } catch (NulsException e) {
@@ -151,8 +153,8 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                 info.setDecimals(txData.getDecimals());
                 Integer hChainId = txData.getChainId();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
-                // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
-                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false;
+                // Heterogeneous Contract Asset Registration OR NERVEAsset binding heterogeneous contract assets: New binding / Overwrite binding
+                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false, isStablePause = false;
                 do {
                     byte[] remark = tx.getRemark();
                     if (remark == null) {
@@ -172,34 +174,34 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                     int assetChainId = Integer.parseInt(asset[0]);
                     int assetId = Integer.parseInt(asset[1]);
                     if (BindHeterogeneousContractMode.NEW.toString().equals(mode)) {
-                        // NERVE资产绑定异构合约资产: 新绑定
+                        // NERVEAsset binding heterogeneous contract assets: New binding
                         docking.saveHeterogeneousAssetInfos(List.of(info));
                         ledgerAssetRegisterHelper.crossChainAssetRegByExistNerveAsset(assetChainId, assetId, hChainId, info.getAssetId(),
                                 info.getSymbol(), info.getDecimals(), info.getSymbol(), info.getContractAddress());
                         isBindNew = true;
-                        chain.getLogger().info("[commit] NERVE资产绑定异构链合约资产[新绑定], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                        chain.getLogger().info("[commit] NERVEAsset binding heterogeneous chain contract assets[New binding], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
                                 assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     } else if (BindHeterogeneousContractMode.REMOVE.toString().equals(mode)) {
                         docking.rollbackHeterogeneousAssetInfos(List.of(info));
                         HeterogeneousAssetInfo hAssetInfo = info;
                         ledgerAssetRegisterHelper.deleteCrossChainAssetByExistNerveAsset(hChainId, hAssetInfo.getAssetId());
                         isBindRemove = true;
-                        chain.getLogger().info("[commit] NERVE资产取消绑定异构链合约资产[取消绑定], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                        chain.getLogger().info("[commit] NERVEUnbind assets to heterogeneous chain contract assets[Unbind], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
                                 assetChainId, assetId, hChainId, hAssetInfo.getAssetId(), hAssetInfo.getSymbol(), hAssetInfo.getDecimals(), hAssetInfo.getContractAddress());
                     } else if (BindHeterogeneousContractMode.OVERRIDE.toString().equals(mode)) {
-                        // NERVE资产绑定异构合约资产: 覆盖绑定
+                        // NERVEAsset binding heterogeneous contract assets: Overwrite binding
                         HeterogeneousAssetInfo hAssetInfo = docking.getAssetByContractAddress(info.getContractAddress());
                         ledgerAssetRegisterHelper.deleteCrossChainAssetByExistNerveAsset(hAssetInfo.getChainId(), hAssetInfo.getAssetId());
                         ledgerAssetRegisterHelper.crossChainAssetRegByExistNerveAsset(assetChainId, assetId, hChainId, hAssetInfo.getAssetId(),
                                 hAssetInfo.getSymbol(), hAssetInfo.getDecimals(), hAssetInfo.getSymbol(), hAssetInfo.getContractAddress());
                         isBindOverride = true;
-                        chain.getLogger().info("[commit] NERVE资产绑定异构链合约资产[覆盖绑定], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                        chain.getLogger().info("[commit] NERVEAsset binding heterogeneous chain contract assets[Overwrite binding], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
                                 assetChainId, assetId, hChainId, hAssetInfo.getAssetId(), hAssetInfo.getSymbol(), hAssetInfo.getDecimals(), hAssetInfo.getContractAddress());
                     } else if (BindHeterogeneousContractMode.UNREGISTER.toString().equals(mode)) {
                         docking.rollbackHeterogeneousAssetInfos(List.of(info));
                         ledgerAssetRegisterHelper.deleteCrossChainAsset(hChainId, info.getAssetId());
                         isUnregister = true;
-                        chain.getLogger().info("[commit] NERVE资产取消注册异构链合约资产[取消注册], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                        chain.getLogger().info("[commit] NERVEAsset deregistration of heterogeneous chain contract assets[Cancel registration], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
                                 assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     } else if (BindHeterogeneousContractMode.PAUSE.toString().equals(mode)) {
                         int hAssetId = 1;
@@ -216,8 +218,8 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                             ledgerAssetRegisterHelper.pauseOut(hChainId, hAssetId);
                         }
                         isPause = true;
-                        chain.getLogger().info("[commit] 异构链合约资产[{}暂停], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
-                                isIn ? "充值" : "提现", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                        chain.getLogger().info("[commit] Heterogeneous Chain Contract Assets[{}suspend], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                                isIn ? "Recharge" : "Withdrawal", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     } else if (BindHeterogeneousContractMode.RESUME.toString().equals(mode)) {
                         int hAssetId = 1;
                         if (StringUtils.isNotBlank(info.getContractAddress())) {
@@ -233,17 +235,24 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                             ledgerAssetRegisterHelper.resumeOut(hChainId, hAssetId);
                         }
                         isResume = true;
-                        chain.getLogger().info("[commit] 异构链合约资产[{}恢复], NERVE asset: {}-{}, 异构链资产信息: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
-                                isIn ? "充值" : "提现", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                    chain.getLogger().info("[commit] Heterogeneous Chain Contract Assets[{}recovery], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                            isIn ? "Recharge" : "Withdrawal", assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                    } else if (BindHeterogeneousContractMode.STABLE_SWAP_COIN_PAUSE.toString().equals(mode)) {
+                        String stableAddress = asset[2];
+                        String status = asset[3];
+                        SwapCall.pauseCoinForStable(chainId, stableAddress, assetChainId, assetId, status);
+                        isStablePause = true;
+                        chain.getLogger().info("[commit] Multi-Routing-Pool[{}-{}], NERVE asset: {}-{}, Heterogeneous Chain Asset Information: chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}",
+                                stableAddress, status, assetChainId, assetId, hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                     }
 
                 } while (false);
-                // 异构合约资产注册
-                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume) {
+                // Heterogeneous Contract Asset Registration
+                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume && !isStablePause) {
                     docking.saveHeterogeneousAssetInfos(List.of(info));
                     ledgerAssetRegisterHelper.crossChainAssetReg(chainId, hChainId, info.getAssetId(),
                             info.getSymbol(), info.getDecimals(), info.getSymbol(), info.getContractAddress());
-                    chain.getLogger().info("[commit] 异构链合约资产注册, chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}", hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
+                    chain.getLogger().info("[commit] Heterogeneous Chain Contract Asset Registration, chainId: {}, assetId: {}, symbol: {}, decimals: {}, address: {}", hChainId, info.getAssetId(), info.getSymbol(), info.getDecimals(), info.getContractAddress());
                 }
             }
         } catch (Exception e) {
@@ -276,8 +285,8 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
 
                 Integer hChainId = txData.getChainId();
                 IHeterogeneousChainDocking docking = heterogeneousDockingManager.getHeterogeneousDocking(hChainId);
-                // 异构合约资产注册 OR NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定
-                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false;
+                // Heterogeneous Contract Asset Registration OR NERVEAsset binding heterogeneous contract assets: New binding / Overwrite binding
+                boolean isBindNew = false, isBindRemove = false, isBindOverride = false, isUnregister = false, isPause = false, isResume = false, isStablePause = false;
                 do {
                     byte[] remark = tx.getRemark();
                     if (remark == null) {
@@ -297,7 +306,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                     int assetChainId = Integer.parseInt(asset[0]);
                     int assetId = Integer.parseInt(asset[1]);
                     if (BindHeterogeneousContractMode.NEW.toString().equals(mode)) {
-                        // NERVE资产绑定异构合约资产: 新绑定
+                        // NERVEAsset binding heterogeneous contract assets: New binding
                         docking.rollbackHeterogeneousAssetInfos(List.of(info));
                         ledgerAssetRegisterHelper.deleteCrossChainAssetByExistNerveAsset(hChainId, info.getAssetId());
                         isBindNew = true;
@@ -307,7 +316,7 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                                 info.getSymbol(), info.getDecimals(), info.getSymbol(), info.getContractAddress());
                         isBindRemove = true;
                     } else if (BindHeterogeneousContractMode.OVERRIDE.toString().equals(mode)) {
-                        // NERVE资产绑定异构合约资产: 覆盖绑定
+                        // NERVEAsset binding heterogeneous contract assets: Overwrite binding
                         HeterogeneousAssetInfo hAssetInfo = docking.getAssetByContractAddress(info.getContractAddress());
                         ledgerAssetRegisterHelper.deleteCrossChainAssetByExistNerveAsset(hAssetInfo.getChainId(), hAssetInfo.getAssetId());
                         String oldAssetContactInfo = modeSplit[2];
@@ -353,11 +362,21 @@ public class HeterogeneousContractAssetRegCompleteProcessor implements Transacti
                             ledgerAssetRegisterHelper.pauseOut(hChainId, hAssetId);
                         }
                         isResume = true;
+                    } else if (BindHeterogeneousContractMode.STABLE_SWAP_COIN_PAUSE.toString().equals(mode)) {
+                        String stableAddress = asset[2];
+                        String status = asset[3];
+                        if ("pause".equalsIgnoreCase(status)) {
+                            status = "RESUME";
+                        } else if ("resume".equalsIgnoreCase(status)) {
+                            status = "PAUSE";
+                        }
+                        SwapCall.pauseCoinForStable(chainId, stableAddress, assetChainId, assetId, status);
+                        isStablePause = true;
                     }
 
                 } while (false);
-                // 异构合约资产注册
-                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume) {
+                // Heterogeneous Contract Asset Registration
+                if (!isBindNew && !isBindRemove && !isBindOverride && !isUnregister && !isPause && !isResume && !isStablePause) {
                     docking.rollbackHeterogeneousAssetInfos(List.of(info));
                     ledgerAssetRegisterHelper.deleteCrossChainAsset(hChainId, info.getAssetId());
                 }

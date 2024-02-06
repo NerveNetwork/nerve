@@ -35,7 +35,7 @@ import org.tron.trident.utils.Numeric;
 import java.util.List;
 
 /**
- * 解析HTG区块，监听指定地址和指定交易并回调Nerve核心
+ * analysisHTGBlock, listen to specified addresses and transactions, and call backNervecore
  *
  * @author: Mimi
  * @date: 2020-02-20
@@ -46,7 +46,7 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
     private HtgContext htgContext;
 
     /**
-     * 解析HTG区块
+     * analysisHTGblock
      */
     public void analysisEthBlock(Response.BlockExtention block , TrxAnalysisTxHelper analysisTx) throws Exception {
         List<Response.TransactionExtention> list = block.getTransactionsList();
@@ -56,7 +56,7 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
         if (list != null && (size = list.size()) > 0) {
             long txTime = header.getTimestamp();
             if (htgContext.getConverterCoreApi().isProtocol21()) {
-                // 换算时间为秒
+                // Convert time to seconds
                 txTime = txTime / 1000;
             }
             for (int i = 0; i < size; i++) {
@@ -64,24 +64,24 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
                 try {
                     analysisTx.analysisTx(tx.getTransaction(), txTime, blockHeight);
                 } catch (Exception e) {
-                    htgContext.logger().error(String.format("[%s]网络交易解析失败: %s", htgContext.getConfig().getSymbol(), TrxUtil.calcTxHash(tx.getTransaction())), e);
+                    htgContext.logger().error(String.format("[%s]Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), TrxUtil.calcTxHash(tx.getTransaction())), e);
                 }
             }
         }
-        // 保存本地区块
+        // Save local blocks
         HtgSimpleBlockHeader simpleBlockHeader = new HtgSimpleBlockHeader();
         simpleBlockHeader.setHash(Numeric.toHexString(block.getBlockid().toByteArray()));
         simpleBlockHeader.setPreHash(Numeric.toHexString(header.getParentHash().toByteArray()));
         simpleBlockHeader.setHeight(blockHeight);
         simpleBlockHeader.setCreateTime(System.currentTimeMillis());
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
-        // 只保留最近的三十个区块
+        // Keep only the last thirty blocks
         htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
 
         if (blockHeight % 50 == 0) {
-            htgContext.logger().info("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().info("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
         } else {
-            htgContext.logger().debug("同步{}高度[{}]完成", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().debug("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
         }
     }
 

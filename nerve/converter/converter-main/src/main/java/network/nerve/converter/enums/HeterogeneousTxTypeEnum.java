@@ -32,7 +32,7 @@ import java.util.Map;
  * @date: 2020/5/21
  */
 public enum HeterogeneousTxTypeEnum {
-    //类型 1:充值交易, 2:提现交易
+    //type 1:Recharge transaction, 2:Withdrawal transactions
     DEPOSIT((byte) 1),
 
     WITHDRAWAL((byte) 2);

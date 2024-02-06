@@ -31,11 +31,11 @@ package network.nerve.converter.heterogeneouschain.avax.constant;
  */
 public interface AvaxDBConstant {
     /**
-     * AVAX信息表
-     * - 同步区块头信息
-     * - 交易关系信息
-     * - 账户信息
-     * - 待确认交易
+     * AVAXInformation table
+     * - Synchronize block header information
+     * - Transaction relationship information
+     * - Account information
+     * - Transaction to be confirmed
      * - ...
      */
     String DB_AVAX = "cv_table_avax";

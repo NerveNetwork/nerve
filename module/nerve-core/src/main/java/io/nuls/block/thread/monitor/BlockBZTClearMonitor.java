@@ -29,17 +29,17 @@ import io.nuls.core.rpc.util.NulsDateUtils;
 import java.util.*;
 
 /**
- * bzt校验的区块数据清理情况监控器
- * 每隔固定时间间隔启动
- * 如果发现缓存数据超出100size，则启动时间对比进行数据清理
+ * bztVerified block data cleaning monitor
+ * Start every fixed time interval
+ * If it is found that the cached data exceeds the limit100sizeStart time comparison for data cleaning
  *
  * @author ljs
  * @version 1.0
- * @date 19-12-14 下午3:53
+ * @date 19-12-14 afternoon3:53
  */
 public class BlockBZTClearMonitor extends BaseMonitor {
     /**
-     * 如果缓存中有200个区块基础验证通过的区块在2分钟之内还未拜占庭通过则需要清理删除
+     * If there are200The blocks that have passed basic verification are2If Byzantium has not been approved within minutes, it needs to be cleared and deleted
      * */
     private static final short MAX_TEMP_SIZE = 200;
     private static final short OVER_TIME_INTERVAL = 120;

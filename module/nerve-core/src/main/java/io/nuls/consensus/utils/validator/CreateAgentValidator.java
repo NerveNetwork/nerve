@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 创建节点交易验证器
+ * Create a node transaction validator
  * @author  tag
  * */
 @Component
@@ -43,24 +43,24 @@ public class CreateAgentValidator extends BaseValidator {
             }
             Agent agent = new Agent();
             agent.parse(tx.getTxData(), 0);
-            //节点基础验证
+            //Node basic verification
             Result rs = createAgentBasicValid(chain, tx, agent);
             if (rs.isFailed()) {
                 return rs;
             }
-            //节点地址验证
+            //Node address verification
             rs = createAgentAddrValid(chain, tx, agent);
             if (rs.isFailed()) {
                 return rs;
             }
-            //coinData验证
+            //coinDatavalidate
             CoinData coinData = new CoinData();
             coinData.parse(tx.getCoinData(), 0);
             rs = appendDepositCoinDataValid(chain, agent.getDeposit(), coinData, agent.getAgentAddress());
             if (rs.isFailed()) {
                 return rs;
             }
-            //验证手续费是否足够
+            //Verify if the handling fee is sufficient
             rs = validFee(chain, coinData, tx);
             if (rs.isFailed()) {
                 return rs;
@@ -73,12 +73,12 @@ public class CreateAgentValidator extends BaseValidator {
     }
 
     /**
-     * 创建节点交易基础验证
+     * Create node transaction basic verification
      * Create agent transaction base validation
      *
-     * @param chain 链ID/chain id
-     * @param tx    创建节点交易/create transaction
-     * @param agent 节点/agent
+     * @param chain chainID/chain id
+     * @param tx    Create node transactions/create transaction
+     * @param agent node/agent
      * @return Result
      */
     private Result createAgentBasicValid(Chain chain, Transaction tx, Agent agent){
@@ -107,18 +107,18 @@ public class CreateAgentValidator extends BaseValidator {
     }
 
     /**
-     * 创建节点交易节点地址及出块地址验证
+     * Create node transaction node address and block out address verification
      * address validate
      *
-     * @param chain 链ID/chain id
-     * @param tx    创建节点交易/create transaction
-     * @param agent 节点/agent
+     * @param chain chainID/chain id
+     * @param tx    Create node transactions/create transaction
+     * @param agent node/agent
      * @return boolean
      */
     private Result createAgentAddrValid(Chain chain, Transaction tx, Agent agent) {
         if (!chain.getSeedAddressList().isEmpty()) {
             byte[] nodeAddressBytes;
-            //节点地址及出块地址不能是种子节点
+            //Node address and block address cannot be seed nodes
             for (String nodeAddress : chain.getSeedAddressList()) {
                 nodeAddressBytes = AddressTool.getAddress(nodeAddress);
                 if (Arrays.equals(nodeAddressBytes, agent.getAgentAddress())) {
@@ -131,7 +131,7 @@ public class CreateAgentValidator extends BaseValidator {
                 }
             }
         }
-        //节点地址及出块地址不能重复
+        //Node address and block address cannot be duplicated
         List<Agent> agentList = agentManager.getAgentList(chain, chain.getBestHeader().getHeight());
         if (agentList != null && agentList.size() > 0) {
             Set<String> set = new HashSet<>();

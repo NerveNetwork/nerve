@@ -38,19 +38,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 虚拟银行提交异构链地址txData
+ * Virtual bank submits heterogeneous chain addressestxData
  * @author: Loki
  * @date: 2020-02-17
  */
 public class SubmitHeterogeneousAddressTxData extends BaseNulsData {
 
     /**
-     * 节点地址
+     * Node address
      */
     private byte[] agentAddress;
 
     /**
-     * 异构链地址集合
+     * Heterogeneous chain address set
      */
     private List<HeterogeneousAddress> heterogeneousAddressList;
 

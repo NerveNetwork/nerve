@@ -47,7 +47,7 @@ public class LedgerBalance implements Serializable {
     private BigInteger freeze;
     private byte[] nonce;
     /**
-     * 存储连续交易的第一个交易的nonce，用于回滚连续交易
+     * Store the first transaction of a continuous transactionnonce, used to roll back continuous transactions
      */
     private byte[] preNonce;
 

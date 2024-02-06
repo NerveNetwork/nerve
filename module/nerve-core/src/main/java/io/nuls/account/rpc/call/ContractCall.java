@@ -42,7 +42,7 @@ import java.util.Map;
 public class ContractCall {
 
     /**
-     * 导入账户调用智能合约
+     * Import account and call smart contract
      * @param chain
      * @param address
      * @return

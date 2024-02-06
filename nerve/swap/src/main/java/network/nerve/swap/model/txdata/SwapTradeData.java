@@ -19,7 +19,7 @@ public class SwapTradeData extends BaseNulsData {
     private BigInteger amountOutMin;
     private byte[] to;
     /**
-     * 手续费接收地址
+     * Handling fee receiving address
      */
     private byte[] feeTo;
     private long deadline;

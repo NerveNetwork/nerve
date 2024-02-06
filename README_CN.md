@@ -2,61 +2,61 @@
 <h1 align="center">NerveNetwork </h1>
 <h4 align="center">Version 0.0.0 </h4>
 
-[English](README.md) | 中文
+[English](README.md) | Chinese
 
-欢迎来到Nerve的源码库！
+Welcome toNerveSource code library for！
 
-Nerve是一个去中心化的数字资产服务网络。它是基于NULS微服务框架，使用NULS ChainBox开发搭建的区块链跨链交互协议。旨在打破区块链价值孤岛，建立跨链互通的资产交互网络，为Defi应用生态提供底层支持。让数字资产持有者享受真正安全、自由、透明的Defi应用服务。
-通过Nerve跨链交互协议，只需要通过标准的接口进行少量的开发，即可将不同结构的区块链转化成为一套NULS生态中跨链模块能够识别的通用资产类型。从而打通NULS生态体系内外的资产交互，同时也为主流的数字资产例如BTC等提供丰富的Defi使用场景。
+NerveIt is a decentralized digital asset service network. It is based onNULSMicroservices framework, usingNULS ChainBoxDevelop and build a blockchain cross chain interaction protocol. Intended to break the value island of blockchain and establish a cross chain interoperability asset exchange networkDefiThe application ecosystem provides underlying support. Enable digital asset holders to enjoy true security、free、TransparentDefiApplication services.
+adoptNerveCross chain interaction protocol, which only requires a small amount of development through standard interfaces, can transform blockchains of different structures into a setNULSCommon asset types that can be recognized by cross chain modules in the ecosystem. So as to connectNULSAsset interactions within and outside the ecosystem, as well as mainstream digital assets such asBTCWaiting to provide richDefiUsage scenario.
 
-目前Nerve正处在紧张的开发、调试阶段，代码还非常不稳定，技术人员会不定期的推送新版代码到github仓库中。
+at presentNerveCurrently under intense development、During the debugging phase, the code is still very unstable, and technicians will periodically push new versions of the code togithubIn the warehouse.
 
-也非常欢迎及希望能有更多的开发者加入到Nerve中来。
+We also warmly welcome and hope that more developers can join usNerveZhonglai.
 
-* [特性](#特性)
-* [构建开发环境](#构建开发环境)
-* [获取Nerve程序包](#获取Nerve程序包)
-* [贡献代码](#贡献代码)
-* [开源社区](#开源社区)
-    * [网站](#网站)
-    * [Discord开发者社区](#discord开发者社区)
-* [许可证](#许可证)
+* [characteristic](#characteristic)
+* [Building a development environment](#Building a development environment)
+* [obtainNervePackage](#obtainNervePackage)
+* [Contribution Code](#Contribution Code)
+* [Open source community](#Open source community)
+    * [website](#website)
+    * [DiscordDeveloper Community](#discordDeveloper Community)
+* [License](#License)
 
-## 特性
+## characteristic
 
-* POCBFT共识算法
-* 同构跨链和异构跨链交互协议
-* 微服务底层架构
-* 多语言开发支持
-* 秒级交易确认时间
-* 底层支持DEX协议
-* 去中心化交易撮合机制
-* 天生对接NULS生态
+* POCBFTConsensus algorithm
+* Isomorphic Cross Chain and Heterogeneous Cross Chain Interaction Protocol
+* Microservices underlying architecture
+* Multi language development support
+* Second level transaction confirmation time
+* Bottom level supportDEXprotocol
+* Decentralized trading matching mechanism
+* Natural dockingNULSecology
 
-## 构建开发环境
-成功编译Nerve需要以下准备：
+## Building a development environment
+Successfully compiledNerveThe following preparations are required：
 
-* JDK版本在11及以上
-* Maven环境
+* JDKVersion in11And above
+* Mavenenvironment
 
-## 获取Nerve程序包
+## obtainNervePackage
 
-目前的代码版本还不稳定，暂不提供程序包下载。
+The current code version is not stable and package downloads are not currently available.
  
-## 贡献代码
+## Contribution Code
 
-请您以签过名的commit发送pull request请求，我们期待您的加入！
+Please provide a signed documentcommitsendpull requestRequest, we look forward to your joining！
 
-## 开源社区
+## Open source community
 
-### 网站
+### website
 
 - http://nerve.network/
 
-### Discord开发者社区
+### DiscordDeveloper Community
 
 - https://discord.gg/bdyMBT/
 
-## 许可证
-Nerve是在[MIT](http://opensource.org/licenses/MIT)许可下发布的。
-以后添加的模块可能会在不同的许可证下发布，具体将在模块库路径中指定。
+## License
+NerveIt's in the[MIT](http://opensource.org/licenses/MIT)Released under license.
+The modules added in the future may be released under different licenses, which will be specified in the module library path.

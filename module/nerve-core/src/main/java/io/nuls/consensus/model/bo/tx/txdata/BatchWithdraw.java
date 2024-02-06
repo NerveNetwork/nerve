@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 批量退出staking交易的txData
+ * Batch exitstakingTransactionaltxData
  */
 public class BatchWithdraw extends BaseNulsData {
 

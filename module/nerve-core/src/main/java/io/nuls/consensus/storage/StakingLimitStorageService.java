@@ -9,7 +9,7 @@ import java.math.BigDecimal;
  */
 public interface StakingLimitStorageService {
     /**
-     * 累加staking金额
+     * accumulationstakingmoney
      *
      * @param key
      * @param Amount
@@ -18,7 +18,7 @@ public interface StakingLimitStorageService {
     boolean addStaking(Chain chain, String key, BigDecimal Amount);
 
     /**
-     * 减少staking金额
+     * reducestakingmoney
      *
      * @param key
      * @param Amount
@@ -27,7 +27,7 @@ public interface StakingLimitStorageService {
     boolean exitStaking(Chain chain, String key, BigDecimal Amount);
 
     /**
-     * 获取可以参与的数量
+     * Obtain the number of available participants
      *
      * @param key
      * @return

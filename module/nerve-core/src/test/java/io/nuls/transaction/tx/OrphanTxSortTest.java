@@ -44,14 +44,14 @@ public class OrphanTxSortTest {
     public void test() throws Exception {
         for (int y = 0; y < 1; y++) {
             List<Transaction> txs = getTxs();
-            System.out.println("正确的顺序");
+            System.out.println("Correct order");
             Map<String, Integer> indexMap = new HashMap<>();
             int index = 1;
             for (int i = 0; i < txs.size(); i++) {
                 Transaction tx = txs.get(i);
                 CoinData coinData = TxUtil.getCoinData(tx);
                 indexMap.put(tx.getHash().toHex(), index);
-                System.out.println(index++ + " 正确的顺序: " + tx.getHash().toHex() + ", nonce:" + HexUtil.encode(coinData.getFrom().get(0).getNonce()));
+                System.out.println(index++ + " Correct order: " + tx.getHash().toHex() + ", nonce:" + HexUtil.encode(coinData.getFrom().get(0).getNonce()));
 
 //                for (int x = 0; x < coinData.getFrom().size(); x++) {
 //                    CoinFrom from = coinData.getFrom().get(x);
@@ -67,27 +67,27 @@ public class OrphanTxSortTest {
             }
             System.out.println("Size:" + txList.size());
 
-            System.out.println("排序前");
+            System.out.println("Before sorting");
             for (TransactionNetPO tx : txList) {
-                System.out.println("排序前的顺序: " + indexMap.get(tx.getTx().getHash().toHex()));
+                System.out.println("Order before sorting: " + indexMap.get(tx.getTx().getHash().toHex()));
             }
             long start = System.currentTimeMillis();
 
             /**
-             * 排序
+             * sort
              */
             OrphanSort sort = new OrphanSort();
             sort.rank(txList);
 
             long end = System.currentTimeMillis() - start;
-            System.out.println("执行时间：" + end);
+            System.out.println("execution time：" + end);
             System.out.println(txList.size());
-            System.out.println("排序后");
+            System.out.println("After sorting");
             for (int i = 0; i < txList.size(); i++) {
                 TransactionNetPO tx = txList.get(i);
                 String hs = txs.get(i).getHash().toHex();
-//                System.out.println("排序后的顺序-(正确性): " + tx.getTx().getHash().toHex() + ", " + tx.getTx().getHash().toHex().equals(hs));
-                System.out.println("排序后的顺序- " + indexMap.get(tx.getTx().getHash().toHex()));
+//                System.out.println("Sorted order-(Correctness): " + tx.getTx().getHash().toHex() + ", " + tx.getTx().getHash().toHex().equals(hs));
+                System.out.println("Sorted order- " + indexMap.get(tx.getTx().getHash().toHex()));
             }
 
         }
@@ -99,8 +99,8 @@ public class OrphanTxSortTest {
         Set<Integer> set = new HashSet<>();
         while (true) {
             Random rand = new Random();
-            //随机数范取值围应为0到list最大索引之间
-            //根据公式rand.nextInt((list.size() - 1) - 0 + 1) + 0;
+            //The range of values for the random number norm should be0reachlistBetween maximum indexes
+            //According to the formularand.nextInt((list.size() - 1) - 0 + 1) + 0;
             int ran = rand.nextInt(count);
             if (set.add(ran)) {
                 list.add(ran);
@@ -112,7 +112,7 @@ public class OrphanTxSortTest {
         return list;
     }
 
-    // 顺序
+    // order
     private List<Transaction> getTxs() throws Exception {
 
         String s1 = "02006ff3dd5e0d7472616e736665722074657374008c01170200017fe9a685e43b3124e00fd9c8e4e59158baea634502000100400d030000000000000000000000000000000000000000000000000000000000080000000000000000000117020001f7ec6473df12e751d64cf20a8baa7edd50810f8102000100a08601000000000000000000000000000000000000000000000000000000000000000000000000006a210318f683066b45e7a5225779061512e270044cc40a45c924afcf78bb7587758ca0473045022100ebbabfc6284636503db17f483df703441bfbbde3e4a45ad36377ff0d9695b18202202ecdefd6638f9746c2123d18e8f5e12f3621c9f669689439bdd87bd0e9859919";
@@ -150,7 +150,7 @@ public class OrphanTxSortTest {
         return list;
     }
 
-    // 乱序
+    // Disorderly order
     private List<Transaction> getTxs2() throws Exception {
         String s1 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af7846102605bef00000000000000000000000000000000000000000000000000000000000c32ce4a020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300605bef000000000000000000000000000000000000000000000000000000000008f1a6292a88c0798300170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000082c2d09ee348fad0d0001170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000300605bef0000000000000000000000000000000000000000000000000000000000feffffffffffffff692102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad846304402205fee2462aa08f9af41acc565f32e39169a6399c1cf397ed24cfb30f5a94408a6022006a675e9c758bc2cbb84c02838c5781e1a6bfeb53c256d5b50f5c0bc969d67ab";
         String s2 = "e5003a0bda5e007a5e350860a922803ea827f6f285d9375a21248088dc2625541dd9c9696f4998250400015884fa407da3005067ce4bd6d29a8e4a2af78461024878e2050000000000000000000000000000000000000000000000000000000061a86e4b020000000000000000000000000000000000000000000000000000000000d202170400015884fa407da3005067ce4bd6d29a8e4a2af78461040003004878e20500000000000000000000000000000000000000000000000000000000088a4f23768f930d8e00170400015884fa407da3005067ce4bd6d29a8e4a2af7846104000100a086010000000000000000000000000000000000000000000000000000000000088a4f23768f930d8e0001170400015884fa407da3005067ce4bd6d29a8e4a2af78461040003004878e20500000000000000000000000000000000000000000000000000000000feffffffffffffff6a2102446e0d4d132610b9ac3546fbae0d43cd7be1c4c62c3cb18ff8dc51691d141ad84730450221008e5f61bcd7a7cfc26ed4deecc7ec4ebebb1dc9a23abb6ed170b88527a9dcfdf102202b3fc7d3b640cc024a0878d17ec3f785490426cde146f2b7f9da1b78cbe565b8";

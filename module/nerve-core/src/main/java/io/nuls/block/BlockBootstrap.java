@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 import static io.nuls.block.constant.Constant.*;
 
 /**
- * 区块模块启动类
+ * Block module startup class
  *
  * @author captain
  * @version 1.0
- * @date 19-3-4 下午4:09
+ * @date 19-3-4 afternoon4:09
  */
 @Component
 public class BlockBootstrap implements INerveCoreBootstrap {
@@ -50,7 +50,7 @@ public class BlockBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 返回当前模块的描述信息
+     * Return the description information of the current module
      *
      * @return
      */
@@ -60,7 +60,7 @@ public class BlockBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 初始化模块信息,比如初始化RockDB等,在此处初始化后,可在其他bean的afterPropertiesSet中使用
+     * Initialize module information,For example, initializationRockDBetc.,After initialization here,Can be found in otherbeanofafterPropertiesSetUsed in
      */
     private void init() {
         try {
@@ -73,11 +73,11 @@ public class BlockBootstrap implements INerveCoreBootstrap {
     }
 
     /**
-     * 初始化数据库
+     * Initialize database
      * Initialization database
      */
     private void initDb() throws Exception {
-        //读取配置文件,数据存储根目录,初始化打开该目录下所有表连接并放入缓存
+        //Read configuration file,Root directory of data storage,Initialize and open all table connections in this directory and place them in cache
         RocksDBService.init(blockConfig.getDataPath() + File.separator + ModuleE.BL.name);
         RocksDBService.createTable(CHAIN_LATEST_HEIGHT);
         RocksDBService.createTable(PROTOCOL_CONFIG);
@@ -86,7 +86,7 @@ public class BlockBootstrap implements INerveCoreBootstrap {
 
     private boolean doStart() {
         try {
-            //启动链
+            //Start Chain
             chainManager.runChain();
         } catch (Exception e) {
             Log.error("block module doStart error!" + e);
@@ -107,33 +107,33 @@ public class BlockBootstrap implements INerveCoreBootstrap {
                 BlockSynchronizer.syn(chainId);
             }
         } else {
-            //开启区块同步线程
+            //Enable block synchronization thread
             List<Integer> chainIds = ContextManager.CHAIN_ID_LIST;
             for (Integer chainId : chainIds) {
                 BlockSynchronizer.syn(chainId);
             }
-            //开启分叉链处理线程
+            //Enable fork chain processing thread
             /*ScheduledThreadPoolExecutor forkExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("fork-chains-monitor"));
             forkExecutor.scheduleWithFixedDelay(ForkChainsMonitor.getInstance(), 0, blockConfig.getForkChainsMonitorInterval(), TimeUnit.MILLISECONDS);*/
-            //开启孤儿链处理线程
+            //Enable orphan chain processing thread
             /*ScheduledThreadPoolExecutor orphanExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-monitor"));
             orphanExecutor.scheduleWithFixedDelay(OrphanChainsMonitor.getInstance(), 0, blockConfig.getOrphanChainsMonitorInterval(), TimeUnit.MILLISECONDS);*/
-            //开启孤儿链维护线程
+            //Enable orphan chain maintenance thread
             /*ScheduledThreadPoolExecutor maintainExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("orphan-chains-maintainer"));
             maintainExecutor.scheduleWithFixedDelay(OrphanChainsMaintainer.getInstance(), 0, blockConfig.getOrphanChainsMaintainerInterval(), TimeUnit.MILLISECONDS);*/
-            //开启数据库大小监控线程
+            //Enable database size monitoring thread
             ScheduledThreadPoolExecutor dbSizeExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("storage-size-monitor"));
             dbSizeExecutor.scheduleWithFixedDelay(StorageSizeMonitor.getInstance(), 0, blockConfig.getStorageSizeMonitorInterval(), TimeUnit.MILLISECONDS);
-            //开启区块监控线程
+            //Enable block monitoring thread
             ScheduledThreadPoolExecutor monitorExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("network-monitor"));
             monitorExecutor.scheduleWithFixedDelay(NetworkResetMonitor.getInstance(), 0, blockConfig.getNetworkResetMonitorInterval(), TimeUnit.MILLISECONDS);
-            //开启交易组获取线程
+            //Start the transaction group acquisition thread
             ScheduledThreadPoolExecutor txGroupExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("txGroup-requestor"));
             txGroupExecutor.scheduleWithFixedDelay(TxGroupRequestor.getInstance(), 0, blockConfig.getTxGroupRequestorInterval(), TimeUnit.MILLISECONDS);
-            //开启节点数量监控线程
+            //Enable node count monitoring thread
             ScheduledThreadPoolExecutor nodesExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("nodes-monitor"));
             nodesExecutor.scheduleWithFixedDelay(NodesMonitor.getInstance(), 0, blockConfig.getNodesMonitorInterval(), TimeUnit.MILLISECONDS);
-            //开启bzt缓存数据的清理
+            //openbztCleaning of cached data
             ScheduledThreadPoolExecutor bztClearExecutor = ThreadUtils.createScheduledThreadPool(1, new NulsThreadFactory("blockBZTClear-monitor"));
             bztClearExecutor.scheduleWithFixedDelay(BlockBZTClearMonitor.getInstance(), 0, blockConfig.getBlockBZTClearMonitorInterval(), TimeUnit.MILLISECONDS);
 

@@ -58,7 +58,7 @@ public class ParseTxUtils {
                 HexUtil.decode("022ed52fef6356f14bd28f4f47b410cd12545a0634a90531aa902316beefcb9c38"));
         signature.setPubKeyList(publicKeyList);
         tx.setTransactionSignature(signature.serialize());
-        System.out.println("结果");
+        System.out.println("result");
         System.out.println(HexUtil.encode(tx.serialize()));
     }
 

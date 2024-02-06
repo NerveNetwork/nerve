@@ -83,34 +83,34 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
                 break;
             }
 
-            // 广播的交易
+            // Broadcasting transactions
             if (ethListener.isListeningTx(tx.getHash())) {
-                EthContext.logger().info("监听到本地广播到ETH网络的交易[{}]", tx.getHash());
+                EthContext.logger().info("Listening to local broadcastsETHOnline transactions[{}]", tx.getHash());
                 isBroadcastTx = true;
                 break;
             }
 
             tx.setFrom(tx.getFrom().toLowerCase());
             tx.setTo(tx.getTo().toLowerCase());
-            // 使用input判断是否为提现or变更交易，input.substring(0, 10).equals("0xaaaaaaaa")，保存解析的完整交易数据
-            // 广播的交易
+            // applyinputDetermine whether it is a withdrawalorChange transaction,input.substring(0, 10).equals("0xaaaaaaaa")Save the complete transaction data for parsing
+            // Broadcasting transactions
             if (ethListener.isListeningAddress(tx.getTo())) {
                 EthInput ethInput = this.parseInput(tx.getInput());
                 if(ethInput.isBroadcastTx()) {
                     isBroadcastTx = true;
                     txType = ethInput.getTxType();
                     nerveTxHash = ethInput.getNerveTxHash();
-                    EthContext.logger().info("监听到ETH网络的[{}]交易[{}], nerveTxHash: {}", txType, tx.getHash(), nerveTxHash);
+                    EthContext.logger().info("Listening toETHNetwork based[{}]transaction[{}], nerveTxHash: {}", txType, tx.getHash(), nerveTxHash);
                     break;
                 }
             }
 
-            // ETH充值交易 条件: 固定接收地址, 金额大于0, 没有input
+            // ETHRecharge transaction condition: Fixed receiving address, Amount greater than0, absenceinput
             if (ethListener.isListeningAddress(tx.getTo()) &&
                     tx.getValue().compareTo(BigInteger.ZERO) > 0 &&
                     tx.getInput().equals(EthConstant.HEX_PREFIX)) {
                 if (!ethParseTxHelper.validationEthDeposit(tx)) {
-                    EthContext.logger().error("[{}]不是ETH充值交易[2]", ethTxHash);
+                    EthContext.logger().error("[{}]No, it's notETHRecharge transaction[2]", ethTxHash);
                     break;
                 }
                 isDepositTx = true;
@@ -121,19 +121,19 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
                 po.setDecimals(EthConstant.ETH_DECIMALS);
                 po.setAssetId(EthConstant.ETH_ASSET_ID);
                 po.setNerveAddress(EthUtil.covertNerveAddressByEthTx(tx));
-                EthContext.logger().info("监听到ETH网络的ETH充值交易[{}], from: {}, to: {}, value: {}, nerveAddress: {}",
+                EthContext.logger().info("Listening toETHNetwork basedETHRecharge transaction[{}], from: {}, to: {}, value: {}, nerveAddress: {}",
                         tx.getHash(),
                         tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress());
                 break;
             }
-            // ERC20充值交易
+            // ERC20Recharge transaction
             if (ethERC20Helper.isERC20(tx.getTo(), po)) {
                 TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
                 if (ethERC20Helper.hasERC20WithListeningAddress(txReceipt, po, toAddress -> ethListener.isListeningAddress(toAddress))) {
                     isDepositTx = true;
                     txType = HeterogeneousChainTxType.DEPOSIT;
                     po.setNerveAddress(EthUtil.covertNerveAddressByEthTx(tx));
-                    EthContext.logger().info("监听到ETH网络的ERC20充值交易[{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
+                    EthContext.logger().info("Listening toETHNetwork basedERC20Recharge transaction[{}], from: {}, to: {}, value: {}, nerveAddress: {}, contract: {}, decimals: {}",
                             tx.getHash(),
                             tx.getFrom(), po.getTo(), po.getValue(), po.getNerveAddress(), po.getContractAddress(), po.getDecimals());
                     break;
@@ -141,16 +141,16 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
             }
 
         } while (false);
-        // 检查是否被Nerve网络确认，产生原因是当前节点解析eth交易比其他节点慢，其他节点确认了此交易后，当前节点才解析到此交易
+        // Check if it has been affectedNerveNetwork confirmation, the cause is the current node parsingethThe transaction is slower than other nodes, and the current node only resolves this transaction after other nodes confirm it
         EthUnconfirmedTxPo txPoFromDB = null;
         if(isBroadcastTx || isDepositTx) {
             txPoFromDB = ethUnconfirmedTxStorageService.findByTxHash(ethTxHash);
             if(txPoFromDB != null && txPoFromDB.isDelete()) {
-                EthContext.logger().info("ETH交易[{}]已被[Nerve网络]确认，不再处理", ethTxHash);
+                EthContext.logger().info("ETHtransaction[{}]Has been[Nervenetwork]Confirm, no further processing", ethTxHash);
                 return;
             }
         }
-        // 如果是发出去的交易，例如提现和管理员变更，则补全交易信息
+        // If it is a transaction sent out, such as withdrawal and administrator changes, complete the transaction information
         if (isBroadcastTx) {
             if (txType == null) {
                 EthInput ethInput = this.parseInput(tx.getInput());
@@ -160,14 +160,14 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
             this.dealBroadcastTx(nerveTxHash, txType, tx, blockHeight, txTime, txPoFromDB);
             return;
         }
-        // 充值交易放入需要确认30个区块的待确认交易队列中
+        // Confirmation required for deposit of recharge transactions30In the pending confirmation transaction queue of blocks
         if (isDepositTx) {
             po.setTxType(txType);
             po.setTxHash(ethTxHash);
             po.setBlockHeight(blockHeight);
             po.setFrom(tx.getFrom());
             po.setTxTime(txTime);
-            // 保存解析的充值交易
+            // Save analyzed recharge transactions
             ethStorageHelper.saveTxInfo(po);
 
             ethUnconfirmedTxStorageService.save(po);
@@ -177,14 +177,14 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
 
     private void dealBroadcastTx(String nerveTxHash, HeterogeneousChainTxType txType, Transaction tx, long blockHeight, long txTime, EthUnconfirmedTxPo txPoFromDB) throws Exception {
         String ethTxHash = tx.getHash();
-        // 检查nerveTxHash是否合法
+        // inspectnerveTxHashIs it legal
         String realNerveTxHash = nerveTxHash;
         if (nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_I) || nerveTxHash.startsWith(EthConstant.ETH_RECOVERY_II)) {
             realNerveTxHash = nerveTxHash.substring(EthConstant.ETH_RECOVERY_I.length());
             txType = HeterogeneousChainTxType.RECOVERY;
         }
         if(EthContext.getConverterCoreApi().getNerveTx(realNerveTxHash) == null) {
-            EthContext.logger().warn("交易业务不合法[{}]，未找到NERVE交易，类型: {}, Key: {}", ethTxHash, txType, realNerveTxHash);
+            EthContext.logger().warn("Illegal transaction business[{}], not foundNERVETransaction, Type: {}, Key: {}", ethTxHash, txType, realNerveTxHash);
             return;
         }
         EthUnconfirmedTxPo txPo = txPoFromDB;
@@ -198,10 +198,10 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
         txPo.setTxType(txType);
         txPo.setBlockHeight(blockHeight);
         txPo.setTxTime(txTime);
-        // 判断是否为签名完成的交易，更改状态，解析交易的多签地址列表
+        // Determine whether it is a signed transaction, change the status, and parse the multi signature address list of the transaction
         TransactionReceipt txReceipt = ethWalletApi.getTxReceipt(ethTxHash);
         if (txReceipt == null || !txReceipt.isStatusOK()) {
-            // 当前节点发出的交易，交易失败，重发三十次，仍然失败的话，则丢弃交易
+            // The transaction sent by the current node has failed. If it is resent thirty times and still fails, the transaction will be discarded
             if (ethResendHelper.currentNodeSent(ethTxHash) && ethResendHelper.canResend(nerveTxHash)) {
                 ethResendHelper.increase(nerveTxHash);
                 txPo.setStatus(MultiSignatureStatus.RESEND);
@@ -209,12 +209,12 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
                 txPo.setStatus(MultiSignatureStatus.FAILED);
             }
         } else {
-            // 先默认设置为正在多签的交易
+            // Set it as a transaction with multiple signatures by default
             txPo.setStatus(MultiSignatureStatus.DOING);
             HeterogeneousTransactionInfo txInfo = null;
-            // 以此判断是否为首次保存
+            // To determine if it is the first time saving
             if (StringUtils.isBlank(txPo.getFrom())) {
-                // 解析交易数据，补充基本信息、多签列表信息
+                // Analyze transaction data and supplement basic information、Multiple signature list information
                 switch (txType) {
                     case WITHDRAW:
                         txInfo = ethParseTxHelper.parseWithdrawTransaction(tx, txReceipt);
@@ -236,17 +236,17 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
                     BeanUtils.copyProperties(txInfo, txPo);
                 }
             } else {
-                // 解析交易多签列表
+                // Analyze the multi signature list of transactions
                 txPo.setSigners(ethParseTxHelper.parseSigners(txReceipt));
             }
-            // 设置为签名完成的交易，当多签存在时
+            // Transactions set to complete with signatures, when multiple signatures exist
             if (txPo.getSigners() != null && !txPo.getSigners().isEmpty()) {
-                EthContext.logger().info("已完成签名的多签[{}]交易[{}], signers: {}",
+                EthContext.logger().info("Multiple signatures completed[{}]transaction[{}], signers: {}",
                         txType,
                         ethTxHash, Arrays.toString(txPo.getSigners().toArray()));
                 txPo.setStatus(MultiSignatureStatus.COMPLETED);
             }
-            // 保存解析的已签名完成的交易
+            // Save parsed signed completed transactions
             if (txInfo != null) {
                 ethStorageHelper.saveTxInfo(txInfo);
             } else {
@@ -255,10 +255,10 @@ public class EthAnalysisTxHelper implements IEthAnalysisTx {
         }
         ethUnconfirmedTxStorageService.save(txPo);
         if (!isLocal) {
-            EthContext.logger().info("从eth网络解析到的交易[{}]，新添加入待确认队列", ethTxHash);
+            EthContext.logger().info("fromethTransactions analyzed by the network[{}], newly added to the pending confirmation queue", ethTxHash);
             EthContext.UNCONFIRMED_TX_QUEUE.offer(txPo);
         }
-        // 移除监听
+        // Remove listening
         ethListener.removeListeningTx(ethTxHash);
     }
 

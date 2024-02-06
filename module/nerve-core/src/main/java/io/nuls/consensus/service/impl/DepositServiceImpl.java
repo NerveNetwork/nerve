@@ -44,7 +44,7 @@ import java.util.*;
 
 
 /**
- * 共识模块RPC接口实现类
+ * Consensus moduleRPCInterface implementation class
  * Consensus Module RPC Interface Implementation Class
  *
  * @author tag
@@ -59,7 +59,7 @@ public class DepositServiceImpl implements DepositService {
     private CoinDataManager coinDataManager;
 
     /**
-     * 委托共识
+     * Commission consensus
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -88,16 +88,16 @@ public class DepositServiceImpl implements DepositService {
             if (!AddressTool.validAddress(dto.getChainId(), dto.getAddress())) {
                 throw new NulsException(ConsensusErrorCode.ADDRESS_ERROR);
             }
-            //账户验证
+            //Account verification
             HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
 
-            //验证资产是否可以参与stacking
+            //Verify whether assets can participatestacking
             if (null == chainManager.assetStackingVerify(dto.getAssetChainId(), dto.getAssetId())) {
                 chain.getLogger().error("The current asset does not support stacking");
                 return Result.getFailed(ConsensusErrorCode.ASSET_NOT_SUPPORT_STACKING);
             }
 
-            //如果为存定期则验证定期类型是否存在
+            //If it is a fixed term, verify whether the fixed term type exists
             if (dto.getDepositType() == DepositType.REGULAR.getCode()) {
                 DepositTimeType depositTimeType = DepositTimeType.getValue(dto.getTimeType());
                 if (depositTimeType == null) {
@@ -112,7 +112,7 @@ public class DepositServiceImpl implements DepositService {
             tx.setTime(NulsDateUtils.getCurrentTimeSeconds());
             CoinData coinData = coinDataManager.getCoinData(deposit.getAddress(), chain, new BigInteger(dto.getDeposit()), ConsensusConstant.CONSENSUS_LOCK_TIME, tx.size() + P2PHKSignature.SERIALIZE_LENGTH, dto.getAssetChainId(), dto.getAssetId());
             tx.setCoinData(coinData.serialize());
-            //交易签名
+            //Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAddress(), dto.getPassword(), priKey, tx);
             String txStr = RPCUtil.encode(tx.serialize());
@@ -130,7 +130,7 @@ public class DepositServiceImpl implements DepositService {
     }
 
     /**
-     * 退出共识
+     * Exit consensus
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -150,7 +150,7 @@ public class DepositServiceImpl implements DepositService {
             if (!AddressTool.validAddress(dto.getChainId(), dto.getAddress())) {
                 return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
             }
-            //账户验证
+            //Account verification
             HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             NulsHash hash = NulsHash.fromHex(dto.getTxHash());
             Transaction depositTransaction = CallMethodUtils.getTransaction(chain, dto.getTxHash());
@@ -177,7 +177,7 @@ public class DepositServiceImpl implements DepositService {
                 return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
             }
 
-            //如果为定期委托则验证委托是否到期
+            //If it is a regular commission, verify whether the commission has expired
             long time = NulsDateUtils.getCurrentTimeSeconds();
             if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
                 DepositTimeType depositTimeType = DepositTimeType.getValue(deposit.getTimeType());
@@ -208,7 +208,7 @@ public class DepositServiceImpl implements DepositService {
             coinData.getFrom().get(0).setNonce(CallMethodUtils.getNonce(hash.getBytes()));
             cancelDepositTransaction.setCoinData(coinData.serialize());
 
-            //交易签名
+            //Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAddress(), dto.getPassword(), priKey, cancelDepositTransaction);
             String txStr = RPCUtil.encode(cancelDepositTransaction.serialize());
@@ -226,7 +226,7 @@ public class DepositServiceImpl implements DepositService {
     }
 
     /**
-     * 获取委托列表信息
+     * Obtain delegation list information
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -333,7 +333,7 @@ public class DepositServiceImpl implements DepositService {
     }
 
     /**
-     * 退出共识
+     * Exit consensus
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -352,7 +352,7 @@ public class DepositServiceImpl implements DepositService {
                 return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
             }
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //账户验证
+            //Account verification
             HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             String[] hashHexList = dto.getTxHash().split(",");
             List<CoinFrom> fromList = new ArrayList<>();
@@ -387,7 +387,7 @@ public class DepositServiceImpl implements DepositService {
                     return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
                 }
 
-                //如果为定期委托则验证委托是否到期
+                //If it is a regular commission, verify whether the commission has expired
                 long time = NulsDateUtils.getCurrentTimeSeconds();
                 if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
                     DepositTimeType depositTimeType = DepositTimeType.getValue(deposit.getTimeType());
@@ -469,7 +469,7 @@ public class DepositServiceImpl implements DepositService {
             coinData.setTo(toList);
             batchWithdrawTransaction.setCoinData(coinData.serialize());
 
-            //交易签名
+            //Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAddress(), dto.getPassword(), priKey, batchWithdrawTransaction);
             String txStr = RPCUtil.encode(batchWithdrawTransaction.serialize());
@@ -503,7 +503,7 @@ public class DepositServiceImpl implements DepositService {
                 return Result.getFailed(ConsensusErrorCode.PARAM_ERROR);
             }
             byte[] address = AddressTool.getAddress(dto.getAddress());
-            //账户验证
+            //Account verification
             HashMap callResult = CallMethodUtils.getPrivateKey(dto.getChainId(), dto.getAddress(), dto.getPassword());
             String[] hashHexList = dto.getTxHashes().split(",");
             List<CoinFrom> fromList = new ArrayList<>();
@@ -538,7 +538,7 @@ public class DepositServiceImpl implements DepositService {
                     return Result.getFailed(ConsensusErrorCode.DATA_ERROR);
                 }
 
-                //如果为定期委托则验证委托是否到期
+                //If it is a regular commission, verify whether the commission has expired
                 long time = NulsDateUtils.getCurrentTimeSeconds();
                 if (deposit.getDepositType() == DepositType.REGULAR.getCode()) {
                     DepositTimeType depositTimeType = DepositTimeType.getValue(deposit.getTimeType());
@@ -634,7 +634,7 @@ public class DepositServiceImpl implements DepositService {
 
             batchStakingMergeTx.setCoinData(coinData.serialize());
 
-            //交易签名
+            //Transaction signature
             String priKey = (String) callResult.get(PARAM_PRI_KEY);
             CallMethodUtils.transactionSignature(dto.getChainId(), dto.getAddress(), dto.getPassword(), priKey, batchStakingMergeTx);
             String txStr = RPCUtil.encode(batchStakingMergeTx.serialize());

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 追加保证金实现类
+ * Implementation of additional margin
  * Additional margin implementation class
  *
  * @author tag

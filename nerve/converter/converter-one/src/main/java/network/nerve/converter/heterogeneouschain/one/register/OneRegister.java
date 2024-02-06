@@ -32,7 +32,7 @@ import network.nerve.converter.heterogeneouschain.one.context.OneContext;
 
 
 /**
- * ONE组件向Nerve核心注册
+ * ONEComponent orientedNerveCore registration
  *
  * @author: Mimi
  * @date: 2020-02-20

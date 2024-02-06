@@ -52,7 +52,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     private BigInteger unFreezeLockTimeState(List<FreezeLockTimeState> timeList) {
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
-        //可移除的时间锁列表
+        //List of removable time locks
         List<FreezeLockTimeState> timeRemove = new ArrayList<>();
         timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
         for (FreezeLockTimeState freezeLockTimeState : timeList) {
@@ -73,7 +73,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     private BigInteger unFreezeLockTimeStateV2(List<FreezeLockTimeState> timeList) {
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
-        //可移除的时间锁列表
+        //List of removable time locks
         List<FreezeLockTimeState> timeRemove = new ArrayList<>();
         timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
         for (FreezeLockTimeState freezeLockTimeState : timeList) {
@@ -95,7 +95,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     private BigInteger unFreezeLockTimeStateV17(List<FreezeLockTimeState> timeList) {
         long nowTime = NulsDateUtils.getCurrentTimeSeconds();
         long nowTimeMl = NulsDateUtils.getCurrentTimeMillis();
-        //可移除的时间锁列表
+        //List of removable time locks
         List<FreezeLockTimeState> timeRemove = new ArrayList<>();
         timeList.sort((x, y) -> Long.compare(x.getLockTime(), y.getLockTime()));
         for (FreezeLockTimeState freezeLockTimeState : timeList) {
@@ -115,15 +115,15 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     }
 
     private BigInteger unFreezeLockHeightState(int addressChainId, List<FreezeHeightState> heightList, AccountState accountState, long nowHeight) {
-        //可移除的高度锁列表
+        //List of height locks that can be removed
         List<FreezeHeightState> heightRemove = new ArrayList<>();
         heightList.sort((x, y) -> Long.compare(x.getHeight(), y.getHeight()));
         for (FreezeHeightState freezeHeightState : heightList) {
             if (freezeHeightState.getHeight() <= nowHeight) {
-                //时间到期，进行解锁
+                //Time expires, unlock
                 heightRemove.add(freezeHeightState);
             } else {
-                //因为正序排列，所以可以跳出
+                //Because it is arranged in positive order, it can be skipped out
                 break;
             }
         }
@@ -136,7 +136,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
     }
 
     /**
-     * 释放账户的锁定记录
+     * Release account lock records
      *
      * @param addressChainId
      * @param accountState
@@ -151,7 +151,7 @@ public class FreezeStateServiceImpl implements FreezeStateService {
         }
         long nowHeight = repository.getBlockHeight(addressChainId);
         BigInteger addTimeAmount;
-        // protocol17 协议升级
+        // protocol17 Protocol upgrade
         if (nowHeight < LedgerConstant.PROTOCOL_1_17_0) {
             addTimeAmount = unFreezeLockTimeStateV2(timeList);
         } else {

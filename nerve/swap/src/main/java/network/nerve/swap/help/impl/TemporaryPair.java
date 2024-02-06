@@ -49,7 +49,7 @@ public class TemporaryPair extends AbstractPair {
         swapPairDTO.setTotalLP(swapPairDTO.getTotalLP().add(liquidityChange));
         swapPairDTO.setReserve0(balance0);
         swapPairDTO.setReserve1(balance1);
-        // pierre reserve0, reserve1 是否需要价格预言机
+        // pierre reserve0, reserve1 Do you need a price oracle
 
     }
 
@@ -58,7 +58,7 @@ public class TemporaryPair extends AbstractPair {
         swapPairDTO.setTotalLP(swapPairDTO.getTotalLP().subtract(liquidityChange));
         swapPairDTO.setReserve0(reserve0);
         swapPairDTO.setReserve1(reserve1);
-        // pierre reserve0, reserve1 是否需要价格预言机
+        // pierre reserve0, reserve1 Do you need a price oracle
 
     }
 }

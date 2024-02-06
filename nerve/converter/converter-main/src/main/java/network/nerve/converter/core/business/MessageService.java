@@ -28,38 +28,38 @@ import network.nerve.converter.message.*;
 import network.nerve.converter.model.bo.Chain;
 
 /**
- * 消息处理核心业务
+ * Message processing core business
  * @author: Loki
  * @date: 2020-02-27
  */
 public interface MessageService {
 
     /**
-     * 处理收到新交易hash和签名的消息
-     * @param chain   消息所属链Id
-     * @param nodeId    发送此消息的节点Id
-     * @param message   消息体
+     * Processing new transactions receivedhashMessage with signature
+     * @param chain   Chain to which the message belongsId
+     * @param nodeId    The node that sent this messageId
+     * @param message   Message Body
      */
     void newHashSign(Chain chain, String nodeId, BroadcastHashSignMessage message);
 
     /**
-     * 处理收到索取完整交易的消息
-     * @param chain   消息所属链Id
-     * @param nodeId    发送此消息的节点Id
-     * @param message   消息体
+     * Processing messages requesting complete transactions
+     * @param chain   Chain to which the message belongsId
+     * @param nodeId    The node that sent this messageId
+     * @param message   Message Body
      */
     void getTx(Chain chain, String nodeId, GetTxMessage message);
 
     /**
-     * 处理收到完整交易的消息
-     * @param chain   消息所属链Id
-     * @param nodeId    发送此消息的节点Id
-     * @param message   消息体
+     * Processing messages that receive complete transactions
+     * @param chain   Chain to which the message belongsId
+     * @param nodeId    The node that sent this messageId
+     * @param message   Message Body
      */
     void receiveTx(Chain chain, String nodeId, NewTxMessage message);
 
     /**
-     * 重新解析(异构链)交易
+     * Re parsing(Heterogeneous chain)transaction
      * @param chain
      * @param nodeId
      * @param message
@@ -67,7 +67,7 @@ public interface MessageService {
     void checkRetryParse(Chain chain, String nodeId, CheckRetryParseMessage message);
 
     /**
-     * 收到异构链签名消息
+     * Received heterogeneous chain signature message
      * @param chain
      * @param nodeId
      * @param message
@@ -75,14 +75,14 @@ public interface MessageService {
     void componentSign(Chain chain, String nodeId, ComponentSignMessage message, boolean isCreate);
 
     /**
-     * 取消当前虚拟银行发出的异构链交易
+     * Cancel heterogeneous chain transactions issued by the current virtual bank
      * @param chain
      * @param nodeId
      * @param cancelHtgTxMessage
      */
     void cancelHtgTx(Chain chain, String nodeId, CancelHtgTxMessage cancelHtgTxMessage);
     /**
-     * 重发虚拟银行变更签名消息
+     * Resend virtual bank signature change message
      * @param chain
      * @param nodeId
      * @param message

@@ -71,18 +71,19 @@ public class HeterogeneousContractAssetRegCompleteVerifier {
             Set<String> unregisterSet = new HashSet<>();
             Set<String> pauseSet = new HashSet<>();
             Set<String> resumeSet = new HashSet<>();
-            // 异构合约资产注册 OR (NERVE资产绑定异构合约资产: 新绑定 / 覆盖绑定 / 取消绑定) OR 异构合约资产取消注册 OR (异构链资产充值 暂停 / 恢复)
+            Set<String> stableSwapCoinSet = new HashSet<>();
+            // Heterogeneous Contract Asset Registration OR (NERVEAsset binding heterogeneous contract assets: New binding / Overwrite binding / Unbind) OR Unregistration of heterogeneous contract assets OR (Heterogeneous chain asset recharge suspend / recovery)
             HeterogeneousContractAssetRegCompleteTxData txData = new HeterogeneousContractAssetRegCompleteTxData();
             txData.parse(tx.getTxData(), 0);
             String contractAddress = addressToLowerCase(txData.getContractAddress());
             String errorCode = ledgerAssetRegisterHelper.checkHeterogeneousContractAssetReg(chain, tx, contractAddress, txData.getDecimals(), txData.getSymbol(), txData.getChainId(),
-                    contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, true);
+                    contractAssetRegSet, bindNewSet, bindRemoveSet, bindOverrideSet, unregisterSet, pauseSet, resumeSet, stableSwapCoinSet, true);
             if (StringUtils.isNotBlank(errorCode)) {
                 throw new NulsException(ErrorCode.init(errorCode));
             }
             if(logger.isDebugEnabled()) {
                 long e = System.currentTimeMillis();
-                logger.debug("[异构链合约资产注册信息-validate], 调用异构链[validateHeterogeneousAssetInfoFromNet]时间:{}", e - s);
+                logger.debug("[Heterogeneous Chain Contract Asset Registration Information-validate], Calling heterogeneous chains[validateHeterogeneousAssetInfoFromNet]time:{}", e - s);
             }
         } catch (Exception e) {
             chain.getLogger().error(e);

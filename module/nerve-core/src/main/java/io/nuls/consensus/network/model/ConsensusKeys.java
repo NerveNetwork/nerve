@@ -23,7 +23,7 @@ import io.nuls.base.basic.AddressTool;
 import io.nuls.core.model.ByteUtils;
 
 /**
- * 自身节点公私钥
+ * Own node public and private keys
  */
 public class ConsensusKeys {
     private byte[] pubKey;

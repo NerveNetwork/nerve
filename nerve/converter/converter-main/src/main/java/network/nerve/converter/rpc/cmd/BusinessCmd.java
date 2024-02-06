@@ -37,7 +37,6 @@ import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.model.ObjectUtils;
-import io.nuls.core.model.StringUtils;
 import io.nuls.core.parse.JSONUtils;
 import io.nuls.core.rpc.cmd.BaseCmd;
 import io.nuls.core.rpc.model.*;
@@ -52,6 +51,7 @@ import network.nerve.converter.core.business.AssembleTxService;
 import network.nerve.converter.core.business.HeterogeneousService;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
+import network.nerve.converter.core.thread.task.VirtualBankDirectorBalanceTask;
 import network.nerve.converter.manager.ChainManager;
 import network.nerve.converter.model.bo.AgentBasic;
 import network.nerve.converter.model.bo.Chain;
@@ -71,10 +71,7 @@ import network.nerve.converter.utils.LoggerUtil;
 import network.nerve.converter.utils.VirtualBankUtil;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -110,22 +107,22 @@ public class BusinessCmd extends BaseCmd {
     @Autowired
     private AccountConfig accountConfig;
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "提现")
+    @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL, version = 1.0, description = "Withdrawal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "提现资产链id"),
-            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "提现资产id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现到账地址"),
-            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "提现到账金额"),
-            @Parameter(parameterName = "distributionFee", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "手续费"),
-            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "手续费链ID(5/9,101,102,103....)"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "assetChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Withdrawal asset chainid"),
+            @Parameter(parameterName = "assetId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Withdrawal of assetsid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Withdrawal to account address"),
+            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Withdrawal to account amount"),
+            @Parameter(parameterName = "distributionFee", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Handling fees"),
+            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Service fee chainID(5/9,101,102,103....)"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response withdrawal(Map params) {
@@ -182,18 +179,18 @@ public class BusinessCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL_ADDITIONAL_FEE, version = 1.0, description = "追加提现手续费/原路退回的提案")
+    @CmdAnnotation(cmd = ConverterCmdConstant.WITHDRAWAL_ADDITIONAL_FEE, version = 1.0, description = "Additional withdrawal handling fee/Proposal for returning the original route")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "原始交易hash"),
-            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "追加的主资产的链ID(5/9,101,102,103....)"),
-            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "追加的手续费金额"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "交易备注"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "支付/签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Original transactionhash"),
+            @Parameter(parameterName = "feeChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Chain of additional main assetsID(5/9,101,102,103....)"),
+            @Parameter(parameterName = "amount", requestType = @TypeDescriptor(value = BigInteger.class), parameterDes = "Additional handling fee amount"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Transaction notes"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "payment/Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response withdrawalAdditionalFee(Map params) {
@@ -247,13 +244,13 @@ public class BusinessCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.VIRTUAL_BANK_INFO, version = 1.0, description = "获取当前所有虚拟银行成员信息")
+    @CmdAnnotation(cmd = ConverterCmdConstant.VIRTUAL_BANK_INFO, version = 1.0, description = "Obtain information on all current virtual bank members")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
             @Parameter(parameterName = "balance", requestType = @TypeDescriptor(value = boolean.class),
-                    parameterDes = "是否需要获取各银行节点支付手续费异构链地址余额(可不传,默认false)")
+                    parameterDes = "Do you need to obtain the balance of payment fees for heterogeneous chain addresses at each bank node(No need to transmit it,defaultfalse)")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
             @Key(name = "list", description = "List<VirtualBankDirectorDTO>", valueType = List.class, valueElement = VirtualBankDirectorDTO.class)
     })
     )
@@ -292,14 +289,14 @@ public class BusinessCmd extends BaseCmd {
                 ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.clear();
             }
             if (ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.isEmpty()) {
-                chain.getLogger().debug("缓存未建立，直接查询异构链余额");
+                chain.getLogger().debug("Cache not established, query heterogeneous chain balance directly");
                 ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD = list;
                 ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD_RECORD_TIME = now;
-                // 并行查询异构链余额
+                // Parallel query of heterogeneous chain balances
                 VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, 0, converterCoreApi);
             } else {
-                chain.getLogger().debug("使用缓存的异构链余额");
-                // 使用缓存的异构链余额
+                chain.getLogger().debug("Use cached heterogeneous chain balance");
+                // Use cached heterogeneous chain balance
                 Map<String, VirtualBankDirectorDTO> cacheMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST_FOR_CMD.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity(), (key1, key2) -> key2));
                 for (VirtualBankDirectorDTO dto : list) {
                     VirtualBankDirectorDTO cacheDto = cacheMap.get(dto.getSignAddress());
@@ -315,13 +312,13 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.BROADCAST_PROPOSAL, version = 1.0, description = "处理新的提案交易(已组装好的交易)")
+    @CmdAnnotation(cmd = ConverterCmdConstant.BROADCAST_PROPOSAL, version = 1.0, description = "Handling new proposal transactions(Assembled transactions)")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHex", requestType = @TypeDescriptor(value = String.class), parameterDes = "完整交易hex")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHex", requestType = @TypeDescriptor(value = String.class), parameterDes = "Complete transactionhex")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response processProposal(Map params) {
@@ -353,22 +350,22 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.PROPOSAL, version = 1.0, description = "申请提案")
+    @CmdAnnotation(cmd = ConverterCmdConstant.PROPOSAL, version = 1.0, description = "Application proposal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = byte.class), parameterDes = "提案类型"),
-            @Parameter(parameterName = "content", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案类容"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链chainId"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash"),
-            @Parameter(parameterName = "businessAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "地址（账户、节点地址等）"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "链内交易hash"),
-            @Parameter(parameterName = "voteRangeType", requestType = @TypeDescriptor(value = byte.class), parameterDes = "投票范围类型"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "备注"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = byte.class), parameterDes = "Proposal type"),
+            @Parameter(parameterName = "content", requestType = @TypeDescriptor(value = String.class), parameterDes = "Proposal content"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainchainId"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous Chain Tradinghash"),
+            @Parameter(parameterName = "businessAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "address（account、Node address, etc）"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "On chain transactionshash"),
+            @Parameter(parameterName = "voteRangeType", requestType = @TypeDescriptor(value = byte.class), parameterDes = "Voting scope type"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Remarks"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response proposal(Map params) {
@@ -404,19 +401,19 @@ public class BusinessCmd extends BaseCmd {
             map.put("value", tx.getHash().toHex());
             map.put("hex", RPCUtil.encode(tx.serialize()));
             try {
-                chain.getLogger().info("提案tx hex: {}", RPCUtil.encode(tx.serialize()));
+                chain.getLogger().info("proposaltx hex: {}", RPCUtil.encode(tx.serialize()));
             } catch (Exception e) {
-                chain.getLogger().warn("日志调用失败[0]: {}", e.getMessage());
+                chain.getLogger().warn("Log call failed[0]: {}", e.getMessage());
             }
             try {
-                chain.getLogger().info("提案tx format: {}", tx.format(ProposalTxData.class));
+                chain.getLogger().info("proposaltx format: {}", tx.format(ProposalTxData.class));
             } catch (Exception e) {
-                chain.getLogger().warn("日志调用失败[1]: {}", e.getMessage());
+                chain.getLogger().warn("Log call failed[1]: {}", e.getMessage());
             }
             try {
-                chain.getLogger().info("提案参数: {}", JSONUtils.obj2PrettyJson(proposalTxDTO));
+                chain.getLogger().info("Proposal parameters: {}", JSONUtils.obj2PrettyJson(proposalTxDTO));
             } catch (Exception e) {
-                chain.getLogger().warn("日志调用失败[2]: {}", e.getMessage());
+                chain.getLogger().warn("Log call failed[2]: {}", e.getMessage());
             }
             return success(map);
         } catch (NulsRuntimeException e) {
@@ -431,15 +428,15 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.RESET_VIRTUAL_BANK, version = 1.0, description = "重置虚拟银行异构链(合约)")
+    @CmdAnnotation(cmd = ConverterCmdConstant.RESET_VIRTUAL_BANK, version = 1.0, description = "Reset Virtual Bank Heterogeneous Chain(contract)")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response resetVirtualBank(Map params) {
@@ -465,7 +462,7 @@ public class BusinessCmd extends BaseCmd {
             SignAccountDTO signAccountDTO = new SignAccountDTO();
             signAccountDTO.setAddress((String) params.get("address"));
             signAccountDTO.setPassword((String) params.get("password"));
-            if (!chain.isVirtualBankBySignAddr(signAccountDTO.getAddress())) {
+            if (!chain.isSeedVirtualBankBySignAddr(signAccountDTO.getAddress())) {
                 throw new NulsRuntimeException(ConverterErrorCode.SIGNER_NOT_VIRTUAL_BANK_AGENT);
             }
             Transaction tx = assembleTxService.createResetVirtualBankTx(chain, heterogeneousChainId, signAccountDTO);
@@ -486,17 +483,17 @@ public class BusinessCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.VOTE_PROPOSAL, version = 1.0, description = "投票提案")
+    @CmdAnnotation(cmd = ConverterCmdConstant.VOTE_PROPOSAL, version = 1.0, description = "Voting proposal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash"),
-            @Parameter(parameterName = "choice", requestType = @TypeDescriptor(value = byte.class), parameterDes = "表决"),
-            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "备注"),
-            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "签名地址"),
-            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "密码")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Proposal transactionhash"),
+            @Parameter(parameterName = "choice", requestType = @TypeDescriptor(value = byte.class), parameterDes = "vote"),
+            @Parameter(parameterName = "remark", requestType = @TypeDescriptor(value = String.class), parameterDes = "Remarks"),
+            @Parameter(parameterName = "address", requestType = @TypeDescriptor(value = String.class), parameterDes = "Signature address"),
+            @Parameter(parameterName = "password", requestType = @TypeDescriptor(value = String.class), parameterDes = "password")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     })
     )
     public Response voteProposal(Map params) {
@@ -544,12 +541,12 @@ public class BusinessCmd extends BaseCmd {
     }
 
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.DISQUALIFICATION, version = 1.0, description = "获取已撤销虚拟银行资格节点地址列表")
+    @CmdAnnotation(cmd = ConverterCmdConstant.DISQUALIFICATION, version = 1.0, description = "Obtain a list of revoked virtual bank qualification node addresses")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "节点地址")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "list", valueType = List.class, valueElement = String.class, description = "Node address")
     })
     )
     public Response getDisqualification(Map params) {
@@ -579,14 +576,14 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_PARSE, version = 1.0, description = "重新解析异构链交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_PARSE, version = 1.0, description = "Re analyze heterogeneous chain transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous Chain Tradinghash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public Response checkRetryParse(Map params) {
@@ -605,7 +602,7 @@ public class BusinessCmd extends BaseCmd {
             Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
 
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
-                chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryParse");
+                chain.getLogger().error("Current non virtual bank member nodes, Not processedcheckRetryParse");
                 map.put("value", false);
             } else {
                 heterogeneousService.checkRetryParse(chain, heterogeneousChainId, heterogeneousTxHash);
@@ -624,14 +621,14 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_HTG_TX, version = 1.0, description = "重新解析异构链交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CHECK_RETRY_HTG_TX, version = 1.0, description = "Re analyze heterogeneous chain transactions")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous Chain Tradinghash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public Response checkRetryHtgTx(Map params) {
@@ -650,7 +647,7 @@ public class BusinessCmd extends BaseCmd {
             Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
 
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
-                chain.getLogger().error("当前非虚拟银行成员节点, 不处理checkRetryHtgTx");
+                chain.getLogger().error("Current non virtual bank member nodes, Not processedcheckRetryHtgTx");
                 map.put("value", false);
             } else {
                 heterogeneousService.checkRetryHtgTx(chain, heterogeneousChainId, heterogeneousTxHash);
@@ -669,13 +666,13 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_WITHDRAWAL, version = 1.0, description = "重新将异构链提现交易放入task, 重发消息")
+    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_WITHDRAWAL, version = 1.0, description = "Repositioning heterogeneous chain withdrawal transactionstask, Resend message")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "链内提现交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = int.class), parameterDes = "On chain withdrawal transactionshash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public Response retryWithdrawalMsg(Map params) {
@@ -690,7 +687,7 @@ public class BusinessCmd extends BaseCmd {
             }
             Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
-                chain.getLogger().error("当前非虚拟银行成员节点, 不处理retryWithdrawalMsg");
+                chain.getLogger().error("Current non virtual bank member nodes, Not processedretryWithdrawalMsg");
                 map.put("value", false);
             } else {
                 String txHash = params.get("hash").toString();
@@ -707,7 +704,7 @@ public class BusinessCmd extends BaseCmd {
                 pendingPO.setBlockHeader(header);
                 txSubsequentProcessStorageService.save(chain, pendingPO);
                 map.put("value", chain.getPendingTxQueue().offer(pendingPO));
-                chain.getLogger().info("重新将异构链提现交易放入task, 重发消息, txHash: {}", txHash);
+                chain.getLogger().info("Repositioning heterogeneous chain withdrawal transactionstask, Resend message, txHash: {}", txHash);
             }
             return success(map);
         } catch (NulsRuntimeException e) {
@@ -722,12 +719,12 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_PROPOSAL_INFO, version = 1.0, description = "查询提案")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_PROPOSAL_INFO, version = 1.0, description = "Query proposal")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提案交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "proposalTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Proposal transactionhash")
     })
-    @ResponseData(name = "返回值", description = "返回 network.nerve.converter.model.po.ProposalPO 对象的序列化字符串")
+    @ResponseData(name = "Return value", description = "return network.nerve.converter.model.po.ProposalPO Serialized string of object")
     public Response getProposalInfo(Map params) {
         Chain chain = null;
         try {
@@ -752,16 +749,16 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.CANCEL_HTG_TX, version = 1.0, description = "取消虚拟银行发出的异构链网络交易")
+    @CmdAnnotation(cmd = ConverterCmdConstant.CANCEL_HTG_TX, version = 1.0, description = "Cancel heterogeneous chain network transactions issued by virtual banks")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "异构链id"),
-            @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "虚拟银行管理员签名账户地址"),
-            @Parameter(parameterName = "nonce", requestType = @TypeDescriptor(value = String.class), parameterDes = "账户nonce"),
-            @Parameter(parameterName = "priceGwei", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链price(Gwei)")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousChainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "Heterogeneous chainid"),
+            @Parameter(parameterName = "heterogeneousAddress", requestType = @TypeDescriptor(value = String.class), parameterDes = "Virtual bank administrator signature account address"),
+            @Parameter(parameterName = "nonce", requestType = @TypeDescriptor(value = String.class), parameterDes = "accountnonce"),
+            @Parameter(parameterName = "priceGwei", requestType = @TypeDescriptor(value = String.class), parameterDes = "Heterogeneous chainprice(Gwei)")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public Response cancelHtgTx(Map params) {
@@ -784,7 +781,7 @@ public class BusinessCmd extends BaseCmd {
             Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
 
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
-                chain.getLogger().error("当前非虚拟银行成员节点, 不处理cancelHtgTx");
+                chain.getLogger().error("Current non virtual bank member nodes, Not processedcancelHtgTx");
                 map.put("value", false);
             } else {
                 heterogeneousService.cancelHtgTx(chain, heterogeneousChainId, heterogeneousAddress, nonce, priceGwei);
@@ -803,13 +800,13 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.GET_RECHARGE_NERVE_HASH, version = 1.0, description = "根据异构链跨链转入的交易hash查询NERVE的交易hash")
+    @CmdAnnotation(cmd = ConverterCmdConstant.GET_RECHARGE_NERVE_HASH, version = 1.0, description = "Transactions transferred across heterogeneous chainshashqueryNERVETransactionhash")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "异构链跨链转入的交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "heterogeneousTxHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Cross chain transfer transactions of heterogeneous chainshash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", description = "交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", description = "transactionhash")
     }))
     public Response getRechargeNerveHash(Map params) {
         Chain chain = null;
@@ -837,16 +834,16 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.FIND_BY_WITHDRAWAL_TX_HASH, version = 1.0, description = "根据提现交易hash获取确认信息")
+    @CmdAnnotation(cmd = ConverterCmdConstant.FIND_BY_WITHDRAWAL_TX_HASH, version = 1.0, description = "Based on withdrawal transactionshashObtain confirmation information")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "提现交易hash")
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "txHash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Withdrawal transactionshash")
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "heterogeneousChainId", description = "异构链ID"),
-            @Key(name = "heterogeneousHeight", description = "异构链交易区块高度"),
-            @Key(name = "heterogeneousTxHash", description = "异构链交易hash"),
-            @Key(name = "confirmWithdrawalTxHash", description = "NERVE确认交易hash")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "heterogeneousChainId", description = "Heterogeneous chainID"),
+            @Key(name = "heterogeneousHeight", description = "Heterogeneous chain transaction block height"),
+            @Key(name = "heterogeneousTxHash", description = "Heterogeneous Chain Tradinghash"),
+            @Key(name = "confirmWithdrawalTxHash", description = "NERVEConfirm transactionhash")
     }))
     public Response findByWithdrawalTxHash(Map params) {
         Chain chain = null;
@@ -877,16 +874,16 @@ public class BusinessCmd extends BaseCmd {
         }
     }
 
-    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_VIRTUAL_BANK, version = 1.0, description = "重试虚拟银行异构链(合约)")
+    @CmdAnnotation(cmd = ConverterCmdConstant.RETRY_VIRTUAL_BANK, version = 1.0, description = "Retrying Virtual Bank Heterogeneous Chain(contract)")
     @Parameters(value = {
-            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
-            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "虚拟银行变更交易hash"),
-            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "交易所在高度"),
-            @Parameter(parameterName = "prepare", requestType = @TypeDescriptor(value = int.class), parameterDes = "1 - 准备阶段，2 - 非准备，执行阶段"),
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "hash", requestType = @TypeDescriptor(value = String.class), parameterDes = "Virtual Bank Change Transactionhash"),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "Exchange at height"),
+            @Parameter(parameterName = "prepare", requestType = @TypeDescriptor(value = int.class), parameterDes = "1 - Preparation phase,2 - Unprepared, execution phase"),
 
     })
-    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
-            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "Whether successful")
     })
     )
     public Response retryVirtualBank(Map params) {
@@ -905,7 +902,7 @@ public class BusinessCmd extends BaseCmd {
             }
             Map<String, Boolean> map = new HashMap<>(ConverterConstant.INIT_CAPACITY_2);
             if (!VirtualBankUtil.isCurrentDirector(chain)) {
-                chain.getLogger().error("当前非虚拟银行成员节点, 不处理retryVirtualBank");
+                chain.getLogger().error("Current non virtual bank member nodes, Not processedretryVirtualBank");
                 map.put("value", false);
                 return success(map);
             }
@@ -918,6 +915,57 @@ public class BusinessCmd extends BaseCmd {
             long height = Long.parseLong(params.get("height").toString());
             BlockHeader blockHeader = BlockCall.getBlockHeader(chain, height);
             this.retryVirtualBankProcessor(chain, confirmedTx, blockHeader, prepare);
+            map.put("value", true);
+            return success(map);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (NulsException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(ConverterErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
+    }
+
+    @CmdAnnotation(cmd = "cv_filter_wechat_msg", version = 1.0, description = "过滤微信通知")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "链id"),
+            @Parameter(parameterName = "hashes", requestType = @TypeDescriptor(value = String.class), parameterDes = "txHash,用逗号隔开"),
+            @Parameter(parameterName = "type", requestType = @TypeDescriptor(value = int.class), parameterDes = "操作类型, 0-add, 1-remove, 2-query")
+
+    })
+    @ResponseData(name = "返回值", description = "返回一个Map对象", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = "value", valueType = boolean.class, description = "是否成功")
+    })
+    )
+    public Response filterWechatMsg(Map params) {
+        Chain chain = null;
+        try {
+            ObjectUtils.canNotEmpty(params.get("chainId"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            ObjectUtils.canNotEmpty(params.get("hashes"), ConverterErrorCode.PARAMETER_ERROR.getMsg());
+            chain = chainManager.getChain((Integer) params.get("chainId"));
+            if (null == chain) {
+                throw new NulsRuntimeException(ConverterErrorCode.CHAIN_NOT_EXIST);
+            }
+            if (chain.getLatestBasicBlock().getSyncStatusEnum() == SyncStatusEnum.SYNC) {
+                throw new NulsException(ConverterErrorCode.PAUSE_NEWTX);
+            }
+            Map<String, Object> map = new HashMap<>();
+            Integer type = ((Integer) params.get("type"));
+            if (type == null) {
+                type = 0;
+            }
+            String hashes = params.get("hashes").toString();
+            List<String> hashList = Arrays.stream(hashes.split(",")).map(hash -> hash.trim()).collect(Collectors.toList());
+            if (type.intValue() == 0) {
+                VirtualBankDirectorBalanceTask.addFileterHashes(hashList);
+            } else if (type.intValue() == 1){
+                VirtualBankDirectorBalanceTask.removeFileterHashes(hashList);
+            } else if (type.intValue() == 2){
+                map.put("data", VirtualBankDirectorBalanceTask.getFileterHashes());
+            }
             map.put("value", true);
             return success(map);
         } catch (NulsRuntimeException e) {
@@ -987,7 +1035,7 @@ public class BusinessCmd extends BaseCmd {
         }
 
 
-        // 放入异构链处理机制
+        // Insert heterogeneous chain processing mechanism
         TxSubsequentProcessPO pendingPO = new TxSubsequentProcessPO();
         pendingPO.setTx(tx);
         pendingPO.setListInDirector(listInDirector);

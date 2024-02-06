@@ -65,7 +65,7 @@ public class ProtocolGroupManager {
     }
 
     /**
-     * 获取当前生效的协议版本号
+     * Obtain the current effective protocol version number
      * @param chainId
      * @return
      */
@@ -74,7 +74,7 @@ public class ProtocolGroupManager {
     }
 
     /**
-     * 获取当前生效的协议版本(包含消息、交易详细信息)
+     * Obtain the current effective protocol version(Include messages、Transaction Details)
      * @param chainId
      * @return
      */

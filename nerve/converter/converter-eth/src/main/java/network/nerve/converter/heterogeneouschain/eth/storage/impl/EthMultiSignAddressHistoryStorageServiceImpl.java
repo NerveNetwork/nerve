@@ -29,12 +29,15 @@ import io.nuls.core.model.StringUtils;
 import io.nuls.core.rockdb.service.RocksDBService;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthConstant;
 import network.nerve.converter.heterogeneouschain.eth.constant.EthDBConstant;
+import network.nerve.converter.heterogeneouschain.eth.context.EthContext;
 import network.nerve.converter.heterogeneouschain.eth.storage.EthMultiSignAddressHistoryStorageService;
 import network.nerve.converter.model.po.StringSetPo;
 import network.nerve.converter.utils.ConverterDBUtil;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static network.nerve.converter.utils.ConverterDBUtil.stringToBytes;
 
 /**
  * @author: Mimi
@@ -43,29 +46,69 @@ import java.util.Set;
 @Component
 public class EthMultiSignAddressHistoryStorageServiceImpl implements EthMultiSignAddressHistoryStorageService {
 
-    private final String baseArea = EthDBConstant.DB_ETH;
+    private String baseArea = EthDBConstant.DB_ETH;
     private final String KEY_PREFIX = "MSADDRESS-";
-    private final byte[] ALL_KEY = ConverterDBUtil.stringToBytes("MSADDRESS-ALL");
+    private final byte[] ALL_KEY = stringToBytes("MSADDRESS-ALL");
+    private final String MERGE_KEY_PREFIX;
+    private final byte[] MERGE_ALL_KEY;
+
+    public EthMultiSignAddressHistoryStorageServiceImpl() {
+        int htgChainId = 101;
+        this.MERGE_KEY_PREFIX = htgChainId + "_MSADDRESS-";
+        this.MERGE_ALL_KEY = stringToBytes(htgChainId + "_MSADDRESS-ALL");
+    }
+
+    private boolean merged = false;
+    private void checkMerged() {
+        if (merged) {
+            return;
+        }
+        merged = EthContext.getConverterCoreApi().isDbMerged(101);
+        if (merged) {
+            this.baseArea = EthContext.getConverterCoreApi().mergedDBName();
+        }
+    }
+    private String KEY_PREFIX() {
+        checkMerged();
+        if (merged) {
+            return MERGE_KEY_PREFIX;
+        } else {
+            return KEY_PREFIX;
+        }
+    }
+    private byte[] ALL_KEY() {
+        checkMerged();
+        if (merged) {
+            return MERGE_ALL_KEY;
+        } else {
+            return ALL_KEY;
+        }
+    }
+
+    private String baseArea() {
+        checkMerged();
+        return this.baseArea;
+    }
 
     @Override
     public int save(String address) throws Exception {
         if (StringUtils.isBlank(address)) {
             return 0;
         }
-        boolean result = RocksDBService.put(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address), EthConstant.EMPTY_BYTE);
+        boolean result = RocksDBService.put(baseArea(), stringToBytes(KEY_PREFIX() + address), EthConstant.EMPTY_BYTE);
         if (result) {
-            StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+            StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
             if(setPo == null) {
                 setPo = new StringSetPo();
                 Set<String> set = new HashSet<>();
                 set.add(address);
                 setPo.setCollection(set);
-                result = ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+                result = ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
             } else {
                 Set<String> set = setPo.getCollection();
                 if(!set.contains(address)) {
                     set.add(address);
-                    result = ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+                    result = ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
                 } else {
                     result = true;
                 }
@@ -76,7 +119,7 @@ public class EthMultiSignAddressHistoryStorageServiceImpl implements EthMultiSig
 
     @Override
     public boolean isExist(String address) {
-        byte[] bytes = RocksDBService.get(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
+        byte[] bytes = RocksDBService.get(baseArea(), stringToBytes(KEY_PREFIX() + address));
         if(bytes == null) {
             return false;
         }
@@ -85,17 +128,17 @@ public class EthMultiSignAddressHistoryStorageServiceImpl implements EthMultiSig
 
     @Override
     public void deleteByAddress(String address) throws Exception {
-        RocksDBService.delete(baseArea, ConverterDBUtil.stringToBytes(KEY_PREFIX + address));
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+        RocksDBService.delete(baseArea(), stringToBytes(KEY_PREFIX() + address));
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
         if(setPo != null) {
             setPo.getCollection().remove(address);
-            ConverterDBUtil.putModel(baseArea, ALL_KEY, setPo);
+            ConverterDBUtil.putModel(baseArea(), ALL_KEY(), setPo);
         }
     }
 
     @Override
     public Set<String> findAll() {
-        StringSetPo setPo = ConverterDBUtil.getModel(baseArea, ALL_KEY, StringSetPo.class);
+        StringSetPo setPo = ConverterDBUtil.getModel(baseArea(), ALL_KEY(), StringSetPo.class);
         if (setPo == null) {
             return null;
         }

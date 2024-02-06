@@ -22,7 +22,7 @@ import io.nuls.consensus.utils.validator.CreateAgentValidator;
 import java.util.*;
 
 /**
- * 创建节点处理器
+ * Create Node Processor
  *
  * @author tag
  * @date 2019/6/1
@@ -88,7 +88,7 @@ public class CreateAgentProcessor implements TransactionProcessor {
                 String agentAddressHex = HexUtil.encode(agent.getAgentAddress());
                 String packAddressHex = HexUtil.encode(agent.getPackingAddress());
                 /*
-                 * 获得过红牌交易的地址不能创建节点
+                 * An address that has obtained a red card transaction cannot create a node
                  * */
                 if (!redPunishAddressSet.isEmpty()) {
                     if (redPunishAddressSet.contains(agentAddressHex) || redPunishAddressSet.contains(packAddressHex)) {
@@ -99,7 +99,7 @@ public class CreateAgentProcessor implements TransactionProcessor {
                     }
                 }
                 /*
-                 * 重复创建节点
+                 * Repeatedly creating nodes
                  * */
                 if (!createAgentAddressSet.add(agentAddressHex) || !createAgentAddressSet.add(packAddressHex)) {
                     invalidTxList.add(createAgentTx);
@@ -136,7 +136,7 @@ public class CreateAgentProcessor implements TransactionProcessor {
                 break;
             }
         }
-        //回滚已提交成功的交易
+        //Roll back transactions that have been successfully submitted
         if (!commitResult) {
             for (Transaction rollbackTx : commitSuccessList) {
                 createAgentRollBack(rollbackTx, chain, blockHeader);
@@ -163,7 +163,7 @@ public class CreateAgentProcessor implements TransactionProcessor {
             }
 
         }
-        //保存已回滚成功的交易
+        //Save successfully rolled back transactions
         if (!rollbackResult) {
             for (Transaction commitTx : rollbackSuccessList) {
                 createAgentCommit(commitTx, blockHeader, chain);

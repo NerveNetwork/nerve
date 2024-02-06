@@ -41,6 +41,7 @@ import network.nerve.swap.handler.ISwapHandler;
 import network.nerve.swap.handler.impl.stable.StableAddLiquidityHandler;
 import network.nerve.swap.handler.impl.swap.LedgerTempBalanceManagerMock;
 import network.nerve.swap.help.IPairFactory;
+import network.nerve.swap.help.SwapHelper;
 import network.nerve.swap.help.impl.TemporaryPairFactory;
 import network.nerve.swap.manager.ChainManager;
 import network.nerve.swap.manager.LedgerTempBalanceManager;
@@ -111,15 +112,15 @@ public class StableAddLiquidityHandlerTest {
         Chain.putCurrentThreadBlockType(0);
         BatchInfo batchInfo = new BatchInfo();
         chain.setBatchInfo(batchInfo);
-        // 准备临时余额
+        // Prepare temporary balance
         LedgerTempBalanceManager tempBalanceManager = LedgerTempBalanceManagerMock.newInstance(chainId);
         batchInfo.setLedgerTempBalanceManager(tempBalanceManager);
-        // 准备当前区块头
+        // Prepare the current block header
         BlockHeader tempHeader = new BlockHeader();
         tempHeader.setHeight(blockHeight);
         tempHeader.setTime(System.currentTimeMillis() / 1000);
         batchInfo.setCurrentBlockHeader(tempHeader);
-        // 准备临时交易对
+        // Prepare for temporary transactions
         StableSwapTempPairManager stableSwapTempPairManager = StableSwapTempPairManager.newInstance(chainId);
         batchInfo.setStableSwapTempPairManager(stableSwapTempPairManager);
         chainManager.getChainMap().put(chainId, chain);
@@ -208,7 +209,7 @@ public class StableAddLiquidityHandlerTest {
     }
 
     protected JunitCase getCase0() throws Exception {
-        String caseDesc = "正常-首次添加流动性";
+        String caseDesc = "normal-Adding liquidity for the first time";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -231,7 +232,7 @@ public class StableAddLiquidityHandlerTest {
         Transaction tx = TxAssembleUtil.asmbStableSwapAddLiquidity(chainId, from, amounts, tokens,
                 stablePairAddressBytes, to, tempBalanceManager);
         tempBalanceManager.refreshTempBalance(chainId, tx, header.getTime());
-        System.out.println(String.format("\t用户交易: \n%s", tx.format()));
+        System.out.println(String.format("\tUser transactions: \n%s", tx.format()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) throws Exception {
@@ -242,19 +243,19 @@ public class StableAddLiquidityHandlerTest {
 
                 BigInteger toAddressBalanceLP = tempBalanceManager.getBalance(to, tokenLP.getChainId(), tokenLP.getAssetId()).getData().getBalance();
 
-                Assert.assertEquals("添加前的池子资产0", BigInteger.ZERO, bus.getBalances()[0]);
-                Assert.assertEquals("添加前的池子资产1", BigInteger.ZERO, bus.getBalances()[1]);
-                Assert.assertEquals("实际添加的资产0", amounts[0], bus.getRealAmounts()[0]);
-                Assert.assertEquals("实际添加的资产1", amounts[1], bus.getRealAmounts()[1]);
-                Assert.assertEquals("退回的资产0", BigInteger.ZERO, bus.getRefundAmounts()[0]);
-                Assert.assertEquals("退回的资产1", BigInteger.ZERO, bus.getRefundAmounts()[1]);
-                Assert.assertEquals("流动性份额", liquidity, bus.getLiquidity());
-                Assert.assertEquals("用户获得的流动性份额", toAddressBalanceLP, bus.getLiquidity());
+                Assert.assertEquals("Pool assets before addition0", BigInteger.ZERO, bus.getBalances()[0]);
+                Assert.assertEquals("Pool assets before addition1", BigInteger.ZERO, bus.getBalances()[1]);
+                Assert.assertEquals("Actual added assets0", amounts[0], bus.getRealAmounts()[0]);
+                Assert.assertEquals("Actual added assets1", amounts[1], bus.getRealAmounts()[1]);
+                Assert.assertEquals("Returned assets0", BigInteger.ZERO, bus.getRefundAmounts()[0]);
+                Assert.assertEquals("Returned assets1", BigInteger.ZERO, bus.getRefundAmounts()[1]);
+                Assert.assertEquals("Liquidity share", liquidity, bus.getLiquidity());
+                Assert.assertEquals("The liquidity share obtained by users", toAddressBalanceLP, bus.getLiquidity());
 
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("\t系统交易: \n%s", result.getSubTx().format()));
-                System.out.println(String.format("[通过, 描述: %s] Test StableSwap-AddLiquidity tx execute! hash: %s, liquidity: %s", junitCase.getKey(), tx.getHash().toHex(), liquidity));
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("\tSystem transactions: \n%s", result.getSubTx().format()));
+                System.out.println(String.format("[adopt, describe: %s] Test StableSwap-AddLiquidity tx execute! hash: %s, liquidity: %s", junitCase.getKey(), tx.getHash().toHex(), liquidity));
 
 
             }
@@ -264,7 +265,7 @@ public class StableAddLiquidityHandlerTest {
 
 
     protected JunitCase getCase1() throws Exception {
-        String caseDesc = "正常-第二次添加流动性";
+        String caseDesc = "normal-Add liquidity for the second time";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -277,13 +278,18 @@ public class StableAddLiquidityHandlerTest {
         NerveToken[] tokens = new NerveToken[]{token0, token1};
         long deadline = System.currentTimeMillis() / 1000 + 300;
         byte[] to = AddressTool.getAddress(address21);
-        StableAddLiquidityBus _bus = SwapUtils.calStableAddLiquididy(chainId, iPairFactory, stablePairAddress, fromBytes, amounts, to);
+        StableAddLiquidityBus _bus = SwapUtils.calStableAddLiquididy(new SwapHelper(){
+            @Override
+            public boolean isSupportProtocol31() {
+                return true;
+            }
+        }, chainId, iPairFactory, stablePairAddress, fromBytes, amounts, to);
 
         BigInteger _toAddressBalanceLP = tempBalanceManager.getBalance(to, tokenLP.getChainId(), tokenLP.getAssetId()).getData().getBalance();
         Transaction tx = TxAssembleUtil.asmbStableSwapAddLiquidity(chainId, from, amounts, tokens,
                 stablePairAddressBytes, to, tempBalanceManager);
         tempBalanceManager.refreshTempBalance(chainId, tx, header.getTime());
-        System.out.println(String.format("\t用户交易: \n%s", tx.format()));
+        System.out.println(String.format("\tUser transactions: \n%s", tx.format()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) throws Exception {
@@ -294,19 +300,19 @@ public class StableAddLiquidityHandlerTest {
 
                 BigInteger toAddressBalanceLP = tempBalanceManager.getBalance(to, tokenLP.getChainId(), tokenLP.getAssetId()).getData().getBalance();
 
-                Assert.assertEquals("添加前的池子资产0", BigInteger.valueOf(30000_000000L), bus.getBalances()[0]);
-                Assert.assertEquals("添加前的池子资产1", BigInteger.valueOf(20000_000000000L), bus.getBalances()[1]);
-                Assert.assertEquals("实际添加的资产0", BigInteger.valueOf(300_000000L), bus.getRealAmounts()[0]);
-                Assert.assertEquals("实际添加的资产1", BigInteger.valueOf(200_000000000L), bus.getRealAmounts()[1]);
-                Assert.assertEquals("退回的资产0", BigInteger.ZERO, bus.getRefundAmounts()[0]);
-                Assert.assertEquals("退回的资产1", BigInteger.ZERO, bus.getRefundAmounts()[1]);
-                Assert.assertEquals("流动性份额", liquidity, bus.getLiquidity());
-                Assert.assertEquals("用户获得的流动性份额", toAddressBalanceLP.subtract(_toAddressBalanceLP), bus.getLiquidity());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("用户总流动性份额: %s", toAddressBalanceLP));
-                System.out.println(String.format("\t系统交易: \n%s", result.getSubTx().format()));
-                System.out.println(String.format("[通过, 描述: %s] Test StableSwap-AddLiquidity tx execute! hash: %s, liquidity: %s", junitCase.getKey(), tx.getHash().toHex(), liquidity));
+                Assert.assertEquals("Pool assets before addition0", BigInteger.valueOf(30000_000000L), bus.getBalances()[0]);
+                Assert.assertEquals("Pool assets before addition1", BigInteger.valueOf(20000_000000000L), bus.getBalances()[1]);
+                Assert.assertEquals("Actual added assets0", BigInteger.valueOf(300_000000L), bus.getRealAmounts()[0]);
+                Assert.assertEquals("Actual added assets1", BigInteger.valueOf(200_000000000L), bus.getRealAmounts()[1]);
+                Assert.assertEquals("Returned assets0", BigInteger.ZERO, bus.getRefundAmounts()[0]);
+                Assert.assertEquals("Returned assets1", BigInteger.ZERO, bus.getRefundAmounts()[1]);
+                Assert.assertEquals("Liquidity share", liquidity, bus.getLiquidity());
+                Assert.assertEquals("The liquidity share obtained by users", toAddressBalanceLP.subtract(_toAddressBalanceLP), bus.getLiquidity());
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("Total user liquidity share: %s", toAddressBalanceLP));
+                System.out.println(String.format("\tSystem transactions: \n%s", result.getSubTx().format()));
+                System.out.println(String.format("[adopt, describe: %s] Test StableSwap-AddLiquidity tx execute! hash: %s, liquidity: %s", junitCase.getKey(), tx.getHash().toHex(), liquidity));
 
 
             }
@@ -315,7 +321,7 @@ public class StableAddLiquidityHandlerTest {
     }
 
     private JunitCase getCase2() throws Exception {
-        String caseDesc = "异常-添加流动性";
+        String caseDesc = "abnormal-Add liquidity";
         System.out.println(String.format("//////////////////////////////////////////////////【%s】//////////////////////////////////////////////////", caseDesc));
         int chainId = chain.getChainId();
         BatchInfo batchInfo = chain.getBatchInfo();
@@ -330,16 +336,16 @@ public class StableAddLiquidityHandlerTest {
         Transaction tx = TxAssembleUtil.asmbStableSwapAddLiquidity(chainId, from, amounts, tokens,
                 stablePairAddressBytes, to, tempBalanceManager);
         tempBalanceManager.refreshTempBalance(chainId, tx, header.getTime());
-        System.out.println(String.format("\t用户交易: \n%s", tx.format()));
+        System.out.println(String.format("\tUser transactions: \n%s", tx.format()));
         NerveCallback<SwapResult> callback = new NerveCallback<>() {
             @Override
             public void callback(JunitCase junitCase, SwapResult result) throws Exception {
                 assertNotNull(result);
-                Assert.assertFalse("期望执行失败", result.isSuccess());
-                Assert.assertEquals("交易hash", tx.getHash().toHex(), result.getHash());
-                Assert.assertEquals("区块高度", header.getHeight(), result.getBlockHeight());
-                System.out.println(String.format("\t系统交易: \n%s", result.getSubTx().format()));
-                System.out.println(String.format("[通过, 描述: %s] Test Swap-AddLiquidity tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
+                Assert.assertFalse("Expected execution failure", result.isSuccess());
+                Assert.assertEquals("transactionhash", tx.getHash().toHex(), result.getHash());
+                Assert.assertEquals("block height", header.getHeight(), result.getBlockHeight());
+                System.out.println(String.format("\tSystem transactions: \n%s", result.getSubTx().format()));
+                System.out.println(String.format("[adopt, describe: %s] Test Swap-AddLiquidity tx execute! Error: %s", junitCase.getKey(), result.getErrorMessage()));
             }
         };
         return new JunitCase(caseDesc, handler, new Object[]{tx}, null, false, null, callback);

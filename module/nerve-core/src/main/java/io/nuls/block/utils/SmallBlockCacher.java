@@ -40,13 +40,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * 系统正常运行时缓存区块的广播、转发消息
- * 1.缓存收到的SmallBlock
- * 2.缓存状态标记
+ * Broadcast of cached blocks during normal system operation、relay the message
+ * 1.Cache receivedSmallBlock
+ * 2.Cache status markers
  *
  * @author captain
  * @version 1.0
- * @date 18-12-6 上午10:49
+ * @date 18-12-6 morning10:49
  */
 @Component
 public class SmallBlockCacher {
@@ -55,45 +55,45 @@ public class SmallBlockCacher {
     private static BlockService service;
 
     /**
-     * 缓存区块转发、广播过程中收到的{@link SmallBlock},可以用来排除重复消息,
+     * Cache block forwarding、Received during broadcast{@link SmallBlock},Can be used to exclude duplicate messages,
      */
     private static Map<Integer, Map<NulsHash, CachedSmallBlock>> smallBlockCacheMap = new ConcurrentHashMap<>();
 
     /**
-     * 记录每一个区块的传播状态
+     * Record the propagation status of each block
      */
     private static Map<Integer, Map<NulsHash, BlockForwardEnum>> statusCacheMap = new ConcurrentHashMap<>();
 
     /**
-     * 当前正在处理的区块
+     * Currently processing blocks
      * */
     public static CopyOnWriteArrayList<NulsHash> processBlockList = new CopyOnWriteArrayList<>();
 
     /**
-     * 待处理的消息
-     * key : 区块hash
-     * value : 待处理的SmallBlockMessage
+     * Pending messages
+     * key : blockhash
+     * value : PendingSmallBlockMessage
      * */
     public static Map<NulsHash, List<MessageInfo>> pendMessageMap = new ConcurrentHashMap<>();
 
     /**
-     * 共识网络接收到的区块节点列表，用于广播消息去重
-     * key:区块HASH
-     * value:节点列表
+     * The list of block nodes received by the consensus network for broadcasting message deduplication
+     * key:blockHASH
+     * value:Node List
      * */
     public static Map<NulsHash, Set<String>> consensusNodeMap = new ConcurrentHashMap<>();
 
     /**
-     * 全网络接收到的区块节点列表，用于广播消息去重
-     * key:区块HASH
-     * value:节点列表
+     * A list of block nodes received by the entire network for broadcasting message deduplication
+     * key:blockHASH
+     * value:Node List
      * */
     public static Map<NulsHash, Set<String>> nodeMap = new ConcurrentHashMap<>();
 
     /**
-     * 将一个SmallBlock放入内存中,若不主动删除,则在缓存存满或者存在时间超过1000秒时,自动清理
+     * Add aSmallBlockPut into memory,If not deleted proactively,If the cache is full or exists for more than1000Second hour,Automatic cleaning
      *
-     * @param chainId          链Id/chain id
+     * @param chainId          chainId/chain id
      * @param cachedSmallBlock
      */
     public static void cacheSmallBlock(int chainId, CachedSmallBlock cachedSmallBlock) {
@@ -102,9 +102,9 @@ public class SmallBlockCacher {
     }
 
     /**
-     * 根据hash获取缓存的{@link SmallBlock}
+     * according tohashGet cached{@link SmallBlock}
      *
-     * @param chainId   链Id/chain id
+     * @param chainId   chainId/chain id
      * @param blockHash
      * @return
      */
@@ -129,9 +129,9 @@ public class SmallBlockCacher {
     }
 
     /**
-     * 根据hash获取缓存的{@link SmallBlock}
+     * according tohashGet cached{@link SmallBlock}
      *
-     * @param chainId   链Id/chain id
+     * @param chainId   chainId/chain id
      * @param blockHash
      * @return
      */
@@ -144,9 +144,9 @@ public class SmallBlockCacher {
     }
 
     /**
-     * 获取状态
+     * Get Status
      *
-     * @param chainId   链Id/chain id
+     * @param chainId   chainId/chain id
      * @param blockHash
      * @return
      */
@@ -156,9 +156,9 @@ public class SmallBlockCacher {
     }
 
     /**
-     * 设置状态
+     * Set Status
      *
-     * @param chainId          链Id/chain id
+     * @param chainId          chainId/chain id
      * @param blockHash
      * @param blockForwardEnum
      * @return
@@ -169,7 +169,7 @@ public class SmallBlockCacher {
 
 
     /**
-     * 缓存指定区块消息接收节点IP,广播去重
+     * Cache specified block message receiving nodesIP,Broadcast deduplication
      * */
     public static void cacheNode(NulsHash blockHash, String nodeId, boolean isPocNet){
         if(isPocNet){
@@ -192,9 +192,9 @@ public class SmallBlockCacher {
     }
 
     /**
-     * 缓存初始化
+     * Cache initialization
      *
-     * @param chainId 链Id/chain id
+     * @param chainId chainId/chain id
      */
     public static void init(int chainId) {
         ConfigBean parameters = ContextManager.getContext(chainId).getParameters();

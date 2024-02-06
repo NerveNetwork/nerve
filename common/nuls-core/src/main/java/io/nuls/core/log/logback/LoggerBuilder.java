@@ -5,6 +5,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.rolling.RollingFileAppender;
+import ch.qos.logback.core.spi.ScanException;
 import io.nuls.core.model.StringUtils;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 日志管理工具类
+ * Log management tool class
  * Log Management Tool Class
  *
  * @author tag
@@ -65,13 +66,18 @@ public class LoggerBuilder {
 
     @SuppressWarnings("unchecked")
     private static NulsLogger build(String fileName, Level fileLevel, Level consoleLevel) {
-        RollingFileAppender fileAppender = LogAppender.getAppender(fileName, fileLevel);
+        RollingFileAppender fileAppender;
+        try {
+            fileAppender = LogAppender.getAppender(fileName, fileLevel);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger logger = context.getLogger(fileAppender.getEncoder().toString());
-        //设置不向上级打印信息
+        //Set not to print information to superiors
         logger.setAdditive(false);
         logger.addAppender(fileAppender);
-        //输出到控制台
+        //Output to console
         Appender consoleAppender = LogAppender.createConsoleAppender(consoleLevel);
         logger.addAppender(consoleAppender);
         return new NulsLogger(logger);

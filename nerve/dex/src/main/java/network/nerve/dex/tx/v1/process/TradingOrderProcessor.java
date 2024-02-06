@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 用户挂单委托交易处理器
+ * User order commission transaction processor
  */
 @Component("TradingOrderProcessorV1")
 public class TradingOrderProcessor implements TransactionProcessor {
@@ -55,7 +55,7 @@ public class TradingOrderProcessor implements TransactionProcessor {
     }
 
     /**
-     * 提交挂单委托
+     * Submit order commission
      *
      * @param tx
      * @param index
@@ -105,7 +105,7 @@ public class TradingOrderProcessor implements TransactionProcessor {
     }
 
     /**
-     * 挂单委托交易放在第2位处理
+     * Place the entrusted transaction on the order placement page2Bit processing
      *
      * @return
      */

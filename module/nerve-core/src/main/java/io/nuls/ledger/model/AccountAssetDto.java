@@ -34,17 +34,17 @@ import java.math.BigInteger;
  * @author: PierreLuo
  * @date: 2020-02-11
  */
-@ApiModel(name = "账户资产信息")
+@ApiModel(name = "Account asset information")
 public class AccountAssetDto {
-    @ApiModelProperty(description = "资产链id")
+    @ApiModelProperty(description = "Asset Chainid")
     private Integer assetChainId;
-    @ApiModelProperty(description = "资产id")
+    @ApiModelProperty(description = "assetid")
     private Integer assetId;
-    @ApiModelProperty(description = "可用金额")
+    @ApiModelProperty(description = "Available amount")
     private BigInteger available;
-    @ApiModelProperty(description = "锁定金额")
+    @ApiModelProperty(description = "Lock in amount")
     private BigInteger freeze;
-    @ApiModelProperty(description = "是否已确认")
+    @ApiModelProperty(description = "Has it been confirmed")
     private boolean isConfirmed;
 
     private String nonce;

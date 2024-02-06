@@ -69,7 +69,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
         if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return this.validateProtocol17(chainId, txs, txMap, blockHeader);
         } else {
             return this._validate(chainId, txs, txMap, blockHeader);
@@ -79,7 +79,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
     @Override
     public boolean commit(int chainId, List<Transaction> txs, BlockHeader blockHeader, int syncStatus) {
         if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return this.commitProtocol17(chainId, txs, blockHeader, syncStatus);
         } else {
             return this._commit(chainId, txs, blockHeader, syncStatus);
@@ -89,7 +89,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
     @Override
     public boolean rollback(int chainId, List<Transaction> txs, BlockHeader blockHeader) {
         if (swapHelper.isSupportProtocol17()) {
-            //协议17: 整合稳定币币池后，稳定币币种1:1兑换
+            //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return this.rollbackProtocol17(chainId, txs, blockHeader);
         } else {
             return this._rollback(chainId, txs, blockHeader);
@@ -243,7 +243,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                     if (i == pathLength - 1) {
                         continue;
                     }
-                    // 检查地址，可能是稳定币池的地址
+                    // Check the address, it may be the address of the stablecoin pool
                     if (!SwapUtils.groupCombining(token, path[i + 1]) && !swapPairCache.isExist(SwapUtils.getStringPairAddress(chainId, token, path[i + 1]))) {
                         logger.error("PAIR_ADDRESS_ERROR! hash-{}", tx.getHash().toHex());
                         failsList.add(tx);
@@ -253,7 +253,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                 }
                 CoinData coinData = tx.getCoinDataInstance();
                 SwapTradeDTO dto = swapTradeHandler.getSwapTradeInfo(chainId, coinData);
-                // 当第一个交易对是稳定币池交易对时，检查是否为稳定币池地址
+                // When the first transaction pair is a stablecoin pool transaction pair, check if it is a stablecoin pool address
                 int groupIndex;
                 if ((groupIndex = SwapContext.stableCoinGroup.groupIndex(path[0], path[1])) != -1) {
                     if (!Arrays.equals(AddressTool.getAddress(SwapContext.stableCoinGroup.getAddressByIndex(groupIndex)), dto.getFirstPairAddress())) {
@@ -278,7 +278,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                 }
                 SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, dto.getAmountIn(),
                         txData.getTo(), txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
-                //协议17: 增加校验，稳定币兑换的逻辑
+                //protocol17: Add verification and logic for stablecoin exchange
                 if (swapTradeBus.isExistStablePair()) {
                     swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
                 }
@@ -305,14 +305,14 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[commit] Swap Trade, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
                 SwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), SwapTradeBus.class);
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 List<TradePairBus> busList = bus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
                     IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairBus.getPairAddress()));
@@ -337,19 +337,19 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
             Map<String, SwapResult> swapResultMap = chain.getBatchInfo().getSwapResultMap();
             for (Transaction tx : txs) {
                 logger.info("[commit] Swap Trade, hash: {}", tx.getHash().toHex());
-                // 从执行结果中提取业务数据
+                // Extracting business data from execution results
                 SwapResult result = swapResultMap.get(tx.getHash().toHex());
                 swapExecuteResultStorageService.save(chainId, tx.getHash(), result);
                 if (!result.isSuccess()) {
                     continue;
                 }
                 SwapTradeBus bus = result.getSwapTradeBus();
-                // 更新Pair的资金池和发行总量
+                // updatePairThe fund pool and total issuance amount of
                 List<TradePairBus> busList = bus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
-                    //协议17: 更新稳定币池 整合稳定币币池后，稳定币币种1:1兑换
+                    //protocol17: Update stablecoin pool After integrating the stablecoin pool, stablecoin currencies1:1exchange
                     if (bus.isExistStablePair() && SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                        // 持久化更新稳定币池的数据
+                        // Persistently updating data from the stablecoin pool
                         stableSwapTradeTxProcessor.updatePersistence(pairBus.getStableSwapTradeBus(), blockHeader.getHeight(), blockHeader.getTime());
                         continue;
                     }
@@ -381,7 +381,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                     continue;
                 }
                 SwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), SwapTradeBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 List<TradePairBus> busList = bus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
                     IPair pair = iPairFactory.getPair(AddressTool.getStringAddressByBytes(pairBus.getPairAddress()));
@@ -415,12 +415,12 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                 }
 
                 SwapTradeBus bus = SwapDBUtil.getModel(HexUtil.decode(result.getBusiness()), SwapTradeBus.class);
-                // 回滚Pair的资金池
+                // RollBACKPairOur fund pool
                 List<TradePairBus> busList = bus.getTradePairBuses();
                 for (TradePairBus pairBus : busList) {
-                    //协议17: 回滚更新稳定币池 整合稳定币币池后，稳定币币种1:1兑换
+                    //protocol17: Rolling back and updating the stablecoin pool After integrating the stablecoin pool, stablecoin currencies1:1exchange
                     if (SwapUtils.groupCombining(pairBus.getTokenIn(), pairBus.getTokenOut())) {
-                        // 回滚持久化更新稳定币池的数据
+                        // Rolling back persistent updates to stablecoin pool data
                         stableSwapTradeTxProcessor.rollbackPersistence(pairBus);
                         continue;
                     }

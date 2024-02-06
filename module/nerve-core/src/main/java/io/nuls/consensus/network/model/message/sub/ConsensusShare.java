@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * @author lanjinsheng
  * @date 2019/10/17
- * @description 分享列表
+ * @description Share List
  */
 public class ConsensusShare extends BaseNulsData {
     private List<ConsensusNet> shareList = new ArrayList<>();
