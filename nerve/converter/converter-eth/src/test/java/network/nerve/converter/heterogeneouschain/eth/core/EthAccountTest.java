@@ -93,7 +93,7 @@ public class EthAccountTest extends Base {
         // 94f024a7c2c30549b7ee932030e7c38f8a9dff22b4b08809fb9e5e2263974717::::::::::0xc99039f0b5e1c8a6a4bb7349cdcfef63288164cc
         // a572b95153b10141ff06c64818c93bd0e7b4025125b83f15a89a7189248191ca::::::::::0x20a495b1f92b135373cd080a60bd58f7dd073d33
         // 7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b::::::::::0xb7c574220c7aaa5d16b9072cf5821bf2ee8930f4
-        String prikey = "912b6f010e024327865784dd3388d906d4813c236458183574eda28762373d49";
+        String prikey = "7b44f568ca9fc376d12e86e48ef7f4ba66bc709f276bd778e95e0967bd3fc27b";
         //String prikey = "71361500124b2e4ca11f68c9148a064bb77fe319d8d27b798af4dda3f4d910cc";
         //String prikey = "1523eb8a85e8bb6641f8ae53c429811ede7ea588c4b8933fed796c667c203c06";
         System.out.println("=========eth==============");
@@ -186,7 +186,7 @@ public class EthAccountTest extends Base {
     }
 
     @Test
-    public void verifySignDataTest() throws Exception {
+    public void signDataAndVerifyTest() throws Exception {
         String prikey = "B36097415F57FE0AC1665858E3D007BA066A7C022EC712928D2372B27E8513FF";
         String data = "202008111807";
         io.nuls.core.crypto.ECKey nEckey = io.nuls.core.crypto.ECKey.fromPrivate(HexUtil.decode(Numeric.cleanHexPrefix(prikey)));
@@ -200,6 +200,19 @@ public class EthAccountTest extends Base {
                 HexUtil.decode(Numeric.cleanHexPrefix(sign)),
                 HexUtil.decode(Numeric.cleanHexPrefix(pub)));
         System.out.println(String.format("verify result: %s", verify));
+    }
+
+    @Test
+    public void verifySignDataTest() throws Exception {
+        String data = "abcdefghijk123456789";
+        byte[] signBytes = HexUtil.decode("1be2eb61aed3e5d50c0e041db8012bc3e8ba79b2b81aa4d76155880ccfac9d893b61ce8b74f8ad99aa8cea3fa224e7880f50ac317389169568a6f3e21c176e9641");
+        String pub = "026887958bcc4cb6f8c04ea49260f0d10e312c41baf485252953b14724db552aac";
+        ECDSASignature signature = new ECDSASignature(Numeric.decodeQuantity("0x1be2eb61aed3e5d50c0e041db8012bc3e8ba79b2b81aa4d76155880ccfac9d89"), Numeric.decodeQuantity("0x3b61ce8b74f8ad99aa8cea3fa224e7880f50ac317389169568a6f3e21c176e96"));
+        byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
+        for (int i = 0; i < 4; i++) {
+            BigInteger recover = Sign.recoverFromSignature(i, signature, dataBytes);
+            System.out.println(String.format("order: %s", HexUtil.encode(recover.toByteArray())));
+        }
     }
 
     @Test

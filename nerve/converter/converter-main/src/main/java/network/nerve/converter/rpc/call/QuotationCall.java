@@ -114,6 +114,9 @@ public class QuotationCall {
         } else if ("ZETA_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01993");
         }*/
+        if (chain.getChainId() == 5 && "SHM_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.01993");
+        }
         /************************************************/
         try {
             Map<String, Object> params = new HashMap(ConverterConstant.INIT_CAPACITY_4);

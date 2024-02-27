@@ -68,6 +68,7 @@ public enum AssetName {
     OKB(134, 18),
     ZETA(135, 18),
     KROMA(136, 18),
+    SHM(137, 18),
 
     BTC(201, 8),
     FCH(202, 8);

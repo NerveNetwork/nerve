@@ -23,6 +23,9 @@
  */
 package network.nerve.swap.cache.impl;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import io.nuls.core.core.annotation.Component;
 import network.nerve.swap.cache.LedgerAssetCache;
 import network.nerve.swap.model.NerveToken;
@@ -31,6 +34,7 @@ import network.nerve.swap.rpc.call.LedgerCall;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author: PierreLuo
@@ -40,20 +44,33 @@ import java.util.Map;
 public class LedgerAssetCacheImpl implements LedgerAssetCache {
 
     //Different chain addresses will not be the same, so chains will no longer be distinguished
-    private Map<String, LedgerAssetDTO> CACHE_MAP = new HashMap<>();
+    //private Map<String, LedgerAssetDTO> CACHE_MAP = new HashMap<>();
+    private LoadingCache<String, LedgerAssetDTO> CACHE = CacheBuilder.newBuilder()
+            .initialCapacity(50)
+            .maximumSize(500)
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .build(new CacheLoader<String, LedgerAssetDTO>() {
+                @Override
+                public LedgerAssetDTO load(String key) throws Exception {
+                    String[] assetInfo = key.split("-");
+                    int chainId = Integer.parseInt(assetInfo[0]);
+                    int assetChainId = Integer.parseInt(assetInfo[1]);
+                    int assetId = Integer.parseInt(assetInfo[2]);
+                    return LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
+                }
+            });
 
+    private LedgerAssetDTO getAssetFromCache(int chainId, int assetChainId, int assetId) {
+        try {
+            String key = chainId + "-" + assetChainId + "-" + assetId;
+            return CACHE.get(key);
+        } catch (Exception e) {
+            return null;
+        }
+    }
     @Override
     public LedgerAssetDTO getLedgerAsset(int chainId, int assetChainId, int assetId) {
-        String key = assetChainId + "_" + assetId;
-        LedgerAssetDTO dto = CACHE_MAP.get(key);
-        if (dto == null) {
-            dto = LedgerCall.getNerveAsset(chainId, assetChainId, assetId);
-            if (dto == null) {
-                return null;
-            }
-            CACHE_MAP.put(key, dto);
-        }
-        return dto;
+        return getAssetFromCache(chainId, assetChainId, assetId);
     }
 
     @Override

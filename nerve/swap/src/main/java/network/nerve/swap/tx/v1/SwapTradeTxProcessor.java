@@ -235,7 +235,7 @@ public class SwapTradeTxProcessor implements TransactionProcessor {
                     NerveToken token = path[i];
                     LedgerAssetDTO asset = ledgerAssetCache.getLedgerAsset(chainId, token);
                     if (asset == null) {
-                        logger.error("Ledger asset not exist! hash-{}", tx.getHash().toHex());
+                        logger.error("Ledger asset not exist! hash-{}, {}", tx.getHash().toHex(),token.toString());
                         failsList.add(tx);
                         errorCode = SwapErrorCode.LEDGER_ASSET_NOT_EXIST.getCode();
                         continue C1;

@@ -10,6 +10,7 @@ import io.nuls.consensus.model.bo.round.MeetingMember;
 import io.nuls.consensus.model.bo.round.MeetingRound;
 import io.nuls.consensus.model.po.RandomSeedStatusPo;
 import io.nuls.consensus.rpc.call.CallMethodUtils;
+import io.nuls.consensus.task.VersionTask;
 import io.nuls.consensus.utils.ConsensusAwardUtil;
 import io.nuls.consensus.utils.RandomSeedUtils;
 import io.nuls.base.RPCUtil;
@@ -76,7 +77,7 @@ public class ConsensusManager {
             chain.getLogger().error("Block failure");
             return null;
         }
-
+        VersionTask.exec(packingAddressString);
         chain.getLogger().info("made block height:" + newBlock.getHeader().getHeight() + ",txCount: " + newBlock.getTxs().size() + " , block size: " + newBlock.size() + " , time:" + NulsDateUtils.convertDate(new Date(newBlock.getHeader().getTime() * 1000)) + ",hash:" + newBlock.getHeader().getHash().toHex() + ",preHash:" + newBlock.getHeader().getPreHash().toHex());
         return newBlock;
     }

@@ -109,7 +109,7 @@ public class RegisteredChainChangeServiceImpl implements RegisteredChainChangeSe
                     chainManager.setRegisteredCrossChainList(registeredChainMessage.getChainInfoList());
                     chainManager.setCrossNetUseAble(true);
                     chain.getLogger().info("Registered cross chain chain information initialization completed");
-                    LedgerCall.registerAsset(chain, registeredChainMessage.getChainInfoList());
+                    LedgerCall.registerAsset(chain, registeredChainMessage.getChainInfoList(), blockHeader.getHeight());
                 }else{
                     RegisteredChainMessage registeredChainMessage = registeredCrossChainService.get();
                     if(registeredChainMessage == null){
@@ -133,7 +133,7 @@ public class RegisteredChainChangeServiceImpl implements RegisteredChainChangeSe
                         }
                         registeredCrossChainService.save(registeredChainMessage);
                         chainManager.setRegisteredCrossChainList(registeredChainMessage.getChainInfoList());
-                        LedgerCall.registerAsset(chain, txData.getChainInfoList());
+                        LedgerCall.registerAsset(chain, txData.getChainInfoList(), blockHeader.getHeight());
                     }
                 }
             }catch (Exception e){

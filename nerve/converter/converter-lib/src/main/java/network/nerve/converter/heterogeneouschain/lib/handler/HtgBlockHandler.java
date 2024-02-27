@@ -105,7 +105,7 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 // When starting a node, the local block is empty and will be removed from theHTGStarting synchronization at the latest height of the network
                 EthBlock.Block block = htgWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 htgBlockAnalysisHelper.analysisEthBlock(block, htgAnalysisTxHelper);
@@ -113,11 +113,12 @@ public class HtgBlockHandler implements Runnable, BeanInitial {
                 return;
             }
             Long localBlockHeight = localMax.getHeight();
+            long difference = blockHeightFromEth - localBlockHeight;
             // When starting a node, the latest local altitude matchesHTGWhen the height of a network block differs by two or more blocks, it will be removed from theHTGNetwork height begins to synchronize
-            if (firstSync && blockHeightFromEth - localBlockHeight >= 2) {
+            if (firstSync && Math.abs(difference) >= 2) {
                 EthBlock.Block block = htgWalletApi.getBlockByHeight(blockHeightFromEth);
                 if(block == null) {
-                    htgContext.logger().info("Unable to obtain{}Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
+                    htgContext.logger().info("Unable to obtain {} Block, waiting for the next round of execution", htgContext.getConfig().getSymbol());
                     return;
                 }
                 htgLocalBlockHelper.deleteAllLocalBlockHeader();

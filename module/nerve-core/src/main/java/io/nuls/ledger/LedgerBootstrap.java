@@ -91,6 +91,13 @@ public class LedgerBootstrap implements INerveCoreBootstrap {
         } catch (Exception e) {
             LoggerUtil.COMMON_LOG.warn("Failed to get height_1_17_0", e);
         }
+        try {
+            long heightVersion1_32_0 = Long.parseLong(configurationLoader.getValue(ModuleE.Constant.PROTOCOL_UPDATE, "height_1_32_0"));
+            // v1.32.0 Protocol upgrade height
+            LedgerConstant.PROTOCOL_1_32_0 = heightVersion1_32_0;
+        } catch (Exception e) {
+            LoggerUtil.COMMON_LOG.warn("Failed to get height_1_32_0", e);
+        }
     }
 
     @Override

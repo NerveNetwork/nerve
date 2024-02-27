@@ -1,9 +1,9 @@
 [global]
 encoding=UTF-8
 language=en
-logPath=/Users/wangzhijian/workspace/nerve-network/logs
+logPath=/Users/macle/workspace/nerve-network/logs
 logLevel=INFO
-dataPath=/Users/wangzhijian/workspace/nerve-network/data
+dataPath=/Users/macle/workspace/nerve-network/data
 #Default This ChainID
 chainId=9
 #Address prefix
@@ -40,7 +40,6 @@ maxInCount=300
 #Maximum number of outbound connections
 maxOutCount=50
 reverseCheck=0
-
 [account]
 blockAccountManager=NERVEepb6hz6zSAPu7YkxyM68M6omUkwAJpHmt
 keystoreFolder=/keystore/backup

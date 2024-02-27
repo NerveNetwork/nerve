@@ -158,13 +158,14 @@ public class LedgerCall {
      * Registered assets information
      * */
     @SuppressWarnings("unchecked")
-    public static void registerAsset(Chain chain, List<ChainInfo> chainInfoList) throws NulsException {
+    public static void registerAsset(Chain chain, List<ChainInfo> chainInfoList, long height) throws NulsException {
         try {
             Map<String, Object> params = new HashMap<>(4);
             params.put(Constants.VERSION_KEY_STR, NulsCrossChainConstant.RPC_VERSION);
             params.put(Constants.CHAIN_ID, chain.getChainId());
             params.put("assetType", 3);
             params.put("crossChainAssetList", assembleLedgerAsset(chainInfoList));
+            params.put("height", height);
             try {
                 Request request = MessageUtil.newRequest("lg_cross_chain_asset_list_reg", params, Constants.BOOLEAN_FALSE, Constants.ZERO, Constants.ZERO);
                 NerveCoreResponseMessageProcessor.requestOnly(ModuleE.LG.abbr, request);

@@ -38,10 +38,7 @@ import io.nuls.ledger.storage.CrossChainAssetRegMngRepository;
 import io.nuls.ledger.utils.LoggerUtil;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -127,6 +124,7 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
                     @Key(name = "address", valueType = String.class, description = "New asset address"),
                     @Key(name = "usable", valueType = boolean.class, description = "Is the asset available")
             })),
+            @Parameter(parameterName = "height", requestType = @TypeDescriptor(value = long.class), parameterDes = "Current block height"),
     })
     @ResponseData(name = "Return value", description = "Return aMapobject",
             responseType = @TypeDescriptor(value = Map.class, mapKeys = {
@@ -138,12 +136,24 @@ public class CrossChainAssetsRegCmd extends BaseLedgerCmd {
         try {
             LoggerUtil.COMMON_LOG.debug("[register] cross chain asset list");
             int chainId = Integer.parseInt(params.get("chainId").toString());
+            long height = Long.parseLong(params.get("height").toString());
             short assetType = Short.parseShort(params.get("assetType").toString());
             List<LedgerAsset> saveAssetList = new ArrayList<>();
             List<String> deleteAssetKeyList = new ArrayList<>();
             List<Map<String, Object>> list = (List<Map<String, Object>>) params.get("crossChainAssetList");
+            Collection<Map<String, Object>> dataList;
+            if (height >= LedgerConstant.PROTOCOL_1_32_0) {
+                Map<String, Map<String, Object>> dataMap = new HashMap<>();
+                for(Map<String, Object> assetMap : list) {
+                    String key = assetMap.get("assetChainId").toString() + "-" + assetMap.get("assetId").toString();
+                    dataMap.put(key, assetMap);
+                }
+                dataList = dataMap.values();
+            } else {
+                dataList = list;
+            }
             boolean usable;
-            for(Map<String, Object> assetMap : list) {
+            for(Map<String, Object> assetMap : dataList) {
                 int assetChainId = Integer.parseInt(assetMap.get("assetChainId").toString());
                 // When an in chain asset is registered as a cross chain asset, the cross chain module will register the asset as a cross chain asset and notify the ledger. At this time, the ledger should be ignored and the asset should not be modified as a cross chain asset
                 if (assetType == 3 && chainId == assetChainId) {

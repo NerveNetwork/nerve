@@ -79,9 +79,9 @@ public class TrxBlockAnalysisHelper implements BeanInitial {
         htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
 
         if (blockHeight % 50 == 0) {
-            htgContext.logger().info("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().info("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
         } else {
-            htgContext.logger().debug("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
+            htgContext.logger().debug("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
         }
     }
 

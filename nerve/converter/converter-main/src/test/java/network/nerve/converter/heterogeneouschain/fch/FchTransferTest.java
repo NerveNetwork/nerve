@@ -30,6 +30,7 @@ import apipClient.ApipClient;
 import apipClient.ApipDataGetter;
 import apipClient.BlockchainAPIs;
 import apipClient.FreeGetAPIs;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fchClass.Cash;
@@ -43,6 +44,7 @@ import javaTools.JsonTools;
 import keyTools.KeyTools;
 import network.nerve.converter.btc.txdata.RechargeData;
 import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.VarInt;
 import org.bitcoinj.script.Script;
 import org.bitcoinj.script.ScriptBuilder;
 import org.junit.Before;
@@ -200,8 +202,15 @@ public class FchTransferTest {
         String opReturn = null;
         String signedTx = FchTool.createTransactionSign(cashList, priBytes, outputs, opReturn);
         System.out.println(signedTx);
-        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
-        System.out.println(client.getResponseBodyStr());
+        //ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        //System.out.println(client.getResponseBodyStr());
+    }
+
+    @Test
+    public void getUTXOs() throws JsonProcessingException {
+        ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, "FBejsS6cJaBrAwPcMjFJYH7iy6Krh2fkRD", 0);
+        List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+        System.out.println(JSONUtils.obj2PrettyJson(cashList));
     }
 
     /**
@@ -219,19 +228,20 @@ public class FchTransferTest {
 
         ApipClient apipClient = FreeGetAPIs.getCashes(urlHead, owner, 0);
         List<Cash> cashList = ApipDataGetter.getCashList(apipClient.getResponseBody().getData());
+        Double amount = Double.valueOf("0.5");
+        Double fee = Double.valueOf("0.00000500");
+        String to = "FUmo2eez6VK2sfGWjek9i9aK5y1mdHSnqv";
 
-        //multisigAddress = "3BXpnXkAG7SYNxyKyDimcxjkyYQcaaJs5X";
-        String feeTo = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
+        /*String feeTo = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         Double fee = Double.valueOf("0.00002");
-        String to = multisigAddress;
-        Double amount = Double.valueOf("0.0015");
         RechargeData rechargeData = new RechargeData();
         rechargeData.setTo(AddressTool.getAddress("TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad"));
         rechargeData.setValue(new BigDecimal(amount.toString()).movePointRight(8).toBigInteger().longValue());
         if (fee.doubleValue() > 0) {
             rechargeData.setFeeTo(AddressTool.getAddress(feeTo));
         }
-        String opReturn = HexUtil.encode(rechargeData.serialize());
+        String opReturn = HexUtil.encode(rechargeData.serialize());*/
+        String opReturn = "test fch js";
 
         List<SendTo> outputs = new ArrayList<>();
         SendTo sendTo = new SendTo();
@@ -242,8 +252,8 @@ public class FchTransferTest {
 
         String signedTx = FchTool.createTransactionSign(cashList, priBytes, outputs, opReturn);
         System.out.println(signedTx);
-        ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
-        System.out.println(client.getResponseBodyStr());
+        //ApipClient client = FreeGetAPIs.broadcast(urlHead, signedTx);
+        //System.out.println(client.getResponseBodyStr());
     }
 
     @Test
@@ -499,7 +509,6 @@ public class FchTransferTest {
 
     @Test
     public void getTxInfoTest() {
-        byte[] sessionKey = HexUtil.decode("11f2fbcc6f04e9bf40d55603a21ffff4ec156ed948809a492dc43c33d67ebc32");
         String txHash = "5e6c1e6ac94d9bdfcc26cf196d682e4b6e14760686df9740049802c850a05551";
         ApipClient client = BlockchainAPIs.txByIdsPost(urlHead, new String[]{
                 txHash,
@@ -529,5 +538,32 @@ public class FchTransferTest {
         System.out.println("opReturn info:\n" + client.getResponseBodyStr());
         Map<String, OpReturn> opReturnMap = ApipDataGetter.getOpReturnMap(client.getResponseBody().getData());
         System.out.println(opReturnMap.size());
+    }
+
+    //fee = txSize * (feeRate/1000)*100000000
+    public static long calcTxSize(int inputNum, int outputNum, int opReturnBytesLen) {
+
+        long baseLength = 10;
+        long inputLength = 141 * (long) inputNum;
+        long outputLength = 34 * (long) (outputNum + 1); // Include change output
+
+        int opReturnLen=0;
+        if (opReturnBytesLen!=0)
+            opReturnLen = calcOpReturnLen(opReturnBytesLen);
+
+        return baseLength + inputLength + outputLength + opReturnLen;
+    }
+
+    private static int calcOpReturnLen(int opReturnBytesLen) {
+        int dataLen;
+        if(opReturnBytesLen <76){
+            dataLen = opReturnBytesLen +1;
+        }else if(opReturnBytesLen <256){
+            dataLen = opReturnBytesLen +2;
+        }else dataLen = opReturnBytesLen +3;
+        int scriptLen;
+        scriptLen = (dataLen + 1) + VarInt.sizeOf(dataLen+1);
+        int amountLen = 8;
+        return scriptLen + amountLen;
     }
 }

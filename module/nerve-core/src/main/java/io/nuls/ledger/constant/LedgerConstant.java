@@ -162,4 +162,5 @@ public class LedgerConstant {
      * v1.17.0 Protocol upgrade height
      */
     public static long PROTOCOL_1_17_0 = 0L;
+    public static long PROTOCOL_1_32_0 = 0L;
 }

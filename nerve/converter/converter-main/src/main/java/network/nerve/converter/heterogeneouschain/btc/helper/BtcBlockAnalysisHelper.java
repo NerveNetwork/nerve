@@ -58,7 +58,7 @@ public class BtcBlockAnalysisHelper implements BeanInitial {
                 try {
                     analysisTx.analysisTx(tx, txTime, blockHeight, block.getHash());
                 } catch (Exception e) {
-                    htgContext.logger().error(String.format("[%s]Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getTxId()), e);
+                    htgContext.logger().error(String.format("[%s] Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getTxId()), e);
                 }
             }
         }
@@ -71,12 +71,7 @@ public class BtcBlockAnalysisHelper implements BeanInitial {
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // Keep only the last thirty blocks
         htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
-
-        if (blockHeight % 50 == 0) {
-            htgContext.logger().info("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
-        } else {
-            htgContext.logger().debug("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
-        }
+        htgContext.logger().info("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
     }
 
 

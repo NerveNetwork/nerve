@@ -230,9 +230,9 @@
             <version>1.0.0</version>
         </dependency>
         <dependency>
-            <groupId>com.github.bitsoex.btcd-cli4j</groupId>
+            <groupId>com.github.bitsoex.btcd-cli4j-NERVE</groupId>
             <artifactId>btcd-cli4j-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.1</version>
         </dependency>
 
         <dependency>

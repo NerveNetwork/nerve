@@ -62,7 +62,7 @@ public class FchBlockAnalysisHelper implements BeanInitial {
                 try {
                     analysisTx.analysisTx(tx, txTime, blockHeight);
                 } catch (Exception e) {
-                    htgContext.logger().error(String.format("[%s]Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getId()), e);
+                    htgContext.logger().error(String.format("[%s] Network transaction parsing failed: %s", htgContext.getConfig().getSymbol(), tx.getId()), e);
                 }
             }
         }
@@ -75,12 +75,7 @@ public class FchBlockAnalysisHelper implements BeanInitial {
         htgLocalBlockHelper.saveLocalBlockHeader(simpleBlockHeader);
         // Keep only the last thirty blocks
         htgLocalBlockHelper.deleteByHeight(blockHeight - 30);
-
-        if (blockHeight % 50 == 0) {
-            htgContext.logger().info("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
-        } else {
-            htgContext.logger().debug("synchronization{}height[{}]complete", htgContext.getConfig().getSymbol(), blockHeight);
-        }
+        htgContext.logger().info("synchronization {} height [{}] complete", htgContext.getConfig().getSymbol(), blockHeight);
     }
 
 

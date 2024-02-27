@@ -2,6 +2,7 @@ package network.nerve.converter.heterogeneouschain.enuls.core;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.log.logback.NulsLogger;
 import io.nuls.core.parse.JSONUtils;
@@ -35,6 +36,7 @@ import org.web3j.rlp.RlpString;
 import org.web3j.rlp.RlpType;
 import org.web3j.utils.Numeric;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -76,9 +78,39 @@ public class EnulsWalletApiTest extends Base {
         fromPriKey = "4594348E3482B751AA235B8E580EFEF69DB465B3A291C5662CEDA6459ED12E39";
     }
 
+    protected void setAccount_5996() {
+        from = "0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996";
+        fromPriKey = pMap.get(from.toLowerCase()).toString();
+    }
+
+    Map<String, Object> pMap;
+    String packageAddressPrivateKeyZP;
+    String packageAddressPrivateKeyNE;
+    String packageAddressPrivateKeyHF;
     @Before
     public void before() {
+        try {
+            String path = new File(EnulsWalletApiTest.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
+            pMap = JSONUtils.json2map(pData);
+            String packageAddressZP = "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV";
+            String packageAddressNE = "TNVTdTSPMGoSukZyzpg23r3A7AnaNyi3roSXT";
+            String packageAddressHF = "TNVTdTSPV7WotsBxPc4QjbL8VLLCoQfHPXWTq";
+            packageAddressPrivateKeyZP = pMap.get(packageAddressZP).toString();
+            packageAddressPrivateKeyNE = pMap.get(packageAddressNE).toString();
+            packageAddressPrivateKeyHF = pMap.get(packageAddressHF).toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
+    protected void setLocalNewTest() {
+        list = new ArrayList<>();
+        list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
+        list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
+        list.add(packageAddressPrivateKeyHF);// 0x4dAE32e287D43Ba6F6fE9323864e67A9c66B47e6
+        this.multySignContractAddress = "0x56F175D48211e7D018ddA7f0A0B51bcfB405AE69";
+        init();
     }
 
     protected void setDev() {
@@ -289,17 +321,18 @@ public class EnulsWalletApiTest extends Base {
      */
     @Test
     public void depositERC20ByCrossOut() throws Exception {
-        setLocalTest();
+        setLocalNewTest();
         //setBeta();
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
         // initialization account
-        setAccount_EFa1();
+        setAccount_5996();
         // ERC20 Transfer quantity
-        String sendAmount = "8.12345678";// 1.123456, 1234.123456789123456789
+        String sendAmount = "20000000";// 1.123456, 1234.123456789123456789
         // initialization ERC20 Address information
-        setErc20USDT();
+        //setErc20USDT();
         //setErc20NVT();
-        //setErc20USD18();
+        setErc20USD18();
+        erc20Address = "0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA";
         // Nerve Receiving address
         String to = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
 
@@ -316,13 +349,13 @@ public class EnulsWalletApiTest extends Base {
             String authHash = this.sendTx(from, fromPriKey, approveFunction, HeterogeneousChainTxType.DEPOSIT, null, erc20Address);
             System.out.println(String.format("erc20Authorization recharge[%s], authorizationhash: %s", approveAmount, authHash));
             while (htgWalletApi.getTxReceipt(authHash) == null) {
-                System.out.println("wait for8Second query[ERC20authorization]Transaction packaging results");
+                System.out.println("wait for 8 Second query[ERC20authorization]Transaction packaging results");
                 TimeUnit.SECONDS.sleep(8);
             }
             TimeUnit.SECONDS.sleep(8);
             BigInteger tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             while (tempAllowanceAmount.compareTo(convertAmount) < 0) {
-                System.out.println("wait for8Second query[ERC20authorization]Transaction limit");
+                System.out.println("wait for 8 Second query[ERC20authorization]Transaction limit");
                 TimeUnit.SECONDS.sleep(8);
                 tempAllowanceAmount = (BigInteger) htgWalletApi.callViewFunction(erc20Address, allowanceFunction).get(0).getValue();
             }

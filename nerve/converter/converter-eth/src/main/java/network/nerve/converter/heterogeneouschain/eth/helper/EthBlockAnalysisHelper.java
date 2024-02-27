@@ -69,9 +69,9 @@ public class EthBlockAnalysisHelper {
         // Keep only the last thirty blocks
         ethLocalBlockHelper.deleteByHeight(blockHeight - 30);
         if (blockHeight % 20 == 0) {
-            EthContext.logger().info("synchronizationETHheight[{}]complete", blockHeight);
+            EthContext.logger().info("synchronization ETH height [{}] complete", blockHeight);
         } else {
-            EthContext.logger().debug("synchronizationETHheight[{}]complete", blockHeight);
+            EthContext.logger().debug("synchronization ETH height [{}] complete", blockHeight);
         }
     }
 
