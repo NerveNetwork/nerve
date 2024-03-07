@@ -158,6 +158,8 @@ public class HeterogeneousUtil {
         switch (htgChainId) {
             case 130: return getL1FeeOnScroll(_l1GasUsedOnScroll, ethNetworkGasPrice);
             case 133: return getL1FeeOnManta(_l1GasUsedOnManta, ethNetworkGasPrice);
+            case 139:
+            case 138:
             case 136:
             case 115:
             case 129: return getL1FeeOnOptimismOrBase(_l1GasUsedOnOptimismOrBase, ethNetworkGasPrice);

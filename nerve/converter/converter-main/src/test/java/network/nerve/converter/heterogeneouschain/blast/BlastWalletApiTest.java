@@ -1,4 +1,4 @@
-package network.nerve.converter.heterogeneouschain.shm;
+package network.nerve.converter.heterogeneouschain.blast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.nuls.base.signture.TransactionSignature;
@@ -41,12 +41,12 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 
-public class ShmWalletApiTest extends Base {
+public class BlastWalletApiTest extends Base {
 
-    String testEthRpcAddress = "https://sphinx.shardeum.org";
-    int testChainId = 8082;
-    String mainEthRpcAddress = "";
-    int mainChainId = 0;
+    String testEthRpcAddress = "https://sepolia.blast.io";
+    int testChainId = 168587773;
+    String mainEthRpcAddress = "https://rpc.blast.io";
+    int mainChainId = 81457;
     @Override
     protected String testEthRpcAddress() {
         return testEthRpcAddress;
@@ -72,21 +72,21 @@ public class ShmWalletApiTest extends Base {
     protected String erc20Address;
     protected int erc20Decimals;
 
-    /** Kroma testnet */
-    static String USDT_SHM = "0x348371cFc7782d336C890B733d792258E1809216";
-    static String USD18_SHM = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
-    static String NVT_KROMA_MINTER = "0x348371cFc7782d336C890B733d792258E1809216";
+    /** Blast testnet */
+    static String USDT_BLAST = "0xF2e1C076eede6F0B8d82eE78fa12112DDEfb5f06";
+    static String USD18_BLAST = "0x21615a84D8D834ca598a59D8E5C810128403DfaE";
+    static String NVT_BLAST_MINTER = "0xE6b360C49A316fcc71d55B3074160ee043a7BD8B";
 
     protected void setErc20USDT() {
-        erc20Address = USDT_SHM;
+        erc20Address = USDT_BLAST;
         erc20Decimals = 6;
     }
     protected void setErc20USD18() {
-        erc20Address = USD18_SHM;
+        erc20Address = USD18_BLAST;
         erc20Decimals = 18;
     }
     protected void setErc20NVT() {
-        erc20Address = NVT_KROMA_MINTER;
+        erc20Address = NVT_BLAST_MINTER;
         erc20Decimals = 8;
     }
 
@@ -121,7 +121,7 @@ public class ShmWalletApiTest extends Base {
     @Before
     public void before() {
         try {
-            String path = new File(ShmWalletApiTest.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
+            String path = new File(BlastWalletApiTest.class.getClassLoader().getResource("").getFile()).getParentFile().getParentFile().getParentFile().getParentFile().getParentFile().getPath();
             String pData = IoUtils.readBytesToString(new File(path + File.separator + "ethwp.json"));
             pMap = JSONUtils.json2map(pData);
             String packageAddressZP = "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV";
@@ -140,7 +140,7 @@ public class ShmWalletApiTest extends Base {
         list.add(packageAddressPrivateKeyZP);// 0x2804A4296211Ab079AED4e12120808F1703841b3
         list.add(packageAddressPrivateKeyNE);// 0x4202726a119F7784085B04264BfF716267a51032
         list.add(packageAddressPrivateKeyHF);// 0x4dAE32e287D43Ba6F6fE9323864e67A9c66B47e6
-        this.multySignContractAddress = "0x8710648efDf506B2055Ff2cd53275427aFC2D276";
+        this.multySignContractAddress = "0x50074F4Bc4bC955622b49de16Fc6E3C1c73afBcA";
         init();
     }
 
@@ -300,7 +300,7 @@ public class ShmWalletApiTest extends Base {
             System.out.println(String.format("towards [%s] Transfer %s individual ERC20(USDT), transaction hash: %s", to, tokenAmount, token.getTransactionHash()));
         }
 
-        TimeUnit.SECONDS.sleep(10);
+        TimeUnit.SECONDS.sleep(20);
         setErc20USD18();
         tokenAddress = erc20Address;
         tokenDecimals = erc20Decimals;
@@ -324,7 +324,7 @@ public class ShmWalletApiTest extends Base {
         // initialization account
         setAccount_5996();
         // MainAssetquantity
-        String sendAmount = "0.001";
+        String sendAmount = "0.00001";
         // Nerve Receiving address
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
         BigInteger convertAmount = htgWalletApi.convertMainAssetToWei(new BigDecimal(sendAmount));
@@ -352,9 +352,9 @@ public class ShmWalletApiTest extends Base {
         // initialization account
         setAccount_5996();
         // ERC20 Transfer quantity
-        String sendAmount = "1.123456"; setErc20USDT();
+        //String sendAmount = "1.123456"; setErc20USDT();
         //String sendAmount = "1234.123456789123456789"; setErc20USD18();
-        //String sendAmount = "20.12345678"; setErc20NVT();
+        String sendAmount = "20.12345678"; setErc20NVT();
 
         // Nerve Receiving address
         String to = "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad";
@@ -398,7 +398,7 @@ public class ShmWalletApiTest extends Base {
         // initialization account
         setAccount_5996();
         // Main asset expenses
-        String mainValue = "0.0001";
+        String mainValue = "0.000001";
         // ERC20 Transfer quantity
         String sendAmount = "2.15";
         // initialization ERC20 Address information
@@ -1033,7 +1033,7 @@ public class ShmWalletApiTest extends Base {
 
     @Test
     public void getCurrentGasPrice() throws IOException {
-        //setMain();
+        setMainProxy();
         BigInteger gasPrice = htgWalletApi.getWeb3j().ethGasPrice().send().getGasPrice();
         System.out.println(gasPrice);
         System.out.println(new BigDecimal(gasPrice).divide(BigDecimal.TEN.pow(9)).toPlainString());
@@ -1147,9 +1147,9 @@ public class ShmWalletApiTest extends Base {
         setLocalNewTest();
         List<String> tos = new ArrayList<>();
         //tos.add("0xC9aFB4fA1D7E2B7D324B7cb1178417FF705f5996");
-        //tos.add("0x2804a4296211ab079aed4e12120808f1703841b3");
         //tos.add("0x4202726a119f7784085b04264bff716267a51032");
-        tos.add("0x1a9f8b818a73B0F9FDe200cd88C42B626d2661Cd");
+        tos.add("0x4F50AB8Ae16d0643C9dad2cc9debbb0E9F714507");
+        tos.add("0x2804A4296211Ab079AED4e12120808F1703841b3");
         tos.add("0x6c2039B5fDaE068baD4931E8Cc0b8E3a542937ac");
         tos.add("0x3c2ff003fF996836d39601cA22394A58ca9c473b");
         htgContext.setEthGasPrice(htgWalletApi.getCurrentGasPrice());
@@ -1158,11 +1158,11 @@ public class ShmWalletApiTest extends Base {
         // initialization account
         setAccount_2617();
         // MainAssetquantity
-        String sendAmount = "20";
+        String sendAmount = "0.002";
         for (String to : tos) {
             String txHash = htgWalletApi.sendMainAssetForTestCase(from, fromPriKey, to, new BigDecimal(sendAmount), htgContext.GAS_LIMIT_OF_MAIN_ASSET(), gasPrice);
             System.out.println(String.format("towards [%s] Transfer %s individual MainAsset, transaction hash: %s", to, sendAmount, txHash));
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.SECONDS.sleep(20);
         }
     }
 

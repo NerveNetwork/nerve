@@ -1455,6 +1455,25 @@ public class ETHWalletApiTest extends Base {
     }
 
     @Test
+    public void testCost() {
+        String priceL1 = "59";
+        BigDecimal l1Fee = new BigDecimal("297216").multiply(new BigDecimal("0.684")).multiply(new BigDecimal(priceL1).multiply(BigDecimal.TEN.pow(9)));
+        String priceL2Mode = "0.001000252";
+        String priceL2Blast = "0.001000582";
+        String priceL2Merlin = "0.5";
+        BigDecimal l2FeeMode = new BigDecimal("4500000").multiply(new BigDecimal(priceL2Mode).multiply(BigDecimal.TEN.pow(9)));
+        BigDecimal l2FeeBlast = new BigDecimal("4500000").multiply(new BigDecimal(priceL2Blast).multiply(BigDecimal.TEN.pow(9)));
+        System.out.println(String.format("mode: %s", l1Fee.add(l2FeeMode).movePointLeft(18).toPlainString()));
+        System.out.println(String.format("blast: %s", l1Fee.add(l2FeeBlast).movePointLeft(18).toPlainString()));
+        System.out.println(String.format("merlin: %s", new BigDecimal("4500000").multiply(new BigDecimal(priceL2Merlin).multiply(BigDecimal.TEN.pow(9))).movePointLeft(18).toPlainString()));
+        /**
+         mode: 0.5 ETH
+         blast: 0.5 ETH
+         merlin: 0.01 BTC
+         */
+    }
+
+    @Test
     public void maintestSendEth() throws Exception {
         setMain();
         EthContext.setEthGasPrice(BigInteger.valueOf(22L).multiply(BigInteger.TEN.pow(9)));

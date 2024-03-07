@@ -79,7 +79,7 @@ public class HtgRpcAvailableHandler implements Runnable, BeanInitial {
                         break;
                     }
                     if (now - lastRecordTime > MINUTES_1) {
-                        htgContext.logger().error("{}Network block synchronization exception, local block height: {}, Existing{}Block not synchronized in seconds, please check the networkRPCservice",
+                        htgContext.logger().error("{} Network block synchronization exception, local block height: {}, Existing {} Block not synchronized in seconds, please check the network RPC service",
                                 htgContext.getConfig().getSymbol(),
                                 localBlockHeight,
                                 (now - lastRecordTime) / 1000);

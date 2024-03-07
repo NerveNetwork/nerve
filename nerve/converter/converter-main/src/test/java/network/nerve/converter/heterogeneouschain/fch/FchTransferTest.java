@@ -148,6 +148,10 @@ public class FchTransferTest {
     }
 
 
+    @Test
+    public void validAddr() {
+        System.out.println(KeyTools.isValidFchAddr("2cg5hKp41bh7ePqfvpZePzHoRwkxSVfWZGw1WEfE"));
+    }
 
     /**
      * Ordinary address transfer

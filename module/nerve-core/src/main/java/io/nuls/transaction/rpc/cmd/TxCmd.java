@@ -1,6 +1,7 @@
 package io.nuls.transaction.rpc.cmd;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.rpc.model.NerveCoreCmd;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
@@ -30,6 +31,7 @@ import io.nuls.transaction.model.bo.TxPackage;
 import io.nuls.transaction.model.bo.VerifyLedgerResult;
 import io.nuls.transaction.model.dto.ModuleTxRegisterDTO;
 import io.nuls.transaction.model.po.TransactionConfirmedPO;
+import io.nuls.transaction.rpc.cmd.pausetemp.*;
 import io.nuls.transaction.service.ConfirmedTxService;
 import io.nuls.transaction.service.TxPackageService;
 import io.nuls.transaction.service.TxService;

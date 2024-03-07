@@ -180,6 +180,7 @@ public interface IConverterCoreApi {
      * Does it support protocols31 v1.31.0
      */
     boolean isProtocol31();
+    boolean isProtocol33();
 
 
     /**

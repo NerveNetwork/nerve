@@ -104,7 +104,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 }
                 // querynerveCorresponding to the transactionethWhether the transaction was successful
                 if (htgInvokeTxHelper.isSuccessfulNerve(nerveTxHash)) {
-                    logger().info("[{}]Nerve tx stayNERVENetwork confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
+                    logger().info("[{}]Nerve tx stay NERVE Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                     this.clearDB(nerveTxHash);
                     continue;
                 }
@@ -116,7 +116,7 @@ public class HtgWaitingTxInvokeDataHandler implements Runnable, BeanInitial {
                 if (getCurrentBlockHeightOnNerve() >= validateHeight) {
                     validateHeight = getCurrentBlockHeightOnNerve() + 30;
                     if (htgParseTxHelper.isCompletedTransactionByLatest(nerveTxHash)) {
-                        logger().info("Nerve tx stay{}Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
+                        logger().info("Nerve tx stay {} Network confirmed, Successfully removed queue, nerveHash: {}", symbol, nerveTxHash);
                         this.clearDB(nerveTxHash);
                         continue;
                     }

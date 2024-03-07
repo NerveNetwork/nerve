@@ -71,7 +71,11 @@ public enum AssetName {
     SHM(137, 18),
 
     BTC(201, 8),
-    FCH(202, 8);
+    FCH(202, 8),
+
+    MODE(138, 18),
+    BLAST(139, 18),
+    MERLIN(140, 18);
 
     // Can use the main assets of other heterogeneous networks as transaction fees, For example, withdrawal toETH, PaymentBNBAs a handling fee
     private int chainId;

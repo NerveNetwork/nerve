@@ -126,6 +126,8 @@ public class ConverterCoreApi implements IConverterCoreApi {
         l1FeeChainSet.add(130);
         l1FeeChainSet.add(133);
         l1FeeChainSet.add(136);
+        l1FeeChainSet.add(138);
+        l1FeeChainSet.add(139);
     }
 
     public NulsLogger logger() {
@@ -509,6 +511,10 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public boolean isProtocol31() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_31_0;
     }
+    @Override
+    public boolean isProtocol33() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_33_0;
+    }
 
     private void loadHtgMainAsset() {
         if (heterogeneousDockingManager.getAllHeterogeneousDocking().size() == htgMainAssetMap.size()) return;
@@ -816,7 +822,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
             } else {
                 ethGasPrice = heterogeneousDockingManager.getHeterogeneousDocking(118).currentGasPrice();
                 //TODO pierre test
-                //ethGasPrice = new BigDecimal("47.48643118").movePointRight(9).toBigInteger();
+                //ethGasPrice = new BigDecimal("0.127838726").movePointRight(9).toBigInteger();
             }
             return HeterogeneousUtil.getL1Fee(htgChainId, ethGasPrice);
         } catch (NulsException e) {
