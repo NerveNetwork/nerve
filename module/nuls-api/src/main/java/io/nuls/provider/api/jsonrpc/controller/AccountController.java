@@ -38,6 +38,7 @@ import io.nuls.provider.api.config.Config;
 import io.nuls.provider.api.config.Context;
 import io.nuls.provider.model.dto.AccountBlockDTO;
 import io.nuls.provider.model.dto.AccountKeyStoreDto;
+import io.nuls.provider.model.dto.AccountWhitelistDTO;
 import io.nuls.provider.model.form.PriKeyForm;
 import io.nuls.provider.model.jsonrpc.RpcErrorCode;
 import io.nuls.provider.model.jsonrpc.RpcResult;
@@ -1059,6 +1060,39 @@ public class AccountController {
             return RpcResult.paramError("[address] is inValid");
         }
         AccountBlockDTO dto = accountTools.getBlockAccountInfo(chainId, address);
+        if (dto == null) {
+            return RpcResult.failed(AccountErrorCode.DATA_NOT_FOUND);
+        }
+        return RpcResult.success(dto);
+    }
+
+    @RpcMethod("getAccountWhitelistInfo")
+    @ApiOperation(description = "getAccountWhitelistInfo", order = 163)
+    @Parameters({
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainID"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMapobject", responseType = @TypeDescriptor(value = AccountWhitelistDTO.class))
+    public RpcResult getAccountWhitelistInfo(List<Object> params) {
+        int chainId;
+        String address;
+        try {
+            chainId = (int) params.get(0);
+        } catch (Exception e) {
+            return RpcResult.paramError("[chainId] is inValid");
+        }
+        try {
+            address = (String) params.get(1);
+        } catch (Exception e) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        if (!Context.isChainExist(chainId)) {
+            return RpcResult.paramError(String.format("chainId [%s] is invalid", chainId));
+        }
+        if (!AddressTool.validAddress(chainId, address)) {
+            return RpcResult.paramError("[address] is inValid");
+        }
+        AccountWhitelistDTO dto = accountTools.getAccountWhitelistInfo(chainId, address);
         if (dto == null) {
             return RpcResult.failed(AccountErrorCode.DATA_NOT_FOUND);
         }

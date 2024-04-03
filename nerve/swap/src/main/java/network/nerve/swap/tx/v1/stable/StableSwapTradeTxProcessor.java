@@ -201,7 +201,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                 byte tokenOutIndex = txData.getTokenOutIndex();
                 CoinData coinData = tx.getCoinDataInstance();
                 StableSwapTradeDTO dto = stableSwapTradeHandler.getStableSwapTradeInfo(chainId, coinData, iPairFactory, tokenOutIndex);
-                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo(), null);
+                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo(), null, null);
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);
@@ -256,7 +256,7 @@ public class StableSwapTradeTxProcessor implements TransactionProcessor {
                     errorCode = SwapErrorCode.PAIR_ADDRESS_ERROR.getCode();
                     continue;
                 }
-                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), null, dto.getFeeTo());
+                SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), null, dto.getFeeTo(), dto.getUserAddress());
             } catch (Exception e) {
                 Log.error(e);
                 failsList.add(tx);

@@ -36,6 +36,7 @@ import io.nuls.core.log.logback.NulsLogger;
 import network.nerve.converter.config.ConverterContext;
 import network.nerve.converter.constant.ConverterConstant;
 import network.nerve.converter.constant.ConverterErrorCode;
+import network.nerve.converter.core.api.ConverterCoreApi;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteStatusEnum;
 import network.nerve.converter.manager.ChainManager;
@@ -72,6 +73,8 @@ public class ProposalProcessor implements TransactionProcessor {
     private ProposalStorageService proposalStorageService;
     @Autowired
     private ProposalVotingStorageService proposalVotingStorageService;
+    @Autowired
+    private ConverterCoreApi converterCoreApi;
 
     @Override
     public Map<String, Object> validate(int chainId, List<Transaction> txs, Map<Integer, List<Transaction>> txMap, BlockHeader blockHeader) {
@@ -98,6 +101,13 @@ public class ProposalProcessor implements TransactionProcessor {
                 }
                 // swapCustomization of handling fees, verification of setting scope
                 ProposalTxData txData = ConverterUtil.getInstance(tx.getTxData(), ProposalTxData.class);
+                if (txData.getType() == ProposalTypeEnum.TRANSACTION_WHITELIST.value() && !converterCoreApi.isProtocol34()) {
+                    failsList.add(tx);
+                    // Heterogeneous chain address cannot be empty
+                    errorCode = ConverterErrorCode.PROPOSAL_REJECTED.getCode();
+                    log.error("[Validate TRANSACTION_WHITELIST] error");
+                    continue;
+                }
                 if (txData.getType() != ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE.value()) {
                     continue;
                 }

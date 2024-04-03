@@ -132,10 +132,10 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
      *     If a handling fee address is specified in the transaction, it will be divided into70%, Remaining30%Provide system address
      *     If no fee address is specified in the transaction, provide the system address
      */
-    public Transaction makeSystemDealTx(int chainId, IPairFactory iPairFactory, SwapTradeBus bus, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo) throws Exception{
+    public Transaction makeSystemDealTx(int chainId, IPairFactory iPairFactory, SwapTradeBus bus, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo, byte[] userAddress) throws Exception{
         if (swapHelper.isSupportProtocol24()) {
             //protocol24: Customized transaction fees
-            return makeSystemDealTxProtocol24(chainId, iPairFactory, bus, orginTxHash, blockTime, tempBalanceManager, feeTo);
+            return makeSystemDealTxProtocol24(chainId, iPairFactory, bus, orginTxHash, blockTime, tempBalanceManager, feeTo, userAddress);
         } else if (swapHelper.isSupportProtocol17()) {
             //protocol17: After integrating the stablecoin pool, stablecoin currencies1:1exchange
             return makeSystemDealTxProtocol17(chainId, iPairFactory, bus, orginTxHash, blockTime, tempBalanceManager, feeTo);
@@ -366,7 +366,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             result.setSwapTradeBus(bus);
             // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
-            Transaction sysDealTx = this.makeSystemDealTxProtocol24(chainId, iPairFactory, bus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            Transaction sysDealTx = this.makeSystemDealTxProtocol24(chainId, iPairFactory, bus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
             result.setSubTx(sysDealTx);
             result.setSubTxStr(SwapUtils.nulsData2Hex(sysDealTx));
             // Update temporary balance
@@ -509,7 +509,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             // After integrating the stablecoin pool, stablecoin currencies1:1exchange
             if (bus.isExistStablePair() && SwapUtils.groupCombining(tokenIn, tokenOut)) {
                 StableSwapTradeBus stableSwapTradeBus = stableSwapTradeHandler.tradeByCombining(chainId, iPairFactory, pairBus.getPairAddress(), pairBus.getTo(),
-                        tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal);
+                        tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal, null);
                 pairBus.setStableSwapTradeBus(stableSwapTradeBus);
                 pairBus.setPreBlockHeight(stableSwapTradeBus.getPreBlockHeight());
                 pairBus.setPreBlockTime(stableSwapTradeBus.getPreBlockTime());
@@ -582,7 +582,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
         return sysDealTx;
     }
 
-    private Transaction makeSystemDealTxProtocol24(int chainId, IPairFactory iPairFactory, SwapTradeBus bus, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo) throws Exception {
+    private Transaction makeSystemDealTxProtocol24(int chainId, IPairFactory iPairFactory, SwapTradeBus bus, String orginTxHash, long blockTime, LedgerTempBalanceManager tempBalanceManager, byte[] feeTo, byte[] userAddress) throws Exception {
         List<TradePairBus> busList = bus.getTradePairBuses();
         SwapSystemDealTransaction sysDeal = new SwapSystemDealTransaction(orginTxHash, blockTime);
         NerveToken tokenIn, tokenOut;
@@ -592,7 +592,7 @@ public class SwapTradeHandler extends SwapHandlerConstraints {
             // After integrating the stablecoin pool, stablecoin currencies1:1exchange
             if (bus.isExistStablePair() && SwapUtils.groupCombining(tokenIn, tokenOut)) {
                 StableSwapTradeBus stableSwapTradeBus = stableSwapTradeHandler.tradeByCombining(chainId, iPairFactory, pairBus.getPairAddress(), pairBus.getTo(),
-                        tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal);
+                        tempBalanceManager, pairBus.getTokenIn(), pairBus.getAmountIn(), pairBus.getTokenOut(), sysDeal, userAddress);
                 pairBus.setStableSwapTradeBus(stableSwapTradeBus);
                 pairBus.setPreBlockHeight(stableSwapTradeBus.getPreBlockHeight());
                 pairBus.setPreBlockTime(stableSwapTradeBus.getPreBlockTime());

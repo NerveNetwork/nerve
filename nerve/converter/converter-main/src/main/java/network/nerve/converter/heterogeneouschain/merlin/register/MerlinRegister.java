@@ -21,15 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package network.nerve.converter.heterogeneouschain.shm.register;
+package network.nerve.converter.heterogeneouschain.merlin.register;
 
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
 import network.nerve.converter.config.ConverterConfig;
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContext;
 import network.nerve.converter.heterogeneouschain.lib.register.HtgRegister;
-import network.nerve.converter.heterogeneouschain.shm.context.MerlinContext;
-import network.nerve.converter.heterogeneouschain.shm.context.ModeContext;
+import network.nerve.converter.heterogeneouschain.merlin.context.MerlinContext;
 
 
 /**

@@ -131,6 +131,8 @@ public interface QuotationConstant {
     String ANCHOR_TOKEN_JNS = "JNS-USDT";
     String ANCHOR_TOKEN_DOGE = "DOGE-USDT";
     String ANCHOR_TOKEN_ZETA = "ZETA-USDT";
+    String ANCHOR_TOKEN_FCH = "FCH-USDT";
+    String ANCHOR_TOKEN_PLS = "PLS-USDT";
 
     String QU_PROTOCOL_FILE = "qu-cfg-";
     String QU_CONTRACT_FILE = "quotation-contract-config-";

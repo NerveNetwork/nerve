@@ -142,8 +142,10 @@ public class BlockSignTest {
 
     public static void blockSignerPubTest() throws NulsException {
         String url = "https://api.nerve.network/jsonrpc";
-        long start = 55029898;
-        long end = 55029915;
+        //long start = 55029898;
+        //long end = 55029915;
+        long start = 56735460;
+        long end = 56735478;
         for (long i=start;i<=end;i++) {
             String post = (String) post(url + "",
                     Map.of("jsonrpc", "2.0",

@@ -17,6 +17,7 @@ import network.nerve.swap.model.business.AddLiquidityBus;
 import network.nerve.swap.model.business.RemoveLiquidityBus;
 import network.nerve.swap.model.business.SwapTradeBus;
 import network.nerve.swap.model.business.linkswap.StableLpSwapTradeBus;
+import network.nerve.swap.model.business.linkswap.SwapTradeStableRemoveLpBus;
 import network.nerve.swap.model.business.stable.StableAddLiquidityBus;
 import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
 import network.nerve.swap.model.business.stable.StableSwapTradeBus;
@@ -185,6 +186,7 @@ public class SwapUtilsTest {
         busClassMap.put(TxType.SWAP_REMOVE_LIQUIDITY_STABLE_COIN, StableRemoveLiquidityBus.class);
         busClassMap.put(TxType.SWAP_TRADE_STABLE_COIN, StableSwapTradeBus.class);
         busClassMap.put(TxType.SWAP_STABLE_LP_SWAP_TRADE, StableLpSwapTradeBus.class);
+        busClassMap.put(TxType.SWAP_TRADE_SWAP_STABLE_REMOVE_LP, SwapTradeStableRemoveLpBus.class);
     }
 
     protected Object desBusStr(Object txType, Object busStr) {

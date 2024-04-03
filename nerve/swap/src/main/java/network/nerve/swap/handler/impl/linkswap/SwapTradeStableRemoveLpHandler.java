@@ -189,7 +189,7 @@ public class SwapTradeStableRemoveLpHandler extends SwapHandlerConstraints {
             // Assembly system transaction
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             // generateswapSystem transactions
-            Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            Transaction sysDealTx0 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getUserAddress());
             // Update temporary balance
             tempBalanceManager.refreshTempBalance(chainId, sysDealTx0, blockTime);
             // Generate and revoke stablecoin liquidity system transactions

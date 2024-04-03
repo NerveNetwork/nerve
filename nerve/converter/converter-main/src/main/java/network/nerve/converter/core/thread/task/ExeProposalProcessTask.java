@@ -231,6 +231,13 @@ public class ExeProposalProcessTask implements Runnable {
                                 ProposalTypeEnum.MANAGE_SWAP_PAIR_FEE_RATE,
                                 proposalPO.getHash().toHex());
                         break;
+                    case TRANSACTION_WHITELIST:
+                        // swapmodule Used forSwapCustomized transaction fees
+                        publishProposalConfirmed(proposalPO, pendingPO);
+                        chain.getLogger().info("[Create Proposal Confirmation-{}] proposalHash:{}",
+                                ProposalTypeEnum.TRANSACTION_WHITELIST,
+                                proposalPO.getHash().toHex());
+                        break;
                     case OTHER:
                     default:
                         break;

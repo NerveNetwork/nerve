@@ -380,9 +380,16 @@ public class LedgerAssetRegisterHelper {
                     isStablePause = true;
                     String stableAddress = asset[2];
                     String status = asset[3];
-                    if (!"pause".equalsIgnoreCase(status) && "resume".equalsIgnoreCase(status)) {
-                        bindError = ConverterErrorCode.DATA_PARSE_ERROR;
-                        break;
+                    if (converterCoreApi.isProtocol34()) {
+                        if (!"pause".equalsIgnoreCase(status) && !"resume".equalsIgnoreCase(status)) {
+                            bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                            break;
+                        }
+                    } else {
+                        if (!"pause".equalsIgnoreCase(status) && "resume".equalsIgnoreCase(status)) {
+                            bindError = ConverterErrorCode.DATA_PARSE_ERROR;
+                            break;
+                        }
                     }
                     pauseKey = new StringBuilder(heterogeneousChainId).append("_")
                             .append(assetChainId).append("_")

@@ -110,9 +110,11 @@ public class QuotationCall {
         } else if ("OKB_PRICE".equals(oracleKey)){
             return new BigDecimal("54.6444");
         } else if ("FCH_PRICE".equals(oracleKey)){
-            return new BigDecimal("0.01993");
+            return new BigDecimal("0.00307");
         } else if ("ZETA_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01993");
+        } else if ("PLS_PRICE".equals(oracleKey)){
+            return new BigDecimal("0.0001142");
         }*/
         if (chain.getChainId() == 5 && "SHM_PRICE".equals(oracleKey)){
             return new BigDecimal("0.01993");
@@ -130,7 +132,8 @@ public class QuotationCall {
             }
             return new BigDecimal(price);
         } catch (NulsException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            chain.getLogger().error(e);
         }
         return null;
     }

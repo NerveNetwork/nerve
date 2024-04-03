@@ -9,6 +9,7 @@ import io.nuls.account.model.bo.AccountKeyStore;
 import io.nuls.account.model.bo.Chain;
 import io.nuls.account.model.dto.AccountKeyStoreDTO;
 import io.nuls.account.model.dto.AccountOfflineDTO;
+import io.nuls.account.model.dto.AccountWhitelistDTO;
 import io.nuls.account.model.dto.SimpleAccountDTO;
 import io.nuls.account.service.AccountKeyStoreService;
 import io.nuls.account.service.AccountService;
@@ -16,13 +17,12 @@ import io.nuls.account.service.TransactionService;
 import io.nuls.account.util.AccountTool;
 import io.nuls.account.util.Preconditions;
 import io.nuls.account.util.manager.ChainManager;
-import io.nuls.core.rpc.model.NerveCoreCmd;
-import io.nuls.common.NerveCoreConfig;
 import io.nuls.base.RPCUtil;
 import io.nuls.base.basic.AddressTool;
 import io.nuls.base.data.Address;
 import io.nuls.base.signture.BlockSignature;
 import io.nuls.base.signture.P2PHKSignature;
+import io.nuls.common.NerveCoreConfig;
 import io.nuls.core.basic.Page;
 import io.nuls.core.core.annotation.Autowired;
 import io.nuls.core.core.annotation.Component;
@@ -1468,6 +1468,76 @@ public class AccountCmd extends BaseCmd {
             return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
         }
         return success(map);
+    }
+
+    @CmdAnnotation(cmd = "ac_savewhitelist", version = 1.0, description = "savewhitelist")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "data", parameterType = "String", parameterDes = "Account whitelist data"),
+    })
+    @ResponseData(name = "Return value", description = "Return aMap", responseType = @TypeDescriptor(value = Map.class, mapKeys = {
+            @Key(name = RpcConstant.VALUE, valueType = boolean.class, description = "Is it successfully set up")
+    }))
+    public Response saveWhitelist(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            Preconditions.checkNotNull(params, AccountErrorCode.NULL_PARAMETER);
+            Object chainIdObj = params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object dataObj = params.get(RpcParameterNameConstant.DATA);
+            if (chainIdObj == null || dataObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //Data for whitelist
+            String dataStr = (String) dataObj;
+            boolean result = accountService.saveWhitelist(chain.getChainId(), dataStr);
+            Map<String, Object> map = new HashMap<>(AccountConstant.INIT_CAPACITY_2);
+            map.put(RpcConstant.VALUE, result);
+            return success(map);
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(e.getMessage());
+        }
+    }
+
+    @CmdAnnotation(cmd = "ac_getAccountWhitelistInfo", version = 1.0, description = "getAccountWhitelistInfo")
+    @Parameters(value = {
+            @Parameter(parameterName = "chainId", requestType = @TypeDescriptor(value = int.class), parameterDes = "chainid"),
+            @Parameter(parameterName = "address", parameterType = "String", parameterDes = "Account address")
+    })
+    @ResponseData(name = "Return value", responseType = @TypeDescriptor(value = SimpleAccountDTO.class))
+    public Response getAccountWhitelistInfo(Map params) {
+        Chain chain = null;
+        try {
+            // check parameters
+            Object chainIdObj = params == null ? null : params.get(RpcParameterNameConstant.CHAIN_ID);
+            Object addressObj = params == null ? null : params.get(RpcParameterNameConstant.ADDRESS);
+            if (params == null || chainIdObj == null || addressObj == null) {
+                throw new NulsRuntimeException(AccountErrorCode.NULL_PARAMETER);
+            }
+            // parse params
+            //chainID
+            chain = chainManager.getChain((Integer) chainIdObj);
+            if (null == chain) {
+                throw new NulsRuntimeException(AccountErrorCode.CHAIN_NOT_EXIST);
+            }
+            //Account address
+            String address = (String) addressObj;
+            //Search account based on address
+            AccountWhitelistDTO account = accountService.getAccountWhitelistInfo(chain.getChainId(), address);
+            return success(account);
+        } catch (NulsRuntimeException e) {
+            errorLogProcess(chain, e);
+            return failed(e.getErrorCode());
+        } catch (Exception e) {
+            errorLogProcess(chain, e);
+            return failed(AccountErrorCode.SYS_UNKOWN_EXCEPTION);
+        }
     }
 
     private void errorLogProcess(Chain chain, Exception e) {

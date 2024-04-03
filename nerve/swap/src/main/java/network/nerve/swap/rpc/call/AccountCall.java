@@ -2,13 +2,15 @@ package network.nerve.swap.rpc.call;
 
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.log.Log;
+import io.nuls.core.parse.MapUtils;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.core.rpc.model.message.Response;
 import io.nuls.core.rpc.netty.processor.ResponseMessageProcessor;
 import network.nerve.swap.constant.SwapErrorCode;
+import network.nerve.swap.model.dto.AccountWhitelistDTO;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 public class AccountCall extends BaseCall {
 
@@ -36,5 +38,34 @@ public class AccountCall extends BaseCall {
             throw new NulsException(SwapErrorCode.ACCOUNT_VALID_ERROR);
         }
         return (String) callResult.get("priKey");
+    }
+
+    public static AccountWhitelistDTO getAccountWhitelistInfo(int chainId, String address) {
+        try {
+            Map<String, Object> param = new HashMap<>(2);
+            param.put("chainId", chainId);
+            param.put("address", address);
+            Map result = (Map) requestAndResponse(ModuleE.AC.abbr, "ac_getAccountWhitelistInfo", param);
+            if (result == null) {
+                return null;
+            }
+            AccountWhitelistDTO dto = new AccountWhitelistDTO();
+            dto.setAddress((String) result.get("address"));
+            dto.setExtend((String) result.get("extend"));
+            Object typesObj = result.get("types");
+            if (typesObj == null) {
+                dto.setTypes(Collections.EMPTY_SET);
+            } else {
+                Set<Integer> types = new HashSet<>();
+                List<Integer> typeList = (List<Integer>) typesObj;
+                for (Integer type : typeList) {
+                    types.add(type);
+                }
+                dto.setTypes(types);
+            }
+            return dto;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

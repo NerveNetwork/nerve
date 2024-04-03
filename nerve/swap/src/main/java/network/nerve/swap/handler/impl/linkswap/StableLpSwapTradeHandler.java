@@ -173,7 +173,7 @@ public class StableLpSwapTradeHandler extends SwapHandlerConstraints {
             LedgerTempBalanceManager tempBalanceManager = batchInfo.getLedgerTempBalanceManager();
             Transaction sysDealTx0 = stableAddLiquidityHandler.makeSystemDealTx(stableAddLiquidityBus, pairPo.getCoins(), pairPo.getTokenLP(), tx.getHash().toHex(), blockTime, tempBalanceManager);
             // generateswapSystem transactions
-            Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo());
+            Transaction sysDealTx1 = swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockTime, tempBalanceManager, txData.getFeeTo(), dto.getFrom());
 
             // Integrate two generated transactions
             Transaction sysDealTx = sysDealTx0;

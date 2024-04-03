@@ -27,6 +27,7 @@ package io.nuls.account.service;
 import io.nuls.account.model.bo.Account;
 import io.nuls.account.model.bo.AccountKeyStore;
 import io.nuls.account.model.bo.Chain;
+import io.nuls.account.model.dto.AccountWhitelistDTO;
 import io.nuls.base.signture.BlockSignature;
 import io.nuls.base.signture.P2PHKSignature;
 import io.nuls.core.exception.NulsException;
@@ -283,4 +284,7 @@ public interface AccountService {
 
     String eciesDecrypt(String data, int chainId, String address, String password, Map<String, Object> extend) throws NulsException;
 
+    boolean saveWhitelist(int chainId, String dataStr);
+
+    AccountWhitelistDTO getAccountWhitelistInfo(int chainId, String address);
 }

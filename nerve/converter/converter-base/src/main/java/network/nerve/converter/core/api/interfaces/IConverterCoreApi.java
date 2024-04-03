@@ -181,6 +181,7 @@ public interface IConverterCoreApi {
      */
     boolean isProtocol31();
     boolean isProtocol33();
+    boolean isProtocol34();
 
 
     /**

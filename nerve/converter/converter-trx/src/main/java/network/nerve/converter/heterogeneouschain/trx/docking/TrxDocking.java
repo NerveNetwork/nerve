@@ -23,6 +23,7 @@
  */
 package network.nerve.converter.heterogeneouschain.trx.docking;
 
+import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.exception.NulsException;
 import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.log.logback.NulsLogger;
@@ -56,9 +57,12 @@ import network.nerve.converter.heterogeneouschain.trx.model.TrxAccount;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxEstimateSun;
 import network.nerve.converter.heterogeneouschain.trx.model.TrxSendTransactionPo;
 import network.nerve.converter.heterogeneouschain.trx.utils.TrxUtil;
+import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
+import org.tron.trident.abi.TypeReference;
 import org.tron.trident.abi.datatypes.Address;
+import org.tron.trident.abi.datatypes.DynamicBytes;
 import org.tron.trident.abi.datatypes.Function;
 import org.tron.trident.abi.datatypes.Type;
 import org.tron.trident.proto.Chain;
@@ -1354,10 +1358,35 @@ public class TrxDocking extends HtgDocking implements IHeterogeneousChainDocking
 
     private String createTxComplete(String nerveTxHash, HtgUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType) throws Exception {
         // estimatefeeLimit
-        TrxEstimateSun estimateSun = trxWalletApi.estimateSunUsed(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
-        if (estimateSun.isReverted()) {
-            logger().error("[{}]Transaction verification failed, reason: {}", txType, estimateSun.getRevertReason());
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
+        TrxEstimateSun estimateSun;
+        try {
+            estimateSun = trxWalletApi.estimateSunUsed(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+            if (estimateSun.isReverted()) {
+                logger().error("[{}]Transaction verification failed, reason: {}", txType, estimateSun.getRevertReason());
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
+            }
+        } catch (Exception e) {
+            if (e instanceof NulsException && ConverterUtil.isInsufficientSignature((NulsException) e)) {
+                List<HeterogeneousSign> regainSignatures = htgContext.getConverterCoreApi().regainSignatures(htgContext.NERVE_CHAINID(), nerveTxHash, htgContext.getConfig().getChainId());
+                if (regainSignatures.size() > HtgConstant.MAX_MANAGERS) {
+                    logger().warn("Obtaining Byzantine signature exceeds the maximum value, Obtain numerical values: {}, Maximum value: {}", regainSignatures.size(), HtgConstant.MAX_MANAGERS);
+                    regainSignatures = regainSignatures.subList(0, HtgConstant.MAX_MANAGERS);
+                }
+                StringBuilder builder = new StringBuilder(HtgConstant.HEX_PREFIX);
+                regainSignatures.stream().forEach(signature -> builder.append(HexUtil.encode(signature.getSignature())));
+                List<Type> typeList = txFunction.getInputParameters();
+                List<Type> newTypeList = new ArrayList<>(typeList);
+                newTypeList.remove(newTypeList.size() - 1);
+                newTypeList.add(new DynamicBytes(Numeric.hexStringToByteArray(builder.toString())));
+                txFunction = new Function(txFunction.getName(), newTypeList, List.of(new TypeReference<Type>(){}));
+                estimateSun = trxWalletApi.estimateSunUsed(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+                if (estimateSun.isReverted()) {
+                    logger().error("[{}]Transaction verification failed, reason: {}", txType, estimateSun.getRevertReason());
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, estimateSun.getRevertReason());
+                }
+            } else {
+                throw e;
+            }
         }
         // feeLimitchoice
         BigInteger feeLimit;

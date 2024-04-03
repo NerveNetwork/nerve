@@ -52,6 +52,7 @@ import network.nerve.converter.model.po.TxSubsequentProcessPO;
 import network.nerve.converter.model.txdata.ConfirmProposalTxData;
 import network.nerve.converter.model.txdata.ConfirmUpgradeTxData;
 import network.nerve.converter.model.txdata.ProposalExeBusinessData;
+import network.nerve.converter.rpc.call.AccountCall;
 import network.nerve.converter.rpc.call.SwapCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.ProposalExeStorageService;
@@ -596,6 +597,9 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
                         Integer feeRate = Integer.parseInt(po.getContent());
                         String swapPairAddress = AddressTool.getStringAddressByBytes(po.getAddress());
                         SwapCall.updateSwapPairFeeRate(chainId, swapPairAddress, feeRate);
+                    } else if (ProposalTypeEnum.getEnum(po.getType()) == ProposalTypeEnum.TRANSACTION_WHITELIST) {
+                        String dataStr = po.getContent();
+                        AccountCall.saveWhitelist(chainId, dataStr);
                     }
                 }
                 if (syncStatus == SyncStatusEnum.RUNNING.value() && isCurrentDirector) {
@@ -633,7 +637,7 @@ public class ConfirmProposalProcessor implements TransactionProcessor {
         } catch (Exception e) {
             chain.getLogger().error(e);
             if (failRollback) {
-                rollbackProtocol16(chainId, txs, blockHeader, false);
+                rollbackProtocol27(chainId, txs, blockHeader, false);
             }
             return false;
         }

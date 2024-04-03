@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package network.nerve.converter.heterogeneouschain.shm.context;
+package network.nerve.converter.heterogeneouschain.mode.context;
 
 import network.nerve.converter.heterogeneouschain.lib.context.HtgContextNew;
 

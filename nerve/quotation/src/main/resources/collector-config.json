@@ -40,6 +40,12 @@
     "baseurl": "https://poloniex.com",
     "collector": "network.nerve.quotation.rpc.querier.impl.PoloniexQuerier",
     "weight": "0.10"
+  },
+  {
+    "name": "Xeggex",
+    "baseurl": "https://api.xeggex.com",
+    "collector": "network.nerve.quotation.rpc.querier.impl.XeggexQuerier",
+    "weight": "0.10"
   }
 ]
 

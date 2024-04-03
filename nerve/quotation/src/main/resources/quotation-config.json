@@ -234,6 +234,20 @@
           "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
           "anchorToken": "ZETA-USDT",
           "desc": "ZETA relative USDT price"
+        },
+        {
+          "key": "FCH_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "FCH-USDT",
+          "desc": "FCH relative USDT price"
+        },
+        {
+          "key": "PLS_PRICE",
+          "collector": "network.nerve.quotation.processor.impl.CollectorProcessor",
+          "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor",
+          "anchorToken": "PLS-USDT",
+          "desc": "PLS relative USDT price"
         }
       ]
     }

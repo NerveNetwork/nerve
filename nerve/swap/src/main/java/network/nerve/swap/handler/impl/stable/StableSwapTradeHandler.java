@@ -117,7 +117,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             StableSwapPairPo pairPo = stablePair.getPair();
             NerveToken[] coins = pairPo.getCoins();
             // Integrate computing data
-            StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo(), null);
+            StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), txData.getFeeTo(), null, null);
             // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
@@ -200,7 +200,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
             StableSwapPairPo pairPo = stablePair.getPair();
             NerveToken[] coins = pairPo.getCoins();
             // Integrate computing data
-            StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), null, dto.getFeeTo());
+            StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, dto.getAmountsIn(), tokenOutIndex, dto.getPairAddress(), txData.getTo(), null, dto.getFeeTo(), dto.getUserAddress());
             // Loading execution result
             result.setTxType(txType());
             result.setSuccess(true);
@@ -492,7 +492,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
     }
 
     // After integrating the stablecoin pool, ordinarySWAPCalling the stablecoin pool function, stablecoin currency1:1exchange
-    public StableSwapTradeBus tradeByCombining(int chainId, IPairFactory iPairFactory, byte[] pairAddressBytes, byte[] to, LedgerTempBalanceManager tempBalanceManager, NerveToken tokenIn, BigInteger amountIn, NerveToken tokenOut, SwapSystemDealTransaction sysDeal) throws Exception {
+    public StableSwapTradeBus tradeByCombining(int chainId, IPairFactory iPairFactory, byte[] pairAddressBytes, byte[] to, LedgerTempBalanceManager tempBalanceManager, NerveToken tokenIn, BigInteger amountIn, NerveToken tokenOut, SwapSystemDealTransaction sysDeal, byte[] userAddress) throws Exception {
         String pairAddress = AddressTool.getStringAddressByBytes(pairAddressBytes);
         IStablePair stablePair = iPairFactory.getStablePair(pairAddress);
         StableSwapPairPo pairPo = stablePair.getPair();
@@ -508,7 +508,7 @@ public class StableSwapTradeHandler extends SwapHandlerConstraints {
         }
         BigInteger[] amountsIn = SwapUtils.emptyFillZero(new BigInteger[length]);
         amountsIn[tokenInIndex] = amountIn;
-        StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, amountsIn, (byte) tokenOutIndex, pairAddressBytes, to, null, null);
+        StableSwapTradeBus bus = SwapUtils.calStableSwapTradeBusiness(swapHelper, chainId, iPairFactory, amountsIn, (byte) tokenOutIndex, pairAddressBytes, to, null, null, userAddress);
         this.makeSystemDealTxInner(sysDeal, bus, coins, tempBalanceManager, null);
         return bus;
     }

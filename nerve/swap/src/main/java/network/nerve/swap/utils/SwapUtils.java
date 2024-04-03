@@ -12,6 +12,7 @@ import io.nuls.core.basic.Result;
 import io.nuls.core.constant.BaseConstant;
 import io.nuls.core.constant.CommonCodeConstanst;
 import io.nuls.core.constant.ErrorCode;
+import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.ECKey;
 import io.nuls.core.crypto.HexUtil;
 import io.nuls.core.crypto.Sha256Hash;
@@ -38,6 +39,7 @@ import network.nerve.swap.model.business.RemoveLiquidityBus;
 import network.nerve.swap.model.business.stable.StableAddLiquidityBus;
 import network.nerve.swap.model.business.stable.StableRemoveLiquidityBus;
 import network.nerve.swap.model.business.stable.StableSwapTradeBus;
+import network.nerve.swap.model.dto.AccountWhitelistDTO;
 import network.nerve.swap.model.dto.RealAddLiquidityOrderDTO;
 import network.nerve.swap.model.po.FarmPoolPO;
 import network.nerve.swap.model.po.SwapPairPO;
@@ -45,16 +47,14 @@ import network.nerve.swap.model.po.stable.StableSwapPairPo;
 import network.nerve.swap.model.vo.RouteOfPriceImpactVO;
 import network.nerve.swap.model.vo.RouteVO;
 import network.nerve.swap.model.vo.SwapPairVO;
+import network.nerve.swap.rpc.call.AccountCall;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static io.nuls.core.model.FormatValidUtils.NULS;
@@ -477,10 +477,28 @@ public class SwapUtils {
         // add by cobble at 2024/1/19 Currency suspension exchange status check
         boolean[] pauses = pairPo.getPauses();
         if (pauses != null) {
+            AccountWhitelistDTO accountWhitelistInfo = null;
             for (int i = 0; i < amounts.length; i++) {
                 if (amounts[i].compareTo(BigInteger.ZERO) > 0 && pauses[i]) {
-                    SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
-                    throw new NulsException(INVALID_COINS);
+                    // check if from is the whitelist addr
+                    if (accountWhitelistInfo == null) {
+                        accountWhitelistInfo = AccountCall.getAccountWhitelistInfo(chainId, AddressTool.getStringAddressByBytes(from));
+                    }
+                    boolean whitelist = false;
+                    do {
+                        if (accountWhitelistInfo == null) {
+                            break;
+                        }
+                        Set<Integer> types = accountWhitelistInfo.getTypes();
+                        if (!types.contains(TxType.SWAP_ADD_LIQUIDITY_STABLE_COIN)) {
+                            break;
+                        }
+                        whitelist = true;
+                    } while (false);
+                    if (!whitelist) {
+                        SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
+                        throw new NulsException(INVALID_COINS);
+                    }
                 }
             }
         }
@@ -798,9 +816,9 @@ public class SwapUtils {
 
     public static StableSwapTradeBus calStableSwapTradeBusiness(SwapHelper swapHelper,
             int chainId, IPairFactory iPairFactory,
-            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, byte[] _feeTo, CoinTo feeTo) throws NulsException {
+            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, byte[] _feeTo, CoinTo feeTo, byte[] userAddress) throws NulsException {
         if (swapHelper.isSupportProtocol31()) {
-            return calStableSwapTradeBusinessP31(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, feeTo);
+            return calStableSwapTradeBusinessP31(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, feeTo, userAddress);
         } else if (swapHelper.isSupportProtocol21()) {
             return calStableSwapTradeBusinessP21(chainId, iPairFactory, amountsIn, tokenOutIndex, pairAddressBytes, to, feeTo);
         } else {
@@ -939,7 +957,7 @@ public class SwapUtils {
 
     private static StableSwapTradeBus calStableSwapTradeBusinessP31(
             int chainId, IPairFactory iPairFactory,
-            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, CoinTo feeTo) throws NulsException {
+            BigInteger[] amountsIn, byte tokenOutIndex, byte[] pairAddressBytes, byte[] to, CoinTo feeTo, byte[] userAddress) throws NulsException {
         if (!AddressTool.validAddress(chainId, to)) {
             throw new NulsException(SwapErrorCode.RECEIVE_ADDRESS_ERROR);
         }
@@ -967,10 +985,28 @@ public class SwapUtils {
         // add by cobble at 2024/1/19 Currency suspension exchange status check
         boolean[] pauses = pairPo.getPauses();
         if (pauses != null) {
+            AccountWhitelistDTO accountWhitelistInfo = null;
             for (int i = 0; i < length; i++) {
                 if (amountsIn[i].compareTo(BigInteger.ZERO) > 0 && pauses[i]) {
-                    SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
-                    throw new NulsException(INVALID_COINS);
+                    // check if from is the whitelist addr
+                    if (accountWhitelistInfo == null) {
+                        accountWhitelistInfo = AccountCall.getAccountWhitelistInfo(chainId, AddressTool.getStringAddressByBytes(userAddress));
+                    }
+                    boolean whitelist = false;
+                    do {
+                        if (accountWhitelistInfo == null) {
+                            break;
+                        }
+                        Set<Integer> types = accountWhitelistInfo.getTypes();
+                        if (!types.contains(TxType.SWAP_TRADE_STABLE_COIN)) {
+                            break;
+                        }
+                        whitelist = true;
+                    } while (false);
+                    if (!whitelist) {
+                        SwapContext.logger.info("[{}] error paused coin: {}", pairAddress, coins[i].str());
+                        throw new NulsException(INVALID_COINS);
+                    }
                 }
             }
         }

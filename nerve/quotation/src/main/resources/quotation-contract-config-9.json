@@ -109,5 +109,18 @@
     "rpcAddress": "9-1,9-220",
     "effectiveHeight": 51500000,
     "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
+  },
+  {
+    "chain": "nerve",
+    "key": "NVTBTCLPKEY",
+    "anchorToken": "NVTBTCLP-USDT",
+    "tokenInfo": "9-793-18",
+    "swapTokenContractAddress": "9-1-8",
+    "baseTokenContractAddress": "9-787-18",
+    "baseAnchorToken": "USDT-USDT",
+    "baseTokenInfo": "9-220-18",
+    "rpcAddress": "9-1,9-220",
+    "effectiveHeight": 523000000,
+    "calculator": "network.nerve.quotation.processor.impl.CalculatorProcessor"
   }
 ]

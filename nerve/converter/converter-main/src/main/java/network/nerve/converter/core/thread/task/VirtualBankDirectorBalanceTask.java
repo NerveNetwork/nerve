@@ -110,7 +110,7 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                 chain.getLogger().error(e.getMessage(), e);
             }
 
-            try {
+            /*try {
                 do {
                     if (!converterCoreApi.isVirtualBankByCurrentNode()) {
                         chain.getLogger().info("Non virtual bank members, skip the task of heterogeneous chain balance caching");
@@ -132,6 +132,60 @@ public class VirtualBankDirectorBalanceTask implements Runnable {
                         list.add(directorDTO);
                     }
                     ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST = list;
+                    // Parallel query of heterogeneous chain balances
+                    VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, this.logPrint, converterCoreApi);
+                } while (false);
+            } catch (Exception e) {
+                chain.getLogger().error(e.getMessage(), e);
+            }*/
+            try {
+                do {
+                    if (!converterCoreApi.isVirtualBankByCurrentNode()) {
+                        chain.getLogger().info("Non virtual bank members, skip the task of heterogeneous chain balance caching");
+                        break;
+                    }
+                    chain.getLogger().info("Update cached virtual bank heterogeneous chain network balances by height, every other150Count each block once, Current network height: {}", latestHeight);
+                    Map<String, VirtualBankDirector> mapVirtualBank = chain.getMapVirtualBank();
+                    List<VirtualBankDirectorDTO> list;
+                    if (ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST == null || ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.isEmpty()) {
+                        list = new ArrayList<>();
+                        for (VirtualBankDirector director : mapVirtualBank.values()) {
+                            VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
+                            for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+                                if (chain.getChainId() == 5 && addr.getChainId() == 101) {
+                                    continue;
+                                }
+                                IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                                String chainSymbol = heterogeneousDocking.getChainSymbol();
+                                addr.setSymbol(chainSymbol);
+                            }
+                            list.add(directorDTO);
+                        }
+                        ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST = list;
+                    } else {
+                        Map<String, VirtualBankDirectorDTO> directorDTOMap = ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST.stream().collect(Collectors.toMap(VirtualBankDirectorDTO::getSignAddress, Function.identity()));
+                        for (VirtualBankDirector director : mapVirtualBank.values()) {
+                            if (!directorDTOMap.containsKey(director.getSignAddress())) {
+                                VirtualBankDirectorDTO directorDTO = new VirtualBankDirectorDTO(director);
+                                for (HeterogeneousAddressDTO addr : directorDTO.getHeterogeneousAddresses()) {
+                                    if (chain.getChainId() == 5 && addr.getChainId() == 101) {
+                                        continue;
+                                    }
+                                    IHeterogeneousChainDocking heterogeneousDocking = heterogeneousDockingManager.getHeterogeneousDocking(addr.getChainId());
+                                    String chainSymbol = heterogeneousDocking.getChainSymbol();
+                                    addr.setSymbol(chainSymbol);
+                                }
+                                directorDTOMap.put(director.getSignAddress(), directorDTO);
+                            }
+                        }
+                        for (VirtualBankDirectorDTO dto : ConverterContext.VIRTUAL_BANK_DIRECTOR_LIST) {
+                            if (!mapVirtualBank.containsKey(dto.getSignAddress())) {
+                                directorDTOMap.remove(dto.getSignAddress());
+                            }
+                        }
+                        list = new ArrayList<>(directorDTOMap.values());
+                    }
+
                     // Parallel query of heterogeneous chain balances
                     VirtualBankUtil.virtualBankDirectorBalance(list, chain, heterogeneousDockingManager, this.logPrint, converterCoreApi);
                 } while (false);

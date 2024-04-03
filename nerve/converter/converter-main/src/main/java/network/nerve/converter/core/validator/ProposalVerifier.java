@@ -39,7 +39,6 @@ import network.nerve.converter.constant.ConverterErrorCode;
 import network.nerve.converter.core.context.HeterogeneousChainManager;
 import network.nerve.converter.core.heterogeneous.docking.interfaces.IHeterogeneousChainDocking;
 import network.nerve.converter.core.heterogeneous.docking.management.HeterogeneousDockingManager;
-import network.nerve.converter.enums.HeterogeneousTxTypeEnum;
 import network.nerve.converter.enums.ProposalTypeEnum;
 import network.nerve.converter.enums.ProposalVoteRangeTypeEnum;
 import network.nerve.converter.model.bo.Chain;
@@ -53,7 +52,6 @@ import network.nerve.converter.rpc.call.TransactionCall;
 import network.nerve.converter.storage.ConfirmWithdrawalStorageService;
 import network.nerve.converter.storage.RechargeStorageService;
 import network.nerve.converter.utils.ConverterUtil;
-import network.nerve.converter.utils.HeterogeneousUtil;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -160,6 +158,10 @@ public class ProposalVerifier {
                 validBankVoteRange(chain, rangeType);
                 validStableSwap(chain, txData.getAddress());
                 break;
+            case TRANSACTION_WHITELIST:
+                validBankVoteRange(chain, rangeType);
+                validTxWhitelist(chain, txData.getContent());
+                break;
             default:
                 break;
         }
@@ -231,6 +233,51 @@ public class ProposalVerifier {
         boolean legalCoin = SwapCall.isLegalCoinForRemoveStable(chain.getChainId(), stablePairAddress, assetChainId, assetId);
         if (!legalCoin) {
             chain.getLogger().error("[Proposal to remove currency] Currency is illegal. stablePairAddress: {}, asset:{}-{}", stablePairAddress, assetChainId, assetId);
+            throw new NulsException(ConverterErrorCode.DATA_ERROR);
+        }
+    }
+
+    private void validTxWhitelist(Chain chain, String content) throws NulsException {
+        boolean success = false;
+        String dataStr = content;
+        OUT:
+        do {
+            if (StringUtils.isBlank(dataStr)) {
+                break;
+            }
+            try {
+                String[] addressInfos = dataStr.split(",");
+                for (String addressInfoStr : addressInfos) {
+                    String[] addressInfo = addressInfoStr.split("-");
+                    String addr = addressInfo[0];
+                    boolean valid = AddressTool.validAddress(chain.getChainId(), addr);
+                    // address verification adds verification logic and is replaced with a byte array, which is then regeneratedbase58After the address is provided, communicate with the userbase58Avoiding the problem of different address prefixes compared to addresses
+                    if (!valid) {
+                        break OUT;
+                    }
+                    byte[] addressBytes = AddressTool.getAddress(addr);
+                    String addressStr = AddressTool.getStringAddressByBytes(addressBytes);
+                    valid = addr.equals(addressStr);
+                    if (!valid) {
+                        break OUT;
+                    }
+                    int length = addressInfo.length;
+                    for (int i = 1; i < length; i++) {
+                        int type = Integer.parseInt(addressInfo[i]);
+                        if (type > 300 || type < 0) {
+                            break OUT;
+                        }
+                    }
+                }
+
+            } catch (Exception e) {
+                chain.getLogger().error(e);
+                break;
+            }
+            success = true;
+        } while (false);
+        if (!success) {
+            chain.getLogger().error("[Proposal to save account whitelist] Account whitelist information missing. content:{}", dataStr);
             throw new NulsException(ConverterErrorCode.DATA_ERROR);
         }
     }

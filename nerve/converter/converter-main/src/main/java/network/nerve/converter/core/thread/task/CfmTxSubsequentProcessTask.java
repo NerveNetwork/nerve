@@ -608,6 +608,14 @@ public class CfmTxSubsequentProcessTask implements Runnable {
 
         boolean rs = false;
         if (compSignPO.getByzantinePass()) {
+            // collect more signatures
+            StringBuilder signatureDataBuilder = new StringBuilder();
+            for (ComponentSignMessage msg : compSignPO.getListMsg()) {
+                signatureDataBuilder.append(HexUtil.encode(msg.getListSign().get(0).getSignature())).append(",");
+            }
+            signatureDataBuilder.deleteCharAt(signatureDataBuilder.length() - 1);
+            chain.getLogger().info("[withdraw] Collected {} signatures for {}, signatures: {}", compSignPO.getListMsg().size(), txHash, signatureDataBuilder.toString());
+
             if (pendingPO.getRetry() || !compSignPO.getCompleted()) {
                 // Execute calls to heterogeneous chains
                 List<ComponentCallParm> callParmsList = compSignPO.getCallParms();

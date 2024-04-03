@@ -45,11 +45,12 @@ import network.nerve.converter.heterogeneouschain.lib.management.BeanInitial;
 import network.nerve.converter.heterogeneouschain.lib.model.*;
 import network.nerve.converter.heterogeneouschain.lib.storage.*;
 import network.nerve.converter.heterogeneouschain.lib.utils.HtgUtil;
+import network.nerve.converter.model.HeterogeneousSign;
 import network.nerve.converter.model.bo.*;
 import network.nerve.converter.utils.ConverterUtil;
-import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.WalletUtils;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthCall;
@@ -1325,28 +1326,42 @@ public class HtgDocking implements IHeterogeneousChainDocking, BeanInitial {
         return this.createTxComplete(nerveTxHash, po, fromAddress, priKey, txFunction, txType, null, false);
     }
     private String createTxComplete(String nerveTxHash, HtgUnconfirmedTxPo po, String fromAddress, String priKey, Function txFunction, HeterogeneousChainTxType txType, BigInteger gasPrice, boolean resend) throws Exception {
-        // Verify the legality of contract transactions
-        //EthCall ethCall = htgWalletApi.validateContractCall(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
-        //if (ethCall.isReverted()) {
-        //    logger().error("[{}]Transaction verification failed, reason: {}", txType, ethCall.getRevertReason());
-        //    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, ethCall.getRevertReason());
-        //}
         // estimateGasLimit
         BigInteger estimateGas;
-        EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
-        if (estimateGasObj.getError() != null) {
-            String error = estimateGasObj.getError().getMessage();
-            /*boolean completedTransaction = ConverterUtil.isCompletedTransaction(error);
-            if (completedTransaction && (txType == HeterogeneousChainTxType.WITHDRAW || txType == HeterogeneousChainTxType.CHANGE)) {
-                estimateGas = txType == HeterogeneousChainTxType.WITHDRAW ? HtgConstant.GAS_LIMIT_OF_WITHDRAW : HtgConstant.GAS_LIMIT_OF_CHANGE;
+        try {
+            EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+            if (estimateGasObj.getError() != null) {
+                String error = estimateGasObj.getError().getMessage();
+                logger().error("[{}]Transaction estimation GasLimit Failure, reason for failure: {}", txType, error);
+                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimate GasLimit Failure, " + error);
             } else {
-                logger().error("[{}]Transaction estimationGasLimitFailure, reason for failure: {}", txType, error);
-                throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail, " + error);
-            }*/
-            logger().error("[{}]Transaction estimationGasLimitFailure, reason for failure: {}", txType, error);
-            throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimateGasLimitfail, " + error);
-        } else {
-            estimateGas = estimateGasObj.getAmountUsed();
+                estimateGas = estimateGasObj.getAmountUsed();
+            }
+        } catch (Exception e) {
+            if (e instanceof NulsException && ConverterUtil.isInsufficientSignature((NulsException) e)) {
+                List<HeterogeneousSign> regainSignatures = htgContext.getConverterCoreApi().regainSignatures(htgContext.NERVE_CHAINID(), nerveTxHash, htgContext.getConfig().getChainId());
+                if (regainSignatures.size() > HtgConstant.MAX_MANAGERS) {
+                    logger().warn("Obtaining Byzantine signature exceeds the maximum value, Obtain numerical values: {}, Maximum value: {}", regainSignatures.size(), HtgConstant.MAX_MANAGERS);
+                    regainSignatures = regainSignatures.subList(0, HtgConstant.MAX_MANAGERS);
+                }
+                StringBuilder builder = new StringBuilder(HtgConstant.HEX_PREFIX);
+                regainSignatures.stream().forEach(signature -> builder.append(HexUtil.encode(signature.getSignature())));
+                List<Type> typeList = txFunction.getInputParameters();
+                List<Type> newTypeList = new ArrayList<>(typeList);
+                newTypeList.remove(newTypeList.size() - 1);
+                newTypeList.add(new DynamicBytes(Numeric.hexStringToByteArray(builder.toString())));
+                txFunction = new Function(txFunction.getName(), newTypeList, List.of(new TypeReference<Type>(){}));
+                EthEstimateGas estimateGasObj = htgWalletApi.ethEstimateGas(fromAddress, htgContext.MULTY_SIGN_ADDRESS(), txFunction);
+                if (estimateGasObj.getError() != null) {
+                    String error = estimateGasObj.getError().getMessage();
+                    logger().error("[{}]Transaction estimation GasLimit Failure, reason for failure: {}", txType, error);
+                    throw new NulsException(ConverterErrorCode.HETEROGENEOUS_TRANSACTION_CONTRACT_VALIDATION_FAILED, "estimate GasLimit Failure, " + error);
+                } else {
+                    estimateGas = estimateGasObj.getAmountUsed();
+                }
+            } else {
+                throw e;
+            }
         }
 
         if (logger().isDebugEnabled()) {

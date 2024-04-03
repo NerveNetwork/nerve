@@ -116,6 +116,9 @@ public class AccountBootstrap implements INerveCoreBootstrap {
             if (!RocksDBService.existTable(AccountStorageConstant.DB_NAME_ACCOUNT_BLOCK)) {
                 RocksDBService.createTable(AccountStorageConstant.DB_NAME_ACCOUNT_BLOCK);
             }
+            if (!RocksDBService.existTable(AccountStorageConstant.DB_NAME_ACCOUNT_WHITELIST)) {
+                RocksDBService.createTable(AccountStorageConstant.DB_NAME_ACCOUNT_WHITELIST);
+            }
         } catch (Exception e) {
             if (!DBErrorCode.DB_TABLE_EXIST.equals(e.getMessage())) {
                 LoggerUtil.LOG.error(e.getMessage());

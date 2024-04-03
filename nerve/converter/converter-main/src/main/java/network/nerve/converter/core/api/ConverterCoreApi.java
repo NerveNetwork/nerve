@@ -333,7 +333,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
         for (Map.Entry<String, BigDecimal> entry : list) {
             resultMap.put(entry.getKey(), i++);
         }
-        nerveChain.getLogger().debug("Current Bank Order: {}", resultMap);
+        nerveChain.getLogger().info("Current Bank Order: {}, balanceMap: {}", resultMap, balanceMap);
         return resultMap;
     }
 
@@ -417,7 +417,7 @@ public class ConverterCoreApi implements IConverterCoreApi {
     public BigDecimal getUsdtPriceByAsset(AssetName assetName) {
         String key = ConverterContext.priceKeyMap.get(assetName.name());
         if (assetName == AssetName.FCH) {
-            key = "DOGE_PRICE";
+            return getFchUsdtPrice();
         }
         //TODO pierre test code
         //if (assetName == AssetName.ETH) {
@@ -427,8 +427,14 @@ public class ConverterCoreApi implements IConverterCoreApi {
             return BigDecimal.ZERO;
         }
         // Obtain the specified asset'sUSDTprice
+        return QuotationCall.getPriceByOracleKey(nerveChain, key);
+    }
+
+    private BigDecimal getFchUsdtPrice() {
+        String key = ConverterContext.priceKeyMap.get(AssetName.FCH.name());
         BigDecimal price = QuotationCall.getPriceByOracleKey(nerveChain, key);
-        if (assetName == AssetName.FCH) {
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            price = QuotationCall.getPriceByOracleKey(nerveChain, "DOGE_PRICE");
             price = price.multiply(fchToDogePrice);
         }
         return price;
@@ -514,6 +520,11 @@ public class ConverterCoreApi implements IConverterCoreApi {
     @Override
     public boolean isProtocol33() {
         return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_33_0;
+    }
+
+    @Override
+    public boolean isProtocol34() {
+        return nerveChain.getLatestBasicBlock().getHeight() >= ConverterContext.PROTOCOL_1_34_0;
     }
 
     private void loadHtgMainAsset() {

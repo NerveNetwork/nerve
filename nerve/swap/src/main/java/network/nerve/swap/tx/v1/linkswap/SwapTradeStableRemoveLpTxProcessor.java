@@ -185,7 +185,7 @@ public class SwapTradeStableRemoveLpTxProcessor implements TransactionProcessor 
                         stablePairAddressBytes, txData.getPath(), txData.getAmountOutMin(), txData.getFeeTo());
                 //protocol17: Add verification and logic for stablecoin exchange
                 if (swapTradeBus.isExistStablePair()) {
-                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
+                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo(), dto.getUserAddress());
                 }
                 List<TradePairBus> pairBuses = swapTradeBus.getTradePairBuses();
                 TradePairBus lastPairBus = pairBuses.get(pairBuses.size() - 1);

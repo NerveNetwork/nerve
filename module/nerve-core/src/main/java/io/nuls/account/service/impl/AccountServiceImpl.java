@@ -31,11 +31,15 @@ import io.nuls.account.constant.AccountErrorCode;
 import io.nuls.account.model.bo.Account;
 import io.nuls.account.model.bo.AccountKeyStore;
 import io.nuls.account.model.bo.Chain;
+import io.nuls.account.model.bo.tx.AccountWhitelistInfo;
+import io.nuls.account.model.bo.tx.txdata.AccountWhitelistData;
+import io.nuls.account.model.dto.AccountWhitelistDTO;
 import io.nuls.account.model.po.AccountPO;
 import io.nuls.account.rpc.call.ContractCall;
 import io.nuls.account.rpc.call.EventCall;
 import io.nuls.account.service.*;
 import io.nuls.account.storage.AccountStorageService;
+import io.nuls.account.storage.AccountWhitelistStorageService;
 import io.nuls.account.util.AccountTool;
 import io.nuls.account.util.LoggerUtil;
 import io.nuls.account.util.Preconditions;
@@ -71,6 +75,8 @@ public class AccountServiceImpl implements AccountService {
 
     @Autowired
     private AccountStorageService accountStorageService;
+    @Autowired
+    private AccountWhitelistStorageService accountWhitelistStorageService;
 
     @Autowired
     private AliasService aliasService;
@@ -797,5 +803,37 @@ public class AccountServiceImpl implements AccountService {
         } catch (Exception e) {
             throw new NulsException(e);
         }
+    }
+
+    @Override
+    public boolean saveWhitelist(int chainId, String dataStr) {
+        if (StringUtils.isBlank(dataStr)) {
+            return true;
+        }
+        AccountWhitelistData data = new AccountWhitelistData();
+        String[] addressInfos = dataStr.split(",");
+        AccountWhitelistInfo[] infos = new AccountWhitelistInfo[addressInfos.length];
+        data.setInfos(infos);
+        int k = 0;
+        for (String addressInfoStr : addressInfos) {
+            String[] addressInfo = addressInfoStr.split("-");
+            String addr = addressInfo[0];
+            int length = addressInfo.length;
+            int[] types = new int[length - 1];
+            for (int i = 1; i < length; i++) {
+                types[i - 1] = Integer.parseInt(addressInfo[i]);
+            }
+            infos[k++] = new AccountWhitelistInfo(AddressTool.getAddress(addr), types, null);
+        }
+        return accountWhitelistStorageService.saveAccountList(data);
+    }
+
+    @Override
+    public AccountWhitelistDTO getAccountWhitelistInfo(int chainId, String address) {
+        AccountWhitelistInfo info = accountWhitelistStorageService.getAccount(AddressTool.getAddress(address));
+        if (info == null) {
+            return null;
+        }
+        return info.toDTO();
     }
 }

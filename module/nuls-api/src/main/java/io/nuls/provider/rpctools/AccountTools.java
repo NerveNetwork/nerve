@@ -13,6 +13,7 @@ import io.nuls.core.parse.SerializeUtils;
 import io.nuls.core.rpc.info.Constants;
 import io.nuls.core.rpc.model.ModuleE;
 import io.nuls.provider.model.dto.AccountBlockDTO;
+import io.nuls.provider.model.dto.AccountWhitelistDTO;
 import io.nuls.provider.rpctools.vo.Account;
 import io.nuls.provider.utils.Log;
 import io.nuls.v2.error.AccountErrorCode;
@@ -151,6 +152,33 @@ public class AccountTools implements CallRpc {
                     return null;
                 }
                 AccountBlockDTO result = new AccountBlockDTO();
+                result.setAddress((String) res.get("address"));
+                Object obj = res.get("types");
+                if (obj != null) {
+                    result.setTypes((List<Integer>) obj);
+                }
+                return result;
+            });
+            return dto;
+        } catch (Exception e) {
+            Log.error(e);
+            return null;
+        }
+    }
+
+    public AccountWhitelistDTO getAccountWhitelistInfo(int chainId, String address) {
+        try {
+            if (StringUtils.isBlank(address)) {
+                return null;
+            }
+            Map<String, Object> params = new HashMap<>(4);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("address", address);
+            AccountWhitelistDTO dto = callRpc(ModuleE.AC.abbr, "ac_getAccountWhitelistInfo", params, (Function<Map<String, Object>, AccountWhitelistDTO>) res -> {
+                if (res == null) {
+                    return null;
+                }
+                AccountWhitelistDTO result = new AccountWhitelistDTO();
                 result.setAddress((String) res.get("address"));
                 Object obj = res.get("types");
                 if (obj != null) {

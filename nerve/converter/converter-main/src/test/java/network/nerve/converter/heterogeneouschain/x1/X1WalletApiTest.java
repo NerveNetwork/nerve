@@ -38,10 +38,10 @@ import java.util.concurrent.TimeUnit;
 
 public class X1WalletApiTest extends Base {
 
-    String testEthRpcAddress = "https://x1testrpc.okx.com";
+    String testEthRpcAddress = "https://testrpc.xlayer.tech";
     int testChainId = 195;
-    String mainEthRpcAddress = "https://xxx";
-    int mainChainId = -1;
+    String mainEthRpcAddress = "https://rpc.xlayer.tech";
+    int mainChainId = 196;
     @Override
     protected String testEthRpcAddress() {
         return testEthRpcAddress;

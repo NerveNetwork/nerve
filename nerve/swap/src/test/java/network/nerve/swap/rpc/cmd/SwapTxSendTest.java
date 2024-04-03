@@ -8,6 +8,7 @@ import io.nuls.base.data.NulsHash;
 import io.nuls.base.data.Transaction;
 import io.nuls.core.constant.TxType;
 import io.nuls.core.crypto.HexUtil;
+import io.nuls.core.exception.NulsRuntimeException;
 import io.nuls.core.io.IoUtils;
 import io.nuls.core.log.Log;
 import io.nuls.core.parse.JSONUtils;
@@ -52,6 +53,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static network.nerve.swap.constant.SwapCmdConstant.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class SwapTxSendTest {
     static String awardFeeSystemAddressPublicKey = "d60fc83130dbe5537d4f1e1e35c533f1a396b8b7d641d717b2d1eb1245d0d796";
@@ -157,7 +160,7 @@ public class SwapTxSendTest {
     protected NerveToken swap_lp_nvt8safemoon9;
     protected NerveToken swap_lp_goat9safemoon9;
     protected NerveToken stable_swap_lp = new NerveToken(chainId, stableLpAssetId);
-    protected String stablePairAddress = "TNVTdTSQh2YzAxL8kPt5yc25AhMUsm7st1VCi";
+    protected String stablePairAddress = "TNVTdTSQh4hP4ZhLfw4ZbufkUifeaARpGEZBP";
 
     protected NerveToken U1D = new NerveToken(5, 3);
     protected NerveToken U2D = new NerveToken(5, 4);
@@ -249,7 +252,7 @@ public class SwapTxSendTest {
         if (!response.isSuccess()) {
             Log.error("asset[{}-{}]Creation failed, error: {}", asset, decimals, JSONUtils.obj2PrettyJson(response));
         } else {
-            Map chainAssetTxReg = (Map)((Map) response.getResponseData()).get("chainAssetTxReg");
+            Map chainAssetTxReg = (Map) ((Map) response.getResponseData()).get("chainAssetTxReg");
             String txHash = (String) chainAssetTxReg.get("txHash");
             Log.info("asset[{}-{}]Created successfully, txHash: {}", asset, decimals, txHash);
             TimeUnit.MILLISECONDS.sleep(6000);
@@ -622,7 +625,7 @@ public class SwapTxSendTest {
         // U4D[5-5] decimals: 18, initNumber: 100000000, type: 1
         // UDN[5-6] decimals: 18, initNumber: 0, type: 10
         Map<String, Object> params = new HashMap<>();
-        params.put("coins", new String[]{"5-4","5-5","5-6","5-7","5-8"});
+        params.put("coins", new String[]{"5-7", "5-8", "5-9", "5-10", "5-11"});
         params.put("symbol", "UDN");
         this.sendTx(from, STABLE_SWAP_CREATE_PAIR, params);
     }
@@ -647,27 +650,28 @@ public class SwapTxSendTest {
     })
     @Test
     public void stableSwapAddLiquidity() throws Exception {
-        String amount0 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
+        String amount0 = new BigDecimal("23").scaleByPowerOfTen(18).toPlainString();
         //String amount1 = new BigDecimal("500").scaleByPowerOfTen(18).toPlainString();
         //String amount2 = new BigDecimal("2000").scaleByPowerOfTen(18).toPlainString();
         //String amount3 = new BigDecimal("300").scaleByPowerOfTen(18).toPlainString();
         //String amount4 = new BigDecimal("700").scaleByPowerOfTen(18).toPlainString();
 
         Map<String, Object> params = new HashMap<>();
-        //params.put("amounts", new String[]{amount1,amount2,amount3,amount4});
+        //params.put("amounts", new String[]{amount0, amount1, amount2, amount3, amount4});
         params.put("amounts", new String[]{amount0});
-        //params.put("tokens", new String[]{"5-5","5-6","5-7","5-8"});
-        params.put("tokens", new String[]{"5-4"});
+        //params.put("tokens", new String[]{"5-7", "5-8", "5-9", "5-10", "5-11"});
+        params.put("tokens", new String[]{"5-7"});//"5-7","5-8","5-9","5-10","5-11"
         params.put("pairAddress", stablePairAddress);
         params.put("deadline", deadline());
         params.put("to", address31);
+        from = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         this.sendTx(from, STABLE_SWAP_ADD_LIQUIDITY, params);
     }
 
     @Test
     public void addAndRemoveTest() throws Exception {
         stablePairAddress = "TNVTdTSQjZrzxLvarNBrHrU2tbeoVGVMZoYn7";
-        for (int i =0; i< 1; i++) {
+        for (int i = 0; i < 1; i++) {
             Map<String, Object> params = new HashMap<>();
             params.put("amounts", new String[]{new BigDecimal("98.6").movePointRight(18).toPlainString()});
             params.put("tokens", new String[]{new NerveToken(5, 3).str()});
@@ -739,8 +743,8 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("amountsIn", new String[]{new BigDecimal("22").movePointRight(18).toPlainString()});
-        params.put("tokensIn", new String[]{"5-5"});
+        params.put("amountsIn", new String[]{new BigDecimal("2").movePointRight(18).toPlainString()});
+        params.put("tokensIn", new String[]{"5-8"});
         params.put("tokenOutIndex", 0);
         //params.put("feeTo", address51);
         params.put("pairAddress", stablePairAddress);
@@ -748,6 +752,7 @@ public class SwapTxSendTest {
         params.put("to", address31);
         //params.put("feeToken", U3D.str());
         //params.put("feeAmount", new BigDecimal("0.29").movePointRight(18).toPlainString());
+        //from = "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA";
         this.sendTx(from, STABLE_SWAP_TOKEN_TRADE, params);
     }
 
@@ -764,6 +769,25 @@ public class SwapTxSendTest {
         //String stablePairAddress = AddressTool.getStringAddressByBytes(stablePairAddressBytes);
         Map map = this.getStableSwapPairInfo(stablePairAddress);
         System.out.println(JSONUtils.obj2PrettyJson(map));
+    }
+
+    @Test
+    public void pauseStableTest() throws Exception {
+        pauseStable(chain.getChainId(), 5, 7, true);
+    }
+
+    private void pauseStable(int chainId, int nerveAssetChainId, int nerveAssetId, boolean pause) throws Exception {
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+        params.put("stablePairAddress", stablePairAddress);
+        params.put("assetChainId", nerveAssetChainId);
+        params.put("assetId", nerveAssetId);
+        params.put("status", pause ? "pause" : "resume");
+        params.put("address", packageAddressZP);
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_pause_coin_for_stable_swap", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
     }
 
     @Test
@@ -938,6 +962,25 @@ public class SwapTxSendTest {
     }
 
     @Test
+    public void getAccountWhitelistInfoTest() {
+        try {
+            //create password accounts
+            //query specified account private key
+            Map<String, Object> params = new HashMap<>();
+            params.put(Constants.VERSION_KEY_STR, version);
+            params.put(Constants.CHAIN_ID, chainId);
+            //params.put("address", "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad");
+            params.put("address", "TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA");
+            Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.AC.abbr, "ac_getAccountWhitelistInfo", params);
+            System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        } catch (NulsRuntimeException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
     public void proposalAddCoin() throws Exception {
         //Overwrite if account already exists If the account exists, it covers.
         Map<String, Object> params = new HashMap<>();
@@ -973,6 +1016,30 @@ public class SwapTxSendTest {
         params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
         params.put("remark", "Stable currency removal currency test");
         params.put("address", "TNVTdTSPLbhQEw4hhLc2Enr5YtTheAjg8yDsV");
+        params.put("password", password);
+        Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
+        System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
+        HashMap result = (HashMap) ((HashMap) cmdResp.getResponseData()).get("cv_proposal");
+        String hash = (String) result.get("value");
+        String txHex = (String) result.get("hex");
+        Log.debug("hash:{}", hash);
+        Log.debug("txHex:{}", txHex);
+    }
+
+
+    @Test
+    public void proposalAddressWhitelist() throws Exception {
+        //Overwrite if account already exists If the account exists, it covers.
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constants.VERSION_KEY_STR, "1.0");
+        params.put(Constants.CHAIN_ID, chainId);
+
+        params.put("type", (byte) 13);// ProposalTypeEnum.TRANSACTION_WHITELIST
+        params.put("content", "TNVTdTSPJJMGh7ijUGDqVZyucbeN1z4jqb1ad-72-74,TNVTdTSPRnXkDiagy7enti1KL75NU5AxC9sQA-73-74");
+        //params.put("businessAddress", "TNVTdTSQJkuFpDm9j49KJBBuduuv3XsQCoeJQ");// pairAddress
+        params.put("voteRangeType", (byte) 1);// ProposalVoteRangeTypeEnum.BANK
+        params.put("remark", "transaction whitelist");
+        params.put("address", address31);
         params.put("password", password);
         Response cmdResp = ResponseMessageProcessor.requestAndResponse(ModuleE.CV.abbr, "cv_proposal", params);
         System.out.println(JSONUtils.obj2PrettyJson(cmdResp));
@@ -1040,7 +1107,7 @@ public class SwapTxSendTest {
         }
         String hash;
         if (obj instanceof Map) {
-            hash = (String) ((Map)obj).get("txHash");
+            hash = (String) ((Map) obj).get("txHash");
         } else if (obj instanceof String) {
             hash = (String) obj;
         } else {

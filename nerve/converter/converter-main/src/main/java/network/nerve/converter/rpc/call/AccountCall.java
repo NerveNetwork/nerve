@@ -62,6 +62,22 @@ public class AccountCall extends BaseCall {
         }
     }
 
+    public static Boolean saveWhitelist(int chainId, String data) throws NulsException {
+        try {
+            Map<String, Object> params = new HashMap<>(ConverterConstant.INIT_CAPACITY_8);
+            params.put(Constants.VERSION_KEY_STR, ConverterConstant.RPC_VERSION);
+            params.put(Constants.CHAIN_ID, chainId);
+            params.put("data", data);
+
+            HashMap result = (HashMap) requestAndResponse(ModuleE.AC.abbr, "ac_savewhitelist", params);
+            Boolean value = (Boolean)result.get("value");
+            return value;
+        } catch (NulsException e) {
+            LoggerUtil.LOG.error("SaveWhitelist fail - data:{}", data);
+            throw e;
+        }
+    }
+
 
     public static String getPriKey(String address, String password) throws NulsException {
         if (ConverterContext.SIG_MODE == ConverterConstant.SIG_MODE_LOCAL) {

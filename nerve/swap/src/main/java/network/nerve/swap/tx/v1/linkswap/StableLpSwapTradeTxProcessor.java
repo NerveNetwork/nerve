@@ -177,7 +177,7 @@ public class StableLpSwapTradeTxProcessor implements TransactionProcessor {
                 SwapTradeBus swapTradeBus = swapTradeHandler.calSwapTradeBusiness(chainId, iPairFactory, stableAddLiquidityBus.getLiquidity(), txData.getTo(), swapTradePath, txData.getAmountOutMin(), txData.getFeeTo());
                 //protocol17: Add verification and logic for stablecoin exchange
                 if (swapTradeBus.isExistStablePair()) {
-                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo());
+                    swapTradeHandler.makeSystemDealTx(chainId, iPairFactory, swapTradeBus, tx.getHash().toHex(), blockHeader.getTime(), LedgerTempBalanceManager.newInstance(chainId), txData.getFeeTo(), dto.getFrom());
                 }
             } catch (Exception e) {
                 Log.error(e);
